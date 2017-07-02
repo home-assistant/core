@@ -26,12 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
 DEVICES = []
+CONF_DEVICE_CACHE = 'device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
@@ -44,29 +45,65 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Harmony platform."""
     import pyharmony
-    global DEVICES
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    _LOGGER.debug("Loading Harmony platform: %s", name)
+    host = None
+    activity = None
 
-    harmony_conf_file = hass.config.path(
-        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
+    if CONF_DEVICE_CACHE not in hass.data:
+        hass.data[CONF_DEVICE_CACHE] = []
 
+    if discovery_info:
+        # Find the discovered device in the list of user configurations
+        override = next((c for c in hass.data[CONF_DEVICE_CACHE]
+                         if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)),
+                        False)
+
+        port = DEFAULT_PORT
+        if override:
+            activity = override.get(ATTR_ACTIVITY)
+            port = override.get(CONF_PORT, DEFAULT_PORT)
+
+        host = (
+            discovery_info.get(CONF_NAME),
+            discovery_info.get(CONF_HOST),
+            port)
+
+        # Ignore hub name when checking if this hub is known - ip and port only
+        if host and host[1:] in set([h[1:] for h in DEVICES]):
+            _LOGGER.debug("Discovered host already known: %s", host)
+            return
+    elif CONF_HOST in config:
+        host = (
+            config.get(CONF_NAME),
+            config.get(CONF_HOST),
+            config.get(CONF_PORT),
+        )
+        activity = config.get(ATTR_ACTIVITY)
+    else:
+        hass.data[CONF_DEVICE_CACHE].append(config)
+        return
+
+    name, address, port = host
+    _LOGGER.info("Loading Harmony Platform: %s at %s:%s, startup activity: %s",
+                 name, address, port, activity)
     try:
         _LOGGER.debug("Calling pyharmony.ha_get_token for remote at: %s:%s",
-                      host, port)
-        token = urllib.parse.quote_plus(pyharmony.ha_get_token(host, port))
+                      address, port)
+        token = urllib.parse.quote_plus(pyharmony.ha_get_token(address, port))
+        _LOGGER.debug("Received token: %s", token)
     except ValueError as err:
         _LOGGER.warning("%s for remote: %s", err.args[0], name)
         return False
 
-    _LOGGER.debug("Received token: %s", token)
-    DEVICES = [HarmonyRemote(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(ATTR_ACTIVITY), harmony_conf_file, token)]
-    add_devices(DEVICES, True)
+    harmony_conf_file = hass.config.path(
+        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
+    device = HarmonyRemote(
+        name, address, port,
+        activity, harmony_conf_file, token)
+
+    DEVICES.append(device)
+
+    add_devices([device])
     register_services(hass)
     return True
 

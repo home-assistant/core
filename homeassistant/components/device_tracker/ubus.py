@@ -18,6 +18,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
+from homeassistant.exceptions import HomeAssistantError
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
@@ -38,6 +39,23 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
+def _refresh_on_acccess_denied(func):
+    """If remove rebooted, it lost our session so rebuld one and try again."""
+    def decorator(self, *args, **kwargs):
+        """Wrapper function to refresh session_id on PermissionError."""
+        try:
+            return func(self, *args, **kwargs)
+        except PermissionError:
+            _LOGGER.warning("Invalid session detected." +
+                            " Tryign to refresh session_id and re-run the rpc")
+            self.session_id = _get_session_id(self.url, self.username,
+                                              self.password)
+
+            return func(self, *args, **kwargs)
+
+    return decorator
+
+
 class UbusDeviceScanner(DeviceScanner):
     """
     This class queries a wireless router running OpenWrt firmware.
@@ -48,14 +66,16 @@ class UbusDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         host = config[CONF_HOST]
-        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+        self.username = config[CONF_USERNAME]
+        self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.lock = threading.Lock()
         self.last_results = {}
         self.url = 'http://{}/ubus'.format(host)
 
-        self.session_id = _get_session_id(self.url, username, password)
+        self.session_id = _get_session_id(self.url, self.username,
+                                          self.password)
         self.hostapd = []
         self.leasefile = None
         self.mac2name = None
@@ -66,6 +86,7 @@ class UbusDeviceScanner(DeviceScanner):
         self._update_info()
         return self.last_results
 
+    @_refresh_on_acccess_denied
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         with self.lock:
@@ -95,6 +116,7 @@ class UbusDeviceScanner(DeviceScanner):
             return self.mac2name.get(device.upper(), None)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
+    @_refresh_on_acccess_denied
     def _update_info(self):
         """Ensure the information from the Luci router is up to date.
 
@@ -142,6 +164,12 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
 
     if res.status_code == 200:
         response = res.json()
+        if 'error' in response:
+            if 'message' in response['error'] and \
+                    response['error']['message'] == "Access denied":
+                raise PermissionError(response['error']['message'])
+            else:
+                raise HomeAssistantError(response['error']['message'])
 
         if rpcmethod == "call":
             try:

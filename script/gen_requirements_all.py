@@ -28,7 +28,8 @@ COMMENT_REQUIREMENTS = (
     'face_recognition',
     'blinkt',
     'smbus-cffi',
-    'envirophat'
+    'envirophat',
+    'i2csense'
 )
 
 TEST_REQUIREMENTS = (
@@ -67,6 +68,7 @@ TEST_REQUIREMENTS = (
     'pywebpush',
     'PyJWT',
     'restrictedpython',
+    'pyunifi',
 )
 
 IGNORE_PACKAGES = (

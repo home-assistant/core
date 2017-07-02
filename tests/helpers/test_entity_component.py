@@ -9,6 +9,7 @@ from datetime import timedelta
 
 import homeassistant.core as ha
 import homeassistant.loader as loader
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
@@ -21,7 +22,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, MockModule, fire_time_changed,
-    mock_coro)
+    mock_coro, async_fire_time_changed)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -84,7 +85,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         # No group after setup
         assert len(self.hass.states.entity_ids()) == 0
 
-        component.add_entities([EntityTest(name='hello')])
+        component.add_entities([EntityTest()])
 
         # group exists
         assert len(self.hass.states.entity_ids()) == 2
@@ -92,7 +93,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         group = self.hass.states.get('group.everyone')
 
-        assert group.attributes.get('entity_id') == ('test_domain.hello',)
+        assert group.attributes.get('entity_id') == \
+            ('test_domain.unnamed_device',)
 
         # group extended
         component.add_entities([EntityTest(name='goodbye')])
@@ -100,9 +102,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        # Sorted order
+        # Ordered in order of added to the group
         assert group.attributes.get('entity_id') == \
-            ('test_domain.goodbye', 'test_domain.hello')
+            ('test_domain.goodbye', 'test_domain.unnamed_device')
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
@@ -532,3 +534,47 @@ def test_extract_from_service_available_device(hass):
     assert ['test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
                component.async_extract_from_service(call_2))
+
+
+@asyncio.coroutine
+def test_platform_not_ready(hass):
+    """Test that we retry when platform not ready."""
+    platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady,
+                                        None])
+    loader.set_component('test_domain.mod1', MockPlatform(platform1_setup))
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'mod1'
+        }
+    })
+
+    assert len(platform1_setup.mock_calls) == 1
+    assert 'test_domain.mod1' not in hass.config.components
+
+    utcnow = dt_util.utcnow()
+
+    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+        # Should not trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 1
+
+        # Should trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 2
+        assert 'test_domain.mod1' not in hass.config.components
+
+        # This should not trigger attempt 3
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 2
+
+        # Trigger attempt 3, which succeeds
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 3
+        assert 'test_domain.mod1' in hass.config.components

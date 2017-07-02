@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 47
+MINOR_VERSION = 49
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -161,6 +161,7 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
 CONF_WHITE_VALUE = 'white_value'
 CONF_XY = 'xy'
 CONF_ZONE = 'zone'
@@ -199,6 +200,8 @@ STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_OK = 'ok'
+STATE_PROBLEM = 'problem'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution

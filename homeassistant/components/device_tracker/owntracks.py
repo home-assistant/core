@@ -21,7 +21,7 @@ from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.0']
+REQUIREMENTS = ['libnacl==1.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

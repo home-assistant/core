@@ -210,6 +210,9 @@ def test_api_get_config(hass, mock_api_client):
     result = yield from resp.json()
     if 'components' in result:
         result['components'] = set(result['components'])
+    if 'whitelist_external_dirs' in result:
+        result['whitelist_external_dirs'] = \
+            set(result['whitelist_external_dirs'])
 
     assert hass.config.as_dict() == result
 

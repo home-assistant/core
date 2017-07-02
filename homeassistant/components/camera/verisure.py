@@ -24,22 +24,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not os.access(directory_path, os.R_OK):
         _LOGGER.error("file path %s is not readable", directory_path)
         return False
-    hub.update_smartcam()
+    hub.update_overview()
     smartcams = []
     smartcams.extend([
-        VerisureSmartcam(hass, value.deviceLabel, directory_path)
-        for value in hub.smartcam_status.values()])
+        VerisureSmartcam(hass, device_label, directory_path)
+        for device_label in hub.get(
+            "$.customerImageCameras[*].deviceLabel")])
     add_devices(smartcams)
 
 
 class VerisureSmartcam(Camera):
     """Representation of a Verisure camera."""
 
-    def __init__(self, hass, device_id, directory_path):
+    def __init__(self, hass, device_label, directory_path):
         """Initialize Verisure File Camera component."""
         super().__init__()
 
-        self._device_id = device_id
+        self._device_label = device_label
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
@@ -58,28 +59,27 @@ class VerisureSmartcam(Camera):
 
     def check_imagelist(self):
         """Check the contents of the image list."""
-        hub.update_smartcam_imagelist()
-        if (self._device_id not in hub.smartcam_dict or
-                not hub.smartcam_dict[self._device_id]):
+        hub.update_smartcam_imageseries()
+        image_ids = hub.get_image_info(
+            "$.imageSeries[?(@.deviceLabel=='%s')].image[0].imageId",
+            self._device_label)
+        if not image_ids:
             return
-        images = hub.smartcam_dict[self._device_id]
-        new_image_id = images[0]
-        _LOGGER.debug("self._device_id=%s, self._images=%s, "
-                      "self._new_image_id=%s", self._device_id,
-                      images, new_image_id)
+        new_image_id = image_ids[0]
         if (new_image_id == '-1' or
                 self._image_id == new_image_id):
             _LOGGER.debug("The image is the same, or loading image_id")
             return
         _LOGGER.debug("Download new image %s", new_image_id)
-        hub.my_pages.smartcam.download_image(
-            self._device_id, new_image_id, self._directory_path)
+        new_image_path = os.path.join(
+            self._directory_path, '{}{}'.format(new_image_id, '.jpg'))
+        hub.session.download_image(
+            self._device_label, new_image_id, new_image_path)
         _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
         self._image_id = new_image_id
-        self._image = os.path.join(
-            self._directory_path, '{}{}'.format(self._image_id, '.jpg'))
+        self._image = new_image_path
 
     def delete_image(self, event):
         """Delete an old image."""
@@ -95,4 +95,6 @@ class VerisureSmartcam(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return hub.smartcam_status[self._device_id].location
+        return hub.get_first(
+            "$.customerImageCameras[?(@.deviceLabel=='%s')].area",
+            self._device_label)
