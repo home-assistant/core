@@ -68,7 +68,7 @@ amcrest==1.2.0
 anthemav==1.1.8
 
 # homeassistant.components.apcupsd
-apcaccess==0.0.10
+apcaccess==0.0.13
 
 # homeassistant.components.notify.apns
 apns2==0.1.1
@@ -344,7 +344,7 @@ jsonrpc-websocket==0.5
 keyring>=9.3,<10.0
 
 # homeassistant.components.knx
-knxip==0.3.3
+knxip==0.4
 
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.1
@@ -648,7 +648,7 @@ pynx584==0.4
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.6.1
+pyowm==2.7.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
