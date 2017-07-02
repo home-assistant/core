@@ -402,14 +402,14 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             session.post(base_url, login_data, headers=header)
 
             # a timestamp is required to be sent as get parameter
-            ts = int(datetime.now().timestamp() * 1e3)
+            timestamp = int(datetime.now().timestamp() * 1e3)
 
             client_list_url = '{}/data/monitor.client.client.json'.format(
                 base_url)
 
             get_params = {
                 'operation': 'load',
-                '_': ts
+                '_': timestamp
             }
 
             response = session.get(client_list_url,
