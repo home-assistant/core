@@ -7,6 +7,13 @@ from homeassistant.components.sensor.tube_state import CONF_LINE, URL
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
+VALID_CONFIG = {
+    'platform': 'tube_state',
+    CONF_LINE: [
+        'London Overground',
+    ]
+}
+
 
 class TestLondonTubeSensor(unittest.TestCase):
     """Test the tube_state platform."""
@@ -14,7 +21,7 @@ class TestLondonTubeSensor(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = {CONF_LINE: ['London Overground']}
+        self.config = VALID_CONFIG
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -25,10 +32,8 @@ class TestLondonTubeSensor(unittest.TestCase):
         """Test for operational tube_state sensor with proper attributes."""
         mock_req.get(URL, text=load_fixture('tube_state.json'))
         self.assertTrue(
-            setup_component(self.hass, 'sensor', {'tube_state': self.config}))
+            setup_component(self.hass, 'sensor', {'sensor': self.config}))
 
-        ids = self.hass.states.entity_ids()
-        assert len(ids) > 0
         state = self.hass.states.get('sensor.london_overground')
         assert state.state == 'Minor Delays'
         assert state.attributes.get('Description') == 'something'
