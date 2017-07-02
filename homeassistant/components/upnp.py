@@ -9,6 +9,8 @@ from urllib.parse import urlsplit
 
 import voluptuous as vol
 
+import homeassistant.loader as loader
+
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
