@@ -301,7 +301,8 @@ class BrData(object):
                             content.get(MESSAGE),
                             content.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(2)
+            yield from self.schedule_update(SCHEDULE_NOK)
+            return
 
         # rounding coordinates prevents unnecessary redirects/calls
         rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
@@ -318,7 +319,8 @@ class BrData(object):
                             raincontent.get(MESSAGE),
                             raincontent.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(2)
+            yield from self.schedule_update(SCHEDULE_NOK)
+            return
 
         result = parse_data(content.get(CONTENT),
                             raincontent.get(CONTENT),
