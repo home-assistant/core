@@ -9,7 +9,6 @@ https://home-assistant.io/components/scene.velux/
 import logging
 
 from homeassistant.components.scene import Scene
-import homeassistant.components.velux as velux_component
 
 
 DEPENDENCIES = ['velux']
