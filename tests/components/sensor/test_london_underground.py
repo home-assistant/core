@@ -2,7 +2,6 @@
 import unittest
 import requests_mock
 
-from homeassistant.components.sensor import london_underground
 from homeassistant.components.sensor.london_underground import CONF_LINE, URL
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
