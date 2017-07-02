@@ -309,9 +309,6 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 # homeassistant.components.light.osramlightify
 https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5
 
-# homeassistant.components.tado
-https://github.com/wmalgadey/PyTado/archive/0.2.1.zip#PyTado==0.2.1
-
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -731,6 +728,9 @@ python-roku==3.1.3
 
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
+
+# homeassistant.components.tado
+python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==6.1.0
