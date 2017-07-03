@@ -65,17 +65,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         intesishome.connect()
 
     if intesishome.error_message:
-        persistent_notification.create(hass, intesishome.error_message, "IntesisHome Error", 'intesishome')
+        persistent_notification.create(hass, intesishome.error_message,
+        "IntesisHome Error", 'intesishome')
 
     """Setup the IntesisHome thermostat."""
     add_devices([IntesisAC(deviceid, device)
                  for deviceid, device in intesishome.get_devices().items()])
     return True
-    
+
+
 class IntesisAC(ClimateDevice):
     def __init__(self, deviceid, device):
         """Initialize the thermostat"""
-        _LOGGER.debug('Added climate device with state: %s',repr(device))
+        _LOGGER.debug('Added climate device with state: %s', repr(device))
 
         self._deviceid = deviceid
         self._devicename = device['name']
@@ -93,9 +95,11 @@ class IntesisAC(ClimateDevice):
         self._fan_speed = STATE_UNKNOWN
         self._current_operation = STATE_UNKNOWN
 
-        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN, STATE_OFF]
-        self._fan_list = [STATE_AUTO, STATE_QUIET, STATE_LOW, STATE_MEDIUM, STATE_HIGH]
-        self._swing_list = ["Auto/Stop","Swing","Middle"]
+        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_DRY,
+                               STATE_FAN, STATE_OFF]
+        self._fan_list = [STATE_AUTO, STATE_QUIET, STATE_LOW, STATE_MEDIUM,
+                         STATE_HIGH]
+        self._swing_list = ["Auto/Stop", "Swing", "Middle"]
 
         # Best guess as which widget represents vertical swing control
         if 42 in device.get('widgets'):
@@ -111,7 +115,7 @@ class IntesisAC(ClimateDevice):
 
     @property
     def temperature_unit(self):
-        """IntesisHome API uses Celsius on the backend - let Home Assistant convert"""
+        """IntesisHome API uses Celsius - let Home Assistant convert"""
         return TEMP_CELSIUS
 
     @property
@@ -135,7 +139,7 @@ class IntesisAC(ClimateDevice):
 
         temperature = kwargs.get(ATTR_TEMPERATURE)
         operation_mode = kwargs.get(ATTR_OPERATION_MODE)
-        
+
         if operation_mode:
             self._target_temp = temperature
             self.set_operation_mode(operation_mode)
@@ -163,7 +167,7 @@ class IntesisAC(ClimateDevice):
                 self._target_temp = None
             elif operation_mode == STATE_DRY:
                 intesishome.set_mode_dry(self._deviceid)
-            
+
             if self._target_temp:
                 intesishome.set_temperature(self._deviceid, self._target_temp)
 
@@ -182,7 +186,6 @@ class IntesisAC(ClimateDevice):
         elif swing == "Middle":
             intesishome.set_vertical_vane(self._deviceid, 'manual3')
             intesishome.set_horizontal_vane(self._deviceid, 'swing')
-
 
     def update(self):
         if intesishome.is_disconnected:
@@ -214,7 +217,7 @@ class IntesisAC(ClimateDevice):
             self._current_operation = STATE_UNKNOWN
 
         # Target temperature
-        if self._current_operation in [STATE_OFF,STATE_FAN]:
+        if self._current_operation in [STATE_OFF, STATE_FAN]:
             self._target_temp = None
         else:
             self._target_temp = intesishome.get_setpoint(self._deviceid)
@@ -240,12 +243,10 @@ class IntesisAC(ClimateDevice):
         else:
             self._swing = STATE_UNKNOWN
 
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _poll_status(self, shouldCallback):
         _LOGGER.debug("Polling IntesisHome Status via HTTP")
         intesishome.poll_status(shouldCallback)
-
 
     @property
     def icon(self):
@@ -265,7 +266,7 @@ class IntesisAC(ClimateDevice):
     def update_callback(self):
         """Called when data is received by pyIntesishome"""
         _LOGGER.debug("IntesisHome sent a status update.")
-        self.hass.async_add_job(self.update_ha_state,True)
+        self.hass.async_add_job(self.update_ha_state, True)
 
     @property
     def min_temp(self):
