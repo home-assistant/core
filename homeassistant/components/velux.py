@@ -1,6 +1,5 @@
 """
-
-Connects to VELUX KLF 200 interface
+Connects to VELUX KLF 200 interface.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.velux/
@@ -33,7 +32,6 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the velux component."""
-
     try:
         if DOMAIN not in hass.data:
             hass.data[DOMAIN] = VeluxModule(hass, config)

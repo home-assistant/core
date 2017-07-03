@@ -52,7 +52,7 @@ class VeluxScene(Scene):
 
     @property
     def is_on(self):
-        """There is no way of detecting if a scene is active (yet) """
+        """There is no way of detecting if a scene is active (yet)."""
         return False
 
     def activate(self, **kwargs):
