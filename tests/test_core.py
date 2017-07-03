@@ -821,13 +821,13 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(('/home', '/tmp'))
+            self.config.whitelist_external_dirs = set(('/home', '/var'))
 
             unvalid = [
                 "/hass/config/secure",
                 "/etc/passwd",
                 "/root/secure_file",
-                "/tmp/../etc/passwd",
+                "/var/../etc/passwd",
                 test_file,
             ]
             for path in unvalid:
