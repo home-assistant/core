@@ -13,9 +13,10 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE)
 from homeassistant.util import Throttle
 from homeassistant.components import persistent_notification
 from homeassistant.components.climate import ( ClimateDevice,
-    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, ATTR_OPERATION_MODE)
-from homeassistant.const import (TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_UNKNOWN)
+                                               PLATFORM_SCHEMA,
+                                               ATTR_TEMPERATURE,
+                                               ATTR_OPERATION_MODE)
+from homeassistant.const import (TEMP_CELSIUS, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 # Return cached results if last scan time was less than this value.
-# If a persistent connection is established for the controller, changes to values are in realtime.
+# If a persistent connection is established for the controller, 
+# changes to values are in realtime.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 try:
@@ -49,24 +51,25 @@ except ImportError:
     # pylint: disable=unused-import
     from asyncio import async
     ensure_future = async
-   
+
 intesishome = None
 hass = None
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     from pyintesishome import IntesisHome
-    global intesishome 
-    
+    global intesishome
+
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASSWORD)
-    
+
     if intesishome is None:
-        intesishome = IntesisHome(_user,_pass, hass.loop)
+        intesishome = IntesisHome(_user, _pass, hass.loop)
         intesishome.connect()
 
     if intesishome.error_message:
         persistent_notification.create(hass, intesishome.error_message,
-        "IntesisHome Error", 'intesishome')
+                                       "IntesisHome Error", 'intesishome')
 
     """Setup the IntesisHome thermostat."""
     add_devices([IntesisAC(deviceid, device)
@@ -96,9 +99,9 @@ class IntesisAC(ClimateDevice):
         self._current_operation = STATE_UNKNOWN
 
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_DRY,
-                               STATE_FAN, STATE_OFF]
+                                STATE_FAN, STATE_OFF]
         self._fan_list = [STATE_AUTO, STATE_QUIET, STATE_LOW, STATE_MEDIUM,
-                         STATE_HIGH]
+                          STATE_HIGH]
         self._swing_list = ["Auto/Stop", "Swing", "Middle"]
 
         # Best guess as which widget represents vertical swing control
