@@ -213,7 +213,7 @@ class APIEntityStateView(HomeAssistantView):
 
         new_state = data.get('state')
 
-        if not new_state:
+        if new_state is None:
             return self.json_message('No state specified', HTTP_BAD_REQUEST)
 
         attributes = data.get('attributes')
