@@ -8,12 +8,12 @@ EXAMPLE_MSG = """
 {
     "text": "turn the lights green",
     "intent": {
-        "intent_name": "Lights",
+        "intentName": "Lights",
         "probability": 1
     },
     "slots": [
         {
-            "slot_name": "light_color",
+            "slotName": "light_color",
             "value": {
                 "kind": "Custom",
                 "value": "blue"
