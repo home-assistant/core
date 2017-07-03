@@ -24,7 +24,7 @@ REQUIRES = [
     'typing>=3,<4',
     'aiohttp==2.2.0',
     'async_timeout==1.2.1',
-    'chardet==3.0.2',
+    'chardet==3.0.4',
     'astral==1.4',
 ]
 
