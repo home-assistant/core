@@ -6,7 +6,7 @@ from tests.common import async_fire_mqtt_message, async_mock_service
 
 EXAMPLE_MSG = """
 {
-    "text": "turn the lights green",
+    "input": "turn the lights green",
     "intent": {
         "intentName": "Lights",
         "probability": 1
