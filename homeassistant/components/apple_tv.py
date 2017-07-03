@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'apple_tv'
 
+SERVICE_SCAN = 'apple_tv_scan'
 SERVICE_AUTHENTICATE = 'apple_tv_authenticate'
 
 ATTR_ATV = 'atv'
@@ -40,8 +41,10 @@ DATA_ENTITIES = 'data_apple_tv_entities'
 
 KEY_CONFIG = 'apple_tv_configuring'
 
-NOTIFICATION_ID = 'apple_tv_notification'
-NOTIFICATION_TITLE = 'Apple TV Authentication'
+NOTIFICATION_AUTH_ID = 'apple_tv_auth_notification'
+NOTIFICATION_AUTH_TITLE = 'Apple TV Authentication'
+NOTIFICATION_SCAN_ID = 'apple_tv_scan_notification'
+NOTIFICATION_SCAN_TITLE = 'Apple TV Scan'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -52,6 +55,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_START_OFF, default=False): cv.boolean
     })])
 }, extra=vol.ALLOW_EXTRA)
+
+# Currently no attributes but it might change later
+APPLE_TV_SCAN_SCHEMA = vol.Schema({})
 
 APPLE_TV_AUTHENTICATE_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
@@ -76,15 +82,15 @@ def request_configuration(hass, config, atv, credentials):
                 'Authentication succeeded!<br /><br />Add the following '
                 'to credentials: in your apple_tv configuration:<br /><br />'
                 '{0}'.format(credentials),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+                title=NOTIFICATION_AUTH_TITLE,
+                notification_id=NOTIFICATION_AUTH_ID)
         except exceptions.DeviceAuthenticationError as ex:
             notification.async_create(
                 hass,
                 'Authentication failed! Did you enter correct PIN?<br /><br />'
                 'Details: {0}'.format(ex),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+                title=NOTIFICATION_AUTH_TITLE,
+                notification_id=NOTIFICATION_AUTH_ID)
 
         hass.async_add_job(configurator.request_done, instance)
 
@@ -94,6 +100,32 @@ def request_configuration(hass, config, atv, credentials):
         submit_caption='Confirm',
         fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
     )
+
+
+@asyncio.coroutine
+def scan_for_apple_tvs(hass):
+    """Scan for devices and present a notification of the ones found."""
+    import pyatv
+    atvs = yield from pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
+
+    devices = []
+    for atv in atvs:
+        login_id = atv.login_id
+        if login_id is None:
+            login_id = 'Home Sharing disabled'
+        devices.append('Name: {0}<br />Host: {1}<br />Login ID: {2}'.format(
+            atv.name, atv.address, login_id))
+
+    if not devices:
+        devices = ['No device(s) found']
+
+    notification = get_component('persistent_notification')
+    notification.async_create(
+        hass,
+        'The following devices were found:<br /><br />' +
+        '<br /><br />'.join(devices),
+        title=NOTIFICATION_SCAN_TITLE,
+        notification_id=NOTIFICATION_SCAN_ID)
 
 
 @asyncio.coroutine
@@ -122,6 +154,8 @@ def async_setup(hass, config):
                 yield from atv.airplay.start_authentication()
                 hass.async_add_job(request_configuration,
                                    hass, config, atv, credentials)
+            elif service.service == SERVICE_SCAN:
+                hass.async_add_job(scan_for_apple_tvs, hass)
 
     @asyncio.coroutine
     def atv_discovered(service, info):
@@ -142,6 +176,11 @@ def async_setup(hass, config):
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SCAN, async_service_handler,
+        descriptions.get(SERVICE_SCAN),
+        schema=APPLE_TV_SCAN_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
