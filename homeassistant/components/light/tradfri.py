@@ -126,8 +126,8 @@ class TradfriGroup(Light):
                                       err_callback=self._async_start_observe,
                                       duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as exc:
-            _LOGGER.warning("Observation failed, trying again", exc_info=exc)
+        except PyTradFriError as err:
+            _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
     def _refresh(self, group):
@@ -264,8 +264,8 @@ class TradfriLight(Light):
                                       err_callback=self._async_start_observe,
                                       duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as exc:
-            _LOGGER.warning("Observation failed, trying again", exc_info=exc)
+        except PyTradFriError as err:
+            _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
     def _refresh(self, light):
