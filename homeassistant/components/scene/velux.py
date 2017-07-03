@@ -18,7 +18,6 @@ DOMAIN = "velux"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup velux scene plattform."""
-
     if DOMAIN not in hass.data \
             or not hass.data[DOMAIN].initialized:
         _LOGGER.error('No connection to VELUX KLF 200 controller.')
