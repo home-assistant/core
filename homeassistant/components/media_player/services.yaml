@@ -316,11 +316,3 @@ kodi_call_method:
     method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
-
-apple_tv_authenticate:
-  description: Start AirPlay device authentication.
-
-  fields:
-    entity_id:
-      description: Name(s) of entities to authenticate with.
-      example: 'media_player.apple_tv'

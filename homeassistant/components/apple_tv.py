@@ -4,20 +4,27 @@ Support for Apple TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/apple_tv/
 """
+import os
 import asyncio
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_NAME)
+from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_ENTITY_ID)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import discovery
 from homeassistant.components.discovery import SERVICE_APPLE_TV
+from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['pyatv==0.3.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'apple_tv'
+
+SERVICE_AUTHENTICATE = 'apple_tv_authenticate'
 
 ATTR_ATV = 'atv'
 ATTR_POWER = 'power'
@@ -29,6 +36,12 @@ CONF_CREDENTIALS = 'credentials'
 DEFAULT_NAME = 'Apple TV'
 
 DATA_APPLE_TV = 'data_apple_tv'
+DATA_ENTITIES = 'data_apple_tv_entities'
+
+KEY_CONFIG = 'apple_tv_configuring'
+
+NOTIFICATION_ID = 'apple_tv_notification'
+NOTIFICATION_TITLE = 'Apple TV Authentication'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -40,12 +53,75 @@ CONFIG_SCHEMA = vol.Schema({
     })])
 }, extra=vol.ALLOW_EXTRA)
 
+APPLE_TV_AUTHENTICATE_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+
+def request_configuration(hass, config, atv, credentials):
+    """Request configuration steps from the user."""
+    configurator = get_component('configurator')
+
+    @asyncio.coroutine
+    def configuration_callback(callback_data):
+        """Handle the submitted configuration."""
+        from pyatv import exceptions
+        pin = callback_data.get('pin')
+        notification = get_component('persistent_notification')
+
+        try:
+            yield from atv.airplay.finish_authentication(pin)
+            notification.async_create(
+                hass,
+                'Authentication succeeded!<br /><br />Add the following '
+                'to credentials: in your apple_tv configuration:<br /><br />'
+                '{0}'.format(credentials),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+        except exceptions.DeviceAuthenticationError as ex:
+            notification.async_create(
+                hass,
+                'Authentication failed! Did you enter correct PIN?<br /><br />'
+                'Details: {0}'.format(ex),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+
+        hass.async_add_job(configurator.request_done, instance)
+
+    instance = configurator.request_config(
+        hass, 'Apple TV Authentication', configuration_callback,
+        description='Please enter PIN code shown on screen.',
+        submit_caption='Confirm',
+        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
+    )
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Apple TV component."""
     if DATA_APPLE_TV not in hass.data:
         hass.data[DATA_APPLE_TV] = {}
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Handler for service calls."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_ENTITIES]
+                       if device.entity_id in entity_ids]
+        else:
+            devices = hass.data[DATA_ENTITIES]
+
+        for device in devices:
+            atv = device.atv
+            if service.service == SERVICE_AUTHENTICATE:
+                credentials = yield from atv.airplay.generate_credentials()
+                yield from atv.airplay.load_credentials(credentials)
+                _LOGGER.debug('Generated new credentials: %s', credentials)
+                yield from atv.airplay.start_authentication()
+                hass.async_add_job(request_configuration,
+                                   hass, config, atv, credentials)
 
     @asyncio.coroutine
     def atv_discovered(service, info):
@@ -62,6 +138,15 @@ def async_setup(hass, config):
     tasks = [_setup_atv(hass, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
         yield from asyncio.wait(tasks, loop=hass.loop)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
+        descriptions.get(SERVICE_AUTHENTICATE),
+        schema=APPLE_TV_AUTHENTICATE_SCHEMA)
 
     return True
 

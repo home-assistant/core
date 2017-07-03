@@ -6,74 +6,24 @@ https://home-assistant.io/components/media_player.apple_tv/
 """
 import asyncio
 import logging
-import os
 
 from homeassistant.core import callback
 from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
+    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW, DOMAIN, MEDIA_PLAYER_SCHEMA)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP, ATTR_ENTITY_ID)
-from homeassistant.loader import get_component
-from homeassistant.config import load_yaml_config_file
+    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
 
 
 DEPENDENCIES = ['apple_tv']
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_AUTHENTICATE = 'apple_tv_authenticate'
-
-DATA_ENTITIES = 'data_apple_tv_entities'
-
-KEY_CONFIG = 'apple_tv_configuring'
-
-NOTIFICATION_ID = 'apple_tv_notification'
-NOTIFICATION_TITLE = 'Apple TV Authentication'
-
-
-def request_configuration(hass, config, atv, credentials):
-    """Request configuration steps from the user."""
-    configurator = get_component('configurator')
-
-    @asyncio.coroutine
-    def configuration_callback(callback_data):
-        """Handle the submitted configuration."""
-        from pyatv import exceptions
-        pin = callback_data.get('pin')
-        notification = get_component('persistent_notification')
-
-        try:
-            yield from atv.airplay.finish_authentication(pin)
-            notification.async_create(
-                hass,
-                'Authentication succeeded!<br /><br />Add the following '
-                'to credentials: in your apple_tv configuration:<br /><br />'
-                '{0}'.format(credentials),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-        except exceptions.DeviceAuthenticationError as ex:
-            notification.async_create(
-                hass,
-                'Authentication failed! Did you enter correct PIN?<br /><br />'
-                'Details: {0}'.format(ex),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-
-        hass.async_add_job(configurator.request_done, instance)
-
-    instance = configurator.request_config(
-        hass, 'Apple TV Authentication', configuration_callback,
-        description='Please enter PIN code shown on screen.',
-        submit_caption='Confirm',
-        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
-    )
 
 
 @asyncio.coroutine
@@ -92,39 +42,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     power = hass.data[DATA_APPLE_TV][host][ATTR_POWER]
     entity = AppleTvDevice(atv, name, power)
 
-    @asyncio.coroutine
-    def async_service_handler(service):
-        """Handler for service calls."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-
-        if entity_ids:
-            devices = [device for device in hass.data[DATA_ENTITIES]
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_ENTITIES]
-
-        for device in devices:
-            if service.service == SERVICE_AUTHENTICATE:
-                credentials = yield from atv.airplay.generate_credentials()
-                yield from atv.airplay.load_credentials(credentials)
-                _LOGGER.debug('Generated new credentials: %s', credentials)
-                yield from atv.airplay.start_authentication()
-                hass.async_add_job(request_configuration,
-                                   hass, config, device.atv, credentials)
-
     @callback
     def on_hass_stop(event):
         """Stop push updates when hass stops."""
         atv.push_updater.stop()
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
-        descriptions.get(SERVICE_AUTHENTICATE),
-        schema=MEDIA_PLAYER_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
