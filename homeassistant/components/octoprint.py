@@ -10,6 +10,7 @@ import time
 import requests
 import voluptuous as vol
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +40,7 @@ def setup(hass, config):
         OCTOPRINT.get('job')
     except requests.exceptions.RequestException as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
-        return False
+        raise PlatformNotReady
 
     return True
 
