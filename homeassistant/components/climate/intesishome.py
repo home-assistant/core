@@ -12,10 +12,10 @@ from datetime import timedelta
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE)
 from homeassistant.util import Throttle
 from homeassistant.components import persistent_notification
-from homeassistant.components.climate import ( ClimateDevice,
-                                               PLATFORM_SCHEMA,
-                                               ATTR_TEMPERATURE,
-                                               ATTR_OPERATION_MODE)
+from homeassistant.components.climate import (ClimateDevice,
+                                              PLATFORM_SCHEMA,
+                                              ATTR_TEMPERATURE,
+                                              ATTR_OPERATION_MODE)
 from homeassistant.const import (TEMP_CELSIUS, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 # Return cached results if last scan time was less than this value.
-# If a persistent connection is established for the controller, 
+# If a persistent connection is established for the controller,
 # changes to values are in realtime.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -339,3 +339,4 @@ class IntesisAC(ClimateDevice):
     def is_away_mode_on(self):
         """Return if away mode is on."""
         return None
+
