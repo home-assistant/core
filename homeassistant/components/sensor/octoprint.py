@@ -13,13 +13,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-
+DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
 
 SENSOR_TYPES = {
@@ -38,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint sensors."""
-    octoprint = get_component('octoprint')
+    octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
@@ -46,16 +45,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     types = ["actual", "target"]
     for octo_type in monitored_conditions:
         if octo_type == "Temperatures":
-            for tool in octoprint.OCTOPRINT.get_tools():
+            for tool in octoprint_api.get_tools():
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
-                        octoprint.OCTOPRINT, temp_type, temp_type, name,
+                        octoprint_api, temp_type, temp_type, name,
                         SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
                         SENSOR_TYPES[octo_type][1], tool)
                     devices.append(new_sensor)
         else:
             new_sensor = OctoPrintSensor(
-                octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
+                octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
                 name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
                 SENSOR_TYPES[octo_type][1])
             devices.append(new_sensor)
@@ -115,8 +114,4 @@ class OctoPrintSensor(Entity):
                 self.api_tool)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
-            return
-
-        if self._state is None and self.sensor_type != "completion":
-            _LOGGER.warning("Unable to locate value for %s", self.sensor_type)
             return
