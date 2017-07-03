@@ -19,7 +19,7 @@ DOMAIN = "velux"
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.1.1']
+REQUIREMENTS = ['pyvlx==0.1.2']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -32,12 +32,13 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the velux component."""
+    from pyvlx import PyVLXException
     try:
         if DOMAIN not in hass.data:
             hass.data[DOMAIN] = VeluxModule(hass, config)
             yield from hass.data[DOMAIN].async_start()
 
-    except Exception as ex:
+    except PyVLXException as ex:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
         hass.data[DOMAIN] = None
         return False
