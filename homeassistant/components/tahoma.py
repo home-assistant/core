@@ -755,13 +755,13 @@ class Device:
         # make sure there are not more active states than definitions
         if activeStatesAmount > len(self.stateDefinitions):
             raise ValueError(
-                'Missmatch of state definition and active states (' + 
-                    str(len(self.stateDefinitions)) + '/' + str(
-                        activeStatesAmount) + '): ' + debugOutput)
+                'Missmatch of state definition and active states (' +
+                    str(len(self.stateDefinitions)) + '/' +
+                    str(activeStatesAmount) + '): ' + debugOutput)
 
         if len(self.stateDefinitions) > 0:
 
-            if not 'states' in dataInput.keys():
+            if 'states' not in dataInput.keys():
                 raise ValueError("No active states given.")
 
             self.__activeStates = {}
@@ -769,11 +769,13 @@ class Device:
             for state in dataInput['states']:
 
                 if not state['name'] in self.stateDefinitions:
-                    raise ValueError("Active state '" + state['name'] + 
+                    raise ValueError(
+                        "Active state '" + state['name'] +
                         "' has not been defined: " + debugOutput)
 
                 if state['name'] in self.__activeStates.keys():
-                    raise ValueError("Active state '" + state['name'] + 
+                    raise ValueError(
+                        "Active state '" + state['name'] +
                         "' has been double defined: " + debugOutput)
 
                 self.__activeStates[state['name']] = state['value']
@@ -798,13 +800,13 @@ class Device:
         if name not in self.__activeStates.keys():
             raise ValueError("Can not set unknown state '" + name + "'")
 
-        if (isinstance(self.__activeStates[name], int) 
-            and isinstance(value, str)):
+        if (isinstance(self.__activeStates[name], int) and
+            isinstance(value, str)):
             # we get an update as str but current value is 
             # an int, try to convert
             self.__activeStates[name] = int(value)
-        elif (isinstance(self.__activeStates[name], float) 
-            and isinstance(value, str)):
+        elif (isinstance(self.__activeStates[name], float) and
+            isinstance(value, str)):
             # we get an update as str but current value is 
             # a float, try to convert
             self.__activeStates[name] = float(value)
@@ -838,8 +840,8 @@ class Action:
 
             for cmd in data['commands']:
                 if 'parameters' in cmd.keys():
-                    self.__commands.append(Command(cmd['name'], 
-                        cmd['parameters']))
+                    self.__commands.append(
+                        Command(cmd['name'], cmd['parameters']))
                 else:
                     self.__commands.append(Command(cmd['name']))
         elif isinstance(data, str):
@@ -856,7 +858,7 @@ class Action:
         self.__deviceURL = url
 
     def addCommand(self, cmdName, *args):
-        self.__commands.append(Command(cmdName,args))
+        self.__commands.append(Command(cmdName, args))
 
     @property
     def commands(self):
@@ -895,9 +897,9 @@ class Command:
 
         if len(args):
             for arg in args[0]:
-                if (type(arg) is not str
-                    and type(arg) is not int
-                    and type(arg) is not float):
+                if (type(arg) is not str and
+                    type(arg) is not int and
+                    type(arg) is not float):
                     raise ValueError(
                         "Type '" + type(arg) + "' is not Int, bool or .")
 
