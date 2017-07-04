@@ -15,7 +15,6 @@ from homeassistant.components.rflink import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT)
-from homeassistant.helpers.deprecation import get_deprecated
 
 DEPENDENCIES = ['rflink']
 

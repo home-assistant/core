@@ -403,6 +403,7 @@ class SwitchableRflinkDevice(RflinkCommand):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
 
+
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
     CONF_GROUP_ALIASSES,
@@ -415,7 +416,6 @@ REPLACEMENT_CONFIG_OPTIONS = [
 
 def remove_deprecated(config):
     """Remove deprecated config options from device config."""
-
     for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
         if deprecated_option in config:
             replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
