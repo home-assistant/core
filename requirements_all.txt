@@ -74,7 +74,7 @@ apcaccess==0.0.13
 apns2==0.1.1
 
 # homeassistant.components.light.avion
-# avion==0.6
+# avion==0.7
 
 # homeassistant.components.axis
 axis==8
