@@ -109,10 +109,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    setup_plexserver(host, token, has_ssl, verify_ssl, hass, config, add_devices_callback)
+    setup_plexserver(
+            host, token, has_ssl, verify_ssl,
+            hass, config, add_devices_callback
+        )
 
 
-def setup_plexserver(host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
+def setup_plexserver(
+        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
@@ -124,7 +128,10 @@ def setup_plexserver(host, token, has_ssl, verify_ssl, hass, config, add_devices
         cert_session = requests.Session()
         cert_session.verify = False
     try:
-        plexserver = plexapi.server.PlexServer('%s://%s' % (http_prefix, host), token, cert_session)
+        plexserver = plexapi.server.PlexServer(
+                '%s://%s' % (http_prefix, host),
+                token, cert_session
+            )
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
@@ -253,13 +260,11 @@ def request_configuration(host, hass, config, add_devices_callback):
             'id': 'token',
             'name': 'X-Plex-Token',
             'type': ''
-        },
-        {
+        },{
             'id': 'has_ssl',
             'name': 'Use SSL',
             'type': ''
-        },
-        {
+        },{
             'id': 'do_not_verify_ssl',
             'name': 'Do not verify SSL',
             'type': ''
