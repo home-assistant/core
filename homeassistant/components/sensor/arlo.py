@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.arlo import (
-    CONF_ATTRIBUTION, DEFAULT_BRAND)
+    CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO)
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
@@ -40,7 +40,7 @@ SCAN_INTERVAL = timedelta(seconds=90)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Arlo IP sensor."""
-    arlo = hass.data.get('arlo')
+    arlo = hass.data.get(DATA_ARLO)
     if not arlo:
         return False
 
