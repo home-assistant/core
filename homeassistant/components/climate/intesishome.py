@@ -77,7 +77,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class IntesisAC(ClimateDevice):
     """Representation of an IntesisHome thermostat."""
-    
     def __init__(self, deviceid, device):
         """Initialize the thermostat."""
         _LOGGER.debug('Added climate device with state: %s', repr(device))
