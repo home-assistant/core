@@ -659,9 +659,6 @@ class TahomaApi :
             self.login()
             self.refreshAllStates()
             return
-            #raise ValueError('Could not refresh all states, HTTP code: '
-            #     + str(request.status_code) + ' - ' + request.reason)
-
 
 
 class TahomaDevice(Entity):
@@ -693,6 +690,7 @@ class TahomaDevice(Entity):
         attr['Tahoma Device Id'] = self.tahoma_device.url
 
         return attr
+
 
 class Device:
 
@@ -829,8 +827,6 @@ class Device:
         self.__protocol
 
 
-#from device import Device
-
 class Action:
 
     def __init__(self, data):
@@ -921,8 +917,6 @@ class Command:
             sort_keys=True, separators=(',', ': ') )
 
 
-#from action import Action
-
 class ActionGroup:
 
     def __init__(self, data):
@@ -946,10 +940,6 @@ class ActionGroup:
     def actions(self):
         return self.__actions
 
-
-
-
-#from eventState import EventState
 
 class Event:
 
@@ -979,6 +969,7 @@ class DeviceStateChangedEvent(Event):
     @property
     def states(self):
         return self.__states
+
 
 class CommandExecutionStateChangedEvent(Event):
     def __init__(self, data):
@@ -1011,6 +1002,7 @@ class CommandExecutionStateChangedEvent(Event):
     @property
     def failureType(self):
         return self.__failureType
+
 
 class ExecutionStateChangedEvent(Event):
 
@@ -1048,11 +1040,8 @@ class ExecutionStateChangedEvent(Event):
         return self.__failedDeviceURL
 
 
-
 class EventState():
-    # emulate Enum as we have to be compatible with 
-    # Python 2.5 we can not use Class Enum from Python V3+
-
+    
     def __init__(self, state):
 
         if isinstance(state, int):
@@ -1083,8 +1072,8 @@ class EventState():
             else:
                 raise ValueError("Unknown state init '" + state + "'")
         else:
-            raise ValueError("EventState init can only be" + 
-                " called with int or str.")
+            raise ValueError("EventState init can only be " + 
+                "called with int or str.")
 
     @property
     def state(self):
@@ -1092,15 +1081,6 @@ class EventState():
 
     def __int__(self):
         return self.__state
-
-    # python 2.5
-    def __cmp__(self, other):
-        if isinstance(other, int):
-            return cmp(self.__state, other)
-        if isinstance(other, EventState):
-            return cmp(self.__state, other.__state)
-
-        return -1
 
     # python > 3
     def __eq__(self, other):
@@ -1120,9 +1100,6 @@ class EventState():
     Failed = 5
     Unknown = 6
 
-
-#from action import Action
-#from eventState import EventState
 
 class Execution:
 
