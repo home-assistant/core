@@ -346,9 +346,6 @@ keyring>=9.3,<10.0
 # homeassistant.components.knx
 knxip==0.3.3
 
-# homeassistant.components.velux
-pyvlx==0.1.2
-
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.0
 
@@ -761,6 +758,9 @@ pyunifi==2.13
 
 # homeassistant.components.vera
 pyvera==0.2.33
+
+# homeassistant.components.velux
+pyvlx==0.1.2
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.5
