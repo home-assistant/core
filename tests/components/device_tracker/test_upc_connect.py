@@ -147,8 +147,7 @@ class TestUPCConnect(object):
             scanner.async_scan_devices(), self.hass.loop).result()
 
         assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['fun'] == 123
-        assert scanner.token == '1235678'
+        assert aioclient_mock.mock_calls[0][2] == 'token=654321&fun=123'
         assert mac_list == ['30:D3:2D:0:69:21', '5C:AA:FD:25:32:02',
                             '70:EE:50:27:A1:38']
 
@@ -189,7 +188,7 @@ class TestUPCConnect(object):
             scanner.async_scan_devices(), self.hass.loop).result()
 
         assert len(aioclient_mock.mock_calls) == 2
-        assert aioclient_mock.mock_calls[1][2]['fun'] == 123
+        assert aioclient_mock.mock_calls[1][2] == 'token=654321&fun=123'
         assert mac_list == ['30:D3:2D:0:69:21', '5C:AA:FD:25:32:02',
                             '70:EE:50:27:A1:38']
 
@@ -230,7 +229,7 @@ class TestUPCConnect(object):
             scanner.async_scan_devices(), self.hass.loop).result()
 
         assert len(aioclient_mock.mock_calls) == 2
-        assert aioclient_mock.mock_calls[1][2]['fun'] == 123
+        assert aioclient_mock.mock_calls[1][2] == 'token=654321&fun=123'
         assert mac_list == []
 
     def test_scan_devices_parse_error(self, aioclient_mock):
@@ -265,6 +264,6 @@ class TestUPCConnect(object):
             scanner.async_scan_devices(), self.hass.loop).result()
 
         assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['fun'] == 123
+        assert aioclient_mock.mock_calls[0][2] == 'token=654321&fun=123'
         assert scanner.token is None
         assert mac_list == []
