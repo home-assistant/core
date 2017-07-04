@@ -10,15 +10,15 @@ import functools as ft
 import logging
 
 import async_timeout
-import voluptuous as vol
-
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -28,9 +28,12 @@ ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
 CONF_ALIASES = 'aliases'
+CONF_ALIASSES = 'aliasses'
 CONF_GROUP_ALIASES = 'group_aliases'
+CONF_GROUP_ALIASSES = 'group_aliasses'
 CONF_GROUP = 'group'
 CONF_NOGROUP_ALIASES = 'nogroup_aliases'
+CONF_NOGROUP_ALIASSES = 'nogroup_aliasses'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
@@ -399,3 +402,24 @@ class SwitchableRflinkDevice(RflinkCommand):
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
+
+DEPRECATED_CONFIG_OPTIONS = [
+    CONF_ALIASSES,
+    CONF_GROUP_ALIASSES,
+    CONF_NOGROUP_ALIASSES]
+REPLACEMENT_CONFIG_OPTIONS = [
+    CONF_ALIASES,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES]
+
+
+def remove_deprecated(config):
+    """Remove deprecated config options from device config."""
+
+    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
+        if deprecated_option in config:
+            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
+            # generate deprecation warning
+            get_deprecated(config, replacement_option, deprecated_option)
+            # remove old config value replacing new one
+            config[replacement_option] = config.pop(deprecated_option)
