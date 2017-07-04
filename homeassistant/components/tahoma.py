@@ -701,29 +701,29 @@ class Device:
 
         debugOutput = json.dumps(dataInput)
         
-        if not 'label' in dataInput.keys():
+        if 'label' not in dataInput.keys():
             raise ValueError('No device name found: ' + debugOutput)
 
         self.__label = dataInput['label']
 
-        if not 'controllableName' in dataInput.keys():
+        if 'controllableName' not in dataInput.keys():
             raise ValueError('No control label name found: ' + debugOutput)
 
         self.__type = dataInput['controllableName']
 
-        if not 'deviceURL' in dataInput.keys():
+        if 'deviceURL' not in dataInput.keys():
             raise ValueError('No control URL: ' + debugOutput)
 
         self.__url = dataInput['deviceURL']
 
-        ### Parse definitions
+        # Parse definitions
 
-        if not 'definition' in dataInput.keys():
+        if 'definition' not in dataInput.keys():
             raise ValueError('No device definition found: ' + debugOutput)
 
         self.__definitions = {
-            'commands' : [],
-            'states' : []
+            'commands': [],
+            'states': []
         }
 
         definition = dataInput['definition']
@@ -731,7 +731,7 @@ class Device:
         if 'commands' in definition.keys():
             for command in definition['commands']:
                 if command['commandName'] in self.__definitions['commands']:
-                    raise ValueError("Command '" + command['commandName'] + 
+                    raise ValueError("Command '" + command['commandName'] +
                         "' double defined - " + debugOutput)
 
                 self.__definitions['commands'].append(command['commandName'])
@@ -739,12 +739,12 @@ class Device:
         if 'states' in definition.keys():
             for state in definition['states']:
                 if state['qualifiedName'] in self.__definitions['states']:
-                    raise ValueError("State '" + state['qualifiedName'] + 
+                    raise ValueError("State '" + state['qualifiedName'] +
                         "' double defined - " + debugOutput)
 
                 self.__definitions['states'].append(state['qualifiedName'])
 
-        ### Parse active states
+        # Parse active states
 
         # calculate the amount of known active states
         activeStatesAmount = 0
@@ -755,9 +755,9 @@ class Device:
         # make sure there are not more active states than definitions
         if activeStatesAmount > len(self.stateDefinitions):
             raise ValueError(
-                'Missmatch of state definition and active states (' +
-                    str(len(self.stateDefinitions)) + '/' +
-                    str(activeStatesAmount) + '): ' + debugOutput)
+                "Missmatch of state definition and active states (" +
+                    str(len(self.stateDefinitions)) + "/" +
+                    str(activeStatesAmount) + "): " + debugOutput)
 
         if len(self.stateDefinitions) > 0:
 
@@ -768,7 +768,7 @@ class Device:
 
             for state in dataInput['states']:
 
-                if not state['name'] in self.stateDefinitions:
+                if state['name'] not in self.stateDefinitions:
                     raise ValueError(
                         "Active state '" + state['name'] +
                         "' has not been defined: " + debugOutput)
@@ -801,13 +801,13 @@ class Device:
             raise ValueError("Can not set unknown state '" + name + "'")
 
         if (isinstance(self.__activeStates[name], int) and
-            isinstance(value, str)):
-            # we get an update as str but current value is 
+                isinstance(value, str)):
+            # we get an update as str but current value is
             # an int, try to convert
             self.__activeStates[name] = int(value)
         elif (isinstance(self.__activeStates[name], float) and
-            isinstance(value, str)):
-            # we get an update as str but current value is 
+                isinstance(value, str)):
+            # we get an update as str but current value is
             # a float, try to convert
             self.__activeStates[name] = float(value)
         else:
@@ -898,8 +898,8 @@ class Command:
         if len(args):
             for arg in args[0]:
                 if (type(arg) is not str and
-                    type(arg) is not int and
-                    type(arg) is not float):
+                        type(arg) is not int and
+                        type(arg) is not float):
                     raise ValueError(
                         "Type '" + type(arg) + "' is not Int, bool or .")
 
