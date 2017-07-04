@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -18,7 +18,6 @@ DEPENDENCIES = ['modbus']
 
 CONF_COIL = "coil"
 CONF_COILS = "coils"
-CONF_SLAVE = "slave"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
