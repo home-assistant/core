@@ -283,7 +283,8 @@ class Recorder(threading.Thread):
                         dbstate.event_id = dbevent.event_id
                         session.add(dbstate)
             except Exception as err:
-                _LOGGER.error("Error in database connectivity: %s. This update is not saved", err)
+                _LOGGER.error("Error in database connectivity: %s. "
+                              "This update is not saved", err)
 
             self.queue.task_done()
 
