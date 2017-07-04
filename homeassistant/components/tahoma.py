@@ -868,17 +868,24 @@ class Action:
         for cmd in self.commands:
             commands.append(cmd.serialize())
 
-        out = { "commands": commands, "deviceURL": self.__deviceURL }
+        out = {'commands': commands, 'deviceURL': self.__deviceURL}
 
         return out
 
     def __str__(self):
-        return json.dumps(self.serialize(), indent=4, sort_keys=True, 
-            separators=(',', ': ') )
+        return json.dumps(
+            self.serialize(),
+            indent=4,
+            sort_keys=True,
+            separators=(',', ': ')
+            )
 
     def __repr__(self):
-        return json.dumps(self.serialize(), indent=None, sort_keys=True, 
-            separators=(',', ': ') )
+        return json.dumps(
+            self.serialize(),
+            indent=None,
+            sort_keys=True,
+            separators=(',', ': '))
 
 
 class Command:
@@ -888,10 +895,11 @@ class Command:
 
         if len(args):
             for arg in args[0]:
-                if (type(arg) is not str and type(arg) is not int 
+                if (type(arg) is not str
+                    and type(arg) is not int
                     and type(arg) is not float):
-                    raise ValueError("Type '" + type(arg) + 
-                        "' is not Integer, Boolean or .")
+                    raise ValueError(
+                        "Type '" + type(arg) + "' is not Int, bool or .")
 
             self.__args = args[0]
         else:
@@ -906,15 +914,21 @@ class Command:
         return self.__args
 
     def serialize(self):
-        return { 'name': self.__name, 'parameters': self.__args }
+        return {'name': self.__name, 'parameters': self.__args}
 
     def __str__(self):
-        return json.dumps(self.serialize(), indent=4, 
-            sort_keys=True, separators=(',', ': ') )
+        return json.dumps(
+            self.serialize(),
+            indent=4,
+            sort_keys=True,
+            separators=(',', ': '))
 
     def __repr__(self):
-        return json.dumps(self.serialize(), indent=None, 
-            sort_keys=True, separators=(',', ': ') )
+        return json.dumps(
+            self.serialize(),
+            indent=None,
+            sort_keys=True,
+            separators=(',', ': '))
 
 
 class ActionGroup:
@@ -1041,7 +1055,7 @@ class ExecutionStateChangedEvent(Event):
 
 
 class EventState():
-    
+
     def __init__(self, state):
 
         if isinstance(state, int):
@@ -1072,8 +1086,8 @@ class EventState():
             else:
                 raise ValueError("Unknown state init '" + state + "'")
         else:
-            raise ValueError("EventState init can only be " + 
-                "called with int or str.")
+            raise ValueError(
+                "EventState init can only be called with int or str.")
 
     @property
     def state(self):
