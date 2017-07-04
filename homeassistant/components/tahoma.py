@@ -81,7 +81,7 @@ def map_tahoma_device(tahoma_device):
 	
 class TahomaApi :
 	
-	def __init__(self, userName, userPassword, **kwargs ):
+	def __init__(self, userName, userPassword, **kwargs):
 		
 		"""Initalize the Tahoma protocol.
 		:param userName: Tahoma username
@@ -102,7 +102,7 @@ class TahomaApi :
 			return
 		login = { 'userId' : self.__username, 'userPassword' : self.__password }
 		header = _BASE_HEADERS.copy()
-		request = requests.post( _BASE_URL + 'login', data=login, headers=header )
+		request = requests.post(_BASE_URL + 'login', data=login, headers=header)
 		try:
 			result = request.json()
 		except ValueError as e:
@@ -115,7 +115,7 @@ class TahomaApi :
 		
 		if request.status_code != 200:
 			raise HomeAssistantError("Could not login, HTTP code: " + 
-				str(request.status_code) + ' - ' + request.reason )
+				str(request.status_code) + ' - ' + request.reason)
 		
 		if 'success' not in result.keys() or not result['success']:
 			raise HomeAssistantError("Could not login, no success")
@@ -156,7 +156,7 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.get( _BASE_URL + 'getEndUser', headers=header )
+		request = requests.get(_BASE_URL + 'getEndUser', headers=header)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
@@ -192,14 +192,14 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.get( _BASE_URL + 'getSetup', headers=header )
+		request = requests.get(_BASE_URL + 'getSetup', headers=header)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
 			self.login()
 			self.getSetup()
 			return
-			#raise ValueError('Could not get setup, HTTP code: ' + str(request.status_code) + ' - ' + request.reason )
+			#raise ValueError('Could not get setup, HTTP code: ' + str(request.status_code) + ' - ' + request.reason)
 
 		try:
 			result = request.json()
@@ -219,7 +219,7 @@ class TahomaApi :
 			raise HomeAssistantError("Did not find device definition.")
 
 		for deviceData in result['setup']['devices']:
-			device = Device( self, deviceData )
+			device = Device(self, deviceData)
 			self.__devices[device.url] = device
 
 		self.__location = result['setup']['location']
@@ -360,12 +360,12 @@ class TahomaApi :
 		actionsSerialized = []
 
 		for action in actions:
-			actionsSerialized.append( action.serialize() )
+			actionsSerialized.append(action.serialize())
 
 		data = { "label": nameOfAction, "actions": actionsSerialized }
-		js = json.dumps( data, indent=None, sort_keys=True )
+		js = json.dumps(data, indent=None, sort_keys=True)
 
-		request = requests.post( _BASE_URL + "apply", headers=header, data=js)
+		request = requests.post(_BASE_URL + "apply", headers=header, data=js)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
@@ -414,7 +414,7 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.post( _BASE_URL + 'getEvents', headers=header )
+		request = requests.post(_BASE_URL + 'getEvents', headers=header)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
@@ -500,7 +500,7 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.get( _BASE_URL + 'getHistory', headers=header)
+		request = requests.get(_BASE_URL + 'getHistory', headers=header)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
@@ -542,7 +542,7 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.get( _BASE_URL + "getActionGroups", headers=header)
+		request = requests.get(_BASE_URL + "getActionGroups", headers=header)
 
 		if request.status_code != 200:
 			self.__loggedIn = False
@@ -571,7 +571,7 @@ class TahomaApi :
 		header = _BASE_HEADERS.copy()
 		header['Cookie'] = self.__cookie
 
-		request = requests.get( _BASE_URL + 'launchActionGroup?oid=' + id, 
+		request = requests.get(_BASE_URL + 'launchActionGroup?oid=' + id, 
 			headers=header)
 
 		if request.status_code != 200:
@@ -599,7 +599,7 @@ class TahomaApi :
 
 		js = self._createGetStateRequest(devices)
 
-		request = requests.post( _BASE_URL + 'getStates', 
+		request = requests.post(_BASE_URL + 'getStates', 
 			headers=header, data=js)
 
 		if request.status_code != 200:
@@ -630,12 +630,12 @@ class TahomaApi :
 			states = []
 
 			for stateName in sorted(device.activeStates.keys()):
-				states.append( { 'name': stateName } )
+				states.append({ 'name': stateName })
 
-			devList.append( { 'deviceURL': device.url, 'states': states } )
+			devList.append({ 'deviceURL': device.url, 'states': states })
 
-		return json.dumps( devList, indent=None, sort_keys=True, 
-			separators=(',', ': ') )
+		return json.dumps(devList, indent=None, sort_keys=True, 
+			separators=(',', ': '))
 
 	def _getStates(self, result):
 
@@ -660,7 +660,7 @@ class TahomaApi :
 			self.refreshAllStates()
 			return
 			#raise ValueError('Could not refresh all states, HTTP code: '
-			#	 + str(request.status_code) + ' - ' + request.reason )
+			#	 + str(request.status_code) + ' - ' + request.reason)
 
 
 
@@ -696,32 +696,32 @@ class TahomaDevice(Entity):
 
 class Device:
 
-	def __init__( self, protocol, dataInput ):
+	def __init__(self, protocol, dataInput):
 
 		self.__protocol = protocol
 		self.__rawData = dataInput
 
-		debugOutput = json.dumps( dataInput )
+		debugOutput = json.dumps(dataInput)
 		
 		if not 'label' in dataInput.keys():
-			raise ValueError('No device name found: ' + debugOutput )
+			raise ValueError('No device name found: ' + debugOutput)
 
 		self.__label = dataInput['label']
 
 		if not 'controllableName' in dataInput.keys():
-			raise ValueError('No control label name found: ' + debugOutput )
+			raise ValueError('No control label name found: ' + debugOutput)
 
 		self.__type = dataInput['controllableName']
 
 		if not 'deviceURL' in dataInput.keys():
-			raise ValueError('No control URL: ' + debugOutput )
+			raise ValueError('No control URL: ' + debugOutput)
 
 		self.__url = dataInput['deviceURL']
 
 		### Parse definitions
 
 		if not 'definition' in dataInput.keys():
-			raise ValueError('No device definition found: ' + debugOutput )
+			raise ValueError('No device definition found: ' + debugOutput)
 
 		self.__definitions = {
 			'commands' : [],
@@ -842,10 +842,10 @@ class Action:
 
 			for cmd in data['commands']:
 				if 'parameters' in cmd.keys():
-					self.__commands.append( Command(cmd['name'], 
+					self.__commands.append(Command(cmd['name'], 
 						cmd['parameters']))
 				else:
-					self.__commands.append( Command(cmd['name'] ) )
+					self.__commands.append(Command(cmd['name']))
 		elif isinstance(data, str):
 			self.__deviceURL = data
 		else:
@@ -870,19 +870,19 @@ class Action:
 		commands = []
 
 		for cmd in self.commands:
-			commands.append( cmd.serialize() )
+			commands.append(cmd.serialize())
 
 		out = { "commands": commands, "deviceURL": self.__deviceURL }
 
 		return out
 
 	def __str__(self):
-		return json.dumps( self.serialize(), indent=4, sort_keys=True, 
-			separators=(',', ': ')  )
+		return json.dumps(self.serialize(), indent=4, sort_keys=True, 
+			separators=(',', ': ') )
 
 	def __repr__(self):
-		return json.dumps( self.serialize(), indent=None, sort_keys=True, 
-			separators=(',', ': ')  )
+		return json.dumps(self.serialize(), indent=None, sort_keys=True, 
+			separators=(',', ': ') )
 
 
 class Command:
@@ -913,12 +913,12 @@ class Command:
 		return { 'name': self.__name, 'parameters': self.__args }
 
 	def __str__(self):
-		return json.dumps( self.serialize(), indent=4, 
-			sort_keys=True, separators=(',', ': ')  )
+		return json.dumps(self.serialize(), indent=4, 
+			sort_keys=True, separators=(',', ': ') )
 
 	def __repr__(self):
-		return json.dumps( self.serialize(), indent=None, 
-			sort_keys=True, separators=(',', ': ')  )
+		return json.dumps(self.serialize(), indent=None, 
+			sort_keys=True, separators=(',', ': ') )
 
 
 #from action import Action
@@ -932,7 +932,7 @@ class ActionGroup:
 		self.__actions = []
 
 		for cmd in data['actions']:
-			self.__actions.append( Action(cmd) )
+			self.__actions.append(Action(cmd))
 
 	@property
 	def lastUpdate(self):
@@ -1135,7 +1135,7 @@ class Execution:
 		self.__actions = []
 
 		for cmd in data['actionGroup']['actions']:
-			self.__actions.append( Action(cmd) )
+			self.__actions.append(Action(cmd))
 
 	@property
 	def id(self):
