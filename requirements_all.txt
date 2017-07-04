@@ -902,7 +902,7 @@ uvcclient==0.10.0
 volvooncall==0.3.3
 
 # homeassistant.components.verisure
-vsure==1.3.6
+vsure==1.3.7
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.14
