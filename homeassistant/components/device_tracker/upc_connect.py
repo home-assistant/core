@@ -12,11 +12,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -25,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_IP = '192.168.0.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
 })
 
@@ -48,7 +46,6 @@ class UPCDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.hass = hass
         self.host = config[CONF_HOST]
-        self.password = config[CONF_PASSWORD]
 
         self.data = {}
         self.token = None
