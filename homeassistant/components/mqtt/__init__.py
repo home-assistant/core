@@ -300,7 +300,7 @@ def async_setup(hass, config):
     import random
     client_id = conf.get(
         CONF_CLIENT_ID, 'home-assistant-{}'.format(random.randrange(0, 1000)))
-    #client_id = conf.get(CONF_CLIENT_ID)
+    # client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
 
     # Only setup if embedded config passed in or no broker specified
