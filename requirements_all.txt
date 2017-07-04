@@ -347,7 +347,7 @@ keyring>=9.3,<10.0
 knxip==0.3.3
 
 # homeassistant.components.velux
-pyvlx==0.1.1
+pyvlx==0.1.2
 
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.0
