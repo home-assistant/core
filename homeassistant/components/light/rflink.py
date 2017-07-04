@@ -10,9 +10,9 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
-    CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES,
-    CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
+    CONF_ALIASES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
+    CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES, CONF_IGNORE_DEVICES,
+    CONF_NOGROUP_ALIASES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
     DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
     DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import (
@@ -39,11 +39,11 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_TYPE):
                 vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
                         TYPE_HYBRID, TYPE_TOGGLE),
-            vol.Optional(CONF_ALIASSES, default=[]):
+            vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_GROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
@@ -117,25 +117,25 @@ def devices_from_config(domain_config, hass=None):
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
-        # Register entity (and aliasses) to listen to incoming rflink events
+        # Register entity (and aliases) to listen to incoming rflink events
 
-        # Device id and normal aliasses respond to normal and group command
+        # Device id and normal aliases respond to normal and group command
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
         if config[CONF_GROUP]:
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASSES]:
+        for _id in config[CONF_ALIASES]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliasses only respond to group commands
-        for _id in config[CONF_GROUP_ALIASSES]:
+        # group_aliases only respond to group commands
+        for _id in config[CONF_GROUP_ALIASES]:
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliasses only respond to normal commands
-        for _id in config[CONF_NOGROUP_ALIASSES]:
+        # nogroup_aliases only respond to normal commands
+        for _id in config[CONF_NOGROUP_ALIASES]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
 

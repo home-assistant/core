@@ -9,7 +9,7 @@ from functools import partial
 import logging
 
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES, DATA_DEVICE_REGISTER,
+    CONF_ALIASES, CONF_AUTOMATIC_ADD, CONF_DEVICES, DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
     RflinkDevice, cv, vol)
 from homeassistant.const import (
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
-            vol.Optional(CONF_ALIASSES, default=[]):
+            vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
         },
     }),

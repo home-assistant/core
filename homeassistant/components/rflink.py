@@ -27,10 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
-CONF_ALIASSES = 'aliasses'
-CONF_GROUP_ALIASSES = 'group_aliasses'
+CONF_ALIASES = 'aliases'
+CONF_GROUP_ALIASES = 'group_aliases'
 CONF_GROUP = 'group'
-CONF_NOGROUP_ALIASSES = 'nogroup_aliasses'
+CONF_NOGROUP_ALIASES = 'nogroup_aliases'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
@@ -220,8 +220,8 @@ class RflinkDevice(Entity):
     platform = None
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=None, group=True,
-                 group_aliasses=None, nogroup_aliasses=None, fire_event=False,
+    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
+                 group_aliases=None, nogroup_aliases=None, fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         self.hass = hass
