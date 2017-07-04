@@ -29,13 +29,13 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATED = 'Updated'
 TIMEFRAME_LABEL = 'Timeframe'
-# schedule next call after (minutes):
+# Schedule next call after (minutes):
 SCHEDULE_OK = 10
-# when an error occurred, new call after (minutes):
+# When an error occurred, new call after (minutes):
 SCHEDULE_NOK = 2
 
 # Supported sensor types:
-# key: ['label', unit, icon]
+# Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
     'symbol': ['Symbol', None, None],
