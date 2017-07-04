@@ -108,7 +108,6 @@ class UPCDeviceScanner(DeviceScanner):
     @asyncio.coroutine
     def _async_ws_function(self, function):
         """Execute a command on UPC firmware webservice."""
-
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 # The 'token' parameter has to be first, and 'fun' second
