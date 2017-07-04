@@ -260,11 +260,11 @@ def request_configuration(host, hass, config, add_devices_callback):
             'id': 'token',
             'name': 'X-Plex-Token',
             'type': ''
-        },{
+        }, {
             'id': 'has_ssl',
             'name': 'Use SSL',
             'type': ''
-        },{
+        }, {
             'id': 'do_not_verify_ssl',
             'name': 'Do not verify SSL',
             'type': ''
