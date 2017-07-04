@@ -34,13 +34,17 @@ CONF_COVERS = 'covers'
 
 CONF_POSITION_TEMPLATE = 'position_template'
 CONF_TILT_TEMPLATE = 'tilt_template'
+CONF_OPEN_TIME = 'opening_time'
+CONF_CLOSE_TIME = 'closing_time'
 OPEN_ACTION = 'open_cover'
 CLOSE_ACTION = 'close_cover'
 STOP_ACTION = 'stop_cover'
 POSITION_ACTION = 'set_cover_position'
 TILT_ACTION = 'set_cover_tilt_position'
+
 CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
 CONF_OPEN_OR_CLOSE = 'open_or_close'
+CONF_OPEN_CLOSE_TIME = 'open_close_time'
 
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
@@ -57,6 +61,8 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Inclusive(CONF_OPEN_TIME, CONF_OPEN_CLOSE_TIME): int,
+    vol.Inclusive(CONF_CLOSE_TIME, CONF_OPEN_CLOSE_TIME): int,
     vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
@@ -83,6 +89,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stop_action = device_config.get(STOP_ACTION)
         position_action = device_config.get(POSITION_ACTION)
         tilt_action = device_config.get(TILT_ACTION)
+        open_time = device_config.get(CONF_OPEN_TIME)
+        close_time = device_config.get(CONF_CLOSE_TIME)
 
         if position_template is None and state_template is None:
             _LOGGER.error('Must specify either %s' or '%s',
@@ -93,6 +101,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.error('Must specify at least one of %s' or '%s',
                           OPEN_ACTION, POSITION_ACTION)
             continue
+
+        if open_time and (open_action is None or
+                          close_action is None or
+                          stop_action is None):
+            _LOGGER.error('Must specify %s, %s and %s with %s or %s',
+                          OPEN_ACTION, CLOSE_ACTION, STOP_ACTION,
+                          CONF_OPEN_TIME, CONF_CLOSE_TIME)
+            continue
+
         template_entity_ids = set()
         if state_template is not None:
             temp_ids = state_template.extract_entities()
@@ -125,7 +142,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 device, friendly_name, state_template,
                 position_template, tilt_template, icon_template,
                 open_action, close_action, stop_action,
-                position_action, tilt_action, entity_ids
+                position_action, tilt_action, open_time, close_time,
+                entity_ids
             )
         )
     if not covers:
@@ -142,7 +160,8 @@ class CoverTemplate(CoverDevice):
     def __init__(self, hass, device_id, friendly_name, state_template,
                  position_template, tilt_template, icon_template,
                  open_action, close_action, stop_action,
-                 position_action, tilt_action, entity_ids):
+                 position_action, tilt_action, open_time, close_time,
+                 entity_ids):
         """Initialize the Template cover."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -167,6 +186,8 @@ class CoverTemplate(CoverDevice):
         self._tilt_script = None
         if tilt_action is not None:
             self._tilt_script = Script(hass, tilt_action)
+        self._open_time = open_time
+        self._close_time = close_time
         self._icon = None
         self._position = None
         self._tilt_value = None
@@ -243,7 +264,8 @@ class CoverTemplate(CoverDevice):
         if self._stop_script is not None:
             supported_features |= SUPPORT_STOP
 
-        if self._position_script is not None:
+        if (self._position_script is not None or
+                (self._open_time and self._stop_script)):
             supported_features |= SUPPORT_SET_POSITION
 
         if self.current_cover_tilt_position is not None:
@@ -274,6 +296,11 @@ class CoverTemplate(CoverDevice):
             self.hass.async_add_job(self._position_script.async_run(
                 {"position": 0}))
 
+    @callback
+    def _stop_cover(self, **kwargs):
+        """Stop the cover."""
+        self.hass.async_add_job(self._stop_script.async_run())
+
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
@@ -283,9 +310,22 @@ class CoverTemplate(CoverDevice):
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set cover position."""
-        self._position = kwargs[ATTR_POSITION]
-        self.hass.async_add_job(self._position_script.async_run(
-            {"position": self._position}))
+        if self._position_script:
+            self._position = kwargs[ATTR_POSITION]
+            self.hass.async_add_job(self._position_script.async_run(
+                {"position": self._position}))
+        else:
+            delay = (kwargs[ATTR_POSITION] - self._position) / 100.0
+            self._position = kwargs[ATTR_POSITION]
+            if delay > 0:
+                delay = delay * self._open_time
+                self.hass.async_add_job(self._open_script.async_run())
+            elif delay < 0:
+                delay = -delay * self._close_time
+                self.hass.async_add_job(self._close_script.async_run())
+            else:
+                return
+            self.hass.loop.call_later(delay, self._stop_cover)
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
