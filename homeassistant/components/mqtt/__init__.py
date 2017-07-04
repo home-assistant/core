@@ -452,8 +452,8 @@ class MQTT(object):
                 certificate, certfile=client_cert,
                 keyfile=client_key, tls_version=tls_version)
 
-        if tls_insecure is not None:
-            self._mqttc.tls_insecure_set(tls_insecure)
+            if tls_insecure is not None:
+                self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
