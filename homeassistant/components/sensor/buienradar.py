@@ -89,7 +89,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     coordinates = {CONF_LATITUDE: float(latitude),
                    CONF_LONGITUDE: float(longitude)}
 
-    _LOGGER.debug("Initializing buienradar sensor coordinates %s, timeframe %s",
+    _LOGGER.debug("Initializing buienradar sensor coordinate %s, timeframe %s",
                   coordinates, timeframe)
 
     dev = []
