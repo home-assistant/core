@@ -49,7 +49,7 @@ class ArloCam(Camera):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._base_stn = hass.data['arlo'].base_stations[0]
+        self._base_stn = hass.data[DATA_ARLO].base_stations[0]
         self._name = self._camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
