@@ -14,6 +14,9 @@ omit =
     homeassistant/components/apcupsd.py
     homeassistant/components/*/apcupsd.py
 
+    homeassistant/components/apple_tv.py
+    homeassistant/components/*/apple_tv.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
@@ -34,6 +37,9 @@ omit =
 
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
+
+    homeassistant/components/comfoconnect.py
+    homeassistant/components/*/comfoconnect.py
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
@@ -302,7 +308,6 @@ omit =
     homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
     homeassistant/components/media_player/anthemav.py
-    homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
@@ -390,7 +395,7 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
-    homeassistant/components/sensor/dublin_bus_transport.py
+    homeassistant/components/sensor/citybikes.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/comed_hourly_pricing.py
@@ -404,6 +409,7 @@ omit =
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
+    homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/ebox.py
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py

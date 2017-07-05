@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['i2csense==0.0.3',
+REQUIREMENTS = ['i2csense==0.0.4',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
