@@ -249,7 +249,7 @@ class IntesisAC(ClimateDevice):
             self._swing = STATE_UNKNOWN
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    @staticmethod
+    # pylint: disable=no-self-use
     def _poll_status(self, shouldcallback):
         """Internal method to poll IntesisHome via HTTP."""
         _LOGGER.debug("Polling IntesisHome Status via HTTP")
