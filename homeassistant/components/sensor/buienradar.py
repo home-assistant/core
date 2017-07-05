@@ -27,7 +27,6 @@ REQUIREMENTS = ['buienradar==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATED = 'Updated'
 TIMEFRAME_LABEL = 'Timeframe'
 # Schedule next call after (minutes):
 SCHEDULE_OK = 10
@@ -90,8 +89,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     coordinates = {CONF_LATITUDE: float(latitude),
                    CONF_LONGITUDE: float(longitude)}
 
-    _LOGGER.info("Initializing buienradar sensor coordinates %s, timeframe %s",
-                 coordinates, timeframe)
+    _LOGGER.debug("Initializing buienradar sensor coordinates %s, timeframe %s",
+                  coordinates, timeframe)
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
@@ -209,7 +208,6 @@ class BrSensor(Entity):
         return {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
-            UPDATED: self._measured,
         }
 
     @property

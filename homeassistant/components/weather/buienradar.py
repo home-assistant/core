@@ -48,8 +48,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
     # create weather device:
-    _LOGGER.info("Initializing buienradar weather: coordinates %s",
-                 coordinates)
+    _LOGGER.debug("Initializing buienradar weather: coordinates %s",
+                  coordinates)
     async_add_devices([BrWeather(data, config.get(CONF_FORECAST, True),
                                  config.get(CONF_NAME, None))])
 
