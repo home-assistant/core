@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
 DEVICES = []
-CONF_DEVICE_CACHE = 'device_cache'
+CONF_DEVICE_CACHE = 'harmony_device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             port)
 
         # Ignore hub name when checking if this hub is known - ip and port only
-        if host and host[1:] in set([h[1:] for h in DEVICES]):
+        if host and host[1:] in (h.host for h in DEVICES):
             _LOGGER.debug("Discovered host already known: %s", host)
             return
     elif CONF_HOST in config:
@@ -147,7 +147,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
-        self._ip = host
+        self.host = host
         self._port = port
         self._state = None
         self._current_activity = None
@@ -182,7 +182,7 @@ class HarmonyRemote(remote.RemoteDevice):
         name = self._name
         _LOGGER.debug("Polling %s for current activity", name)
         state = pyharmony.ha_get_current_activity(
-            self._token, self._config, self._ip, self._port)
+            self._token, self._config, self.host, self._port)
         _LOGGER.debug("%s current activity reported as: %s", name, state)
         self._current_activity = state
         self._state = bool(state != 'PowerOff')
@@ -197,7 +197,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         if activity:
             pyharmony.ha_start_activity(
-                self._token, self._ip, self._port, self._config, activity)
+                self._token, self.host, self._port, self._config, activity)
             self._state = True
         else:
             _LOGGER.error("No activity specified with turn_on service")
@@ -205,13 +205,13 @@ class HarmonyRemote(remote.RemoteDevice):
     def turn_off(self):
         """Start the PowerOff activity."""
         import pyharmony
-        pyharmony.ha_power_off(self._token, self._ip, self._port)
+        pyharmony.ha_power_off(self._token, self.host, self._port)
 
     def send_command(self, **kwargs):
         """Send a set of commands to one device."""
         import pyharmony
         pyharmony.ha_send_commands(
-            self._token, self._ip, self._port, kwargs[ATTR_DEVICE],
+            self._token, self.host, self._port, kwargs[ATTR_DEVICE],
             kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
             float(kwargs[ATTR_DELAY_SECS]))
 
@@ -219,8 +219,8 @@ class HarmonyRemote(remote.RemoteDevice):
         """Sync the Harmony device with the web service."""
         import pyharmony
         _LOGGER.debug("Syncing hub with Harmony servers")
-        pyharmony.ha_sync(self._token, self._ip, self._port)
+        pyharmony.ha_sync(self._token, self.host, self._port)
         self._config = pyharmony.ha_get_config(
-            self._token, self._ip, self._port)
+            self._token, self.host, self._port)
         _LOGGER.debug("Writing hub config to file: %s", self._config_path)
         pyharmony.ha_write_config_file(self._config, self._config_path)

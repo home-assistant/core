@@ -32,12 +32,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 INTENT_SCHEMA = vol.Schema({
-    vol.Required('text'): str,
+    vol.Required('input'): str,
     vol.Required('intent'): {
-        vol.Required('intent_name'): str
+        vol.Required('intentName'): str
     },
     vol.Optional('slots'): [{
-        vol.Required('slot_name'): str,
+        vol.Required('slotName'): str,
         vol.Required('value'): {
             vol.Required('kind'): str,
             vol.Required('value'): cv.match_all
@@ -95,7 +95,7 @@ class IntentHandler(object):
             LOGGER.error('Intent has invalid schema: %s. %s', err, response)
             return
 
-        intent = response['intent']['intent_name'].split('__')[-1]
+        intent = response['intent']['intentName'].split('__')[-1]
         config = self.intents.get(intent)
 
         if config is None:
@@ -113,26 +113,9 @@ class IntentHandler(object):
         parameters = {}
 
         for slot in response.get('slots', []):
-            key = slot['slot_name']
-            value = self.get_value(slot['value'])
+            key = slot['slotName']
+            value = slot['value']['value']
             if value is not None:
                 parameters[key] = value
 
         return parameters
-
-    @staticmethod
-    def get_value(value):
-        """Return the value of a given slot."""
-        kind = value['kind']
-
-        if kind == "Custom":
-            return value["value"]
-        elif kind == "Builtin":
-            try:
-                return value["value"]["value"]
-            except KeyError:
-                return None
-        else:
-            LOGGER.warning('Received unknown slot type: %s', kind)
-
-        return None
