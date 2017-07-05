@@ -279,17 +279,17 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.close_cover, **kwargs))
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
         pass
 
-    def async_set_cover_position(self, **kwargs):
+    def async_set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(
-            ft.partial(self.set_cover_position, **kwargs))
+            ft.partial(self.set_cover_position, position, **kwargs))
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -326,17 +326,17 @@ class CoverDevice(Entity):
         return self.hass.async_add_job(
             ft.partial(self.close_cover_tilt, **kwargs))
 
-    def set_cover_tilt_position(self, **kwargs):
+    def set_cover_tilt_position(self, position, **kwargs):
         """Move the cover tilt to a specific position."""
         pass
 
-    def async_set_cover_tilt_position(self, **kwargs):
+    def async_set_cover_tilt_position(self, position, **kwargs):
         """Move the cover tilt to a specific position.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(
-            ft.partial(self.set_cover_tilt_position, **kwargs))
+            ft.partial(self.set_cover_tilt_position, position, **kwargs))
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
