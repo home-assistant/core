@@ -19,7 +19,7 @@ DOMAIN = "velux"
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.1.2']
+REQUIREMENTS = ['pyvlx==0.1.3']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
