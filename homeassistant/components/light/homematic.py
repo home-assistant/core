@@ -38,10 +38,9 @@ class HMLight(HMDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
-        if self._state is "LEVEL":
+        if self._state == "LEVEL":
             return int(self._hm_get_state() * 255)
-        else:
-            return None
+        return None
 
     @property
     def is_on(self):
@@ -58,7 +57,7 @@ class HMLight(HMDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._state is "LEVEL":
+        if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
         else:
