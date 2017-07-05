@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 try:
+    # pylint: disable=unused-import
     from asyncio import ensure_future
 except ImportError:
     # Python 3.4.3 and ealier has this as async
@@ -248,6 +249,7 @@ class IntesisAC(ClimateDevice):
             self._swing = STATE_UNKNOWN
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @staticmethod
     def _poll_status(self, shouldcallback):
         """Internal method to poll IntesisHome via HTTP."""
         _LOGGER.debug("Polling IntesisHome Status via HTTP")
