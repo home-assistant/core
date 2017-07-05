@@ -27,10 +27,10 @@ def get_device(hass, values, node_config, **kwargs):
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
-    elif (values.primary.command_class in [
-            zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
-        return ZwaveGarageDoor(values)
+    elif (values.primary.command_class == 
+            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR
+            and values.primary.index ==0):
+        return ZwaveGarageDoor(hass, values)
     return None
 
 
@@ -109,14 +109,22 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave garage door device."""
 
-    def __init__(self, values):
+    def __init__(self, hass, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._network = hass.data[zwave.const.DATA_NETWORK]
+        self._open_id = None
+        self._close_id = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._state = self.values.primary.data
+        self._current_position = self.values.primary.data
+
+        if self.values.open and self.values.close and \
+                self._open_id is None and self._close_id is None:
+                self._open_id = self.values.open.value_id
+                self._close_id = self.values.close.value_id
 
     @property
     def is_closed(self):
@@ -125,11 +133,11 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def close_cover(self):
         """Close the garage door."""
-        self.values.primary.data = False
+        self._network.manager.pressButton(self._close_id)
 
     def open_cover(self):
         """Open the garage door."""
-        self.values.primary.data = True
+        self._network.manager.pressButton(self._open_id)
 
     @property
     def device_class(self):
