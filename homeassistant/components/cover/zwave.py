@@ -28,8 +28,7 @@ def get_device(hass, values, node_config, **kwargs):
             and values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
     elif (values.primary.command_class == 
-            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR
-            and values.primary.index ==0):
+            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
         return ZwaveGarageDoor(hass, values)
     return None
 
