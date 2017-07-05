@@ -14,6 +14,9 @@ omit =
     homeassistant/components/apcupsd.py
     homeassistant/components/*/apcupsd.py
 
+    homeassistant/components/apple_tv.py
+    homeassistant/components/*/apple_tv.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
@@ -302,7 +305,6 @@ omit =
     homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
     homeassistant/components/media_player/anthemav.py
-    homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
