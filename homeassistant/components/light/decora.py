@@ -45,7 +45,7 @@ def retry(method):
             if time.monotonic() - initial >= 10:
                 return None
             try:
-                return f(device, *args, **kwds)
+                return method(device, *args, **kwds)
             except (decora.decoraException, AttributeError):
                 device._switch.connect()
     return wrapper_retry
@@ -53,11 +53,8 @@ def retry(method):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Decora switch."""
-    global DECORA_EXCEPTION
-
+    # pylint: disable=import-error
     import decora
-
-    DECORA_EXCEPTION = decora.decoraException
 
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
@@ -148,4 +145,3 @@ class DecoraLight(Light):
         """Synchronise internal state with the actual light state."""
         self._brightness = self._switch.get_brightness() * 2.55
         self._state = self._switch.get_on()
-        
