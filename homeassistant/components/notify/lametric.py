@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ICON
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.lametric import DOMAIN
