@@ -44,11 +44,10 @@ def retry(method):
         while True:
             if time.monotonic() - initial >= 10:
                 return None
-            try:                
-                return f(*args, **kwds)
+            try:
+                return f(device, *args, **kwds)
             except (decora.decoraException, AttributeError):
                 device._switch.connect()
-
     return wrapper_retry
 
 
