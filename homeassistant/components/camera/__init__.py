@@ -266,8 +266,7 @@ class Camera(Entity):
             return STATE_RECORDING
         elif self.is_streaming:
             return STATE_STREAMING
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""

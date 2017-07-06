@@ -334,8 +334,8 @@ class KodiDevice(MediaPlayerDevice):
 
         if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
-        else:
-            return STATE_PLAYING
+
+        return STATE_PLAYING
 
     @asyncio.coroutine
     def async_ws_connect(self):
@@ -407,8 +407,8 @@ class KodiDevice(MediaPlayerDevice):
         """Active server for json-rpc requests."""
         if self._enable_websocket and self._ws_server.connected:
             return self._ws_server
-        else:
-            return self._http_server
+
+        return self._http_server
 
     @property
     def name(self):
@@ -503,8 +503,8 @@ class KodiDevice(MediaPlayerDevice):
         artists = self._item.get('artist', [])
         if artists:
             return artists[0]
-        else:
-            return None
+
+        return None
 
     @property
     def media_album_artist(self):
@@ -512,8 +512,8 @@ class KodiDevice(MediaPlayerDevice):
         artists = self._item.get('albumartist', [])
         if artists:
             return artists[0]
-        else:
-            return None
+
+        return None
 
     @property
     def supported_features(self):
@@ -678,9 +678,9 @@ class KodiDevice(MediaPlayerDevice):
         elif media_type == "PLAYLIST":
             return self.server.Player.Open(
                 {"item": {"playlistid": int(media_id)}})
-        else:
-            return self.server.Player.Open(
-                {"item": {"file": str(media_id)}})
+
+        return self.server.Player.Open(
+            {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
@@ -794,9 +794,9 @@ class KodiDevice(MediaPlayerDevice):
         """Get albums list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetAlbums())
-        else:
-            return (yield from self.server.AudioLibrary.GetAlbums(
-                {"filter": {"artistid": int(artist_id)}}))
+
+        return (yield from self.server.AudioLibrary.GetAlbums(
+            {"filter": {"artistid": int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_artist(self, artist_name):
@@ -815,9 +815,9 @@ class KodiDevice(MediaPlayerDevice):
         """Get songs list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetSongs())
-        else:
-            return (yield from self.server.AudioLibrary.GetSongs(
-                {"filter": {"artistid": int(artist_id)}}))
+
+        return (yield from self.server.AudioLibrary.GetSongs(
+            {"filter": {"artistid": int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_song(self, song_name, artist_name=''):

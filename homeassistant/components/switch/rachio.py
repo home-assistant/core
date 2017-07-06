@@ -137,9 +137,9 @@ class RachioIro(object):
 
         if include_disabled:
             return self._zones
-        else:
-            self.update(no_throttle=True)
-            return [z for z in self._zones if z.is_enabled]
+
+        self.update(no_throttle=True)
+        return [z for z in self._zones if z.is_enabled]
 
     @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
     def update(self, **kwargs):

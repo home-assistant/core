@@ -80,8 +80,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Return the name of the device."""
         if self._name is not None:
             return self._name
-        else:
-            return 'Alarm {}'.format(self.simplisafe.location_id())
+        return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
     def code_format(self):
