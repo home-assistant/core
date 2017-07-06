@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'tahoma'
 _BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web/externalAPI/json/'
-_BASE_HEADERS = {'User-Agent' : 'mine'}
+_BASE_HEADERS = {'User-Agent': 'mine'}
 CONF_EXCLUDE = 'exclude'
 
 TAHOMA_ID_LIST_SCHEMA = vol.Schema([cv.string])
@@ -39,25 +39,23 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-
 def setup(hass, config):
     """docstring for async_setup"""
     global TAHOMA_CONTROLLER
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-    exclude  = conf.get(CONF_EXCLUDE)
-        
+    exclude = conf.get(CONF_EXCLUDE)
+
     TAHOMA_CONTROLLER = TahomaApi(username, password)
     TAHOMA_DEVICES['api'] = TAHOMA_CONTROLLER
-    
+
     TAHOMA_CONTROLLER.getSetup()
     devices = TAHOMA_CONTROLLER.getDevices()
-    user = TAHOMA_CONTROLLER.getUser()
-    
-    actionGroups = TAHOMA_CONTROLLER.getActionGroups()
+    #user = TAHOMA_CONTROLLER.getUser()
+    #actionGroups = TAHOMA_CONTROLLER.getActionGroups()
 
-    for    device in devices:
+    for device in devices:
         d = TAHOMA_CONTROLLER.getDevice(device)
         _LOGGER.error(d.label)
         _LOGGER.error(d.type)
@@ -66,7 +64,6 @@ def setup(hass, config):
             if device_type is None:
                 continue
             TAHOMA_DEVICES[device_type].append(d)
-
 
     return True
 
@@ -78,7 +75,6 @@ def map_tahoma_device(tahoma_device):
         return 'sensor'
     return None
 
-    
 class TahomaApi:
 
     def __init__(self, userName, userPassword, **kwargs):
