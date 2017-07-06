@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
 DOMAIN = "velux"
+DATA_VELUX = "data_velux"
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +35,11 @@ def async_setup(hass, config):
     """Set up the velux component."""
     from pyvlx import PyVLXException
     try:
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = VeluxModule(hass, config)
-            yield from hass.data[DOMAIN].async_start()
+        hass.data[DATA_VELUX] = VeluxModule(hass, config)
+        yield from hass.data[DATA_VELUX].async_start()
 
     except PyVLXException as ex:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
-        hass.data[DOMAIN] = None
         return False
 
     for component in SUPPORTED_DOMAINS:
@@ -61,7 +60,6 @@ class VeluxModule:
         self.pyvlx = PyVLX(
             host=host,
             password=password)
-        self.initialized = False
         self.hass = hass
 
     @asyncio.coroutine

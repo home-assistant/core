@@ -6,25 +6,19 @@ Connects to VELUX KLF 200 interface
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.velux/
 """
-import logging
-
 from homeassistant.components.scene import Scene
-
+from homeassistant.components.velux import _LOGGER, DATA_VELUX
 
 DEPENDENCIES = ['velux']
-_LOGGER = logging.getLogger(__name__)
-DOMAIN = "velux"
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup velux scene plattform."""
-    if DOMAIN not in hass.data \
-            or not hass.data[DOMAIN].initialized:
-        _LOGGER.error('No connection to VELUX KLF 200 controller.')
+    """Set up the scenes for velux platform."""
+    if DATA_VELUX not in hass.data \
+            or not hass.data[DATA_VELUX].initialized:
         return False
 
     entities = []
-    for scene in hass.data[DOMAIN].pyvlx.scenes:
+    for scene in hass.data[DATA_VELUX].pyvlx.scenes:
         entities.append(VeluxScene(hass, scene))
     add_devices(entities)
     return True
