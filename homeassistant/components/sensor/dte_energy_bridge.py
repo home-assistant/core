@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     ip_address = config.get(CONF_IP_ADDRESS)
 
-    add_devices([DteEnergyBridgeSensor(ip_address, name)])
+    add_devices([DteEnergyBridgeSensor(ip_address, name)], True)
 
 
 class DteEnergyBridgeSensor(Entity):

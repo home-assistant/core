@@ -10,8 +10,9 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.const import (
-    STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_SENSORS,
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+    STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
+    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -69,6 +70,10 @@ PLANT_SCHEMA = vol.Schema({
 })
 
 DOMAIN = 'plant'
+DEPENDENCIES = ['zone', 'group']
+
+GROUP_NAME_ALL_PLANTS = 'all plants'
+ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
@@ -80,7 +85,8 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_PLANTS)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -199,11 +205,11 @@ class Plant(Entity):
                         self._icon = params['icon']
 
         if len(result) == 0:
-            self._state = 'ok'
+            self._state = STATE_OK
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
         else:
-            self._state = 'problem'
+            self._state = STATE_PROBLEM
             self._problems = ','.join(result)
         _LOGGER.debug("New data processed")
         self.hass.async_add_job(self.async_update_ha_state())

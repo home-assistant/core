@@ -6,6 +6,8 @@ https://home-assistant.io/components/influxdb/
 """
 import logging
 
+import re
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -56,6 +58,9 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
+RE_DECIMAL = re.compile(r'[^\d.]+')
+
 
 def setup(hass, config):
     """Set up the InfluxDB component."""
@@ -96,7 +101,7 @@ def setup(hass, config):
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("SHOW DIAGNOSTICS;", database=conf[CONF_DB_NAME])
+        influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file and that "
@@ -160,7 +165,12 @@ def setup(hass, config):
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
-                    json_body[0]['fields'][new_key] = str(value)
+                    new_value = str(value)
+                    json_body[0]['fields'][new_key] = new_value
+
+                    if RE_DIGIT_TAIL.match(new_value):
+                        json_body[0]['fields'][key] = float(
+                            RE_DECIMAL.sub('', new_value))
 
         json_body[0]['tags'].update(tags)
 

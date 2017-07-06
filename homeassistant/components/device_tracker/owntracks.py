@@ -21,7 +21,7 @@ from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.0']
+REQUIREMENTS = ['libnacl==1.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 "key for topic %s", topic)
             return None
 
-    # pylint: disable=too-many-return-statements
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
         try:

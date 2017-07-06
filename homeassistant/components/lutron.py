@@ -7,6 +7,10 @@ https://home-assistant.io/components/lutron/
 import asyncio
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
@@ -19,6 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, base_config):
     """Set up the Lutron component."""
@@ -29,13 +41,11 @@ def setup(hass, base_config):
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
-        config['lutron_host'],
-        config['lutron_user'],
-        config['lutron_password']
-    )
+        config[CONF_HOST], config[CONF_USERNAME], config[CONF_USERNAME])
+
     hass.data[LUTRON_CONTROLLER].load_xml_db()
     hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to Main Repeater at %s", config['lutron_host'])
+    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
     # Sort our devices into types
     for area in hass.data[LUTRON_CONTROLLER].areas:

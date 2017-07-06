@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pin=pinnum, unit_of_measurement=pin.get(
                     CONF_UNIT_OF_MEASUREMENT), renderer=renderer))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class ArestSensor(Entity):
@@ -119,7 +119,6 @@ class ArestSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._renderer = renderer
-        self.update()
 
         if self._pin is not None:
             request = requests.get(

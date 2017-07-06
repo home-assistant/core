@@ -9,14 +9,13 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pysnmp==4.3.7']
+REQUIREMENTS = ['pysnmp==4.3.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ SNMP_VERSIONS = {
     '2c': 1
 }
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,
@@ -75,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     else:
         data = SnmpData(host, port, community, baseoid, version)
-        add_devices([SnmpSensor(data, name, unit)])
+        add_devices([SnmpSensor(data, name, unit)], True)
 
 
 class SnmpSensor(Entity):
@@ -87,7 +86,6 @@ class SnmpSensor(Entity):
         self._name = name
         self._state = None
         self._unit_of_measurement = unit_of_measurement
-        self.update()
 
     @property
     def name(self):
@@ -122,7 +120,6 @@ class SnmpData(object):
         self._version = SNMP_VERSIONS[version]
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the remote SNMP capable host."""
         from pysnmp.hlapi import (

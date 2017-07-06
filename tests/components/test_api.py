@@ -98,6 +98,23 @@ def test_api_state_change_with_bad_data(hass, mock_api_client):
 
 # pylint: disable=invalid-name
 @asyncio.coroutine
+def test_api_state_change_to_zero_value(hass, mock_api_client):
+    """Test if changing a state to a zero value is possible."""
+    resp = yield from mock_api_client.post(
+        const.URL_API_STATES_ENTITY.format("test_entity.with_zero_state"),
+        json={'state': 0})
+
+    assert resp.status == 201
+
+    resp = yield from mock_api_client.post(
+        const.URL_API_STATES_ENTITY.format("test_entity.with_zero_state"),
+        json={'state': 0.})
+
+    assert resp.status == 200
+
+
+# pylint: disable=invalid-name
+@asyncio.coroutine
 def test_api_state_change_push(hass, mock_api_client):
     """Test if we can push a change the state of an entity."""
     hass.states.async_set("test.test", "not_to_be_set")
@@ -210,6 +227,9 @@ def test_api_get_config(hass, mock_api_client):
     result = yield from resp.json()
     if 'components' in result:
         result['components'] = set(result['components'])
+    if 'whitelist_external_dirs' in result:
+        result['whitelist_external_dirs'] = \
+            set(result['whitelist_external_dirs'])
 
     assert hass.config.as_dict() == result
 

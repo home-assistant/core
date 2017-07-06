@@ -10,6 +10,7 @@ INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_COAP_CLIENT="${INSTALL_COAP_CLIENT:-yes}"
+INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -29,8 +30,8 @@ PACKAGES=(
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
-  cmake git
-  # libcec
+  cmake
+  git
   swig
 )
 
@@ -62,10 +63,14 @@ if [ "$INSTALL_COAP_CLIENT" == "yes" ]; then
   virtualization/Docker/scripts/coap_client
 fi
 
+if [ "$INSTALL_SSOCR" == "yes" ]; then
+  virtualization/Docker/scripts/ssocr
+fi
+
 # Remove packages
 apt-get remove -y --purge ${PACKAGES_DEV[@]}
 apt-get -y --purge autoremove
 
 # Cleanup
 apt-get clean
-rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/src/app/build/

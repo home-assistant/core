@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.2']
+REQUIREMENTS = ['radiotherm==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,7 @@ class RadioThermostat(ClimateDevice):
         self._name = None
         self._fmode = None
         self._tmode = None
+        self._tstate = None
         self._hold_temp = hold_temp
         self._away = False
         self._away_temps = away_temps
@@ -140,6 +141,7 @@ class RadioThermostat(ClimateDevice):
         self._name = self.device.name['raw']
         self._fmode = self.device.fmode['human']
         self._tmode = self.device.tmode['human']
+        self._tstate = self.device.tstate['human']
 
         if self._tmode == 'Cool':
             self._target_temperature = self.device.t_cool['raw']
@@ -147,6 +149,12 @@ class RadioThermostat(ClimateDevice):
         elif self._tmode == 'Heat':
             self._target_temperature = self.device.t_heat['raw']
             self._current_operation = STATE_HEAT
+        elif self._tmode == 'Auto':
+            if self._tstate == 'Cool':
+                self._target_temperature = self.device.t_cool['raw']
+            elif self._tstate == 'Heat':
+                self._target_temperature = self.device.t_heat['raw']
+            self._current_operation = STATE_AUTO
         else:
             self._current_operation = STATE_IDLE
 
@@ -159,6 +167,12 @@ class RadioThermostat(ClimateDevice):
             self.device.t_cool = round(temperature * 2.0) / 2.0
         elif self._current_operation == STATE_HEAT:
             self.device.t_heat = round(temperature * 2.0) / 2.0
+        elif self._current_operation == STATE_AUTO:
+            if self._tstate == 'Cool':
+                self.device.t_cool = round(temperature * 2.0) / 2.0
+            elif self._tstate == 'Heat':
+                self.device.t_heat = round(temperature * 2.0) / 2.0
+
         if self._hold_temp or self._away:
             self.device.hold = 1
         else:

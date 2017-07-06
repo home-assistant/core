@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import now, parse_datetime
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['myusps==1.1.1']
+REQUIREMENTS = ['myusps==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

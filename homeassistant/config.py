@@ -16,7 +16,8 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB)
+    __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
+    CONF_WHITELIST_EXTERNAL_DIRS)
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -35,6 +36,10 @@ YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 DATA_CUSTOMIZE = 'hass_customize'
+
+FILE_MIGRATION = [
+    ["ios.conf", ".ios.conf"],
+]
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -73,6 +78,8 @@ http:
 # For more information, please see:
 # https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
 updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
 
 # Discover some devices automatically
 discovery:
@@ -124,6 +131,9 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
+    vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
+        # pylint: disable=no-value-for-parameter
+        vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -292,6 +302,12 @@ def process_ha_config_upgrade(hass):
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
 
+    _LOGGER.info('Migrating old system config files to new locations')
+    for oldf, newf in FILE_MIGRATION:
+        if os.path.isfile(hass.config.path(oldf)):
+            _LOGGER.info('Migrating %s to %s', oldf, newf)
+            os.rename(hass.config.path(oldf), hass.config.path(newf))
+
 
 @callback
 def async_log_exception(ex, domain, config, hass):
@@ -353,6 +369,12 @@ def async_process_ha_core_config(hass, config):
 
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
+
+    # init whitelist external dir
+    hac.whitelist_external_dirs = set((hass.config.path('www'),))
+    if CONF_WHITELIST_EXTERNAL_DIRS in config:
+        hac.whitelist_external_dirs.update(
+            set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])

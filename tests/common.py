@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -45,8 +45,23 @@ def threadsafe_callback_factory(func):
     def threadsafe(*args, **kwargs):
         """Call func threadsafe."""
         hass = args[0]
-        run_callback_threadsafe(
+        return run_callback_threadsafe(
             hass.loop, ft.partial(func, *args, **kwargs)).result()
+
+    return threadsafe
+
+
+def threadsafe_coroutine_factory(func):
+    """Create threadsafe functions out of coroutine.
+
+    Callback needs to have `hass` as first argument.
+    """
+    @ft.wraps(func)
+    def threadsafe(*args, **kwargs):
+        """Call func threadsafe."""
+        hass = args[0]
+        return run_coroutine_threadsafe(
+            func(*args, **kwargs), hass.loop).result()
 
     return threadsafe
 
@@ -98,8 +113,6 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    loop._thread_ident = threading.get_ident()
-
     hass = ha.HomeAssistant(loop)
     INSTANCES.append(hass)
 
@@ -162,7 +175,8 @@ def get_test_instance_port():
     return _TEST_INSTANCE_PORT
 
 
-def mock_service(hass, domain, service):
+@ha.callback
+def async_mock_service(hass, domain, service):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -171,12 +185,12 @@ def mock_service(hass, domain, service):
         """Mock service call."""
         calls.append(call)
 
-    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
-        hass.services.async_register(domain, service, mock_service_log)
-    else:
-        hass.services.register(domain, service, mock_service_log)
+    hass.services.async_register(domain, service, mock_service_log)
 
     return calls
+
+
+mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @ha.callback
@@ -258,16 +272,20 @@ def mock_http_component_app(hass, api_password=None):
     return app
 
 
-def mock_mqtt_component(hass):
+@asyncio.coroutine
+def async_mock_mqtt_component(hass):
     """Mock the MQTT component."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
-        setup_component(hass, mqtt.DOMAIN, {
+        yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
             }
         })
         return mock_mqtt
+
+
+mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
 
 
 @ha.callback

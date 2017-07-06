@@ -273,7 +273,7 @@ def _discover_endpoint_info(endpoint):
     for key, value in extra_info.items():
         if isinstance(value, bytes):
             try:
-                extra_info[key] = value.decode('ascii')
+                extra_info[key] = value.decode('ascii').strip()
             except UnicodeDecodeError:
                 # Unsure what the best behaviour here is. Unset the key?
                 pass

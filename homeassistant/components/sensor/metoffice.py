@@ -141,7 +141,7 @@ class MetOfficeCurrentSensor(Entity):
         attr['Sensor Id'] = self._condition
         attr['Site Id'] = self.site.id
         attr['Site Name'] = self.site.name
-        attr['Last Update'] = self.data.lastupdate
+        attr['Last Update'] = self.data.data.date
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 

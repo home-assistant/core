@@ -43,7 +43,7 @@ SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
     vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
