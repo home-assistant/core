@@ -122,64 +122,31 @@ class DecoraLight(Light):
         """We can read the actual state."""
         return False
 
+    @retry
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        # pylint: disable=import-error
-        import decora
-
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.set_brightness(brightness / 2.55)
-                break
-            except (decora.decoraException, AttributeError):
-                self._switch.connect()
-
+        self._switch.set_brightness(brightness / 2.55)
         self._brightness = brightness
-        return True
 
+    @retry
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.on()
-                self._state = True
-                break
-            except (decora.decoraException, AttributeError):
-                self._switch.connect()
+        self._switch.on()
+        self._state = True
 
         if brightness is not None:
             self.set_state(brightness)
 
+    @retry
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.off()
-                self._state = False
-                break
-            except (decora.decoraException, AttributeError):
-                self._switch.connect()
+        self._switch.off()
+        self._state = False
 
+    @retry
     def update(self):
         """Synchronise internal state with the actual light state."""
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._brightness = self._switch.get_brightness() * 2.55
-                self._state = self._switch.get_on()
-                break
-            except (decora.decoraException, AttributeError):
-                self._switch.connect()
+        self._brightness = self._switch.get_brightness() * 2.55
+        self._state = self._switch.get_on()
+        
