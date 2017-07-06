@@ -35,21 +35,15 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the LaMetricManager."""
     _LOGGER.debug("Setting up LaMetric platform")
-    try:
-        conf = config[DOMAIN]
-        hlmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
-                                   client_secret=conf[CONF_CLIENT_SECRET])
-        devices = hlmn.manager().get_devices()
-    except Exception as exception:
-        _LOGGER.error("Could not setup LaMetric platform: %s", exception)
-        return False
+    conf = config[DOMAIN]
+    hlmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
+                               client_secret=conf[CONF_CLIENT_SECRET])
+    devices = hlmn.manager().get_devices()
 
     found = False
     hass.data[DOMAIN] = hlmn
-    hass.data[LAMETRIC_DEVICES] = []
     for dev in devices:
         _LOGGER.debug("Discovered LaMetric device: %s", dev)
-        hass.data[LAMETRIC_DEVICES].append(dev)
         found = True
 
     return found

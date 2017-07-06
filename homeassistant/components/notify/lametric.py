@@ -32,13 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
     hlmn = hass.data.get(DOMAIN)
-    try:
-        return LaMetricNotificationService(hlmn,
-                                           config[CONF_ICON],
-                                           config[CONF_DISPLAY_TIME] * 1000)
-    except HomeAssistantError:
-        _LOGGER.exception("Could not configure LaMetric notifier")
-        return None
+    return LaMetricNotificationService(hlmn,
+                                       config[CONF_ICON],
+                                       config[CONF_DISPLAY_TIME] * 1000)
 
 
 class LaMetricNotificationService(BaseNotificationService):
@@ -71,7 +67,7 @@ class LaMetricNotificationService(BaseNotificationService):
                                   sound_id=data["sound"])
                     _LOGGER.debug("Adding notification sound %s",
                                   data["sound"])
-                except Exception:
+                except AssertionError:
                     _LOGGER.error("Sound ID %s unknown, ignoring",
                                   data["sound"])
 
