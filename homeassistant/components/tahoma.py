@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'tahoma'
 _BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web/externalAPI/json/'
-_BASE_HEADERS = { 'User-Agent' : 'mine',  }
+_BASE_HEADERS = {'User-Agent' : 'mine'}
 CONF_EXCLUDE = 'exclude'
 
 TAHOMA_ID_LIST_SCHEMA = vol.Schema([cv.string])
@@ -100,7 +100,7 @@ class TahomaApi :
     def login(self):
         if self.__loggedIn:
             return
-        login = { 'userId' : self.__username, 'userPassword' : self.__password }
+        login = {'userId' : self.__username, 'userPassword' : self.__password}
         header = _BASE_HEADERS.copy()
         request = requests.post(_BASE_URL + 'login', data=login, headers=header)
         try:
@@ -167,8 +167,8 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError:
-            raise HomeAssistantError("Not a valid result for" + 
-                " getEndUser, protocol error!")
+            raise HomeAssistantError(
+                "Not a valid result for getEndUser, protocol error!")
 
         return result['endUser']
 
@@ -312,7 +312,7 @@ class TahomaApi :
         With a previous getSetup call the devices which have 
         been found will be returned.
 
-        :return: Returns a dictionary { deviceURL -> Device }
+        :return: Returns a dictionary {deviceURL -> Device }
         :rtype: dict
 
         :Seealso:
@@ -362,7 +362,7 @@ class TahomaApi :
         for action in actions:
             actionsSerialized.append(action.serialize())
 
-        data = { "label": nameOfAction, "actions": actionsSerialized }
+        data = {"label": nameOfAction, "actions": actionsSerialized}
         js = json.dumps(data, indent=None, sort_keys=True)
 
         request = requests.post(_BASE_URL + "apply", headers=header, data=js)
@@ -623,19 +623,20 @@ class TahomaApi :
             devices = givenDevices
         else:
             devices = []
-            for devName  in self.__devices.keys():
+            for devName in self.__devices.keys():
                 devices.append(self.__devices[devName])
 
         for device in devices:
             states = []
 
             for stateName in sorted(device.activeStates.keys()):
-                states.append({ 'name': stateName })
+                states.append({'name': stateName})
 
-            devList.append({ 'deviceURL': device.url, 'states': states })
+            devList.append({'deviceURL': device.url, 'states': states})
 
-        return json.dumps(devList, indent=None, sort_keys=True, 
-            separators=(',', ': '))
+        return json.dumps(
+                    devList, indent=None,
+                    sort_keys=True, separators=(',', ': '))
 
     def _getStates(self, result):
 
@@ -651,8 +652,8 @@ class TahomaApi :
         header = _BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(_BASE_URL + "refreshAllStates", 
-            headers=header)
+        request = requests.get(
+            _BASE_URL + "refreshAllStates",headers=header)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -672,17 +673,17 @@ class TahomaDevice(Entity):
         self.tahoma_id = TAHOMA_ID_FORMAT.format(
             slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
-    
+
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
-    
+
     @property
     def should_poll(self):
         """Get polling requirement from tahoma device."""
         return True
-    
+
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
@@ -700,7 +701,7 @@ class Device:
         self.__rawData = dataInput
 
         debugOutput = json.dumps(dataInput)
-        
+
         if 'label' not in dataInput.keys():
             raise ValueError('No device name found: ' + debugOutput)
 
