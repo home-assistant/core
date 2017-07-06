@@ -8,8 +8,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.knx import (KNXConfig, KNXMultiAddressDevice)
-from homeassistant.components.light import (Light, PLATFORM_SCHEMA, \
-                                            SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS)
+from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
+                                            SUPPORT_BRIGHTNESS, 
+                                            ATTR_BRIGHTNESS)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -53,7 +54,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
         if CONF_BRIGHTNESS_ADDRESS in config.config:
             _LOGGER.debug("%s is dimmable", self.name)
             self._supported_features = self._supported_features | \
-            SUPPORT_BRIGHTNESS
+                SUPPORT_BRIGHTNESS
             self._brightness = None
 
     def turn_on(self, **kwargs):
@@ -62,7 +63,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
         This sends a value 1 to the group address of the device
         """
         _LOGGER.debug("%s: turn on", self.name)
-        self.set_value('base',[1])
+        self.set_value('base', [1])
         self._state = 1
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -70,7 +71,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
             _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
                           self.name, self._brightness)
             assert (self._brightness <= 255)
-            self.set_value("brightness",[self._brightness])
+            self.set_value("brightness", [self._brightness])
 
         if not self.should_poll:
             self.schedule_update_ha_state()
@@ -81,7 +82,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
         This sends a value 1 to the group address of the device
         """
         _LOGGER.debug("%s: turn off", self.name)
-        self.set_value('base',[0])
+        self.set_value('base', [0])
         self._state = 0
         if not self.should_poll:
             self.schedule_update_ha_state()
@@ -96,7 +97,6 @@ class KNXLight(KNXMultiAddressDevice, Light):
         """Flag supported features."""
         return self._supported_features
 
-
     def update(self):
         """Update device state."""
         super().update()
@@ -104,7 +104,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
             value = self.value('brightness_state')
             if value is not None:
                 self._brightness = int.from_bytes(value, byteorder='little')
-                _LOGGER.debug("%s: brightness = %d", 
+                _LOGGER.debug("%s: brightness = %d",
                               self.name, self._brightness)
 
         if self.has_attribute('state'):
