@@ -4,7 +4,6 @@ This component provides basic support for Amcrest IP cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/amcrest/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
@@ -113,7 +111,6 @@ def setup(hass, config):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
             return False
-
 
         ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
         name = device.get(CONF_NAME)
