@@ -216,7 +216,7 @@ class TahomaApi :
             results from the server."""
         self.__devices = {}
 
-        if ('setup' not in result.keys() 
+        if ('setup' not in result.keys()
             or 'devices' not in result['setup'].keys()):
             raise HomeAssistantError("Did not find device definition.")
 
@@ -521,7 +521,6 @@ class TahomaApi :
 
         return result['history']
 
-
     def cancelAllExecutions(self):
         """Cancels all running executions.
 
@@ -558,8 +557,7 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for " +
-                "getActionGroups, protocol error: " + e)
+            raise HomeAssistantError("getActionGroups: Not a valid result for ")
 
         if 'actionGroups' not in result.keys():
             return None
@@ -576,8 +574,9 @@ class TahomaApi :
         header = _BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(_BASE_URL + 'launchActionGroup?oid=' +
-                    id,headers=header)
+        request = requests.get(
+                        _BASE_URL + 'launchActionGroup?oid=' +
+                        id, headers=header)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -588,14 +587,16 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for launch " +
-                "action group, protocol error: " + 
-                request.status_code + ' - ' + request.reason +
-                " (" + e + ")")
+            raise HomeAssistantError(
+                    "Not a valid result for launch" +
+                    "action group, protocol error: " +
+                    request.status_code + ' - ' + request.reason +
+                    " (" + e + ")")
 
         if 'actionGroup' not in result.keys():
-            raise HomeAssistantError("Could not launch action" +
-                "group, missing execId.")
+            raise HomeAssistantError(
+                    "Could not launch action" +
+                    "group, missing execId.")
 
         return result['actionGroup'][0]['execId']
 
@@ -617,8 +618,9 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for" +
-                " getStates, protocol error: " + e)
+            raise HomeAssistantError(
+                    "Not a valid result for" +
+                    "getStates, protocol error:" + e)
 
         self._getStates(result)
 
@@ -762,7 +764,7 @@ class Device:
         # make sure there are not more active states than definitions
         if activeStatesAmount > len(self.stateDefinitions):
             raise ValueError(
-                "Missmatch of state definition and active states (" +
+                    "Missmatch of state definition and active states (" +
                     str(len(self.stateDefinitions)) + "/" +
                     str(activeStatesAmount) + "): " + debugOutput)
 
