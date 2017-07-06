@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.knx import (KNXConfig, KNXMultiAddressDevice)
 from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
-                                            SUPPORT_BRIGHTNESS, 
+                                            SUPPORT_BRIGHTNESS,
                                             ATTR_BRIGHTNESS)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
