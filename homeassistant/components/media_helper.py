@@ -27,7 +27,7 @@ def setup(hass, config):
                      'media_player', 'services.yaml'))
 
     def play_media(call):
-        """Get stream url and send it to the media_player.play_media service."""
+        """Get stream url and send it to the media_player.play_media."""
         media_url = call.data.get(ATTR_MEDIA_CONTENT_ID)
 
         try:
