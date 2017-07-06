@@ -65,6 +65,9 @@ def setup(hass, config):
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
     def received_knx_event(address, data):
+        """Process received KNX message."""
+        if len(data) == 1:
+            data=data[0]
         hass.bus.fire('knx_event', {
             'address': address,
             'data': data
