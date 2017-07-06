@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (
-    TAHOMA_CONTROLLER, TAHOMA_DEVICES, TahomaDevice, Device, Action, Command)
+    TAHOMA_DEVICES, TahomaDevice, Action)
 
 DEPENDENCIES = ['tahoma']
 
@@ -29,7 +29,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         """Initialize the Tahoma device."""
         TahomaDevice.__init__(self, tahoma_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.tahoma_id)
-    
+
     def update(self):
         self.controller.getStates([self.tahoma_device])
         self.schedule_update_ha_state()
