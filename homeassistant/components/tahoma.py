@@ -102,19 +102,20 @@ class TahomaApi :
             return
         login = {'userId' : self.__username, 'userPassword' : self.__password}
         header = _BASE_HEADERS.copy()
-        request = requests.post(_BASE_URL + 'login', data=login, headers=header)
+        request = requests.post(_BASE_URL + 'login',
+            data=login, headers=header)
         try:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError("Not a valid result for login, " +
-                "protocol error: " + request.status_code + ' - ' + 
+                "protocol error: " + request.status_code + ' - ' +
                 request.reason + "(" + e + ")")
         
         if 'error' in result.keys():
             raise HomeAssistantError("Could not login: " + result['error'])
         
         if request.status_code != 200:
-            raise HomeAssistantError("Could not login, HTTP code: " + 
+            raise HomeAssistantError("Could not login, HTTP code: " +
                 str(request.status_code) + ' - ' + request.reason)
         
         if 'success' not in result.keys() or not result['success']:
@@ -175,8 +176,10 @@ class TahomaApi :
     def getSetup(self):
         """Load the setup from the server.
 
-        Loads the configuration from the server, nothing will be returned. After loading the configuration the devices
-        can be obtained through getDevice and getDevices. Also location and gateway will be set through this
+        Loads the configuration from the server, nothing will 
+        be returned. After loading the configuration the devices
+        can be obtained through getDevice and getDevices. 
+        Also location and gateway will be set through this
         method.
 
         raises ValueError in case of protocol issues
@@ -199,12 +202,11 @@ class TahomaApi :
             self.login()
             self.getSetup()
             return
-            #raise ValueError('Could not get setup, HTTP code: ' + str(request.status_code) + ' - ' + request.reason)
 
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for getSetup, " + 
+            raise HomeAssistantError("Not a valid result for getSetup, " +
                 "protocol error: " + e)
 
         self._getSetup(result)
@@ -343,7 +345,8 @@ class TahomaApi :
 
         :param nameOfAction: the label/name for the action
         :param actions: an array of Action objects
-        :return: the execution identifier  ************** what if it fails
+        :return: the execution identifier  ************** 
+        what if it fails
         :rtype: string
 
         raises ValueError in case of protocol issues
@@ -365,7 +368,8 @@ class TahomaApi :
         data = {"label": nameOfAction, "actions": actionsSerialized}
         js = json.dumps(data, indent=None, sort_keys=True)
 
-        request = requests.post(_BASE_URL + "apply", headers=header, data=js)
+        request = requests.post(_BASE_URL + "apply",
+                        headers=header, data=js)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -376,9 +380,10 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for applying an " +
-                "action, protocol error: " + request.status_code + ' - ' + 
-                request.reason + " (" + e + ")")
+            raise HomeAssistantError(
+                "Not a valid result for applying an " +
+                "action, protocol error: " + request.status_code +
+                ' - ' + request.reason + " (" + e + ")")
 
         if 'execId' not in result.keys():
             raise HomeAssistantError("Could not run actions, missing execId.")
@@ -443,8 +448,8 @@ class TahomaApi :
                 if isinstance(event, DeviceStateChangedEvent):
                     # change device state
                     if self.__devices[event.deviceURL] is None:
-                        raise HomeAssistantError("Received device change " + 
-                            "state for unknown device '" + 
+                        raise HomeAssistantError("Received device change " +
+                            "state for unknown device '" +
                             event.deviceURL + "'")
 
                     self.__devices[event.deviceURL].setActiveStates(
@@ -470,7 +475,7 @@ class TahomaApi :
         header = _BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(_BASE_URL + 
+        request = requests.get(_BASE_URL +
             'getCurrentExecutions', headers=header)
 
         if request.status_code != 200:
@@ -482,7 +487,7 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for" + 
+            raise HomeAssistantError("Not a valid result for" +
                 " getCurrentExecutions, protocol error: " + e)
 
         if 'executions' not in result.keys():
@@ -553,7 +558,7 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for " + 
+            raise HomeAssistantError("Not a valid result for " +
                 "getActionGroups, protocol error: " + e)
 
         if 'actionGroups' not in result.keys():
@@ -571,8 +576,8 @@ class TahomaApi :
         header = _BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(_BASE_URL + 'launchActionGroup?oid=' + id, 
-            headers=header)
+        request = requests.get(_BASE_URL + 'launchActionGroup?oid=' +
+                    id,headers=header)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -583,13 +588,14 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for launch " + 
-                "action group, protocol error: " + request.status_code + 
-                ' - ' + request.reason + " (" + e + ")")
+            raise HomeAssistantError("Not a valid result for launch " +
+                "action group, protocol error: " + 
+                request.status_code + ' - ' + request.reason +
+                " (" + e + ")")
 
         if 'actionGroup' not in result.keys():
-            raise HomeAssistantError("Could not launch action" + 
-                " group, missing execId.")
+            raise HomeAssistantError("Could not launch action" +
+                "group, missing execId.")
 
         return result['actionGroup'][0]['execId']
 
@@ -611,7 +617,7 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for" + 
+            raise HomeAssistantError("Not a valid result for" +
                 " getStates, protocol error: " + e)
 
         self._getStates(result)
