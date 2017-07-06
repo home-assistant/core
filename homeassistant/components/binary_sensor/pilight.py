@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from homeassistant.const import (
-    CONF_RESET_DELAY_SEC,
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
     CONF_PAYLOAD,
