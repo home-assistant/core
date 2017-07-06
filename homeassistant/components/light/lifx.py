@@ -239,10 +239,10 @@ class LIFXManager(object):
 
         if service == SERVICE_EFFECT_PULSE:
             effect = aiolifx_effects.EffectPulse(
-                power_on=kwargs.get(ATTR_POWER_ON, None),
-                period=kwargs.get(ATTR_PERIOD, None),
-                cycles=kwargs.get(ATTR_CYCLES, None),
-                mode=kwargs.get(ATTR_MODE, None),
+                power_on=kwargs.get(ATTR_POWER_ON),
+                period=kwargs.get(ATTR_PERIOD),
+                cycles=kwargs.get(ATTR_CYCLES),
+                mode=kwargs.get(ATTR_MODE),
                 hsbk=find_hsbk(**kwargs),
             )
             yield from self.effects_conductor.start(effect, devices)
@@ -254,11 +254,11 @@ class LIFXManager(object):
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
 
             effect = aiolifx_effects.EffectColorloop(
-                power_on=kwargs.get(ATTR_POWER_ON, None),
-                period=kwargs.get(ATTR_PERIOD, None),
-                change=kwargs.get(ATTR_CHANGE, None),
-                spread=kwargs.get(ATTR_SPREAD, None),
-                transition=kwargs.get(ATTR_TRANSITION, None),
+                power_on=kwargs.get(ATTR_POWER_ON),
+                period=kwargs.get(ATTR_PERIOD),
+                change=kwargs.get(ATTR_CHANGE),
+                spread=kwargs.get(ATTR_SPREAD),
+                transition=kwargs.get(ATTR_TRANSITION),
                 brightness=brightness,
             )
             yield from self.effects_conductor.start(effect, devices)
@@ -335,10 +335,9 @@ class AwaitAioLIFX:
         self.device = None
         self.message = None
         self.event.clear()
-        method(self.callback)
+        method(callb=self.callback)
 
         yield from self.event.wait()
-
         return self.message
 
 
@@ -382,10 +381,7 @@ class LIFXLight(Light):
     @property
     def who(self):
         """Return a string identifying the device."""
-        ip_addr = '-'
-        if self.device:
-            ip_addr = self.device.ip_addr[0]
-        return "%s (%s)" % (ip_addr, self.name)
+        return "%s (%s)" % (self.device.ip_addr, self.name)
 
     @property
     def rgb_color(self):
@@ -541,9 +537,6 @@ class LIFXLight(Light):
             if power_off:
                 yield from ack(partial(bulb.set_power, False, duration=fade))
 
-        # Avoid state ping-pong by holding off updates while the state settles
-        yield from asyncio.sleep(0.25)
-
         # Schedule an update when the transition is complete
         self.update_later(fade)
 
@@ -561,4 +554,6 @@ class LIFXLight(Light):
         """Update bulb status."""
         _LOGGER.debug("%s async_update", self.who)
         if self.available:
+            # Avoid state ping-pong by holding off updates as the state settles
+            yield from asyncio.sleep(0.25)
             yield from AwaitAioLIFX(self).wait(self.device.get_color)

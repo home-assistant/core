@@ -159,8 +159,7 @@ class GaradgetCover(CoverDevice):
         """Return if the cover is closed."""
         if self._state == STATE_UNKNOWN:
             return None
-        else:
-            return self._state == STATE_CLOSED
+        return self._state == STATE_CLOSED
 
     @property
     def device_class(self):

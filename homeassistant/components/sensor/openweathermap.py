@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.6.1']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ SENSOR_TYPES = {
     'pressure': ['Pressure', 'mbar'],
     'clouds': ['Cloud coverage', '%'],
     'rain': ['Rain', 'mm'],
-    'snow': ['Snow', 'mm']
+    'snow': ['Snow', 'mm'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(OpenWeatherMapSensor(
             name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class OpenWeatherMapSensor(Entity):
@@ -100,7 +100,6 @@ class OpenWeatherMapSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -129,6 +128,9 @@ class OpenWeatherMapSensor(Entity):
         self.owa_client.update()
         data = self.owa_client.data
         fc_data = self.owa_client.fc_data
+
+        if data is None or fc_data is None:
+            return
 
         if self.type == 'weather':
             self._state = data.get_detailed_status()
@@ -188,7 +190,7 @@ class WeatherData(object):
         except TypeError:
             obs = None
         if obs is None:
-            _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
+            _LOGGER.warning("Failed to fetch data")
             return
 
         self.data = obs.get_weather()
@@ -199,4 +201,4 @@ class WeatherData(object):
                     self.latitude, self.longitude)
                 self.fc_data = obs.get_forecast()
             except TypeError:
-                _LOGGER.warning("Failed to fetch forecast from OpenWeatherMap")
+                _LOGGER.warning("Failed to fetch forecast")

@@ -200,8 +200,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Return the state of the device."""
         if self._status.source == 'STANDBY':
             return STATE_OFF
-        else:
-            return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
+
+        return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
     @property
     def is_volume_muted(self):
@@ -280,8 +280,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             return self._status.station_name
         elif self._status.artist is not None:
             return self._status.artist + " - " + self._status.track
-        else:
-            return None
+
+        return None
 
     @property
     def media_duration(self):

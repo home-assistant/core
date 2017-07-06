@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
 from homeassistant.const import (
-    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -25,7 +25,6 @@ CONF_PRECISION = 'precision'
 CONF_REGISTER = 'register'
 CONF_REGISTERS = 'registers'
 CONF_SCALE = 'scale'
-CONF_SLAVE = 'slave'
 CONF_DATA_TYPE = 'data_type'
 CONF_REGISTER_TYPE = 'register_type'
 

@@ -159,9 +159,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif state == 'PAUSE':
             return STATE_PAUSED
-        else:
-            return STATE_ON if self._client.is_on else STATE_OFF
-        return STATE_UNKNOWN
+
+        return STATE_ON if self._client.is_on else STATE_OFF
 
     def turn_off(self):
         """Turn off media player."""
