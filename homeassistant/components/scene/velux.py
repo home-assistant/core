@@ -9,7 +9,9 @@ https://home-assistant.io/components/scene.velux/
 from homeassistant.components.scene import Scene
 from homeassistant.components.velux import _LOGGER, DATA_VELUX
 
+
 DEPENDENCIES = ['velux']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the scenes for velux platform."""
