@@ -242,10 +242,9 @@ class MoldIndicator(Entity):
                 ATTR_DEWPOINT: self._dewpoint,
                 ATTR_CRITICAL_TEMP: self._crit_temp,
             }
-        else:
-            return {
-                ATTR_DEWPOINT:
-                    util.temperature.celsius_to_fahrenheit(self._dewpoint),
-                ATTR_CRITICAL_TEMP:
-                    util.temperature.celsius_to_fahrenheit(self._crit_temp),
-            }
+        return {
+            ATTR_DEWPOINT:
+                util.temperature.celsius_to_fahrenheit(self._dewpoint),
+            ATTR_CRITICAL_TEMP:
+                util.temperature.celsius_to_fahrenheit(self._crit_temp),
+        }

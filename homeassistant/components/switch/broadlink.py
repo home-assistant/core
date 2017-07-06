@@ -244,10 +244,6 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, device):
-        """Initialize the switch."""
-        super().__init__(friendly_name, device)
-
     @property
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
