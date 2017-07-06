@@ -113,18 +113,19 @@ class TahomaApi :
         
         if 'error' in result.keys():
             raise HomeAssistantError("Could not login: " + result['error'])
-        
+
         if request.status_code != 200:
-            raise HomeAssistantError("Could not login, HTTP code: " +
-                str(request.status_code) + ' - ' + request.reason)
-        
+            raise HomeAssistantError(
+                    "Could not login, HTTP code: " +
+                    str(request.status_code) + ' - ' + request.reason)
+
         if 'success' not in result.keys() or not result['success']:
             raise HomeAssistantError("Could not login, no success")
-        
+
         cookie = request.headers.get("set-cookie")
         if cookie is None:
             raise HomeAssistantError("Could not login, no cookie set")
-        
+
         self.__cookie = cookie
         self.__loggedIn = True
         return self.__loggedIn
@@ -178,7 +179,7 @@ class TahomaApi :
 
         Loads the configuration from the server, nothing will
         be returned. After loading the configuration the devices
-        can be obtained through getDevice and getDevices. 
+        can be obtained through getDevice and getDevices.
         Also location and gateway will be set through this
         method.
 
@@ -206,19 +207,20 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for getSetup, " +
-                "protocol error: " + e)
+            raise HomeAssistantError(
+                    "Not a valid result for getSetup, " +
+                    "protocol error: " + e)
 
         self._getSetup(result)
 
     def _getSetup(self, result):
-        """ Internal method which process the 
+        """ Internal method which process the
             results from the server."""
         self.__devices = {}
 
-        if ('setup' not in result.keys()
-            or 'devices' not in result['setup'].keys()):
-            raise HomeAssistantError("Did not find device definition.")
+        if ('setup' not in result.keys() or
+            'devices' not in result['setup'].keys()):
+                raise HomeAssistantError("Did not find device definition.")
 
         for deviceData in result['setup']['devices']:
             device = Device(self, deviceData)
@@ -234,12 +236,9 @@ class TahomaApi :
         When the configuration has been loaded via getSetup this
         method retrieves all the location details which have
         been saved for your Tahoma box.
-
         :return: a dict with all the informations
         :rtype: dict
-
         :Example:
-
         >>> "creationTime": <time>,
         >>> "lastUpdateTime": <time>,
         >>> "addressLine1": "<street>",
@@ -431,8 +430,9 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for getEvent," +
-                " protocol error: " + e)
+            raise HomeAssistantError(
+                    "Not a valid result for getEvent," +
+                    " protocol error: " + e)
 
         return self._getEvents(result)
 
