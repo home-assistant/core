@@ -231,7 +231,7 @@ class TahomaApi :
     def location(self):
         """Return the location information stored in your Tahoma box.
 
-        When the configuration has been loaded via getSetup this 
+        When the configuration has been loaded via getSetup this
         method retrieves all the location details which have
         been saved for your Tahoma box.
 
@@ -271,10 +271,10 @@ class TahomaApi :
     def gateway(self):
         """Return information about your Tahoma box.
 
-        When the configuration has been loaded via getSetup this 
+        When the configuration has been loaded via getSetup this
         method retrieves all  details your Tahoma box.
 
-        :return: a list of all gateways with a dict per gateway with 
+        :return: a list of all gateways with a dict per gateway with
         all the informations
         :rtype: list
 
@@ -308,10 +308,10 @@ class TahomaApi :
         return self.__gateway
 
     def getDevices(self):
-        """Return all devices which have been found with last getSetup 
+        """Return all devices which have been found with last getSetup
         request.
 
-        With a previous getSetup call the devices which have 
+        With a previous getSetup call the devices which have
         been found will be returned.
 
         :return: Returns a dictionary {deviceURL -> Device }
@@ -324,7 +324,7 @@ class TahomaApi :
         return self.__devices
 
     def getDevice(self, url):
-        """Return a particular device which have been found with the 
+        """Return a particular device which have been found with the
         last getSetup request.
 
         :param url: The device URL of the device to be returned.
@@ -340,12 +340,12 @@ class TahomaApi :
     def applyActions(self, nameOfAction, actions):
         """Start to execute an action or a group of actions.
 
-        This method takes a bunch of actions and runs them on your 
+        This method takes a bunch of actions and runs them on your
         Tahoma box.
 
         :param nameOfAction: the label/name for the action
         :param actions: an array of Action objects
-        :return: the execution identifier  ************** 
+        :return: the execution identifier  **************
         what if it fails
         :rtype: string
 
@@ -368,8 +368,9 @@ class TahomaApi :
         data = {"label": nameOfAction, "actions": actionsSerialized}
         js = json.dumps(data, indent=None, sort_keys=True)
 
-        request = requests.post(_BASE_URL + "apply",
-                        headers=header, data=js)
+        request = requests.post(
+                            _BASE_URL + "apply",
+                            headers=header, data=js)
 
         if request.status_code != 200:
             self.__loggedIn = False
