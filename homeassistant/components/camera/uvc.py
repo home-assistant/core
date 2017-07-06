@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         return False
 
-    identifier = nvrconn.server_version >= (3, 2, 0) and 'id' or 'uuid'
+    identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'
     # Filter out airCam models, which are not supported in the latest
     # version of UnifiVideo and which are EOL by Ubiquiti
     cameras = [

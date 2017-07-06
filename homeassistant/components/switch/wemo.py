@@ -195,7 +195,7 @@ class WemoSwitch(SwitchDevice):
         self.wemo.on()
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = WEMO_OFF
         self.wemo.off()

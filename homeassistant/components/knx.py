@@ -43,7 +43,7 @@ def setup(hass, config):
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
 
-    if host is '0.0.0.0':
+    if host == '0.0.0.0':
         _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
 
     KNXTUNNEL = KNXIPTunnel(host, port)

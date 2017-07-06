@@ -271,14 +271,14 @@ class Alert(ToggleEntity):
                 'notify', target, {'message': self._done_message})
 
     @asyncio.coroutine
-    def async_turn_on(self):
+    def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""
         _LOGGER.debug("Reset Alert: %s", self._name)
         self._ack = False
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Async Acknowledge alert."""
         _LOGGER.debug("Acknowledged Alert: %s", self._name)
         self._ack = True

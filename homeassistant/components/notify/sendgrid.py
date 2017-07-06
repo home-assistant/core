@@ -74,5 +74,5 @@ class SendgridNotificationService(BaseNotificationService):
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code is not 202:
+        if response.status_code != 202:
             _LOGGER.error("Unable to send notification")

@@ -131,8 +131,7 @@ class CastDevice(MediaPlayerDevice):
             return STATE_IDLE
         elif self.cast.is_idle:
             return STATE_OFF
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def volume_level(self):
