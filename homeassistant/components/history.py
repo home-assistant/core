@@ -161,8 +161,8 @@ def states_to_json(hass, states, start_time, entity_id, filters=None):
         result[state.entity_id].append(state)
 
     # Append all changes to it
-    for entity_id, group in groupby(states, lambda state: state.entity_id):
-        result[entity_id].extend(group)
+    for ent_id, group in groupby(states, lambda state: state.entity_id):
+        result[ent_id].extend(group)
     return result
 
 
