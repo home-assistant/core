@@ -79,10 +79,10 @@ def map_tahoma_device(tahoma_device):
     return None
 
     
-class TahomaApi :
-    
+class TahomaApi:
+
     def __init__(self, userName, userPassword, **kwargs):
-        
+
         """Initalize the Tahoma protocol.
         :param userName: Tahoma username
         :param userPassword: Password
@@ -100,17 +100,18 @@ class TahomaApi :
     def login(self):
         if self.__loggedIn:
             return
-        login = {'userId' : self.__username, 'userPassword' : self.__password}
+        login = {'userId': self.__username, 'userPassword': self.__password}
         header = _BASE_HEADERS.copy()
         request = requests.post(_BASE_URL + 'login',
             data=login, headers=header)
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for login, " +
-                "protocol error: " + request.status_code + ' - ' +
-                request.reason + "(" + e + ")")
-        
+            raise HomeAssistantError(
+                    "Not a valid result for login, " +
+                    "protocol error: " + request.status_code + ' - ' +
+                    request.reason + "(" + e + ")")
+
         if 'error' in result.keys():
             raise HomeAssistantError("Could not login: " + result['error'])
 
@@ -219,8 +220,9 @@ class TahomaApi :
         self.__devices = {}
 
         if ('setup' not in result.keys() or
-            'devices' not in result['setup'].keys()):
-                raise HomeAssistantError("Did not find device definition.")
+                'devices' not in result['setup'].keys()):
+                    raise HomeAssistantError(
+                        "Did not find device definition.")
 
         for deviceData in result['setup']['devices']:
             device = Device(self, deviceData)
@@ -521,8 +523,9 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for" +
-                " getHistory, protocol error: " + e)
+            raise HomeAssistantError(
+                    "Not a valid result for" +
+                    "getHistory, protocol error: " + e)
 
         return result['history']
 
@@ -612,8 +615,9 @@ class TahomaApi :
 
         js = self._createGetStateRequest(devices)
 
-        request = requests.post(_BASE_URL + 'getStates', 
-            headers=header, data=js)
+        request = requests.post(
+                    _BASE_URL + 'getStates',
+                    headers=header, data=js)
 
         if request.status_code != 200:
             self.__loggedIn = False
