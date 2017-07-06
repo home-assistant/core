@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN,
     CONF_NAME)
 
-REQUIREMENTS = ['total_connect_client==0.7']
+REQUIREMENTS = ['total_connect_client==0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
