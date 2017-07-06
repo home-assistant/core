@@ -13,11 +13,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo climate devices."""
     add_devices([
         DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
-                    'Auto Low', None, None, 'Auto', 'heat', None, None, None),
+                    'Auto Low', None, None, 'Auto', 'heat', None, None, None,
+                    None),
         DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
-                    67, 54, 'Off', 'cool', False, None, None),
+                    67, 54, 'Off', 'cool', False, None, None, True),
         DemoClimate('Ecobee', None, TEMP_CELSIUS, None, None, 23, 'Auto Low',
-                    None, None, 'Auto', 'auto', None, 24, 21)
+                    None, None, 'Auto', 'auto', None, 24, 21, None)
     ])
 
 
@@ -27,7 +28,8 @@ class DemoClimate(ClimateDevice):
     def __init__(self, name, target_temperature, unit_of_measurement,
                  away, hold, current_temperature, current_fan_mode,
                  target_humidity, current_humidity, current_swing_mode,
-                 current_operation, aux, target_temp_high, target_temp_low):
+                 current_operation, aux, target_temp_high, target_temp_low,
+                 enabled):
         """Initialize the climate device."""
         self._name = name
         self._target_temperature = target_temperature
@@ -35,6 +37,7 @@ class DemoClimate(ClimateDevice):
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._hold = hold
+        self._enabled = enabled
         self._current_temperature = current_temperature
         self._current_humidity = current_humidity
         self._current_fan_mode = current_fan_mode
@@ -108,6 +111,11 @@ class DemoClimate(ClimateDevice):
         return self._away
 
     @property
+    def is_enabled(self):
+        """Return whether the thermostat is currently enabled."""
+        return self._enabled
+
+    @property
     def current_hold_mode(self):
         """Return hold mode setting."""
         return self._hold
@@ -175,6 +183,16 @@ class DemoClimate(ClimateDevice):
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
+        self.schedule_update_ha_state()
+
+    def turn_enabled_off(self):
+        """Turn enabled off."""
+        self._enabled = False
+        self.schedule_update_ha_state()
+
+    def turn_enabled_on(self):
+        """Turn enabled on."""
+        self._enabled = True
         self.schedule_update_ha_state()
 
     def set_hold_mode(self, hold):

@@ -22,6 +22,18 @@ set_away_mode:
       description: New value of away mode
       example: true
 
+set_enabled:
+  description: Enable or disable a climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'
+
+    enabled:
+      description: New value of enabled
+      example: true
+
 set_hold_mode:
   description: Turn hold mode for climate device
 
