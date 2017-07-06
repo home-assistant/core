@@ -8,11 +8,8 @@ https://home-assistant.io/components/sensor.tahoma/
 import logging
 
 from datetime import timedelta
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.util import convert
 from homeassistant.components.tahoma import (
     TAHOMA_DEVICES, TahomaDevice)
 
