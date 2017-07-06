@@ -57,9 +57,9 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                 split_entity_id(camera_entity)[1])
 
         self._faces = {}
-        for name, face_file in faces.items():
+        for face_name, face_file in faces.items():
             image = face_recognition.load_image_file(face_file)
-            self._faces[name] = face_recognition.face_encodings(image)[0]
+            self._faces[face_name] = face_recognition.face_encodings(image)[0]
 
     @property
     def camera_entity(self):

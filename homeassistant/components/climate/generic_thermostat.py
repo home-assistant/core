@@ -134,9 +134,9 @@ class GenericThermostat(ClimateDevice):
         if self.ac_mode:
             cooling = self._active and self._is_device_active
             return STATE_COOL if cooling else STATE_IDLE
-        else:
-            heating = self._active and self._is_device_active
-            return STATE_HEAT if heating else STATE_IDLE
+
+        heating = self._active and self._is_device_active
+        return STATE_HEAT if heating else STATE_IDLE
 
     @property
     def target_temperature(self):
@@ -159,9 +159,9 @@ class GenericThermostat(ClimateDevice):
         # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
-        else:
-            # get default temp from super class
-            return ClimateDevice.min_temp.fget(self)
+
+        # get default temp from super class
+        return ClimateDevice.min_temp.fget(self)
 
     @property
     def max_temp(self):
@@ -169,9 +169,9 @@ class GenericThermostat(ClimateDevice):
         # pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
-        else:
-            # Get default temp from super class
-            return ClimateDevice.max_temp.fget(self)
+
+        # Get default temp from super class
+        return ClimateDevice.max_temp.fget(self)
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):

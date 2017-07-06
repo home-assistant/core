@@ -177,8 +177,7 @@ class SynoNasSensor(Entity):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
             return "{} ({})".format(self.var_name, self.monitor_device)
-        else:
-            return self.var_name
+        return self.var_name
 
     @property
     def icon(self):
@@ -191,8 +190,7 @@ class SynoNasSensor(Entity):
         if self.var_id in ['volume_disk_temp_avg', 'volume_disk_temp_max',
                            'disk_temp']:
             return self._api.temp_unit
-        else:
-            return self.var_units
+        return self.var_units
 
     def update(self):
         """Get the latest data for the states."""
@@ -238,8 +236,8 @@ class SynoNasStorageSensor(SynoNasSensor):
 
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
-                else:
-                    return round(attr * 1.8 + 32.0, 1)
-            else:
-                return getattr(self._api.storage,
-                               self.var_id)(self.monitor_device)
+
+                return round(attr * 1.8 + 32.0, 1)
+
+            return getattr(self._api.storage,
+                           self.var_id)(self.monitor_device)

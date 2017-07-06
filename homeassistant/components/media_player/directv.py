@@ -144,10 +144,9 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the channel current playing media."""
         if self._is_standby:
             return None
-        else:
-            chan = "{} ({})".format(
-                self._current['callsign'], self._current['major'])
-            return chan
+
+        return "{} ({})".format(
+            self._current['callsign'], self._current['major'])
 
     def turn_on(self):
         """Turn on the receiver."""
