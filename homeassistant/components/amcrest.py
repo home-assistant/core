@@ -4,6 +4,7 @@ This component provides basic support for Amcrest IP cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/amcrest/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -87,7 +88,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
@@ -129,7 +131,7 @@ def setup(hass, config):
             else:
                 authentication = None
 
-        discovery.load_platform(
+        hass.async_add_job(discovery.async_load_platform(
             hass, 'camera', DOMAIN, {
                 'device': camera,
                 CONF_AUTHENTICATION: authentication,
@@ -137,14 +139,14 @@ def setup(hass, config):
                 CONF_NAME: name,
                 CONF_RESOLUTION: resolution,
                 CONF_STREAM_SOURCE: stream_source,
-            }, config)
+            }, config))
 
         if sensors:
-            discovery.load_platform(
+            hass.async_add_job(discovery.async_load_platform(
                 hass, 'sensor', DOMAIN, {
                     'device': camera,
                     CONF_NAME: name,
                     CONF_SENSORS: sensors,
-                }, config)
+                }, config))
 
     return True
