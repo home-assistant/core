@@ -176,7 +176,7 @@ class TahomaApi :
     def getSetup(self):
         """Load the setup from the server.
 
-        Loads the configuration from the server, nothing will 
+        Loads the configuration from the server, nothing will
         be returned. After loading the configuration the devices
         can be obtained through getDevice and getDevices. 
         Also location and gateway will be set through this
@@ -391,16 +391,16 @@ class TahomaApi :
         return result['execId']
 
     def getEvents(self):
-        """Returns a set of events which have been occured 
+        """Returns a set of events which have been occured
         since the last call of this method.
 
-        This method should be called regulary to get all occuring 
+        This method should be called regulary to get all occuring
         Events. There are three different Event types/classes
         which can be returned:
 
-        - DeviceStateChangedEvent, if any device changed it's state 
+        - DeviceStateChangedEvent, if any device changed it's state
         due to an applied action or just because of other reasons
-        - CommandExecutionStateChangedEvent, a executed command goes 
+        - CommandExecutionStateChangedEvent, a executed command goes
         through several phases which can be followed
         - ExecutionStateChangedEvent, ******** todo
 
@@ -442,15 +442,16 @@ class TahomaApi :
         for eventData in result:
             event = Event.factory(eventData)
 
-            if event is not None: # otherwise it is an unknown event
+            if event is not None:
                 events.append(event)
 
                 if isinstance(event, DeviceStateChangedEvent):
                     # change device state
                     if self.__devices[event.deviceURL] is None:
-                        raise HomeAssistantError("Received device change " +
-                            "state for unknown device '" +
-                            event.deviceURL + "'")
+                        raise HomeAssistantError(
+                                "Received device change " +
+                                "state for unknown device '" +
+                                event.deviceURL + "'")
 
                     self.__devices[event.deviceURL].setActiveStates(
                         event.states)
@@ -475,8 +476,10 @@ class TahomaApi :
         header = _BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(_BASE_URL +
-            'getCurrentExecutions', headers=header)
+        request = requests.get(
+                        _BASE_URL +
+                        'getCurrentExecutions',
+                        headers=header)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -487,8 +490,9 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("Not a valid result for" +
-                " getCurrentExecutions, protocol error: " + e)
+            raise HomeAssistantError(
+                    "Not a valid result for" +
+                    "getCurrentExecutions, protocol error: " + e)
 
         if 'executions' not in result.keys():
             return None
@@ -557,7 +561,8 @@ class TahomaApi :
         try:
             result = request.json()
         except ValueError as e:
-            raise HomeAssistantError("getActionGroups: Not a valid result for ")
+            raise HomeAssistantError(
+                    "getActionGroups: Not a valid result for ")
 
         if 'actionGroups' not in result.keys():
             return None
