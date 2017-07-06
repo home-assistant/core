@@ -87,21 +87,20 @@ class CiscoDeviceScanner(DeviceScanner):
             lines_result = lines_result[2:]
 
             for line in lines_result:
-                if len(line.split()) is 6:
-                    parts = line.split()
-                    if len(parts) != 6:
-                        continue
+                parts = line.split()
+                if len(parts) != 6:
+                    continue
 
-                    # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
-                    # 'GigabitEthernet0']
-                    age = parts[2]
-                    hw_addr = parts[3]
+                # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
+                # 'GigabitEthernet0']
+                age = parts[2]
+                hw_addr = parts[3]
 
-                    if age != "-":
-                        mac = _parse_cisco_mac_address(hw_addr)
-                        age = int(age)
-                        if age < 1:
-                            last_results.append(mac)
+                if age != "-":
+                    mac = _parse_cisco_mac_address(hw_addr)
+                    age = int(age)
+                    if age < 1:
+                        last_results.append(mac)
 
             self.last_results = last_results
             return True
