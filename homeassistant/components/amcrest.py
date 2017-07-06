@@ -15,6 +15,7 @@ import homeassistant.loader as loader
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
     CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -36,6 +37,7 @@ DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
 TIMEOUT = 10
 
+DATA_AMCREST = 'amcrest'
 DOMAIN = 'amcrest'
 
 NOTIFICATION_ID = 'amcrest_notification'
@@ -87,12 +89,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
-    amcrest_data = hass.data[DOMAIN] = []
     amcrest_cams = config[DOMAIN]
 
     persistent_notification = loader.get_component('persistent_notification')
@@ -114,6 +114,7 @@ def async_setup(hass, config):
                 notification_id=NOTIFICATION_ID)
             return False
 
+
         ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
         name = device.get(CONF_NAME)
         resolution = RESOLUTION_LIST[device.get(CONF_RESOLUTION)]
@@ -131,32 +132,22 @@ def async_setup(hass, config):
             else:
                 authentication = None
 
-        amcrest_data.append(AmcrestEntity(camera,
-                                          name,
-                                          authentication,
-                                          resolution,
-                                          stream_source,
-                                          ffmpeg_arguments,
-                                          sensors))
+        discovery.load_platform(
+            hass, 'camera', DOMAIN, {
+                'device': camera,
+                CONF_AUTHENTICATION: authentication,
+                CONF_FFMPEG_ARGUMENTS: ffmpeg_arguments,
+                CONF_NAME: name,
+                CONF_RESOLUTION: resolution,
+                CONF_STREAM_SOURCE: stream_source,
+            }, config)
+
+        if sensors:
+            discovery.load_platform(
+                hass, 'sensor', DOMAIN, {
+                    'device': camera,
+                    CONF_NAME: name,
+                    CONF_SENSORS: sensors,
+                }, config)
 
     return True
-
-
-class AmcrestEntity(Entity):
-    """The Amcrest device entity."""
-
-    def __init__(self, camera, name, authentication, resolution,
-                 stream_source, ffmpeg_arguments, sensors):
-        """Initialize Amcrest Entity object."""
-        self.authentication = authentication
-        self.camera = camera
-        self.ffmpeg_arguments = ffmpeg_arguments
-        self.resolution = resolution
-        self.sensors = sensors
-        self.stream_source = stream_source
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name

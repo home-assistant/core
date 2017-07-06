@@ -22,16 +22,16 @@ SCAN_INTERVAL = timedelta(seconds=10)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a sensor for an Amcrest IP Camera."""
-    amcrest_data = hass.data.get('amcrest')
-    if not amcrest_data:
-        return False
+    if discovery_info is None:
+        return
+
+    device = discovery_info['device']
+    name = discovery_info['name']
+    sensors = discovery_info['sensors']
 
     amcrest_sensors = []
-    for device in amcrest_data:
-        for sensor_type in device.sensors:
-            amcrest_sensors.append(AmcrestSensor(device.name,
-                                                 device.camera,
-                                                 sensor_type))
+    for sensor_type in sensors:
+        amcrest_sensors.append(AmcrestSensor(name,device,sensor_type))
 
     async_add_devices(amcrest_sensors, True)
     return True

@@ -23,21 +23,25 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Amcrest IP Camera."""
-    amcrest_data = hass.data.get('amcrest')
-    if not amcrest_data:
-        return False
+    if discovery_info is None:
+        return
 
-    cameras = []
-    for device in amcrest_data:
-        cameras.append(AmcrestCam(hass,
-                                  device.name,
-                                  device.camera,
-                                  device.authentication,
-                                  device.ffmpeg_arguments,
-                                  device.stream_source,
-                                  device.resolution))
+    device = discovery_info['device']
+    authentication = discovery_info['authentication']
+    ffmpeg_arguments = discovery_info['ffmpeg_arguments']
+    name = discovery_info['name']
+    resolution = discovery_info['resolution']
+    stream_source = discovery_info['stream_source']
 
-    async_add_devices(cameras, True)
+    async_add_devices([
+        AmcrestCam(hass,
+                   name,
+                   device,
+                   authentication,
+                   ffmpeg_arguments,
+                   stream_source,
+                   resolution)], True)
+
     return True
 
 
