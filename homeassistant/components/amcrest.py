@@ -13,7 +13,7 @@ import voluptuous as vol
 import homeassistant.loader as loader
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_DIGEST_AUTHENTICATION)
+    CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -72,7 +72,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_DIGEST_AUTHENTICATION):
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
             vol.All(vol.In(AUTHENTICATION_LIST)),
         vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
             vol.All(vol.In(RESOLUTION_LIST)),
@@ -124,7 +124,7 @@ def setup(hass, config):
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
         if username is not None and password is not None:
-            if device.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+            if device.get(CONF_AUTHENTICATION) == HTTP_BASIC_AUTHENTICATION:
                 authentication = aiohttp.BasicAuth(username, password)
             else:
                 authentication = None
