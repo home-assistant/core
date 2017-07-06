@@ -116,8 +116,6 @@ def setup(hass, config):
         descriptions = load_yaml_config_file(os.path.join(
             os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
 
-        _LOGGER.error(descriptions)
-
         # Register services for modbus
         hass.services.register(
             DOMAIN, SERVICE_WRITE_REGISTER, write_register,
