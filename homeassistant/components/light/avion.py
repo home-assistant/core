@@ -37,8 +37,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Avion switch."""
-    lights = []
+    # pylint: disable=import-error
+    import avion
 
+    lights = []
     if CONF_USERNAME in config and CONF_PASSWORD in config:
         data = avion.avion_info(config[CONF_USERNAME], config[CONF_PASSWORD])
         for location in data['locations']:
