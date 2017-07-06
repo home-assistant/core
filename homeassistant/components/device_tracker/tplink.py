@@ -234,10 +234,9 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                         self.stok = ''
                         self.sysauth = ''
                         return False
-                    else:
-                        _LOGGER.error(
-                            "An unknown error happened while fetching data")
-                        return False
+                    _LOGGER.error(
+                        "An unknown error happened while fetching data")
+                    return False
             except ValueError:
                 _LOGGER.error("Router didn't respond with JSON. "
                               "Check if credentials are correct")

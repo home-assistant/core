@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, STATE_UNKNOWN, CONF_TOKEN)
+    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -101,8 +101,7 @@ class WaqiSensor(Entity):
         """Return the state of the device."""
         if self._details is not None:
             return self._details.get('aqi')
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):

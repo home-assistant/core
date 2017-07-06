@@ -109,16 +109,14 @@ class NestThermostat(ClimateDevice):
             return self._mode
         elif self._mode == STATE_HEAT_COOL:
             return STATE_AUTO
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
             return self._target_temperature
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
@@ -129,8 +127,7 @@ class NestThermostat(ClimateDevice):
             return self._eco_temperature[0]
         if self._mode == STATE_HEAT_COOL:
             return self._target_temperature[0]
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_high(self):
@@ -141,8 +138,7 @@ class NestThermostat(ClimateDevice):
             return self._eco_temperature[1]
         if self._mode == STATE_HEAT_COOL:
             return self._target_temperature[1]
-        else:
-            return None
+        return None
 
     @property
     def is_away_mode_on(self):
@@ -188,9 +184,8 @@ class NestThermostat(ClimateDevice):
         if self._has_fan:
             # Return whether the fan is on
             return STATE_ON if self._fan else STATE_AUTO
-        else:
-            # No Fan available so disable slider
-            return None
+        # No Fan available so disable slider
+        return None
 
     @property
     def fan_list(self):
