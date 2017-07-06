@@ -10,9 +10,8 @@ import requests
 import voluptuous as vol
 
 from collections import defaultdict
-from homeassistant.util import (convert, slugify)
+from homeassistant.util import (slugify)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import HomeAssistantError
@@ -38,6 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE, default=[]): TAHOMA_ID_LIST_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
     """docstring for async_setup"""

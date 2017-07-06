@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.util import convert
 from homeassistant.components.tahoma import (
-    TAHOMA_CONTROLLER, TAHOMA_DEVICES, TahomaDevice, Device, Action, Command)
+    TAHOMA_DEVICES, TahomaDevice)
 
 DEPENDENCIES = ['tahoma']
 
@@ -50,7 +50,7 @@ class TahomaSensor(TahomaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self.tahoma_device.type ==  'Temperature Sensor':
+        if self.tahoma_device.type == 'Temperature Sensor':
             return self._temperature_units
         elif self.tahoma_device.type == 'io:LightIOSystemSensor':
             return 'lux'
@@ -61,5 +61,7 @@ class TahomaSensor(TahomaDevice, Entity):
         """Update the state."""
         self.controller.getStates([self.tahoma_device])
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
-            self.current_value = self.tahoma_device.activeStates['core:LuminanceState']
+            self.current_value = 
+                self.tahoma_device.activeStates['core:LuminanceState']
+        
         self.schedule_update_ha_state()
