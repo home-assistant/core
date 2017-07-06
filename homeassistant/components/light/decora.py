@@ -39,7 +39,7 @@ def retry(method):
         """Try send command and retry on error."""
         # pylint: disable=import-error
         import decora
-        
+
         initial = time.monotonic()
         while True:
             if time.monotonic() - initial >= 10:
