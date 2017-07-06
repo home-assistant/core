@@ -31,7 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     amcrest_sensors = []
     for sensor_type in sensors:
-        amcrest_sensors.append(AmcrestSensor(name, device,sensor_type))
+        amcrest_sensors.append(AmcrestSensor(name, device, sensor_type))
 
     async_add_devices(amcrest_sensors, True)
     return True
