@@ -95,8 +95,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):

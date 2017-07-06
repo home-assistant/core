@@ -60,8 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if region == 'us':
         return _setup_us(username, password, config, add_devices)
-    else:
-        return _setup_round(username, password, config, add_devices)
+
+    return _setup_round(username, password, config, add_devices)
 
 
 def _setup_round(username, password, config, add_devices):
@@ -251,8 +251,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self._device.system_mode == 'cool':
             return self._device.setpoint_cool
-        else:
-            return self._device.setpoint_heat
+        return self._device.setpoint_heat
 
     @property
     def current_operation(self: ClimateDevice) -> str:

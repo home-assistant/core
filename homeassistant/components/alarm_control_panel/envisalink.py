@@ -113,8 +113,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
-        else:
-            return '^\\d{4,6}$'
+        return '^\\d{4,6}$'
 
     @property
     def state(self):

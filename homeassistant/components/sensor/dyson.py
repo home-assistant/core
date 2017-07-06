@@ -59,8 +59,7 @@ class DysonFilterLifeSensor(Entity):
         """Return filter life in hours.."""
         if self._device.state:
             return self._device.state.filter_life
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def name(self):
