@@ -232,8 +232,7 @@ class QNAPSensor(Entity):
         if self.monitor_device is not None:
             return "{} {} ({})".format(
                 server_name, self.var_name, self.monitor_device)
-        else:
-            return "{} {}".format(server_name, self.var_name)
+        return "{} {}".format(server_name, self.var_name)
 
     @property
     def icon(self):

@@ -33,10 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink device."""
-        super().__init__(wink, hass)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
@@ -52,8 +48,7 @@ class WinkLight(WinkDevice, Light):
         """Return the brightness of the light."""
         if self.wink.brightness() is not None:
             return int(self.wink.brightness() * 255)
-        else:
-            return None
+        return None
 
     @property
     def rgb_color(self):

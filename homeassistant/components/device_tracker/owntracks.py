@@ -131,8 +131,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             plaintext_payload = decrypt_payload(topic, data['data'])
             if plaintext_payload is None:
                 return None
-            else:
-                return validate_payload(topic, plaintext_payload, data_type)
+            return validate_payload(topic, plaintext_payload, data_type)
 
         if not isinstance(data, dict) or data.get('_type') != data_type:
             _LOGGER.debug("Skipping %s update for following data "

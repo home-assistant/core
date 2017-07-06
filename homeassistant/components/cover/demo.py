@@ -79,8 +79,7 @@ class DemoCover(CoverDevice):
         """Flag supported features."""
         if self._supported_features is not None:
             return self._supported_features
-        else:
-            return super().supported_features
+        return super().supported_features
 
     def close_cover(self, **kwargs):
         """Close the cover."""

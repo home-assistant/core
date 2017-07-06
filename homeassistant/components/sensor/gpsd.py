@@ -94,8 +94,7 @@ class GpsdSensor(Entity):
             return "3D Fix"
         elif self.agps_thread.data_stream.mode == 2:
             return "2D Fix"
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):

@@ -106,8 +106,7 @@ class AppleTvDevice(MediaPlayerDevice):
                     state == const.PLAY_STATE_FAST_BACKWARD:
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
-            else:
-                return STATE_STANDBY  # Bad or unknown state?
+            return STATE_STANDBY  # Bad or unknown state?
 
     @callback
     def playstatus_update(self, updater, playing):

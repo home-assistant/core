@@ -167,8 +167,8 @@ class BrSensor(Entity):
 
         if self.type != SYMBOL:
             return None
-        else:
-            return self._entity_picture
+
+        return self._entity_picture
 
     @property
     def device_state_attributes(self):
