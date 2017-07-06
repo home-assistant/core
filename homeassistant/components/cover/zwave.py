@@ -111,24 +111,34 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._operation_list = None
+        self._operating_state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._state = self.values.primary.data
+        self._operating_state = self.values.primary.data
+        operation_list =  self.values.primary.data_items
+        if operation_list:
+           self._operation_list = list(operation_list)
+        _LOGGER.debug("self._operation_list=%s",self._operation_list)
+        _LOGGER.debug("self._operating_state=%s",self.operating_state)
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._state
+        if self._operating_state == "Closed":
+           return True
+        else:
+           return False
 
     def close_cover(self):
         """Close the garage door."""
-        self.values.primary.data = False
+        self.values.primary.data = "Closed"
 
     def open_cover(self):
         """Open the garage door."""
-        self.values.primary.data = True
+        self.values.primary.data = "Opened"
 
     @property
     def device_class(self):
