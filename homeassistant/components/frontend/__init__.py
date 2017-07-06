@@ -8,8 +8,7 @@ import os
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.const import HTTP_NOT_FOUND
-from homeassistant.components import api, group
+from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.components.http.const import KEY_DEVELOPMENT
