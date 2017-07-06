@@ -70,7 +70,7 @@ class KNXLight(KNXMultiAddressDevice, Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
                           self.name, self._brightness)
-            assert (self._brightness <= 255)
+            assert self._brightness <= 255
             self.set_value("brightness", [self._brightness])
 
         if not self.should_poll:
