@@ -15,7 +15,6 @@ import threading
 import time
 from datetime import timedelta, datetime
 from typing import Optional, Dict
-from sqlalchemy import exc
 
 import voluptuous as vol
 
@@ -159,6 +158,7 @@ class Recorder(threading.Thread):
         """Start processing events to save."""
         from .models import States, Events
         from homeassistant.components import persistent_notification
+        from sqlalchemy import exc
 
         tries = 1
         connected = False
