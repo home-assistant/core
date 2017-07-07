@@ -2,6 +2,7 @@
 # when the code that they own is touched.
 # https://github.com/blog/2392-introducing-code-owners
 
+setup.py @home-assistant/core
 homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
