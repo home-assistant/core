@@ -1,6 +1,5 @@
 """
 Support for Radio Thermostat wifi-enabled home thermostats.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
@@ -137,23 +136,43 @@ class RadioThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        self._current_temperature = self.device.temp['raw']
+        current_temp = self.device.temp['raw']
+        while current_temp == -1:
+            _LOGGER.error("Invalid temperature detected, retrying")
+            current_temp = self.device.temp['raw']
+        self._current_temperature = current_temp
         self._name = self.device.name['raw']
         self._fmode = self.device.fmode['human']
         self._tmode = self.device.tmode['human']
         self._tstate = self.device.tstate['human']
 
         if self._tmode == 'Cool':
-            self._target_temperature = self.device.t_cool['raw']
+            target_temp = self.device.t_cool['raw']
+            while target_temp == -1:
+                _LOGGER.error("Invalid temperature detected, retrying")
+                target_temp = self.device.t_cool['raw']
+            self._target_temperature = target_temp
             self._current_operation = STATE_COOL
         elif self._tmode == 'Heat':
-            self._target_temperature = self.device.t_heat['raw']
+            target_temp = self.device.t_heat['raw']
+            while target_temp == -1:
+                _LOGGER.error("Invalid temperature detected, retrying")
+                target_temp = self.device.t_heat['raw']
+            self._target_temperature = target_temp
             self._current_operation = STATE_HEAT
         elif self._tmode == 'Auto':
             if self._tstate == 'Cool':
-                self._target_temperature = self.device.t_cool['raw']
+                target_temp = self.device.t_cool['raw']
+                while target_temp == -1:
+                    _LOGGER.error("Invalid temperature detected, retrying")
+                    target_temp = self.device.t_cool['raw']
+                self._target_temperature = target_temp
             elif self._tstate == 'Heat':
-                self._target_temperature = self.device.t_heat['raw']
+                target_temp = self.device.t_heat['raw']
+                while target_temp == -1:
+                    _LOGGER.error("Invalid temperature detected, retrying")
+                    target_temp = self.device.t_heat['raw']
+                self._target_temperature = target_temp
             self._current_operation = STATE_AUTO
         else:
             self._current_operation = STATE_IDLE
@@ -200,7 +219,6 @@ class RadioThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on.
-
         The RTCOA app simulates away mode by using a hold.
         """
         away_temp = None
