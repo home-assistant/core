@@ -138,6 +138,7 @@ class Light(zha.Entity, light.Light):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
+        @asyncio.coroutine
         def safe_read(cluster, attributes):
             """Swallow all exceptions from network read.
 
