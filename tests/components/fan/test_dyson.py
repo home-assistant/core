@@ -6,6 +6,15 @@ from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import dyson
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
+from libpurecoollink.dyson import DysonState
+
+
+class MockDysonState(DysonState):
+    """Mock Dyson state."""
+
+    def __init__(self):
+        """Create new Mock Dyson State."""
+        pass
 
 
 def _get_device_with_no_state():
@@ -257,7 +266,7 @@ class DysonTest(unittest.TestCase):
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
-        component.on_message("Message")
+        component.on_message(MockDysonState())
         component.schedule_update_ha_state.assert_called_with()
 
     def test_service_set_night_mode(self):
