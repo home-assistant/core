@@ -111,23 +111,21 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self._operation_list = None
-        self._operating_state = None
+        self._door_state_list = None
+        self._door_state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._operating_state = self.values.primary.data
-        operation_list =  self.values.primary.data_items
-        if operation_list:
-           self._operation_list = list(operation_list)
-        _LOGGER.debug("self._operation_list=%s",self._operation_list)
-        _LOGGER.debug("self._operating_state=%s",self.operating_state)
+        self._door_state = self.values.primary.data
+        if door_state_list:
+           self._door_state_list = list(state_list)
+        _LOGGER.debug("self._door_state_list=%s",self._door_state_list)
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        if self._operating_state == "Closed":
+        if self._door_state == "Closed":
            return True
         else:
            return False
@@ -149,3 +147,12 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_GARAGE
+
+	@property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        data = super().device_state_attributes
+        if self._door_state:
+            data[ATTR_DOOR_STATE] = self._door_state
+
+        return data

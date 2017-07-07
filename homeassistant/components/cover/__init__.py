@@ -55,6 +55,8 @@ ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
+ATTR_DOOR_STATE = 'door_state'
+ATTR_DOOR_STATE_LIST = 'door_state_list'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -234,6 +236,13 @@ class CoverDevice(Entity):
         current_tilt = self.current_cover_tilt_position
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
+			
+		door_state = self.door_state
+        if door_state is not None:
+            data[ATTR_DOOR_STATE] = door_state
+            if self.door_state_list:
+                data[ATTR_DOOR_STATE_LIST] = self.door_state_list
+
 
         return data
 
