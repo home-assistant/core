@@ -244,8 +244,8 @@ def request_configuration(host, hass, config, add_devices_callback):
         """Handle configuration changes."""
         setup_plexserver(
                 host, data.get('token'),
-                True if data.get('has_ssl') else False,
-                False if data.get('do_not_verify') else True,
+                cv.boolean(data.get('has_ssl')),
+                cv.boolean(data.get('do_not_verify')),
                 hass, config, add_devices_callback
             )
 
