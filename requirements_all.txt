@@ -354,7 +354,7 @@ libpurecoollink==0.1.5
 librouteros==1.0.2
 
 # homeassistant.components.media_player.soundtouch
-libsoundtouch==0.6.2
+libsoundtouch==0.7.2
 
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
