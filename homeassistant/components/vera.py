@@ -122,8 +122,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
-        else:
-            return 'switch'
+        return 'switch'
     return None
 
 

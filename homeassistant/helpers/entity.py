@@ -172,6 +172,7 @@ class Entity(object):
         if async_update is None:
             return
 
+        # pylint: disable=not-callable
         run_coroutine_threadsafe(async_update(), self.hass.loop).result()
 
     # DO NOT OVERWRITE
@@ -391,5 +392,4 @@ class ToggleEntity(Entity):
         """
         if self.is_on:
             return self.async_turn_off()
-        else:
-            return self.async_turn_on()
+        return self.async_turn_on()

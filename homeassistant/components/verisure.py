@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['vsure==1.3.6', 'jsonpath==0.75']
+REQUIREMENTS = ['vsure==1.3.7', 'jsonpath==0.75']
 
 _LOGGER = logging.getLogger(__name__)
 

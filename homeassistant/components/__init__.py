@@ -39,19 +39,19 @@ def is_on(hass, entity_id=None):
     else:
         entity_ids = hass.states.entity_ids()
 
-    for entity_id in entity_ids:
-        domain = ha.split_entity_id(entity_id)[0]
+    for ent_id in entity_ids:
+        domain = ha.split_entity_id(ent_id)[0]
 
         module = get_component(domain)
 
         try:
-            if module.is_on(hass, entity_id):
+            if module.is_on(hass, ent_id):
                 return True
 
         except AttributeError:
             # module is None or method is_on does not exist
             _LOGGER.exception("Failed to call %s.is_on for %s",
-                              module, entity_id)
+                              module, ent_id)
 
     return False
 

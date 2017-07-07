@@ -146,7 +146,4 @@ class ArwnSensor(Entity):
     @property
     def icon(self):
         """Return the icon of device based on its type."""
-        if self._icon:
-            return self._icon
-        else:
-            return super().icon
+        return self._icon
