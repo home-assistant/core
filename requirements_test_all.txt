@@ -62,7 +62,7 @@ holidays==0.8.1
 influxdb==3.0.0
 
 # homeassistant.components.dyson
-libpurecoollink==0.1.5
+libpurecoollink==0.2.0
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
