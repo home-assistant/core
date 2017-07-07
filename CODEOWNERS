@@ -29,3 +29,6 @@ homeassistant/components/scene/hass.py @home-assistant/core
 
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
+
+# Indiviudal components
+homeassistant/components/cover/template.py @PhracturedBlue
