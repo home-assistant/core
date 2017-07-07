@@ -29,20 +29,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkCoverDevice(WinkDevice, CoverDevice):
     """Representation of a Wink cover device."""
 
-    def __init__(self, wink, hass):
-        """Initialize the cover."""
-        super().__init__(wink, hass)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['cover'].append(self)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the shade."""
         self.wink.set_state(0)
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the shade."""
         self.wink.set_state(1)
 

@@ -123,7 +123,7 @@ class ArestSensor(Entity):
         if self._pin is not None:
             request = requests.get(
                 '{}/mode/{}/i'.format(self._resource, self._pin), timeout=10)
-            if request.status_code is not 200:
+            if request.status_code != 200:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

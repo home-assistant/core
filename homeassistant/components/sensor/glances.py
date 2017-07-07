@@ -89,8 +89,7 @@ class GlancesSensor(Entity):
         """Return the name of the sensor."""
         if self._name is None:
             return SENSOR_TYPES[self.type][0]
-        else:
-            return '{} {}'.format(self._name, SENSOR_TYPES[self.type][0])
+        return '{} {}'.format(self._name, SENSOR_TYPES[self.type][0])
 
     @property
     def unit_of_measurement(self):

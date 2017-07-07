@@ -65,7 +65,7 @@ influxdb==3.0.0
 libpurecoollink==0.1.5
 
 # homeassistant.components.media_player.soundtouch
-libsoundtouch==0.6.2
+libsoundtouch==0.7.2
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi

@@ -157,8 +157,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             from libpurecoollink.const import FanSpeed
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return self._device.state.speed
-            else:
-                return int(self._device.state.speed)
+            return int(self._device.state.speed)
         return None
 
     @property

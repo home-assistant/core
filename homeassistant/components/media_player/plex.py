@@ -531,16 +531,16 @@ class PlexClient(MediaPlayerDevice):
         # type so that lower layers don't think it's a URL and choke on it
         if value is self.na_type:
             return None
-        else:
-            return value
+
+        return value
 
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
         if self.media_content_type is MEDIA_TYPE_MUSIC:
             return 'music'
-        else:
-            return 'video'
+
+        return 'video'
 
     @property
     def media_content_id(self):
@@ -560,8 +560,8 @@ class PlexClient(MediaPlayerDevice):
             return MEDIA_TYPE_VIDEO
         elif self._session_type == 'track':
             return MEDIA_TYPE_MUSIC
-        else:
-            return None
+
+        return None
 
     @property
     def media_artist(self):
@@ -657,8 +657,8 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
-        else:
-            return None
+
+        return None
 
     def _local_client_control_fix(self):
         """Detect if local client and adjust url to allow control."""

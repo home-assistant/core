@@ -133,8 +133,8 @@ class MpdDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif self.status['state'] == 'pause':
             return STATE_PAUSED
-        else:
-            return STATE_OFF
+
+        return STATE_OFF
 
     @property
     def media_content_id(self):
@@ -164,8 +164,8 @@ class MpdDevice(MediaPlayerDevice):
             return title
         elif title is None:
             return name
-        else:
-            return '{}: {}'.format(name, title)
+
+        return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):

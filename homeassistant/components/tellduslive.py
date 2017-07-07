@@ -116,10 +116,9 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
-            else:
-                _LOGGER.warning(
-                    "Unidentified device type (methods: %d)", device.methods)
-                return 'switch'
+            _LOGGER.warning(
+                "Unidentified device type (methods: %d)", device.methods)
+            return 'switch'
 
         def discover(device_id, component):
             """Discover the component."""

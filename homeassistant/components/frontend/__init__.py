@@ -8,8 +8,7 @@ import os
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.const import HTTP_NOT_FOUND
-from homeassistant.components import api, group
+from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.components.http.const import KEY_DEVELOPMENT
@@ -138,6 +137,8 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
     if index_view:
         hass.http.app.router.add_route(
             'get', '/{}'.format(url_path), index_view.get)
+        hass.http.app.router.add_route(
+            'get', '/{}/{{extra:.+}}'.format(url_path), index_view.get)
 
 
 def add_manifest_json_key(key, val):
@@ -172,8 +173,10 @@ def setup(hass, config):
     # Now register their urls.
     if DATA_PANELS in hass.data:
         for url_path in hass.data[DATA_PANELS]:
-            hass.http.app.router.add_route('get', '/{}'.format(url_path),
-                                           index_view.get)
+            hass.http.app.router.add_route(
+                'get', '/{}'.format(url_path), index_view.get)
+            hass.http.app.router.add_route(
+                'get', '/{}/{{extra:.+}}'.format(url_path), index_view.get)
     else:
         hass.data[DATA_PANELS] = {}
 
@@ -212,7 +215,7 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = 'frontend:index'
     requires_auth = False
-    extra_urls = ['/states', '/states/{entity_id}']
+    extra_urls = ['/states', '/states/{extra}']
 
     def __init__(self):
         """Initialize the frontend view."""
@@ -225,16 +228,9 @@ class IndexView(HomeAssistantView):
         )
 
     @asyncio.coroutine
-    def get(self, request, entity_id=None):
+    def get(self, request, extra=None):
         """Serve the index view."""
         hass = request.app['hass']
-
-        if entity_id is not None:
-            state = hass.states.get(entity_id)
-
-            if (not state or state.domain != 'group' or
-                    not state.attributes.get(group.ATTR_VIEW)):
-                return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
         if request.app[KEY_DEVELOPMENT]:
             core_url = '/static/home-assistant-polymer/build/core.js'
