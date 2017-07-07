@@ -1,5 +1,6 @@
 """
 Support for Radio Thermostat wifi-enabled home thermostats.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
@@ -219,6 +220,7 @@ class RadioThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on.
+        
         The RTCOA app simulates away mode by using a hold.
         """
         away_temp = None
