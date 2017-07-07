@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.dyson/
 import logging
 import asyncio
 
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.dyson import DYSON_DEVICES
 
 from homeassistant.helpers.entity import Entity
@@ -87,7 +87,7 @@ class DysonFilterLifeSensor(DysonSensor):
         """Return filter life in hours."""
         if self._device.state:
             return int(self._device.state.filter_life)
-        return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -108,8 +108,7 @@ class DysonDustSensor(DysonSensor):
         """Return Dust value."""
         if self._device.environmental_state:
             return self._device.environmental_state.dust
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -130,8 +129,7 @@ class DysonHumiditySensor(DysonSensor):
         """Return Dust value."""
         if self._device.environmental_state:
             return self._device.environmental_state.humidity
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -155,11 +153,8 @@ class DysonTemperatureSensor(DysonSensor):
             temperature_kelvin = self._device.environmental_state.temperature
             if self._unit == TEMP_CELSIUS:
                 return float("{0:.1f}".format(temperature_kelvin - 273.15))
-            else:
-                return float(
-                    "{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
-        else:
-            return STATE_UNKNOWN
+            return float("{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -180,8 +175,7 @@ class DysonAirQualitySensor(DysonSensor):
         """Return Air QUality value."""
         if self._device.environmental_state:
             return self._device.environmental_state.volatil_organic_compounds
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def unit_of_measurement(self):
