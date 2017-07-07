@@ -118,7 +118,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def update_properties(self):
         """Handle data changes for node values."""
         self._door_state = self.values.primary.data
-        self._door_state_list =  self.values.primary.data_items
+        self.door_state_list =  self.values.primary.data_items
         if door_state_list:
            self._door_state_list = list(state_list)
         _LOGGER.debug("self._door_state_list=%s",self._door_state_list)
