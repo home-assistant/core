@@ -86,13 +86,13 @@ class IntentHandler(object):
         try:
             response = json.loads(payload)
         except TypeError:
-            LOGGER.error("Received invalid JSON: %s", payload)
+            LOGGER.error('Received invalid JSON: %s', payload)
             return
 
         try:
             response = INTENT_SCHEMA(response)
         except vol.Invalid as err:
-            LOGGER.error("Intent has invalid schema: %s. %s", err, response)
+            LOGGER.error('Intent has invalid schema: %s. %s', err, response)
             return
 
         intent = response['intent']['intentName'].split('__')[-1]
@@ -108,7 +108,6 @@ class IntentHandler(object):
             slots = self.parse_slots(response)
             yield from action.async_run(slots)
 
-    # pylint: disable=no-self-use
     def parse_slots(self, response):
         """Parse the intent slots."""
         parameters = {}
