@@ -220,7 +220,7 @@ class RadioThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on.
-        
+
         The RTCOA app simulates away mode by using a hold.
         """
         away_temp = None
