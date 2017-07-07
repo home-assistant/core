@@ -189,11 +189,12 @@ class CoverTemplate(CoverDevice):
         self._open_time = open_time
         self._close_time = close_time
         self._optimistic = (optimistic or
-                            (not tilt_template and not position_template))
+                            (not state_template and not position_template))
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
         self._position = 0
         self._tilt_value = 0
+        self._in_motion = False
         self._entities = entity_ids
 
         if self._template is not None:
@@ -267,8 +268,7 @@ class CoverTemplate(CoverDevice):
         if self._stop_script is not None:
             supported_features |= SUPPORT_STOP
 
-        if (self._position_script is not None or
-                (self._open_time and self._stop_script)):
+        if self._position_script or self._open_time:
             supported_features |= SUPPORT_SET_POSITION
 
         if self.current_cover_tilt_position is not None:
@@ -290,6 +290,7 @@ class CoverTemplate(CoverDevice):
             self.hass.async_add_job(self._position_script.async_run(
                 {"position": 100}))
         if self._optimistic:
+            self._position = 100
             self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
@@ -301,11 +302,13 @@ class CoverTemplate(CoverDevice):
             self.hass.async_add_job(self._position_script.async_run(
                 {"position": 0}))
         if self._optimistic:
+            self._position = 0
             self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
     def _stop_cover(self, **kwargs):
-        """Stop the cover."""
+        """Stop the cover on timed move."""
+        self._in_motion = False
         self.hass.async_add_job(self._stop_script.async_run())
 
     @asyncio.coroutine
@@ -322,6 +325,10 @@ class CoverTemplate(CoverDevice):
             self.hass.async_add_job(self._position_script.async_run(
                 {"position": self._position}))
         else:
+            if self._in_motion:
+                _LOGGER.warning("Ignoring requested cover move."
+                                "  It is already in motion.")
+                return
             delay = (kwargs[ATTR_POSITION] - self._position) / 100.0
             self._position = kwargs[ATTR_POSITION]
             if delay > 0:
@@ -333,8 +340,8 @@ class CoverTemplate(CoverDevice):
             else:
                 return
             self.hass.loop.call_later(delay, self._stop_cover)
+            self._in_motion = True
         if self._optimistic:
-            _LOGGER.warning("Optimize")
             self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine

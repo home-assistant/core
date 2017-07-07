@@ -2,6 +2,7 @@
 
 import logging
 import unittest
+import time
 
 from homeassistant.core import callback
 from homeassistant import setup
@@ -21,7 +22,7 @@ class TestTemplateCover(unittest.TestCase):
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Initialize services when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -254,32 +255,6 @@ class TestTemplateCover(unittest.TestCase):
 
         assert self.hass.states.all() == []
 
-    def test_template_position_or_value(self):
-        """Test that at least one of value or position template is used."""
-        with assert_setup_component(1, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', {
-                'cover': {
-                    'platform': 'template',
-                    'covers': {
-                        'test_template_cover': {
-                            'open_cover': {
-                                'service': 'cover.open_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                        },
-                    }
-                }
-            })
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
     def test_template_open_or_position(self):
         """Test that at least one of open_cover or set_position is used."""
         with assert_setup_component(1, 'cover'):
@@ -436,13 +411,13 @@ class TestTemplateCover(unittest.TestCase):
         """Test the set_position command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'input_slider', {
-               'input_slider': {
-                   'test': {
-                       'min': '0',
-                       'max': '100',
-                       'initial': '42',
-                   }
-               }
+                'input_slider': {
+                    'test': {
+                        'min': '0',
+                        'max': '100',
+                        'initial': '42',
+                    }
+                }
             })
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -486,6 +461,162 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 25.0
+
+    def test_timed_open_close(self):
+        """Test the timed open and close functions."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_open': {
+                            'set_cover_position': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                        },
+                        'test_close': {
+                            'set_cover_position': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                        },
+                        'test_stop': {
+                            'set_cover_position': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                        },
+                        'test_template_cover': {
+                            'open_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_open'
+                            },
+                            'close_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_close'
+                            },
+                            'stop_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_stop'
+                            },
+                            'opening_time': 1,
+                            'closing_time': 1,
+                        }
+                    }
+                }
+            })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        # Test timed opening
+        cover.set_cover_position(self.hass, 5,
+                                 'cover.test_template_cover')
+        # This should be ignored
+        cover.set_cover_position(self.hass, 2,
+                                 'cover.test_template_cover')
+        self.hass.block_till_done()
+        # Wait until delayed timer fires
+        time.sleep(0.1)
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        state_open = self.hass.states.get('cover.test_open')
+        state_close = self.hass.states.get('cover.test_close')
+        state_stop = self.hass.states.get('cover.test_stop')
+        assert state.attributes.get('current_position') == 5.0
+        assert state_open.state == STATE_OPEN
+        assert state_close.state == STATE_CLOSED
+        assert state_stop.state == STATE_OPEN
+
+        # Test timed closing
+        cover.close_cover(self.hass, 'cover.test_open')
+        cover.close_cover(self.hass, 'cover.test_close')
+        cover.close_cover(self.hass, 'cover.test_stop')
+        cover.set_cover_position(self.hass, 0,
+                                 'cover.test_template_cover')
+        self.hass.block_till_done()
+        # Wait until delayed timer fires
+        time.sleep(0.1)
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        state_open = self.hass.states.get('cover.test_open')
+        state_close = self.hass.states.get('cover.test_close')
+        state_stop = self.hass.states.get('cover.test_stop')
+        assert state.attributes.get('current_position') == 0.0
+        assert state_open.state == STATE_CLOSED
+        assert state_close.state == STATE_OPEN
+        assert state_stop.state == STATE_OPEN
+
+        # Test NO-OP
+        cover.close_cover(self.hass, 'cover.test_open')
+        cover.close_cover(self.hass, 'cover.test_close')
+        cover.close_cover(self.hass, 'cover.test_stop')
+        cover.set_cover_position(self.hass, 0,
+                                 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        state_open = self.hass.states.get('cover.test_open')
+        state_close = self.hass.states.get('cover.test_close')
+        state_stop = self.hass.states.get('cover.test_stop')
+        assert state.attributes.get('current_position') == 0.0
+        assert state_open.state == STATE_CLOSED
+        assert state_close.state == STATE_CLOSED
+        assert state_stop.state == STATE_CLOSED
+
+    def test_opening_time_without_closing_time(self):
+        """Test that both opening_time and closing_time are set."""
+        with assert_setup_component(0, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'open_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_open'
+                            },
+                            'close_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_close'
+                            },
+                            'stop_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_stop'
+                            },
+                            'opening_time': 1,
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        assert self.hass.states.all() == []
+
+    def test_opening_time_without_open_action(self):
+        """Test that both opening_time and closing_time are set."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'set_cover_position': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'opening_time': 1,
+                            'closing_time': 1,
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        assert self.hass.states.all() == []
 
     def test_set_tilt_position(self):
         """Test the set_tilt_position command."""
