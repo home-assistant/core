@@ -316,5 +316,5 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Returns the media type."""
+        """Return the media type."""
         return MEDIA_TYPE_MUSIC
