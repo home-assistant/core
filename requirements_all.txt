@@ -643,6 +643,9 @@ pynut2==2.1.2
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
+# homeassistant.components.sensor.otp
+pyotp==2.2.6
+
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
 pyowm==2.7.1
