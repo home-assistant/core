@@ -47,15 +47,13 @@ def retry(method):
             try:
                 return method(device, *args, **kwds)
             except (decora.decoraException, AttributeError):
+                # pylint: disable=protected-access
                 device._switch.connect()
     return wrapper_retry
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Decora switch."""
-    # pylint: disable=import-error
-    import decora
-
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
