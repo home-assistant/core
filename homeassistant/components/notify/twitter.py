@@ -71,26 +71,28 @@ class TwitterNotificationService(BaseNotificationService):
 
     def upload_media(self, media_path=None):
         """Upload media."""
-        if media_path:
-            (media_type, _) = mimetypes.guess_type(media_path)
-            total_bytes = os.path.getsize(media_path)
+        if not media_path:
+            return None
 
-            file = open(media_path, 'rb')
-            resp = self.upload_media_init(media_type, total_bytes)
+        (media_type, _) = mimetypes.guess_type(media_path)
+        total_bytes = os.path.getsize(media_path)
 
-            media_id = None
-            if resp.status_code not in range(200, 299):
-                self.log_error_resp(resp)
-            else:
-                media_id = resp.json()['media_id']
-                media_id = self.upload_media_chunked(file, total_bytes,
-                                                     media_id)
+        file = open(media_path, 'rb')
+        resp = self.upload_media_init(media_type, total_bytes)
 
-                resp = self.upload_media_finalize(media_id)
-                if resp.status_code not in range(200, 299):
-                    self.log_error_resp(resp)
+        if 199 > resp.status_code < 300:
+            self.log_error_resp(resp)
+            return None
 
-            return media_id
+        media_id = resp.json()['media_id']
+        media_id = self.upload_media_chunked(file, total_bytes,
+                                             media_id)
+
+        resp = self.upload_media_finalize(media_id)
+        if 199 > resp.status_code < 300:
+            self.log_error_resp(resp)
+
+        return media_id
 
     def upload_media_init(self, media_type, total_bytes):
         """Upload media, INIT phase."""
