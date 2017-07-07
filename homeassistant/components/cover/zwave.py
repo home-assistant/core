@@ -150,7 +150,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Flag supported features."""
         return SUPPORT_GARAGE
 
-	@property
+    @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         data = super().device_state_attributes
