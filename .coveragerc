@@ -453,6 +453,7 @@ omit =
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/opensky.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/otp.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
