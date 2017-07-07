@@ -70,10 +70,10 @@ class ModbusCoilSwitch(ToggleEntity):
     def update(self):
         """Update the state of the switch."""
         result = modbus.HUB.read_coils(self._slave, self._coil, 1)
-        if not result:
+        try:
+            self._is_on = bool(result.bits[0])
+        except AttributeError:
             _LOGGER.error(
                 'No response from modbus slave %s coil %s',
                 self._slave,
                 self._coil)
-            return
-        self._is_on = bool(result.bits[0])
