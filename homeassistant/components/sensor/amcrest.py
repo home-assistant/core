@@ -12,7 +12,7 @@ from homeassistant.components.amcrest import SENSORS
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_UNKNOWN
 
-DEPENDENCIES = ['amcrest', 'ffmpeg']
+DEPENDENCIES = ['amcrest']
 
 _LOGGER = logging.getLogger(__name__)
 

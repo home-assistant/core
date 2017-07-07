@@ -4,7 +4,6 @@ This component provides basic support for Amcrest IP cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/amcrest/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -88,8 +87,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera
 
