@@ -313,7 +313,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if self._user is not None and self._user['product'] == 'premium':
             return SUPPORT_SPOTIFY
         return None
-    
+
     @property
     def media_content_type(self):
         """Returns the media type."""
