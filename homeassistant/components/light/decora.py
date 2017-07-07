@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.decora/
 """
 import logging
+from functools import wraps
 import time
 
 import voluptuous as vol
@@ -14,10 +15,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-
-# pylint: disable=import-error
-
-DECORA_EXCEPTION = None
 
 REQUIREMENTS = ['decora==0.6']
 
@@ -35,14 +32,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def retry(method):
+    """Retry bluetooth commands."""
+    @wraps(method)
+    def wrapper_retry(device, *args, **kwds):
+        """Try send command and retry on error."""
+        # pylint: disable=import-error
+        import decora
+
+        initial = time.monotonic()
+        while True:
+            if time.monotonic() - initial >= 10:
+                return None
+            try:
+                return method(device, *args, **kwds)
+            except (decora.decoraException, AttributeError):
+                # pylint: disable=protected-access
+                device._switch.connect()
+    return wrapper_retry
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Decora switch."""
-    global DECORA_EXCEPTION
-
-    import decora
-
-    DECORA_EXCEPTION = decora.decoraException
-
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
@@ -60,6 +71,7 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
+        # pylint: disable=import-error
         import decora
 
         self._name = device['name']
@@ -82,13 +94,11 @@ class DecoraLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        self.update()
         return self._state
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        self.update()
         return self._brightness
 
     @property
@@ -106,61 +116,30 @@ class DecoraLight(Light):
         """We can read the actual state."""
         return False
 
+    @retry
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.set_brightness(brightness / 2.55)
-                break
-            except (DECORA_EXCEPTION, AttributeError):
-                self._switch.connect()
-
+        self._switch.set_brightness(brightness / 2.55)
         self._brightness = brightness
-        return True
 
+    @retry
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.on()
-                self._state = True
-                break
-            except (DECORA_EXCEPTION, AttributeError):
-                self._switch.connect()
+        self._switch.on()
+        self._state = True
 
         if brightness is not None:
             self.set_state(brightness)
 
+    @retry
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._switch.off()
-                self._state = False
-                break
-            except (DECORA_EXCEPTION, AttributeError):
-                self._switch.connect()
+        self._switch.off()
+        self._state = False
 
+    @retry
     def update(self):
         """Synchronise internal state with the actual light state."""
-        initial = time.monotonic()
-        while True:
-            if time.monotonic() - initial >= 10:
-                return None
-            try:
-                self._brightness = self._switch.get_brightness() * 2.55
-                self._state = self._switch.get_on()
-                break
-            except (DECORA_EXCEPTION, AttributeError):
-                self._switch.connect()
+        self._brightness = self._switch.get_brightness() * 2.55
+        self._state = self._switch.get_on()

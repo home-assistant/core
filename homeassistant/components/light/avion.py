@@ -17,10 +17,6 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-# pylint: disable=import-error
-
-AVION_EXCEPTION = None
-
 REQUIREMENTS = ['avion==0.7']
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,11 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Avion switch."""
-    global AVION_EXCEPTION
-
+    # pylint: disable=import-error
     import avion
-
-    AVION_EXCEPTION = avion.avionException
 
     lights = []
     if CONF_USERNAME in config and CONF_PASSWORD in config:
@@ -77,6 +70,7 @@ class AvionLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
+        # pylint: disable=import-error
         import avion
 
         self._name = device['name']
@@ -123,6 +117,9 @@ class AvionLight(Light):
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
+        # pylint: disable=import-error
+        import avion
+
         # Bluetooth LE is unreliable, and the connection may drop at any
         # time. Make an effort to re-establish the link.
         initial = time.monotonic()
@@ -132,7 +129,7 @@ class AvionLight(Light):
             try:
                 self._switch.set_brightness(brightness)
                 break
-            except AVION_EXCEPTION:
+            except avion.avionException:
                 self._switch.connect()
         return True
 
