@@ -108,6 +108,7 @@ class IntentHandler(object):
             slots = self.parse_slots(response)
             yield from action.async_run(slots)
 
+    # pylint: disable=no-self-use
     def parse_slots(self, response):
         """Parse the intent slots."""
         parameters = {}
