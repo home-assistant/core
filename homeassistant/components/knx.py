@@ -24,11 +24,14 @@ DOMAIN = 'knx'
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
 
 KNXTUNNEL = None
+CONF_LISTEN = "listen"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_LISTEN, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,7 +41,7 @@ def setup(hass, config):
     global KNXTUNNEL
 
     from knxip.ip import KNXIPTunnel
-    from knxip.core import KNXException
+    from knxip.core import KNXException, parse_group_address
 
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
@@ -60,6 +63,24 @@ def setup(hass, config):
         return False
 
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
+
+    def received_knx_event(address, data):
+        """Process received KNX message."""
+        if len(data) == 1:
+            data = data[0]
+        hass.bus.fire('knx_event', {
+            'address': address,
+            'data': data
+        })
+
+    for listen in config[DOMAIN].get(CONF_LISTEN):
+        _LOGGER.debug("Registering listener for %s", listen)
+        try:
+            KNXTUNNEL.register_listener(parse_group_address(listen),
+                                        received_knx_event)
+        except KNXException as knxexception:
+            _LOGGER.error("Can't register KNX listener for address %s (%s)",
+                          listen, knxexception)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
     return True
