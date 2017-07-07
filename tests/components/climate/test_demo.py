@@ -208,6 +208,28 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
+    def test_set_enabled_bad_attr(self):
+        """Test setting the enabled without required attribute."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('on', state.attributes.get('enabled'))
+        climate.set_enabled(self.hass, None, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual('on', state.attributes.get('enabled'))
+
+    def test_set_enabled_on(self):
+        """Test setting the enabled on/true."""
+        climate.set_enabled(self.hass, True, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('on', state.attributes.get('enabled'))
+
+    def test_set_enabled_off(self):
+        """Test setting the enabled mode off/false."""
+        climate.set_enabled(self.hass, False, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('off', state.attributes.get('enabled'))
+
     def test_set_hold_mode_home(self):
         """Test setting the hold mode home."""
         climate.set_hold_mode(self.hass, 'home', ENTITY_ECOBEE)

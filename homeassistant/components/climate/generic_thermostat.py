@@ -87,6 +87,7 @@ class GenericThermostat(ClimateDevice):
         self.min_cycle_duration = min_cycle_duration
         self._tolerance = tolerance
         self._keep_alive = keep_alive
+        self._is_enabled = True
 
         self._active = False
         self._cur_temp = None
@@ -117,6 +118,11 @@ class GenericThermostat(ClimateDevice):
     def name(self):
         """Return the name of the thermostat."""
         return self._name
+
+    @property
+    def is_enabled(self):
+        """Return whether the thermostat is currently enabled."""
+        return self._is_enabled
 
     @property
     def temperature_unit(self):
@@ -152,6 +158,16 @@ class GenericThermostat(ClimateDevice):
         self._target_temp = temperature
         self._async_control_heating()
         yield from self.async_update_ha_state()
+
+    def turn_enabled_off(self):
+        """Turn enabled off."""
+        self._is_enabled = False
+        if self._is_device_active:
+            switch.async_turn_off(self.hass, self.heater_entity_id)
+
+    def turn_enabled_on(self):
+        """Turn enabled on."""
+        self._is_enabled = True
 
     @property
     def min_temp(self):
@@ -219,6 +235,9 @@ class GenericThermostat(ClimateDevice):
                          'Generic thermostat active.')
 
         if not self._active:
+            return
+
+        if not self._is_enabled:
             return
 
         if self.min_cycle_duration:

@@ -29,6 +29,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 SERVICE_SET_AWAY_MODE = 'set_away_mode'
+SERVICE_SET_ENABLED = 'set_enabled'
 SERVICE_SET_AUX_HEAT = 'set_aux_heat'
 SERVICE_SET_TEMPERATURE = 'set_temperature'
 SERVICE_SET_FAN_MODE = 'set_fan_mode'
@@ -51,6 +52,7 @@ ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
 ATTR_AWAY_MODE = 'away_mode'
+ATTR_ENABLED = 'enabled'
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_FAN_MODE = 'fan_mode'
 ATTR_FAN_LIST = 'fan_list'
@@ -80,6 +82,10 @@ _LOGGER = logging.getLogger(__name__)
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
+})
+SET_ENABLED_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENABLED): cv.boolean,
 })
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -124,6 +130,17 @@ def set_away_mode(hass, away_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
+
+
+def set_enabled(hass, enabled, entity_id=None):
+    """Enable all or specified climate devices."""
+    data = {
+        ATTR_ENABLED: enabled
+    }
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_ENABLED, data)
 
 
 def set_hold_mode(hass, hold_mode, entity_id=None):
@@ -254,6 +271,26 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
         descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
+
+    @asyncio.coroutine
+    def async_enabled_set_service(service):
+        """Set enabled on target climate devices."""
+        target_climate = component.async_extract_from_service(service)
+
+        enabled = service.data.get(ATTR_ENABLED)
+
+        for climate in target_climate:
+            if enabled:
+                yield from climate.async_turn_enabled_on()
+            else:
+                yield from climate.async_turn_enabled_off()
+
+        yield from _async_update_climate(target_climate)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_ENABLED, async_enabled_set_service,
+        descriptions.get(SERVICE_SET_ENABLED),
+        schema=SET_ENABLED_SCHEMA)
 
     @asyncio.coroutine
     def async_hold_mode_set_service(service):
@@ -462,6 +499,10 @@ class ClimateDevice(Entity):
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
+        is_enabled = self.is_enabled
+        if is_enabled is not None:
+            data[ATTR_ENABLED] = STATE_ON if is_enabled else STATE_OFF
+
         is_aux_heat = self.is_aux_heat_on
         if is_aux_heat is not None:
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
@@ -526,6 +567,11 @@ class ClimateDevice(Entity):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
+        return None
+
+    @property
+    def is_enabled(self):
+        """Return true if the thermostat is enabled."""
         return None
 
     @property
@@ -635,6 +681,28 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_away_mode_off)
+
+    def turn_enabled_on(self):
+        """Turn enabled on."""
+        raise NotImplementedError()
+
+    def async_turn_enabled_on(self):
+        """Turn enabled mode on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_enabled_on)
+
+    def turn_enabled_off(self):
+        """Turn enabled off."""
+        raise NotImplementedError()
+
+    def async_turn_enabled_off(self):
+        """Turn enabled off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.turn_enabled_off)
 
     def set_hold_mode(self, hold_mode):
         """Set new target hold mode."""
