@@ -1,4 +1,8 @@
-"""Parent component for Dyson Pure Cool Link devices."""
+"""Parent component for Dyson Pure Cool Link devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/dyson/
+"""
 
 import logging
 
@@ -9,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
     CONF_DEVICES
 
-REQUIREMENTS = ['libpurecoollink==0.1.5']
+REQUIREMENTS = ['libpurecoollink==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

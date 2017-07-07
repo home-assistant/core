@@ -1,4 +1,8 @@
-"""Support for Dyson Pure Cool link fan."""
+"""Support for Dyson Pure Cool link fan.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/fan.dyson/
+"""
 import logging
 import asyncio
 from os import path
@@ -79,9 +83,11 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
-        _LOGGER.debug(
-            "Message received for fan device %s : %s", self.name, message)
-        self.schedule_update_ha_state()
+        from libpurecoollink.dyson import DysonState
+        if isinstance(message, DysonState):
+            _LOGGER.debug("Message received for fan device %s : %s", self.name,
+                          message)
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
