@@ -289,8 +289,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, 'light', ['light.test_1', 'light.test_2'])
         group.Group.create_group(
             self.hass, 'switch', ['switch.test_1', 'switch.test_2'])
-        group.Group.create_group(self.hass, 'group_of_groups', ['group.light',
-                                                                'group.switch'])
+        group.Group.create_group(
+            self.hass, 'group_of_groups', ['group.light', 'group.switch'])
 
         self.assertEqual(
             ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
