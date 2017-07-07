@@ -489,9 +489,6 @@ pushbullet.py==0.10.0
 # homeassistant.components.notify.pushetta
 pushetta==1.0.15
 
-# homeassistant.components.sensor.waqi
-pwaqi==3.0
-
 # homeassistant.components.light.rpi_gpio_pwm
 pwmled==1.1.1
 
@@ -923,6 +920,9 @@ vtjp==0.1.14
 # homeassistant.components.media_player.webostv
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
+
+# homeassistant.components.sensor.waqi
+waqiasync==1.0.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
