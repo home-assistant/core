@@ -170,6 +170,9 @@ omit =
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
+    homeassistant/components/velux.py
+    homeassistant/components/*/velux.py
+
     homeassistant/components/vera.py
     homeassistant/components/*/vera.py
 
