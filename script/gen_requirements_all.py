@@ -69,7 +69,6 @@ TEST_REQUIREMENTS = (
     'PyJWT',
     'restrictedpython',
     'pyunifi',
-    'wakeonlan',
 )
 
 IGNORE_PACKAGES = (
