@@ -13,7 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 
 REQUIREMENTS = ['TwitterAPI==2.4.5']
@@ -23,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CONSUMER_KEY = 'consumer_key'
 CONF_CONSUMER_SECRET = 'consumer_secret'
 CONF_ACCESS_TOKEN_SECRET = 'access_token_secret'
+
+ATTR_MEDIA = 'media'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
@@ -36,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Twitter notification service."""
     return TwitterNotificationService(
+        hass,
         config[CONF_CONSUMER_KEY], config[CONF_CONSUMER_SECRET],
         config[CONF_ACCESS_TOKEN], config[CONF_ACCESS_TOKEN_SECRET],
         config.get(CONF_USERNAME)
@@ -45,17 +48,23 @@ def get_service(hass, config, discovery_info=None):
 class TwitterNotificationService(BaseNotificationService):
     """Implementation of a notification service for the Twitter service."""
 
-    def __init__(self, consumer_key, consumer_secret, access_token_key,
+    def __init__(self, hass, consumer_key, consumer_secret, access_token_key,
                  access_token_secret, username):
         """Initialize the service."""
         from TwitterAPI import TwitterAPI
         self.user = username
+        self.hass = hass
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
     def send_message(self, message="", **kwargs):
-        """Tweet a message, optionally with media"""
-        media = kwargs.get('media', None)
+        """Tweet a message, optionally with media."""
+        data = kwargs.get(ATTR_DATA)
+        media = data.get(ATTR_MEDIA)
+        if not self.hass.config.is_allowed_path(media):
+            _LOGGER.warning("'%s' is not in a whitelisted area.", media)
+            return
+
         media_id = self.upload_media(media)
 
         if self.user:
