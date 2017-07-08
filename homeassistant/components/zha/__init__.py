@@ -264,16 +264,25 @@ def _discover_endpoint_info(endpoint):
     if 0 not in endpoint.clusters:
         return extra_info
 
-    result, _ = yield from endpoint.clusters[0].read_attributes(
-        ['manufacturer', 'model'],
-        allow_cache=True,
-    )
-    extra_info.update(result)
+    @asyncio.coroutine
+    def read(attributes):
+        """Read attributes and update extra_info convenience function."""
+        result, _ = yield from endpoint.clusters[0].read_attributes(
+            attributes,
+            allow_cache=True,
+        )
+        extra_info.update(result)
+
+    yield from read(['manufacturer', 'model'])
+    if extra_info['manufacturer'] is None or extra_info['model'] is None:
+        # Some devices fail at returning multiple results. Attempt separately.
+        yield from read(['manufacturer'])
+        yield from read(['model'])
 
     for key, value in extra_info.items():
         if isinstance(value, bytes):
             try:
-                extra_info[key] = value.decode('ascii')
+                extra_info[key] = value.decode('ascii').strip()
             except UnicodeDecodeError:
                 # Unsure what the best behaviour here is. Unset the key?
                 pass

@@ -289,5 +289,5 @@ class YamahaDevice(MediaPlayerDevice):
             # just the one we have.
             if song and station:
                 return '{}: {}'.format(station, song)
-            else:
-                return song or station
+
+            return song or station

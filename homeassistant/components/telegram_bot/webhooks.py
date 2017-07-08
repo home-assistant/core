@@ -114,5 +114,4 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
 
         if not self.process_message(data):
             return self.json_message('Invalid message', HTTP_BAD_REQUEST)
-        else:
-            return self.json({})
+        return self.json({})

@@ -121,8 +121,7 @@ class IOSSensor(Entity):
 
         if self.type == "state":
             return returning_icon_state
-        else:
-            return returning_icon_level
+        return returning_icon_level
 
     def update(self):
         """Get the latest state of the sensor."""

@@ -61,9 +61,5 @@ def test_states_routes(hass, mock_http_client):
     resp = yield from mock_http_client.get('/states')
     assert resp.status == 200
 
-    resp = yield from mock_http_client.get('/states/group.non_existing')
-    assert resp.status == 404
-
-    hass.states.async_set('group.existing', 'on', {'view': True})
     resp = yield from mock_http_client.get('/states/group.existing')
     assert resp.status == 200

@@ -73,8 +73,8 @@ class TomatoDeviceScanner(DeviceScanner):
 
         if not filter_named or not filter_named[0]:
             return None
-        else:
-            return filter_named[0]
+
+        return filter_named[0]
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):

@@ -9,7 +9,7 @@ import hashlib
 import logging
 import re
 import threading
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import requests
 import voluptuous as vol
@@ -33,8 +33,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink4DeviceScanner, Tplink3DeviceScanner,
-                Tplink2DeviceScanner, TplinkDeviceScanner]:
+    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
+                Tplink3DeviceScanner, Tplink2DeviceScanner,
+                TplinkDeviceScanner]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -234,10 +235,9 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                         self.stok = ''
                         self.sysauth = ''
                         return False
-                    else:
-                        _LOGGER.error(
-                            "An unknown error happened while fetching data")
-                        return False
+                    _LOGGER.error(
+                        "An unknown error happened while fetching data")
+                    return False
             except ValueError:
                 _LOGGER.error("Router didn't respond with JSON. "
                               "Check if credentials are correct")
@@ -350,3 +350,83 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
             self.last_results = [mac.replace("-", ":") for mac in mac_results]
             return True
+
+
+class Tplink5DeviceScanner(TplinkDeviceScanner):
+    """This class queries a TP-Link EAP-225 AP with newer TP-Link FW."""
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found MAC IDs."""
+        self._update_info()
+        return self.last_results.keys()
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """Get firmware doesn't save the name of the wireless device."""
+        return None
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """Ensure the information from the TP-Link AP is up to date.
+
+        Return boolean if scanning successful.
+        """
+        with self.lock:
+            _LOGGER.info("Loading wireless clients...")
+
+            base_url = 'http://{}'.format(self.host)
+
+            header = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
+                              " rv:53.0) Gecko/20100101 Firefox/53.0",
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+                "Accept-Language": "Accept-Language: en-US,en;q=0.5",
+                "Accept-Encoding": "gzip, deflate",
+                "Content-Type": "application/x-www-form-urlencoded; "
+                                "charset=UTF-8",
+                "X-Requested-With": "XMLHttpRequest",
+                "Referer": "http://" + self.host + "/",
+                "Connection": "keep-alive",
+                "Pragma": "no-cache",
+                "Cache-Control": "no-cache"
+            }
+
+            password_md5 = hashlib.md5(self.password).hexdigest().upper()
+
+            # create a session to handle cookie easier
+            session = requests.session()
+            session.get(base_url, headers=header)
+
+            login_data = {"username": self.username, "password": password_md5}
+            session.post(base_url, login_data, headers=header)
+
+            # a timestamp is required to be sent as get parameter
+            timestamp = int(datetime.now().timestamp() * 1e3)
+
+            client_list_url = '{}/data/monitor.client.client.json'.format(
+                base_url)
+
+            get_params = {
+                'operation': 'load',
+                '_': timestamp
+            }
+
+            response = session.get(client_list_url,
+                                   headers=header,
+                                   params=get_params)
+            session.close()
+            try:
+                list_of_devices = response.json()
+            except ValueError:
+                _LOGGER.error("AP didn't respond with JSON. "
+                              "Check if credentials are correct.")
+                return False
+
+            if list_of_devices:
+                self.last_results = {
+                    device['MAC'].replace('-', ':'): device['DeviceName']
+                    for device in list_of_devices['data']
+                    }
+                return True
+
+            return False
