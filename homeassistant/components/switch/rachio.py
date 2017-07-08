@@ -8,7 +8,7 @@ import homeassistant.util as util
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['rachiopy==0.1.1']
+REQUIREMENTS = ['rachiopy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
