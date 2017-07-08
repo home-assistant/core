@@ -160,12 +160,19 @@ class MiroboSwitch(SwitchDevice):
 
         return self._vacuum
 
+    def raw_command(self, command, params):
+        """Send command."""
+        from mirobo import VacuumException
+        try:
+            self.vacuum.raw_command(command, params)
+        except VacuumException as ex:
+            _LOGGER.error("Unable to send command to the vacuum: %s", ex)
+
     def remote_control(self, speed, direction, duration):
         """Remote control."""
         from mirobo import VacuumException
         try:
             self.vacuum.rc_move_once(speed, direction, duration)
-            _LOGGER.error("self.vacuum.rc_move_once(%s, %s, %s)", speed, direction, duration)
         except VacuumException as ex:
             _LOGGER.error("Unable to remote control the vacuum: %s", ex)
 
