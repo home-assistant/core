@@ -775,7 +775,7 @@ pyzabbix==0.7.4
 qnapstats==0.2.4
 
 # homeassistant.components.switch.rachio
-rachiopy==0.1.1
+rachiopy==0.1.2
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.3
