@@ -21,7 +21,7 @@ def mock_wakeonlan():
 
 
 @asyncio.coroutine
-def test_setup_component(hass):
+def test_setup_component(hass, mock_wakeonlan):
     """Test the set up of new component."""
     assert(not hass.services.has_service(DOMAIN, SERVICE_SEND_MAGIC_PACKET))
     yield from async_setup_component(hass, DOMAIN, {})
