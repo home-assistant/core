@@ -1,72 +1,52 @@
 """Tests for Wake On LAN component."""
-import unittest
-from unittest.mock import patch
+import asyncio
+from functools import partial
+from unittest import mock
 
-from homeassistant.setup import setup_component
-from homeassistant.components import wake_on_lan
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
+from homeassistant.components.wake_on_lan import DOMAIN
 
 
-class TestWakeOnLAN(unittest.TestCase):
-    """Test the Wake On LAN component."""
+@pytest.fixture
+def mock_wakeonlan():
+    """Mock mock_wakeonlan."""
+    module = mock.MagicMock()
+    with mock.patch.dict('sys.modules', {
+        'wakeonlan': module,
+    }):
+        yield module
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+@asyncio.coroutine
+def test_setup_component(hass):
+    """Test the set up of new component."""
+    assert(not hass.services.has_service('wake_on_lan', 'send_magic_packet'))
+    yield from async_setup_component(hass, DOMAIN, {})
+    assert(hass.services.has_service('wake_on_lan', 'send_magic_packet'))
 
-    def test_setup_component(self):
-        """Test the set up of new component."""
-        self.assertTrue(setup_component(self.hass, wake_on_lan.DOMAIN, {
-            wake_on_lan.DOMAIN: {}
-        }))
 
-        self.assertTrue(self.hass.services.has_service(
-            'wake_on_lan', 'send_magic_packet'))
+@asyncio.coroutine
+def test_send_magic_packet(hass, caplog, mock_wakeonlan):
+    """Test of send magic packet service call."""
+    yield from async_setup_component(hass, DOMAIN, {})
 
-    @patch('homeassistant.core._LOGGER.error')
-    def test_service_call_bad_params(self, mock_log):
-        """Test of service parameters of send magic packet."""
-        setup_component(self.hass, wake_on_lan.DOMAIN,
-                        {wake_on_lan.DOMAIN: {}})
+    yield from hass.async_add_job(partial(
+        hass.services.call, 'wake_on_lan', 'send_magic_packet',
+        {"broadcast_address": "192.168.255.255"}))
+    assert len(mock_wakeonlan.mock_calls) == 0
+    assert 'ERROR' in caplog.text
 
-        self.hass.services.call('wake_on_lan', 'send_magic_packet',
-                                blocking=True)
-        self.assertEqual(1, mock_log.call_count)
+    yield from hass.async_add_job(partial(
+        hass.services.call, 'wake_on_lan', 'send_magic_packet',
+        {"mac": "aa:bb:cc:dd:ee:ff"}))
+    assert len(mock_wakeonlan.mock_calls) == 1
+    assert 'Event service_executed' in caplog.text.splitlines()[-1]
 
-        self.hass.services.call('wake_on_lan', 'send_magic_packet',
-                                {}, blocking=True)
-        self.assertEqual(2, mock_log.call_count)
-
-        # Send a real magic packet to a non existent MAC address
-        self.hass.services.call('wake_on_lan', 'send_magic_packet',
-                                {"mac": "aa:bb:cc:dd:ee:ff"}, blocking=True)
-        self.assertEqual(2, mock_log.call_count)
-
-    @patch('wakeonlan.wol.send_magic_packet')
-    def test_send_magic_packet(self, mock_log):
-        """Test of send magic packet service call."""
-        setup_component(self.hass, wake_on_lan.DOMAIN,
-                        {wake_on_lan.DOMAIN: {}})
-
-        self.hass.services.call(
-            'wake_on_lan', 'send_magic_packet',
-            {"mac": "aa:bb:cc:dd:ee:ff"}, blocking=True)
-        self.assertEqual(1, mock_log.call_count)
-
-        self.hass.services.call(
-            'wake_on_lan', 'send_magic_packet',
-            {"mac": "aa:bb:cc:dd:ee:ff",
-             "broadcast_address": "192.168.255.255"},
-            blocking=True)
-        self.assertEqual(2, mock_log.call_count)
-
-        self.hass.services.call(
-            'wake_on_lan', 'send_magic_packet',
-            {"broadcast_address": "192.168.255.255"},
-            blocking=True)
-        self.assertEqual(2, mock_log.call_count)
+    yield from hass.async_add_job(partial(
+        hass.services.call, 'wake_on_lan', 'send_magic_packet',
+        {"mac": "aa:bb:cc:dd:ee:ff",
+         "broadcast_address": "192.168.255.255"}))
+    assert len(mock_wakeonlan.mock_calls) == 2
+    assert 'Event service_executed' in caplog.text.splitlines()[-1]
