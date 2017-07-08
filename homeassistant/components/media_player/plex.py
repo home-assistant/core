@@ -110,9 +110,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return
 
     setup_plexserver(
-            host, token, has_ssl, verify_ssl,
-            hass, config, add_devices_callback
-        )
+        host, token, has_ssl, verify_ssl,
+        hass, config, add_devices_callback
+    )
 
 
 def setup_plexserver(
@@ -129,9 +129,9 @@ def setup_plexserver(
         cert_session.verify = False
     try:
         plexserver = plexapi.server.PlexServer(
-                '%s://%s' % (http_prefix, host),
-                token, cert_session
-            )
+            '%s://%s' % (http_prefix, host),
+            token, cert_session
+        )
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
@@ -243,11 +243,11 @@ def request_configuration(host, hass, config, add_devices_callback):
     def plex_configuration_callback(data):
         """Handle configuration changes."""
         setup_plexserver(
-                host, data.get('token'),
-                cv.boolean(data.get('has_ssl')),
-                cv.boolean(data.get('do_not_verify')),
-                hass, config, add_devices_callback
-            )
+            host, data.get('token'),
+            cv.boolean(data.get('has_ssl')),
+            cv.boolean(data.get('do_not_verify')),
+            hass, config, add_devices_callback
+        )
 
     _CONFIGURING[host] = configurator.request_config(
         hass,
