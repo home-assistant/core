@@ -143,7 +143,7 @@ class RadioThermostat(ClimateDevice):
             _LOGGER.error("Invalid temperature detected, retrying")
             current_temp = self.device.temp['raw']
             retry += 1
-        if retry == 5: 
+        if retry == 5:
             _LOGGER.error("Couldn't get valid reading")
             return
         self._current_temperature = current_temp
