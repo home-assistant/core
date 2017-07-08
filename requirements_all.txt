@@ -940,6 +940,9 @@ xbee-helper==0.0.7
 # homeassistant.components.sensor.xbox_live
 xboxapi==0.1.1
 
+# homeassistant.components.xknx
+xknx==0.5.0
+
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
