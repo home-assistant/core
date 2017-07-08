@@ -184,7 +184,6 @@ def expand_entity_ids(hass, entity_ids):
     Async friendly.
     """
     found_ids = []
-
     for entity_id in entity_ids:
         if not isinstance(entity_id, str):
             continue
@@ -196,9 +195,13 @@ def expand_entity_ids(hass, entity_ids):
             domain, _ = ha.split_entity_id(entity_id)
 
             if domain == DOMAIN:
+                child_entities = get_entity_ids(hass, entity_id)
+                if entity_id in child_entities:
+                    child_entities = list(child_entities)
+                    child_entities.remove(entity_id)
                 found_ids.extend(
                     ent_id for ent_id
-                    in expand_entity_ids(hass, get_entity_ids(hass, entity_id))
+                    in expand_entity_ids(hass, child_entities)
                     if ent_id not in found_ids)
 
             else:
@@ -223,7 +226,6 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
         return []
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
-
     if not domain_filter:
         return entity_ids
 
