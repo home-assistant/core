@@ -137,3 +137,6 @@ uvcclient==0.10.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
+
+# homeassistant.components.wake_on_lan
+wakeonlan==0.2.2
