@@ -14,6 +14,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
+from homeassistant.util import RetryOnError
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -25,7 +26,7 @@ CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
-CONF_BLACKLIST_DOMAINS = "blacklist_domains"
+CONF_RETRY_COUNT = 'max_retries'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -50,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_RETRY_COUNT): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -98,6 +100,7 @@ def setup(hass, config):
     tags = conf.get(CONF_TAGS)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
+    max_tries = conf.get(CONF_RETRY_COUNT)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -174,6 +177,10 @@ def setup(hass, config):
 
         json_body[0]['tags'].update(tags)
 
+        _write_data(json_body)
+
+    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20)
+    def _write_data(json_body):
         try:
             influx.write_points(json_body)
         except exceptions.InfluxDBClientError:
