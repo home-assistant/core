@@ -377,8 +377,10 @@ def async_process_ha_core_config(hass, config):
     # init whitelist external dir
     hac.whitelist_external_dirs = set((hass.config.path('www'),))
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
-        hac.whitelist_external_dirs.update(
-            set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
+        dirs = config[CONF_WHITELIST_EXTERNAL_DIRS]
+        import pathlib
+        dirs = map(lambda d: pathlib.Path(d).resolve(), dirs)
+        hac.whitelist_external_dirs.update(set(dirs))
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
