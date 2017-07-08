@@ -277,5 +277,4 @@ class WinkDevice(Entity):
         """Return the devices tamper status."""
         if hasattr(self.wink, 'tamper_detected'):
             return self.wink.tamper_detected()
-        else:
-            return None
+        return None

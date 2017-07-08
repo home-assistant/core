@@ -57,10 +57,6 @@ class Sensor(zha.Entity):
     value_attribute = 0
     min_reportable_change = 1
 
-    def __init__(self, **kwargs):
-        """Initialize ZHA sensor."""
-        super().__init__(**kwargs)
-
     @property
     def state(self) -> str:
         """Return the state of the entity."""

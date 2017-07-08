@@ -117,17 +117,20 @@ class ModbusRegisterSensor(Entity):
                 self._register,
                 self._count)
         val = 0
-        if not result:
+
+        try:
+            registers = result.registers
+        except AttributeError:
             _LOGGER.error("No response from modbus slave %s register %s",
                           self._slave, self._register)
             return
         if self._data_type == DATA_TYPE_FLOAT:
             byte_string = b''.join(
-                [x.to_bytes(2, byteorder='big') for x in result.registers]
+                [x.to_bytes(2, byteorder='big') for x in registers]
             )
             val = struct.unpack(">f", byte_string)[0]
         elif self._data_type == DATA_TYPE_INT:
-            for i, res in enumerate(result.registers):
+            for i, res in enumerate(registers):
                 val += res * (2**(i*16))
         self._value = format(
             self._scale * val + self._offset, '.{}f'.format(self._precision))

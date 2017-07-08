@@ -83,8 +83,7 @@ class TimeDateSensor(Entity):
             return 'mdi:calendar-clock'
         elif 'date' in self.type:
             return 'mdi:calendar'
-        else:
-            return 'mdi:clock'
+        return 'mdi:clock'
 
     def get_next_interval(self, now=None):
         """Compute next time an update should occur."""

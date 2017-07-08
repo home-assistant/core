@@ -73,8 +73,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
             return None
         if self.current_cover_position > 0:
             return False
-        else:
-            return True
+        return True
 
     @property
     def current_cover_position(self):
@@ -86,8 +85,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 return 0
             elif self._current_position >= 95:
                 return 100
-            else:
-                return self._current_position
+            return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
