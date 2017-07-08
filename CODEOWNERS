@@ -32,8 +32,8 @@ homeassistant/components/zone.py @home-assistant/core
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
 
-homeassistant/components/zwave/* @home-assistant/zwave
-homeassistant/components/*/zwave.py @home-assistant/zwave
+homeassistant/components/zwave/* @home-assistant/z-wave
+homeassistant/components/*/zwave.py @home-assistant/z-wave
 
 # Indiviudal components
 homeassistant/components/cover/template.py @PhracturedBlue
