@@ -35,3 +35,49 @@ mysensors_send_ir_code:
     V_IR_SEND:
       description: IR code to send
       example: '0xC284'
+
+xiaomi_vacuum_command:
+  description: Send command to the vacuum.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that should change fanspeed.
+      example: 'switch.mirobo'
+
+    command:
+      description: Command to execute
+      example: 'set_dnd_timer'
+
+    params:
+      description: Parameters for the command
+      example: '[22,0,6,0]'
+
+xiaomi_vacuum_set_fanspeed:
+  description: Set the fanspeed.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that should change fanspeed.
+      example: 'switch.mirobo'
+
+    fanspeed:
+      description: Fanspeed, 38, 60 or 77
+      example: '38'
+
+xiaomi_vacuum_remote_control:
+  description: Remote control the vacuum.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that should have the IR code set and be turned on. Platform dependent.
+      example: 'switch.mirobo'
+
+    speed:
+      description: Speed, between -0.3 - 0.3
+      example: '0.2'
+    direction:
+      description: Direction, between -3.1 - 3.1
+      example: '0.0'
+    duration:
+      description: Duration of the movement
+      example: '1500'
