@@ -596,7 +596,8 @@ class KodiDevice(MediaPlayerDevice):
         if self._turn_on_action == 'script':
             _LOGGER.info('Turn on script %s', self._script_on)
             yield from self.hass.async_add_job(
-                partial(self.hass.services.call, *self._script_on.split('.')))
+                partial(self.hass.services.call,
+                        *self._script_on.split('.')))
         elif self._turn_on_action == WAKE_ON_LAN:
             if self._mac:
                 service_data = {'mac': self._mac}
@@ -630,7 +631,8 @@ class KodiDevice(MediaPlayerDevice):
         elif self._turn_off_action == 'script':
             _LOGGER.info('Turn off script %s', self._script_off)
             yield from self.hass.async_add_job(
-                partial(self.hass.services.call, *self._script_on.split('.')))
+                partial(self.hass.services.call,
+                        *self._script_off.split('.')))
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
