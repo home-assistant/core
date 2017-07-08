@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
-from functools import wraps
+from functools import wraps, partial
 import logging
 import urllib
 import re
@@ -20,15 +20,19 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN,
+    SUPPORT_TURN_ON)
+from homeassistant.components.wake_on_lan import (
+    SERVICE_SEND_MAGIC_PACKET, DOMAIN as WAKE_ON_LAN)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
+    CONF_TIMEOUT, CONF_MAC, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.setup import async_setup_component
 
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
@@ -37,8 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 
 CONF_TCP_PORT = 'tcp_port'
+CONF_TURN_ON_ACTION = 'turn_on_action'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
+CONF_SCRIPT_ON = 'script_on'
+CONF_SCRIPT_OFF = 'script_off'
 CONF_ENABLE_WEBSOCKET = 'enable_websocket'
+CONF_WOL_BROADCAST_ADDRESS = 'wake_on_lan_broadcast'
 
 DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
@@ -47,7 +55,10 @@ DEFAULT_TIMEOUT = 5
 DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
-TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
+TURN_ON_ACTION = [None, 'script', WAKE_ON_LAN]
+TURN_OFF_ACTION = [None, 'script', 'quit', 'hibernate',
+                   'suspend', 'reboot', 'shutdown']
+VALID_SCRIPTS = ['script', 'python_script']
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -75,12 +86,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+    vol.Optional(CONF_TURN_ON_ACTION, default=None): vol.In(TURN_ON_ACTION),
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
     vol.Optional(CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET):
         cv.boolean,
+    vol.Optional(CONF_MAC, default=None): cv.string,
+    vol.Optional(CONF_WOL_BROADCAST_ADDRESS): cv.string,
+    vol.Optional(CONF_SCRIPT_ON, default=None): cv.entity_id,
+    vol.Optional(CONF_SCRIPT_OFF, default=None): cv.entity_id,
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
@@ -124,6 +140,41 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tcp_port = config.get(CONF_TCP_PORT)
     encryption = get_deprecated(config, CONF_PROXY_SSL, CONF_SSL)
     websocket = config.get(CONF_ENABLE_WEBSOCKET)
+    turn_on_action = config.get(CONF_TURN_ON_ACTION)
+    turn_off_action = config.get(CONF_TURN_OFF_ACTION)
+    mac = config.get(CONF_MAC)
+    script_on = config.get(CONF_SCRIPT_ON)
+    script_off = config.get(CONF_SCRIPT_OFF)
+
+    # Turn on action validation
+    if (turn_on_action == 'script'
+            and (script_on is None
+                 or script_on.split('.')[0] not in VALID_SCRIPTS)):
+        _LOGGER.warning("In order to use the turn on action 'script' "
+                        "you need to define '%s' with a valid Home Assistant "
+                        "script or python_script entity.", CONF_SCRIPT_ON)
+        turn_on_action = None
+    elif turn_on_action == WAKE_ON_LAN:
+        if mac is None:
+            _LOGGER.warning("In order to use the turn on action '%s' "
+                            "you need to define '%s' with the MAC address "
+                            "and set up the %s component.",
+                            WAKE_ON_LAN, CONF_MAC, WAKE_ON_LAN)
+            turn_on_action = None
+        elif not hass.services.has_service(
+                WAKE_ON_LAN, SERVICE_SEND_MAGIC_PACKET):
+            _LOGGER.info("Launching setup of %s component", WAKE_ON_LAN)
+            yield from hass.async_add_job(
+                async_setup_component(hass, WAKE_ON_LAN))
+
+    # Turn off action validation
+    if (turn_off_action == 'script'
+            and (script_off is None
+                 or script_off.split('.')[0] not in VALID_SCRIPTS)):
+        _LOGGER.warning("In order to use the turn off action 'script' "
+                        "you need to define '%s' with a valid Home Assistant "
+                        "script or python_script entity.", CONF_SCRIPT_OFF)
+        turn_off_action = None
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
@@ -138,8 +189,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host=host, port=port, tcp_port=tcp_port, encryption=encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
+        turn_on_action=turn_on_action, turn_off_action=turn_off_action,
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket,
+        mac=mac, wake_on_lan_broadcast=config.get(CONF_WOL_BROADCAST_ADDRESS),
+        script_on=script_on, script_off=script_off)
 
     hass.data[DATA_KODI].append(entity)
     async_add_devices([entity], update_before_add=True)
@@ -210,8 +263,11 @@ class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
-                 username=None, password=None, turn_off_action=None,
-                 timeout=DEFAULT_TIMEOUT, websocket=True):
+                 username=None, password=None,
+                 turn_on_action=None, turn_off_action=None,
+                 timeout=DEFAULT_TIMEOUT, websocket=True,
+                 mac=None, wake_on_lan_broadcast=None,
+                 script_on=None, script_off=None):
         """Initialize the Kodi device."""
         import jsonrpc_async
         import jsonrpc_websocket
@@ -262,7 +318,12 @@ class KodiDevice(MediaPlayerDevice):
         else:
             self._ws_server = None
 
+        self._mac = mac
+        self._wol_broadcast = wake_on_lan_broadcast
+        self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
+        self._script_on = script_on
+        self._script_off = script_off
         self._enable_websocket = websocket
         self._players = list()
         self._properties = {}
@@ -520,10 +581,37 @@ class KodiDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         supported_features = SUPPORT_KODI
 
-        if self._turn_off_action in TURN_OFF_ACTION:
+        if self._turn_on_action is not None:
+            supported_features |= SUPPORT_TURN_ON
+
+        if self._turn_off_action is not None:
             supported_features |= SUPPORT_TURN_OFF
 
         return supported_features
+
+    @cmd
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Execute turn_on_action to turn on media player."""
+        if self._turn_on_action == 'script':
+            _LOGGER.info('Turn on script %s', self._script_on)
+            yield from self.hass.async_add_job(
+                partial(self.hass.services.call, *self._script_on.split('.')))
+        elif self._turn_on_action == WAKE_ON_LAN:
+            if self._mac:
+                service_data = {'mac': self._mac}
+                if self._wol_broadcast is not None:
+                    service_data['broadcast_address'] = self._wol_broadcast
+                _LOGGER.info('Turn on with %s to %s',
+                             WAKE_ON_LAN, service_data)
+                yield from self.hass.async_add_job(
+                    partial(self.hass.services.call,
+                            WAKE_ON_LAN, SERVICE_SEND_MAGIC_PACKET,
+                            service_data=service_data))
+            else:
+                _LOGGER.warning("turn_on requested but mac address is none")
+        else:
+            _LOGGER.warning("turn_on requested but turn_on_action is none")
 
     @cmd
     @asyncio.coroutine
@@ -539,6 +627,10 @@ class KodiDevice(MediaPlayerDevice):
             yield from self.server.System.Reboot()
         elif self._turn_off_action == 'shutdown':
             yield from self.server.System.Shutdown()
+        elif self._turn_off_action == 'script':
+            _LOGGER.info('Turn off script %s', self._script_off)
+            yield from self.hass.async_add_job(
+                partial(self.hass.services.call, *self._script_on.split('.')))
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
