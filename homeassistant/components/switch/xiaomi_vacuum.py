@@ -34,9 +34,9 @@ SERVICE_COMMAND = 'xiaomi_vacuum_command'
 ATTR_FANSPEED = 'fanspeed'
 SERVICE_FANSPEED = 'xiaomi_vacuum_set_fanspeed'
 
-SERVICE_START_REMOTE_CONTROL = 'xiaomi_vacuum_start_remote_control'
-SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_vacuum_move_remote_control'
-SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_vacuum_stop_remote_control'
+SERVICE_START_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control_start'
+SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control_move'
+SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control_stop'
 SERVICE_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control'
 
 ATTR_RC_VELOCITY = 'velocity'
@@ -50,14 +50,14 @@ COMMAND_SERVICE_SCHEMA = vol.Schema({
 
 FANSPEED_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_FANSPEED): vol.All(vol.Coerce(int),
-                                         vol.Any(38, 60, 77, 90)),
+                                         vol.Range(min=0, max=100)),
 })
 
 REMOTE_CONTROL_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_RC_VELOCITY): vol.All(vol.Coerce(float),
                                             vol.Range(min=-0.3, max=0.3)),
     vol.Optional(ATTR_RC_ROTATION): vol.All(vol.Coerce(int),
-                                            vol.Range(min=-180, max=180)),
+                                            vol.Range(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 
