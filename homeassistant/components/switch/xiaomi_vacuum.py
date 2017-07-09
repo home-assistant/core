@@ -13,8 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (DOMAIN, SwitchDevice,
                                              PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (ATTR_ENTITY_ID, DEVICE_DEFAULT_NAME,
-                                 CONF_NAME, CONF_HOST, CONF_TOKEN)
+from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME,
+                                 CONF_HOST, CONF_TOKEN)
 
 _LOGGER = logging.getLogger(__name__)
 
