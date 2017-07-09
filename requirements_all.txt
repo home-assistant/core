@@ -746,6 +746,13 @@ python-telegram-bot==6.1.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.velbus
+# homeassistant.components.binary_sensor.velbus
+# homeassistant.components.fan.velbus
+# homeassistant.components.light.velbus
+# homeassistant.components.switch.velbus
+python-velbus==2.0.11
+
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
@@ -775,9 +782,6 @@ pyvlx==0.1.3
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.5
-
-# homeassistant.components.velbus
-python-velbus==2.0.11
 
 # homeassistant.components.wemo
 pywemo==0.4.19
