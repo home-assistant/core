@@ -1,8 +1,8 @@
 """
 Interfaces with Egardia / Woonveilig alarm control panel.
 
-For more details about this platform, please refer to the $
-https://home-assistant.io/components/alarm_control_panel.egardia
+For more details about this platform, please refer to
+https://home-assistant.io/components/alarm_control_panel.egardia/
 """
 
 import logging
@@ -18,8 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pythonegardia>=1.0.3']
-REQUIREMENTS = ['requests']
+REQUIREMENTS = ['pythonegardia==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,28 +39,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
+    from pythonegardia import egardiadevice
+    import requests
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    add_devices([EgardiaAlarm(name, host, port, username, password)])
+    try:
+        egardiasystem = egardiadevice.EgardiaDevice(host, port,
+                                                    username, password, "")
+    except requests.ConnectionError:
+        _LOGGER.error("Unable to connect to device %s:%s", host, port)
+        return False
+    except egardiadevice.UnauthorizedError:
+        _LOGGER.error("Unable to authorize. Wrong password or username.")
+        return False
+    add_devices([EgardiaAlarm(name, egardiasystem)])
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, host, port, username, password):
+    def __init__(self, name, egardiasystem):
         """Initialize object."""
-        from pythonegardia import egardiadevice
-        self._host = host
-        self._port = port
         self._name = name
-        self._username = username
-        self._password = password
-        self._egardiasystem = egardiadevice.EgardiaDevice(
-            host, port, username, password, "")
-        self._status = 'UNKNOWN'
+        self._egardiasystem = egardiasystem
+        self._status = STATE_UNKNOWN
 
     @property
     def name(self):
@@ -71,7 +75,6 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        self.update()
         if self._status == 'ARM':
             state = STATE_ALARM_ARMED_AWAY
         elif self._status == 'HOME':
