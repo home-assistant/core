@@ -10,7 +10,8 @@ import os
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import DOMAIN, SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import (DOMAIN, SwitchDevice,
+                                             PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID, DEVICE_DEFAULT_NAME,
                                  CONF_NAME, CONF_HOST, CONF_TOKEN)
@@ -31,7 +32,7 @@ ATTR_PARAMS = 'params'
 SERVICE_COMMAND = 'xiaomi_vacuum_command'
 
 ATTR_FANSPEED = 'fanspeed'
-SERVICE_FANSPEED= 'xiaomi_vacuum_set_fanspeed'
+SERVICE_FANSPEED = 'xiaomi_vacuum_set_fanspeed'
 
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_vacuum_start_remote_control'
 SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_vacuum_move_remote_control'
@@ -48,14 +49,18 @@ COMMAND_SERVICE_SCHEMA = vol.Schema({
 })
 
 FANSPEED_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_FANSPEED): vol.All(vol.Coerce(int), vol.Any(38, 60, 77, 90)),
+    vol.Required(ATTR_FANSPEED): vol.All(vol.Coerce(int),
+                                         vol.Any(38, 60, 77, 90)),
 })
 
 REMOTE_CONTROL_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_RC_VELOCITY): vol.All(vol.Coerce(float), vol.Range(min=-0.3, max=0.3)),
-    vol.Optional(ATTR_RC_ROTATION): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
+    vol.Optional(ATTR_RC_VELOCITY): vol.All(vol.Coerce(float),
+                                            vol.Range(min=-0.3, max=0.3)),
+    vol.Optional(ATTR_RC_ROTATION): vol.All(vol.Coerce(int),
+                                            vol.Range(min=-180, max=180)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -94,16 +99,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         velocity = service.data.get(ATTR_RC_VELOCITY)
         rotation = service.data.get(ATTR_RC_ROTATION)
         duration = service.data.get(ATTR_RC_DURATION)
-        
-        mirobo.remote_control_move(velocity=velocity, rotation=rotation, duration=duration)
+
+        mirobo.remote_control_move(velocity=velocity, rotation=rotation,
+                                   duration=duration)
 
     def remote_control_service(service):
         """Remote control the vacuum."""
         velocity = service.data.get(ATTR_RC_VELOCITY)
         rotation = service.data.get(ATTR_RC_ROTATION)
         duration = service.data.get(ATTR_RC_DURATION)
-        
-        mirobo.remote_control(velocity=velocity, rotation=rotation, duration=duration)
+
+        mirobo.remote_control(velocity=velocity, rotation=rotation,
+                              duration=duration)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -135,6 +142,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                            remote_control_service,
                            descriptions.get(SERVICE_REMOTE_CONTROL),
                            schema=REMOTE_CONTROL_SERVICE_SCHEMA)
+
 
 class MiroboSwitch(SwitchDevice):
     """Representation of a Xiaomi Vacuum."""
@@ -211,19 +219,25 @@ class MiroboSwitch(SwitchDevice):
         except VacuumException as ex:
             _LOGGER.error("Unable to stop remote control the vacuum: %s", ex)
 
-    def remote_control_move(self, rotation: int=0, velocity: float=0.3, duration: int=1500):
+    def remote_control_move(self, rotation: int=0, velocity: float=0.3,
+                            duration: int=1500):
         """Move vacuum with remote control."""
         from mirobo import VacuumException
         try:
-            self.vacuum.manual_control(velocity=velocity, rotation=rotation, duration=duration)
+            self.vacuum.manual_control(velocity=velocity, rotation=rotation,
+                                       duration=duration)
         except VacuumException as ex:
-            _LOGGER.error("Unable to move with remote control the vacuum: %s", ex)
+            _LOGGER.error("Unable to move with remote control the vacuum: %s",
+                          ex)
 
-    def remote_control(self, rotation: int=0, velocity: float=0.3, duration: int=1500):
+    def remote_control(self, rotation: int=0, velocity: float=0.3,
+                       duration: int=1500):
         """Remote control."""
         from mirobo import VacuumException
         try:
-            self.vacuum.manual_control_once(velocity=velocity, rotation=rotation, duration=duration)
+            self.vacuum.manual_control_once(velocity=velocity,
+                                            rotation=rotation,
+                                            duration=duration)
         except VacuumException as ex:
             _LOGGER.error("Unable to remote control the vacuum: %s", ex)
 
