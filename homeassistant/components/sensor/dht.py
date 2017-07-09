@@ -12,8 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS,
-    CONF_TEMPERATURE_OFFSET, CONF_HUMIDITY_OFFSET)
+    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
@@ -27,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PIN = 'pin'
 CONF_SENSOR = 'sensor'
+CONF_HUMIDITY_OFFSET = 'humidity_offset'
+CONF_TEMPERATURE_OFFSET = 'temperature_offset'
 
 DEFAULT_NAME = 'DHT Sensor'
 
