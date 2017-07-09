@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TEMPERATURE_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-500, max=1000)),
+        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
     vol.Optional(CONF_HUMIDITY_OFFSET, default=0):
         vol.All(vol.Coerce(float), vol.Range(min=-100, max=100))
 })
