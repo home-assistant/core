@@ -33,24 +33,25 @@ SERVICE_COMMAND = 'xiaomi_vacuum_command'
 ATTR_FANSPEED = 'fanspeed'
 SERVICE_FANSPEED= 'xiaomi_vacuum_set_fanspeed'
 
+SERVICE_START_REMOTE_CONTROL = 'xiaomi_vacuum_start_remote_control'
+SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_vacuum_move_remote_control'
+SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_vacuum_stop_remote_control'
+SERVICE_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control'
+
 ATTR_RC_VELOCITY = 'velocity'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_DURATION = 'duration'
-SERVICE_REMOTE_CONTROL = 'xiaomi_vacuum_remote_control'
 
 COMMAND_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_COMMAND): cv.string,
     vol.Optional(ATTR_PARAMS): cv.string,
 })
 
 FANSPEED_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FANSPEED): vol.All(vol.Coerce(int), vol.Any(38, 60, 77, 90)),
 })
 
 REMOTE_CONTROL_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_RC_VELOCITY): vol.All(vol.Coerce(float), vol.Range(min=-0.3, max=0.3)),
     vol.Optional(ATTR_RC_ROTATION): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
@@ -69,7 +70,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def send_command_service(service):
         """Send command."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
         command = service.data.get(ATTR_COMMAND)
         params = service.data.get(ATTR_PARAMS)
 
@@ -77,19 +77,33 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def set_fan_speed_service(service):
         """Set fan speed."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
         fan_speed = service.data.get(ATTR_FANSPEED)
 
         mirobo.set_fanspeed(fan_speed)
 
-    def remote_control_service(service):
-        """Remote control the vacuum."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+    def remote_control_start_service(service):
+        """Start remote control of the vacuum."""
+        mirobo.remote_control_start()
+
+    def remote_control_stop_service(service):
+        """Stop remote control of the vacuum."""
+        mirobo.remote_control_stop()
+
+    def remote_control_move_service(service):
+        """Move the vacuum while remote control mode started."""
         velocity = service.data.get(ATTR_RC_VELOCITY)
         rotation = service.data.get(ATTR_RC_ROTATION)
         duration = service.data.get(ATTR_RC_DURATION)
-		
-        mirobo.remote_control(velocity, rotation, duration)
+        
+        mirobo.remote_control_move(velocity=velocity, rotation=rotation, duration=duration)
+
+    def remote_control_service(service):
+        """Remote control the vacuum."""
+        velocity = service.data.get(ATTR_RC_VELOCITY)
+        rotation = service.data.get(ATTR_RC_ROTATION)
+        duration = service.data.get(ATTR_RC_DURATION)
+        
+        mirobo.remote_control(velocity=velocity, rotation=rotation, duration=duration)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -103,6 +117,19 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                            set_fan_speed_service,
                            descriptions.get(SERVICE_FANSPEED),
                            schema=FANSPEED_SERVICE_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_START_REMOTE_CONTROL,
+                           remote_control_start_service,
+                           descriptions.get(SERVICE_START_REMOTE_CONTROL))
+
+    hass.services.register(DOMAIN, SERVICE_STOP_REMOTE_CONTROL,
+                           remote_control_stop_service,
+                           descriptions.get(SERVICE_STOP_REMOTE_CONTROL))
+
+    hass.services.register(DOMAIN, SERVICE_MOVE_REMOTE_CONTROL,
+                           remote_control_move_service,
+                           descriptions.get(SERVICE_MOVE_REMOTE_CONTROL),
+                           schema=REMOTE_CONTROL_SERVICE_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_REMOTE_CONTROL,
                            remote_control_service,
@@ -168,11 +195,35 @@ class MiroboSwitch(SwitchDevice):
         except VacuumException as ex:
             _LOGGER.error("Unable to send command to the vacuum: %s", ex)
 
+    def remote_control_start(self):
+        """Start remote control."""
+        from mirobo import VacuumException
+        try:
+            self.vacuum.manual_start()
+        except VacuumException as ex:
+            _LOGGER.error("Unable to start remote control the vacuum: %s", ex)
+
+    def remote_control_stop(self):
+        """Stop remote control."""
+        from mirobo import VacuumException
+        try:
+            self.vacuum.manual_stop()
+        except VacuumException as ex:
+            _LOGGER.error("Unable to stop remote control the vacuum: %s", ex)
+
+    def remote_control_move(self, rotation: int=0, velocity: float=0.3, duration: int=1500):
+        """Move vacuum with remote control."""
+        from mirobo import VacuumException
+        try:
+            self.vacuum.manual_control(velocity=velocity, rotation=rotation, duration=duration)
+        except VacuumException as ex:
+            _LOGGER.error("Unable to move with remote control the vacuum: %s", ex)
+
     def remote_control(self, rotation: int=0, velocity: float=0.3, duration: int=1500):
         """Remote control."""
         from mirobo import VacuumException
         try:
-            self.vacuum.manual_control_once(velocity=0.2, rotation=0.0, duration=1500)
+            self.vacuum.manual_control_once(velocity=velocity, rotation=rotation, duration=duration)
         except VacuumException as ex:
             _LOGGER.error("Unable to remote control the vacuum: %s", ex)
 
