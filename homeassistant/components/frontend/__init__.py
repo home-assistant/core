@@ -210,7 +210,7 @@ def setup(hass, config):
                   'dev-template'):
         register_built_in_panel(hass, panel)
 
-    themes = config.get(DOMAIN).get(ATTR_THEMES)
+    themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
     if themes:
         setup_themes(hass, themes)
 
