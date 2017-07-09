@@ -50,16 +50,16 @@ xiaomi_vacuum_set_fanspeed:
   description: Set the fanspeed.
   fields:
     fanspeed:
-      description: Fanspeed, 38, 60, 77 or 90
+      description: Fanspeed, between 0 and 100
       example: '60'
 
-xiaomi_vacuum_start_remote_control:
+xiaomi_vacuum_remote_control_start:
   description: Start remote control of the vacuum. You can then move it with xiaomi_vacuum_move_remote_control.
 
-xiaomi_vacuum_stop_remote_control:
+xiaomi_vacuum_remote_control_stop:
   description: Stop remote control mode of the vacuum.
 
-xiaomi_vacuum_move_remote_control:
+xiaomi_vacuum_remote_control_move:
   description: Remote control the vacuum, make sure you first set it in remote control mode. With xiaomi_vacuum_start_remote_control.
   fields:
     velocity:
