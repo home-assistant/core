@@ -197,10 +197,16 @@ omit =
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/egardia.py
+<<<<<<< 10fff66cc1f009ccf9ca058671fe4a5bdce857f1
+=======
+<<<<<<< 8b543f71fdd84dd14eee79e9530b61962fc8f2c9
+    homeassistant/components/alarm_control_panel/manual_mqtt.py
+=======
+>>>>>>> Egardia platform, requirements file updated
+>>>>>>> Egardia platform, requirements file updated
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/alarm_control_panel/totalconnect.py
-    homeassistant/components/alarm_control_panel/egardia.py
     homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
