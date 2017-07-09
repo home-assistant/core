@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_TIMEOUT, CONF_MAC, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.setup import async_setup_component
 
@@ -58,7 +58,6 @@ DEFAULT_ENABLE_WEBSOCKET = True
 TURN_ON_ACTION = [None, 'script', WAKE_ON_LAN]
 TURN_OFF_ACTION = [None, 'script', 'quit', 'hibernate',
                    'suspend', 'reboot', 'shutdown']
-VALID_SCRIPTS = ['script', 'python_script']
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -95,8 +94,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
     vol.Optional(CONF_MAC, default=None): cv.string,
     vol.Optional(CONF_WOL_BROADCAST_ADDRESS): cv.string,
-    vol.Optional(CONF_SCRIPT_ON, default=None): cv.entity_id,
-    vol.Optional(CONF_SCRIPT_OFF, default=None): cv.entity_id,
+    vol.Optional(CONF_SCRIPT_ON, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_SCRIPT_OFF, default=None): cv.SCRIPT_SCHEMA,
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
@@ -147,13 +146,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     script_off = config.get(CONF_SCRIPT_OFF)
 
     # Turn on action validation
-    if (turn_on_action == 'script'
-            and (script_on is None
-                 or script_on.split('.')[0] not in VALID_SCRIPTS)):
-        _LOGGER.warning("In order to use the turn on action 'script' "
-                        "you need to define '%s' with a valid Home Assistant "
-                        "script or python_script entity.", CONF_SCRIPT_ON)
-        turn_on_action = None
+    if turn_on_action == 'script':
+        if script_on is None:
+            _LOGGER.warning("In order to use the turn on action 'script' "
+                            "you need to define the script secuence in '%s'",
+                            CONF_SCRIPT_ON)
+            turn_on_action = None
+        else:
+            script_on = script.Script(
+                hass, script_on, "Kodi Turn ON action script")
     elif turn_on_action == WAKE_ON_LAN:
         if mac is None:
             _LOGGER.warning("In order to use the turn on action '%s' "
@@ -168,13 +169,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 async_setup_component(hass, WAKE_ON_LAN))
 
     # Turn off action validation
-    if (turn_off_action == 'script'
-            and (script_off is None
-                 or script_off.split('.')[0] not in VALID_SCRIPTS)):
-        _LOGGER.warning("In order to use the turn off action 'script' "
-                        "you need to define '%s' with a valid Home Assistant "
-                        "script or python_script entity.", CONF_SCRIPT_OFF)
-        turn_off_action = None
+    if turn_off_action == 'script':
+        if script_off is None:
+            _LOGGER.warning("In order to use the turn off action 'script' "
+                            "you need to define the script secuence in '%s'",
+                            CONF_SCRIPT_OFF)
+            turn_off_action = None
+        else:
+            script_off = script.Script(
+                hass, script_off, "Kodi Turn OFF action script")
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
@@ -594,10 +597,7 @@ class KodiDevice(MediaPlayerDevice):
     def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
         if self._turn_on_action == 'script':
-            _LOGGER.info('Turn on script %s', self._script_on)
-            yield from self.hass.async_add_job(
-                partial(self.hass.services.call,
-                        *self._script_on.split('.')))
+            yield from self._script_on.async_run()
         elif self._turn_on_action == WAKE_ON_LAN:
             if self._mac:
                 service_data = {'mac': self._mac}
@@ -629,10 +629,7 @@ class KodiDevice(MediaPlayerDevice):
         elif self._turn_off_action == 'shutdown':
             yield from self.server.System.Shutdown()
         elif self._turn_off_action == 'script':
-            _LOGGER.info('Turn off script %s', self._script_off)
-            yield from self.hass.async_add_job(
-                partial(self.hass.services.call,
-                        *self._script_off.split('.')))
+            yield from self._script_off.async_run()
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
