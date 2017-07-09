@@ -747,6 +747,9 @@ python-wink==1.2.4
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
 
+# homeassistant.components.alarm_control_panel.egardia
+pythonegardia==1.0.8
+
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
