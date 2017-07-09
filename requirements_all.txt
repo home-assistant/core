@@ -235,9 +235,6 @@ gTTS-token==1.1.1
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
-# homeassistant.components.media_player.vizio
-git+https://github.com/vkorn/pyvizio.git@master#pyvizio==0.0.1
-
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.5
 
