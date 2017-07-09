@@ -148,7 +148,7 @@ class VelbusDoubleSwitch(SwitchDevice):
                     self._close_channel_state = message.is_on()
                     self.schedule_update_ha_state()
                 if message.channel == self._open_channel:
-                    self._open_channel_State = message.is_on()
+                    self._open_channel_state = message.is_on()
                     self.schedule_update_ha_state()
 
     @property
