@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_MAC
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['wakeonlan==0.2.2']

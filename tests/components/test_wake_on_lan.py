@@ -1,6 +1,5 @@
 """Tests for Wake On LAN component."""
 import asyncio
-from functools import partial
 from unittest import mock
 
 import pytest
