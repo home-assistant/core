@@ -1,12 +1,17 @@
 """Handle the frontend for Home Assistant."""
 import asyncio
+from collections import OrderedDict
 import hashlib
 import json
 import logging
 import os
 
 from aiohttp import web
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
+from homeassistant.config import find_config_file, load_yaml_config_file
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
@@ -21,6 +26,8 @@ URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
+
+ATTR_THEMES = 'themes'
 
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
@@ -44,10 +51,27 @@ for size in (192, 384, 512, 1024):
 
 DATA_PANELS = 'frontend_panels'
 DATA_INDEX_VIEW = 'frontend_index_view'
+DATA_THEMES = 'frontend_themes'
+DATA_CURRENT_THEME = 'frontend_current_theme'
+DEFAULT_THEME = 'default'
 
 # To keep track we don't register a component twice (gives a warning)
 _REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(ATTR_THEMES): vol.Schema({
+            cv.string: OrderedDict
+        }),
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+SERVICE_SET_DEFAULT_THEME = 'set_default_theme'
+SERVICE_RELOAD_THEMES = 'reload_themes'
+SERVICE_SET_DEFAULT_THEME_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+})
 
 
 def register_built_in_panel(hass, component_name, sidebar_title=None,
@@ -186,7 +210,43 @@ def setup(hass, config):
                   'dev-template'):
         register_built_in_panel(hass, panel)
 
+    themes = config.get(DOMAIN).get(ATTR_THEMES)
+    if themes:
+        setup_themes(hass, themes)
+
     return True
+
+
+def setup_themes(hass, themes):
+    """Set up themes data and services."""
+    hass.data[DATA_THEMES] = themes
+    hass.data[DATA_CURRENT_THEME] = DEFAULT_THEME
+    hass.http.register_view(ThemesView)
+
+    def set_default_theme(call):
+        """Set default theme."""
+        data = call.data
+        name = data[CONF_NAME]
+        if name != DEFAULT_THEME and name not in hass.data[DATA_THEMES]:
+            _LOGGER.warning("Theme %s is not defined.", name)
+        hass.data[DATA_CURRENT_THEME] = name
+
+    def reload_themes(_):
+        """Reload themes."""
+        path = find_config_file(hass.config.config_dir)
+        new_themes = load_yaml_config_file(path)[DOMAIN].get(ATTR_THEMES, {})
+        hass.data[DATA_THEMES] = new_themes
+        if hass.data[DATA_CURRENT_THEME] not in new_themes:
+            hass.data[DATA_CURRENT_THEME] = DEFAULT_THEME
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_SET_DEFAULT_THEME,
+                           set_default_theme,
+                           descriptions[SERVICE_SET_DEFAULT_THEME],
+                           SERVICE_SET_DEFAULT_THEME_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
+                           descriptions[SERVICE_RELOAD_THEMES])
 
 
 class BootstrapView(HomeAssistantView):
@@ -291,3 +351,21 @@ class ManifestJSONView(HomeAssistantView):
         """Return the manifest.json."""
         msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
         return web.Response(body=msg, content_type="application/manifest+json")
+
+
+class ThemesView(HomeAssistantView):
+    """View to return defined themes."""
+
+    requires_auth = False
+    url = '/api/themes'
+    name = 'api:themes'
+
+    @callback
+    def get(self, request):
+        """Return themes."""
+        hass = request.app['hass']
+
+        return self.json({
+            'themes': hass.data[DATA_THEMES],
+            'current_theme': hass.data[DATA_CURRENT_THEME],
+        })
