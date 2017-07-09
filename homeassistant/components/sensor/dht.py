@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(DHTSensor(
                 data, variable, SENSOR_TYPES[variable][1], name,
-                    temperature_offset, humidity_offset))
+                temperature_offset, humidity_offset))
     except KeyError:
         pass
 
@@ -93,7 +93,7 @@ class DHTSensor(Entity):
     """Implementation of the DHT sensor."""
 
     def __init__(self, dht_client, sensor_type, temp_unit, name,
-            temperature_offset, humidity_offset):
+                 temperature_offset, humidity_offset):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
