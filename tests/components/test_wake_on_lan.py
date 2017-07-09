@@ -21,33 +21,29 @@ def mock_wakeonlan():
 
 
 @asyncio.coroutine
-def test_setup_component(hass, mock_wakeonlan):
-    """Test the set up of new component."""
-    assert(not hass.services.has_service(DOMAIN, SERVICE_SEND_MAGIC_PACKET))
-    yield from async_setup_component(hass, DOMAIN, {})
-    assert(hass.services.has_service(DOMAIN, SERVICE_SEND_MAGIC_PACKET))
-
-
-@asyncio.coroutine
 def test_send_magic_packet(hass, caplog, mock_wakeonlan):
     """Test of send magic packet service call."""
+    mac = "aa:bb:cc:dd:ee:ff"
+    bc_ip = "192.168.255.255"
+
     yield from async_setup_component(hass, DOMAIN, {})
 
-    yield from hass.async_add_job(partial(
+    yield from hass.async_add_job(
         hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"broadcast_address": "192.168.255.255"}))
-    assert len(mock_wakeonlan.mock_calls) == 0
-    assert 'ERROR' in caplog.text
-
-    yield from hass.async_add_job(partial(
-        hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"mac": "aa:bb:cc:dd:ee:ff"}))
+        {"mac": mac, "broadcast_address": bc_ip})
     assert len(mock_wakeonlan.mock_calls) == 1
-    assert 'Event service_executed' in caplog.text.splitlines()[-1]
+    assert mock_wakeonlan.mock_calls[-1][1][0] == mac
+    assert mock_wakeonlan.mock_calls[-1][2]['ip_address'] == bc_ip
 
-    yield from hass.async_add_job(partial(
-        hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"mac": "aa:bb:cc:dd:ee:ff",
-         "broadcast_address": "192.168.255.255"}))
+    yield from hass.async_add_job(
+        hass.services.call,
+        DOMAIN, SERVICE_SEND_MAGIC_PACKET,
+        {"broadcast_address": bc_ip})
+    assert 'ERROR' in caplog.text
+    assert len(mock_wakeonlan.mock_calls) == 1
+
+    yield from hass.async_add_job(
+        hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac})
     assert len(mock_wakeonlan.mock_calls) == 2
-    assert 'Event service_executed' in caplog.text.splitlines()[-1]
+    assert mock_wakeonlan.mock_calls[-1][1][0] == mac
+    assert not mock_wakeonlan.mock_calls[-1][2]

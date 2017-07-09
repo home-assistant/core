@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wake_on_lan/
 """
 import asyncio
+from functools import partial
 import logging
 import os
 
@@ -35,7 +36,7 @@ def async_setup(hass, config):
     """Set up the wake on LAN component."""
     from wakeonlan import wol
 
-    @callback
+    @asyncio.coroutine
     def send_magic_packet(call):
         """Send magic packet to wake up a device."""
         mac_address = call.data.get(CONF_MAC)
@@ -43,9 +44,12 @@ def async_setup(hass, config):
         _LOGGER.info("Send magic packet to mac %s (broadcast: %s)",
                      mac_address, broadcast_address)
         if broadcast_address is not None:
-            wol.send_magic_packet(mac_address, ip_address=broadcast_address)
+            yield from hass.async_add_job(
+                partial(wol.send_magic_packet, mac_address,
+                        ip_address=broadcast_address))
         else:
-            wol.send_magic_packet(mac_address)
+            yield from hass.async_add_job(
+                partial(wol.send_magic_packet, mac_address))
 
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file, os.path.join(
