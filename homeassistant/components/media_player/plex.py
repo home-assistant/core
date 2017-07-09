@@ -144,10 +144,6 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-        except OSError:
-            _LOGGER.error("Could not connect to plex server at http://%s",
-                          host)
-            return
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Could not connect to plex server at http://%s (%s)",
                           host, ex)
