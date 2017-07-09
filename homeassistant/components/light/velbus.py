@@ -2,7 +2,7 @@
 Support for Velbus lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/velbus/
+https://home-assistant.io/components/light.velbus/
 """
 import asyncio
 import logging
@@ -25,8 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         {
             vol.Required('module'): cv.positive_int,
             vol.Required('channel'): cv.positive_int,
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional('is_pushbutton'): cv.boolean
+            vol.Required(CONF_NAME): cv.string
         }
     ])
 })

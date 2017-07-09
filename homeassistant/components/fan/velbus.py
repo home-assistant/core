@@ -2,7 +2,7 @@
 Support for Velbus platform.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/velbus/
+https://home-assistant.io/components/fan.velbus/
 """
 import asyncio
 import logging
