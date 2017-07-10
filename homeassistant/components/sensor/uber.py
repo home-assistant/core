@@ -31,8 +31,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVER_TOKEN): cv.string,
-    vol.Required(CONF_START_LATITUDE): cv.latitude,
-    vol.Required(CONF_START_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_START_LATITUDE): cv.latitude,
+    vol.Optional(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
     vol.Optional(CONF_PRODUCT_IDS): vol.All(cv.ensure_list, [cv.string]),
@@ -44,13 +44,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from uber_rides.session import Session
 
     session = Session(server_token=config.get(CONF_SERVER_TOKEN))
-
+    start_latitude = config.get(CONF_START_LATITUDE, hass.config.latitude)
+    start_longitude = config.get(CONF_START_LONGITUDE, hass.config.longitude)
+    end_latitude = config.get(CONF_END_LATITUDE)
+    end_longitude = config.get(CONF_END_LONGITUDE)
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
     timeandpriceest = UberEstimate(
-        session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
-        config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
+        session, start_latitude, start_longitude, end_latitude, end_longitude)
+
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
