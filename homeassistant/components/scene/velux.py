@@ -4,7 +4,7 @@ Support for VELUX scenes.
 Connects to VELUX KLF 200 interface
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.velux/
+https://home-assistant.io/components/velux/
 """
 from homeassistant.components.scene import Scene
 from homeassistant.components.velux import _LOGGER, DATA_VELUX
