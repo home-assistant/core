@@ -27,7 +27,8 @@ def test_send_magic_packet(hass, caplog, mock_wakeonlan):
 
     yield from async_setup_component(hass, DOMAIN, {})
 
-    yield from hass.services.async_call(DOMAIN, SERVICE_SEND_MAGIC_PACKET,
+    yield from hass.services.async_call(
+        DOMAIN, SERVICE_SEND_MAGIC_PACKET,
         {"mac": mac, "broadcast_address": bc_ip}, blocking=True)
     assert len(mock_wakeonlan.mock_calls) == 1
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
