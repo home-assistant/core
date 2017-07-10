@@ -9,10 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['uber_rides==0.4.1']
 
@@ -35,8 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_PRODUCT_IDS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -57,11 +56,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        if (product.get('price_details') is not None) and \
-           product['price_details']['estimate'] != 'Metered':
+        if product.get('price_details') is not None:
             dev.append(UberSensor(
                 'price', timeandpriceest, product_id, product))
-    add_devices(dev)
+
+    add_devices(dev, True)
 
 
 class UberSensor(Entity):
@@ -73,8 +72,8 @@ class UberSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(self._product['display_name'],
-                                    self._sensortype)
+        self._name = '{} {}'.format(
+            self._product['display_name'], self._sensortype)
         if self._sensortype == 'time':
             self._unit_of_measurement = 'min'
             time_estimate = self._product.get('time_estimate_seconds', 0)
@@ -90,7 +89,6 @@ class UberSensor(Entity):
                 self._state = int(price_details.get(statekey, 0))
             else:
                 self._state = 0
-        self.update()
 
     @property
     def name(self):
@@ -214,8 +212,8 @@ class UberEstimate(object):
                 if product.get('price_details') is None:
                     price_details = {}
                 price_details['estimate'] = price.get('estimate', '0')
-                price_details['high_estimate'] = price.get('high_estimate',
-                                                           '0')
+                price_details['high_estimate'] = price.get(
+                    'high_estimate', '0')
                 price_details['low_estimate'] = price.get('low_estimate', '0')
                 price_details['currency_code'] = price.get('currency_code')
                 surge_multiplier = price.get('surge_multiplier', '0')
