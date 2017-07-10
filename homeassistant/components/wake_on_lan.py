@@ -59,5 +59,4 @@ def async_setup(hass, config):
         description=descriptions.get(DOMAIN).get(SERVICE_SEND_MAGIC_PACKET),
         schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA)
 
-    _LOGGER.debug("Set up of WOL service done.")
     return True

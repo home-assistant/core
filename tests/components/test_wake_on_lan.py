@@ -30,6 +30,7 @@ def test_send_magic_packet(hass, caplog, mock_wakeonlan):
     yield from hass.async_add_job(
         hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET,
         {"mac": mac, "broadcast_address": bc_ip})
+    yield from hass.async_block_till_done()
     assert len(mock_wakeonlan.mock_calls) == 1
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
     assert mock_wakeonlan.mock_calls[-1][2]['ip_address'] == bc_ip
@@ -38,11 +39,13 @@ def test_send_magic_packet(hass, caplog, mock_wakeonlan):
         hass.services.call,
         DOMAIN, SERVICE_SEND_MAGIC_PACKET,
         {"broadcast_address": bc_ip})
+    yield from hass.async_block_till_done()
     assert 'ERROR' in caplog.text
     assert len(mock_wakeonlan.mock_calls) == 1
 
     yield from hass.async_add_job(
         hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac})
+    yield from hass.async_block_till_done()
     assert len(mock_wakeonlan.mock_calls) == 2
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
     assert not mock_wakeonlan.mock_calls[-1][2]
