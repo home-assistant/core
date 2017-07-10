@@ -27,25 +27,20 @@ def test_send_magic_packet(hass, caplog, mock_wakeonlan):
 
     yield from async_setup_component(hass, DOMAIN, {})
 
-    yield from hass.async_add_job(
-        hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"mac": mac, "broadcast_address": bc_ip})
-    yield from hass.async_block_till_done()
+    yield from hass.services.async_call(DOMAIN, SERVICE_SEND_MAGIC_PACKET,
+        {"mac": mac, "broadcast_address": bc_ip}, blocking=True)
     assert len(mock_wakeonlan.mock_calls) == 1
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
     assert mock_wakeonlan.mock_calls[-1][2]['ip_address'] == bc_ip
 
-    yield from hass.async_add_job(
-        hass.services.call,
+    yield from hass.services.async_call(
         DOMAIN, SERVICE_SEND_MAGIC_PACKET,
-        {"broadcast_address": bc_ip})
-    yield from hass.async_block_till_done()
+        {"broadcast_address": bc_ip}, blocking=True)
     assert 'ERROR' in caplog.text
     assert len(mock_wakeonlan.mock_calls) == 1
 
-    yield from hass.async_add_job(
-        hass.services.call, DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac})
-    yield from hass.async_block_till_done()
+    yield from hass.services.async_call(
+        DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac}, blocking=True)
     assert len(mock_wakeonlan.mock_calls) == 2
     assert mock_wakeonlan.mock_calls[-1][1][0] == mac
     assert not mock_wakeonlan.mock_calls[-1][2]
