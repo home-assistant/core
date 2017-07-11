@@ -17,6 +17,8 @@ from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import template, script, config_validation as cv
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.intent import (
+    UnknownIntent, IntentError, InvalidSlotInfo)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ ATTR_REDIRECTION_URL = 'redirectionURL'
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
 
 DOMAIN = 'alexa'
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'intent']
 
 
 class SpeechType(enum.Enum):
@@ -130,6 +132,7 @@ class AlexaIntentsView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Handle Alexa."""
+        hass = request.app['hass']
         data = yield from request.json()
 
         _LOGGER.debug('Received Alexa request: %s', data)
@@ -147,13 +150,13 @@ class AlexaIntentsView(HomeAssistantView):
             return None
 
         intent = req.get('intent')
-        response = AlexaResponse(request.app['hass'], intent)
+        alexa_response = AlexaResponse(hass, intent)
 
         if req_type == 'LaunchRequest':
-            response.add_speech(
+            alexa_response.add_speech(
                 SpeechType.plaintext,
                 "Hello, and welcome to the future. How may I help?")
-            return self.json(response)
+            return self.json(alexa_response)
 
         if req_type != 'IntentRequest':
             _LOGGER.warning('Received unsupported request: %s', req_type)
@@ -162,31 +165,38 @@ class AlexaIntentsView(HomeAssistantView):
                 HTTP_BAD_REQUEST)
 
         intent_name = intent['name']
-        config = self.intents.get(intent_name)
 
-        if config is None:
+        try:
+            intent_response = yield from hass.intent.async_handle(
+                DOMAIN, intent_name, alexa_response.variables)
+        except UnknownIntent as err:
             _LOGGER.warning('Received unknown intent %s', intent_name)
-            response.add_speech(
+            alexa_response.add_speech(
                 SpeechType.plaintext,
                 "This intent is not yet configured within Home Assistant.")
-            return self.json(response)
+            return self.json(alexa_response)
 
-        speech = config.get(CONF_SPEECH)
-        card = config.get(CONF_CARD)
-        action = config.get(CONF_ACTION)
+        except InvalidSlotInfo as err:
+            _LOGGER.error('Received invalid slot data from Alexa: %s', err)
+            return self.json_message('Invalid slot data received',
+                                     HTTP_BAD_REQUEST)
+        except IntentError:
+            _LOGGER.exception('Error handling request for %s', intent_name)
+            return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
 
-        if action is not None:
-            yield from action.async_run(response.variables)
+        for speech_type in ('ssml', 'plain'):
+            if speech_type in intent_response.speech:
+                alexa_response.add_speech(
+                    speech_type,
+                    intent_response.speech[speech_type]['speech'])
+                break
 
-        # pylint: disable=unsubscriptable-object
-        if speech is not None:
-            response.add_speech(speech[CONF_TYPE], speech[CONF_TEXT])
+        if 'simple' in intent_response.card:
+            alexa_response.add_card(
+                'simple', intent_response.card['simple']['title'],
+                intent_response.card['simple']['content'])
 
-        if card is not None:
-            response.add_card(card[CONF_TYPE], card[CONF_TITLE],
-                              card[CONF_CONTENT])
-
-        return self.json(response)
+        return self.json(alexa_response)
 
 
 class AlexaResponse(object):
