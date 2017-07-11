@@ -14,10 +14,9 @@ import homeassistant.loader as loader
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
     CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['amcrest==1.2.0']
 DEPENDENCIES = ['ffmpeg']
@@ -129,7 +128,7 @@ def setup(hass, config):
             else:
                 authentication = None
 
-        hass.async_add_job(discovery.async_load_platform(
+        discovery.load_platform(
             hass, 'camera', DOMAIN, {
                 'device': camera,
                 CONF_AUTHENTICATION: authentication,
@@ -137,14 +136,14 @@ def setup(hass, config):
                 CONF_NAME: name,
                 CONF_RESOLUTION: resolution,
                 CONF_STREAM_SOURCE: stream_source,
-            }, config))
+            }, config)
 
         if sensors:
-            hass.async_add_job(discovery.async_load_platform(
+            discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
                     'device': camera,
                     CONF_NAME: name,
                     CONF_SENSORS: sensors,
-                }, config))
+                }, config)
 
     return True

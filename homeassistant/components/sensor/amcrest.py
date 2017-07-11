@@ -42,7 +42,6 @@ class AmcrestSensor(Entity):
 
     def __init__(self, name, camera, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        super(AmcrestSensor, self).__init__()
         self._attrs = {}
         self._camera = camera
         self._sensor_type = sensor_type
