@@ -103,7 +103,7 @@ class ArloCam(Camera):
     def set_base_station_mode(self, mode):
         """Set the mode in the base station."""
         # Get the list of base stations identified by library
-        base_stations = has.data[DATA_ARLO].base_stations
+        base_stations = self.hass.data[DATA_ARLO].base_stations
 
         # Some Arlo cameras does not have basestation
         # So check if there is base station detected first
