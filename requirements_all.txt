@@ -961,6 +961,9 @@ yeelight==0.3.0
 # homeassistant.components.light.yeelightsunflower
 yeelightsunflower==0.0.8
 
+# homeassistant.components.media_extractor
+youtube_dl==2017.7.2
+
 # homeassistant.components.light.zengge
 zengge==0.2
 
