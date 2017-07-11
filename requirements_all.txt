@@ -60,8 +60,7 @@ aiopvapi==1.4
 # homeassistant.components.alarmdecoder
 alarmdecoder==0.12.1.0
 
-# homeassistant.components.camera.amcrest
-# homeassistant.components.sensor.amcrest
+# homeassistant.components.amcrest
 amcrest==1.2.0
 
 # homeassistant.components.media_player.anthemav
