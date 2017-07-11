@@ -59,7 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        if product.get('price_details') is not None:
+
+        if product.get('price_details') is not None \
+                and product['display_name'] != 'TAXI':
             dev.append(UberSensor(
                 'price', timeandpriceest, product_id, product))
 
