@@ -312,6 +312,7 @@ omit =
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
+    homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
