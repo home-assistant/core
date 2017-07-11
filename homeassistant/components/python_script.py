@@ -61,6 +61,7 @@ def execute(hass, filename, source, data=None):
     """Execute Python source."""
     from RestrictedPython import compile_restricted_exec
     from RestrictedPython.Guards import safe_builtins, full_write_guard
+    from RestrictedPython.Utilities import utility_builtins
 
     compiled = compile_restricted_exec(source, filename=filename)
 
@@ -87,8 +88,10 @@ def execute(hass, filename, source, data=None):
 
         return getattr(obj, name, default)
 
+    builtins = safe_builtins.copy()
+    builtins.update(utility_builtins)
     restricted_globals = {
-        '__builtins__': safe_builtins,
+        '__builtins__': builtins,
         '_print_': StubPrinter,
         '_getattr_': protected_getattr,
         '_write_': full_write_guard,
