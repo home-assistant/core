@@ -273,9 +273,6 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
-# homeassistant.components.switch.dlink
-https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
-
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.0
 
@@ -505,6 +502,9 @@ pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.18.0
+
+# homeassistant.components.switch.dlink
+pyW215==0.5.1
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
