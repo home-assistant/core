@@ -1,6 +1,5 @@
 """Handle the frontend for Home Assistant."""
 import asyncio
-from collections import OrderedDict
 import hashlib
 import json
 import logging
@@ -11,7 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.config import find_config_file, load_yaml_config_file
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
@@ -28,7 +27,7 @@ URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
 
 ATTR_THEMES = 'themes'
-
+DEFAULT_THEME_COLOR = '#03A9F4'
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
     'description': 'Open-source home automation platform running on Python 3.',
@@ -39,7 +38,7 @@ MANIFEST_JSON = {
     'name': 'Home Assistant',
     'short_name': 'Assistant',
     'start_url': '/',
-    'theme_color': '#03A9F4'
+    'theme_color': DEFAULT_THEME_COLOR
 }
 
 for size in (192, 384, 512, 1024):
@@ -52,8 +51,10 @@ for size in (192, 384, 512, 1024):
 DATA_PANELS = 'frontend_panels'
 DATA_INDEX_VIEW = 'frontend_index_view'
 DATA_THEMES = 'frontend_themes'
-DATA_CURRENT_THEME = 'frontend_current_theme'
+DATA_DEFAULT_THEME = 'frontend_default_theme'
 DEFAULT_THEME = 'default'
+
+PRIMARY_COLOR = 'primary-color'
 
 # To keep track we don't register a component twice (gives a warning)
 _REGISTERED_COMPONENTS = set()
@@ -62,14 +63,14 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(ATTR_THEMES): vol.Schema({
-            cv.string: OrderedDict
+            cv.string: {cv.string: cv.string}
         }),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-SERVICE_SET_DEFAULT_THEME = 'set_default_theme'
+SERVICE_SET_THEME = 'set_theme'
 SERVICE_RELOAD_THEMES = 'reload_themes'
-SERVICE_SET_DEFAULT_THEME_SCHEMA = vol.Schema({
+SERVICE_SET_THEME_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
 })
 
@@ -220,31 +221,51 @@ def setup(hass, config):
 def setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.data[DATA_THEMES] = themes
-    hass.data[DATA_CURRENT_THEME] = DEFAULT_THEME
+    hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
     hass.http.register_view(ThemesView)
 
-    def set_default_theme(call):
-        """Set default theme."""
+    @callback
+    def update_theme_color_and_fire_event():
+        """Update theme_color in manifest."""
+        name = hass.data[DATA_DEFAULT_THEME]
+        themes = hass.data[DATA_THEMES]
+        if name != DEFAULT_THEME and PRIMARY_COLOR in themes[name]:
+            MANIFEST_JSON['theme_color'] = themes[name][PRIMARY_COLOR]
+        else:
+            MANIFEST_JSON['theme_color'] = DEFAULT_THEME_COLOR
+        hass.bus.async_fire(EVENT_THEMES_UPDATED, {
+            'themes': themes,
+            'default_theme': name,
+        })
+
+    @callback
+    def set_theme(call):
+        """Set backend-prefered theme."""
         data = call.data
         name = data[CONF_NAME]
-        if name != DEFAULT_THEME and name not in hass.data[DATA_THEMES]:
+        if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
+            _LOGGER.info("Theme %s set as default", name)
+            hass.data[DATA_DEFAULT_THEME] = name
+            update_theme_color_and_fire_event()
+        else:
             _LOGGER.warning("Theme %s is not defined.", name)
-        hass.data[DATA_CURRENT_THEME] = name
 
+    @callback
     def reload_themes(_):
         """Reload themes."""
         path = find_config_file(hass.config.config_dir)
         new_themes = load_yaml_config_file(path)[DOMAIN].get(ATTR_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
-        if hass.data[DATA_CURRENT_THEME] not in new_themes:
-            hass.data[DATA_CURRENT_THEME] = DEFAULT_THEME
+        if hass.data[DATA_DEFAULT_THEME] not in new_themes:
+            hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+        update_theme_color_and_fire_event()
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_SET_DEFAULT_THEME,
-                           set_default_theme,
-                           descriptions[SERVICE_SET_DEFAULT_THEME],
-                           SERVICE_SET_DEFAULT_THEME_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_SET_THEME,
+                           set_theme,
+                           descriptions[SERVICE_SET_THEME],
+                           SERVICE_SET_THEME_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
                            descriptions[SERVICE_RELOAD_THEMES])
 
@@ -367,5 +388,5 @@ class ThemesView(HomeAssistantView):
 
         return self.json({
             'themes': hass.data[DATA_THEMES],
-            'current_theme': hass.data[DATA_CURRENT_THEME],
+            'default_theme': hass.data[DATA_DEFAULT_THEME],
         })
