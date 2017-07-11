@@ -27,7 +27,7 @@ from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['phue==0.9']
+REQUIREMENTS = ['phue==1.0']
 
 # Track previously setup bridges
 _CONFIGURED_BRIDGES = {}
