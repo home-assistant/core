@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.exceptions as exc
 
 REQUIREMENTS = ['pythonegardia==1.0.8']
 
@@ -50,8 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         egardiasystem = egardiadevice.EgardiaDevice(host, port,
                                                     username, password, "")
     except requests.ConnectionError:
-        _LOGGER.error("Unable to connect to device %s:%s", host, port)
-        return False
+        raise exc.PlatformNotReady()
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username.")
         return False
@@ -67,6 +67,14 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         self._egardiasystem = egardiasystem
         self._status = STATE_UNKNOWN
 
+    STATES = {
+        'ARM': STATE_ALARM_ARMED_AWAY,
+        'HOME': STATE_ALARM_ARMED_HOME,
+        'DAY HOME': STATE_ALARM_ARMED_HOME,
+        'DISARM': STATE_ALARM_DISARMED,
+        'UNKNOWN': STATE_UNKNOWN
+    }
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -75,29 +83,13 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._status == 'ARM':
-            state = STATE_ALARM_ARMED_AWAY
-        elif self._status == 'HOME':
-            state = STATE_ALARM_ARMED_HOME
-        elif self._status == 'DAY HOME':
-            state = STATE_ALARM_ARMED_HOME
-        elif self._status == 'NIGHT HOME':
-            state = STATE_ALARM_ARMED_HOME
-        elif self._status == 'DISARM':
-            state = STATE_ALARM_DISARMED
-        else:
-            state = STATE_UNKNOWN
-        return state
-
-    def getstate(self):
-        """Retrieve the status from the Egardia system."""
-        status = self._egardiasystem.getState()
-        _LOGGER.info("Egardia alarm status: "+status)
-        return status.upper()
+        return self._status
 
     def update(self):
         """Update the alarm status."""
-        self._status = self.getstate()
+        status = self._egardiasystem.getState()
+        self._status = ([v for k, v in self.STATES.items()
+                         if status.upper() == k][0])
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
