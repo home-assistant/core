@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.exceptions as exc
 
-REQUIREMENTS = ['pythonegardia==1.0.8']
+REQUIREMENTS = ['pythonegardia==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
