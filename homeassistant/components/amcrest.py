@@ -10,11 +10,12 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
+from requests.exceptions import HTTPError, ConnectTimeout
+
 import homeassistant.loader as loader
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
     CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
-from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
