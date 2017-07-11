@@ -918,6 +918,7 @@ vsure==1.3.7
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.14
 
+# homeassistant.components.wake_on_lan
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.media_player.webostv
