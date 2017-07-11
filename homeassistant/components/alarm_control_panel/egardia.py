@@ -94,14 +94,11 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._egardiasystem.alarm_disarm()
-        _LOGGER.info("Egardia alarm DISARMED")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._egardiasystem.alarm_arm_home()
-        _LOGGER.info("Egardia alarm ARMED HOME")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._egardiasystem.alarm_arm_away()
-        _LOGGER.info("Egardia alarm ARMED AWAY")
