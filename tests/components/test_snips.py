@@ -30,14 +30,16 @@ def test_snips_call_action(hass, mqtt_mock):
     calls = async_mock_service(hass, 'test', 'service')
 
     result = yield from async_setup_component(hass, "snips", {
-        "snips": {
-            "intents": {
-                "Lights": {
-                    "action": {
-                        "service": "test.service",
-                        "data_template": {
-                            "color": "{{ light_color }}"
-                        }
+        "snips": {},
+    })
+    assert result
+    result = yield from async_setup_component(hass, "intent_script", {
+        "intent_script": {
+            "Lights": {
+                "action": {
+                    "service": "test.service",
+                    "data_template": {
+                        "color": "{{ light_color }}"
                     }
                 }
             }
