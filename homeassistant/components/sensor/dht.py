@@ -129,13 +129,17 @@ class DHTSensor(Entity):
         data = self.dht_client.data
 
         if self.type == SENSOR_TEMPERATURE:
-            temperature = round(data[SENSOR_TEMPERATURE], 1)
+            temperature = data[SENSOR_TEMPERATURE]
+            _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
+                          temperature, temperature_offset)
             if (temperature >= -20) and (temperature < 80):
                 self._state = round(temperature + temperature_offset, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY:
-            humidity = round(data[SENSOR_HUMIDITY], 1)
+            humidity = data[SENSOR_HUMIDITY]
+            _LOGGER.debug("Humidity %.1f%% + offset %.1f",
+                          humidity, humidity_offset)
             if (humidity >= 0) and (humidity <= 100):
                 self._state = round(humidity + humidity_offset, 1)
 
