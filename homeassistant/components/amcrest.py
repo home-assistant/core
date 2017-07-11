@@ -9,7 +9,6 @@ from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
-
 from requests.exceptions import HTTPError, ConnectTimeout
 
 import homeassistant.loader as loader
