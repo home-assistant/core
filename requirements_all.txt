@@ -476,6 +476,9 @@ pocketcasts==0.1
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
+# homeassistant.components.prometheus
+prometheus_client==0.0.19
+
 # homeassistant.components.sensor.systemmonitor
 psutil==5.2.2
 
