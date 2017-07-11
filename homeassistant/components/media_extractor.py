@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config import load_yaml_config_file
 
 
-DOMAIN = 'media_helper'
+DOMAIN = 'media_extractor'
 DEPENDENCIES = ['media_player']
 REQUIREMENTS = ['youtube_dl==2017.7.2']
 
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Set up the media_helper service."""
+    """Set up the media_extractor service."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__),
                      'media_player', 'services.yaml'))
@@ -75,7 +75,7 @@ def get_media_stream_url(media_url):
         raise YDException()
 
     if 'entries' in all_media_streams:
-        _LOGGER.warning("Playlists is not supported, "
+        _LOGGER.warning("Playlists are not supported, "
                         "looking for the first video")
         try:
             selected_stream = next(all_media_streams['entries'])
