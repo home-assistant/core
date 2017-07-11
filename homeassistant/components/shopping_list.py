@@ -1,3 +1,4 @@
+"""Component to manage a shoppling list."""
 import asyncio
 import logging
 

@@ -1,3 +1,4 @@
+"""Module to coordinate user intentions."""
 import asyncio
 import logging
 
@@ -78,6 +79,7 @@ class IntentHandler:
         raise NotImplementedError()
 
     def __repr__(self):
+        """String representation of intent handler."""
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
 

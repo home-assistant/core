@@ -1,3 +1,4 @@
+"""Test intent_script component."""
 import asyncio
 
 from homeassistant.bootstrap import async_setup_component

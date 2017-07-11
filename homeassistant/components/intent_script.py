@@ -58,8 +58,10 @@ def async_setup(hass, config):
 
 
 class ScriptIntentHandler(IntentHandler):
+    """Respond to an intent with a script."""
 
     def __init__(self, intent_type, config):
+        """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
 
