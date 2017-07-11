@@ -225,7 +225,7 @@ def setup_themes(hass, themes):
     hass.http.register_view(ThemesView)
 
     @callback
-    def update_theme_color_and_fire_event():
+    def update_theme_and_fire_event():
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
@@ -246,7 +246,7 @@ def setup_themes(hass, themes):
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
             _LOGGER.info("Theme %s set as default", name)
             hass.data[DATA_DEFAULT_THEME] = name
-            update_theme_color_and_fire_event()
+            update_theme_and_fire_event()
         else:
             _LOGGER.warning("Theme %s is not defined.", name)
 
@@ -258,7 +258,7 @@ def setup_themes(hass, themes):
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
-        update_theme_color_and_fire_event()
+        update_theme_and_fire_event()
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
