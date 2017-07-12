@@ -95,7 +95,7 @@ def setup(hass, config):
             return
 
         try:
-             data = event.data["data"]
+            data = event.data["data"]
         except KeyError:
             _LOGGER.error("KNX data block missing")
             return
@@ -118,7 +118,7 @@ def setup(hass, config):
             knxdata = data
         else:
             try:
-                knxdata = [ int(data) & 0xff ]
+                knxdata = [int(data) & 0xff]
             except ValueError:
                 _LOGGER.error("KNX data format incorrect")
                 return
