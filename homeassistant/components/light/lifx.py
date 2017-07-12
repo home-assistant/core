@@ -112,11 +112,21 @@ LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
 })
 
 
+def aiolifx():
+    """Return the aiolifx module."""
+    import aiolifx as aiolifx_module
+    return aiolifx_module
+
+
+def aiolifx_effects():
+    """Return the aiolifx_effects module."""
+    import aiolifx_effects as aiolifx_effects_module
+    return aiolifx_effects_module
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the LIFX platform."""
-    import aiolifx
-
     if sys.platform == 'win32':
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
@@ -124,7 +134,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     server_addr = config.get(CONF_SERVER)
 
     lifx_manager = LIFXManager(hass, async_add_devices)
-    lifx_discovery = aiolifx.LifxDiscovery(
+    lifx_discovery = aiolifx().LifxDiscovery(
         hass.loop,
         lifx_manager,
         discovery_interval=DISCOVERY_INTERVAL,
@@ -187,11 +197,10 @@ class LIFXManager(object):
 
     def __init__(self, hass, async_add_devices):
         """Initialize the light."""
-        import aiolifx_effects
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
-        self.effects_conductor = aiolifx_effects.Conductor(loop=hass.loop)
+        self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
         descriptions = load_yaml_config_file(
             path.join(path.dirname(__file__), 'services.yaml'))
@@ -245,11 +254,10 @@ class LIFXManager(object):
     @asyncio.coroutine
     def start_effect(self, entities, service, **kwargs):
         """Start a light effect on entities."""
-        import aiolifx_effects
         devices = list(map(lambda l: l.device, entities))
 
         if service == SERVICE_EFFECT_PULSE:
-            effect = aiolifx_effects.EffectPulse(
+            effect = aiolifx_effects().EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 cycles=kwargs.get(ATTR_CYCLES),
@@ -264,7 +272,7 @@ class LIFXManager(object):
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
 
-            effect = aiolifx_effects.EffectColorloop(
+            effect = aiolifx_effects().EffectColorloop(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 change=kwargs.get(ATTR_CHANGE),
