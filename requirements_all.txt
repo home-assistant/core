@@ -52,7 +52,7 @@ aiohttp_cors==0.5.3
 aiolifx==0.5.2
 
 # homeassistant.components.light.lifx
-aiolifx_effects==0.1.0
+aiolifx_effects==0.1.1
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.4

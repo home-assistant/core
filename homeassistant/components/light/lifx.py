@@ -33,7 +33,7 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.5.2', 'aiolifx_effects==0.1.0']
+REQUIREMENTS = ['aiolifx==0.5.2', 'aiolifx_effects==0.1.1']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -53,10 +53,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_INFRARED = 'infrared'
+ATTR_ZONES = 'zones'
 ATTR_POWER = 'power'
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 })
 
@@ -158,6 +160,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 def lifxwhite(device):
     """Return whether this is a white-only bulb."""
     return not aiolifx().products.features_map[device.product]["color"]
+
+
+def lifxmultizone(device):
+    """Return whether this is a multizone bulb/strip."""
+    return aiolifx().products.features_map[device.product]["multizone"]
 
 
 def find_hsbk(**kwargs):
@@ -326,6 +333,9 @@ class LIFXManager(object):
 
             if lifxwhite(device):
                 entity = LIFXWhite(device, self.effects_conductor)
+            elif lifxmultizone(device):
+                yield from ack(partial(device.get_color_zones, start_index=0))
+                entity = LIFXStrip(device, self.effects_conductor)
             else:
                 entity = LIFXColor(device, self.effects_conductor)
 
@@ -530,7 +540,7 @@ class LIFXLight(Light):
         _LOGGER.debug("%s async_update", self.who)
         if self.available:
             # Avoid state ping-pong by holding off updates as the state settles
-            yield from asyncio.sleep(0.25)
+            yield from asyncio.sleep(0.3)
             yield from AwaitAioLIFX().wait(self.device.get_color)
 
 
@@ -597,3 +607,50 @@ class LIFXColor(LIFXLight):
 
         return color_util.color_hsv_to_RGB(
             hue, convert_16_to_8(sat), convert_16_to_8(bri))
+
+
+class LIFXStrip(LIFXColor):
+    """Representation of a LIFX light strip with multiple zones."""
+
+    @asyncio.coroutine
+    def send_color(self, ack, hsbk, kwargs, duration):
+        """Send a color change to the device."""
+        bulb = self.device
+        num_zones = len(bulb.color_zones)
+
+        # Zone brightness is not reported when powered off
+        if not self.is_on and hsbk[2] is None:
+            yield from ack(partial(bulb.set_power, True))
+            yield from self.async_update()
+            yield from ack(partial(bulb.set_power, False))
+
+        zones = kwargs.get(ATTR_ZONES, None)
+        if zones is None:
+            zones = list(range(0, num_zones))
+        else:
+            zones = list(filter(lambda x: x < num_zones, set(zones)))
+
+        # Send new color to each zone
+        for index, zone in enumerate(zones):
+            zone_hsbk = merge_hsbk(bulb.color_zones[zone], hsbk)
+            apply = 1 if (index == len(zones)-1) else 0
+            set_zone = partial(bulb.set_color_zones,
+                               start_index=zone,
+                               end_index=zone,
+                               color=zone_hsbk,
+                               duration=duration,
+                               apply=apply)
+            yield from ack(set_zone)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update strip status."""
+        if self.available:
+            yield from super().async_update()
+
+            ack = AwaitAioLIFX().wait
+            bulb = self.device
+
+            # Each get_color_zones returns the next 8 zones
+            for zone in range(0, len(bulb.color_zones), 8):
+                yield from ack(partial(bulb.get_color_zones, start_index=zone))
