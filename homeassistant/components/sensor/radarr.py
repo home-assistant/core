@@ -216,8 +216,9 @@ def get_date(zone, offset=0):
 
 def get_release_date(data):
     """Get release date."""
-    date = data['physicalRelease']
-    if not date:
+    if 'physicalRelease' in data:
+        date = data['physicalRelease']
+    else:
         date = data['inCinemas']
     return date
 
