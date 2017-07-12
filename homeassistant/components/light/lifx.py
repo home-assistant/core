@@ -37,6 +37,11 @@ REQUIREMENTS = ['aiolifx==0.5.2', 'aiolifx_effects==0.1.0']
 
 UDP_BROADCAST_PORT = 56700
 
+DISCOVERY_INTERVAL = 60
+MESSAGE_TIMEOUT = 1.0
+MESSAGE_RETRIES = 8
+UNAVAILABLE_GRACE = 90
+
 CONF_SERVER = 'server'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -117,7 +122,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     server_addr = config.get(CONF_SERVER)
 
     lifx_manager = LIFXManager(hass, async_add_devices)
-    lifx_discovery = aiolifx.LifxDiscovery(hass.loop, lifx_manager)
+    lifx_discovery = aiolifx.LifxDiscovery(
+        hass.loop,
+        lifx_manager,
+        discovery_interval=DISCOVERY_INTERVAL)
 
     coro = hass.loop.create_datagram_endpoint(
         lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
@@ -287,6 +295,9 @@ class LIFXManager(object):
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
+            device.timeout = MESSAGE_TIMEOUT
+            device.retry_count = MESSAGE_RETRIES
+            device.unregister_timeout = UNAVAILABLE_GRACE
             device.get_version(self.got_version)
 
     @callback
