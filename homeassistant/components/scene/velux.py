@@ -1,8 +1,6 @@
 """
 Support for VELUX scenes.
 
-Connects to VELUX KLF 200 interface
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.velux/
 """
