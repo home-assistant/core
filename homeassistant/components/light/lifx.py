@@ -43,9 +43,11 @@ MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
 CONF_SERVER = 'server'
+CONF_BROADCAST = 'broadcast'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+    vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
 })
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
@@ -125,7 +127,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     lifx_discovery = aiolifx.LifxDiscovery(
         hass.loop,
         lifx_manager,
-        discovery_interval=DISCOVERY_INTERVAL)
+        discovery_interval=DISCOVERY_INTERVAL,
+        broadcast_ip=config.get(CONF_BROADCAST))
 
     coro = hass.loop.create_datagram_endpoint(
         lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
