@@ -1,8 +1,8 @@
 """
 Decorator service for the media_player.play_media service.
 
-Extracts stream url and sends it to the media_player.play_media
-service.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/media_extractor/
 """
 import logging
 import os
@@ -12,28 +12,28 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA, SERVICE_PLAY_MEDIA)
 from homeassistant.config import load_yaml_config_file
 
-
-DOMAIN = 'media_extractor'
-DEPENDENCIES = ['media_player']
-REQUIREMENTS = ['youtube_dl==2017.7.2']
+REQUIREMENTS = ['youtube_dl==2017.7.9']
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'media_extractor'
+DEPENDENCIES = ['media_player']
+
 
 def setup(hass, config):
-    """Set up the media_extractor service."""
+    """Set up the media extractor service."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__),
                      'media_player', 'services.yaml'))
 
     def play_media(call):
-        """Get stream url and send it to the media_player.play_media."""
+        """Get stream URL and send it to the media_player.play_media."""
         media_url = call.data.get(ATTR_MEDIA_CONTENT_ID)
 
         try:
             stream_url = get_media_stream_url(media_url)
         except YDException:
-            _LOGGER.error("Could not retrieve data for the url: %s",
+            _LOGGER.error("Could not retrieve data for the URL: %s",
                           media_url)
             return
         else:
@@ -62,7 +62,7 @@ class YDException(Exception):
 
 
 def get_media_stream_url(media_url):
-    """Extract stream url from the media url."""
+    """Extract stream URL from the media URL."""
     from youtube_dl import YoutubeDL
     from youtube_dl.utils import DownloadError, ExtractorError
 
