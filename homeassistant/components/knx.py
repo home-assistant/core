@@ -100,18 +100,26 @@ def setup(hass, config):
             _LOGGER.error("KNX data block missing")
             return
 
-        knxaddr = None
-        try:
-            addr = int(addr)
-        except ValueError:
-            pass
+        if isinstance(addr, list):
+            addrlist = addr
+        else:
+            addrlist = [addr]
 
-        if knxaddr is None:
+        knxaddrlist = []
+        for addr in addrlist:
             try:
-                knxaddr = parse_group_address(addr)
-            except KNXException:
-                _LOGGER.error("KNX address format incorrect")
-                return
+                _LOGGER.debug("Found %s",addr)
+                knxaddr = int(addr)
+            except ValueError:
+                knxaddr = None
+
+            if knxaddr is None:
+                try:
+                    knxaddr = parse_group_address(addr)
+                except KNXException:
+                    _LOGGER.error("KNX address format incorrect: %s", addr)
+
+            knxaddrlist.append(knxaddr)
 
         knxdata = None
         if isinstance(data, list):
@@ -120,10 +128,11 @@ def setup(hass, config):
             try:
                 knxdata = [int(data) & 0xff]
             except ValueError:
-                _LOGGER.error("KNX data format incorrect")
+                _LOGGER.error("KNX data format incorrect: %s", data)
                 return
 
-        KNXTUNNEL.group_write(knxaddr, knxdata)
+        for addr in knxaddrlist:
+            KNXTUNNEL.group_write(addr, knxdata)
 
     # Listen for when knx_frame_send event is fired
     hass.bus.listen(EVENT_KNX_FRAME_SEND, handle_knx_send)
