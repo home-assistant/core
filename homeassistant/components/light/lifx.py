@@ -324,7 +324,11 @@ class LIFXManager(object):
     @callback
     def ready(self, device, msg):
         """Handle the device once all data is retrieved."""
-        entity = LIFXLight(device, self.effects_conductor)
+        if lifxwhite(device):
+            entity = LIFXWhite(device, self.effects_conductor)
+        else:
+            entity = LIFXColor(device, self.effects_conductor)
+
         _LOGGER.debug("%s register READY", entity.who)
         self.entities[device.mac_addr] = entity
         self.async_add_devices([entity])
@@ -404,14 +408,6 @@ class LIFXLight(Light):
         return "%s (%s)" % (self.device.ip_addr, self.name)
 
     @property
-    def rgb_color(self):
-        """Return the RGB value."""
-        hue, sat, bri, _ = self.device.color
-
-        return color_util.color_hsv_to_RGB(
-            hue, convert_16_to_8(sat), convert_16_to_8(bri))
-
-    @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         brightness = convert_16_to_8(self.device.color[2])
@@ -428,26 +424,6 @@ class LIFXLight(Light):
         return temperature
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        # The 3 LIFX "White" products supported a limited temperature range
-        if lifxwhite(self.device):
-            kelvin = 6500
-        else:
-            kelvin = 9000
-        return math.floor(color_util.color_temperature_kelvin_to_mired(kelvin))
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        # The 3 LIFX "White" products supported a limited temperature range
-        if lifxwhite(self.device):
-            kelvin = 2700
-        else:
-            kelvin = 2500
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self.device.power_level != 0
@@ -459,32 +435,6 @@ class LIFXLight(Light):
         if effect:
             return 'lifx_effect_' + effect.name
         return None
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                    SUPPORT_TRANSITION | SUPPORT_EFFECT)
-
-        if not lifxwhite(self.device):
-            features |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
-
-        return features
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects for this light."""
-        if lifxwhite(self.device):
-            return [
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_STOP,
-            ]
-
-        return [
-            SERVICE_EFFECT_COLORLOOP,
-            SERVICE_EFFECT_PULSE,
-            SERVICE_EFFECT_STOP,
-        ]
 
     @asyncio.coroutine
     def update_after_transition(self, now):
@@ -577,3 +527,68 @@ class LIFXLight(Light):
             # Avoid state ping-pong by holding off updates as the state settles
             yield from asyncio.sleep(0.25)
             yield from AwaitAioLIFX(self).wait(self.device.get_color)
+
+
+class LIFXWhite(LIFXLight):
+    """Representation of a white-only LIFX light."""
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return math.floor(color_util.color_temperature_kelvin_to_mired(6500))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(2700))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
+                SUPPORT_EFFECT)
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return [
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
+
+
+class LIFXColor(LIFXLight):
+    """Representation of a color LIFX light."""
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return math.floor(color_util.color_temperature_kelvin_to_mired(9000))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(2500))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
+                SUPPORT_EFFECT | SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return [
+            SERVICE_EFFECT_COLORLOOP,
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
+
+    @property
+    def rgb_color(self):
+        """Return the RGB value."""
+        hue, sat, bri, _ = self.device.color
+
+        return color_util.color_hsv_to_RGB(
+            hue, convert_16_to_8(sat), convert_16_to_8(bri))
