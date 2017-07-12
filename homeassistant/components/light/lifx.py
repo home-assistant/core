@@ -485,7 +485,7 @@ class LIFXLight(Light):
         power_on = kwargs.get(ATTR_POWER, False)
         power_off = not kwargs.get(ATTR_POWER, True)
 
-        hsbk = merge_hsbk(self.device.color, find_hsbk(**kwargs))
+        hsbk = find_hsbk(**kwargs)
 
         # Send messages, waiting for ACK each time
         ack = AwaitAioLIFX().wait
@@ -495,19 +495,25 @@ class LIFXLight(Light):
             if power_off:
                 yield from ack(partial(bulb.set_power, False))
             if hsbk:
-                yield from ack(partial(bulb.set_color, hsbk))
+                yield from self.send_color(ack, hsbk, kwargs, duration=0)
             if power_on:
                 yield from ack(partial(bulb.set_power, True, duration=fade))
         else:
             if power_on:
                 yield from ack(partial(bulb.set_power, True))
             if hsbk:
-                yield from ack(partial(bulb.set_color, hsbk, duration=fade))
+                yield from self.send_color(ack, hsbk, kwargs, duration=fade)
             if power_off:
                 yield from ack(partial(bulb.set_power, False, duration=fade))
 
         # Schedule an update when the transition is complete
         self.update_later(fade)
+
+    @asyncio.coroutine
+    def send_color(self, ack, hsbk, kwargs, duration):
+        """Send a color change to the device."""
+        hsbk = merge_hsbk(self.device.color, hsbk)
+        yield from ack(partial(self.device.set_color, hsbk, duration=duration))
 
     @asyncio.coroutine
     def default_effect(self, **kwargs):
