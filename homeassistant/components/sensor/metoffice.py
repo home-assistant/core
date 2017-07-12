@@ -4,16 +4,18 @@ Support for UK Met Office weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
-import homeassistant.helpers.config_validation as cv
 import logging
-import voluptuous as vol
 from datetime import timedelta
+
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,12 +129,7 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        """
-           Special case for added visibility_distance
-           which is just a lookup on visibility code,
-           not retrieved from the dp call directly.
-        """
-        if (self._condition == 'visibility_distance' and 
+        if (self._condition == 'visibility_distance' and
                 'visibility' in self.data.data.__dict__.keys()):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
         if self._condition in self.data.data.__dict__.keys():
