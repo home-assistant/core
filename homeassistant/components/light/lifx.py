@@ -155,6 +155,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
+def lifxwhite(device):
+    """Return whether this is a white-only bulb."""
+    return not aiolifx().products.features_map[device.product]["color"]
+
+
 def find_hsbk(**kwargs):
     """Find the desired color from a number of possible inputs."""
     hue, saturation, brightness, kelvin = [None]*4
@@ -381,14 +386,7 @@ class LIFXLight(Light):
         self.device = device
         self.effects_conductor = effects_conductor
         self.registered = True
-        self.product = device.product
         self.postponed_update = None
-
-    @property
-    def lifxwhite(self):
-        """Return whether this is a white-only bulb."""
-        # https://lan.developer.lifx.com/docs/lifx-products
-        return self.product in [10, 11, 18]
 
     @property
     def available(self):
@@ -433,7 +431,7 @@ class LIFXLight(Light):
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         # The 3 LIFX "White" products supported a limited temperature range
-        if self.lifxwhite:
+        if lifxwhite(self.device):
             kelvin = 6500
         else:
             kelvin = 9000
@@ -443,7 +441,7 @@ class LIFXLight(Light):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         # The 3 LIFX "White" products supported a limited temperature range
-        if self.lifxwhite:
+        if lifxwhite(self.device):
             kelvin = 2700
         else:
             kelvin = 2500
@@ -468,7 +466,7 @@ class LIFXLight(Light):
         features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                     SUPPORT_TRANSITION | SUPPORT_EFFECT)
 
-        if not self.lifxwhite:
+        if not lifxwhite(self.device):
             features |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
 
         return features
@@ -476,7 +474,7 @@ class LIFXLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects for this light."""
-        if self.lifxwhite:
+        if lifxwhite(self.device):
             return [
                 SERVICE_EFFECT_PULSE,
                 SERVICE_EFFECT_STOP,
