@@ -133,7 +133,7 @@ class MetOfficeCurrentSensor(Entity):
            not retrieved from the dp call directly.
         """
         if (self._condition == 'visibility_distance' and 
-            'visibility' in self.data.data.__dict__.keys()):
+                'visibility' in self.data.data.__dict__.keys()):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
         if self._condition in self.data.data.__dict__.keys():
             variable = getattr(self.data.data, self._condition)
