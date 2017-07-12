@@ -69,6 +69,7 @@ TEST_REQUIREMENTS = (
     'PyJWT',
     'restrictedpython',
     'pyunifi',
+    'prometheus_client',
 )
 
 IGNORE_PACKAGES = (
