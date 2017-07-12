@@ -22,6 +22,7 @@ DEFAULT_PORT = 3671
 DOMAIN = 'knx'
 
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
+EVENT_KNX_FRAME_SEND = 'knx_frame_send'
 
 KNXTUNNEL = None
 CONF_LISTEN = "listen"
@@ -83,6 +84,50 @@ def setup(hass, config):
                           listen, knxexception)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
+
+    # Listen to KNX events and send them to the bus
+    def handle_knx_send(event):
+        """Bridge knx_frame_send events to the KNX bus."""
+        try:
+            addr = event.data["address"]
+        except KeyError:
+            _LOGGER.error("KNX group address is missing")
+            return
+
+        try:
+            data = event.data["data"]
+        except KeyError:
+            _LOGGER.error("KNX data block missing")
+            return
+
+        knxaddr = None
+        try:
+            addr = int(addr)
+        except ValueError:
+            pass
+
+        if knxaddr is None:
+            try:
+                knxaddr = parse_group_address(addr)
+            except KNXException:
+                _LOGGER.error("KNX address format incorrect")
+                return
+
+        knxdata = None
+        if isinstance(data, list):
+            knxdata = data
+        else:
+            try:
+                knxdata = [int(data) & 0xff]
+            except ValueError:
+                _LOGGER.error("KNX data format incorrect")
+                return
+
+        KNXTUNNEL.group_write(knxaddr, knxdata)
+
+    # Listen for when knx_frame_send event is fired
+    hass.bus.listen(EVENT_KNX_FRAME_SEND, handle_knx_send)
+
     return True
 
 
