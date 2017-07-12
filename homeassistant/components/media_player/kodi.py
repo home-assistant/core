@@ -31,7 +31,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
-from homeassistant.util import slugify
 from homeassistant.util.yaml import dump
 
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
@@ -52,7 +51,7 @@ DEFAULT_TIMEOUT = 5
 DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
-DEPRECATED_TURN_OFF_ACTION_LIST = {
+DEPRECATED_TURN_OFF_ACTIONS = {
     None: None,
     'quit': 'Application.Quit',
     'hibernate': 'System.Hibernate',
@@ -89,7 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
     vol.Optional(CONF_TURN_ON_ACTION, default=None): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_TURN_OFF_ACTION):
-        vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTION_LIST)),
+        vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -128,24 +127,6 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _script_for_deprecated_turn_off(name, turn_off_action):
-    """Create a script for the deprecated `turn_off_action` options list"""
-    method = DEPRECATED_TURN_OFF_ACTION_LIST[turn_off_action]
-    new_config = OrderedDict(
-        [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
-         ('data', OrderedDict(
-             [('entity_id', '{}.{}'.format(DOMAIN, slugify(name))),
-              ('method', method)]))])
-
-    example_conf = dump(OrderedDict([(CONF_TURN_OFF_ACTION, new_config)]))
-    _LOGGER.warning("The '%s' action for turn off Kodi is deprecated and "
-                    "will cease to function in a future release. You need to "
-                    "change it for a generic Home Assistant script sequence, "
-                    "which is, for this turn_off action, like this:\n%s",
-                    turn_off_action, example_conf)
-    return [new_config]
-
-
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
@@ -157,22 +138,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tcp_port = config.get(CONF_TCP_PORT)
     encryption = get_deprecated(config, CONF_PROXY_SSL, CONF_SSL)
     websocket = config.get(CONF_ENABLE_WEBSOCKET)
-    turn_on_action = config.get(CONF_TURN_ON_ACTION)
-    turn_off_action = config.get(CONF_TURN_OFF_ACTION)
-
-    # Turn on action script
-    if turn_on_action is not None:
-        turn_on_action = script.Script(
-            hass, turn_on_action, "Kodi Turn ON action script")
-
-    # Turn off action script
-    if turn_off_action is not None:
-        # Deprecated option list
-        if isinstance(turn_off_action, str):
-            turn_off_action = _script_for_deprecated_turn_off(
-                name, turn_off_action)
-        turn_off_action = script.Script(
-            hass, turn_off_action, "Kodi Turn OFF action script")
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
@@ -187,7 +152,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host=host, port=port, tcp_port=tcp_port, encryption=encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        turn_on_action=turn_on_action, turn_off_action=turn_off_action,
+        turn_on_action=config.get(CONF_TURN_ON_ACTION),
+        turn_off_action=config.get(CONF_TURN_OFF_ACTION),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
     hass.data[DATA_KODI].append(entity)
@@ -299,9 +265,6 @@ class KodiDevice(MediaPlayerDevice):
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
                 self.async_on_volume_changed
-            self._ws_server.System.OnQuit = self.async_on_quit
-            self._ws_server.System.OnRestart = self.async_on_quit
-            self._ws_server.System.OnSleep = self.async_on_quit
 
             def on_hass_stop(event):
                 """Close websocket connection when hass stops."""
@@ -353,14 +316,14 @@ class KodiDevice(MediaPlayerDevice):
         self._app_properties['muted'] = data['muted']
         self.hass.async_add_job(self.async_update_ha_state())
 
-    @callback
-    def async_on_quit(self, sender, data):
-        """Handle the muted volume."""
+    @asyncio.coroutine
+    def async_on_quit(self):
+        """Reset the player state on quit action."""
         self._players = None
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_add_job(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def _get_players(self):
@@ -413,6 +376,36 @@ class KodiDevice(MediaPlayerDevice):
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
         self.hass.loop.create_task(ws_loop_wrapper())
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Script creation for the turn on/off config options."""
+        if self._turn_on_action is not None:
+            self._turn_on_action = script.Script(
+                self.hass, self._turn_on_action, "Kodi Turn ON action script")
+        if self._turn_off_action is not None:
+            # Deprecation check
+            if isinstance(self._turn_off_action, str):
+                # Create the equivalent script
+                method = DEPRECATED_TURN_OFF_ACTIONS[self._turn_off_action]
+                new_config = OrderedDict(
+                    [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
+                     ('data', OrderedDict(
+                         [('entity_id', self.entity_id),
+                          ('method', method)]))])
+                example_conf = dump(OrderedDict(
+                    [(CONF_TURN_OFF_ACTION, new_config)]))
+                _LOGGER.warning(
+                    "The '%s' action for turn off Kodi is deprecated and "
+                    "will cease to function in a future release. You need to "
+                    "change it for a generic Home Assistant script sequence, "
+                    "which is, for this turn_off action, like this:\n%s",
+                    self._turn_off_action, example_conf)
+                self._turn_off_action = [new_config]
+
+            self._turn_off_action = script.Script(
+                self.hass, self._turn_off_action,
+                "Kodi Turn OFF action script")
 
     @asyncio.coroutine
     def async_update(self):
@@ -585,6 +578,7 @@ class KodiDevice(MediaPlayerDevice):
         """Execute turn_on_action to turn on media player."""
         if self._turn_on_action is not None:
             yield from self._turn_on_action.async_run()
+            yield from self.async_update_ha_state(force_refresh=True)
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
 
@@ -594,6 +588,7 @@ class KodiDevice(MediaPlayerDevice):
         """Execute turn_off_action to turn off media player."""
         if self._turn_off_action is not None:
             yield from self._turn_off_action.async_run()
+            yield from self.async_on_quit()
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
