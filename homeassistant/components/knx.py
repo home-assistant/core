@@ -86,17 +86,15 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
 
     # Listen to KNX events and send them to the bus
-    def handle_knx_send(event):
+    def handle_group_write(call):
         """Bridge knx_frame_send events to the KNX bus."""
-        try:
-            addr = event.data["address"]
-        except KeyError:
+        addr = call.data.get("address")
+        if addr is None:
             _LOGGER.error("KNX group address is missing")
             return
 
-        try:
-            data = event.data["data"]
-        except KeyError:
+        data = call.data.get("data")
+        if data is None:
             _LOGGER.error("KNX data block missing")
             return
 
@@ -135,7 +133,7 @@ def setup(hass, config):
             KNXTUNNEL.group_write(addr, knxdata)
 
     # Listen for when knx_frame_send event is fired
-    hass.bus.listen(EVENT_KNX_FRAME_SEND, handle_knx_send)
+    hass.services.register(DOMAIN, 'group_write', handle_group_write)
 
     return True
 
