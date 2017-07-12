@@ -6,7 +6,7 @@ https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
 from collections import OrderedDict
-from functools import wraps
+from functools import partial, wraps
 import logging
 import urllib
 import re
@@ -125,6 +125,27 @@ SERVICE_TO_METHOD = {
         'method': 'async_call_method',
         'schema': MEDIA_PLAYER_CALL_METHOD_SCHEMA},
 }
+
+
+def _check_deprecated_turn_off(turn_off_action):
+    """Create an equivalent script for old turn off actions."""
+    if isinstance(turn_off_action, str):
+        method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
+        new_config = OrderedDict(
+            [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
+             ('data_template', OrderedDict(
+                 [('entity_id', '{{ entity_id }}'),
+                  ('method', method)]))])
+        example_conf = dump(OrderedDict(
+            [(CONF_TURN_OFF_ACTION, new_config)]))
+        _LOGGER.warning(
+            "The '%s' action for turn off Kodi is deprecated and "
+            "will cease to function in a future release. You need to "
+            "change it for a generic Home Assistant script sequence, "
+            "which is, for this turn_off action, like this:\n%s",
+            turn_off_action, example_conf)
+        turn_off_action = [new_config]
+    return turn_off_action
 
 
 @asyncio.coroutine
@@ -275,6 +296,16 @@ class KodiDevice(MediaPlayerDevice):
         else:
             self._ws_server = None
 
+        # Script creation for the turn on/off config options
+        if turn_on_action is not None:
+            turn_on_action = script.Script(
+                self.hass, turn_on_action,
+                "Kodi Turn ON action script",
+                partial(self.async_update_ha_state, force_refresh=True))
+        if turn_off_action is not None:
+            turn_off_action = script.Script(
+                self.hass, _check_deprecated_turn_off(turn_off_action),
+                "Kodi Turn OFF action script", self.async_on_quit)
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
@@ -376,36 +407,6 @@ class KodiDevice(MediaPlayerDevice):
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
         self.hass.loop.create_task(ws_loop_wrapper())
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Script creation for the turn on/off config options."""
-        if self._turn_on_action is not None:
-            self._turn_on_action = script.Script(
-                self.hass, self._turn_on_action, "Kodi Turn ON action script")
-        if self._turn_off_action is not None:
-            # Deprecation check
-            if isinstance(self._turn_off_action, str):
-                # Create the equivalent script
-                method = DEPRECATED_TURN_OFF_ACTIONS[self._turn_off_action]
-                new_config = OrderedDict(
-                    [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
-                     ('data', OrderedDict(
-                         [('entity_id', self.entity_id),
-                          ('method', method)]))])
-                example_conf = dump(OrderedDict(
-                    [(CONF_TURN_OFF_ACTION, new_config)]))
-                _LOGGER.warning(
-                    "The '%s' action for turn off Kodi is deprecated and "
-                    "will cease to function in a future release. You need to "
-                    "change it for a generic Home Assistant script sequence, "
-                    "which is, for this turn_off action, like this:\n%s",
-                    self._turn_off_action, example_conf)
-                self._turn_off_action = [new_config]
-
-            self._turn_off_action = script.Script(
-                self.hass, self._turn_off_action,
-                "Kodi Turn OFF action script")
 
     @asyncio.coroutine
     def async_update(self):
@@ -577,8 +578,8 @@ class KodiDevice(MediaPlayerDevice):
     def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
         if self._turn_on_action is not None:
-            yield from self._turn_on_action.async_run()
-            yield from self.async_update_ha_state(force_refresh=True)
+            yield from self._turn_on_action.async_run(
+                variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
 
@@ -587,8 +588,8 @@ class KodiDevice(MediaPlayerDevice):
     def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
         if self._turn_off_action is not None:
-            yield from self._turn_off_action.async_run()
-            yield from self.async_on_quit()
+            yield from self._turn_off_action.async_run(
+                variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 
