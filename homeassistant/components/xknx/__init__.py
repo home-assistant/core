@@ -67,14 +67,17 @@ class XKNXModule(object):
     """Representation of XKNX Object."""
 
     def __init__(self, hass, config):
-
-        from xknx import XKNX
-
-        self.xknx = XKNX(hass.loop, start=False)
-
-        self.initialized = False
         self.hass = hass
         self.config = config
+        self.initialized = False
+        self.init_xknx()
+
+    def init_xknx(self):
+        from xknx import XKNX
+        self.xknx = XKNX(
+            config=self.config_file(),
+            loop=self.hass.loop,
+            start=False)
 
     @staticmethod
     def telegram_received_callback(xknx, device, telegram):
@@ -84,16 +87,10 @@ class XKNXModule(object):
     @asyncio.coroutine
     def start(self):
 
-        from xknx import Config
-
-        Config(self.xknx).read(file=self.config_file())
-
         yield from self.xknx.async_start(
             state_updater=True,
             telegram_received_callback=self.telegram_received_callback)
-
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-
         self.initialized = True
 
     @asyncio.coroutine
@@ -106,4 +103,3 @@ class XKNXModule(object):
         if not config_file.startswith("/"):
             return  self.hass.config.path(config_file)
         return config_file
-
