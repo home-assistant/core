@@ -108,7 +108,7 @@ def setup(hass, config):
         knxaddrlist = []
         for addr in addrlist:
             try:
-                _LOGGER.debug("Found %s",addr)
+                _LOGGER.debug("Found %s", addr)
                 knxaddr = int(addr)
             except ValueError:
                 knxaddr = None
