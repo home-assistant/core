@@ -302,36 +302,36 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Handle for newly detected bulb."""
+        """Handler for newly detected bulb."""
+        self.hass.async_add_job(self.async_register(device))
+
+    @asyncio.coroutine
+    def async_register(self, device):
+        """Handler for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            entity.device = device
             entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
-            self.hass.async_add_job(entity.async_update_ha_state())
+            yield from entity.async_update()
+            yield from entity.async_update_ha_state()
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
             device.timeout = MESSAGE_TIMEOUT
             device.retry_count = MESSAGE_RETRIES
             device.unregister_timeout = UNAVAILABLE_GRACE
-            device.get_version(self.got_version)
 
-    @callback
-    def got_version(self, device, msg):
-        """Request current color setting once we have the product version."""
-        device.get_color(self.ready)
+            ack = AwaitAioLIFX().wait
+            yield from ack(device.get_version)
+            yield from ack(device.get_color)
 
-    @callback
-    def ready(self, device, msg):
-        """Handle the device once all data is retrieved."""
-        if lifxwhite(device):
-            entity = LIFXWhite(device, self.effects_conductor)
-        else:
-            entity = LIFXColor(device, self.effects_conductor)
+            if lifxwhite(device):
+                entity = LIFXWhite(device, self.effects_conductor)
+            else:
+                entity = LIFXColor(device, self.effects_conductor)
 
-        _LOGGER.debug("%s register READY", entity.who)
-        self.entities[device.mac_addr] = entity
-        self.async_add_devices([entity])
+            _LOGGER.debug("%s register READY", entity.who)
+            self.entities[device.mac_addr] = entity
+            self.async_add_devices([entity])
 
     @callback
     def unregister(self, device):
@@ -346,9 +346,8 @@ class LIFXManager(object):
 class AwaitAioLIFX:
     """Wait for an aiolifx callback and return the message."""
 
-    def __init__(self, light):
+    def __init__(self):
         """Initialize the wrapper."""
-        self.light = light
         self.device = None
         self.message = None
         self.event = asyncio.Event()
@@ -489,7 +488,7 @@ class LIFXLight(Light):
         hsbk = merge_hsbk(self.device.color, find_hsbk(**kwargs))
 
         # Send messages, waiting for ACK each time
-        ack = AwaitAioLIFX(self).wait
+        ack = AwaitAioLIFX().wait
         bulb = self.device
 
         if not self.is_on:
@@ -526,7 +525,7 @@ class LIFXLight(Light):
         if self.available:
             # Avoid state ping-pong by holding off updates as the state settles
             yield from asyncio.sleep(0.25)
-            yield from AwaitAioLIFX(self).wait(self.device.get_color)
+            yield from AwaitAioLIFX().wait(self.device.get_color)
 
 
 class LIFXWhite(LIFXLight):
