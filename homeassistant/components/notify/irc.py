@@ -9,13 +9,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.components.irc import CONF_NETWORK, DATA_IRC
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['irc']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_NETWORK = 'network'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NETWORK): cv.string,
@@ -49,6 +51,13 @@ class IRCNotificationService(BaseNotificationService):
         if kwargs.get(ATTR_TARGET) is None:
             _LOGGER.error('No target specified')
             return
+
+        # If message is addressed to a specific network, make sure we match
+        data = kwargs.get(ATTR_DATA)
+        if data is not None:
+            network = data.get(ATTR_NETWORK)
+            if network and network != self.plugin.network:
+                return
 
         for target in kwargs.get(ATTR_TARGET):
             self.plugin.context.privmsg(target, message)

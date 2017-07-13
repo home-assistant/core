@@ -10,9 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.irc import (
-    CONF_NETWORK, CONF_CHANNEL, DATA_IRC, ATTR_MESSAGE_COUNT)
+    CONF_NETWORK, CONF_CHANNEL, DATA_IRC)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -73,17 +74,18 @@ class IrcSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = getattr(self._channel, self._attribute)
-        if isinstance(value, set) or isinstance(value, list):
-            return ', '.join(value)
-        return value
+        if self._attribute == 'topic':
+            return self._channel.topic
+        elif self._attribute == 'last_speaker':
+            return self._channel.last_speaker
+        elif self._attribute == 'users':
+            return len(self._channel.users)
+        return STATE_UNKNOWN
 
     @callback
     def attr_updated(self, attr, value):
         """Callback when an attribute for a channel has changed."""
-        print("update 1")
         if attr == self._attribute:
-            print("update 2")
             self.hass.async_add_job(self.async_update_ha_state())
 
     @property
@@ -91,5 +93,4 @@ class IrcSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_CHANNEL: self._channel.channel,
-            ATTR_MESSAGE_COUNT: self._channel.message_count
         }

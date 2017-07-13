@@ -4,6 +4,7 @@ Support for IRC.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/irc/
 """
+import re
 import asyncio
 import logging
 
@@ -13,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
-    CONF_SSL, CONF_VERIFY_SSL)
+    CONF_SSL, CONF_VERIFY_SSL, CONF_WHITELIST)
 
 REQUIREMENTS = ['irc3==1.0.0']
 DOMAIN = 'irc'
@@ -25,12 +26,11 @@ CONF_NICK = 'nick'
 CONF_NETWORK = 'network'
 CONF_AUTOJOIN = 'autojoin'
 CONF_ZNC = 'znc'
-CONF_IGNORE_USERS = 'ignore_users'
 CONF_REAL_NAME = 'real_name'
 
-DATA_IRC = 'data_irc'
+EVENT_PRIVMSG = 'irc_privmsg'
 
-ATTR_MESSAGE_COUNT = 'message_count'
+DATA_IRC = 'data_irc'
 
 DEFAULT_USERNAME = 'hass'
 DEFAULT_REAL_NAME = 'Home Assistant'
@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_AUTOJOIN, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ZNC, default=False): cv.boolean,
-        vol.Optional(CONF_IGNORE_USERS, default=[]):
+        vol.Optional(CONF_WHITELIST, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
     })])
 }, extra=vol.ALLOW_EXTRA)
@@ -106,130 +106,145 @@ class IRCChannel(Observable):
         self.topic = None
         self.last_speaker = None
         self.last_message = None
-        self.message_count = 0
         self.users = set()
 
 
-class HAPlugin(object):
-    """Plugin to IRC3 that handles IRC commands."""
-
+# The irc3 properties must be applied to methods when the class is defined and
+# cannot be added after the object has been constructed (like in __init__).
+# It's an implementation detail in a library that irc3 uses, so this is a
+# work-around to make it work with Home Assistant.
+def make_plugin():
+    """Create plugin to intercept messages from IRC server."""
     import irc3
 
-    # Matches topics when re-connecting to active ZNC session
-    TOPIC_BNC_REPLAY = irc3.rfc.raw.new(
-        'TOPIC_BNC_REPLAY',
-        (r'^(@(?P<tags>\S+) )?:(?P<mask>\S+) 332 '
-         r'(?P<nick>\S+) (?P<channel>\S+) :(?P<data>.+)'))
+    # pylint: disable=redefined-outer-name
+    @irc3.plugin
+    class HAPlugin(object):
+        """Plugin to IRC3 that handles IRC commands."""
 
-    # All users currently in a channel (matches NAMES command)
-    NAME_LIST = irc3.rfc.raw.new(
-        'NAME_LIST',
-        (r'^(@(?P<tags>\S+) )?:(?P<mask>\S+) 353 '
-         r'(?P<nick>\S+) @ (?P<channel>\S+) :(?P<users>.+)'))
+        # Matches topics when re-connecting to active ZNC session
+        TOPIC_BNC_REPLAY = irc3.rfc.raw.new(
+            'TOPIC_BNC_REPLAY',
+            (r'^(@(?P<tags>\S+) )?:(?P<mask>\S+) 332 '
+             r'(?P<nick>\S+) (?P<channel>\S+) :(?P<data>.+)'))
 
-    def __init__(self, context):
-        """Initialize a new HAPlugin instance."""
-        self.context = context
-        self.config = context.config.get('hass_config')
-        self._channels = {}
+        # All users currently in a channel (matches NAMES command)
+        NAME_LIST = irc3.rfc.raw.new(
+            'NAME_LIST',
+            (r'^(@(?P<tags>\S+) )?:(?P<mask>\S+) 353 '
+             r'(?P<nick>\S+) . (?P<channel>\S+) :(?P<users>.+)'))
 
-    def server_ready(self):
-        """Triggered after the server sent the MOTD."""
-        _LOGGER.info('Connected IRC network %s', self.config.get(CONF_NETWORK))
+        def __init__(self, context):
+            """Initialize a new HAPlugin instance."""
+            self.context = context
+            self.hass = context.config.get('hass')
+            self.config = context.config.get('hass_config')
+            self.network = self.config.get(CONF_NETWORK)
+            self._channels = {}
 
-    @staticmethod
-    def connection_lost():
-        """Triggered when connection is lost."""
-        _LOGGER.error('Failed to connect to IRC server')
+        def server_ready(self):
+            """Triggered after the server sent the MOTD."""
+            _LOGGER.info('Connected to IRC network %s',
+                         self.config.get(CONF_NETWORK))
 
-    def get_channel(self, channel):
-        """Return internal channel object."""
-        if channel not in self._channels:
-            self._channels[channel] = IRCChannel(channel)
-        return self._channels[channel]
+        @staticmethod
+        def connection_lost():
+            """Triggered when connection is lost."""
+            _LOGGER.error('Failed to connect to IRC server')
 
-    @irc3.event(irc3.rfc.PRIVMSG)
-    def on_privmsg(self, mask=None, target=None, data=None, **kw):
-        """Handle PRIVMSG commands."""
-        # Do not trigger updates for znc playback
-        self._znc_toggle(mask, target, data)
+        def get_channel(self, channel):
+            """Return internal channel object."""
+            if channel not in self._channels:
+                self._channels[channel] = IRCChannel(channel)
+            return self._channels[channel]
 
-        nick = mask.split('!')[0]
+        @irc3.event(irc3.rfc.PRIVMSG)
+        def on_privmsg(self, mask=None, target=None, data=None, **kw):
+            """Handle PRIVMSG commands."""
+            # Do not trigger updates for znc playback
+            self._znc_toggle(mask, target, data)
 
-        # Ignore messages from blacklisted users
-        if nick in self.config.get(CONF_IGNORE_USERS):
-            return
+            nick = mask.split('!')[0]
+            self._update_channel(target, last_speaker=nick, last_message=data)
 
-        self._update_channel(target, last_speaker=nick, last_message=data)
+            # Check whitelist before firing an event
+            allowed = self.config.get(CONF_WHITELIST)
+            if not any(map(lambda pattern: re.match(pattern, nick), allowed)):
+                return
 
-    def _znc_toggle(self, mask, channel, data):
-        if channel not in self._channels:
-            return
+            channel = self.get_channel(target)
+            self.hass.bus.fire(EVENT_PRIVMSG, {
+                'channel': channel.channel,
+                'last_speaker': channel.last_speaker,
+                'last_message': channel.last_message
+            })
 
-        if self.config.get(CONF_ZNC) and mask == '***!znc@znc.in':
-            if data == 'Buffer Playback...':
-                self._channels[channel].disable()
-            elif data == 'Playback Complete.':
-                self._channels[channel].enable()
+        def _znc_toggle(self, mask, channel, data):
+            if channel not in self._channels:
+                return
 
-    @irc3.event(irc3.rfc.TOPIC)
-    @irc3.event(TOPIC_BNC_REPLAY)
-    def on_topic(self, channel=None, data=None, **kw):
-        """Handle TOPIC commands."""
-        self._update_channel(channel, update_counter=False, topic=data)
+            if self.config.get(CONF_ZNC) and mask == '***!znc@znc.in':
+                if data == 'Buffer Playback...':
+                    self._channels[channel].disable()
+                elif data == 'Playback Complete.':
+                    self._channels[channel].enable()
 
-    def _update_channel(self, channel, update_counter=True, **kwargs):
-        if channel in self._channels:
-            obj = self._channels[channel]
-            if update_counter:
-                obj.message_count += 1
-            obj.update(**kwargs)
+        @irc3.event(irc3.rfc.TOPIC)
+        @irc3.event(TOPIC_BNC_REPLAY)
+        def on_topic(self, channel=None, data=None, **kw):
+            """Handle TOPIC commands."""
+            self._update_channel(channel, topic=data)
 
-    @irc3.event(NAME_LIST)
-    def on_names(self, channel=None, users=None, **kwargs):
-        """Handle NAMES commands."""
-        if channel not in self._channels:
-            return
+        def _update_channel(self, channel, **kwargs):
+            if channel in self._channels:
+                obj = self._channels[channel]
+                obj.update(**kwargs)
 
-        chan = self._channels[channel]
-        chan.users.clear()
-        for user in users.split(' '):
-            if user.startswith('@') or user.startswith('+'):
-                user = user[1:]
-            chan.users.add(user)
-        chan.manual_update('users')
+        @irc3.event(NAME_LIST)
+        def on_names(self, channel=None, users=None, **kwargs):
+            """Handle NAMES commands."""
+            if channel not in self._channels:
+                return
 
-    # These two should update user list for channel
-    @irc3.event(irc3.rfc.JOIN_PART_QUIT)
-    def on_user_event(self, mask=None, event=None, channel=None, **kwargs):
-        """Handle JOIN, PART and QUIT commands."""
-        if channel not in self._channels:
-            return
+            chan = self._channels[channel]
+            chan.users.clear()
+            for user in users.split(' '):
+                if user.startswith('@') or user.startswith('+'):
+                    user = user[1:]
+                chan.users.add(user)
+            chan.manual_update('users')
 
-        nick = mask.split('!')[0]
-        chan = self._channels[channel]
-        if event == 'JOIN':
-            chan.users.add(nick)
-        else:
-            chan.users.remove(nick)
-        chan.manual_update('users')
+        @irc3.event(irc3.rfc.JOIN_PART_QUIT)
+        def on_user_event(self, mask=None, event=None, channel=None, **kwargs):
+            """Handle JOIN, PART and QUIT commands."""
+            if channel not in self._channels:
+                return
 
-    @irc3.event(irc3.rfc.KICK)
-    def on_user_kick(self, channel, target, **kwargs):
-        """Handle KICK commands."""
-        if channel not in self._channels:
-            return
+            nick = mask.split('!')[0]
+            chan = self._channels[channel]
+            if event == 'JOIN':
+                chan.users.add(nick)
+            elif nick in chan.users:
+                chan.users.remove(nick)
+            chan.manual_update('users')
 
-        chan = self._channels[channel]
-        chan.users.remove(target)
-        chan.manual_update('users')
+        @irc3.event(irc3.rfc.KICK)
+        def on_user_kick(self, channel, target, **kwargs):
+            """Handle KICK commands."""
+            if channel not in self._channels:
+                return
+
+            chan = self._channels[channel]
+            if target in chan.users:
+                chan.users.remove(target)
+            chan.manual_update('users')
+
+    return HAPlugin
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the IRC component."""
-    import irc3
-
     hass.data[DATA_IRC] = {}
 
     @asyncio.coroutine
@@ -242,6 +257,7 @@ def async_setup(hass, config):
             'port': config.get(CONF_PORT),
             'username': config.get(CONF_USERNAME),
             'realname': config.get(CONF_REAL_NAME),
+            'hass': hass,
             'hass_config': config,
             'autojoins': config.get(CONF_AUTOJOIN),
             'ssl': config.get(CONF_SSL),
@@ -270,7 +286,7 @@ def async_setup(hass, config):
     # since Home Assistant installs dependencies on-the-fly. This adds it in
     # runtime instead (sort of a hack).
     global HAPlugin  # pylint: disable=invalid-name,global-variable-undefined
-    HAPlugin = irc3.plugin(HAPlugin)
+    HAPlugin = make_plugin()
 
     tasks = [async_setup_irc_server(hass, conf) for conf in config[DOMAIN]]
     if tasks:
