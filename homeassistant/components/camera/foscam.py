@@ -114,15 +114,15 @@ class FoscamCamera(Camera):
             + '&area4=1024&area5=1023' \
             + '&area6=1024&area7=1023' \
             + '&area8=1024&area9=1023'
- 
-        self._set_motion_status_url = uri_template.format(
+
+        _set_motion_status_url = uri_template.format(
             enabled,
             self._username,
             self._password
         )
 
         try:
-            response = requests.get(self._set_motion_status_url, timeout=10)
+            response = requests.get(_set_motion_status_url, timeout=10)
         except requests.exceptions.ConnectionError:
             return None
         else:
