@@ -114,7 +114,7 @@ boto3==1.4.3
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-broadlink==0.3
+broadlink==0.5
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
@@ -272,9 +272,6 @@ holidays==0.8.1
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
-
-# homeassistant.components.switch.dlink
-https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.0
@@ -447,7 +444,7 @@ pdunehd==1.3
 pexpect==4.0.1
 
 # homeassistant.components.light.hue
-phue==0.9
+phue==1.0
 
 # homeassistant.components.rpi_pfio
 pifacecommon==4.1.2
@@ -504,7 +501,10 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.18.0
+pyRFXtrx==0.19.0
+
+# homeassistant.components.switch.dlink
+pyW215==0.5.1
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
@@ -577,7 +577,7 @@ pyharmony==1.0.16
 pyhik==0.1.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.28
+pyhomematic==0.1.29
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -772,6 +772,9 @@ pyunifi==2.13
 # homeassistant.components.vera
 pyvera==0.2.34
 
+# homeassistant.components.media_player.vizio
+pyvizio==0.0.2
+
 # homeassistant.components.velux
 pyvlx==0.1.3
 
@@ -962,7 +965,7 @@ yeelight==0.3.0
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.7.2
+youtube_dl==2017.7.9
 
 # homeassistant.components.light.zengge
 zengge==0.2
