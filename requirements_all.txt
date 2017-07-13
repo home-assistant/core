@@ -501,7 +501,7 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.18.0
+pyRFXtrx==0.19.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.5.1
