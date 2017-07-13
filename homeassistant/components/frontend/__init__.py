@@ -208,7 +208,7 @@ def setup(hass, config):
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template'):
+                  'dev-template', 'kiosk'):
         register_built_in_panel(hass, panel)
 
     themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
