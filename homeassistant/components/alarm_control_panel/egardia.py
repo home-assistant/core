@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.exceptions as exc
 
-REQUIREMENTS = ['pythonegardia==1.0.9']
+REQUIREMENTS = ['pythonegardia==1.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Update the alarm status."""
-        status = self._egardiasystem.getState()
+        status = self._egardiasystem.getstate()
         self._status = ([v for k, v in self.STATES.items()
                          if status.upper() == k][0])
 
