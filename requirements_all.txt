@@ -114,7 +114,7 @@ boto3==1.4.3
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-broadlink==0.3
+broadlink==0.5
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
