@@ -27,6 +27,7 @@ CONF_NETWORK = 'network'
 CONF_AUTOJOIN = 'autojoin'
 CONF_ZNC = 'znc'
 CONF_REAL_NAME = 'real_name'
+CONF_ONLY_WHEN_ADDRESSED = 'only_when_addressed'
 
 EVENT_PRIVMSG = 'irc_privmsg'
 
@@ -52,6 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ZNC, default=False): cv.boolean,
         vol.Optional(CONF_WHITELIST, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ONLY_WHEN_ADDRESSED, default=True): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -170,6 +172,12 @@ def make_plugin():
             # Check whitelist before firing an event
             allowed = self.config.get(CONF_WHITELIST)
             if not any(map(lambda pattern: re.match(pattern, nick), allowed)):
+                return
+
+            # Check if we must be addressed by user
+            only_when_addressed = self.config.get(CONF_ONLY_WHEN_ADDRESSED)
+            is_addressed = data.startswith('{0}:'.format(self.context.nick))
+            if only_when_addressed and not is_addressed:
                 return
 
             channel = self.get_channel(target)
