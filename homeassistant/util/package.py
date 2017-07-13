@@ -25,7 +25,7 @@ def install_package(package: str, upgrade: bool=True,
     """
     # Not using 'import pip; pip.main([])' because it breaks the logger
     with INSTALL_LOCK:
-        if check_package_exists(package, target):
+        if check_package_exists(package):
             return True
 
         _LOGGER.info('Attempting install of %s', package)
@@ -36,6 +36,7 @@ def install_package(package: str, upgrade: bool=True,
         if constraints is not None:
             args += ['--constraint', constraints]
         if target:
+            assert not is_virtual_env()
             # This only works if not running in venv
             args += ['--user']
             env['PYTHONUSERBASE'] = os.path.abspath(target)
@@ -53,7 +54,7 @@ def install_package(package: str, upgrade: bool=True,
         return True
 
 
-def check_package_exists(package: str, lib_dir: str) -> bool:
+def check_package_exists(package: str) -> bool:
     """Check if a package is installed globally or in lib_dir.
 
     Returns True when the requirement is met.

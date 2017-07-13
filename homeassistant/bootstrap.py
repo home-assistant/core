@@ -185,8 +185,7 @@ def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    yield from hass.async_add_job(
-        async_mount_local_lib_path, config_dir, hass.loop)
+    yield from async_mount_local_lib_path(config_dir, hass.loop)
 
     async_enable_logging(hass, verbose, log_rotate_days)
 
