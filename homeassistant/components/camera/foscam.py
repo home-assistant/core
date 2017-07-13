@@ -130,7 +130,7 @@ class FoscamCamera(Camera):
 
     @property
     def motion_detection_enabled(self):
-        """Is motion detection enabled or disabled."""
+        """Camera Motion Detection Status."""
         return self._motion_status
 
     def enable_motion_detection(self):
