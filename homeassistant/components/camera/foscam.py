@@ -114,7 +114,7 @@ class FoscamCamera(Camera):
             + '&area4=1024&area5=1023' \
             + '&area6=1024&area7=1023' \
             + '&area8=1024&area9=1023'
-            
+ 
         self._set_motion_status_url = uri_template.format(
             enabled,
             self._username,
