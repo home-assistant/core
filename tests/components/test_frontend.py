@@ -133,3 +133,13 @@ def test_themes_reload_themes(hass, mock_http_client_with_themes):
         json = yield from resp.json()
         assert json['themes'] == {'sad': {'primary-color': 'blue'}}
         assert json['default_theme'] == 'default'
+
+
+@asyncio.coroutine
+def test_missing_themes(mock_http_client):
+    """Test that themes API works when themes are not defined."""
+    resp = yield from mock_http_client.get('/api/themes')
+    assert resp.status == 200
+    json = yield from resp.json()
+    assert json['default_theme'] == 'default'
+    assert json['themes'] == {}
