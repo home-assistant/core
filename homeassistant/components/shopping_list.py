@@ -70,6 +70,7 @@ class ListTopItemsIntent(IntentHandler):
 
 class ShoppingListView(HomeAssistantView):
     """View to retrieve shopping list content."""
+
     url = '/api/shopping_list'
     name = "api:shopping_list"
 

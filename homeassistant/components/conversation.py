@@ -110,7 +110,7 @@ def async_setup(hass, config):
 
 
 def _create_matcher(utterance):
-    """Creates a regex that matches the utterance."""
+    """Create a regex that matches the utterance."""
     parts = re.split(r'({\w+})', utterance)
     group_matcher = re.compile(r'{(\w+)}')
 
