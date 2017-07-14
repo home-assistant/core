@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-OPENALPR_API_URL = "https://api.openalpr.com/v1/recognize"
+OPENALPR_API_URL = "https://api.openalpr.com/v2/recognize_bytes"
 
 OPENALPR_REGIONS = [
     'au',
@@ -54,7 +54,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     confidence = config[CONF_CONFIDENCE]
     params = {
         'secret_key': config[CONF_API_KEY],
-        'tasks': "plate",
         'return_image': 0,
         'country': config[CONF_REGION],
     }
