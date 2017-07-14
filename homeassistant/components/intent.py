@@ -169,6 +169,7 @@ class IntentRegistry:
                         text_input)
 
         try:
+            _LOGGER.info("Triggering intent handler %s", handler)
             result = yield from handler.async_handle(intent)
             return result
         except vol.Invalid as err:
