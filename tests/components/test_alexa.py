@@ -47,50 +47,52 @@ def alexa_client(loop, hass, test_client):
                     "uid": "uuid"
                 }
             },
-            "intents": {
-                "WhereAreWeIntent": {
-                    "speech": {
-                        "type": "plaintext",
-                        "text":
-                        """
-                            {%- if is_state("device_tracker.paulus", "home")
-                                   and is_state("device_tracker.anne_therese",
-                                                "home") -%}
-                                You are both home, you silly
-                            {%- else -%}
-                                Anne Therese is at {{
-                                    states("device_tracker.anne_therese")
-                                }} and Paulus is at {{
-                                    states("device_tracker.paulus")
-                                }}
-                            {% endif %}
-                        """,
-                    }
+        }
+    }))
+    assert loop.run_until_complete(async_setup_component(hass, 'intent_script', {
+        'intent_script': {
+            "WhereAreWeIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text":
+                    """
+                        {%- if is_state("device_tracker.paulus", "home")
+                               and is_state("device_tracker.anne_therese",
+                                            "home") -%}
+                            You are both home, you silly
+                        {%- else -%}
+                            Anne Therese is at {{
+                                states("device_tracker.anne_therese")
+                            }} and Paulus is at {{
+                                states("device_tracker.paulus")
+                            }}
+                        {% endif %}
+                    """,
+                }
+            },
+            "GetZodiacHoroscopeIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text": "You told us your sign is {{ ZodiacSign }}.",
+                }
+            },
+            "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
+                "speech": {
+                    "type": "plain",
+                    "text": "Playing {{ object_byArtist_name }}.",
+                }
+            },
+            "CallServiceIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text": "Service called",
                 },
-                "GetZodiacHoroscopeIntent": {
-                    "speech": {
-                        "type": "plaintext",
-                        "text": "You told us your sign is {{ ZodiacSign }}.",
-                    }
-                },
-                "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
-                    "speech": {
-                        "type": "plaintext",
-                        "text": "Playing {{ object_byArtist_name }}.",
-                    }
-                },
-                "CallServiceIntent": {
-                    "speech": {
-                        "type": "plaintext",
-                        "text": "Service called",
+                "action": {
+                    "service": "test.alexa",
+                    "data_template": {
+                        "hello": "{{ ZodiacSign }}"
                     },
-                    "action": {
-                        "service": "test.alexa",
-                        "data_template": {
-                            "hello": "{{ ZodiacSign }}"
-                        },
-                        "entity_id": "switch.test",
-                    }
+                    "entity_id": "switch.test",
                 }
             }
         }

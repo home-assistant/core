@@ -15,6 +15,9 @@ SLOT_SCHEMA = vol.Schema({
     vol.Optional('type'): str,
 })
 
+SPEECH_TYPE_PLAIN = 'plain'
+SPEECH_TYPE_SSML = 'ssml'
+
 
 @asyncio.coroutine
 def async_setup(hass, config):

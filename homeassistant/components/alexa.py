@@ -62,6 +62,12 @@ class SpeechType(enum.Enum):
     ssml = "SSML"
 
 
+SPEECH_MAPPINGS = {
+    'plain': SpeechType.plaintext,
+    'ssml': SpeechType.ssml,
+}
+
+
 class CardType(enum.Enum):
     """The Alexa card types."""
 
@@ -168,7 +174,9 @@ class AlexaIntentsView(HomeAssistantView):
 
         try:
             intent_response = yield from hass.intent.async_handle(
-                DOMAIN, intent_name, alexa_response.variables)
+                DOMAIN, intent_name,
+                {key: {'value': value} for key, value
+                 in alexa_response.variables.items()})
         except UnknownIntent as err:
             _LOGGER.warning('Received unknown intent %s', intent_name)
             alexa_response.add_speech(
@@ -184,11 +192,11 @@ class AlexaIntentsView(HomeAssistantView):
             _LOGGER.exception('Error handling request for %s', intent_name)
             return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
 
-        for speech_type in ('ssml', 'plain'):
-            if speech_type in intent_response.speech:
+        for intent_speech, alexa_speech in SPEECH_MAPPINGS.items():
+            if intent_speech in intent_response.speech:
                 alexa_response.add_speech(
-                    speech_type,
-                    intent_response.speech[speech_type]['speech'])
+                    alexa_speech,
+                    intent_response.speech[intent_speech]['speech'])
                 break
 
         if 'simple' in intent_response.card:
