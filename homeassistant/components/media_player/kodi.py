@@ -31,6 +31,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
@@ -127,7 +128,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _check_deprecated_turn_off(turn_off_action):
+def _check_deprecated_turn_off(hass, turn_off_action):
     """Create an equivalent script for old turn off actions."""
     if isinstance(turn_off_action, str):
         method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
@@ -144,6 +145,9 @@ def _check_deprecated_turn_off(turn_off_action):
             "change it for a generic Home Assistant script sequence, "
             "which is, for this turn_off action, like this:\n%s",
             turn_off_action, example_conf)
+        new_config['data_template'] = OrderedDict(
+            [(key, Template(value, hass))
+             for key, value in new_config['data_template'].items()])
         turn_off_action = [new_config]
     return turn_off_action
 
@@ -286,6 +290,9 @@ class KodiDevice(MediaPlayerDevice):
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
                 self.async_on_volume_changed
+            self._ws_server.System.OnQuit = self.async_on_quit
+            self._ws_server.System.OnRestart = self.async_on_quit
+            self._ws_server.System.OnSleep = self.async_on_quit
 
             def on_hass_stop(event):
                 """Close websocket connection when hass stops."""
@@ -300,12 +307,12 @@ class KodiDevice(MediaPlayerDevice):
         if turn_on_action is not None:
             turn_on_action = script.Script(
                 self.hass, turn_on_action,
-                "Kodi Turn ON action script",
-                partial(self.async_update_ha_state, force_refresh=True))
+                "{} turn ON script".format(self.name),
+                self.async_update_ha_state(True))
         if turn_off_action is not None:
             turn_off_action = script.Script(
-                self.hass, _check_deprecated_turn_off(turn_off_action),
-                "Kodi Turn OFF action script", self.async_on_quit)
+                self.hass, _check_deprecated_turn_off(hass, turn_off_action),
+                "{} turn OFF script".format(self.name))
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
@@ -347,14 +354,14 @@ class KodiDevice(MediaPlayerDevice):
         self._app_properties['muted'] = data['muted']
         self.hass.async_add_job(self.async_update_ha_state())
 
-    @asyncio.coroutine
-    def async_on_quit(self):
+    @callback
+    def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
         self._players = None
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        yield from self.async_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def _get_players(self):
