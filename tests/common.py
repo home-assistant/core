@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
-from homeassistant.components import mqtt, recorder
+from homeassistant.components import mqtt, recorder, intent
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
@@ -191,6 +191,28 @@ def async_mock_service(hass, domain, service):
 
 
 mock_service = threadsafe_callback_factory(async_mock_service)
+
+
+@asyncio.coroutine
+def async_mock_intent(hass, intent_typ):
+    """Set up a fake intent handler."""
+    if 'intent' not in hass.config.components:
+        yield from async_setup_component(hass, 'intent', {'intent': {}})
+
+    intents = []
+
+    class ScriptIntentHandler(intent.IntentHandler):
+        intent_type = intent_typ
+
+        @asyncio.coroutine
+        def async_handle(self, intent):
+            """Handle the intent."""
+            intents.append(intent)
+            return intent.create_response()
+
+    hass.intent.async_register(ScriptIntentHandler())
+
+    return intents
 
 
 @ha.callback
