@@ -212,17 +212,20 @@ def setup(hass, config):
         register_built_in_panel(hass, panel)
 
     themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
-    if themes:
-        setup_themes(hass, themes)
+    setup_themes(hass, themes)
 
     return True
 
 
 def setup_themes(hass, themes):
     """Set up themes data and services."""
-    hass.data[DATA_THEMES] = themes
-    hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
     hass.http.register_view(ThemesView)
+    hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
+    if themes is None:
+        hass.data[DATA_THEMES] = {}
+        return
+
+    hass.data[DATA_THEMES] = themes
 
     @callback
     def update_theme_and_fire_event():
