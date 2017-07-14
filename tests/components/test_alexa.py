@@ -49,54 +49,55 @@ def alexa_client(loop, hass, test_client):
             },
         }
     }))
-    assert loop.run_until_complete(async_setup_component(hass, 'intent_script', {
-        'intent_script': {
-            "WhereAreWeIntent": {
-                "speech": {
-                    "type": "plain",
-                    "text":
-                    """
-                        {%- if is_state("device_tracker.paulus", "home")
-                               and is_state("device_tracker.anne_therese",
-                                            "home") -%}
-                            You are both home, you silly
-                        {%- else -%}
-                            Anne Therese is at {{
-                                states("device_tracker.anne_therese")
-                            }} and Paulus is at {{
-                                states("device_tracker.paulus")
-                            }}
-                        {% endif %}
-                    """,
-                }
-            },
-            "GetZodiacHoroscopeIntent": {
-                "speech": {
-                    "type": "plain",
-                    "text": "You told us your sign is {{ ZodiacSign }}.",
-                }
-            },
-            "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
-                "speech": {
-                    "type": "plain",
-                    "text": "Playing {{ object_byArtist_name }}.",
-                }
-            },
-            "CallServiceIntent": {
-                "speech": {
-                    "type": "plain",
-                    "text": "Service called",
+    assert loop.run_until_complete(async_setup_component(
+        hass, 'intent_script', {
+            'intent_script': {
+                "WhereAreWeIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text":
+                        """
+                            {%- if is_state("device_tracker.paulus", "home")
+                                   and is_state("device_tracker.anne_therese",
+                                                "home") -%}
+                                You are both home, you silly
+                            {%- else -%}
+                                Anne Therese is at {{
+                                    states("device_tracker.anne_therese")
+                                }} and Paulus is at {{
+                                    states("device_tracker.paulus")
+                                }}
+                            {% endif %}
+                        """,
+                    }
                 },
-                "action": {
-                    "service": "test.alexa",
-                    "data_template": {
-                        "hello": "{{ ZodiacSign }}"
+                "GetZodiacHoroscopeIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "You told us your sign is {{ ZodiacSign }}.",
+                    }
+                },
+                "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "Playing {{ object_byArtist_name }}.",
+                    }
+                },
+                "CallServiceIntent": {
+                    "speech": {
+                        "type": "plain",
+                        "text": "Service called",
                     },
-                    "entity_id": "switch.test",
+                    "action": {
+                        "service": "test.alexa",
+                        "data_template": {
+                            "hello": "{{ ZodiacSign }}"
+                        },
+                        "entity_id": "switch.test",
+                    }
                 }
             }
-        }
-    }))
+        }))
     return loop.run_until_complete(test_client(hass.http.app))
 
 
