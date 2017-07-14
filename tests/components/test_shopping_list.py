@@ -1,4 +1,4 @@
-"""Test shopping list component"""
+"""Test shopping list component."""
 import asyncio
 
 from homeassistant.bootstrap import async_setup_component

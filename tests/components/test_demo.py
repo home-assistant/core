@@ -24,6 +24,7 @@ def minimize_demo_platforms(hass):
 
 @pytest.fixture(autouse=True)
 def demo_cleanup(hass):
+    """Clean up device tracker demo file."""
     yield
     try:
         os.remove(hass.config.path(device_tracker.YAML_DEVICES))
