@@ -4,6 +4,7 @@ Support for functionality to have conversations with Home Assistant.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
 """
+import asyncio
 import logging
 import re
 import warnings
@@ -14,13 +15,11 @@ from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import script
 
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
 ATTR_TEXT = 'text'
-ATTR_SENTENCE = 'sentence'
 DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
@@ -28,48 +27,49 @@ REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 SERVICE_PROCESS = 'process'
 
 SERVICE_PROCESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
+    vol.Required(ATTR_TEXT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    cv.string: vol.Schema({
-        vol.Required(ATTR_SENTENCE): cv.string,
-        vol.Required('action'): cv.SCRIPT_SCHEMA,
+    vol.Optional('intents', default={}): vol.Schema({
+        cv.string: vol.All(cv.ensure_list, [cv.string])
     })
 })}, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Register the process service."""
     warnings.filterwarnings('ignore', module='fuzzywuzzy')
-    from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
     config = config.get(DOMAIN, {})
 
-    choices = {attrs[ATTR_SENTENCE]: script.Script(
-        hass,
-        attrs['action'],
-        name)
-               for name, attrs in config.items()}
+    intents = {
+        intent: [_create_matcher(sentence) for sentence in sentences]
+        for intent, sentences in config['intents'].items()
+    }
 
+    @asyncio.coroutine
     def process(service):
         """Parse text into commands."""
-        # if actually configured
-        if choices:
-            text = service.data[ATTR_TEXT]
-            match = fuzzyExtract.extractOne(text, choices.keys())
-            scorelimit = 60  # arbitrary value
-            logging.info(
-                'matched up text %s and found %s',
-                text,
-                [match[0] if match[1] > scorelimit else 'nothing']
-                )
-            if match[1] > scorelimit:
-                choices[match[0]].run()  # run respective script
-                return
+        from fuzzywuzzy import process as fuzzyExtract
 
         text = service.data[ATTR_TEXT]
+
+        for intent, matchers in intents.items():
+            for matcher in matchers:
+                match = matcher.match(text)
+
+                if not match:
+                    continue
+
+                yield from hass.intent.async_handle(
+                    DOMAIN, intent, {key: {'value': value} for key, value
+                                     in match.groupdict().items()}, text)
+                return
+
+        text = text.lower()
         match = REGEX_TURN_COMMAND.match(text)
 
         if not match:
@@ -77,7 +77,8 @@ def setup(hass, config):
             return
 
         name, command = match.groups()
-        entities = {state.entity_id: state.name for state in hass.states.all()}
+        entities = {state.entity_id: state.name for state
+                    in hass.states.async_all()}
         entity_ids = fuzzyExtract.extractOne(
             name, entities, score_cutoff=65)[2]
 
@@ -87,20 +88,42 @@ def setup(hass, config):
             return
 
         if command == 'on':
-            hass.services.call(core.DOMAIN, SERVICE_TURN_ON, {
-                ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            yield from hass.services.async_call(
+                core.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: entity_ids,
+                }, blocking=True)
 
         elif command == 'off':
-            hass.services.call(core.DOMAIN, SERVICE_TURN_OFF, {
-                ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            yield from hass.services.async_call(
+                core.DOMAIN, SERVICE_TURN_OFF, {
+                    ATTR_ENTITY_ID: entity_ids,
+                }, blocking=True)
 
         else:
             logger.error('Got unsupported command %s from text %s',
                          command, text)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
 
     return True
+
+
+def _create_matcher(utterance):
+    """Creates a regex that matches the utterance."""
+    parts = re.split(r'({\w+})', utterance)
+    group_matcher = re.compile(r'{(\w+)}')
+
+    pattern = ['^']
+
+    for part in parts:
+        match = group_matcher.match(part)
+
+        if match is None:
+            pattern.append(part)
+            continue
+
+        pattern.append('(?P<{}>{})'.format(match.groups()[0], r'[\w ]+'))
+
+    pattern.append('$')
+    return re.compile(''.join(pattern), re.I)
