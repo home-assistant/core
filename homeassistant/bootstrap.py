@@ -19,6 +19,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 import homeassistant.loader as loader
 from homeassistant.util.logging import AsyncHandler
+from homeassistant.util.package import async_get_user_site, get_user_site
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.signal import async_register_signal_handling
@@ -48,7 +49,8 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            mount_local_lib_path(config_dir)
+            hass.loop.run_until_complete(
+                async_mount_local_lib_path(config_dir, hass.loop))
 
     # run task
     hass = hass.loop.run_until_complete(
@@ -183,7 +185,7 @@ def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    yield from hass.async_add_job(mount_local_lib_path, config_dir)
+    yield from async_mount_local_lib_path(config_dir, hass.loop)
 
     async_enable_logging(hass, verbose, log_rotate_days)
 
@@ -276,11 +278,23 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
 
 
 def mount_local_lib_path(config_dir: str) -> str:
+    """Add local library to Python Path."""
+    deps_dir = os.path.join(config_dir, 'deps')
+    lib_dir = get_user_site(deps_dir)
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
+    return deps_dir
+
+
+@asyncio.coroutine
+def async_mount_local_lib_path(config_dir: str,
+                               loop: asyncio.AbstractEventLoop) -> str:
     """Add local library to Python Path.
 
-    Async friendly.
+    This function is a coroutine.
     """
     deps_dir = os.path.join(config_dir, 'deps')
-    if deps_dir not in sys.path:
-        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    lib_dir = yield from async_get_user_site(deps_dir, loop=loop)
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
     return deps_dir
