@@ -12,8 +12,7 @@ DOMAIN = 'intent'
 _LOGGER = logging.getLogger(__name__)
 
 SLOT_SCHEMA = vol.Schema({
-    vol.Optional('type'): str,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
