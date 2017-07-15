@@ -2,11 +2,12 @@
 import asyncio
 import logging
 import os
+from subprocess import PIPE, Popen
 import sys
 import threading
-from subprocess import Popen, PIPE
 from urllib.parse import urlparse
 
+from pip.locations import running_under_virtualenv
 from typing import Optional
 
 import pkg_resources
@@ -36,7 +37,7 @@ def install_package(package: str, upgrade: bool=True,
         if constraints is not None:
             args += ['--constraint', constraints]
         if target:
-            assert not is_virtual_env()
+            assert not running_under_virtualenv()
             # This only works if not running in venv
             args += ['--user']
             env['PYTHONUSERBASE'] = os.path.abspath(target)
@@ -68,11 +69,6 @@ def check_package_exists(package: str) -> bool:
 
     env = pkg_resources.Environment()
     return any(dist in req for dist in env[req.project_name])
-
-
-def is_virtual_env() -> bool:
-    """Return true if environment is a virtual environment."""
-    return hasattr(sys, 'real_prefix')
 
 
 def _get_user_site(deps_dir: str) -> tuple:

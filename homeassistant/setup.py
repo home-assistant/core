@@ -77,7 +77,7 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
 
     def pip_install(mod):
         """Install packages."""
-        if pkg_util.is_virtual_env():
+        if pkg_util.running_under_virtualenv():
             return pkg_util.install_package(
                 mod, constraints=os.path.join(
                     os.path.dirname(__file__), CONSTRAINT_FILE))

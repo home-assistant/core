@@ -204,13 +204,14 @@ class TestSetup:
         assert 'comp' not in self.hass.config.components
 
     @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.util.package.sys')
+    @mock.patch('homeassistant.util.package.running_under_virtualenv',
+                return_value=True)
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)
     def test_requirement_installed_in_venv(
-            self, mock_install, mock_sys, mock_dirname):
+            self, mock_install, mock_venv, mock_dirname):
         """Test requirement installed in virtual environment."""
-        mock_sys.real_prefix = 'pythonpath'
+        mock_venv.return_value = True
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
         loader.set_component(
@@ -222,11 +223,12 @@ class TestSetup:
             constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
 
     @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.util.package.sys', spec=object())
+    @mock.patch('homeassistant.util.package.running_under_virtualenv',
+                return_value=False)
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)
     def test_requirement_installed_in_deps(
-            self, mock_install, mock_sys, mock_dirname):
+            self, mock_install, mock_venv, mock_dirname):
         """Test requirement installed in deps directory."""
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
