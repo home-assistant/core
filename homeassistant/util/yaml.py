@@ -202,7 +202,7 @@ def _env_var_yaml(loader: SafeLineLoader,
     """Load environment variables and embed it into the configuration YAML."""
     args = node.value.split()
 
-    """Check for a default value"""
+    # Check for a default value
     if len(args) > 1:
         return os.getenv(args[0], ' '.join(args[1:]))
     elif args[0] in os.environ:
