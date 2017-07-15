@@ -5,32 +5,62 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual_mqtt/
 """
 import asyncio
+import datetime
 import logging
 
-import homeassistant.components.mqtt as mqtt
-from homeassistant.components.alarm_control_panel import (
-    manual as manual_alarm, mqtt as mqtt_alarm)
-from homeassistant.components.alarm_control_panel.mqtt import (
-    CONF_PAYLOAD_DISARM, CONF_PAYLOAD_ARM_HOME, CONF_PAYLOAD_ARM_AWAY)
+import voluptuous as vol
+
+import homeassistant.components.alarm_control_panel as alarm
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    STATE_UNKNOWN, CONF_NAME, CONF_CODE,
-    CONF_PENDING_TIME, CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_PLATFORM,
+    CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
+    CONF_DISARM_AFTER_TRIGGER)
+import homeassistant.components.mqtt as mqtt
+
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.core import callback
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_point_in_time
+
+CONF_PAYLOAD_DISARM = 'payload_disarm'
+CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
+CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
+DEFAULT_ARM_AWAY = 'ARM_AWAY'
+DEFAULT_ARM_HOME = 'ARM_HOME'
+DEFAULT_DISARM = 'DISARM'
 
-PLATFORM_SCHEMA = manual_alarm.PLATFORM_SCHEMA.extend(
-    mqtt_alarm.PLATFORM_SCHEMA.schema)
+DEPENDENCIES = ['mqtt']
+
+PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PLATFORM): 'manual_mqtt',
+    vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+    vol.Optional(CONF_CODE): cv.string,
+    vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_DISARM_AFTER_TRIGGER,
+                 default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
+    vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the manual alarm platform."""
+    """Set up the manual MQTT alarm platform."""
     add_devices([ManualMQTTAlarm(
         hass,
         config[CONF_NAME],
@@ -46,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_ARM_AWAY))])
 
 
-class ManualMQTTAlarm(manual_alarm.ManualAlarm):
+class ManualMQTTAlarm(alarm.AlarmControlPanel):
     """
     Representation of an alarm status.
 
@@ -61,16 +91,117 @@ class ManualMQTTAlarm(manual_alarm.ManualAlarm):
                  state_topic, command_topic, qos,
                  payload_disarm, payload_arm_home, payload_arm_away):
         """Init the manual MQTT alarm panel."""
-        super().__init__(hass, name, code, pending_time, trigger_time,
-                         disarm_after_trigger)
+        self._state = STATE_ALARM_DISARMED
+        self._hass = hass
+        self._name = name
+        self._code = str(code) if code else None
+        self._pending_time = datetime.timedelta(seconds=pending_time)
+        self._trigger_time = datetime.timedelta(seconds=trigger_time)
+        self._disarm_after_trigger = disarm_after_trigger
+        self._pre_trigger_state = self._state
+        self._state_ts = None
 
-        self._state = STATE_UNKNOWN
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self._state in (STATE_ALARM_ARMED_HOME,
+                           STATE_ALARM_ARMED_AWAY) and \
+           self._pending_time and self._state_ts + self._pending_time > \
+           dt_util.utcnow():
+            return STATE_ALARM_PENDING
+
+        if self._state == STATE_ALARM_TRIGGERED and self._trigger_time:
+            if self._state_ts + self._pending_time > dt_util.utcnow():
+                return STATE_ALARM_PENDING
+            elif (self._state_ts + self._pending_time +
+                  self._trigger_time) < dt_util.utcnow():
+                if self._disarm_after_trigger:
+                    return STATE_ALARM_DISARMED
+                return self._pre_trigger_state
+
+        return self._state
+
+    @property
+    def code_format(self):
+        """One or more characters."""
+        return None if self._code is None else '.+'
+
+    def alarm_disarm(self, code=None):
+        """Send disarm command."""
+        if not self._validate_code(code, STATE_ALARM_DISARMED):
+            return
+
+        self._state = STATE_ALARM_DISARMED
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+    def alarm_arm_home(self, code=None):
+        """Send arm home command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
+            return
+
+        self._state = STATE_ALARM_ARMED_HOME
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._pending_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
+    def alarm_arm_away(self, code=None):
+        """Send arm away command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
+            return
+
+        self._state = STATE_ALARM_ARMED_AWAY
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._pending_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
+    def alarm_trigger(self, code=None):
+        """Send alarm trigger command. No code needed."""
+        self._pre_trigger_state = self._state
+        self._state = STATE_ALARM_TRIGGERED
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._trigger_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time + self._trigger_time)
+
+    def _validate_code(self, code, state):
+        """Validate given code."""
+        check = self._code is None or code == self._code
+        if not check:
+            _LOGGER.warning("Invalid code given for %s", state)
+        return check
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.
