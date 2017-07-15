@@ -12,21 +12,20 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 from homeassistant.components import mochad
-from homeassistant.const import (CONF_NAME, CONF_PLATFORM, CONF_DEVICES)
+from homeassistant.const import (CONF_NAME, CONF_PLATFORM, CONF_DEVICES,
+                                 CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDRESS = 'address'
-CONF_COMM_TYPE = 'comm_type'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): mochad.DOMAIN,
     CONF_DEVICES: [{
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,
-        vol.Optional(CONF_COMM_TYPE): cv.string,
+        vol.Optional(mochad.CONF_COMM_TYPE): cv.string,
     }]
 })
 
@@ -50,7 +49,7 @@ class MochadLight(Light):
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME,
                              'x10_light_dev_{}'.format(self._address))
-        self._comm_type = dev.get(CONF_COMM_TYPE, 'pl')
+        self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.device = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
         self._brightness = 0
@@ -89,7 +88,7 @@ class MochadLight(Light):
     def turn_on(self, **kwargs):
         """Send the command to turn the light on."""
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self.device.send_cmd('xdim %s' % self._brightness)
+        self.device.send_cmd("xdim {}".format(self._brightness))
         self._controller.read_data()
         self._state = True
 
