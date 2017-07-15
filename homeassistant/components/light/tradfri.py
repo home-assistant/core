@@ -43,6 +43,12 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     devices_command = gateway.get_devices()
     devices_commands = yield from api(devices_command)
     devices = yield from api(*devices_commands)
+
+    try:
+        devices = iter(devices)
+    except TypeError:
+        devices = [devices]
+
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(TradfriLight(light, api) for light in lights)
 
@@ -51,6 +57,12 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         groups_command = gateway.get_groups()
         groups_commands = yield from api(groups_command)
         groups = yield from api(*groups_commands)
+
+        try:
+            groups = iter(groups)
+        except TypeError:
+            groups = [groups]
+
         add_devices(TradfriGroup(group, api) for group in groups)
 
 
