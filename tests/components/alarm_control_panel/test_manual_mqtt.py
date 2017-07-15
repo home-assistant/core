@@ -10,7 +10,9 @@ from homeassistant.const import (
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
-from tests.common import fire_time_changed, get_test_home_assistant
+from tests.common import (
+    fire_time_changed, get_test_home_assistant,
+    mock_mqtt_component, fire_mqtt_message, assert_setup_component)
 
 CODE = 'HELLO_CODE'
 
@@ -21,10 +23,32 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
         self.hass.stop()
+
+    def test_fail_setup_without_state_topic(self):
+        """Test for failing with no state topic."""
+        with assert_setup_component(0) as config:
+            assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+                alarm_control_panel.DOMAIN: {
+                    'platform': 'mqtt_alarm',
+                    'command_topic': 'alarm/command'
+                }
+            })
+            assert not config[alarm_control_panel.DOMAIN]
+
+    def test_fail_setup_without_command_topic(self):
+        """Test failing with no command topic."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+                alarm_control_panel.DOMAIN: {
+                    'platform': 'mqtt_alarm',
+                    'state_topic': 'alarm/state'
+                }
+            })
 
     def test_arm_home_no_pending(self):
         """Test arm home method."""
@@ -382,3 +406,154 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
+
+    def test_arm_home_via_command_topic(self):
+        """Test arming home via command topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'pending_time': 1,
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'payload_arm_home': 'ARM_HOME',
+            }
+        })
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        # Fire the arm command via MQTT; ensure state changes to pending
+        fire_mqtt_message(self.hass, 'alarm/command', 'ARM_HOME')
+        self.hass.block_till_done()
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        # Fast-forward a little bit
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_HOME,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_away_via_command_topic(self):
+        """Test arming away via command topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'pending_time': 1,
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'payload_arm_away': 'ARM_AWAY',
+            }
+        })
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        # Fire the arm command via MQTT; ensure state changes to pending
+        fire_mqtt_message(self.hass, 'alarm/command', 'ARM_AWAY')
+        self.hass.block_till_done()
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        # Fast-forward a little bit
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+    def test_disarm_pending_via_command_topic(self):
+        """Test disarming pending alarm via command topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'pending_time': 1,
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'payload_disarm': 'DISARM',
+            }
+        })
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        # Now that we're pending, receive a command to disarm
+        fire_mqtt_message(self.hass, 'alarm/command', 'DISARM')
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+    def test_state_changes_are_published_to_mqtt(self):
+        """Test publishing of MQTT messages when state changes."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'manual_mqtt',
+                'name': 'test',
+                'pending_time': 1,
+                'trigger_time': 1,
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+            }
+        })
+
+        # Component should send disarmed alarm state on startup
+        self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_DISARMED, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
+
+        # Arm in home mode
+        alarm_control_panel.alarm_arm_home(self.hass)
+        self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_PENDING, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
+        # Fast-forward a little bit
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_ARMED_HOME, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
+
+        # Arm in away mode
+        alarm_control_panel.alarm_arm_away(self.hass)
+        self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_PENDING, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
+        # Fast-forward a little bit
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_ARMED_AWAY, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
+
+        # Disarm
+        alarm_control_panel.alarm_disarm(self.hass)
+        self.hass.block_till_done()
+        self.assertEqual(('alarm/state', STATE_ALARM_DISARMED, 0, True),
+                         self.mock_publish.mock_calls[-2][1])
