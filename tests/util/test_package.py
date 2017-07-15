@@ -66,6 +66,14 @@ def mock_env_copy():
         yield env_copy
 
 
+@pytest.fixture
+def mock_venv():
+    """Mock homeassistant.util.package.running_under_virtualenv."""
+    with patch('homeassistant.util.package.running_under_virtualenv') as mock:
+        mock.return_value = True
+        yield mock
+
+
 @asyncio.coroutine
 def mock_async_subprocess():
     """Return an async Popen mock."""
@@ -90,7 +98,7 @@ def test_install_existing_package(mock_exists, mock_popen):
     assert mock_popen.return_value.communicate.call_count == 0
 
 
-def test_install(mock_sys, mock_exists, mock_popen, mock_env_copy):
+def test_install(mock_sys, mock_exists, mock_popen, mock_env_copy, mock_venv):
     """Test an install attempt on a package that doesn't exist."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False)
@@ -106,7 +114,8 @@ def test_install(mock_sys, mock_exists, mock_popen, mock_env_copy):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_upgrade(mock_sys, mock_exists, mock_popen, mock_env_copy):
+def test_install_upgrade(
+        mock_sys, mock_exists, mock_popen, mock_env_copy, mock_venv):
     """Test an upgrade attempt on a package."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ)
@@ -122,11 +131,13 @@ def test_install_upgrade(mock_sys, mock_exists, mock_popen, mock_env_copy):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_target(mock_sys, mock_exists, mock_popen, mock_env_copy):
+def test_install_target(
+        mock_sys, mock_exists, mock_popen, mock_env_copy, mock_venv):
     """Test an install with a target."""
     target = 'target_folder'
     env = mock_env_copy()
     env['PYTHONUSERBASE'] = os.path.abspath(target)
+    mock_venv.return_value = False
     mock_sys.platform = 'linux'
     args = [
         mock_sys.executable, '-m', 'pip', 'install', '--quiet',
@@ -142,15 +153,15 @@ def test_install_target(mock_sys, mock_exists, mock_popen, mock_env_copy):
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_target_venv(mock_sys, mock_exists, mock_popen, mock_env_copy):
+def test_install_target_venv(
+        mock_sys, mock_exists, mock_popen, mock_env_copy, mock_venv):
     """Test an install with a target in a virtual environment."""
     target = 'target_folder'
-    mock_sys.real_prefix = '/usr'
     with pytest.raises(AssertionError):
         package.install_package(TEST_NEW_REQ, False, target=target)
 
 
-def test_install_error(caplog, mock_sys, mock_exists, mock_popen):
+def test_install_error(caplog, mock_sys, mock_exists, mock_popen, mock_venv):
     """Test an install with a target."""
     caplog.set_level(logging.WARNING)
     mock_popen.return_value.returncode = 1
@@ -160,7 +171,8 @@ def test_install_error(caplog, mock_sys, mock_exists, mock_popen):
         assert record.levelname == 'ERROR'
 
 
-def test_install_constraint(mock_sys, mock_exists, mock_popen, mock_env_copy):
+def test_install_constraint(
+        mock_sys, mock_exists, mock_popen, mock_env_copy, mock_venv):
     """Test install with constraint file on not installed package."""
     env = mock_env_copy()
     constraints = 'constraints_file.txt'
