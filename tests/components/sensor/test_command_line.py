@@ -62,8 +62,10 @@ class TestCommandSensorSensor(unittest.TestCase):
     def test_template_render(self):
         """Ensure command with templates get rendered properly."""
         self.hass.states.set('sensor.test_state', 'Works')
-        data = command_line.CommandSensorData(self.hass, 
-            'echo {{ states.sensor.test_state.state }}')
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo {{ states.sensor.test_state.state }}'
+        )
         data.update()
 
         self.assertEqual("Works", data.value)
