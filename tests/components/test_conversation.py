@@ -147,3 +147,50 @@ def test_calling_intent(hass):
     assert intent.intent_type == 'OrderBeer'
     assert intent.slots == {'type': {'value': 'Grolsch'}}
     assert intent.text_input == 'I would like the Grolsch beer'
+
+
+@asyncio.coroutine
+def test_register_before_setup(hass):
+    """Test calling an intent from a conversation."""
+    intents = async_mock_intent(hass, 'OrderBeer')
+
+    hass.components.conversation.async_register('OrderBeer', [
+        'A {type} beer, please'
+    ])
+
+    result = yield from async_setup_component(hass, 'conversation', {
+        'conversation': {
+            'intents': {
+                'OrderBeer': [
+                    'I would like the {type} beer'
+                ]
+            }
+        }
+    })
+    assert result
+
+    yield from hass.services.async_call(
+        'conversation', 'process', {
+            conversation.ATTR_TEXT: 'A Grolsch beer, please'
+        })
+    yield from hass.async_block_till_done()
+
+    assert len(intents) == 1
+    intent = intents[0]
+    assert intent.platform == 'conversation'
+    assert intent.intent_type == 'OrderBeer'
+    assert intent.slots == {'type': {'value': 'Grolsch'}}
+    assert intent.text_input == 'A Grolsch beer, please'
+
+    yield from hass.services.async_call(
+        'conversation', 'process', {
+            conversation.ATTR_TEXT: 'I would like the Grolsch beer'
+        })
+    yield from hass.async_block_till_done()
+
+    assert len(intents) == 2
+    intent = intents[1]
+    assert intent.platform == 'conversation'
+    assert intent.intent_type == 'OrderBeer'
+    assert intent.slots == {'type': {'value': 'Grolsch'}}
+    assert intent.text_input == 'I would like the Grolsch beer'

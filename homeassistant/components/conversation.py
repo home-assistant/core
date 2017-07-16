@@ -12,6 +12,7 @@ import warnings
 import voluptuous as vol
 
 from homeassistant import core
+from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.helpers import intent, config_validation as cv
@@ -37,6 +38,27 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 })}, extra=vol.ALLOW_EXTRA)
 
 
+@core.callback
+@bind_hass
+def async_register(hass, intent_type, utterances):
+    """Register an intent.
+
+    Registrations don't require conversations to be loaded. They will become
+    active once the conversation component is loaded.
+    """
+    intents = hass.data.get(DOMAIN)
+
+    if intents is None:
+        intents = hass.data[DOMAIN] = {}
+
+    conf = intents.get(intent_type)
+
+    if conf is None:
+        conf = intents[intent_type] = []
+
+    conf.extend(_create_matcher(utterance) for utterance in utterances)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the process service."""
@@ -44,11 +66,18 @@ def async_setup(hass, config):
 
     logger = logging.getLogger(__name__)
     config = config.get(DOMAIN, {})
+    intents = hass.data.get(DOMAIN)
 
-    intents = {
-        intent_type: [_create_matcher(sentence) for sentence in sentences]
-        for intent_type, sentences in config.get('intents', {}).items()
-    }
+    if intents is None:
+        intents = hass.data[DOMAIN] = {}
+
+    for intent_type, utterances in config.get('intents', {}).items():
+        conf = intents.get(intent_type)
+
+        if conf is None:
+            conf = intents[intent_type] = []
+
+        conf.extend(_create_matcher(utterance) for utterance in utterances)
 
     @asyncio.coroutine
     def process(service):
