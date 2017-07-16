@@ -14,9 +14,12 @@ import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_MONITORED_CONDITIONS,
     STATE_UNKNOWN)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,24 +36,36 @@ DEFAULT_NAME = 'google_wifi'
 DEFAULT_HOST = 'testwifi.here'
 
 MONITORED_CONDITIONS = {
-    ATTR_CURRENT_VERSION: ['Current Version',
-                           None, 'mdi:network-question',
-                           ['software', 'softwareVersion']],
-    ATTR_NEW_VERSION: ['New Version',
-                       None, 'mdi:update',
-                       ['software', 'updateNewVersion']],
-    ATTR_UPTIME: ['Uptime',
-                  'days', 'mdi:timelapse',
-                  ['system', 'uptime']],
-    ATTR_LAST_RESTART: ['Last Network Restart',
-                        None, 'mdi:restart',
-                        None],
-    ATTR_LOCAL_IP: ['Local IP Address',
-                    None, 'mdi:access-point-network',
-                    ['wan', 'localIpAddress']],
-    ATTR_STATUS: ['Status',
-                  None, 'mdi:google',
-                  ['wan', 'online']]
+    ATTR_CURRENT_VERSION: [
+        'Current Version',
+        None,
+        'mdi:checkbox-marked-circle-outline'
+    ],
+    ATTR_NEW_VERSION: [
+        'New Version',
+        None,
+        'mdi:update'
+    ],
+    ATTR_UPTIME: [
+        'Uptime',
+        'days',
+        'mdi:timelapse'
+    ],
+    ATTR_LAST_RESTART: [
+        'Last Network Restart',
+        None,
+        'mdi:restart'
+    ],
+    ATTR_LOCAL_IP: [
+        'Local IP Address',
+        None,
+        'mdi:access-point-network'
+    ],
+    ATTR_STATUS: [
+        'Status',
+        None,
+        'mdi:google'
+    ]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -82,13 +97,12 @@ class GoogleWifiSensor(Entity):
         self._hass = hass
         self._api = api
         self._name = name
+        self._state = STATE_UNKNOWN
 
         variable_info = MONITORED_CONDITIONS[variable]
         self._var_name = variable
         self._var_units = variable_info[1]
         self._var_icon = variable_info[2]
-        self._var_key = variable_info[3]
-        self._uptime_keys = MONITORED_CONDITIONS[ATTR_UPTIME][3]
 
     @property
     def name(self):
@@ -113,34 +127,15 @@ class GoogleWifiSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._var_name == ATTR_LAST_RESTART and self.availiable:
-            uptime = self._api.data[self._uptime_keys[0]][self._uptime_keys[1]]
-            last_restart = dt.now() - timedelta(seconds=uptime)
-            return last_restart.strftime("%Y-%m-%d %H:%M:%S")
-
-        if self.availiable:
-            if (not self._api.data['wan']['ipAddress'] and
-                    self._var_name == ATTR_LOCAL_IP):
-                state_data = STATE_UNKNOWN
-            else:
-                state_data = self._api.data[self._var_key[0]][self._var_key[1]]
-
-            if self._var_name == ATTR_UPTIME:
-                return round(state_data / (24 * 3600), 2)
-            elif self._var_name == ATTR_STATUS:
-                if state_data:
-                    return "Online"
-                return "Offline"
-            elif self._var_name == ATTR_NEW_VERSION:
-                if state_data == '0.0.0.0':
-                    return "Latest"
-            return state_data
-
-        return STATE_UNKNOWN
+        return self._state
 
     def update(self):
         """Get the latest data from the Google Wifi API."""
         self._api.update()
+        if self.availiable:
+            self._state = self._api.data[self._var_name]
+        else:
+            self._state = STATE_UNKNOWN
 
 
 class GoogleWifiAPI(object):
@@ -152,19 +147,55 @@ class GoogleWifiAPI(object):
         resource = "{}{}{}".format(uri, host, ENDPOINT)
 
         self._request = requests.Request('GET', resource).prepare()
-        self.data = None
+        self.raw_data = None
+        self.data = {
+            ATTR_CURRENT_VERSION: STATE_UNKNOWN,
+            ATTR_NEW_VERSION: STATE_UNKNOWN,
+            ATTR_UPTIME: STATE_UNKNOWN,
+            ATTR_LAST_RESTART: STATE_UNKNOWN,
+            ATTR_LOCAL_IP: STATE_UNKNOWN,
+            ATTR_STATUS: STATE_UNKNOWN
+        }
         self.availiable = True
         self.update()
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the router."""
         try:
+            _LOGGER.error("Before request")
             with requests.Session() as sess:
                 response = sess.send(
                     self._request, timeout=10)
-            self.data = response.json()
+            self.raw_data = response.json()
+            _LOGGER.error(self.raw_data)
+            self.data_format()
             self.availiable = True
         except ValueError:
             _LOGGER.error("Unable to fetch data from Google Wifi")
             self.availiable = False
-            self.data = None
+            self.raw_data = None
+
+    def data_format(self):
+        """Format raw data into easily accessible dict."""
+        for key, value in self.raw_data.items():
+            if key == 'software':
+                self.data[ATTR_CURRENT_VERSION] = value['softwareVersion']
+                if value['updateNewVersion'] == '0.0.0.0':
+                    self.data[ATTR_NEW_VERSION] = 'Latest'
+                else:
+                    self.data[ATTR_NEW_VERSION] = value['updateNewVersion']
+            elif key == 'system':
+                self.data[ATTR_UPTIME] = value['uptime'] / (3600 * 24)
+                last_restart = dt.now() - timedelta(seconds=value['uptime'])
+                self.data[ATTR_LAST_RESTART] = \
+                    last_restart.strftime("%Y-%m-%d %H:%M:%S")
+            elif key == 'wan':
+                if value['online']:
+                    self.data[ATTR_STATUS] = 'Online'
+                else:
+                    self.data[ATTR_STATUS] = 'Offline'
+                if not value['ipAddress']:
+                    self.data[ATTR_LOCAL_IP] = STATE_UNKNOWN
+                else:
+                    self.data[ATTR_LOCAL_IP] = value['localIpAddress']

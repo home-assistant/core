@@ -1,12 +1,14 @@
 """The tests for the Google Wifi platform."""
 import unittest
 from unittest.mock import patch, Mock
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests_mock
 
+from homeassistant import core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor.google_wifi as google_wifi
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.util import dt as dt_util
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -78,11 +80,21 @@ class TestGoogleWifiSensor(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        with requests_mock.Mocker() as mock_req:
+            self.setup_api(MOCK_DATA, mock_req)
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def setup_api(self, data, mock_req):
+        """Setup API with fake data."""
         resource = '{}{}{}'.format('http://',
                                    'localhost',
                                    google_wifi.ENDPOINT)
-        with requests_mock.Mocker() as mock_req:
-            mock_req.get(resource, text=MOCK_DATA, status_code=200)
+        now = datetime(1970, month=1, day=1)
+        with patch('homeassistant.util.dt.now', return_value=now):
+            mock_req.get(resource, text=data, status_code=200)
             self.api = google_wifi.GoogleWifiAPI("localhost")
         self.name = NAME
         self.sensor_dict = dict()
@@ -92,19 +104,24 @@ class TestGoogleWifiSensor(unittest.TestCase):
             name = '{}_{}'.format(self.name, condition)
             units = cond_list[1]
             icon = cond_list[2]
-            self.sensor_dict[name] = {'sensor': sensor,
-                                      'units': units,
-                                      'icon': icon}
+            self.sensor_dict[condition] = {'sensor': sensor,
+                                           'name': name,
+                                           'units': units,
+                                           'icon': icon}
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    def fake_delay(self, ha_delay):
+        """Fake delay to prevent update throttle."""
+        hass_now = dt_util.utcnow()
+        shifted_time = hass_now + timedelta(seconds=ha_delay)
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: shifted_time})
 
     def test_name(self):
         """Test the name."""
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
-            self.assertEqual(name, sensor.name)
+            test_name = self.sensor_dict[name]['name']
+            self.assertEqual(test_name, sensor.name)
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
@@ -122,23 +139,18 @@ class TestGoogleWifiSensor(unittest.TestCase):
     @requests_mock.Mocker()
     def test_state(self, mock_req):
         """Test the initial state."""
-        resource = '{}{}{}'.format('http://',
-                                   'localhost',
-                                   google_wifi.ENDPOINT)
-        mock_req.get(resource, text=MOCK_DATA, status_code=200)
+        self.setup_api(MOCK_DATA, mock_req)
         now = datetime(1970, month=1, day=1)
         with patch('homeassistant.util.dt.now', return_value=now):
             for name in self.sensor_dict:
                 sensor = self.sensor_dict[name]['sensor']
+                self.fake_delay(2)
                 sensor.update()
-                if name == '{}_{}'.format(self.name,
-                                          google_wifi.ATTR_LAST_RESTART):
+                if name == google_wifi.ATTR_LAST_RESTART:
                     self.assertEqual('1969-12-31 00:00:00', sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_UPTIME):
+                elif name == google_wifi.ATTR_UPTIME:
                     self.assertEqual(1, sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_STATUS):
+                elif name == google_wifi.ATTR_STATUS:
                     self.assertEqual('Online', sensor.state)
                 else:
                     self.assertEqual('initial', sensor.state)
@@ -146,41 +158,32 @@ class TestGoogleWifiSensor(unittest.TestCase):
     @requests_mock.Mocker()
     def test_update_when_value_is_none(self, mock_req):
         """Test state gets updated to unknown when sensor returns no data."""
-        resource = '{}{}{}'.format('http://',
-                                   'localhost',
-                                   google_wifi.ENDPOINT)
-        mock_req.get(resource, text=None, status_code=200)
+        self.setup_api(None, mock_req)
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
+            self.fake_delay(2)
             sensor.update()
             self.assertEqual(STATE_UNKNOWN, sensor.state)
 
     @requests_mock.Mocker()
     def test_update_when_value_changed(self, mock_req):
         """Test state gets updated when sensor returns a new status."""
-        resource = '{}{}{}'.format('http://',
-                                   'localhost',
-                                   google_wifi.ENDPOINT)
-        mock_req.get(resource, text=MOCK_DATA_NEXT, status_code=200)
+        self.setup_api(MOCK_DATA_NEXT, mock_req)
         now = datetime(1970, month=1, day=1)
         with patch('homeassistant.util.dt.now', return_value=now):
             for name in self.sensor_dict:
                 sensor = self.sensor_dict[name]['sensor']
+                self.fake_delay(2)
                 sensor.update()
-                if name == '{}_{}'.format(self.name,
-                                          google_wifi.ATTR_LAST_RESTART):
+                if name == google_wifi.ATTR_LAST_RESTART:
                     self.assertEqual('1969-12-30 00:00:00', sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_UPTIME):
+                elif name == google_wifi.ATTR_UPTIME:
                     self.assertEqual(2, sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_STATUS):
+                elif name == google_wifi.ATTR_STATUS:
                     self.assertEqual('Offline', sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_NEW_VERSION):
+                elif name == google_wifi.ATTR_NEW_VERSION:
                     self.assertEqual('Latest', sensor.state)
-                elif name == '{}_{}'.format(self.name,
-                                            google_wifi.ATTR_LOCAL_IP):
+                elif name == google_wifi.ATTR_LOCAL_IP:
                     self.assertEqual(STATE_UNKNOWN, sensor.state)
                 else:
                     self.assertEqual('next', sensor.state)
