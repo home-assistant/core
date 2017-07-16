@@ -801,8 +801,7 @@ class MediaPlayerDevice(Entity):
 
         if self.state in [STATE_OFF, STATE_IDLE]:
             return self.async_turn_on()
-        else:
-            return self.async_turn_off()
+        return self.async_turn_off()
 
     @asyncio.coroutine
     def async_volume_up(self):
@@ -845,8 +844,7 @@ class MediaPlayerDevice(Entity):
 
         if self.state == STATE_PLAYING:
             return self.async_media_pause()
-        else:
-            return self.async_media_play()
+        return self.async_media_play()
 
     @property
     def entity_picture(self):

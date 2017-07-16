@@ -52,6 +52,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     now = datetime.datetime.now() + offset
     day_name = now.strftime('%A').lower()
     now_str = now.strftime('%H:%M:%S')
+    today = now.strftime('%Y-%m-%d')
 
     from sqlalchemy.sql import text
 
@@ -89,11 +90,14 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     AND start_station.stop_id = :origin_station_id
                AND end_station.stop_id = :end_station_id
     AND origin_stop_time.stop_sequence < destination_stop_time.stop_sequence
+    AND calendar.start_date <= :today
+    AND calendar.end_date >= :today
     ORDER BY origin_stop_time.departure_time LIMIT 1;
     """.format(day_name=day_name))
     result = sched.engine.execute(sql_query, now_str=now_str,
                                   origin_station_id=origin_station.id,
-                                  end_station_id=destination_station.id)
+                                  end_station_id=destination_station.id,
+                                  today=today)
     item = {}
     for row in result:
         item = row
@@ -101,7 +105,6 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     if item == {}:
         return None
 
-    today = now.strftime('%Y-%m-%d')
     departure_time_string = '{} {}'.format(today, item[2])
     arrival_time_string = '{} {}'.format(today, item[3])
     departure_time = datetime.datetime.strptime(departure_time_string,

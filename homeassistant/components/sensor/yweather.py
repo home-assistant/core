@@ -15,6 +15,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN,
     ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['yahooweather==0.8']
 
@@ -26,7 +27,7 @@ CONF_WOEID = 'woeid'
 
 DEFAULT_NAME = 'Yweather'
 
-SCAN_INTERVAL = timedelta(minutes=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
@@ -181,6 +182,7 @@ class YahooWeatherData(object):
         """Return Yahoo! API object."""
         return self._yahoo
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Yahoo!."""
         return self._yahoo.updateWeather()

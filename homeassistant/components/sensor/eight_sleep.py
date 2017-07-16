@@ -155,8 +155,8 @@ class EightUserSensor(EightSleepUserEntity):
         elif 'bed_temp' in self._sensor:
             if self._units == 'si':
                 return '°C'
-            else:
-                return '°F'
+            return '°F'
+        return None
 
     @property
     def icon(self):
@@ -264,8 +264,7 @@ class EightRoomSensor(EightSleepUserEntity):
         """Return the unit the value is expressed in."""
         if self._units == 'si':
             return '°C'
-        else:
-            return '°F'
+        return '°F'
 
     @property
     def icon(self):

@@ -26,17 +26,7 @@ DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
 TIMEOUT = 10
-
-ADDON_REST_COMMANDS = {
-    'install': ['POST'],
-    'uninstall': ['POST'],
-    'start': ['POST'],
-    'stop': ['POST'],
-    'update': ['POST'],
-    'options': ['POST'],
-    'info': ['GET'],
-    'logs': ['GET'],
-}
+NO_TIMEOUT = set(['homeassistant/update', 'host/update', 'supervisor/update'])
 
 
 @asyncio.coroutine
@@ -107,6 +97,8 @@ class HassIO(object):
 
         This method is a coroutine.
         """
+        read_timeout = 0 if path in NO_TIMEOUT else 300
+
         try:
             data = None
             headers = None
@@ -120,7 +112,7 @@ class HassIO(object):
             method = getattr(self.websession, request.method.lower())
             client = yield from method(
                 "http://{}/{}".format(self._ip, path), data=data,
-                headers=headers
+                headers=headers, timeout=read_timeout
             )
 
             return client

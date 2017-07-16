@@ -450,12 +450,11 @@ def setup(hass, config):
                              "with selection %s", param, node_id,
                              selection)
                 return
-            else:
-                value.data = int(selection)
-                _LOGGER.info("Setting config parameter %s on Node %s "
-                             "with selection %s", param, node_id,
-                             selection)
-                return
+            value.data = int(selection)
+            _LOGGER.info("Setting config parameter %s on Node %s "
+                         "with selection %s", param, node_id,
+                         selection)
+            return
         node.set_config_param(param, selection, size)
         _LOGGER.info("Setting unknown config parameter %s on Node %s "
                      "with selection %s", param, node_id,
