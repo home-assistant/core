@@ -354,7 +354,7 @@ def _parse_see_args(topic, data):
         'dev_id': dev_id,
         'host_name': host_name,
         'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY]),
-        'attributes':{}
+        'attributes': {}
     }
     if 'acc' in data:
         kwargs['gps_accuracy'] = data['acc']
