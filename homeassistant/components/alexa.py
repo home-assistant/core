@@ -218,10 +218,12 @@ class AlexaResponse(object):
         self.session_attributes = {}
         self.should_end_session = True
         self.variables = {}
-        for key, value in intent_info.get('slots', {}).items():
-            if 'value' in value:
-                underscored_key = key.replace('.', '_')
-                self.variables[underscored_key] = value['value']
+        # Intent is None if request was a LaunchRequest or SessionEndedRequest
+        if intent_info is not None:
+            for key, value in intent_info.get('slots', {}).items():
+                if 'value' in value:
+                    underscored_key = key.replace('.', '_')
+                    self.variables[underscored_key] = value['value']
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""
