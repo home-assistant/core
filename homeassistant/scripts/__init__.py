@@ -1,15 +1,17 @@
 """Home Assistant command line scripts."""
 import argparse
 import importlib
+import logging
 import os
 import sys
-import logging
+
 from typing import List
 
+from homeassistant.bootstrap import mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.const import CONSTRAINT_FILE
-from homeassistant.util.package import install_package, is_virtual_env
-from homeassistant.bootstrap import mount_local_lib_path
+from homeassistant.util.package import (
+    install_package, running_under_virtualenv)
 
 
 def run(args: List) -> int:
@@ -41,7 +43,7 @@ def run(args: List) -> int:
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     for req in getattr(script, 'REQUIREMENTS', []):
-        if is_virtual_env():
+        if running_under_virtualenv():
             returncode = install_package(req, constraints=os.path.join(
                 os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
         else:

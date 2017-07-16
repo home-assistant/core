@@ -338,7 +338,7 @@ jsonrpc-websocket==0.5
 keyring>=9.3,<10.0
 
 # homeassistant.components.knx
-knxip==0.4
+knxip==0.5
 
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.1

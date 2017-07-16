@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -48,6 +49,7 @@ SWITCH_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def is_on(hass, entity_id=None):
     """Return if the switch is on based on the statemachine.
 
@@ -57,24 +59,28 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, entity_id=None):
     """Turn all or specified switch on."""
     hass.add_job(async_turn_on, hass, entity_id)
 
 
 @callback
+@bind_hass
 def async_turn_on(hass, entity_id=None):
     """Turn all or specified switch on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
+@bind_hass
 def turn_off(hass, entity_id=None):
     """Turn all or specified switch off."""
     hass.add_job(async_turn_off, hass, entity_id)
 
 
 @callback
+@bind_hass
 def async_turn_off(hass, entity_id=None):
     """Turn all or specified switch off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
@@ -82,6 +88,7 @@ def async_turn_off(hass, entity_id=None):
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
+@bind_hass
 def toggle(hass, entity_id=None):
     """Toggle all or specified switch."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None

@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 
 DOMAIN = 'python_script'
@@ -49,6 +50,7 @@ def setup(hass, config):
     return True
 
 
+@bind_hass
 def execute_script(hass, name, data=None):
     """Execute a script."""
     filename = '{}.py'.format(name)
@@ -57,6 +59,7 @@ def execute_script(hass, name, data=None):
     execute(hass, filename, source, data)
 
 
+@bind_hass
 def execute(hass, filename, source, data=None):
     """Execute Python source."""
     from RestrictedPython import compile_restricted_exec
