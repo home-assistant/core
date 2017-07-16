@@ -15,6 +15,8 @@ DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = 'shopping_list_updated'
+INTENT_ADD_ITEM = 'ShoppingListAddItem'
+INTENT_LAST_ITEMS = 'ShoppingListLastItems'
 
 
 @asyncio.coroutine
@@ -24,13 +26,19 @@ def async_setup(hass, config):
     intent.async_register(hass, AddItemIntent())
     intent.async_register(hass, ListTopItemsIntent())
     hass.http.register_view(ShoppingListView)
+    hass.components.conversation.async_register(INTENT_ADD_ITEM, [
+        'Add {item} to my shopping list',
+    ])
+    hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
+        'What is on my shopping list'
+    ])
     return True
 
 
 class AddItemIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
-    intent_type = 'ShoppingListAddItem'
+    intent_type = INTENT_ADD_ITEM
     slot_schema = {
         'item': cv.string
     }
@@ -52,7 +60,7 @@ class AddItemIntent(intent.IntentHandler):
 class ListTopItemsIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
-    intent_type = 'ShoppingListLastItems'
+    intent_type = INTENT_LAST_ITEMS
     slot_schema = {
         'item': cv.string
     }
