@@ -16,7 +16,7 @@ class XKNXClimate(ClimateDevice):
         def after_update_callback(device):
             # pylint: disable=unused-argument
             self.update_ha()
-        self.device.after_update_callback = after_update_callback
+        self.device.register_device_updated_cb(after_update_callback)
 
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())

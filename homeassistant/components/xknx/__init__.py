@@ -77,10 +77,11 @@ class XKNXModule(object):
         self.xknx = XKNX(
             config=self.config_file(),
             loop=self.hass.loop,
-            start=False)
+            start=False,
+            telegram_received_cb=self.telegram_received_cb)
 
     @staticmethod
-    def telegram_received_callback(xknx, device):
+    def telegram_received_cb(xknx, device):
         #print("{0}".format(device.name))
         pass
 
@@ -88,8 +89,7 @@ class XKNXModule(object):
     def start(self):
 
         yield from self.xknx.async_start(
-            state_updater=True,
-            telegram_received_callback=self.telegram_received_callback)
+            state_updater=True)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.initialized = True
 
