@@ -42,8 +42,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 KNX_WRITE_SCHEMA = vol.Schema({
-    KNX_ADDRESS: vol.All(cv.ensure_list, [cv.string]),
-    KNX_DATA: vol.All(cv.ensure_list, [cv.byte])
+    vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(KNX_DATA): vol.All(cv.ensure_list, [cv.byte])
 })
 
 
