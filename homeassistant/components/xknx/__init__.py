@@ -80,7 +80,7 @@ class XKNXModule(object):
             start=False)
 
     @staticmethod
-    def telegram_received_callback(xknx, device, telegram):
+    def telegram_received_callback(xknx, device):
         #print("{0}".format(device.name))
         pass
 
