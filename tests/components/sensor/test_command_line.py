@@ -51,7 +51,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_template(self):
         """Test command sensor with template."""
-        data = command_line.CommandSensorData('echo 50')
+        data = command_line.CommandSensorData(self.hass, 'echo 50')
 
         entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in',
@@ -61,7 +61,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_bad_command(self):
         """Test bad command."""
-        data = command_line.CommandSensorData('asdfasdf')
+        data = command_line.CommandSensorData(self.hass, 'asdfasdf')
         data.update()
 
         self.assertEqual(None, data.value)
