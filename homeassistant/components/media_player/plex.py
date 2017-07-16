@@ -170,9 +170,9 @@ def setup_plexserver(
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-        except OSError:
-            _LOGGER.error("Could not connect to plex server at http://%s",
-                          host)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
             return
 
         new_plex_clients = []
@@ -218,6 +218,10 @@ def setup_plexserver(
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
+            return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
             return
 
         plex_sessions.clear()

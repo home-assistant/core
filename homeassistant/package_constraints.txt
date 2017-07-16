@@ -1,7 +1,7 @@
 requests==2.14.2
 pyyaml>=3.11,<4
 pytz>=2017.02
-pip>=7.1.0
+pip>=8.0.3
 jinja2>=2.9.5
 voluptuous==0.10.5
 typing>=3,<4
