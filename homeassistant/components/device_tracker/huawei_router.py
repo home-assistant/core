@@ -8,7 +8,6 @@ import base64
 import logging
 import re
 import threading
-import time
 from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
@@ -149,7 +148,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         # this request is needed or else some devices' state won't be updated
         requests.get('http://%s/html/bbsp/common/lanuserinfo.asp' % self.host,
                      cookies=cookie.cookies)
-        
+
         _LOGGER.debug("Requesting lan user info data")
         devices = requests.get(
             'http://%s/html/bbsp/common/GetLanUserDevInfo.asp' % self.host,
