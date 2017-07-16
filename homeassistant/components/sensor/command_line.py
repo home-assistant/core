@@ -129,9 +129,8 @@ class CommandSensorData(object):
 
         if rendered_args == args:
             # No template used. default behavior
-            shell = True
         else:
-            # Template used. Break into list and use shell=False for security
+            # Template used. Construct the string used in the shell
             command = str(' '.join([prog] + shlex.split(rendered_args)))
         try:
             return_value = subprocess.check_output(
