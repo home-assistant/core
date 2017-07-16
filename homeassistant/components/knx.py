@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
 import logging
+import os
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['knxip==0.4']
 
@@ -25,6 +27,9 @@ EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
 EVENT_KNX_FRAME_SEND = 'knx_frame_send'
 
 KNXTUNNEL = None
+KNX_ADDRESS = "address"
+KNX_DATA = "data"
+KNX_GROUP_WRITE = "group_write"
 CONF_LISTEN = "listen"
 
 CONFIG_SCHEMA = vol.Schema({
@@ -35,6 +40,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+KNX_WRITE_SCHEMA = vol.Schema({
+    KNX_ADDRESS: vol.All(cv.ensure_list, [cv.string]),
+    KNX_DATA: vol.All(cv.ensure_list, [cv.byte])
+})
 
 
 def setup(hass, config):
@@ -65,6 +75,9 @@ def setup(hass, config):
 
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'knx-services.yaml'))
+
     def received_knx_event(address, data):
         """Process received KNX message."""
         if len(data) == 1:
@@ -88,20 +101,10 @@ def setup(hass, config):
     # Listen to KNX events and send them to the bus
     def handle_group_write(call):
         """Bridge knx_frame_send events to the KNX bus."""
-        addr = call.data.get("address")
-        if addr is None:
-            _LOGGER.error("KNX group address is missing")
-            return
 
-        data = call.data.get("data")
-        if data is None:
-            _LOGGER.error("KNX data block missing")
-            return
-
-        if isinstance(addr, list):
-            addrlist = addr
-        else:
-            addrlist = [addr]
+        # parameters are pre-validated using KNX_WRITE_SCHEMA
+        addrlist = call.data.get("address")
+        knxdata = call.data.get("data")
 
         knxaddrlist = []
         for addr in addrlist:
@@ -119,21 +122,15 @@ def setup(hass, config):
 
             knxaddrlist.append(knxaddr)
 
-        knxdata = None
-        if isinstance(data, list):
-            knxdata = data
-        else:
-            try:
-                knxdata = [int(data) & 0xff]
-            except ValueError:
-                _LOGGER.error("KNX data format incorrect: %s", data)
-                return
-
         for addr in knxaddrlist:
             KNXTUNNEL.group_write(addr, knxdata)
 
     # Listen for when knx_frame_send event is fired
-    hass.services.register(DOMAIN, 'group_write', handle_group_write)
+    hass.services.register(DOMAIN,
+                           KNX_GROUP_WRITE,
+                           handle_group_write,
+                           descriptions.get(KNX_GROUP_WRITE),
+                           schema=KNX_WRITE_SCHEMA)
 
     return True
 
