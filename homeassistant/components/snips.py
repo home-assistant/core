@@ -9,7 +9,6 @@ import json
 import logging
 import voluptuous as vol
 from homeassistant.helpers import intent, config_validation as cv
-from homeassistant import loader
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
@@ -42,8 +41,6 @@ INTENT_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Activate Snips component."""
-    mqtt = loader.get_component('mqtt')
-
     @asyncio.coroutine
     def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
@@ -71,6 +68,7 @@ def async_setup(hass, config):
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent.")
 
-    yield from mqtt.async_subscribe(hass, INTENT_TOPIC, message_received)
+    yield from hass.components.mqtt.async_subscribe(
+        INTENT_TOPIC, message_received)
 
     return True
