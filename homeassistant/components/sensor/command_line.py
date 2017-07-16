@@ -117,9 +117,9 @@ class CommandSensorData(object):
             args_compiled = template.Template(args, self.hass)
             cache[command] = prog, args, args_compiled
 
-        if args_compiled: 
+        if args_compiled:
             try:
-                a = { "arguments": args }
+                a = {"arguments": args}
                 rendered_args = args_compiled.render(a)
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
@@ -129,11 +129,11 @@ class CommandSensorData(object):
 
         if rendered_args == args:
             # No template used. default behavior
-            shell=True
+            shell = True
         else:
             # Template used. Construct the string used in the shell
             command = str(' '.join([prog] + shlex.split(rendered_args)))
-            shell=True
+            shell = True
         try:
             _LOGGER.info("Running command: %s", command)
             return_value = subprocess.check_output(
