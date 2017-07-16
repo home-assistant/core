@@ -206,6 +206,7 @@ class ComponentWrapper:
 
 def bind_hass(func):
     """Decorator to indicate that first argument is hass."""
+    # pylint: disable=protected-access
     func.__bind_hass = True
     return func
 
