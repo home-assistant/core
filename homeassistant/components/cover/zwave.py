@@ -17,6 +17,7 @@ from homeassistant.components.cover import CoverDevice
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+ATTR_DOOR_STATE = 'door_state'
 
 
 def get_device(hass, values, node_config, **kwargs):
@@ -118,12 +119,23 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def update_properties(self):
         """Handle data changes for node values."""
         self._door_state = self.values.primary.data
-        self.door_state_list =  self.values.primary.data_items
+        door_state_list =  self.values.primary.data_items
         if door_state_list:
-           self._door_state_list = list(state_list)
+           self._door_state_list = list(door_state_list)
         _LOGGER.debug("self._door_state_list=%s",self._door_state_list)
         _LOGGER.debug("self._door_state=%s",self._door_state)
 
+		
+    @property
+    def door_state(self):
+        """Return the current door state."""
+        return self._door_state
+		
+    @property
+    def door_state_list(self):
+        """Return the list of door states."""
+        return self._door_state_list
+	
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
