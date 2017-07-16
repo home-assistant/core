@@ -14,12 +14,10 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-import homeassistant.helpers.config_validation as cv
-from homeassistant import loader
+from homeassistant.helpers import intent, config_validation as cv
 
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
-DEPENDENCIES = ['intent']
 
 ATTR_TEXT = 'text'
 DOMAIN = 'conversation'
@@ -66,7 +64,7 @@ def async_setup(hass, config):
                 if not match:
                     continue
 
-                yield from loader.get_component('intent').async_handle(
+                yield from intent.async_handle(
                     hass, DOMAIN, intent_type,
                     {key: {'value': value} for key, value
                      in match.groupdict().items()}, text)
