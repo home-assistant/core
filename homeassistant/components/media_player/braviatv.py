@@ -59,8 +59,7 @@ def _get_mac_address(ip_address):
                       pid_component)
     if match is not None:
         return match.groups()[0]
-    else:
-        return None
+    return None
 
 
 def _config_from_file(filename, config=None):
@@ -307,8 +306,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._volume is not None:
             return self._volume / 100
-        else:
-            return None
+        return None
 
     @property
     def is_volume_muted(self):

@@ -92,8 +92,7 @@ class TelldusLiveSensor(TelldusLiveEntity):
             return self._value_as_humidity
         elif self._type == SENSOR_TYPE_LUMINANCE:
             return self._value_as_luminance
-        else:
-            return self._value
+        return self._value
 
     @property
     def quantity_name(self):

@@ -92,6 +92,9 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/lametric.py
+    homeassistant/components/*/lametric.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
@@ -453,6 +456,7 @@ omit =
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/opensky.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/otp.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
@@ -514,6 +518,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/switch/xiaomi_vacuum.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py

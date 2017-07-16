@@ -158,6 +158,7 @@ class Recorder(threading.Thread):
         """Start processing events to save."""
         from .models import States, Events
         from homeassistant.components import persistent_notification
+        from sqlalchemy import exc
 
         tries = 1
         connected = False
@@ -273,14 +274,31 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            with session_scope(session=self.get_session()) as session:
-                dbevent = Events.from_event(event)
-                session.add(dbevent)
+            tries = 1
+            updated = False
+            while not updated and tries <= 10:
+                if tries != 1:
+                    time.sleep(CONNECT_RETRY_WAIT)
+                try:
+                    with session_scope(session=self.get_session()) as session:
+                        dbevent = Events.from_event(event)
+                        session.add(dbevent)
 
-                if event.event_type == EVENT_STATE_CHANGED:
-                    dbstate = States.from_event(event)
-                    dbstate.event_id = dbevent.event_id
-                    session.add(dbstate)
+                        if event.event_type == EVENT_STATE_CHANGED:
+                            dbstate = States.from_event(event)
+                            dbstate.event_id = dbevent.event_id
+                            session.add(dbstate)
+                    updated = True
+
+                except exc.OperationalError as err:
+                    _LOGGER.error("Error in database connectivity: %s. "
+                                  "(retrying in %s seconds)", err,
+                                  CONNECT_RETRY_WAIT)
+                    tries += 1
+
+            if not updated:
+                _LOGGER.error("Error in database update. Could not save "
+                              "after %d tries. Giving up", tries)
 
             self.queue.task_done()
 

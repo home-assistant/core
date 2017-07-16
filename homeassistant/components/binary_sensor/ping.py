@@ -126,14 +126,14 @@ class PingData(object):
                     'avg': rtt_avg,
                     'max': rtt_max,
                     'mdev': ''}
-            else:
-                match = PING_MATCHER.search(str(out).split('\n')[-1])
-                rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-                return {
-                    'min': rtt_min,
-                    'avg': rtt_avg,
-                    'max': rtt_max,
-                    'mdev': rtt_mdev}
+
+            match = PING_MATCHER.search(str(out).split('\n')[-1])
+            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
+            return {
+                'min': rtt_min,
+                'avg': rtt_avg,
+                'max': rtt_max,
+                'mdev': rtt_mdev}
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
