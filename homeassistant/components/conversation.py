@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
+DEPENDENCIES = ['intent']
 
 ATTR_TEXT = 'text'
 DOMAIN = 'conversation'
