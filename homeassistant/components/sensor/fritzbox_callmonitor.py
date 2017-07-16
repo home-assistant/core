@@ -91,10 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _stop_listener
     )
 
-    if monitor.sock is None:
-        return False
-    else:
-        return True
+    return monitor.sock is not None
 
 
 class FritzBoxCallSensor(Entity):
@@ -118,10 +115,7 @@ class FritzBoxCallSensor(Entity):
     @property
     def should_poll(self):
         """Only poll to update phonebook, if defined."""
-        if self.phonebook is None:
-            return False
-        else:
-            return True
+        return self.phonebook is not None
 
     @property
     def state(self):
@@ -142,8 +136,7 @@ class FritzBoxCallSensor(Entity):
         """Return a name for a given phone number."""
         if self.phonebook is None:
             return 'unknown'
-        else:
-            return self.phonebook.get_name(number)
+        return self.phonebook.get_name(number)
 
     def update(self):
         """Update the phonebook if it is defined."""

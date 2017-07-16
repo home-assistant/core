@@ -17,7 +17,7 @@ DATA_RACHIO = 'rachio'
 CONF_MANUAL_RUN_MINS = 'manual_run_mins'
 DEFAULT_MANUAL_RUN_MINS = 10
 
-MIN_UPDATE_INTERVAL = timedelta(minutes=5)
+MIN_UPDATE_INTERVAL = timedelta(seconds=30)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the component."""
     # Get options
@@ -52,18 +51,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get and persist devices
     devices = _list_devices(rachio, manual_run_mins)
-    if len(devices) == 0:
+    if not devices:
         _LOGGER.error("No Rachio devices found in account " +
                       person['username'])
         return False
-    else:
-        hass.data[DATA_RACHIO] = devices[0]
 
-        if len(devices) > 1:
-            _LOGGER.warning("Multiple Rachio devices found in account, "
-                            "using " + hass.data[DATA_RACHIO].device_id)
-        else:
-            _LOGGER.info("Found Rachio device")
+    hass.data[DATA_RACHIO] = devices[0]
+
+    if len(devices) > 1:
+        _LOGGER.warning("Multiple Rachio devices found in account, "
+                        "using " + hass.data[DATA_RACHIO].device_id)
+    else:
+        _LOGGER.info("Found Rachio device")
 
     hass.data[DATA_RACHIO].update()
     add_devices(hass.data[DATA_RACHIO].list_zones())
@@ -137,9 +136,9 @@ class RachioIro(object):
 
         if include_disabled:
             return self._zones
-        else:
-            self.update(no_throttle=True)
-            return [z for z in self._zones if z.is_enabled]
+
+        self.update(no_throttle=True)
+        return [z for z in self._zones if z.is_enabled]
 
     @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
     def update(self, **kwargs):
@@ -215,14 +214,11 @@ class RachioZone(SwitchDevice):
 
     def turn_on(self):
         """Start the zone."""
-        # Convert minutes to seconds
-        seconds = self._manual_run_secs * 60
-
         # Stop other zones first
         self.turn_off()
 
-        _LOGGER.info("Watering %s for %d sec", self.name, seconds)
-        self.rachio.zone.start(self.zone_id, seconds)
+        _LOGGER.info("Watering %s for %d s", self.name, self._manual_run_secs)
+        self.rachio.zone.start(self.zone_id, self._manual_run_secs)
 
     def turn_off(self):
         """Stop all zones."""

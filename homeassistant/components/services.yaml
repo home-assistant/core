@@ -470,3 +470,53 @@ axis:
       param:
         description: What parameter to operate on. [Required]
         example: 'package=VideoMotionDetection'
+
+apple_tv:
+  apple_tv_authenticate:
+    description: Start AirPlay device authentication.
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to authenticate with.
+        example: 'media_player.apple_tv'
+
+  apple_tv_scan:
+    description: Scan for Apple TV devices.
+
+modbus:
+  write_register:
+    description: Write to a modbus holding register
+    fields:
+      unit:
+        description: Address of the modbus unit
+        example: 21
+      address:
+        description: Address of the holding register to write to
+        example: 0
+      value:
+        description: Value to write
+        example: 0
+  write_coil:
+    description: Write to a modbus coil
+    fields:
+      unit:
+        description: Address of the modbus unit
+        example: 21
+      address:
+        description: Address of the register to read
+        example: 0
+      state:
+        description: State to write
+        example: false
+
+wake_on_lan:
+  send_magic_packet:
+    description: Send a 'magic packet' to wake up a device with 'Wake-On-LAN' capabilities.
+
+    fields:
+      mac:
+        description: MAC address of the device to wake up.
+        example: 'aa:bb:cc:dd:ee:ff'
+      broadcast_address:
+        description: Optional broadcast IP where to send the magic packet.
+        example: '192.168.255.255'

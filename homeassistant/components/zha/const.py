@@ -46,6 +46,7 @@ def populate_data():
         profile = PROFILES[profile_id]
         for device_type, component in classes.items():
             if component not in COMPONENT_CLUSTERS:
-                COMPONENT_CLUSTERS[component] = set()
+                COMPONENT_CLUSTERS[component] = (set(), set())
             clusters = profile.CLUSTERS[device_type]
-            COMPONENT_CLUSTERS[component].update(clusters)
+            COMPONENT_CLUSTERS[component][0].update(clusters[0])
+            COMPONENT_CLUSTERS[component][1].update(clusters[1])

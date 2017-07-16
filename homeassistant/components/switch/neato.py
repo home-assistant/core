@@ -89,10 +89,7 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        if not self._state:
-            return False
-        else:
-            return True
+        return self._state
 
     @property
     def is_on(self):

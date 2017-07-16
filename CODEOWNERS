@@ -1,0 +1,41 @@
+# People marked here will be automatically requested for a review
+# when the code that they own is touched.
+# https://github.com/blog/2392-introducing-code-owners
+
+setup.py @home-assistant/core
+homeassistant/*.py @home-assistant/core
+homeassistant/helpers/* @home-assistant/core
+homeassistant/util/* @home-assistant/core
+homeassistant/components/api.py @home-assistant/core
+homeassistant/components/automation/* @home-assistant/core
+homeassistant/components/configurator.py @home-assistant/core
+homeassistant/components/group.py @home-assistant/core
+homeassistant/components/history.py @home-assistant/core
+homeassistant/components/http/* @home-assistant/core
+homeassistant/components/input_*.py @home-assistant/core
+homeassistant/components/introduction.py @home-assistant/core
+homeassistant/components/logger.py @home-assistant/core
+homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/panel_custom.py @home-assistant/core
+homeassistant/components/panel_iframe.py @home-assistant/core
+homeassistant/components/persistent_notification.py @home-assistant/core
+homeassistant/components/scene/__init__.py @home-assistant/core
+homeassistant/components/scene/hass.py @home-assistant/core
+homeassistant/components/script.py @home-assistant/core
+homeassistant/components/shell_command.py @home-assistant/core
+homeassistant/components/sun.py @home-assistant/core
+homeassistant/components/updater.py @home-assistant/core
+homeassistant/components/weblink.py @home-assistant/core
+homeassistant/components/websocket_api.py @home-assistant/core
+homeassistant/components/zone.py @home-assistant/core
+
+Dockerfile @home-assistant/docker
+virtualization/Docker/* @home-assistant/docker
+
+homeassistant/components/zwave/* @home-assistant/z-wave
+homeassistant/components/*/zwave.py @home-assistant/z-wave
+
+# Indiviudal components
+homeassistant/components/cover/template.py @PhracturedBlue
+homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/media_player/kodi.py @armills

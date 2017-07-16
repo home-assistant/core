@@ -46,8 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     devices = []
-    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMThermostat(hass, config)
+    for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMThermostat(hass, conf)
         new_device.link_homematic()
         devices.append(new_device)
 

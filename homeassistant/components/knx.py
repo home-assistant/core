@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['knxip==0.3.3']
+REQUIREMENTS = ['knxip==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,13 +22,17 @@ DEFAULT_PORT = 3671
 DOMAIN = 'knx'
 
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
+EVENT_KNX_FRAME_SEND = 'knx_frame_send'
 
 KNXTUNNEL = None
+CONF_LISTEN = "listen"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_LISTEN, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,12 +42,12 @@ def setup(hass, config):
     global KNXTUNNEL
 
     from knxip.ip import KNXIPTunnel
-    from knxip.core import KNXException
+    from knxip.core import KNXException, parse_group_address
 
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
 
-    if host is '0.0.0.0':
+    if host == '0.0.0.0':
         _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
 
     KNXTUNNEL = KNXIPTunnel(host, port)
@@ -61,7 +65,69 @@ def setup(hass, config):
 
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
+    def received_knx_event(address, data):
+        """Process received KNX message."""
+        if len(data) == 1:
+            data = data[0]
+        hass.bus.fire('knx_event', {
+            'address': address,
+            'data': data
+        })
+
+    for listen in config[DOMAIN].get(CONF_LISTEN):
+        _LOGGER.debug("Registering listener for %s", listen)
+        try:
+            KNXTUNNEL.register_listener(parse_group_address(listen),
+                                        received_knx_event)
+        except KNXException as knxexception:
+            _LOGGER.error("Can't register KNX listener for address %s (%s)",
+                          listen, knxexception)
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
+
+    # Listen to KNX events and send them to the bus
+    def handle_knx_send(event):
+        """Bridge knx_frame_send events to the KNX bus."""
+        try:
+            addr = event.data["address"]
+        except KeyError:
+            _LOGGER.error("KNX group address is missing")
+            return
+
+        try:
+            data = event.data["data"]
+        except KeyError:
+            _LOGGER.error("KNX data block missing")
+            return
+
+        knxaddr = None
+        try:
+            addr = int(addr)
+        except ValueError:
+            pass
+
+        if knxaddr is None:
+            try:
+                knxaddr = parse_group_address(addr)
+            except KNXException:
+                _LOGGER.error("KNX address format incorrect")
+                return
+
+        knxdata = None
+        if isinstance(data, list):
+            knxdata = data
+        else:
+            try:
+                knxdata = [int(data) & 0xff]
+            except ValueError:
+                _LOGGER.error("KNX data format incorrect")
+                return
+
+        KNXTUNNEL.group_write(knxaddr, knxdata)
+
+    # Listen for when knx_frame_send event is fired
+    hass.bus.listen(EVENT_KNX_FRAME_SEND, handle_knx_send)
+
     return True
 
 
