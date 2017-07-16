@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.3']
+REQUIREMENTS = ['broadlink==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

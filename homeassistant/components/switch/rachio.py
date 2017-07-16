@@ -17,7 +17,7 @@ DATA_RACHIO = 'rachio'
 CONF_MANUAL_RUN_MINS = 'manual_run_mins'
 DEFAULT_MANUAL_RUN_MINS = 10
 
-MIN_UPDATE_INTERVAL = timedelta(minutes=5)
+MIN_UPDATE_INTERVAL = timedelta(seconds=30)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the component."""
     # Get options
@@ -215,14 +214,11 @@ class RachioZone(SwitchDevice):
 
     def turn_on(self):
         """Start the zone."""
-        # Convert minutes to seconds
-        seconds = self._manual_run_secs * 60
-
         # Stop other zones first
         self.turn_off()
 
-        _LOGGER.info("Watering %s for %d sec", self.name, seconds)
-        self.rachio.zone.start(self.zone_id, seconds)
+        _LOGGER.info("Watering %s for %d s", self.name, self._manual_run_secs)
+        self.rachio.zone.start(self.zone_id, self._manual_run_secs)
 
     def turn_off(self):
         """Stop all zones."""

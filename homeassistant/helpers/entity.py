@@ -378,18 +378,18 @@ class ToggleEntity(Entity):
         return self.hass.async_add_job(
             ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self) -> None:
+    def toggle(self, **kwargs) -> None:
         """Toggle the entity."""
         if self.is_on:
-            self.turn_off()
+            self.turn_off(**kwargs)
         else:
-            self.turn_on()
+            self.turn_on(**kwargs)
 
-    def async_toggle(self):
+    def async_toggle(self, **kwargs):
         """Toggle the entity.
 
         This method must be run in the event loop and returns a coroutine.
         """
         if self.is_on:
-            return self.async_turn_off()
-        return self.async_turn_on()
+            return self.async_turn_off(**kwargs)
+        return self.async_turn_on(**kwargs)
