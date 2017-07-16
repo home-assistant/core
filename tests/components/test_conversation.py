@@ -10,6 +10,7 @@ import homeassistant.components as core_components
 from homeassistant.components import conversation
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.helpers import intent
 
 from tests.common import get_test_home_assistant, async_mock_intent
 
@@ -194,3 +195,56 @@ def test_register_before_setup(hass):
     assert intent.intent_type == 'OrderBeer'
     assert intent.slots == {'type': {'value': 'Grolsch'}}
     assert intent.text_input == 'I would like the Grolsch beer'
+
+
+@asyncio.coroutine
+def test_http_processing_intent(hass, test_client):
+    """Test processing intent via HTTP API."""
+    class TestIntentHandler(intent.IntentHandler):
+        intent_type = 'OrderBeer'
+
+        @asyncio.coroutine
+        def async_handle(self, intent):
+            """Handle the intent."""
+            response = intent.create_response()
+            response.async_set_speech(
+                "I've ordered a {}!".format(intent.slots['type']['value']))
+            response.async_set_card(
+                "Beer ordered",
+                "You chose a {}.".format(intent.slots['type']['value']))
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = yield from async_setup_component(hass, 'conversation', {
+        'conversation': {
+            'intents': {
+                'OrderBeer': [
+                    'I would like the {type} beer'
+                ]
+            }
+        }
+    })
+    assert result
+
+    client = yield from test_client(hass.http.app)
+    resp = yield from client.post('/api/conversation/process', json={
+        'text': 'I would like the Grolsch beer'
+    })
+
+    assert resp.status == 200
+    data = yield from resp.json()
+
+    assert data == {
+        'card': {
+            'simple': {
+                'content': 'You chose a Grolsch.',
+                'title': 'Beer ordered'
+            }},
+        'speech': {
+            'plain': {
+                'extra_data': None,
+                'speech': "I've ordered a Grolsch!"
+            }
+        }
+    }
