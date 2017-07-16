@@ -133,6 +133,7 @@ class CommandSensorData(object):
             # Template used. Construct the string used in the shell
             command = str(' '.join([prog] + shlex.split(rendered_args)))
         try:
+            _LOGGER.info("Running command: %s", command)
             return_value = subprocess.check_output(
                 command, shell=True, timeout=15)
             self.value = return_value.strip().decode('utf-8')
