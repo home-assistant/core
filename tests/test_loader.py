@@ -1,11 +1,13 @@
 """Test to verify that we can load components."""
 # pylint: disable=protected-access
+import asyncio
 import unittest
 
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-from tests.common import get_test_home_assistant, MockModule
+from tests.common import (
+    get_test_home_assistant, MockModule, async_mock_service)
 
 
 class TestLoader(unittest.TestCase):
@@ -54,3 +56,22 @@ class TestLoader(unittest.TestCase):
 
         # Try to get load order for non-existing component
         self.assertEqual([], loader.load_order_component('mod1'))
+
+
+def test_component_loader(hass):
+    """Test loading components."""
+    components = loader.Components(hass)
+    assert components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
+    assert hass.components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
+
+
+@asyncio.coroutine
+def test_component_wrapper(hass):
+    """Test component wrapper."""
+    calls = async_mock_service(hass, 'light', 'turn_on')
+
+    components = loader.Components(hass)
+    components.light.async_turn_on('light.test')
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1
