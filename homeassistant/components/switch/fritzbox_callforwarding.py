@@ -84,6 +84,7 @@ class FritzCallForwardingSwitch(SwitchDevice):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the fritzbox connection."""
+    # pylint: disable=import-error
     from fritzconnection import FritzCallforwarding
     from fritzconnection.fritzconnection import FritzConnectionException
 
