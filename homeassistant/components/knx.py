@@ -101,7 +101,6 @@ def setup(hass, config):
     # Listen to KNX events and send them to the bus
     def handle_group_write(call):
         """Bridge knx_frame_send events to the KNX bus."""
-
         # parameters are pre-validated using KNX_WRITE_SCHEMA
         addrlist = call.data.get("address")
         knxdata = call.data.get("data")
