@@ -26,8 +26,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
     CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES,
-                            CONF_SECONDS, CONF_AT, CONF_AFTER))
+}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AT))
 
 
 @asyncio.coroutine
