@@ -55,9 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if denon.update():
         add_devices([denon])
-        return True
-    else:
-        return False
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -197,8 +194,7 @@ class DenonDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self._mediasource in MEDIA_MODES.values():
             return SUPPORT_DENON | SUPPORT_MEDIA_MODES
-        else:
-            return SUPPORT_DENON
+        return SUPPORT_DENON
 
     @property
     def source(self):

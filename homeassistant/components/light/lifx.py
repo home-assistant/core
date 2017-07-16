@@ -33,23 +33,32 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.5.0', 'aiolifx_effects==0.1.0']
+REQUIREMENTS = ['aiolifx==0.5.2', 'aiolifx_effects==0.1.1']
 
 UDP_BROADCAST_PORT = 56700
 
+DISCOVERY_INTERVAL = 60
+MESSAGE_TIMEOUT = 1.0
+MESSAGE_RETRIES = 8
+UNAVAILABLE_GRACE = 90
+
 CONF_SERVER = 'server'
+CONF_BROADCAST = 'broadcast'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+    vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
 })
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_INFRARED = 'infrared'
+ATTR_ZONES = 'zones'
 ATTR_POWER = 'power'
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 })
 
@@ -105,11 +114,21 @@ LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
 })
 
 
+def aiolifx():
+    """Return the aiolifx module."""
+    import aiolifx as aiolifx_module
+    return aiolifx_module
+
+
+def aiolifx_effects():
+    """Return the aiolifx_effects module."""
+    import aiolifx_effects as aiolifx_effects_module
+    return aiolifx_effects_module
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the LIFX platform."""
-    import aiolifx
-
     if sys.platform == 'win32':
         _LOGGER.warning("The lifx platform is known to not work on Windows. "
                         "Consider using the lifx_legacy platform instead")
@@ -117,7 +136,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     server_addr = config.get(CONF_SERVER)
 
     lifx_manager = LIFXManager(hass, async_add_devices)
-    lifx_discovery = aiolifx.LifxDiscovery(hass.loop, lifx_manager)
+    lifx_discovery = aiolifx().LifxDiscovery(
+        hass.loop,
+        lifx_manager,
+        discovery_interval=DISCOVERY_INTERVAL,
+        broadcast_ip=config.get(CONF_BROADCAST))
 
     coro = hass.loop.create_datagram_endpoint(
         lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
@@ -132,6 +155,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
     return True
+
+
+def lifxwhite(device):
+    """Return whether this is a white-only bulb."""
+    return not aiolifx().products.features_map[device.product]["color"]
+
+
+def lifxmultizone(device):
+    """Return whether this is a multizone bulb/strip."""
+    return aiolifx().products.features_map[device.product]["multizone"]
 
 
 def find_hsbk(**kwargs):
@@ -176,11 +209,10 @@ class LIFXManager(object):
 
     def __init__(self, hass, async_add_devices):
         """Initialize the light."""
-        import aiolifx_effects
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
-        self.effects_conductor = aiolifx_effects.Conductor(loop=hass.loop)
+        self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
         descriptions = load_yaml_config_file(
             path.join(path.dirname(__file__), 'services.yaml'))
@@ -234,11 +266,10 @@ class LIFXManager(object):
     @asyncio.coroutine
     def start_effect(self, entities, service, **kwargs):
         """Start a light effect on entities."""
-        import aiolifx_effects
         devices = list(map(lambda l: l.device, entities))
 
         if service == SERVICE_EFFECT_PULSE:
-            effect = aiolifx_effects.EffectPulse(
+            effect = aiolifx_effects().EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 cycles=kwargs.get(ATTR_CYCLES),
@@ -253,7 +284,7 @@ class LIFXManager(object):
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
 
-            effect = aiolifx_effects.EffectColorloop(
+            effect = aiolifx_effects().EffectColorloop(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 change=kwargs.get(ATTR_CHANGE),
@@ -278,29 +309,39 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Handle for newly detected bulb."""
+        """Handler for newly detected bulb."""
+        self.hass.async_add_job(self.async_register(device))
+
+    @asyncio.coroutine
+    def async_register(self, device):
+        """Handler for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            entity.device = device
             entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
-            self.hass.async_add_job(entity.async_update_ha_state())
+            yield from entity.async_update()
+            yield from entity.async_update_ha_state()
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
-            device.get_version(self.got_version)
+            device.timeout = MESSAGE_TIMEOUT
+            device.retry_count = MESSAGE_RETRIES
+            device.unregister_timeout = UNAVAILABLE_GRACE
 
-    @callback
-    def got_version(self, device, msg):
-        """Request current color setting once we have the product version."""
-        device.get_color(self.ready)
+            ack = AwaitAioLIFX().wait
+            yield from ack(device.get_version)
+            yield from ack(device.get_color)
 
-    @callback
-    def ready(self, device, msg):
-        """Handle the device once all data is retrieved."""
-        entity = LIFXLight(device, self.effects_conductor)
-        _LOGGER.debug("%s register READY", entity.who)
-        self.entities[device.mac_addr] = entity
-        self.async_add_devices([entity])
+            if lifxwhite(device):
+                entity = LIFXWhite(device, self.effects_conductor)
+            elif lifxmultizone(device):
+                yield from ack(partial(device.get_color_zones, start_index=0))
+                entity = LIFXStrip(device, self.effects_conductor)
+            else:
+                entity = LIFXColor(device, self.effects_conductor)
+
+            _LOGGER.debug("%s register READY", entity.who)
+            self.entities[device.mac_addr] = entity
+            self.async_add_devices([entity])
 
     @callback
     def unregister(self, device):
@@ -315,9 +356,8 @@ class LIFXManager(object):
 class AwaitAioLIFX:
     """Wait for an aiolifx callback and return the message."""
 
-    def __init__(self, light):
+    def __init__(self):
         """Initialize the wrapper."""
-        self.light = light
         self.device = None
         self.message = None
         self.event = asyncio.Event()
@@ -359,14 +399,7 @@ class LIFXLight(Light):
         self.device = device
         self.effects_conductor = effects_conductor
         self.registered = True
-        self.product = device.product
         self.postponed_update = None
-
-    @property
-    def lifxwhite(self):
-        """Return whether this is a white-only bulb."""
-        # https://lan.developer.lifx.com/docs/lifx-products
-        return self.product in [10, 11, 18]
 
     @property
     def available(self):
@@ -382,14 +415,6 @@ class LIFXLight(Light):
     def who(self):
         """Return a string identifying the device."""
         return "%s (%s)" % (self.device.ip_addr, self.name)
-
-    @property
-    def rgb_color(self):
-        """Return the RGB value."""
-        hue, sat, bri, _ = self.device.color
-
-        return color_util.color_hsv_to_RGB(
-            hue, convert_16_to_8(sat), convert_16_to_8(bri))
 
     @property
     def brightness(self):
@@ -408,26 +433,6 @@ class LIFXLight(Light):
         return temperature
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        # The 3 LIFX "White" products supported a limited temperature range
-        if self.lifxwhite:
-            kelvin = 6500
-        else:
-            kelvin = 9000
-        return math.floor(color_util.color_temperature_kelvin_to_mired(kelvin))
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        # The 3 LIFX "White" products supported a limited temperature range
-        if self.lifxwhite:
-            kelvin = 2700
-        else:
-            kelvin = 2500
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self.device.power_level != 0
@@ -439,32 +444,6 @@ class LIFXLight(Light):
         if effect:
             return 'lifx_effect_' + effect.name
         return None
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                    SUPPORT_TRANSITION | SUPPORT_EFFECT)
-
-        if not self.lifxwhite:
-            features |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
-
-        return features
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects for this light."""
-        if self.lifxwhite:
-            return [
-                SERVICE_EFFECT_PULSE,
-                SERVICE_EFFECT_STOP,
-            ]
-
-        return [
-            SERVICE_EFFECT_COLORLOOP,
-            SERVICE_EFFECT_PULSE,
-            SERVICE_EFFECT_STOP,
-        ]
 
     @asyncio.coroutine
     def update_after_transition(self, now):
@@ -516,29 +495,35 @@ class LIFXLight(Light):
         power_on = kwargs.get(ATTR_POWER, False)
         power_off = not kwargs.get(ATTR_POWER, True)
 
-        hsbk = merge_hsbk(self.device.color, find_hsbk(**kwargs))
+        hsbk = find_hsbk(**kwargs)
 
         # Send messages, waiting for ACK each time
-        ack = AwaitAioLIFX(self).wait
+        ack = AwaitAioLIFX().wait
         bulb = self.device
 
         if not self.is_on:
             if power_off:
                 yield from ack(partial(bulb.set_power, False))
             if hsbk:
-                yield from ack(partial(bulb.set_color, hsbk))
+                yield from self.send_color(ack, hsbk, kwargs, duration=0)
             if power_on:
                 yield from ack(partial(bulb.set_power, True, duration=fade))
         else:
             if power_on:
                 yield from ack(partial(bulb.set_power, True))
             if hsbk:
-                yield from ack(partial(bulb.set_color, hsbk, duration=fade))
+                yield from self.send_color(ack, hsbk, kwargs, duration=fade)
             if power_off:
                 yield from ack(partial(bulb.set_power, False, duration=fade))
 
         # Schedule an update when the transition is complete
         self.update_later(fade)
+
+    @asyncio.coroutine
+    def send_color(self, ack, hsbk, kwargs, duration):
+        """Send a color change to the device."""
+        hsbk = merge_hsbk(self.device.color, hsbk)
+        yield from ack(partial(self.device.set_color, hsbk, duration=duration))
 
     @asyncio.coroutine
     def default_effect(self, **kwargs):
@@ -555,5 +540,117 @@ class LIFXLight(Light):
         _LOGGER.debug("%s async_update", self.who)
         if self.available:
             # Avoid state ping-pong by holding off updates as the state settles
-            yield from asyncio.sleep(0.25)
-            yield from AwaitAioLIFX(self).wait(self.device.get_color)
+            yield from asyncio.sleep(0.3)
+            yield from AwaitAioLIFX().wait(self.device.get_color)
+
+
+class LIFXWhite(LIFXLight):
+    """Representation of a white-only LIFX light."""
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return math.floor(color_util.color_temperature_kelvin_to_mired(6500))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(2700))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
+                SUPPORT_EFFECT)
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return [
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
+
+
+class LIFXColor(LIFXLight):
+    """Representation of a color LIFX light."""
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return math.floor(color_util.color_temperature_kelvin_to_mired(9000))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(2500))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
+                SUPPORT_EFFECT | SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return [
+            SERVICE_EFFECT_COLORLOOP,
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
+
+    @property
+    def rgb_color(self):
+        """Return the RGB value."""
+        hue, sat, bri, _ = self.device.color
+
+        return color_util.color_hsv_to_RGB(
+            hue, convert_16_to_8(sat), convert_16_to_8(bri))
+
+
+class LIFXStrip(LIFXColor):
+    """Representation of a LIFX light strip with multiple zones."""
+
+    @asyncio.coroutine
+    def send_color(self, ack, hsbk, kwargs, duration):
+        """Send a color change to the device."""
+        bulb = self.device
+        num_zones = len(bulb.color_zones)
+
+        # Zone brightness is not reported when powered off
+        if not self.is_on and hsbk[2] is None:
+            yield from ack(partial(bulb.set_power, True))
+            yield from self.async_update()
+            yield from ack(partial(bulb.set_power, False))
+
+        zones = kwargs.get(ATTR_ZONES, None)
+        if zones is None:
+            zones = list(range(0, num_zones))
+        else:
+            zones = list(filter(lambda x: x < num_zones, set(zones)))
+
+        # Send new color to each zone
+        for index, zone in enumerate(zones):
+            zone_hsbk = merge_hsbk(bulb.color_zones[zone], hsbk)
+            apply = 1 if (index == len(zones)-1) else 0
+            set_zone = partial(bulb.set_color_zones,
+                               start_index=zone,
+                               end_index=zone,
+                               color=zone_hsbk,
+                               duration=duration,
+                               apply=apply)
+            yield from ack(set_zone)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update strip status."""
+        if self.available:
+            yield from super().async_update()
+
+            ack = AwaitAioLIFX().wait
+            bulb = self.device
+
+            # Each get_color_zones returns the next 8 zones
+            for zone in range(0, len(bulb.color_zones), 8):
+                yield from ack(partial(bulb.get_color_zones, start_index=zone))

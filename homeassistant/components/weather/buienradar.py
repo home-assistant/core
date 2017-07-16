@@ -6,7 +6,6 @@ https://home-assistant.io/components/weather.buienradar/
 """
 import logging
 import asyncio
-from datetime import timedelta
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA)
 from homeassistant.const import \
@@ -15,9 +14,9 @@ from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
     BrData)
-from homeassistant.helpers.event import (
-    async_track_time_interval)
 import voluptuous as vol
+
+REQUIREMENTS = ['buienradar==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,14 +48,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
     # create weather device:
+    _LOGGER.debug("Initializing buienradar weather: coordinates %s",
+                  coordinates)
     async_add_devices([BrWeather(data, config.get(CONF_FORECAST, True),
                                  config.get(CONF_NAME, None))])
 
-    # Update weather every 10 minutes, since
-    # the data gets updated every 10 minutes
-    async_track_time_interval(hass, data.async_update, timedelta(minutes=10))
     # schedule the first update in 1 minute from now:
-    data.schedule_update(1)
+    yield from data.schedule_update(1)
 
 
 class BrWeather(WeatherEntity):

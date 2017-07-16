@@ -92,8 +92,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         elif self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):

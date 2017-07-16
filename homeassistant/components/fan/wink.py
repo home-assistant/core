@@ -33,10 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkFanDevice(WinkDevice, FanEntity):
     """Representation of a Wink fan."""
 
-    def __init__(self, wink, hass):
-        """Initialize the fan."""
-        super().__init__(wink, hass)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""

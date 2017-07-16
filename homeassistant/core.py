@@ -335,9 +335,9 @@ class Event(object):
             return "<Event {}[{}]: {}>".format(
                 self.event_type, str(self.origin)[0],
                 util.repr_helper(self.data))
-        else:
-            return "<Event {}[{}]>".format(self.event_type,
-                                           str(self.origin)[0])
+
+        return "<Event {}[{}]>".format(self.event_type,
+                                       str(self.origin)[0])
 
     def __eq__(self, other):
         """Return the comparison."""
@@ -783,8 +783,8 @@ class ServiceCall(object):
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
-        else:
-            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+
+        return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
 class ServiceRegistry(object):

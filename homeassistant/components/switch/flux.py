@@ -37,6 +37,7 @@ CONF_MODE = 'mode'
 
 MODE_XY = 'xy'
 MODE_MIRED = 'mired'
+MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -55,7 +56,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-        vol.Any(MODE_XY, MODE_MIRED)
+        vol.Any(MODE_XY, MODE_MIRED, MODE_RGB)
 })
 
 
@@ -76,6 +77,15 @@ def set_lights_temp(hass, lights, mired, brightness):
             turn_on(hass, light,
                     color_temp=int(mired),
                     brightness=brightness,
+                    transition=30)
+
+
+def set_lights_rgb(hass, lights, rgb):
+    """Set color of array of lights."""
+    for light in lights:
+        if is_on(hass, light):
+            turn_on(hass, light,
+                    rgb_color=rgb,
                     transition=30)
 
 
@@ -194,7 +204,8 @@ class FluxSwitch(SwitchDevice):
                 temp = self._sunset_colortemp - temp_offset
             else:
                 temp = self._sunset_colortemp + temp_offset
-        x_val, y_val, b_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+        rgb = color_temperature_to_rgb(temp)
+        x_val, y_val, b_val = color_RGB_to_xy(*rgb)
         brightness = self._brightness if self._brightness else b_val
         if self._disable_brightness_adjust:
             brightness = None
@@ -205,6 +216,11 @@ class FluxSwitch(SwitchDevice):
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
+        elif self._mode == MODE_RGB:
+            set_lights_rgb(self.hass, self._lights, rgb)
+            _LOGGER.info("Lights updated to rgb:%s, %s%% "
+                         "of %s cycle complete at %s", rgb,
+                         round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)

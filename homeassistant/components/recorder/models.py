@@ -173,5 +173,5 @@ def _process_timestamp(ts):
         return None
     elif ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+
+    return dt_util.as_utc(ts)

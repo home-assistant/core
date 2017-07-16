@@ -27,7 +27,7 @@ from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['phue==0.9']
+REQUIREMENTS = ['phue==1.0']
 
 # Track previously setup bridges
 _CONFIGURED_BRIDGES = {}
@@ -330,36 +330,31 @@ class HueLight(Light):
         """Return the brightness of this light between 0..255."""
         if self.is_group:
             return self.info['action'].get('bri')
-        else:
-            return self.info['state'].get('bri')
+        return self.info['state'].get('bri')
 
     @property
     def xy_color(self):
         """Return the XY color value."""
         if self.is_group:
             return self.info['action'].get('xy')
-        else:
-            return self.info['state'].get('xy')
+        return self.info['state'].get('xy')
 
     @property
     def color_temp(self):
         """Return the CT color value."""
         if self.is_group:
             return self.info['action'].get('ct')
-        else:
-            return self.info['state'].get('ct')
+        return self.info['state'].get('ct')
 
     @property
     def is_on(self):
         """Return true if device is on."""
         if self.is_group:
             return self.info['state']['any_on']
-        else:
-            if self.allow_unreachable:
-                return self.info['state']['on']
-            else:
-                return self.info['state']['reachable'] and \
-                    self.info['state']['on']
+        elif self.allow_unreachable:
+            return self.info['state']['on']
+        return self.info['state']['reachable'] and \
+            self.info['state']['on']
 
     @property
     def supported_features(self):
