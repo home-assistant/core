@@ -47,7 +47,6 @@ class WinkFanDevice(WinkDevice, FanEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
-        _LOGGGER.info(speed)
         self.wink.set_state(True, speed)
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
