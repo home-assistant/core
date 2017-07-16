@@ -180,9 +180,12 @@ class Components:
 
     def __getattr__(self, comp_name):
         """Fetch a component."""
-        component = ComponentWrapper(self._hass, get_component(comp_name))
-        setattr(self, comp_name, component)
-        return component
+        component = get_component(comp_name)
+        if component is None:
+            raise ImportError('Unable to load {}'.format(comp_name))
+        wrapped = ComponentWrapper(self._hass, component)
+        setattr(self, comp_name, wrapped)
+        return wrapped
 
 
 class ComponentWrapper:

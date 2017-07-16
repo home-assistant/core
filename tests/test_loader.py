@@ -3,6 +3,8 @@
 import asyncio
 import unittest
 
+import pytest
+
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
@@ -63,6 +65,13 @@ def test_component_loader(hass):
     components = loader.Components(hass)
     assert components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
     assert hass.components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
+
+
+def test_component_loader_non_existing(hass):
+    """Test loading components."""
+    components = loader.Components(hass)
+    with pytest.raises(ImportError):
+        components.non_existing
 
 
 @asyncio.coroutine
