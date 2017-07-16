@@ -7,10 +7,13 @@ https://home-assistant.io/components/sensor.command_line/
 from datetime import timedelta
 import logging
 import subprocess
+import shlex
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers import template
+from homeassistant.exceptions import TemplateError
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
@@ -40,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    data = CommandSensorData(hass, command)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template)])
 
@@ -90,20 +93,48 @@ class CommandSensor(Entity):
 class CommandSensorData(object):
     """The class for handling the data retrieval."""
 
-    def __init__(self, command):
+    def __init__(self, hass, command):
         """Initialize the data object."""
-        self.command = command
         self.value = None
+        self.hass = hass
+        self.command = command
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info("Running command: %s", self.command)
+        
+        command = self.command
+        cache = {}
 
+        if command in cache:
+            prog, args, args_compiled = cache[command]
+        elif ' ' not in command:
+            prog = command
+            args = None
+            args_compiled = None
+            cache[command] = prog, args, args_compiled
+        else:
+            prog, args = command.split(' ', 1)
+            args_compiled = template.Template(args, self.hass)
+            cache[command] = prog, args, args_compiled
+
+        if args_compiled:
+            try:
+                a = {"arguments":args}
+                rendered_args = args_compiled.render(a)
+            except TemplateError as ex:
+                _LOGGER.exception("Error rendering command template: %s", ex)
+                return
+        else:
+            rendered_args = None
+        
+        #Construct the string used in the shell
+        command = str(' '.join([prog] + shlex.split(rendered_args)))
         try:
+            _LOGGER.info("Running command: %s", command)
             return_value = subprocess.check_output(
-                self.command, shell=True, timeout=15)
+                command, shell=True, timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", self.command)
+            _LOGGER.error("Command failed: %s", command)
         except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout for command: %s", self.command)
+            _LOGGER.error("Timeout for command: %s", command)
