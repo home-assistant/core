@@ -13,6 +13,7 @@ import csv
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
@@ -165,6 +166,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 
 
 @callback
+@bind_hass
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   color_temp=None, kelvin=None, white_value=None,
