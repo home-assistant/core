@@ -17,6 +17,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
                                  STATE_UNKNOWN)
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -118,6 +119,7 @@ SERVICE_TO_METHOD = {
 }
 
 
+@bind_hass
 def is_on(hass, entity_id: str=None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
@@ -125,6 +127,7 @@ def is_on(hass, entity_id: str=None) -> bool:
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
+@bind_hass
 def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
     """Turn all or specified fan on."""
     data = {
@@ -137,6 +140,7 @@ def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@bind_hass
 def turn_off(hass, entity_id: str=None) -> None:
     """Turn all or specified fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -144,6 +148,7 @@ def turn_off(hass, entity_id: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+@bind_hass
 def toggle(hass, entity_id: str=None) -> None:
     """Toggle all or specified fans."""
     data = {
@@ -153,6 +158,7 @@ def toggle(hass, entity_id: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+@bind_hass
 def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
     """Set oscillation on all or specified fan."""
     data = {
@@ -165,6 +171,7 @@ def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
     hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
 
 
+@bind_hass
 def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     """Set speed for all or specified fan."""
     data = {
@@ -177,6 +184,7 @@ def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
 
 
+@bind_hass
 def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
     """Set direction for all or specified fan."""
     data = {
