@@ -1,11 +1,11 @@
 """Models for SQLAlchemy."""
-
 import json
 from datetime import datetime
 import logging
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
-                        String, Text, distinct)
+from sqlalchemy import (
+    Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text,
+    distinct)
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
@@ -16,7 +16,7 @@ from homeassistant.remote import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,9 @@ class States(Base):   # type: ignore
                       Index('states__significant_changes',
                             'domain', 'last_updated', 'entity_id'),
                       Index('ix_states_entity_id_created',
-                            'entity_id', 'created'),)
+                            'entity_id', 'created'),
+                      Index('ix_states_created_domain',
+                            'created', 'domain'),)
 
     @staticmethod
     def from_event(event):
@@ -171,5 +173,5 @@ def _process_timestamp(ts):
         return None
     elif ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+
+    return dt_util.as_utc(ts)

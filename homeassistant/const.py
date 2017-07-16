@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 43
+MINOR_VERSION = 50
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -59,6 +59,7 @@ CONF_ACCESS_TOKEN = 'access_token'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
 CONF_BASE = 'base'
 CONF_BEFORE = 'before'
@@ -77,6 +78,7 @@ CONF_COMMAND_STATE = 'command_state'
 CONF_COMMAND_STOP = 'command_stop'
 CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
+CONF_CURRENCY = 'currency'
 CONF_CUSTOMIZE = 'customize'
 CONF_CUSTOMIZE_DOMAIN = 'customize_domain'
 CONF_CUSTOMIZE_GLOB = 'customize_glob'
@@ -103,6 +105,7 @@ CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
 CONF_ICON = 'icon'
+CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
 CONF_ID = 'id'
 CONF_LATITUDE = 'latitude'
@@ -137,7 +140,9 @@ CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_CLASS = 'sensor_class'
+CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
+CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STRUCTURE = 'structure'
@@ -156,6 +161,7 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
 CONF_WHITE_VALUE = 'white_value'
 CONF_XY = 'xy'
 CONF_ZONE = 'zone'
@@ -172,6 +178,8 @@ EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_THEMES_UPDATED = 'themes_updated'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -193,13 +201,17 @@ STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_OK = 'ok'
+STATE_PROBLEM = 'problem'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
 
-# Contains current time for a TIME_CHANGED event
+# Contains time-related attributes
 ATTR_NOW = 'now'
+ATTR_DATE = 'date'
+ATTR_TIME = 'time'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
@@ -324,6 +336,7 @@ SERVICE_MEDIA_STOP = 'media_stop'
 SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
+SERVICE_SHUFFLE_SET = 'shuffle_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'

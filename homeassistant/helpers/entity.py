@@ -146,7 +146,7 @@ class Entity(object):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return False
+        return None
 
     @property
     def force_update(self) -> bool:
@@ -172,6 +172,7 @@ class Entity(object):
         if async_update is None:
             return
 
+        # pylint: disable=not-callable
         run_coroutine_threadsafe(async_update(), self.hass.loop).result()
 
     # DO NOT OVERWRITE
@@ -206,13 +207,13 @@ class Entity(object):
         # update entity data
         if force_refresh:
             if self._update_warn:
-                _LOGGER.warning('Update for %s is already in progress',
+                _LOGGER.warning("Update for %s is already in progress",
                                 self.entity_id)
                 return
 
             self._update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
-                'Update of %s is taking over %s seconds.', self.entity_id,
+                "Update of %s is taking over %s seconds", self.entity_id,
                 SLOW_UPDATE_WARNING
             )
 
@@ -221,10 +222,9 @@ class Entity(object):
                     # pylint: disable=no-member
                     yield from self.async_update()
                 else:
-                    yield from self.hass.loop.run_in_executor(
-                        None, self.update)
+                    yield from self.hass.async_add_job(self.update)
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception('Update for %s fails', self.entity_id)
+                _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
             finally:
                 self._update_warn.cancel()
@@ -264,9 +264,9 @@ class Entity(object):
 
         if not self._slow_reported and end - start > 0.4:
             self._slow_reported = True
-            _LOGGER.warning('Updating state for %s took %.3f seconds. '
-                            'Please report platform to the developers at '
-                            'https://goo.gl/Nvioub', self.entity_id,
+            _LOGGER.warning("Updating state for %s took %.3f seconds. "
+                            "Please report platform to the developers at "
+                            "https://goo.gl/Nvioub", self.entity_id,
                             end - start)
 
         # Overwrite properties that have been set in the config file.
@@ -316,13 +316,13 @@ class Entity(object):
         self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
-        """Helper method to populate attributes based on properties."""
+        """Populate attributes based on properties."""
         if attr in attrs:
             return
 
         value = getattr(self, name)
 
-        if not value:
+        if value is None:
             return
 
         try:
@@ -363,8 +363,8 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_on, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -375,22 +375,21 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_off, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self) -> None:
+    def toggle(self, **kwargs) -> None:
         """Toggle the entity."""
         if self.is_on:
-            self.turn_off()
+            self.turn_off(**kwargs)
         else:
-            self.turn_on()
+            self.turn_on(**kwargs)
 
-    def async_toggle(self):
+    def async_toggle(self, **kwargs):
         """Toggle the entity.
 
         This method must be run in the event loop and returns a coroutine.
         """
         if self.is_on:
-            return self.async_turn_off()
-        else:
-            return self.async_turn_on()
+            return self.async_turn_off(**kwargs)
+        return self.async_turn_on(**kwargs)

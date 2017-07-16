@@ -112,18 +112,17 @@ SERVICE_STANDBY = 'standby'
 
 # pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA = vol.Schema({
-    vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices),
-                                      cv.string)
+    vol.All(cv.positive_int):
+        vol.Any(lambda devices: DEVICE_SCHEMA(devices), cv.string)
 })
 
 CONF_DISPLAY_NAME = 'osd_name'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES): vol.Any(DEVICE_SCHEMA,
-                                            vol.Schema({
-                                                vol.All(cv.string): vol.Any(
-                                                    cv.string)
-                                            })),
+        vol.Optional(CONF_DEVICES):
+            vol.Any(DEVICE_SCHEMA, vol.Schema({
+                vol.All(cv.string): vol.Any(cv.string)})),
         vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DISPLAY_NAME): cv.string,
@@ -155,7 +154,7 @@ def parse_mapping(mapping, parents=None):
 
 
 def setup(hass: HomeAssistant, base_config):
-    """Setup CEC capability."""
+    """Set up the CEC capability."""
     from pycec.network import HDMINetwork
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE_ON, \
@@ -178,8 +177,8 @@ def setup(hass: HomeAssistant, base_config):
         # Create own thread if more than 1 CPU
         hass.loop if multiprocessing.cpu_count() < 2 else None)
     host = base_config[DOMAIN].get(CONF_HOST, None)
-    display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME,
-                                           DEFAULT_DISPLAY_NAME)
+    display_name = base_config[DOMAIN].get(
+        CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
@@ -273,7 +272,7 @@ def setup(hass: HomeAssistant, base_config):
                 addr = entity.attributes['physical_address']
                 _LOGGER.debug("Address acquired: %s", addr)
                 if addr is None:
-                    _LOGGER.error("Device %s has not physical address.",
+                    _LOGGER.error("Device %s has not physical address",
                                   call.data[ATTR_DEVICE])
                     return
         if not isinstance(addr, (PhysicalAddress,)):
@@ -283,15 +282,15 @@ def setup(hass: HomeAssistant, base_config):
 
     def _update(call):
         """
-        Callback called when device update is needed.
+        Update if device update is needed.
 
-        - called by service, requests CEC network to update data.
+        Called by service, requests CEC network to update data.
         """
         hdmi_network.scan()
 
     def _new_device(device):
-        """Called when new device is detected by HDMI network."""
-        key = DOMAIN + '.' + device.name
+        """Handle new devices which are detected by HDMI network."""
+        key = '{}.{}'.format(DOMAIN, device.name)
         hass.data[key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
@@ -376,32 +375,32 @@ class CecDevice(Entity):
 
     @property
     def vendor_id(self):
-        """ID of device's vendor."""
+        """Return the ID of the device's vendor."""
         return self._device.vendor_id
 
     @property
     def vendor_name(self):
-        """Name of device's vendor."""
+        """Return the name of the device's vendor."""
         return self._device.vendor
 
     @property
     def physical_address(self):
-        """Physical address of device in HDMI network."""
+        """Return the physical address of device in HDMI network."""
         return str(self._device.physical_address)
 
     @property
     def type(self):
-        """String representation of device's type."""
+        """Return a string representation of the device's type."""
         return self._device.type_name
 
     @property
     def type_id(self):
-        """Type ID of device."""
+        """Return the type ID of device."""
         return self._device.type
 
     @property
     def icon(self):
-        """Icon for device by its type."""
+        """Return the icon for device by its type."""
         return (self._icon if self._icon is not None else
                 ICONS_BY_TYPE.get(self._device.type)
                 if self._device.type in ICONS_BY_TYPE else ICON_UNKNOWN)

@@ -13,40 +13,42 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import setup_component
-from homeassistant.components.mqtt import (valid_publish_topic,
-                                           valid_subscribe_topic)
-from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,
-                                 CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
+from homeassistant.components.mqtt import (
+    valid_publish_topic, valid_subscribe_topic)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 
+REQUIREMENTS = ['pymysensors==0.10.0']
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
 ATTR_DESCRIPTION = 'description'
 ATTR_DEVICE = 'device'
+ATTR_NODE_ID = 'node_id'
+
 CONF_BAUD_RATE = 'baud_rate'
-CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
+CONF_DEVICE = 'device'
 CONF_GATEWAYS = 'gateways'
 CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
+CONF_RETAIN = 'retain'
 CONF_TCP_PORT = 'tcp_port'
 CONF_TOPIC_IN_PREFIX = 'topic_in_prefix'
 CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
-CONF_RETAIN = 'retain'
 CONF_VERSION = 'version'
-DEFAULT_VERSION = 1.4
+
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
+DEFAULT_VERSION = 1.4
 DOMAIN = 'mysensors'
-MYSENSORS_GATEWAYS = 'mysensors_gateways'
+
 MQTT_COMPONENT = 'mqtt'
-REQUIREMENTS = [
-    'https://github.com/theolind/pymysensors/archive/'
-    'c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1']
+MYSENSORS_GATEWAYS = 'mysensors_gateways'
 
 
 def is_socket_address(value):
@@ -148,7 +150,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the MySensors component."""
+    """Set up the MySensors component."""
     import mysensors.mysensors as mysensors
 
     version = config[DOMAIN].get(CONF_VERSION)
@@ -164,11 +166,11 @@ def setup(hass, config):
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
-                """Call mqtt publish function."""
+                """Call MQTT publish function."""
                 mqtt.publish(hass, topic, payload, qos, retain)
 
             def sub_callback(topic, callback, qos):
-                """Call mqtt subscribe function."""
+                """Call MQTT subscribe function."""
                 mqtt.subscribe(hass, topic, callback, qos)
             gateway = mysensors.MQTTGateway(
                 pub_callback, sub_callback,
@@ -201,7 +203,7 @@ def setup(hass, config):
         gateway.event_callback = gateway.callback_factory()
 
         def gw_start(event):
-            """Callback to trigger start of gateway and any persistence."""
+            """Trigger to start of the gateway and any persistence."""
             if persistence:
                 for node_id in gateway.sensors:
                     node = gateway.sensors[node_id]
@@ -220,7 +222,7 @@ def setup(hass, config):
     gateways = hass.data.get(MYSENSORS_GATEWAYS)
     if gateways is not None:
         _LOGGER.error(
-            '%s already exists in %s, will not setup %s component',
+            "%s already exists in %s, will not setup %s component",
             MYSENSORS_GATEWAYS, hass.data, DOMAIN)
         return False
 
@@ -245,7 +247,7 @@ def setup(hass, config):
 
     if not gateways:
         _LOGGER.error(
-            'No devices could be setup as gateways, check your configuration')
+            "No devices could be setup as gateways, check your configuration")
         return False
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
@@ -266,9 +268,9 @@ def setup(hass, config):
 def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
     """Return a new callback for the platform."""
     def mysensors_callback(gateway, msg):
-        """Callback for mysensors platform."""
+        """Run when a message from the gateway arrives."""
         if gateway.sensors[msg.node_id].sketch_name is None:
-            _LOGGER.debug('No sketch_name: node %s', msg.node_id)
+            _LOGGER.debug("No sketch_name: node %s", msg.node_id)
             return
         child = gateway.sensors[msg.node_id].children.get(msg.child_id)
         if child is None:
@@ -294,7 +296,7 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
             devices[key] = device_class(
                 gateway, msg.node_id, child.id, name, value_type)
             if add_devices:
-                _LOGGER.info('Adding new devices: %s', [devices[key]])
+                _LOGGER.info("Adding new devices: %s", [devices[key]])
                 add_devices([devices[key]], True)
             else:
                 devices[key].update()
@@ -305,7 +307,7 @@ class GatewayWrapper(object):
     """Gateway wrapper class."""
 
     def __init__(self, gateway, optimistic, device):
-        """Setup class attributes on instantiation.
+        """Set up the class attributes on instantiation.
 
         Args:
         gateway (mysensors.SerialGateway): Gateway to wrap.
@@ -318,6 +320,7 @@ class GatewayWrapper(object):
         optimistic (bool): Send values to actuators without feedback state.
         device (str): Device configured as gateway.
         __initialised (bool): True if GatewayWrapper is initialised.
+
         """
         self._wrapped_gateway = gateway
         self.platform_callbacks = []
@@ -346,9 +349,9 @@ class GatewayWrapper(object):
     def callback_factory(self):
         """Return a new callback function."""
         def node_update(msg):
-            """Callback for node updates from the MySensors gateway."""
+            """Handle node updates from the MySensors gateway."""
             _LOGGER.debug(
-                'Update: node %s, child %s sub_type %s',
+                "Update: node %s, child %s sub_type %s",
                 msg.node_id, msg.child_id, msg.sub_type)
             for callback in self.platform_callbacks:
                 callback(self, msg)
@@ -357,10 +360,10 @@ class GatewayWrapper(object):
 
 
 class MySensorsDeviceEntity(object):
-    """Represent a MySensors entity."""
+    """Representation of a MySensors entity."""
 
     def __init__(self, gateway, node_id, child_id, name, value_type):
-        """Set up MySensors device."""
+        """Set up the MySensors device."""
         self.gateway = gateway
         self.node_id = node_id
         self.child_id = child_id
@@ -377,7 +380,7 @@ class MySensorsDeviceEntity(object):
 
     @property
     def name(self):
-        """The name of this entity."""
+        """Return the name of this entity."""
         return self._name
 
     @property
@@ -399,14 +402,14 @@ class MySensorsDeviceEntity(object):
             try:
                 attr[set_req(value_type).name] = value
             except ValueError:
-                _LOGGER.error('Value_type %s is not valid for mysensors '
-                              'version %s', value_type,
+                _LOGGER.error("Value_type %s is not valid for mysensors "
+                              "version %s", value_type,
                               self.gateway.protocol_version)
         return attr
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return true if entity is available."""
         return self.value_type in self._values
 
     def update(self):

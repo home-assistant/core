@@ -10,14 +10,14 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo climate devices."""
+    """Set up the Demo climate devices."""
     add_devices([
-        DemoClimate("HeatPump", 68, TEMP_FAHRENHEIT, None, None, 77,
-                    "Auto Low", None, None, "Auto", "heat", None, None, None),
-        DemoClimate("Hvac", 21, TEMP_CELSIUS, True, None, 22, "On High",
-                    67, 54, "Off", "cool", False, None, None),
-        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, None, 23, "Auto Low",
-                    None, None, "Auto", "auto", None, 24, 21)
+        DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
+                    'Auto Low', None, None, 'Auto', 'heat', None, None, None),
+        DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
+                    67, 54, 'Off', 'cool', False, None, None),
+        DemoClimate('Ecobee', None, TEMP_CELSIUS, None, None, 23, 'Auto Low',
+                    None, None, 'Auto', 'auto', None, 24, 21)
     ])
 
 
@@ -41,15 +41,15 @@ class DemoClimate(ClimateDevice):
         self._current_operation = current_operation
         self._aux = aux
         self._current_swing_mode = current_swing_mode
-        self._fan_list = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
-        self._operation_list = ["heat", "cool", "auto", "off"]
-        self._swing_list = ["Auto", "1", "2", "3", "Off"]
+        self._fan_list = ['On Low', 'On High', 'Auto Low', 'Auto High', 'Off']
+        self._operation_list = ['heat', 'cool', 'auto', 'off']
+        self._swing_list = ['Auto', '1', '2', '3', 'Off']
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
 
     @property
     def should_poll(self):
-        """Polling not needed for a demo climate device."""
+        """Return the polling state."""
         return False
 
     @property
@@ -99,7 +99,7 @@ class DemoClimate(ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         return self._operation_list
 
     @property
@@ -124,7 +124,7 @@ class DemoClimate(ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return the list of available fan modes."""
         return self._fan_list
 
     def set_temperature(self, **kwargs):

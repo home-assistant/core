@@ -45,10 +45,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG TV platform."""
+    """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
-    client = LgNetCastClient(config.get(CONF_HOST),
-                             config.get(CONF_ACCESS_TOKEN))
+    client = LgNetCastClient(
+        config.get(CONF_HOST), config.get(CONF_ACCESS_TOKEN))
 
     add_devices([LgTVDevice(client, config[CONF_NAME])])
 
@@ -110,7 +110,7 @@ class LgTVDevice(MediaPlayerDevice):
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [(k, self._sources[k].find('major').text)
-                                     for k in self._sources.keys()]
+                                     for k in self._sources]
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1]))
                     self._source_names = [n for n, k in sorted_sources]

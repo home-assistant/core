@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the NetAtmo Thermostat."""
+    """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -119,14 +119,14 @@ class NetatmoThermostat(ClimateDevice):
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
 
-    def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         mode = "manual"
         self._data.thermostatdata.setthermpoint(
-            mode, temperature, endTimeOffset)
+            mode, temperature, DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature
         self._away = False
 
@@ -150,7 +150,6 @@ class ThermostatData(object):
         self.current_temperature = None
         self.target_temperature = None
         self.setpoint_mode = None
-        # self.operation =
 
     def get_module_names(self):
         """Return all module available on the API as a list."""

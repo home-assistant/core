@@ -19,6 +19,8 @@ from .const import (
     KEY_FAILED_LOGIN_ATTEMPTS)
 from .util import get_real_ip
 
+_LOGGER = logging.getLogger(__name__)
+
 NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
@@ -29,8 +31,6 @@ SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @asyncio.coroutine
 def ban_middleware(app, handler):
@@ -40,8 +40,8 @@ def ban_middleware(app, handler):
 
     if KEY_BANNED_IPS not in app:
         hass = app['hass']
-        app[KEY_BANNED_IPS] = yield from hass.loop.run_in_executor(
-            None, load_ip_bans_config, hass.config.path(IP_BANS_FILE))
+        app[KEY_BANNED_IPS] = yield from hass.async_add_job(
+            load_ip_bans_config, hass.config.path(IP_BANS_FILE))
 
     @asyncio.coroutine
     def ban_middleware_handler(request):
@@ -90,12 +90,11 @@ def process_wrong_login(request):
         request.app[KEY_BANNED_IPS].append(new_ban)
 
         hass = request.app['hass']
-        yield from hass.loop.run_in_executor(
-            None, update_ip_bans_config, hass.config.path(IP_BANS_FILE),
-            new_ban)
+        yield from hass.async_add_job(
+            update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
 
-        _LOGGER.warning('Banned IP %s for too many login attempts',
-                        remote_addr)
+        _LOGGER.warning(
+            "Banned IP %s for too many login attempts", remote_addr)
 
         persistent_notification.async_create(
             hass,
@@ -107,13 +106,13 @@ class IpBan(object):
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
-        """Initializing Ip Ban object."""
+        """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
 
 
 def load_ip_bans_config(path: str):
-    """Loading list of banned IPs from config file."""
+    """Load list of banned IPs from config file."""
     ip_list = []
 
     if not os.path.isfile(path):
@@ -130,7 +129,7 @@ def load_ip_bans_config(path: str):
             ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
             ip_list.append(IpBan(ip_ban, ip_info['banned_at']))
         except vol.Invalid as err:
-            _LOGGER.error('Failed to load IP ban %s: %s', ip_info, err)
+            _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
             continue
 
     return ip_list

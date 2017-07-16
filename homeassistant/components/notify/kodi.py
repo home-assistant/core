@@ -100,4 +100,4 @@ class KodiNotificationService(BaseNotificationService):
                 title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError:
-            _LOGGER.warning('Unable to fetch Kodi data, Is Kodi online?')
+            _LOGGER.warning("Unable to fetch Kodi data. Is Kodi online?")

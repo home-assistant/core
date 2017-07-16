@@ -80,8 +80,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Return the name of the device."""
         if self._name is not None:
             return self._name
-        else:
-            return 'Alarm {}'.format(self.simplisafe.location_id())
+        return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
     def code_format(self):
@@ -123,25 +122,25 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         if not self._validate_code(code, 'disarming'):
             return
         self.simplisafe.set_state('off')
-        _LOGGER.info('SimpliSafe alarm disarming')
+        _LOGGER.info("SimpliSafe alarm disarming")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if not self._validate_code(code, 'arming home'):
             return
         self.simplisafe.set_state('home')
-        _LOGGER.info('SimpliSafe alarm arming home')
+        _LOGGER.info("SimpliSafe alarm arming home")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if not self._validate_code(code, 'arming away'):
             return
         self.simplisafe.set_state('away')
-        _LOGGER.info('SimpliSafe alarm arming away')
+        _LOGGER.info("SimpliSafe alarm arming away")
 
     def _validate_code(self, code, state):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Wrong code entered for %s', state)
+            _LOGGER.warning("Wrong code entered for %s", state)
         return check

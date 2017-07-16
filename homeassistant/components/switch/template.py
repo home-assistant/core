@@ -13,8 +13,8 @@ from homeassistant.core import callback
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, STATE_OFF,
+    STATE_ON, ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -30,6 +30,7 @@ OFF_ACTION = 'turn_off'
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -44,12 +45,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Template switch."""
+    """Set up the Template switch."""
     switches = []
 
     for device, device_config in config[CONF_SWITCHES].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
@@ -57,15 +59,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         state_template.hass = hass
 
+        if icon_template is not None:
+            icon_template.hass = hass
+
         switches.append(
             SwitchTemplate(
-                hass,
-                device,
-                friendly_name,
-                state_template,
-                on_action,
-                off_action,
-                entity_ids)
+                hass, device, friendly_name, state_template, icon_template,
+                on_action, off_action, entity_ids)
             )
     if not switches:
         _LOGGER.error("No switches added")
@@ -79,16 +79,18 @@ class SwitchTemplate(SwitchDevice):
     """Representation of a Template switch."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 on_action, off_action, entity_ids):
+                 icon_template, on_action, off_action, entity_ids):
         """Initialize the Template switch."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                                  hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, device_id, hass=hass)
         self._name = friendly_name
         self._template = state_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
+        self._icon_template = icon_template
+        self._icon = None
         self._entities = entity_ids
 
     @asyncio.coroutine
@@ -100,7 +102,7 @@ class SwitchTemplate(SwitchDevice):
 
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
-            """Called when the target device changes state."""
+            """Handle target device state changes."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
@@ -126,13 +128,18 @@ class SwitchTemplate(SwitchDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
     def available(self):
         """If switch is available."""
         return self._state is not None
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon
 
     def turn_on(self, **kwargs):
         """Fire the on action."""
@@ -159,3 +166,17 @@ class SwitchTemplate(SwitchDevice):
         except TemplateError as ex:
             _LOGGER.error(ex)
             self._state = None
+
+        if self._icon_template is not None:
+            try:
+                self._icon = self._icon_template.async_render()
+            except TemplateError as ex:
+                if ex.args and ex.args[0].startswith(
+                        "UndefinedError: 'None' has no attribute"):
+                    # Common during HA startup - so just a warning
+                    _LOGGER.warning('Could not render icon template %s,'
+                                    ' the state is unknown.', self._name)
+                    return
+                self._icon = super().icon
+                _LOGGER.error('Could not render icon template %s: %s',
+                              self._name, ex)

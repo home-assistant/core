@@ -1,5 +1,5 @@
 """
-Support for Zwave cover components.
+Support for Z-Wave cover components.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
@@ -21,7 +21,7 @@ SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
 def get_device(hass, values, node_config, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
     if (values.primary.command_class ==
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
@@ -35,13 +35,13 @@ def get_device(hass, values, node_config, **kwargs):
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
-    """Representation of an Zwave roller shutter."""
+    """Representation of an Z-Wave cover."""
 
     def __init__(self, hass, values, invert_buttons):
-        """Initialize the zwave rollershutter."""
+        """Initialize the Z-Wave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
-        self._network = hass.data[zwave.ZWAVE_NETWORK]
+        self._network = hass.data[zwave.const.DATA_NETWORK]
         self._open_id = None
         self._close_id = None
         self._current_position = None
@@ -53,7 +53,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         # Position value
         self._current_position = self.values.primary.data
 
@@ -73,8 +73,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
             return None
         if self.current_cover_position > 0:
             return False
-        else:
-            return True
+        return True
 
     @property
     def current_cover_position(self):
@@ -86,8 +85,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 return 0
             elif self._current_position >= 95:
                 return 100
-            else:
-                return self._current_position
+            return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -115,7 +113,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
 
     @property

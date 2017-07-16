@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the squeezebox platform."""
+    """Set up the squeezebox platform."""
     import socket
 
     username = config.get(CONF_USERNAME)
@@ -65,8 +65,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s",
-                      host, port, error)
+        _LOGGER.error(
+            "Could not communicate with %s:%d: %s", host, port, error)
         return False
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
@@ -95,7 +95,7 @@ class LogitechMediaServer(object):
         result = []
         data = yield from self.async_query('players', 'status')
 
-        for players in data['players_loop']:
+        for players in data.get('players_loop', []):
             player = SqueezeBoxDevice(
                 self, players['playerid'], players['name'])
             yield from player.async_update()

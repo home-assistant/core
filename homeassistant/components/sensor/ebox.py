@@ -1,8 +1,7 @@
 """
 Support for EBox.
 
-Get data from 'My Usage Page' page:
-https://client.ebox.ca/myusage
+Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ebox/
@@ -13,55 +12,44 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD,
     CONF_NAME, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyebox==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = "Gb"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-PERCENT = "%"  # type: str
+GIGABITS = 'Gb'  # type: str
+PRICE = 'CAD'  # type: str
+DAYS = 'days'  # type: str
+PERCENT = '%'  # type: str
 
-DEFAULT_NAME = "EBox"
+DEFAULT_NAME = 'EBox'
 
 REQUESTS_TIMEOUT = 15
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
-    'usage': ['Usage',
-              PERCENT, 'mdi:percent'],
-    'balance': ['Balance',
-                PRICE, 'mdi:square-inc-cash'],
-    'limit': ['Data limit',
-              GIGABITS, 'mdi:download'],
-    'days_left': ['Days left',
-                  DAYS, 'mdi:calendar-today'],
-    'before_offpeak_download': ['Download before offpeak',
-                                GIGABITS, 'mdi:download'],
-    'before_offpeak_upload': ['Upload before offpeak',
-                              GIGABITS, 'mdi:upload'],
-    'before_offpeak_total': ['Total before offpeak',
-                             GIGABITS, 'mdi:download'],
-    'offpeak_download': ['Offpeak download',
-                         GIGABITS, 'mdi:download'],
-    'offpeak_upload': ['Offpeak Upload',
-                       GIGABITS, 'mdi:upload'],
-    'offpeak_total': ['Offpeak Total',
-                      GIGABITS, 'mdi:download'],
-    'download': ['Download',
-                 GIGABITS, 'mdi:download'],
-    'upload': ['Upload',
-               GIGABITS, 'mdi:upload'],
-    'total': ['Total',
-              GIGABITS, 'mdi:download'],
+    'usage': ['Usage', PERCENT, 'mdi:percent'],
+    'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
+    'limit': ['Data limit', GIGABITS, 'mdi:download'],
+    'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
+    'before_offpeak_download':
+        ['Download before offpeak', GIGABITS, 'mdi:download'],
+    'before_offpeak_upload':
+        ['Upload before offpeak', GIGABITS, 'mdi:upload'],
+    'before_offpeak_total':
+        ['Total before offpeak', GIGABITS, 'mdi:download'],
+    'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
+    'offpeak_upload': ['Offpeak Upload', GIGABITS, 'mdi:upload'],
+    'offpeak_total': ['Offpeak Total', GIGABITS, 'mdi:download'],
+    'download': ['Download', GIGABITS, 'mdi:download'],
+    'upload': ['Upload', GIGABITS, 'mdi:upload'],
+    'total': ['Total', GIGABITS, 'mdi:download'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -143,7 +131,6 @@ class EBoxData(object):
         self.client = EboxClient(username, password, REQUESTS_TIMEOUT)
         self.data = {}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Ebox."""
         from pyebox.client import PyEboxError
@@ -152,5 +139,4 @@ class EBoxData(object):
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
             return
-        # Update data
         self.data = self.client.get_data()

@@ -14,8 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.4.zip#pyW215==0.4']
+REQUIREMENTS = ['pyW215==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a D-Link Smart Plug."""
+    """Set up a D-Link Smart Plug."""
     from pyW215.pyW215 import SmartPlug
 
     host = config.get(CONF_HOST)

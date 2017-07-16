@@ -16,14 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Vera covers."""
+    """Set up the Vera covers."""
     add_devices(
         VeraCover(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['cover'])
 
 
 class VeraCover(VeraDevice, CoverDevice):
-    """Represents a Vera Cover in Home Assistant."""
+    """Representation a Vera Cover."""
 
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
@@ -53,10 +53,7 @@ class VeraCover(VeraDevice, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return self.current_cover_position == 0
 
     def open_cover(self, **kwargs):
         """Open the cover."""

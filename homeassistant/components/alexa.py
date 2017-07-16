@@ -17,7 +17,6 @@ from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import template, script, config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +35,6 @@ CONF_TEXT = 'text'
 
 CONF_FLASH_BRIEFINGS = 'flash_briefings'
 CONF_UID = 'uid'
-CONF_DATE = 'date'
 CONF_TITLE = 'title'
 CONF_AUDIO = 'audio'
 CONF_TEXT = 'text'
@@ -88,7 +86,6 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_FLASH_BRIEFINGS: {
             cv.string: vol.All(cv.ensure_list, [{
                 vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
-                vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.string,
                 vol.Required(CONF_TITLE): cv.template,
                 vol.Optional(CONF_AUDIO): cv.template,
                 vol.Required(CONF_TEXT, default=""): cv.template,
@@ -331,10 +328,7 @@ class AlexaFlashBriefingView(HomeAssistantView):
                 else:
                     output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 
-            if isinstance(item[CONF_DATE], str):
-                item[CONF_DATE] = dt_util.parse_datetime(item[CONF_DATE])
-
-            output[ATTR_UPDATE_DATE] = item[CONF_DATE].strftime(DATE_FORMAT)
+            output[ATTR_UPDATE_DATE] = datetime.now().strftime(DATE_FORMAT)
 
             briefing.append(output)
 

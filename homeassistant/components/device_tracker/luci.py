@@ -20,7 +20,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,10 +45,7 @@ def get_scanner(hass, config):
 
 
 class LuciDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running OpenWrt firmware.
-
-    Adapted from Tomato scanner.
-    """
+    """This class queries a wireless router running OpenWrt firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -106,7 +102,7 @@ class LuciDeviceScanner(DeviceScanner):
             return False
 
         with self.lock:
-            _LOGGER.info('Checking ARP')
+            _LOGGER.info("Checking ARP")
 
             url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
 
@@ -114,7 +110,7 @@ class LuciDeviceScanner(DeviceScanner):
                 result = _req_json_rpc(url, 'net.arptable',
                                        params={'auth': self.token})
             except InvalidLuciTokenError:
-                _LOGGER.info('Refreshing token')
+                _LOGGER.info("Refreshing token")
                 self.refresh_token()
                 return False
 
@@ -138,28 +134,27 @@ def _req_json_rpc(url, method, *args, **kwargs):
     try:
         res = requests.post(url, data=data, timeout=5, **kwargs)
     except requests.exceptions.Timeout:
-        _LOGGER.exception('Connection to the router timed out')
+        _LOGGER.exception("Connection to the router timed out")
         return
     if res.status_code == 200:
         try:
             result = res.json()
         except ValueError:
             # If json decoder could not parse the response
-            _LOGGER.exception('Failed to parse response from luci')
+            _LOGGER.exception("Failed to parse response from luci")
             return
         try:
             return result['result']
         except KeyError:
-            _LOGGER.exception('No result in response from luci')
+            _LOGGER.exception("No result in response from luci")
             return
     elif res.status_code == 401:
         # Authentication error
         _LOGGER.exception(
-            "Failed to authenticate, "
-            "please check your username and password")
+            "Failed to authenticate, check your username and password")
         return
     elif res.status_code == 403:
-        _LOGGER.error('Luci responded with a 403 Invalid token')
+        _LOGGER.error("Luci responded with a 403 Invalid token")
         raise InvalidLuciTokenError
 
     else:

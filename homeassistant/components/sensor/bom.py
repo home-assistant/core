@@ -102,14 +102,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if station is not None:
         if zone_id and wmo_id:
             _LOGGER.warning(
-                'Using config "%s", not "%s" and "%s" for BOM sensor',
+                "Using config %s, not %s and %s for BOM sensor",
                 CONF_STATION, CONF_ZONE_ID, CONF_WMO_ID)
     elif zone_id and wmo_id:
         station = '{}.{}'.format(zone_id, wmo_id)
     else:
-        station = closest_station(config.get(CONF_LATITUDE),
-                                  config.get(CONF_LONGITUDE),
-                                  hass.config.config_dir)
+        station = closest_station(
+            config.get(CONF_LATITUDE), config.get(CONF_LONGITUDE),
+            hass.config.config_dir)
         if station is None:
             _LOGGER.error("Could not get BOM weather station from lat/lon")
             return False
@@ -139,17 +139,17 @@ class BOMCurrentSensor(Entity):
         """Return the name of the sensor."""
         if self.stationname is None:
             return 'BOM {}'.format(SENSOR_TYPES[self._condition][0])
-        else:
-            return 'BOM {} {}'.format(
-                self.stationname, SENSOR_TYPES[self._condition][0])
+
+        return 'BOM {} {}'.format(
+            self.stationname, SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
         """Return the state of the sensor."""
         if self.rest.data and self._condition in self.rest.data:
             return self.rest.data[self._condition]
-        else:
-            return STATE_UNKNOWN
+
+        return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):
@@ -186,7 +186,7 @@ class BOMCurrentData(object):
 
     def _build_url(self):
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
-        _LOGGER.info("BOM url %s", url)
+        _LOGGER.info("BOM URL %s", url)
         return url
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -272,7 +272,7 @@ def closest_station(lat, lon, cache_dir):
     stations = bom_stations(cache_dir)
 
     def comparable_dist(wmo_id):
-        """A fast key function for psudeo-distance from lat/lon."""
+        """Create a psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[wmo_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

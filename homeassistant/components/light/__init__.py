@@ -26,6 +26,7 @@ from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
@@ -50,11 +51,15 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_KELVIN = "kelvin"
+ATTR_MIN_MIREDS = "min_mireds"
+ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE_VALUE = "white_value"
 
-# int with value 0 .. 255 representing brightness of the light.
+# Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
+ATTR_BRIGHTNESS_PCT = "brightness_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -73,11 +78,15 @@ EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
+COLOR_GROUP = "Color descriptors"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
+    'min_mireds': ATTR_MIN_MIREDS,
+    'max_mireds': ATTR_MAX_MIREDS,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
     'white_value': ATTR_WHITE_VALUE,
@@ -88,20 +97,25 @@ PROP_TO_ATTR = {
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
+VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PROFILE: cv.string,
+    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_COLOR_NAME: cv.string,
-    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple)),
-    ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
-                           vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int),
-                             vol.Range(min=color_util.HASS_COLOR_MIN,
-                                       max=color_util.HASS_COLOR_MAX)),
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
@@ -140,20 +154,21 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, white_value=None,
+            brightness_pct=None, rgb_color=None, xy_color=None,
+            color_temp=None, kelvin=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     hass.add_job(
-        async_turn_on, hass, entity_id, transition, brightness,
-        rgb_color, xy_color, color_temp, white_value,
+        async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
+        rgb_color, xy_color, color_temp, kelvin, white_value,
         profile, flash, effect, color_name)
 
 
 @callback
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  rgb_color=None, xy_color=None, color_temp=None,
-                  white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
+                  brightness_pct=None, rgb_color=None, xy_color=None,
+                  color_temp=None, kelvin=None, white_value=None,
+                  profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -161,9 +176,11 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
             (ATTR_BRIGHTNESS, brightness),
+            (ATTR_BRIGHTNESS_PCT, brightness_pct),
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
+            (ATTR_KELVIN, kelvin),
             (ATTR_WHITE_VALUE, white_value),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
@@ -205,6 +222,27 @@ def toggle(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+def preprocess_turn_on_alternatives(params):
+    """Processing extra data for turn light on request."""
+    profile = Profiles.get(params.pop(ATTR_PROFILE, None))
+    if profile is not None:
+        params.setdefault(ATTR_XY_COLOR, profile[:2])
+        params.setdefault(ATTR_BRIGHTNESS, profile[2])
+
+    color_name = params.pop(ATTR_COLOR_NAME, None)
+    if color_name is not None:
+        params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
+    kelvin = params.pop(ATTR_KELVIN, None)
+    if kelvin is not None:
+        mired = color_util.color_temperature_kelvin_to_mired(kelvin)
+        params[ATTR_COLOR_TEMP] = int(mired)
+
+    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
+    if brightness_pct is not None:
+        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Expose light control via statemachine and services."""
@@ -213,10 +251,8 @@ def async_setup(hass, config):
     yield from component.async_setup(config)
 
     # load profiles from files
-    profiles = yield from hass.loop.run_in_executor(
-        None, _load_profile_data, hass)
-
-    if profiles is None:
+    profiles_valid = yield from Profiles.load_profiles(hass)
+    if not profiles_valid:
         return False
 
     @asyncio.coroutine
@@ -229,17 +265,7 @@ def async_setup(hass, config):
         target_lights = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
-        # Processing extra data for turn light on request.
-        profile = profiles.get(params.pop(ATTR_PROFILE, None))
-
-        if profile:
-            params.setdefault(ATTR_XY_COLOR, profile[:2])
-            params.setdefault(ATTR_BRIGHTNESS, profile[2])
-
-        color_name = params.pop(ATTR_COLOR_NAME, None)
-
-        if color_name is not None:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        preprocess_turn_on_alternatives(params)
 
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
@@ -266,8 +292,8 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -285,31 +311,50 @@ def async_setup(hass, config):
     return True
 
 
-def _load_profile_data(hass):
-    """Load built-in profiles and custom profiles."""
-    profile_paths = [os.path.join(os.path.dirname(__file__),
-                                  LIGHT_PROFILES_FILE),
-                     hass.config.path(LIGHT_PROFILES_FILE)]
-    profiles = {}
+class Profiles:
+    """Representation of available color profiles."""
 
-    for profile_path in profile_paths:
-        if not os.path.isfile(profile_path):
-            continue
-        with open(profile_path) as inp:
-            reader = csv.reader(inp)
+    _all = None
 
-            # Skip the header
-            next(reader, None)
+    @classmethod
+    @asyncio.coroutine
+    def load_profiles(cls, hass):
+        """Load and cache profiles."""
+        def load_profile_data(hass):
+            """Load built-in profiles and custom profiles."""
+            profile_paths = [os.path.join(os.path.dirname(__file__),
+                                          LIGHT_PROFILES_FILE),
+                             hass.config.path(LIGHT_PROFILES_FILE)]
+            profiles = {}
 
-            try:
-                for rec in reader:
-                    profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
-                    profiles[profile] = (color_x, color_y, brightness)
-            except vol.MultipleInvalid as ex:
-                _LOGGER.error("Error parsing light profile from %s: %s",
-                              profile_path, ex)
-                return None
-    return profiles
+            for profile_path in profile_paths:
+                if not os.path.isfile(profile_path):
+                    continue
+                with open(profile_path) as inp:
+                    reader = csv.reader(inp)
+
+                    # Skip the header
+                    next(reader, None)
+
+                    try:
+                        for rec in reader:
+                            profile, color_x, color_y, brightness = \
+                                PROFILE_SCHEMA(rec)
+                            profiles[profile] = (color_x, color_y, brightness)
+                    except vol.MultipleInvalid as ex:
+                        _LOGGER.error(
+                            "Error parsing light profile from %s: %s",
+                            profile_path, ex)
+                        return None
+            return profiles
+
+        cls._all = yield from hass.async_add_job(load_profile_data, hass)
+        return cls._all is not None
+
+    @classmethod
+    def get(cls, name):
+        """Return a named profile."""
+        return cls._all.get(name)
 
 
 class Light(ToggleEntity):
@@ -336,6 +381,18 @@ class Light(ToggleEntity):
     def color_temp(self):
         """Return the CT color value in mireds."""
         return None
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        # Default to the Philips Hue value that HA has always assumed
+        return 154
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        # Default to the Philips Hue value that HA has always assumed
+        return 500
 
     @property
     def white_value(self):

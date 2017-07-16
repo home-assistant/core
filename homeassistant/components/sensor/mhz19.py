@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available CO2 sensors."""
+    """Set up the available CO2 sensors."""
     from pmsensor import co2sensor
 
     try:
@@ -118,7 +118,7 @@ class MHZ19Sensor(Entity):
 
 
 class MHZClient(object):
-    """Get the latest data from the DHT sensor."""
+    """Get the latest data from the MH-Z sensor."""
 
     def __init__(self, co2sensor, serial):
         """Initialize the sensor."""

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Command Sensor."""
+    """Set up the Command Sensor."""
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -97,13 +97,13 @@ class CommandSensorData(object):
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Running command: %s', self.command)
+        _LOGGER.info("Running command: %s", self.command)
 
         try:
-            return_value = subprocess.check_output(self.command, shell=True,
-                                                   timeout=15)
+            return_value = subprocess.check_output(
+                self.command, shell=True, timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', self.command)
+            _LOGGER.error("Command failed: %s", self.command)
         except subprocess.TimeoutExpired:
-            _LOGGER.error('Timeout for command: %s', self.command)
+            _LOGGER.error("Timeout for command: %s", self.command)

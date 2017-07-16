@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Orange Livebox Play TV platform."""
+    """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -56,8 +56,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = LiveboxPlayTvDevice(host, port, name)
         livebox_devices.append(device)
     except IOError:
-        _LOGGER.error('Failed to connect to Livebox Play TV at %s:%s. '
-                      'Please check your configuration.', host, port)
+        _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
+                      "Please check your configuration", host, port)
     add_devices(livebox_devices, True)
 
 
@@ -159,9 +159,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif state == 'PAUSE':
             return STATE_PAUSED
-        else:
-            return STATE_ON if self._client.is_on else STATE_OFF
-        return STATE_UNKNOWN
+
+        return STATE_ON if self._client.is_on else STATE_OFF
 
     def turn_off(self):
         """Turn off media player."""

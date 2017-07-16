@@ -4,7 +4,6 @@ Support for LED lights that can be controlled using PWM.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.pwm/
 """
-
 import logging
 
 import voluptuous as vol
@@ -55,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the pwm lights."""
+    """Set up the PWM LED lights."""
     from pwmled.led import SimpleLed
     from pwmled.led.rgb import RgbLed
     from pwmled.led.rgbw import RgbwLed
@@ -76,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 opt_args['address'] = led_conf[CONF_ADDRESS]
             driver = Pca9685Driver(pins, **opt_args)
         else:
-            _LOGGER.error("Invalid driver type.")
+            _LOGGER.error("Invalid driver type")
             return
 
         name = led_conf[CONF_NAME]
@@ -88,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         elif led_type == CONF_LED_TYPE_RGBW:
             led = PwmRgbLed(RgbwLed(driver), name)
         else:
-            _LOGGER.error("Invalid led type.")
+            _LOGGER.error("Invalid led type")
             return
         leds.append(led)
 
@@ -96,10 +95,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class PwmSimpleLed(Light):
-    """Representation of a simple on-color pwm led."""
+    """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):
-        """Initialize led."""
+        """Initialize one-color PWM LED."""
         self._led = led
         self._name = name
         self._is_on = False
@@ -149,7 +148,7 @@ class PwmSimpleLed(Light):
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
-        """Turn off a led."""
+        """Turn off a LED."""
         if self.is_on:
             if ATTR_TRANSITION in kwargs:
                 transition_time = kwargs[ATTR_TRANSITION]
@@ -162,10 +161,10 @@ class PwmSimpleLed(Light):
 
 
 class PwmRgbLed(PwmSimpleLed):
-    """Representation of a rgb(w) pwm led."""
+    """Representation of a RGB(W) PWM LED."""
 
     def __init__(self, led, name):
-        """Initialize led."""
+        """Initialize a RGB(W) PWM LED."""
         super().__init__(led, name)
         self._color = DEFAULT_COLOR
 
@@ -180,7 +179,7 @@ class PwmRgbLed(PwmSimpleLed):
         return SUPPORT_RGB_LED
 
     def turn_on(self, **kwargs):
-        """Turn on a led."""
+        """Turn on a LED."""
         if ATTR_RGB_COLOR in kwargs:
             self._color = kwargs[ATTR_RGB_COLOR]
         if ATTR_BRIGHTNESS in kwargs:

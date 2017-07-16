@@ -156,7 +156,7 @@ def request_app_setup(hass, config, add_devices, config_path,
 
     # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
             config_file = config_from_file(config_path)
@@ -201,7 +201,7 @@ def request_oauth_completion(hass):
 
     # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration updates."""
 
     start_url = '{}{}'.format(hass.config.api.base_url, FITBIT_AUTH_START)
 
@@ -299,7 +299,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         response_message = """Fitbit has been successfully authorized!
         You can close this window now!"""

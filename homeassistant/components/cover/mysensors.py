@@ -11,11 +11,12 @@ from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.const import STATE_ON, STATE_OFF
 
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for covers."""
+    """Set up the MySensors platform for covers."""
     if discovery_info is None:
         return
 
@@ -52,8 +53,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         set_req = self.gateway.const.SetReq
         if set_req.V_DIMMER in self._values:
             return self._values.get(set_req.V_DIMMER) == 0
-        else:
-            return self._values.get(set_req.V_LIGHT) == STATE_OFF
+        return self._values.get(set_req.V_LIGHT) == STATE_OFF
 
     @property
     def current_cover_position(self):

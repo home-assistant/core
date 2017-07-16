@@ -12,7 +12,6 @@ import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
-
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
@@ -27,9 +26,9 @@ STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 binary sensor platform."""
+    """Set up the ISY994 binary sensor platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []

@@ -21,7 +21,7 @@ def test_get_device_detects_none(hass, mock_openzwave):
 
 def test_get_device_detects_rollershutter(hass, mock_openzwave):
     """Test device returns rollershutter."""
-    hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode()
     value = MockValue(data=0, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -48,7 +48,7 @@ def test_get_device_detects_garagedoor(hass, mock_openzwave):
 
 def test_roller_no_position_workaround(hass, mock_openzwave):
     """Test position changed."""
-    hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(manufacturer_id='0047', product_type='5a52')
     value = MockValue(data=45, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -61,7 +61,7 @@ def test_roller_no_position_workaround(hass, mock_openzwave):
 
 def test_roller_value_changed(hass, mock_openzwave):
     """Test position changed."""
-    hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode()
     value = MockValue(data=None, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -93,7 +93,7 @@ def test_roller_value_changed(hass, mock_openzwave):
 
 def test_roller_commands(hass, mock_openzwave):
     """Test position changed."""
-    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode()
     value = MockValue(data=50, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -128,7 +128,7 @@ def test_roller_commands(hass, mock_openzwave):
 
 def test_roller_reverse_open_close(hass, mock_openzwave):
     """Test position changed."""
-    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode()
     value = MockValue(data=50, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)

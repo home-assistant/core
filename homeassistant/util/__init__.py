@@ -56,8 +56,8 @@ def repr_helper(inp: Any) -> str:
             in inp.items())
     elif isinstance(inp, datetime):
         return as_local(inp).isoformat()
-    else:
-        return str(inp)
+
+    return str(inp)
 
 
 def convert(value: T, to_type: Callable[[T], U],
@@ -185,7 +185,7 @@ class OrderedSet(MutableSet):
             next_item[1] = prev_item
 
     def __iter__(self):
-        """Iteration of the set."""
+        """Iterate of the set."""
         end = self.end
         curr = end[2]
         while curr is not end:
@@ -273,7 +273,7 @@ class Throttle(object):
 
         @wraps(method)
         def wrapper(*args, **kwargs):
-            """Wrapper that allows wrapped to be called only once per min_time.
+            """Wrap that allows wrapped to be called only once per min_time.
 
             If we cannot acquire the lock, it is running so return None.
             """
@@ -303,8 +303,8 @@ class Throttle(object):
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
                     return result
-                else:
-                    return None
+
+                return None
             finally:
                 throttle[0].release()
 

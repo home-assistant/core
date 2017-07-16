@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Volvo sensors."""
+    """Set up the Volvo sensors."""
     if discovery_info is None:
         return
     add_devices([VolvoSensor(hass, *discovery_info)])
@@ -28,8 +28,7 @@ class VolvoSensor(VolvoEntity):
         val = getattr(self.vehicle, self._attribute)
         if self._attribute == 'odometer':
             return round(val / 1000)  # km
-        else:
-            return val
+        return val
 
     @property
     def unit_of_measurement(self):

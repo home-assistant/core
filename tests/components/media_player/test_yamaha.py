@@ -73,7 +73,7 @@ class TestYamaha(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         super(TestYamaha, self).setUp()
-        self.rec = FakeYamaha('10.0.0.0')
+        self.rec = FakeYamaha("http://10.0.0.0:80/YamahaRemoteControl/ctrl")
 
     def test_get_playback_support(self):
         """Test the playback."""

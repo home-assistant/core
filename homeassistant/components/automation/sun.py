@@ -16,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['sun']
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
@@ -44,8 +42,6 @@ def async_trigger(hass, config, action):
             },
         })
 
-    # Do something to call action
     if event == SUN_EVENT_SUNRISE:
         return async_track_sunrise(hass, call_action, offset)
-    else:
-        return async_track_sunset(hass, call_action, offset)
+    return async_track_sunset(hass, call_action, offset)

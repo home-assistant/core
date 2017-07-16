@@ -14,7 +14,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
+    SUPPORT_SEEK, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
     CONF_HOST, CONF_NAME)
@@ -32,7 +33,8 @@ PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -44,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MPD platform."""
+    """Set up the MPD platform."""
     daemon = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -131,28 +133,28 @@ class MpdDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif self.status['state'] == 'pause':
             return STATE_PAUSED
-        else:
-            return STATE_OFF
+
+        return STATE_OFF
 
     @property
     def media_content_id(self):
-        """Content ID of current playing media."""
+        """Return the content ID of current playing media."""
         return self.currentsong.get('file')
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Return the content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
         return self.currentsong.get('time')
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         name = self.currentsong.get('name', None)
         title = self.currentsong.get('title', None)
 
@@ -162,17 +164,17 @@ class MpdDevice(MediaPlayerDevice):
             return title
         elif title is None:
             return name
-        else:
-            return '{}: {}'.format(name, title)
+
+        return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):
-        """Artist of current playing media (Music track only)."""
+        """Return the artist of current playing media (Music track only)."""
         return self.currentsong.get('artist')
 
     @property
     def media_album_name(self):
-        """Album of current playing media (Music track only)."""
+        """Return the album of current playing media (Music track only)."""
         return self.currentsong.get('album')
 
     @property
@@ -192,7 +194,7 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return the list of available input sources."""
         return self.playlists
 
     def select_source(self, source):
@@ -266,3 +268,20 @@ class MpdDevice(MediaPlayerDevice):
             self.client.clear()
             self.client.add(media_id)
             self.client.play()
+
+    @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return bool(self.status['random'])
+
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        self.client.random(int(shuffle))
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self.client.clear()
+
+    def media_seek(self, position):
+        """Send seek command."""
+        self.client.seekcur(position)

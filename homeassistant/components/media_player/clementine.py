@@ -28,6 +28,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Clementine Remote'
+DEFAULT_PORT = 5500
 
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                      SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_SET | \
@@ -35,19 +36,22 @@ SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                      SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=5500): cv.positive_int,
     vol.Optional(CONF_ACCESS_TOKEN, default=None): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Clementine platform."""
+    """Set up the Clementine platform."""
     from clementineremote import ClementineRemote
-    client = ClementineRemote(config.get(CONF_HOST), config.get(CONF_PORT),
-                              config.get(CONF_ACCESS_TOKEN), reconnect=True)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    token = config.get(CONF_ACCESS_TOKEN)
+
+    client = ClementineRemote(host, port, token, reconnect=True)
 
     add_devices([ClementineDevice(client, config[CONF_NAME])])
 

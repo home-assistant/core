@@ -80,7 +80,7 @@ class NmapDeviceScanner(DeviceScanner):
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
-        _LOGGER.info("nmap scanner initialized")
+        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -95,8 +95,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):

@@ -18,7 +18,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +107,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         Return boolean if scanning successful.
         """
         with self.lock:
-            _LOGGER.info('Checking ARP')
+            _LOGGER.info("Checking ARP")
 
             url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
             data = self.get_ddwrt_data(url)
@@ -137,22 +136,19 @@ class DdWrtDeviceScanner(DeviceScanner):
         """Retrieve data from DD-WRT and return parsed result."""
         try:
             response = requests.get(
-                url,
-                auth=(self.username, self.password),
-                timeout=4)
+                url, auth=(self.username, self.password), timeout=4)
         except requests.exceptions.Timeout:
-            _LOGGER.exception('Connection to the router timed out')
+            _LOGGER.exception("Connection to the router timed out")
             return
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
         elif response.status_code == 401:
             # Authentication error
             _LOGGER.exception(
-                'Failed to authenticate, '
-                'please check your username and password')
+                "Failed to authenticate, check your username and password")
             return
         else:
-            _LOGGER.error('Invalid response from ddwrt: %s', response)
+            _LOGGER.error("Invalid response from DD-WRT: %s", response)
 
 
 def _parse_ddwrt_response(data_str):

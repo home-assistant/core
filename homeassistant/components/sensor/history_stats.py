@@ -4,7 +4,6 @@ Component to make instant statistics about your history.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_stats/
 """
-
 import datetime
 import logging
 import math
@@ -45,8 +44,6 @@ UNITS = {
 }
 ICON = 'mdi:chart-line'
 
-ATTR_START = 'from'
-ATTR_END = 'to'
 ATTR_VALUE = 'value'
 
 
@@ -152,18 +149,15 @@ class HistoryStatsSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling required."""
+        """Return the polling state."""
         return True
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        start, end = self._period
         hsh = HistoryStatsHelper
         return {
             ATTR_VALUE: hsh.pretty_duration(self.value),
-            ATTR_START: start.strftime('%Y-%m-%d %H:%M:%S'),
-            ATTR_END: end.strftime('%Y-%m-%d %H:%M:%S'),
         }
 
     @property
@@ -173,13 +167,33 @@ class HistoryStatsSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
+        # Get previous values of start and end
+        p_start, p_end = self._period
+
         # Parse templates
         self.update_period()
         start, end = self._period
 
-        # Convert to UTC
+        # Convert times to UTC
         start = dt_util.as_utc(start)
         end = dt_util.as_utc(end)
+        p_start = dt_util.as_utc(p_start)
+        p_end = dt_util.as_utc(p_end)
+        now = datetime.datetime.now()
+
+        # Compute integer timestamps
+        start_timestamp = math.floor(dt_util.as_timestamp(start))
+        end_timestamp = math.floor(dt_util.as_timestamp(end))
+        p_start_timestamp = math.floor(dt_util.as_timestamp(p_start))
+        p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
+        now_timestamp = math.floor(dt_util.as_timestamp(now))
+
+        # If period has not changed and current time after the period end...
+        if start_timestamp == p_start_timestamp and \
+            end_timestamp == p_end_timestamp and \
+                end_timestamp <= now_timestamp:
+            # Don't compute anything as the value cannot have changed
+            return
 
         # Get history between start and end
         history_list = history.state_changes_during_period(
@@ -192,7 +206,7 @@ class HistoryStatsSensor(Entity):
         last_state = history.get_state(self.hass, start, self._entity_id)
         last_state = (last_state is not None and
                       last_state == self._entity_state)
-        last_time = dt_util.as_timestamp(start)
+        last_time = start_timestamp
         elapsed = 0
         count = 0
 
@@ -211,8 +225,7 @@ class HistoryStatsSensor(Entity):
 
         # Count time elapsed between last history state and end of measure
         if last_state:
-            measure_end = min(dt_util.as_timestamp(end), dt_util.as_timestamp(
-                datetime.datetime.now()))
+            measure_end = min(end_timestamp, now_timestamp)
             elapsed += measure_end - last_time
 
         # Save value in hours
@@ -239,8 +252,8 @@ class HistoryStatsSensor(Entity):
                     start = dt_util.as_local(dt_util.utc_from_timestamp(
                         math.floor(float(start_rendered))))
                 except ValueError:
-                    _LOGGER.error('PARSING ERROR: start must be a datetime'
-                                  ' or a timestamp.')
+                    _LOGGER.error("Parsing error: start must be a datetime"
+                                  "or a timestamp")
                     return
 
         # Parse end
@@ -256,8 +269,8 @@ class HistoryStatsSensor(Entity):
                     end = dt_util.as_local(dt_util.utc_from_timestamp(
                         math.floor(float(end_rendered))))
                 except ValueError:
-                    _LOGGER.error('PARSING ERROR: end must be a datetime'
-                                  ' or a timestamp.')
+                    _LOGGER.error("Parsing error: end must be a datetime "
+                                  "or a timestamp")
                     return
 
         # Calculate start or end using the duration
@@ -280,13 +293,10 @@ class HistoryStatsHelper:
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
-            return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
+            return '%dd %dh %dm' % (days, hours, minutes)
         elif hours > 0:
-            return '%dh %dm %ds' % (hours, minutes, seconds)
-        elif minutes > 0:
-            return '%dm %ds' % (minutes, seconds)
-        else:
-            return '%ds' % (seconds,)
+            return '%dh %dm' % (hours, minutes)
+        return '%dm' % minutes
 
     @staticmethod
     def pretty_ratio(value, period):
@@ -305,5 +315,5 @@ class HistoryStatsHelper:
             # Common during HA startup - so just a warning
             _LOGGER.warning(ex)
             return
-        _LOGGER.error('Error parsing template for [' + field + ']')
+        _LOGGER.error("Error parsing template for field %s", field)
         _LOGGER.error(ex)

@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Blink Camera."""
+    """Set up a Blink Camera."""
     if discovery_info is None:
         return
 
@@ -49,19 +49,19 @@ class BlinkCamera(Camera):
 
     @property
     def name(self):
-        """A camera name."""
+        """Return the camera name."""
         return self._name
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def request_image(self):
-        """An image request from Blink servers."""
+        """Request a new image from Blink servers."""
         _LOGGER.info("Requesting new image from blink servers")
         image_url = self.check_for_motion()
         header = self.data.cameras[self._name].header
         self.response = requests.get(image_url, headers=header, stream=True)
 
     def check_for_motion(self):
-        """A method to check if motion has been detected since last update."""
+        """Check if motion has been detected since last update."""
         self.data.refresh()
         notifs = self.data.cameras[self._name].notifications
         if notifs > self.notifications:

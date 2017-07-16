@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Raspberry PI GPIO devices."""
+    """Set up the Raspberry PI GPIO devices."""
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     switches = []
@@ -73,13 +73,13 @@ class RPiGPIOSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False

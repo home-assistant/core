@@ -58,7 +58,7 @@ MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup MQTT Sensor."""
+    """Set up MQTT room Sensor."""
     async_add_devices([MQTTRoomSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -85,7 +85,7 @@ class MQTTRoomSensor(Entity):
         self._updated = None
 
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
@@ -100,12 +100,12 @@ class MQTTRoomSensor(Entity):
 
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             try:
                 data = MQTT_PAYLOAD(payload)
             except vol.MultipleInvalid as error:
-                _LOGGER.debug('skipping update because of malformatted '
-                              'data: %s', error)
+                _LOGGER.debug(
+                    "Skipping update because of malformatted data: %s", error)
                 return
 
             device = _parse_update_data(topic, data)

@@ -4,7 +4,6 @@ Support for Synology NAS Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.synologydsm/
 """
-
 import logging
 from datetime import timedelta
 
@@ -86,7 +85,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Synology NAS Sensor."""
+    """Set up the Synology NAS Sensor."""
     # pylint: disable=too-many-locals
     def run_setup(event):
         """Wait until HASS is fully initialized before creating.
@@ -139,7 +138,7 @@ class SynoApi():
 
     # pylint: disable=too-many-arguments, bare-except
     def __init__(self, host, port, username, password, temp_unit):
-        """Constructor of the API wrapper class."""
+        """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 
@@ -178,8 +177,7 @@ class SynoNasSensor(Entity):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
             return "{} ({})".format(self.var_name, self.monitor_device)
-        else:
-            return self.var_name
+        return self.var_name
 
     @property
     def icon(self):
@@ -192,8 +190,7 @@ class SynoNasSensor(Entity):
         if self.var_id in ['volume_disk_temp_avg', 'volume_disk_temp_max',
                            'disk_temp']:
             return self._api.temp_unit
-        else:
-            return self.var_units
+        return self.var_units
 
     def update(self):
         """Get the latest data for the states."""
@@ -239,8 +236,8 @@ class SynoNasStorageSensor(SynoNasSensor):
 
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
-                else:
-                    return round(attr * 1.8 + 32.0, 1)
-            else:
-                return getattr(self._api.storage,
-                               self.var_id)(self.monitor_device)
+
+                return round(attr * 1.8 + 32.0, 1)
+
+            return getattr(self._api.storage,
+                           self.var_id)(self.monitor_device)

@@ -1,4 +1,9 @@
-"""Support for the IKEA Tradfri platform."""
+"""
+Support for the IKEA Tradfri platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.tradfri/
+"""
 import logging
 
 from homeassistant.components.light import (
@@ -6,24 +11,21 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY
+from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS
 from homeassistant.util import color as color_util
-from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['tradfri']
-SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
-SUPPORTED_FEATURES_IKEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
-IKEA = 'ikea_of_sweden'
-
-ALLOWED_TEMPERATURES = {IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}}
-ALLOWED_FEATURES = {IKEA: SUPPORTED_FEATURES_IKEA}
+IKEA = 'IKEA of Sweden'
+ALLOWED_TEMPERATURES = {
+    IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the IKEA Tradfri Light platform."""
+    """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
         return
 
@@ -33,9 +35,58 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
 
+    allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
+    if allow_tradfri_groups:
+        groups = gateway.get_groups()
+        add_devices(TradfriGroup(group) for group in groups)
+
+
+class TradfriGroup(Light):
+    """The platform class required by hass."""
+
+    def __init__(self, light):
+        """Initialize a Group."""
+        self._group = light
+        self._name = light.name
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def name(self):
+        """Return the display name of this group."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if group lights are on."""
+        return self._group.state
+
+    @property
+    def brightness(self):
+        """Return the brightness of the group lights."""
+        return self._group.dimmer
+
+    def turn_off(self, **kwargs):
+        """Instruct the group lights to turn off."""
+        return self._group.set_state(0)
+
+    def turn_on(self, **kwargs):
+        """Instruct the group lights to turn on, or dim."""
+        if ATTR_BRIGHTNESS in kwargs:
+            self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+        else:
+            self._group.set_state(1)
+
+    def update(self):
+        """Fetch new state data for this group."""
+        self._group.update()
+
 
 class Tradfri(Light):
-    """The platform class required by hass."""
+    """The platform class required by Home Asisstant."""
 
     def __init__(self, light):
         """Initialize a Light."""
@@ -46,10 +97,16 @@ class Tradfri(Light):
         self._light_data = light.light_control.lights[0]
         self._name = light.name
         self._rgb_color = None
-        self._features = ALLOWED_FEATURES.get(
-            slugify(self._light.device_info.manufacturer), SUPPORTED_FEATURES)
+        self._features = SUPPORT_BRIGHTNESS
+
+        if self._light_data.hex_color is not None:
+            if self._light.device_info.manufacturer == IKEA:
+                self._features |= SUPPORT_COLOR_TEMP
+            else:
+                self._features |= SUPPORT_RGB_COLOR
+
         self._ok_temps = ALLOWED_TEMPERATURES.get(
-            slugify(self._light.device_info.manufacturer))
+            self._light.device_info.manufacturer)
 
     @property
     def supported_features(self):
@@ -68,22 +125,24 @@ class Tradfri(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
+        """Return the brightness of the light."""
         return self._light_data.dimmer
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if not self.supported_features & SUPPORT_COLOR_TEMP or \
-                not self._ok_temps:
-            return
+        if (self._light_data.hex_color is None or
+                self.supported_features & SUPPORT_COLOR_TEMP == 0 or
+                not self._ok_temps):
+            return None
+
         kelvin = next((
             kelvin for kelvin, hex_color in self._ok_temps.items()
             if hex_color == self._light_data.hex_color), None)
         if kelvin is None:
             _LOGGER.error(
-                'unexpected color temperature found %s',
-                self._light_data.hex_color)
+                "Unexpected color temperature found for %s: %s",
+                self.name, self._light_data.hex_color)
             return
         return color_util.color_temperature_kelvin_to_mired(kelvin)
 
@@ -117,14 +176,15 @@ class Tradfri(Light):
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
             # find closest allowed kelvin temp from user input
-            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x-kelvin))
+            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
             self._light_control.set_hex_color(self._ok_temps[kelvin])
 
     def update(self):
         """Fetch new state data for this light."""
         self._light.update()
 
-        # Handle Hue lights paired with the gatway
-        if self._light_data.hex_color is not None:
+        # Handle Hue lights paired with the gateway
+        # hex_color is 0 when bulb is unreachable
+        if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)

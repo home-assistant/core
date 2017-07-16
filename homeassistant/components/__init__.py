@@ -39,19 +39,19 @@ def is_on(hass, entity_id=None):
     else:
         entity_ids = hass.states.entity_ids()
 
-    for entity_id in entity_ids:
-        domain = ha.split_entity_id(entity_id)[0]
+    for ent_id in entity_ids:
+        domain = ha.split_entity_id(ent_id)[0]
 
         module = get_component(domain)
 
         try:
-            if module.is_on(hass, entity_id):
+            if module.is_on(hass, ent_id):
                 return True
 
         except AttributeError:
             # module is None or method is_on does not exist
             _LOGGER.exception("Failed to call %s.is_on for %s",
-                              module, entity_id)
+                              module, ent_id)
 
     return False
 
@@ -102,10 +102,10 @@ def reload_core_config(hass):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup general services related to Home Assistant."""
+    """Set up general services related to Home Assistant."""
     @asyncio.coroutine
     def async_handle_turn_service(service):
-        """Method to handle calls to homeassistant.turn_on/off."""
+        """Handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id

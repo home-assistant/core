@@ -16,7 +16,7 @@ from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.6.1']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OpenWeatherMap weather platform."""
+    """Set up the OpenWeatherMap weather platform."""
     import pyowm
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))

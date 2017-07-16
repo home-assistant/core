@@ -8,6 +8,7 @@ import sys
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
+    'raspihats',
     'rpi-rf',
     'Adafruit_Python_DHT',
     'Adafruit_BBIO',
@@ -15,6 +16,7 @@ COMMENT_REQUIREMENTS = (
     'pybluez',
     'beacontools',
     'bluepy',
+    'opencv-python',
     'python-lirc',
     'gattlib',
     'pyuserinput',
@@ -22,7 +24,52 @@ COMMENT_REQUIREMENTS = (
     'pycups',
     'python-eq3bt',
     'avion',
-    'decora'
+    'decora',
+    'face_recognition',
+    'blinkt',
+    'smbus-cffi',
+    'envirophat',
+    'i2csense'
+)
+
+TEST_REQUIREMENTS = (
+    'pydispatch',
+    'influxdb',
+    'nx584',
+    'uvcclient',
+    'somecomfort',
+    'aioautomatic',
+    'SoCo',
+    'libsoundtouch',
+    'libpurecoollink',
+    'rxv',
+    'apns2',
+    'sqlalchemy',
+    'forecastio',
+    'aiohttp_cors',
+    'pilight',
+    'fuzzywuzzy',
+    'rflink',
+    'ring_doorbell',
+    'sleepyq',
+    'statsd',
+    'pylitejet',
+    'holidays',
+    'evohomeclient',
+    'pexpect',
+    'hbmqtt',
+    'paho',
+    'dsmr_parser',
+    'mficlient',
+    'pmsensor',
+    'yahoo-finance',
+    'ha-ffmpeg',
+    'gTTS-token',
+    'pywebpush',
+    'PyJWT',
+    'restrictedpython',
+    'pyunifi',
+    'prometheus_client',
 )
 
 IGNORE_PACKAGES = (
@@ -75,11 +122,10 @@ def comment_requirement(req):
 
 
 def gather_modules():
-    """Collect the information and construct the output."""
+    """Collect the information."""
     reqs = {}
 
     errors = []
-    output = []
 
     for package in sorted(explore_module('homeassistant.components', True) +
                           explore_module('homeassistant.scripts', True)):
@@ -112,10 +158,12 @@ def gather_modules():
         print("Make sure you import 3rd party libraries inside methods.")
         return None
 
-    output.append('# Home Assistant core')
-    output.append('\n')
-    output.append('\n'.join(core_requirements()))
-    output.append('\n')
+    return reqs
+
+
+def generate_requirements_list(reqs):
+    """Generate a pip file based on requirements."""
+    output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements,
                           key=lambda name: (len(name.split('.')), name)):
@@ -125,6 +173,32 @@ def gather_modules():
             output.append('\n# {}\n'.format(pkg))
         else:
             output.append('\n{}\n'.format(pkg))
+    return ''.join(output)
+
+
+def requirements_all_output(reqs):
+    """Generate output for requirements_all."""
+    output = []
+    output.append('# Home Assistant core')
+    output.append('\n')
+    output.append('\n'.join(core_requirements()))
+    output.append('\n')
+    output.append(generate_requirements_list(reqs))
+
+    return ''.join(output)
+
+
+def requirements_test_output(reqs):
+    """Generate output for test_requirements."""
+    output = []
+    output.append('# Home Assistant test')
+    output.append('\n')
+    with open('requirements_test.txt') as fp:
+        output.append(fp.read())
+    output.append('\n')
+    filtered = {key: value for key, value in reqs.items()
+                if any(ign in key for ign in TEST_REQUIREMENTS)}
+    output.append(generate_requirements_list(filtered))
 
     return ''.join(output)
 
@@ -140,6 +214,12 @@ def write_requirements_file(data):
         req_file.write(data)
 
 
+def write_test_requirements_file(data):
+    """Write the modules to the requirements_all.txt."""
+    with open('requirements_test_all.txt', 'w+', newline="\n") as req_file:
+        req_file.write(data)
+
+
 def write_constraints_file(data):
     """Write constraints to a file."""
     with open(CONSTRAINT_PATH, 'w+', newline="\n") as req_file:
@@ -149,6 +229,12 @@ def write_constraints_file(data):
 def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
+        return data == ''.join(req_file)
+
+
+def validate_requirements_test_file(data):
+    """Validate if requirements_all.txt is up to date."""
+    with open('requirements_test_all.txt', 'r') as req_file:
         return data == ''.join(req_file)
 
 
@@ -171,22 +257,31 @@ def main():
 
     constraints = gather_constraints()
 
+    reqs_file = requirements_all_output(data)
+    reqs_test_file = requirements_test_output(data)
+
     if sys.argv[-1] == 'validate':
-        if not validate_requirements_file(data):
-            print("******* ERROR")
-            print("requirements_all.txt is not up to date")
-            print("Please run script/gen_requirements_all.py")
-            sys.exit(1)
+        errors = []
+        if not validate_requirements_file(reqs_file):
+            errors.append("requirements_all.txt is not up to date")
+
+        if not validate_requirements_test_file(reqs_test_file):
+            errors.append("requirements_test_all.txt is not up to date")
 
         if not validate_constraints_file(constraints):
+            errors.append(
+                "home-assistant/package_constraints.txt is not up to date")
+
+        if errors:
             print("******* ERROR")
-            print("home-assistant/package_constraints.txt is not up to date")
+            print('\n'.join(errors))
             print("Please run script/gen_requirements_all.py")
             sys.exit(1)
 
         sys.exit(0)
 
-    write_requirements_file(data)
+    write_requirements_file(reqs_file)
+    write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
 
 

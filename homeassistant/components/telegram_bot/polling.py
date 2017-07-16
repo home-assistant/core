@@ -1,5 +1,9 @@
-"""Telegram bot polling implementation."""
+"""
+Telegram bot polling implementation.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.polling/
+"""
 import asyncio
 from asyncio.futures import CancelledError
 import logging
@@ -7,23 +11,22 @@ import logging
 import async_timeout
 from aiohttp.client_exceptions import ClientError
 
-from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
-    BaseTelegramBotEntity, PLATFORM_SCHEMA
-from homeassistant.const import EVENT_HOMEASSISTANT_START, \
-    EVENT_HOMEASSISTANT_STOP, CONF_API_KEY
+from homeassistant.components.telegram_bot import (
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
+    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_API_KEY)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA
+PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the polling platform."""
+def async_setup_platform(hass, config):
+    """Set up the Telegram polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
@@ -76,7 +79,7 @@ class TelegramPoll(BaseTelegramBotEntity):
     def get_updates(self, offset):
         """Bypass the default long polling method to enable asyncio."""
         resp = None
-        _json = []  # The actual value to be returned.
+        _json = {'result': [], 'ok': True}  # Empty result.
 
         if offset:
             self.post_data['offset'] = offset
@@ -86,9 +89,11 @@ class TelegramPoll(BaseTelegramBotEntity):
                     self.update_url, data=self.post_data,
                     headers={'connection': 'keep-alive'}
                 )
-            if resp.status != 200:
+            if resp.status == 200:
+                _json = yield from resp.json()
+            else:
                 _LOGGER.error("Error %s on %s", resp.status, self.update_url)
-            _json = yield from resp.json()
+
         except ValueError:
             _LOGGER.error("Error parsing Json message")
         except (asyncio.TimeoutError, ClientError):
@@ -101,15 +106,19 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     @asyncio.coroutine
     def handle(self):
-        """" Receiving and processing incoming messages."""
+        """Receiving and processing incoming messages."""
         _updates = yield from self.get_updates(self.update_id)
-        for update in _updates['result']:
-            self.update_id = update['update_id'] + 1
-            self.process_message(update)
+        _updates = _updates.get('result')
+        if _updates is None:
+            _LOGGER.error("Incorrect result received.")
+        else:
+            for update in _updates:
+                self.update_id = update['update_id'] + 1
+                self.process_message(update)
 
     @asyncio.coroutine
     def check_incoming(self):
-        """"Loop which continuously checks for incoming telegram messages."""
+        """Loop which continuously checks for incoming telegram messages."""
         try:
             while True:
                 # Each handle call sends a long polling post request
@@ -118,4 +127,4 @@ class TelegramPoll(BaseTelegramBotEntity):
                 # timeout will for this reason not really stress the processor.
                 yield from self.handle()
         except CancelledError:
-            _LOGGER.debug("Stopping telegram polling bot")
+            _LOGGER.debug("Stopping Telegram polling bot")
