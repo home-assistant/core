@@ -15,26 +15,37 @@ from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     STATE_UNKNOWN, CONF_NAME,
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.exceptions as exc
 
-REQUIREMENTS = ['pythonegardia==1.0.10']
+REQUIREMENTS = ['pythonegardia==1.0.13']
+
+CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
+CONF_REPORT_SERVER_PORT = 'report_server_port'
+CONF_REPORT_SERVER_CODES = 'report_server_codes'
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Egardia'
-DEFAULT_PORT = '80'
+DEFAULT_PORT = 80
 DOMAIN = 'egardia'
 NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
+DEFAULT_REPORT_SERVER_ENABLED = False
+DEFAULT_REPORT_SERVER_PORT = 85
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(vol.Coerce(int)),
+    vol.Optional(CONF_REPORT_SERVER_ENABLED,
+                 default=DEFAULT_REPORT_SERVER_ENABLED): cv.boolean,
+    vol.Optional(CONF_REPORT_SERVER_PORT,
+                 default=DEFAULT_REPORT_SERVER_PORT): vol.All(vol.Coerce(int)),
+    vol.Optional(CONF_REPORT_SERVER_CODES): vol.All(cv.ensure_list),
     })
 
 
@@ -47,32 +58,46 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    rs_enabled = config.get(CONF_REPORT_SERVER_ENABLED)
+    rs_port = config.get(CONF_REPORT_SERVER_PORT)
+    rs_codes = config.get(CONF_REPORT_SERVER_CODES)
     try:
         egardiasystem = egardiadevice.EgardiaDevice(host, port,
                                                     username, password, "")
-    except requests.ConnectionError:
+    except requests.exceptions.RequestException:
         raise exc.PlatformNotReady()
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username.")
         return False
-    add_devices([EgardiaAlarm(name, egardiasystem)])
+
+    add_devices([EgardiaAlarm(name, egardiasystem, rs_enabled, rs_port,
+                              rs_codes)])
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem):
+    def __init__(self, name, egardiasystem, rs_enabled=False,
+                 rs_port=None, rs_codes=None):
         """Initialize object."""
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = STATE_UNKNOWN
+        self._rs_enabled = rs_enabled
+        self._rs_port = rs_port
+
+        if rs_codes is not None:
+            self._rs_codes = rs_codes[0]
+        else:
+            self._rs_codes = rs_codes
 
     STATES = {
         'ARM': STATE_ALARM_ARMED_AWAY,
         'HOME': STATE_ALARM_ARMED_HOME,
         'DAY HOME': STATE_ALARM_ARMED_HOME,
         'DISARM': STATE_ALARM_DISARMED,
-        'UNKNOWN': STATE_UNKNOWN
+        'UNKNOWN': STATE_UNKNOWN,
+        'TRIGGERED': STATE_ALARM_TRIGGERED
     }
 
     @property
@@ -85,20 +110,65 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._status
 
+    def lookupstatusfromcode(self, statuscode):
+        """Look at the rs_codes and returns the status from the code."""
+        status = 'UNKNOWN'
+        statuscode = str(statuscode).strip()
+        for i in self._rs_codes:
+            val = str(self._rs_codes[i]).strip()
+            if ',' in val:
+                splitted = val.split(",")
+                for code in splitted:
+                    code = str(code).strip()
+                    if statuscode == code:
+                        status = i.upper()
+                        break
+            elif statuscode == val:
+                status = i.upper()
+                break
+        return status
+
     def update(self):
         """Update the alarm status."""
-        status = self._egardiasystem.getstate()
+        import requests
+        import socket
+        if self._rs_enabled:
+            try:
+                req = requests.get('http://'+socket.getfqdn()+':'
+                                   + str(self._rs_port))
+                statuscode = req.text
+                status = self.lookupstatusfromcode(statuscode)
+            except requests.exceptions.RequestException as err:
+                _LOGGER.error("Egardia device exception occurred when"
+                              + " getting status from report server: "+err)
+        else:
+            status = self._egardiasystem.getstate()
         self._status = ([v for k, v in self.STATES.items()
                          if status.upper() == k][0])
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._egardiasystem.alarm_disarm()
+        import requests
+        try:
+            self._egardiasystem.alarm_disarm()
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("Egardia device exception occurred when"
+                          + " sending disarm command: "+err)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._egardiasystem.alarm_arm_home()
+        import requests
+        try:
+            self._egardiasystem.alarm_arm_home()
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("Egardia device exception occurred when"
+                          + " sending arm home command: "+err)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._egardiasystem.alarm_arm_away()
+        import requests
+        try:
+            self._egardiasystem.alarm_arm_away()
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("Egardia device exception occurred when"
+                          + "sending arm away command: "+err)
