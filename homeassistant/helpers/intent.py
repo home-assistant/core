@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 
-DOMAIN = 'intent'
+DATA_KEY = 'intent'
 _LOGGER = logging.getLogger(__name__)
 
 SLOT_SCHEMA = vol.Schema({
@@ -21,9 +21,9 @@ SPEECH_TYPE_SSML = 'ssml'
 @callback
 def async_register(hass, handler):
     """Register an intent with Home Assistant."""
-    intents = hass.data.get(DOMAIN)
+    intents = hass.data.get(DATA_KEY)
     if intents is None:
-        intents = hass.data[DOMAIN] = {}
+        intents = hass.data[DATA_KEY] = {}
 
     if handler.intent_type in intents:
         _LOGGER.warning('Intent %s is being overwritten by %s.',
@@ -35,7 +35,7 @@ def async_register(hass, handler):
 @asyncio.coroutine
 def async_handle(hass, platform, intent_type, slots=None, text_input=None):
     """Handle an intent."""
-    handler = hass.data.get(DOMAIN, {}).get(intent_type)
+    handler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
         raise UnknownIntent()
@@ -50,12 +50,6 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
         raise InvalidSlotInfo from err
     except Exception as err:
         raise IntentHandleError from err
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Setup intent."""
-    return True
 
 
 class IntentError(HomeAssistantError):
