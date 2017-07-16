@@ -12,6 +12,7 @@ import logging
 from homeassistant.core import callback as async_callback
 from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
     ATTR_ENTITY_PICTURE
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -37,6 +38,7 @@ STATE_CONFIGURE = 'configure'
 STATE_CONFIGURED = 'configured'
 
 
+@bind_hass
 def request_config(
         hass, name, callback, description=None, description_image=None,
         submit_caption=None, fields=None, link_name=None, link_url=None,
