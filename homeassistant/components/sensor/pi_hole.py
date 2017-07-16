@@ -105,7 +105,7 @@ class PiHoleSensor(Entity):
     def state(self):
         """Return the state of the device."""
         try:
-            return round(self._api.data[self._var_id])
+            return round(self._api.data[self._var_id], 2)
         except TypeError:
             return self._api.data[self._var_id]
 
