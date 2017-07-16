@@ -32,7 +32,7 @@ def test_snips_call_action(hass, mqtt_mock):
     })
     assert result
 
-    intents = yield from async_mock_intent(hass, 'Lights')
+    intents = async_mock_intent(hass, 'Lights')
 
     async_fire_mqtt_message(hass, 'hermes/nlu/intentParsed',
                             EXAMPLE_MSG)

@@ -2,6 +2,7 @@
 import asyncio
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.helpers import intent
 
 
 @asyncio.coroutine
@@ -9,8 +10,8 @@ def test_add_item(hass):
     """Test adding an item intent."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    response = yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+    response = yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
     )
 
     assert response.speech['plain']['speech'] == \
@@ -22,18 +23,18 @@ def test_recent_items_intent(hass):
     """Test recent items."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+    yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
     )
-    yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
+    yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
     )
-    yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'soda'}}
+    yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'soda'}}
     )
 
-    response = yield from hass.intent.async_handle(
-        'test', 'ShoppingListLastItems'
+    response = yield from intent.async_handle(
+        hass, 'test', 'ShoppingListLastItems'
     )
 
     assert response.speech['plain']['speech'] == \
@@ -45,11 +46,11 @@ def test_api(hass, test_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+    yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
     )
-    yield from hass.intent.async_handle(
-        'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
+    yield from intent.async_handle(
+        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
     )
 
     client = yield from test_client(hass.http.app)

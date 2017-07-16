@@ -122,7 +122,7 @@ class TestConversation(unittest.TestCase):
 @asyncio.coroutine
 def test_calling_intent(hass):
     """Test calling an intent from a conversation."""
-    intents = yield from async_mock_intent(hass, 'OrderBeer')
+    intents = async_mock_intent(hass, 'OrderBeer')
 
     result = yield from async_setup_component(hass, 'conversation', {
         'conversation': {

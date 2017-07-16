@@ -15,10 +15,9 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
-from homeassistant.helpers import template, script, config_validation as cv
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.intent import (
-    UnknownIntent, IntentError, InvalidSlotInfo)
+from homeassistant.helpers import (
+    intent, template, script, config_validation as cv)
+from homeassistant.components import http
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ ATTR_REDIRECTION_URL = 'redirectionURL'
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
 
 DOMAIN = 'alexa'
-DEPENDENCIES = ['http', 'intent']
+DEPENDENCIES = ['http']
 
 
 class SpeechType(enum.Enum):
@@ -115,7 +114,7 @@ def setup(hass, config):
     return True
 
 
-class AlexaIntentsView(HomeAssistantView):
+class AlexaIntentsView(http.HomeAssistantView):
     """Handle Alexa requests."""
 
     url = INTENTS_API_ENDPOINT
@@ -128,10 +127,10 @@ class AlexaIntentsView(HomeAssistantView):
         intents = copy.deepcopy(intents)
         template.attach(hass, intents)
 
-        for name, intent in intents.items():
-            if CONF_ACTION in intent:
-                intent[CONF_ACTION] = script.Script(
-                    hass, intent[CONF_ACTION], "Alexa intent {}".format(name))
+        for name, conf in intents.items():
+            if CONF_ACTION in conf:
+                conf[CONF_ACTION] = script.Script(
+                    hass, conf[CONF_ACTION], "Alexa intent {}".format(name))
 
         self.intents = intents
 
@@ -155,8 +154,8 @@ class AlexaIntentsView(HomeAssistantView):
         if req_type == 'SessionEndedRequest':
             return None
 
-        intent = req.get('intent')
-        alexa_response = AlexaResponse(hass, intent)
+        alexa_intent_info = req.get('intent')
+        alexa_response = AlexaResponse(hass, alexa_intent_info)
 
         if req_type == 'LaunchRequest':
             alexa_response.add_speech(
@@ -170,25 +169,25 @@ class AlexaIntentsView(HomeAssistantView):
                 'Received unsupported request: {}'.format(req_type),
                 HTTP_BAD_REQUEST)
 
-        intent_name = intent['name']
+        intent_name = alexa_intent_info['name']
 
         try:
-            intent_response = yield from hass.intent.async_handle(
-                DOMAIN, intent_name,
+            intent_response = yield from intent.async_handle(
+                hass, DOMAIN, intent_name,
                 {key: {'value': value} for key, value
                  in alexa_response.variables.items()})
-        except UnknownIntent as err:
+        except intent.UnknownIntent as err:
             _LOGGER.warning('Received unknown intent %s', intent_name)
             alexa_response.add_speech(
                 SpeechType.plaintext,
                 "This intent is not yet configured within Home Assistant.")
             return self.json(alexa_response)
 
-        except InvalidSlotInfo as err:
+        except intent.InvalidSlotInfo as err:
             _LOGGER.error('Received invalid slot data from Alexa: %s', err)
             return self.json_message('Invalid slot data received',
                                      HTTP_BAD_REQUEST)
-        except IntentError:
+        except intent.IntentError:
             _LOGGER.exception('Error handling request for %s', intent_name)
             return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
 
@@ -210,7 +209,7 @@ class AlexaIntentsView(HomeAssistantView):
 class AlexaResponse(object):
     """Help generating the response for Alexa."""
 
-    def __init__(self, hass, intent=None):
+    def __init__(self, hass, intent_info):
         """Initialize the response."""
         self.hass = hass
         self.speech = None
@@ -219,11 +218,10 @@ class AlexaResponse(object):
         self.session_attributes = {}
         self.should_end_session = True
         self.variables = {}
-        if intent is not None and 'slots' in intent:
-            for key, value in intent['slots'].items():
-                if 'value' in value:
-                    underscored_key = key.replace('.', '_')
-                    self.variables[underscored_key] = value['value']
+        for key, value in intent_info.get('slots', {}).items():
+            if 'value' in value:
+                underscored_key = key.replace('.', '_')
+                self.variables[underscored_key] = value['value']
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""
@@ -290,7 +288,7 @@ class AlexaResponse(object):
         }
 
 
-class AlexaFlashBriefingView(HomeAssistantView):
+class AlexaFlashBriefingView(http.HomeAssistantView):
     """Handle Alexa Flash Briefing skill requests."""
 
     url = FLASH_BRIEFINGS_API_ENDPOINT

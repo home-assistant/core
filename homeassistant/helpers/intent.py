@@ -18,10 +18,43 @@ SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
 
 
+@callback
+def async_register(hass, handler):
+    """Register an intent with Home Assistant."""
+    intents = hass.data.get(DOMAIN)
+    if intents is None:
+        intents = hass.data[DOMAIN] = {}
+
+    if handler.intent_type in intents:
+        _LOGGER.warning('Intent %s is being overwritten by %s.',
+                        handler.intent_type, handler)
+
+    intents[handler.intent_type] = handler
+
+
+@asyncio.coroutine
+def async_handle(hass, platform, intent_type, slots=None, text_input=None):
+    """Handle an intent."""
+    handler = hass.data.get(DOMAIN, {}).get(intent_type)
+
+    if handler is None:
+        raise UnknownIntent()
+
+    intent = Intent(hass, platform, intent_type, slots or {}, text_input)
+
+    try:
+        _LOGGER.info("Triggering intent handler %s", handler)
+        result = yield from handler.async_handle(intent)
+        return result
+    except vol.Invalid as err:
+        raise InvalidSlotInfo from err
+    except Exception as err:
+        raise IntentHandleError from err
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup intent."""
-    hass.intent = IntentRegistry(hass)
     return True
 
 
@@ -58,9 +91,9 @@ class IntentHandler:
     platforms = None
 
     @callback
-    def async_can_handle(self, intent):
+    def async_can_handle(self, intent_obj):
         """Test if an intent can be handled."""
-        return self.platforms is None or intent.platform in self.platforms
+        return self.platforms is None or intent_obj.platform in self.platforms
 
     @callback
     def async_validate_slots(self, slots):
@@ -76,7 +109,7 @@ class IntentHandler:
         return self._slot_schema(slots)
 
     @asyncio.coroutine
-    def async_handle(self, intent):
+    def async_handle(self, intent_obj):
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -136,42 +169,3 @@ class IntentResponse:
             'speech': self.speech,
             'card': self.card,
         }
-
-
-class IntentRegistry:
-    """Registry of intent handlers."""
-
-    def __init__(self, hass):
-        """Initialize intent registry."""
-        self.hass = hass
-        self.intents = {}
-
-    @callback
-    def async_register(self, handler):
-        """Register an intent."""
-        if handler.intent_type in self.intents:
-            _LOGGER.warning('Intent %s is being overwritten by %s.',
-                            handler.intent_type, handler)
-            return
-
-        self.intents[handler.intent_type] = handler
-
-    @asyncio.coroutine
-    def async_handle(self, platform, intent_type, slots=None, text_input=None):
-        """Handle an intent."""
-        handler = self.intents.get(intent_type)
-
-        if handler is None:
-            raise UnknownIntent()
-
-        intent = Intent(self.hass, platform, intent_type, slots or {},
-                        text_input)
-
-        try:
-            _LOGGER.info("Triggering intent handler %s", handler)
-            result = yield from handler.async_handle(intent)
-            return result
-        except vol.Invalid as err:
-            raise InvalidSlotInfo from err
-        except Exception as err:
-            raise IntentHandleError from err

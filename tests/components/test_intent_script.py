@@ -2,6 +2,7 @@
 import asyncio
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.helpers import intent
 
 from tests.common import async_mock_service
 
@@ -31,8 +32,8 @@ def test_intent_script(hass):
         }
     })
 
-    response = yield from hass.intent.async_handle(
-        'test', 'HelloWorld', {'name': {'value': 'Paulus'}}
+    response = yield from intent.async_handle(
+        hass, 'test', 'HelloWorld', {'name': {'value': 'Paulus'}}
     )
 
     assert len(calls) == 1

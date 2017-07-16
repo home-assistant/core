@@ -5,11 +5,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.intent import IntentHandler
-from homeassistant.helpers import template, script, config_validation as cv
+from homeassistant.helpers import (
+    intent, template, script, config_validation as cv)
 
 DOMAIN = 'intent_script'
-DEPENDENCIES = ['intent']
 
 CONF_INTENTS = 'intents'
 CONF_SPEECH = 'speech'
@@ -52,12 +51,12 @@ def async_setup(hass, config):
             conf[CONF_ACTION] = script.Script(
                 hass, conf[CONF_ACTION],
                 "Intent Script {}".format(intent_type))
-        hass.intent.async_register(ScriptIntentHandler(intent_type, conf))
+        intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
 
     return True
 
 
-class ScriptIntentHandler(IntentHandler):
+class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
     def __init__(self, intent_type, config):
@@ -66,17 +65,18 @@ class ScriptIntentHandler(IntentHandler):
         self.config = config
 
     @asyncio.coroutine
-    def async_handle(self, intent):
+    def async_handle(self, intent_obj):
         """Handle the intent."""
         speech = self.config.get(CONF_SPEECH)
         card = self.config.get(CONF_CARD)
         action = self.config.get(CONF_ACTION)
-        slots = {key: value['value'] for key, value in intent.slots.items()}
+        slots = {key: value['value'] for key, value
+                 in intent_obj.slots.items()}
 
         if action is not None:
             yield from action.async_run(slots)
 
-        response = intent.create_response()
+        response = intent_obj.create_response()
 
         if speech is not None:
             response.async_set_speech(speech[CONF_TEXT].async_render(slots),

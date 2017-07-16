@@ -15,6 +15,7 @@ from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant import loader
 
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
@@ -47,8 +48,8 @@ def async_setup(hass, config):
     config = config.get(DOMAIN, {})
 
     intents = {
-        intent: [_create_matcher(sentence) for sentence in sentences]
-        for intent, sentences in config.get('intents', {}).items()
+        intent_type: [_create_matcher(sentence) for sentence in sentences]
+        for intent_type, sentences in config.get('intents', {}).items()
     }
 
     @asyncio.coroutine
@@ -58,16 +59,17 @@ def async_setup(hass, config):
 
         text = service.data[ATTR_TEXT]
 
-        for intent, matchers in intents.items():
+        for intent_type, matchers in intents.items():
             for matcher in matchers:
                 match = matcher.match(text)
 
                 if not match:
                     continue
 
-                yield from hass.intent.async_handle(
-                    DOMAIN, intent, {key: {'value': value} for key, value
-                                     in match.groupdict().items()}, text)
+                yield from loader.get_component('intent').async_handle(
+                    hass, DOMAIN, intent_type,
+                    {key: {'value': value} for key, value
+                     in match.groupdict().items()}, text)
                 return
 
         text = text.lower()

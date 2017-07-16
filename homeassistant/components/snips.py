@@ -8,12 +8,11 @@ import asyncio
 import json
 import logging
 import voluptuous as vol
-from homeassistant.helpers import config_validation as cv
-import homeassistant.loader as loader
-from homeassistant.components.intent import IntentError
+from homeassistant.helpers import intent, config_validation as cv
+from homeassistant import loader
 
 DOMAIN = 'snips'
-DEPENDENCIES = ['mqtt', 'intent']
+DEPENDENCIES = ['mqtt']
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
 
@@ -62,14 +61,14 @@ def async_setup(hass, config):
             _LOGGER.error('Intent has invalid schema: %s. %s', err, request)
             return
 
-        intent = request['intent']['intentName'].split('__')[-1]
+        intent_type = request['intent']['intentName'].split('__')[-1]
         slots = {slot['slotName']: {'value': slot['value']['value']}
                  for slot in request.get('slots', [])}
 
         try:
-            yield from hass.intent.async_handle(
-                DOMAIN, intent, slots, request['input'])
-        except IntentError:
+            yield from intent.async_handle(
+                hass, DOMAIN, intent_type, slots, request['input'])
+        except intent.IntentError:
             _LOGGER.exception("Error while handling intent.")
 
     yield from mqtt.async_subscribe(hass, INTENT_TOPIC, message_received)
