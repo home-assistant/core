@@ -19,11 +19,16 @@ CONF_TYPE = 'type'
 CONF_TITLE = 'title'
 CONF_CONTENT = 'content'
 CONF_TEXT = 'text'
+CONF_ASYNC_ACTION = 'async_action'
+
+DEFAULT_CONF_ASYNC_ACTION = False
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         cv.string: {
             vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ASYNC_ACTION,
+                         default=DEFAULT_CONF_ASYNC_ACTION): cv.boolean,
             vol.Optional(CONF_CARD): {
                 vol.Optional(CONF_TYPE, default='simple'): cv.string,
                 vol.Required(CONF_TITLE): cv.template,
@@ -70,11 +75,15 @@ class ScriptIntentHandler(intent.IntentHandler):
         speech = self.config.get(CONF_SPEECH)
         card = self.config.get(CONF_CARD)
         action = self.config.get(CONF_ACTION)
+        is_async_action = self.config.get(CONF_ASYNC_ACTION)
         slots = {key: value['value'] for key, value
                  in intent_obj.slots.items()}
 
         if action is not None:
-            yield from action.async_run(slots)
+            if is_async_action:
+                intent_obj.hass.async_add_job(action.async_run(slots))
+            else:
+                yield from action.async_run(slots)
 
         response = intent_obj.create_response()
 
