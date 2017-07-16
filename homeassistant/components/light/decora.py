@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.decora/
 """
 import logging
+from functools import wraps
+import time
 
 import voluptuous as vol
 
@@ -30,6 +32,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def retry(method):
+    """Retry bluetooth commands."""
+    @wraps(method)
+    def wrapper_retry(device, *args, **kwds):
+        """Try send command and retry on error."""
+        # pylint: disable=import-error
+        import decora
+
+        initial = time.monotonic()
+        while True:
+            if time.monotonic() - initial >= 10:
+                return None
+            try:
+                return method(device, *args, **kwds)
+            except (decora.decoraException, AttributeError):
+                # pylint: disable=protected-access
+                device._switch.connect()
+    return wrapper_retry
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Decora switch."""
     lights = []
@@ -39,8 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device['key'] = device_config[CONF_API_KEY]
         device['address'] = address
         light = DecoraLight(device)
-        if light.is_valid:
-            lights.append(light)
+        lights.append(light)
 
     add_devices(lights)
 
@@ -57,10 +78,8 @@ class DecoraLight(Light):
         self._address = device['address']
         self._key = device["key"]
         self._switch = decora.decora(self._address, self._key)
-        self._switch.connect()
-        self._state = self._switch.get_on()
-        self._brightness = self._switch.get_brightness() * 2.55
-        self.is_valid = True
+        self._brightness = 0
+        self._state = False
 
     @property
     def unique_id(self):
@@ -97,27 +116,29 @@ class DecoraLight(Light):
         """We can read the actual state."""
         return False
 
+    @retry
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        self._switch.set_brightness(int(brightness / 2.55))
+        self._switch.set_brightness(brightness / 2.55)
         self._brightness = brightness
-        return True
 
+    @retry
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-
         self._switch.on()
+        self._state = True
+
         if brightness is not None:
             self.set_state(brightness)
 
-        self._state = True
-
+    @retry
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._switch.off()
         self._state = False
 
+    @retry
     def update(self):
         """Synchronise internal state with the actual light state."""
         self._brightness = self._switch.get_brightness() * 2.55

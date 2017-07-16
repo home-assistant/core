@@ -95,43 +95,37 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return STATE_OFF
         # Haven't determined a way to see if the content is paused
-        else:
-            return STATE_PLAYING
+        return STATE_PLAYING
 
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
         if self._is_standby:
             return None
-        else:
-            return self._current['programId']
+        return self._current['programId']
 
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         if self._is_standby:
             return None
-        else:
-            return self._current['duration']
+        return self._current['duration']
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
         if self._is_standby:
             return None
-        else:
-            return self._current['title']
+        return self._current['title']
 
     @property
     def media_series_title(self):
         """Return the title of current episode of TV show."""
         if self._is_standby:
             return None
-        else:
-            if 'episodeTitle' in self._current:
-                return self._current['episodeTitle']
-            else:
-                return None
+        elif 'episodeTitle' in self._current:
+            return self._current['episodeTitle']
+        return None
 
     @property
     def supported_features(self):
@@ -143,18 +137,16 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the content type of current playing media."""
         if 'episodeTitle' in self._current:
             return MEDIA_TYPE_TVSHOW
-        else:
-            return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_VIDEO
 
     @property
     def media_channel(self):
         """Return the channel current playing media."""
         if self._is_standby:
             return None
-        else:
-            chan = "{} ({})".format(
-                self._current['callsign'], self._current['major'])
-            return chan
+
+        return "{} ({})".format(
+            self._current['callsign'], self._current['major'])
 
     def turn_on(self):
         """Turn on the receiver."""

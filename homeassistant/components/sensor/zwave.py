@@ -78,8 +78,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
             return TEMP_CELSIUS
         elif self._units == 'F':
             return TEMP_FAHRENHEIT
-        else:
-            return self._units
+        return self._units
 
 
 class ZWaveAlarmSensor(ZWaveSensor):

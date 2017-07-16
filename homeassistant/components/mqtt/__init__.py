@@ -315,15 +315,14 @@ def async_setup(hass, config):
         client_cert = conf.get(CONF_CLIENT_CERT)
         tls_insecure = conf.get(CONF_TLS_INSECURE)
         protocol = conf[CONF_PROTOCOL]
-
-        # hbmqtt requires a client id to be set.
-        if client_id is None:
-            client_id = 'home-assistant'
     elif broker_config:
         # If no broker passed in, auto config to internal server
         broker, port, username, password, certificate, protocol = broker_config
         # Embedded broker doesn't have some ssl variables
         client_key, client_cert, tls_insecure = None, None, None
+        # hbmqtt requires a client id to be set.
+        if client_id is None:
+            client_id = 'home-assistant'
     else:
         err = "Unable to start MQTT broker."
         if conf.get(CONF_EMBEDDED) is not None:
@@ -456,8 +455,8 @@ class MQTT(object):
                 certificate, certfile=client_cert,
                 keyfile=client_key, tls_version=tls_version)
 
-        if tls_insecure is not None:
-            self._mqttc.tls_insecure_set(tls_insecure)
+            if tls_insecure is not None:
+                self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe

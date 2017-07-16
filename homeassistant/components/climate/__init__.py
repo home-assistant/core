@@ -398,16 +398,14 @@ class ClimateDevice(Entity):
         """Return the current state."""
         if self.current_operation:
             return self.current_operation
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def precision(self):
         """Return the precision of the system."""
         if self.unit_of_measurement == TEMP_CELSIUS:
             return PRECISION_TENTHS
-        else:
-            return PRECISION_WHOLE
+        return PRECISION_WHOLE
 
     @property
     def state_attributes(self):
@@ -709,6 +707,5 @@ class ClimateDevice(Entity):
             return round(temp * 2) / 2.0
         elif self.precision == PRECISION_TENTHS:
             return round(temp, 1)
-        else:
-            # PRECISION_WHOLE as a fall back
-            return round(temp)
+        # PRECISION_WHOLE as a fall back
+        return round(temp)

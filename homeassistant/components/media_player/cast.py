@@ -131,8 +131,7 @@ class CastDevice(MediaPlayerDevice):
             return STATE_IDLE
         elif self.cast.is_idle:
             return STATE_OFF
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def volume_level(self):
@@ -235,18 +234,13 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.media_status is None or self.media_status_received is None or \
+        if self.media_status is None or \
                 not (self.media_status.player_is_playing or
+                     self.media_status.player_is_paused or
                      self.media_status.player_is_idle):
             return None
 
-        position = self.media_status.current_time
-
-        if self.media_status.player_is_playing:
-            position += (dt_util.utcnow() -
-                         self.media_status_received).total_seconds()
-
-        return position
+        return self.media_status.current_time
 
     @property
     def media_position_updated_at(self):

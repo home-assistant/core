@@ -11,8 +11,14 @@ omit =
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
+    homeassistant/components/amcrest.py
+    homeassistant/components/*/amcrest.py
+
     homeassistant/components/apcupsd.py
     homeassistant/components/*/apcupsd.py
+
+    homeassistant/components/apple_tv.py
+    homeassistant/components/*/apple_tv.py
 
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
@@ -89,6 +95,9 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/lametric.py
+    homeassistant/components/*/lametric.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
@@ -164,6 +173,9 @@ omit =
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
+    homeassistant/components/velux.py
+    homeassistant/components/*/velux.py
+
     homeassistant/components/vera.py
     homeassistant/components/*/vera.py
 
@@ -211,7 +223,6 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
-    homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
@@ -301,8 +312,8 @@ omit =
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
+    homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
-    homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
@@ -339,6 +350,7 @@ omit =
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/vizio.py
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
     homeassistant/components/media_player/yamaha.py
@@ -375,11 +387,11 @@ omit =
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
+    homeassistant/components/prometheus.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/scene/lifx_cloud.py
-    homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
@@ -390,7 +402,7 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
-    homeassistant/components/sensor/dublin_bus_transport.py
+    homeassistant/components/sensor/citybikes.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/comed_hourly_pricing.py
@@ -404,6 +416,7 @@ omit =
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
+    homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/ebox.py
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
@@ -450,6 +463,7 @@ omit =
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/opensky.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/otp.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
@@ -511,6 +525,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/switch/xiaomi_vacuum.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py

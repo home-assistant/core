@@ -13,7 +13,8 @@ from homeassistant.helpers import state
 from homeassistant.const import (
     STATE_OPEN, STATE_CLOSED,
     STATE_LOCKED, STATE_UNLOCKED,
-    STATE_ON, STATE_OFF)
+    STATE_ON, STATE_OFF,
+    STATE_HOME, STATE_NOT_HOME)
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
@@ -258,8 +259,9 @@ class TestStateHelpers(unittest.TestCase):
     def test_as_number_states(self):
         """Test state_as_number with states."""
         zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                       STATE_BELOW_HORIZON)
-        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON)
+                       STATE_BELOW_HORIZON, STATE_NOT_HOME)
+        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                      STATE_HOME)
         for _state in zero_states:
             self.assertEqual(0, state.state_as_number(
                 ha.State('domain.test', _state, {})))

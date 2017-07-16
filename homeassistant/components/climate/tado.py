@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
-        return False
+        return
 
     climate_devices = []
     for zone in zones:
@@ -61,9 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if climate_devices:
         add_devices(climate_devices, True)
-        return True
-    else:
-        return False
 
 
 def create_climate_device(tado, hass, zone, name, zone_id):
@@ -150,8 +147,7 @@ class TadoClimate(ClimateDevice):
         """Return current readable operation mode."""
         if self._cooling:
             return "Cooling"
-        else:
-            return OPERATION_LIST.get(self._current_operation)
+        return OPERATION_LIST.get(self._current_operation)
 
     @property
     def operation_list(self):
@@ -163,16 +159,14 @@ class TadoClimate(ClimateDevice):
         """Return the fan setting."""
         if self.ac_mode:
             return FAN_MODES_LIST.get(self._current_fan)
-        else:
-            return None
+        return None
 
     @property
     def fan_list(self):
         """List of available fan modes."""
         if self.ac_mode:
             return list(FAN_MODES_LIST.values())
-        else:
-            return None
+        return None
 
     @property
     def temperature_unit(self):
@@ -218,18 +212,16 @@ class TadoClimate(ClimateDevice):
         """Return the minimum temperature."""
         if self._min_temp:
             return self._min_temp
-        else:
-            # get default temp from super class
-            return super().min_temp
+        # get default temp from super class
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self._max_temp:
             return self._max_temp
-        else:
-            #  Get default temp from super class
-            return super().max_temp
+        #  Get default temp from super class
+        return super().max_temp
 
     def update(self):
         """Update the state of this climate device."""
