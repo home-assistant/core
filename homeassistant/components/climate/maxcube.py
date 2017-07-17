@@ -140,7 +140,7 @@ class MaxCubeClimate(ClimateDevice):
     def map_temperature_max_hass(temperature):
         """Map Temperature from MAX! to HASS."""
         if temperature is None:
-            return STATE_UNKNOWN
+            return 0.0
 
         return temperature
 
