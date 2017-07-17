@@ -1081,13 +1081,13 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         parent = pathlib.Path(path).parent
         try:
-            parent = parent.resolve()  # pylint: disable=no-member
+            parent = os.path.abspath(parent)  # pylint: disable=no-member
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
             try:
-                parent.relative_to(whitelisted_path)
+                pathlib.Path(parent).relative_to(whitelisted_path)
                 return True
             except ValueError:
                 pass

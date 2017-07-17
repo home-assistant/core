@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 import os
-import pathlib
 import unittest
 import unittest.mock as mock
 from collections import OrderedDict
@@ -398,7 +397,7 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.time_zone.zone == 'America/New_York'
         assert len(self.hass.config.whitelist_external_dirs) == 2
 
-        expected_path = pathlib.Path('/tmp').resolve()
+        expected_path = os.path.abspath('/tmp')
         assert expected_path in self.hass.config.whitelist_external_dirs
 
     def test_loading_configuration_temperature_unit(self):

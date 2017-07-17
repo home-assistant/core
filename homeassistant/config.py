@@ -5,7 +5,6 @@ from collections import OrderedDict
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
-import pathlib
 import re
 import shutil
 import sys
@@ -379,7 +378,7 @@ def async_process_ha_core_config(hass, config):
     hac.whitelist_external_dirs = {hass.config.path('www')}
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(set(
-            pathlib.Path(ext_dir).resolve() for ext_dir
+            os.path.abspath(ext_dir) for ext_dir
             in config[CONF_WHITELIST_EXTERNAL_DIRS]))
 
     # Customize
