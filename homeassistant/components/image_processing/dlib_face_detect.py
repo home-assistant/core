@@ -68,4 +68,4 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
         image = face_recognition.load_image_file(fak_file)
         face_locations = face_recognition.face_locations(image)
 
-        self.process_faces(face_locations, len(face_locations))
+        self.process_faces(list(face_locations), len(face_locations))
