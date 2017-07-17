@@ -62,7 +62,7 @@ def setup(hass, config):
     for _ in range(discovery_retry):
         _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', _ + 1)
         hass.data[PY_XIAOMI_GATEWAY].discover_gateways()
-        if len(hass.data[PY_XIAOMI_GATEWAY]) >= len(gateways):
+        if len(hass.data[PY_XIAOMI_GATEWAY].gateways) >= len(gateways):
             break
 
     if hass.data[PY_XIAOMI_GATEWAY].gateways:
