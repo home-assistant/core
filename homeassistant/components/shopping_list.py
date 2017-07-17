@@ -32,6 +32,8 @@ def async_setup(hass, config):
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
         'What is on my shopping list'
     ])
+    hass.components.frontend.register_built_in_panel(
+        'shopping-list', 'Shopping List', 'mdi:cart')
     return True
 
 
