@@ -10,7 +10,6 @@ import logging
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
