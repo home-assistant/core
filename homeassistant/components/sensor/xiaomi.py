@@ -1,7 +1,4 @@
-"""
-Support for Xiaomi sensors.
-
-"""
+"""Support for Xiaomi sensors."""
 import logging
 
 from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
@@ -13,8 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
-    gateways = PY_XIAOMI_GATEWAY.gateways
-    for (ip_add, gateway) in gateways.items():
+    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['sensor']:
             if device['model'] == 'sensor_ht':
                 devices.append(XiaomiSensor(device, 'Temperature', 'temperature', gateway))
@@ -56,7 +52,7 @@ class XiaomiSensor(XiaomiDevice):
             return 'hPa'
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:
             return False

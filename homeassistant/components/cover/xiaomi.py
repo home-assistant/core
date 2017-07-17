@@ -1,7 +1,4 @@
-"""
-Support for Xiaomi curtain.
-
-"""
+"""Support for Xiaomi curtain."""
 import logging
 
 from homeassistant.components.cover import CoverDevice
@@ -15,13 +12,13 @@ ATTR_CURTAIN_LEVEL = 'curtain_level' # Curtain position in total rail length (%)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
-    gateways = PY_XIAOMI_GATEWAY.gateways
-    for (ip_add, gateway) in gateways.items():
+    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['cover']:
             model = device['model']
             if model == 'curtain':
                 devices.append(XiaomiGenericCover(device, "Curtain",
-                    {'status': 'status', 'pos': 'curtain_level'}, gateway))
+                                                  {'status': 'status', 'pos': 'curtain_level'},
+                                                  gateway))
     add_devices(devices)
 
 
@@ -48,25 +45,25 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.xiaomi_hub.write_to_hub(self._sid,
-            self._data_key['status'], 'close')
+                                     self._data_key['status'], 'close')
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.xiaomi_hub.write_to_hub(self._sid,
-            self._data_key['status'], 'open')
+                                     self._data_key['status'], 'open')
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.xiaomi_hub.write_to_hub(self._sid,
-            self._data_key['status'], 'stop')
+                                     self._data_key['status'], 'stop')
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
         self.xiaomi_hub.write_to_hub(self._sid,
-            self._data_key['pos'], str(position))
+                                     self._data_key['pos'], str(position))
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         if ATTR_CURTAIN_LEVEL in data:
             self._pos = int(data[ATTR_CURTAIN_LEVEL])
             return True

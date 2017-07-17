@@ -1,7 +1,4 @@
-"""
-Support for Xiaomi binary sensors.
-
-"""
+""" Support for Xiaomi binary sensors. """
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -23,9 +20,7 @@ ATTR_DENSITY = 'Density'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
-    gateways = PY_XIAOMI_GATEWAY.gateways
-
-    for (ip_add, gateway) in gateways.items():
+    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['binary_sensor']:
             model = device['model']
             if model == 'motion':
@@ -43,9 +38,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model == '86sw1':
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0', hass, gateway))
             elif model == '86sw2':
-                devices.append(XiaomiButton(device, 'Wall Switch (Left)', 'channel_0', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Right)', 'channel_1', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Both)', 'dual_channel', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Left)', 'channel_0', hass,
+                                            gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Right)', 'channel_1', hass,
+                                            gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Both)', 'dual_channel', hass,
+                                            gateway))
             elif model == 'cube':
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
@@ -53,7 +51,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
     """Representation of a XiaomiNatgasSensor."""
-
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._state = False
@@ -79,7 +76,7 @@ class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
         return attrs
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
 
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
@@ -91,15 +88,13 @@ class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
         if value == '1':
             if self._state:
                 return False
-            else:
-                self._state = True
-                return True
+            self._state = True
+            return True
         elif value == '0':
             if self._state:
                 self._state = False
                 return True
-            else:
-                return False
+            return False
 
 
 class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
@@ -137,7 +132,7 @@ class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
         return attrs
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         self._should_poll = False
         if NO_MOTION in data:  # handle push from the hub
             self._no_motion_since = data[NO_MOTION]
@@ -158,15 +153,13 @@ class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
             self._no_motion_since = 0
             if self._state:
                 return False
-            else:
-                self._state = True
-                return True
+            self._state = True
+            return True
         elif value == NO_MOTION:
             if not self._state:
                 return False
-            else:
-                self._state = False
-                return True
+            self._state = False
+            return True
 
     def update(self):
         """Update the sensor state."""
@@ -210,7 +203,7 @@ class XiaomiDoorSensor(XiaomiDevice, BinarySensorDevice):
         return attrs
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         if NO_CLOSE in data:  # handle push from the hub
             self._open_since = data[NO_CLOSE]
             return True
@@ -222,16 +215,14 @@ class XiaomiDoorSensor(XiaomiDevice, BinarySensorDevice):
         if value == 'open':
             if self._state:
                 return False
-            else:
-                self._state = True
-                return True
+            self._state = True
+            return True
         elif value == 'close':
             self._open_since = 0
             if self._state:
                 self._state = False
                 return True
-            else:
-                return False
+            return False
 
     def update(self):
         """Update the sensor state."""
@@ -269,7 +260,7 @@ class XiaomiSmokeSensor(XiaomiDevice, BinarySensorDevice):
         return attrs
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
 
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
@@ -280,15 +271,13 @@ class XiaomiSmokeSensor(XiaomiDevice, BinarySensorDevice):
         if value == '1':
             if self._state:
                 return False
-            else:
-                self._state = True
-                return True
+            self._state = True
+            return True
         elif value == '0':
             if self._state:
                 self._state = False
                 return True
-            else:
-                return False
+            return False
 
 
 class XiaomiButton(XiaomiDevice, BinarySensorDevice):
@@ -307,7 +296,7 @@ class XiaomiButton(XiaomiDevice, BinarySensorDevice):
         return self._is_down
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:
             return False
@@ -353,7 +342,7 @@ class XiaomiCube(XiaomiDevice, BinarySensorDevice):
         return False
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         if self.STATUS in data:
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
@@ -366,5 +355,4 @@ class XiaomiCube(XiaomiDevice, BinarySensorDevice):
                 'action_type': self.ROTATE,
                 'action_value': float(data[self.ROTATE].replace(",", "."))
             })
-
         return False

@@ -1,7 +1,4 @@
-"""
-Support for Xiaomi Gateways.
-
-"""
+"""Support for Xiaomi Gateways."""
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -10,7 +7,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP
 
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/master.zip#PyXiaomiGateway==0.1.0']
+REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/'
+                'archive/master.zip#PyXiaomiGateway==0.1.0']
 
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_GW_SID = 'gw_sid'
@@ -48,13 +46,14 @@ def setup(hass, config):
 
         key = gateway['key']
         if key is None:
-            _LOGGER.warning('Gateway Key is not provided. Controlling gateway device will not be possible.')
+            _LOGGER.warning('Gateway Key is not provided.'
+                            ' Controlling gateway device will not be possible.')
         elif len(key) != 16:
             _LOGGER.error('Invalid key %s. Key must be 16 characters', key)
             return False
 
     from PyXiaomiGateway import PyXiaomiGateway
-    hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass, gateways, interface)
+    hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways, interface)
 
     _LOGGER.info("Expecting %s gateways", len(gateways))
     for _ in range(discovery_retry):
@@ -63,7 +62,7 @@ def setup(hass, config):
         if len(hass.data[PY_XIAOMI_GATEWAY]) >= len(gateways):
             break
 
-    if len(hass.data[PY_XIAOMI_GATEWAY].gateways) == 0:
+    if hass.data[PY_XIAOMI_GATEWAY].gateways:
         _LOGGER.error("No gateway discovered")
         return False
     hass.data[PY_XIAOMI_GATEWAY].listen()
@@ -88,16 +87,16 @@ def setup(hass, config):
         if ring_id in [9, 14-19]:
             _LOGGER.error('Specified mid: %s is not defined in gateway.', ring_id)
             return
-        
+
         ring_vol = call.data.get(ATTR_RINGTONE_VOL)
         if ring_vol is None:
             ringtone = {'mid': ring_id}
         else:
             ringtone = {'mid': ring_id, 'vol': int(ring_vol)}
 
-        gw_sid = call.data.get(ATTR_GW_SID) 
+        gw_sid = call.data.get(ATTR_GW_SID)
 
-        for (ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+        for (_ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 gateway.write_to_hub(gateway.sid, **ringtone)
                 break
@@ -110,8 +109,8 @@ def setup(hass, config):
         if gw_sid is None:
             _LOGGER.error("Mandatory parameter (%s) is not specified.", ATTR_GW_SID)
             return
-                
-        for (ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+
+        for (_ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 ringtone = {'mid': 10000}
                 gateway.write_to_hub(gateway.sid, **ringtone)
@@ -119,8 +118,10 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
-    hass.services.async_register(DOMAIN, 'play_ringtone', play_ringtone_service, description=None, schema=None)
-    hass.services.async_register(DOMAIN, 'stop_ringtone', stop_ringtone_service, description=None, schema=None)
+    hass.services.async_register(DOMAIN, 'play_ringtone', play_ringtone_service,
+                                 description=None, schema=None)
+    hass.services.async_register(DOMAIN, 'stop_ringtone', stop_ringtone_service,
+                                 description=None, schema=None)
     return True
 
 
@@ -131,10 +132,10 @@ class XiaomiDevice(Entity):
         """Initialize the xiaomi device."""
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
-        self.xiaomi_hub = xiaomi_hub        
+        self.xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'])
         self._device_state_attributes = {}
-        self.parse_voltage(device['data'])        
+        self.parse_voltage(device['data'])
         xiaomi_hub.ha_devices[self._sid].append(self)
 
     @property
@@ -144,7 +145,7 @@ class XiaomiDevice(Entity):
 
     @property
     def should_poll(self):
-        """Poll update device status"""
+        """Poll update device status."""
         return False
 
     @property
@@ -153,13 +154,14 @@ class XiaomiDevice(Entity):
         return self._device_state_attributes
 
     def push_data(self, data):
-        """Push from Hub"""
+        """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
 
         if self.parse_data(data) or self.parse_voltage(data):
             self.schedule_update_ha_state()
 
     def parse_voltage(self, data):
+        """Parse battery level data sent by gateway."""
         if 'voltage' not in data:
             return False
         max_volt = 3300
@@ -170,7 +172,7 @@ class XiaomiDevice(Entity):
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100
         self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent)
         return True
-            
+
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         raise NotImplementedError()

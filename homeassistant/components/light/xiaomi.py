@@ -1,7 +1,4 @@
-"""
-Support for Xiaomi Gateway Light.
-
-"""
+"""Support for Xiaomi Gateway Light."""
 import logging
 import struct
 import binascii
@@ -15,8 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
-    gateways = PY_XIAOMI_GATEWAY.gateways
-    for (ip_add, gateway) in gateways.items():
+    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['light']:
             model = device['model']
             if model == 'gateway':
@@ -38,7 +34,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     def parse_data(self, data):
-        """Parse data sent by gateway"""
+        """Parse data sent by gateway."""
         value = data.get(self._data_key)
         if value is None:
             return False
@@ -46,7 +42,6 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         if value == 0:
             if self._state:
                 self._state = False
-
             return True
 
         rgbhexstr = "%x" % value
