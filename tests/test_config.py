@@ -396,7 +396,9 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
         assert self.hass.config.time_zone.zone == 'America/New_York'
         assert len(self.hass.config.whitelist_external_dirs) == 2
-        assert '/tmp' in self.hass.config.whitelist_external_dirs
+
+        expected_path = os.path.abspath('/tmp')
+        assert expected_path in self.hass.config.whitelist_external_dirs
 
     def test_loading_configuration_temperature_unit(self):
         """Test backward compatibility when loading core config."""
