@@ -60,10 +60,13 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
-        media = data.get(ATTR_MEDIA)
-        if not self.hass.config.is_allowed_path(media):
-            _LOGGER.warning("'%s' is not in a whitelisted area.", media)
-            return
+
+        media = None
+        if data:
+            media = data.get(ATTR_MEDIA)
+            if not self.hass.config.is_allowed_path(media):
+                _LOGGER.warning("'%s' is not in a whitelisted area.", media)
+                return
 
         media_id = self.upload_media(media)
 
