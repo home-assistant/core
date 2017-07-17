@@ -15,8 +15,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
-from homeassistant.helpers import (
-    intent, template, script, config_validation as cv)
+from homeassistant.helpers import intent, template, config_validation as cv
 from homeassistant.components import http
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,20 +75,6 @@ class CardType(enum.Enum):
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
-        CONF_INTENTS: {
-            cv.string: {
-                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(CONF_CARD): {
-                    vol.Required(CONF_TYPE): cv.enum(CardType),
-                    vol.Required(CONF_TITLE): cv.template,
-                    vol.Required(CONF_CONTENT): cv.template,
-                },
-                vol.Optional(CONF_SPEECH): {
-                    vol.Required(CONF_TYPE): cv.enum(SpeechType),
-                    vol.Required(CONF_TEXT): cv.template,
-                }
-            }
-        },
         CONF_FLASH_BRIEFINGS: {
             cv.string: vol.All(cv.ensure_list, [{
                 vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
@@ -103,12 +88,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Activate Alexa component."""
-    intents = config[DOMAIN].get(CONF_INTENTS, {})
     flash_briefings = config[DOMAIN].get(CONF_FLASH_BRIEFINGS, {})
 
-    hass.http.register_view(AlexaIntentsView(hass, intents))
+    hass.http.register_view(AlexaIntentsView)
     hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefings))
 
     return True
@@ -119,20 +104,6 @@ class AlexaIntentsView(http.HomeAssistantView):
 
     url = INTENTS_API_ENDPOINT
     name = 'api:alexa'
-
-    def __init__(self, hass, intents):
-        """Initialize Alexa view."""
-        super().__init__()
-
-        intents = copy.deepcopy(intents)
-        template.attach(hass, intents)
-
-        for name, conf in intents.items():
-            if CONF_ACTION in conf:
-                conf[CONF_ACTION] = script.Script(
-                    hass, conf[CONF_ACTION], "Alexa intent {}".format(name))
-
-        self.intents = intents
 
     @asyncio.coroutine
     def post(self, request):
