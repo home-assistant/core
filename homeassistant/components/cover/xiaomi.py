@@ -6,7 +6,7 @@ from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURTAIN_LEVEL = 'curtain_level' # Curtain position in total rail length (%)
+ATTR_CURTAIN_LEVEL = 'curtain_level'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -17,7 +17,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             model = device['model']
             if model == 'curtain':
                 devices.append(XiaomiGenericCover(device, "Curtain",
-                                                  {'status': 'status', 'pos': 'curtain_level'},
+                                                  {'status': 'status',
+                                                   'pos': 'curtain_level'},
                                                   gateway))
     add_devices(devices)
 

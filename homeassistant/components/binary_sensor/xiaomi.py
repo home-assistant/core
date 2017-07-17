@@ -1,4 +1,4 @@
-""" Support for Xiaomi binary sensors. """
+"""Support for Xiaomi binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -32,18 +32,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model == 'natgas':
                 devices.append(XiaomiNatgasSensor(device, gateway))
             elif model == 'switch':
-                devices.append(XiaomiButton(device, 'Switch', 'status', hass, gateway))
+                devices.append(XiaomiButton(device, 'Switch', 'status',
+                                            hass, gateway))
             elif model == 'sensor_switch.aq2':
-                devices.append(XiaomiButton(device, 'Switch', 'status', hass, gateway))
+                devices.append(XiaomiButton(device, 'Switch', 'status',
+                                            hass, gateway))
             elif model == '86sw1':
-                devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
+                                            hass, gateway))
             elif model == '86sw2':
-                devices.append(XiaomiButton(device, 'Wall Switch (Left)', 'channel_0', hass,
-                                            gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Right)', 'channel_1', hass,
-                                            gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Both)', 'dual_channel', hass,
-                                            gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Left)',
+                                            'channel_0', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Right)'
+                                            , 'channel_1', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Both)'
+                                            , 'dual_channel', hass, gateway))
             elif model == 'cube':
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
@@ -51,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
     """Representation of a XiaomiNatgasSensor."""
+
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._state = False
@@ -77,7 +81,6 @@ class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
-
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
 
@@ -261,7 +264,6 @@ class XiaomiSmokeSensor(XiaomiDevice, BinarySensorDevice):
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
-
         if DENSITY in data:
             self._density = int(data.get(DENSITY))
         value = data.get(self._data_key)

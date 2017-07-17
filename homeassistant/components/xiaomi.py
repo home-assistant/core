@@ -7,8 +7,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP
 
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/'
-                'archive/master.zip#PyXiaomiGateway==0.1.0']
+REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
+                '06a96433974c56d02aec7c5e3174b1fd5e133008.zip#'
+                'PyXiaomiGateway==0.1.0']
 
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_GW_SID = 'gw_sid'
@@ -22,7 +23,8 @@ XIAOMI_COMPONENTS = ['binary_sensor', 'sensor', 'switch', 'light', 'cover']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=[{"sid": None, "key": None}]): cv.ensure_list,
+        vol.Optional(CONF_GATEWAYS, default=[{"sid": None, "key": None}]):
+            cv.ensure_list,
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
     })
@@ -33,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Set up the Xiaomi component."""
-
     gateways = config[DOMAIN][CONF_GATEWAYS]
     interface = config[DOMAIN][CONF_INTERFACE]
     discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
@@ -47,13 +48,15 @@ def setup(hass, config):
         key = gateway['key']
         if key is None:
             _LOGGER.warning('Gateway Key is not provided.'
-                            ' Controlling gateway device will not be possible.')
+                            ' Controlling gateway device'
+                            ' will not be possible.')
         elif len(key) != 16:
             _LOGGER.error('Invalid key %s. Key must be 16 characters', key)
             return False
 
     from PyXiaomiGateway import PyXiaomiGateway
-    hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways, interface)
+    hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways,
+                                                   interface)
 
     _LOGGER.info("Expecting %s gateways", len(gateways))
     for _ in range(discovery_retry):
@@ -79,13 +82,15 @@ def setup(hass, config):
 
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
-        if call.data.get(ATTR_RINGTONE_ID) is None or call.data.get(ATTR_GW_SID) is None:
+        if call.data.get(ATTR_RINGTONE_ID) is None \
+                or call.data.get(ATTR_GW_SID) is None:
             _LOGGER.error("Mandatory parameters is not specified.")
             return
 
         ring_id = int(call.data.get(ATTR_RINGTONE_ID))
         if ring_id in [9, 14-19]:
-            _LOGGER.error('Specified mid: %s is not defined in gateway.', ring_id)
+            _LOGGER.error('Specified mid: %s is not defined in gateway.',
+                          ring_id)
             return
 
         ring_vol = call.data.get(ATTR_RINGTONE_VOL)
@@ -96,7 +101,7 @@ def setup(hass, config):
 
         gw_sid = call.data.get(ATTR_GW_SID)
 
-        for (_ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 gateway.write_to_hub(gateway.sid, **ringtone)
                 break
@@ -107,10 +112,11 @@ def setup(hass, config):
         """Service to stop playing ringtone on Gateway."""
         gw_sid = call.data.get(ATTR_GW_SID)
         if gw_sid is None:
-            _LOGGER.error("Mandatory parameter (%s) is not specified.", ATTR_GW_SID)
+            _LOGGER.error("Mandatory parameter (%s) is not specified.",
+                          ATTR_GW_SID)
             return
 
-        for (_ip_add, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 ringtone = {'mid': 10000}
                 gateway.write_to_hub(gateway.sid, **ringtone)
@@ -118,9 +124,11 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
-    hass.services.async_register(DOMAIN, 'play_ringtone', play_ringtone_service,
+    hass.services.async_register(DOMAIN, 'play_ringtone',
+                                 play_ringtone_service,
                                  description=None, schema=None)
-    hass.services.async_register(DOMAIN, 'stop_ringtone', stop_ringtone_service,
+    hass.services.async_register(DOMAIN, 'stop_ringtone',
+                                 stop_ringtone_service,
                                  description=None, schema=None)
     return True
 

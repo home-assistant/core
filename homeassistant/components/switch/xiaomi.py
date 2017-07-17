@@ -6,8 +6,8 @@ from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LOAD_POWER = 'Load power' # Load power in watts (W)
-ATTR_POWER_CONSUMED = 'Power consumed' #Load power consumption in kilowatt hours (kWh)
+ATTR_LOAD_POWER = 'Load power'  # Load power in watts (W)
+ATTR_POWER_CONSUMED = 'Power consumed'
 ATTR_IN_USE = 'In use'
 LOAD_POWER = 'load_power'
 POWER_CONSUMED = 'power_consumed'
@@ -21,24 +21,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['switch']:
             model = device['model']
             if model == 'plug':
-                devices.append(XiaomiGenericSwitch(device, "Plug", 'status', True, gateway))
+                devices.append(XiaomiGenericSwitch(device, "Plug", 'status',
+                                                   True, gateway))
             elif model == 'ctrl_neutral1':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch', 'channel_0',
+                devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
+                                                   'channel_0',
                                                    False, gateway))
             elif model == 'ctrl_neutral2':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left', 'channel_0',
+                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
+                                                   'channel_0',
                                                    False, gateway))
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right', 'channel_1',
+                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
+                                                   'channel_1',
                                                    False, gateway))
             elif model == '86plug':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Plug', 'status', True, gateway))
+                devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
+                                                   'status', True, gateway))
     add_devices(devices)
 
 
 class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     """Representation of a XiaomiPlug."""
 
-    def __init__(self, device, name, data_key, supports_power_consumption, xiaomi_hub):
+    def __init__(self, device, name, data_key, supports_power_consumption,
+                 xiaomi_hub):
         """Initialize the XiaomiPlug."""
         self._state = False
         self._data_key = data_key
@@ -86,7 +92,6 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
-
         if IN_USE in data:
             self._in_use = int(data[IN_USE])
             if not self._in_use:
