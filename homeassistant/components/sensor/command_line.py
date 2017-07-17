@@ -101,7 +101,6 @@ class CommandSensorData(object):
 
     def update(self):
         """Get the latest data with a shell command."""
-
         command = self.command
         cache = {}
 
@@ -119,8 +118,8 @@ class CommandSensorData(object):
 
         if args_compiled:
             try:
-                a = {"arguments": args}
-                rendered_args = args_compiled.render(a)
+                args_to_render = {"arguments": args}
+                rendered_args = args_compiled.render(args_to_render)
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
                 return
