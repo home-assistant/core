@@ -149,7 +149,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                                        self._known_faces_dir,
                                        filename))
 
-                if self._save_unknown_faces:
+                if self._save_unknown_faces and not result[0]:
                     keep_image(fak_file,
                                os.path.join(self._unknown_faces_dir, filename))
 
