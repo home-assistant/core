@@ -48,7 +48,7 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
             self._name = "Dlib Face {0}".format(
                 split_entity_id(camera_entity)[1])
 
-    @properface_locationsty
+    @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
         return self._camera
