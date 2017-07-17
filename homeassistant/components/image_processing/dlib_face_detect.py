@@ -19,6 +19,8 @@ REQUIREMENTS = ['face_recognition==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LOCATION = 'location'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dlib Face detection platform."""
@@ -68,4 +70,7 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
         image = face_recognition.load_image_file(fak_file)
         face_locations = face_recognition.face_locations(image)
 
-        self.process_faces(list(face_locations), len(face_locations))
+        face_locations = [{ATTR_LOCATION: location}
+                          for location in face_locations]
+
+        self.process_faces(face_locations, len(face_locations))
