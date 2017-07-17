@@ -65,7 +65,7 @@ def setup(hass, config):
         if len(hass.data[PY_XIAOMI_GATEWAY].gateways) >= len(gateways):
             break
 
-    if hass.data[PY_XIAOMI_GATEWAY].gateways:
+    if not hass.data[PY_XIAOMI_GATEWAY].gateways:
         _LOGGER.error("No gateway discovered")
         return False
     hass.data[PY_XIAOMI_GATEWAY].listen()
