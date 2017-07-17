@@ -23,7 +23,11 @@ DOMAIN = 'upnp'
 DATA_UPNP = 'UPNP'
 
 CONF_ENABLE_PORT_MAPPING = 'port_mapping'
+CONF_EXTERNAL_PORT = 'external_port'
 CONF_UNITS = 'unit'
+
+NOTIFICATION_ID = 'upnp_notification'
+NOTIFICATION_TITLE = 'UPnP Setup'
 
 UNITS = {
     "Bytes": 1,
@@ -35,6 +39,7 @@ UNITS = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
+        vol.Optional(CONF_EXTERNAL_PORT, default=0): cv.positive_int,
         vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -65,15 +70,31 @@ def setup(hass, config):
 
     base_url = urlsplit(hass.config.api.base_url)
     host = base_url.hostname
-    external_port = internal_port = base_url.port
+    internal_port = base_url.port
+    external_port = int(config[DOMAIN].get(CONF_EXTERNAL_PORT))
 
-    upnp.addportmapping(
-        external_port, 'TCP', host, internal_port, 'Home Assistant', '')
+    if external_port == 0:
+        external_port = internal_port
 
-    def deregister_port(event):
-        """De-register the UPnP port mapping."""
-        upnp.deleteportmapping(hass.config.api.port, 'TCP')
+    try:
+        upnp.addportmapping(
+            external_port, 'TCP', host, internal_port, 'Home Assistant', '')
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+        def deregister_port(event):
+            """De-register the UPnP port mapping."""
+            upnp.deleteportmapping(external_port, 'TCP')
 
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+
+    except Exception as ex:
+        _LOGGER.error("UPnP failed to configure port mapping: %s", str(ex))
+        hass.components.persistent_notification.create(
+            '<b>ERROR: tcp port {} is already mapped in your router.'
+            '</b><br />Please disable port_mapping in the <i>upnp</i> '
+            'configuration section.<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(external_port),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
     return True

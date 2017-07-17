@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -43,12 +44,14 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def is_locked(hass, entity_id=None):
     """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
+@bind_hass
 def lock(hass, entity_id=None, code=None):
     """Lock all or specified locks."""
     data = {}
@@ -60,6 +63,7 @@ def lock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
+@bind_hass
 def unlock(hass, entity_id=None, code=None):
     """Unlock all or specified locks."""
     data = {}

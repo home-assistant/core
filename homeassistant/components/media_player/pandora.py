@@ -358,9 +358,9 @@ def _pianobar_exists():
     pianobar_exe = shutil.which('pianobar')
     if pianobar_exe:
         return True
-    else:
-        _LOGGER.warning(
-            "The Pandora component depends on the Pianobar client, which "
-            "cannot be found. Please install using instructions at "
-            "https://home-assistant.io/components/media_player.pandora/")
-        return False
+
+    _LOGGER.warning(
+        "The Pandora component depends on the Pianobar client, which "
+        "cannot be found. Please install using instructions at "
+        "https://home-assistant.io/components/media_player.pandora/")
+    return False

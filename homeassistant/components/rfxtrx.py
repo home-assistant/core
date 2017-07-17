@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyRFXtrx==0.18.0']
+REQUIREMENTS = ['pyRFXtrx==0.19.0']
 
 DOMAIN = 'rfxtrx'
 

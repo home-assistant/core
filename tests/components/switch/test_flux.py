@@ -557,3 +557,50 @@ class TestSwitchFlux(unittest.TestCase):
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
+
+    def test_flux_with_rgb(self):
+        """Test the flux switch´s mode rgb."""
+        platform = loader.get_component('light.test')
+        platform.init()
+        self.assertTrue(
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        dev1 = platform.DEVICES[0]
+
+        # Verify initial state of light
+        state = self.hass.states.get(dev1.entity_id)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertIsNone(state.attributes.get('color_temp'))
+
+        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        sunset_time = test_time.replace(hour=17, minute=0, second=0)
+        sunrise_time = test_time.replace(hour=5, minute=0, second=0)
+
+        def event_date(hass, event, now=None):
+            if event == 'sunrise':
+                return sunrise_time
+            else:
+                return sunset_time
+
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            with patch('homeassistant.helpers.sun.get_astral_event_date',
+                       side_effect=event_date):
+                assert setup_component(self.hass, switch.DOMAIN, {
+                    switch.DOMAIN: {
+                        'platform': 'flux',
+                        'name': 'flux',
+                        'lights': [dev1.entity_id],
+                        'mode': 'rgb'
+                    }
+                })
+                turn_on_calls = mock_service(
+                    self.hass, light.DOMAIN, SERVICE_TURN_ON)
+                switch.turn_on(self.hass, 'switch.flux')
+                self.hass.block_till_done()
+                fire_time_changed(self.hass, test_time)
+                self.hass.block_till_done()
+        call = turn_on_calls[-1]
+        rgb = (255, 198, 152)
+        rounded_call = tuple(map(round, call.data[light.ATTR_RGB_COLOR]))
+        self.assertEqual(rounded_call, rgb)

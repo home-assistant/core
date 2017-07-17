@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file, async_log_exception
@@ -93,6 +94,7 @@ DISCOVERY_PLATFORMS = {
 }
 
 
+@bind_hass
 def is_on(hass: HomeAssistantType, entity_id: str=None):
     """Return the state if any or a specified device is home."""
     entity = entity_id or ENTITY_ID_ALL_DEVICES

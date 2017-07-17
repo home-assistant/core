@@ -198,8 +198,7 @@ class APIEntityStateView(HomeAssistantView):
         state = request.app['hass'].states.get(entity_id)
         if state:
             return self.json(state)
-        else:
-            return self.json_message('Entity not found', HTTP_NOT_FOUND)
+        return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
     @asyncio.coroutine
     def post(self, request, entity_id):
@@ -213,7 +212,7 @@ class APIEntityStateView(HomeAssistantView):
 
         new_state = data.get('state')
 
-        if not new_state:
+        if new_state is None:
             return self.json_message('No state specified', HTTP_BAD_REQUEST)
 
         attributes = data.get('attributes')
@@ -237,8 +236,7 @@ class APIEntityStateView(HomeAssistantView):
         """Remove entity."""
         if request.app['hass'].states.async_remove(entity_id):
             return self.json_message('Entity removed')
-        else:
-            return self.json_message('Entity not found', HTTP_NOT_FOUND)
+        return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
 
 class APIEventListenersView(HomeAssistantView):

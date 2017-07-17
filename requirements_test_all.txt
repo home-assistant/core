@@ -62,10 +62,10 @@ holidays==0.8.1
 influxdb==3.0.0
 
 # homeassistant.components.dyson
-libpurecoollink==0.1.5
+libpurecoollink==0.2.0
 
 # homeassistant.components.media_player.soundtouch
-libsoundtouch==0.6.2
+libsoundtouch==0.7.2
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
@@ -87,6 +87,9 @@ pilight==0.1.1
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.4
+
+# homeassistant.components.prometheus
+prometheus_client==0.0.19
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

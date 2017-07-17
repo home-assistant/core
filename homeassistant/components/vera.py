@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.33']
+REQUIREMENTS = ['pyvera==0.2.34']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,8 +122,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
-        else:
-            return 'switch'
+        return 'switch'
     return None
 
 

@@ -35,10 +35,10 @@ CONF_SERVER = 'server'
 CONF_SENDER_NAME = 'sender_name'
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 465
+DEFAULT_PORT = 587
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = 'tls'
+DEFAULT_ENCRYPTION = 'starttls'
 
 ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
@@ -74,8 +74,8 @@ def get_service(hass, config, discovery_info=None):
 
     if mail_service.connection_is_valid():
         return mail_service
-    else:
-        return None
+
+    return None
 
 
 class MailNotificationService(BaseNotificationService):

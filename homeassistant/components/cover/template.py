@@ -40,14 +40,15 @@ STOP_ACTION = 'stop_cover'
 POSITION_ACTION = 'set_cover_position'
 TILT_ACTION = 'set_cover_tilt_position'
 CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
+CONF_OPEN_OR_CLOSE = 'open_or_close'
 
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Required(OPEN_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Required(CLOSE_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Required(STOP_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+    vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+    vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
     vol.Exclusive(CONF_POSITION_TEMPLATE,
                   CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
     vol.Exclusive(CONF_VALUE_TEMPLATE,
@@ -77,9 +78,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
-        open_action = device_config[OPEN_ACTION]
-        close_action = device_config[CLOSE_ACTION]
-        stop_action = device_config[STOP_ACTION]
+        open_action = device_config.get(OPEN_ACTION)
+        close_action = device_config.get(CLOSE_ACTION)
+        stop_action = device_config.get(STOP_ACTION)
         position_action = device_config.get(POSITION_ACTION)
         tilt_action = device_config.get(TILT_ACTION)
 
@@ -88,6 +89,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                           CONF_VALUE_TEMPLATE, CONF_VALUE_TEMPLATE)
             continue
 
+        if position_action is None and open_action is None:
+            _LOGGER.error('Must specify at least one of %s' or '%s',
+                          OPEN_ACTION, POSITION_ACTION)
+            continue
         template_entity_ids = set()
         if state_template is not None:
             temp_ids = state_template.extract_entities()
@@ -147,9 +152,15 @@ class CoverTemplate(CoverDevice):
         self._position_template = position_template
         self._tilt_template = tilt_template
         self._icon_template = icon_template
-        self._open_script = Script(hass, open_action)
-        self._close_script = Script(hass, close_action)
-        self._stop_script = Script(hass, stop_action)
+        self._open_script = None
+        if open_action is not None:
+            self._open_script = Script(hass, open_action)
+        self._close_script = None
+        if close_action is not None:
+            self._close_script = Script(hass, close_action)
+        self._stop_script = None
+        if stop_action is not None:
+            self._stop_script = Script(hass, stop_action)
         self._position_script = None
         if position_action is not None:
             self._position_script = Script(hass, position_action)
@@ -227,9 +238,12 @@ class CoverTemplate(CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
 
-        if self.current_cover_position is not None:
+        if self._stop_script is not None:
+            supported_features |= SUPPORT_STOP
+
+        if self._position_script is not None:
             supported_features |= SUPPORT_SET_POSITION
 
         if self.current_cover_tilt_position is not None:
@@ -245,23 +259,30 @@ class CoverTemplate(CoverDevice):
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        self.hass.async_add_job(self._open_script.async_run())
+        if self._open_script:
+            self.hass.async_add_job(self._open_script.async_run())
+        elif self._position_script:
+            self.hass.async_add_job(self._position_script.async_run(
+                {"position": 100}))
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        self.hass.async_add_job(self._close_script.async_run())
+        if self._close_script:
+            self.hass.async_add_job(self._close_script.async_run())
+        elif self._position_script:
+            self.hass.async_add_job(self._position_script.async_run(
+                {"position": 0}))
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
-        self.hass.async_add_job(self._stop_script.async_run())
+        if self._stop_script:
+            self.hass.async_add_job(self._stop_script.async_run())
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set cover position."""
-        if ATTR_POSITION not in kwargs:
-            return
         self._position = kwargs[ATTR_POSITION]
         self.hass.async_add_job(self._position_script.async_run(
             {"position": self._position}))
@@ -283,8 +304,6 @@ class CoverTemplate(CoverDevice):
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION not in kwargs:
-            return
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
         self.hass.async_add_job(self._tilt_script.async_run(
             {"tilt": self._tilt_value}))

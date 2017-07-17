@@ -77,6 +77,10 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
 
     def pip_install(mod):
         """Install packages."""
+        if pkg_util.running_under_virtualenv():
+            return pkg_util.install_package(
+                mod, constraints=os.path.join(
+                    os.path.dirname(__file__), CONSTRAINT_FILE))
         return pkg_util.install_package(
             mod, target=hass.config.path('deps'),
             constraints=os.path.join(
