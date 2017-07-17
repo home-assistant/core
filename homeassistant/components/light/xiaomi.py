@@ -3,7 +3,8 @@ import logging
 import struct
 import binascii
 from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            SUPPORT_BRIGHTNESS,
                                             SUPPORT_RGB_COLOR, Light)
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +17,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['light']:
             model = device['model']
             if model == 'gateway':
-                devices.append(XiaomiGatewayLight(device, 'Gateway Light', gateway))
+                devices.append(XiaomiGatewayLight(device, 'Gateway Light',
+                                                  gateway))
     add_devices(devices)
 
 
@@ -50,7 +52,8 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
             rgbhexstr = '0' + rgbhexstr
 
         if len(rgbhexstr) != 8:
-            _LOGGER.error('Light RGB data error. Must be 8 characters. Received: %s', rgbhexstr)
+            _LOGGER.error('Light RGB data error.'
+                          ' Must be 8 characters. Received: %s', rgbhexstr)
             return False
 
         rgbhex = bytes.fromhex(rgbhexstr)

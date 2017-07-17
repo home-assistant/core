@@ -43,10 +43,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model == '86sw2':
                 devices.append(XiaomiButton(device, 'Wall Switch (Left)',
                                             'channel_0', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Right)'
-                                            , 'channel_1', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Both)'
-                                            , 'dual_channel', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Right)',
+                                            'channel_1', hass, gateway))
+                devices.append(XiaomiButton(device, 'Wall Switch (Both)',
+                                            'dual_channel', hass, gateway))
             elif model == 'cube':
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
