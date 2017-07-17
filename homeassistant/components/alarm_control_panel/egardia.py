@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.exceptions as exc
 
-REQUIREMENTS = ['pythonegardia==1.0.13']
+REQUIREMENTS = ['pythonegardia==1.0.17']
 
 CONF_REPORT_SERVER_ENABLED = 'report_server_enabled'
 CONF_REPORT_SERVER_PORT = 'report_server_port'
@@ -70,14 +70,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to authorize. Wrong password or username.")
         return False
 
-    add_devices([EgardiaAlarm(name, egardiasystem, rs_enabled, rs_port,
+    add_devices([EgardiaAlarm(name, egardiasystem, hass, rs_enabled, rs_port,
                               rs_codes)])
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem, rs_enabled=False,
+    def __init__(self, name, egardiasystem, hass, rs_enabled=False,
                  rs_port=None, rs_codes=None):
         """Initialize object."""
         self._name = name
@@ -85,11 +85,15 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         self._status = STATE_UNKNOWN
         self._rs_enabled = rs_enabled
         self._rs_port = rs_port
+        self._hass = hass
 
         if rs_codes is not None:
             self._rs_codes = rs_codes[0]
         else:
             self._rs_codes = rs_codes
+
+        if self._rs_enabled:
+            self.listen_to_system_status()
 
     STATES = {
         'ARM': STATE_ALARM_ARMED_AWAY,
@@ -110,41 +114,47 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._status
 
+    def handle_system_status_event(self, event):
+        """Handle egardia_system_status_event."""
+        if event.data.get('status') is not None:
+            statuscode = event.data.get('status')
+            status = self.lookupstatusfromcode(statuscode)
+            self.parsestatus(status)
+
+    def listen_to_system_status(self):
+        """Subscribe to egardia_system_status event."""
+        self._hass.bus.listen('egardia_system_status',
+                              self.handle_system_status_event)
+
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
         status = 'UNKNOWN'
-        statuscode = str(statuscode).strip()
-        for i in self._rs_codes:
-            val = str(self._rs_codes[i]).strip()
-            if ',' in val:
-                splitted = val.split(",")
-                for code in splitted:
-                    code = str(code).strip()
-                    if statuscode == code:
-                        status = i.upper()
-                        break
-            elif statuscode == val:
-                status = i.upper()
-                break
+        if self._rs_codes is not None:
+            statuscode = str(statuscode).strip()
+            for i in self._rs_codes:
+                val = str(self._rs_codes[i]).strip()
+                if ',' in val:
+                    splitted = val.split(",")
+                    for code in splitted:
+                        code = str(code).strip()
+                        if statuscode == code:
+                            status = i.upper()
+                            break
+                elif statuscode == val:
+                    status = i.upper()
+                    break
         return status
+
+    def parsestatus(self, status):
+        """Parse the status."""
+        newstatus = ([v for k, v in self.STATES.items()
+                      if status.upper() == k][0])
+        self._status = newstatus
 
     def update(self):
         """Update the alarm status."""
-        import requests
-        import socket
-        if self._rs_enabled:
-            try:
-                req = requests.get('http://'+socket.getfqdn()+':'
-                                   + str(self._rs_port))
-                statuscode = req.text
-                status = self.lookupstatusfromcode(statuscode)
-            except requests.exceptions.RequestException as err:
-                _LOGGER.error("Egardia device exception occurred when"
-                              + " getting status from report server: "+err)
-        else:
-            status = self._egardiasystem.getstate()
-        self._status = ([v for k, v in self.STATES.items()
-                         if status.upper() == k][0])
+        status = self._egardiasystem.getstate()
+        self.parsestatus(status)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
