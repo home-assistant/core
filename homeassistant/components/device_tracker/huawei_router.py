@@ -9,10 +9,9 @@ import logging
 import re
 import threading
 from datetime import timedelta
-
-import homeassistant.helpers.config_validation as cv
 import requests
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -22,8 +21,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-ARRAY_REGEX = re.compile('var UserDevinfo = new Array\((.*),null\);')
-DEVICE_REGEX = re.compile('new USERDevice\((.*?)\),')
+ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
+DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
 DEVICE_ATTR_REGEX = re.compile('"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
                                '"(?P<MacAddr>.*?)","(?P<Port>.*?)",'
                                '"(?P<IpType>.*?)","(?P<DevType>.*?)",'
@@ -50,22 +49,29 @@ def get_scanner(hass, config):
 
 
 class Device:
+    """This class represents a network device."""
+
     def __init__(self, name, ip, mac, state):
+        """Init the network device."""
         self._name = name
         self._ip = ip
         self._mac = mac
         self._state = state
 
     def name(self):
+        """Return the name of the device."""
         return self._name
 
     def ip(self):
+        """Return the IP address of the device."""
         return self._ip
 
     def mac(self):
+        """Return the MAC address of the device."""
         return self._mac
 
     def state(self):
+        """Return the state of the device (true -> online)."""
         return self._state
 
 
@@ -116,6 +122,10 @@ class HuaweiDeviceScanner(DeviceScanner):
             return True
 
     def _get_data(self):
+        """Get the devices' data from the router.
+
+        Returns a list with all the devices known to the router DHCP server.
+        """
         array_regex_res = ARRAY_REGEX.search(self._get_devices_response())
 
         devices = []
@@ -134,6 +144,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         return devices
 
     def _get_devices_response(self):
+        """Get the raw string with the devices from the router."""
         cnt = requests.post('http://%s/asp/GetRandCount.asp' % self.host)
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors='replace')
 
