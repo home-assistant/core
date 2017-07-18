@@ -19,6 +19,7 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get config."""
     trv_on_off = hass.data["maxcube_trv_on_off"]
