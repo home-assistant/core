@@ -10,7 +10,6 @@ import voluptuous as vol
 from collections import defaultdict
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.components.tahoma_api import (TahomaApi)
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
@@ -36,7 +35,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Activate Tahoma component."""
-    
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
@@ -48,7 +46,7 @@ def setup(hass, config):
         return False
 
     hass.data['TAHOMA_CONTROLLER'] = TAHOMA_CONTROLLER
-    
+
     TAHOMA_DEVICES['api'] = TAHOMA_CONTROLLER
     try:
         TAHOMA_CONTROLLER.getSetup()
@@ -76,6 +74,7 @@ def map_tahoma_device(tahoma_device):
     elif tahoma_device.type == 'io:LightIOSystemSensor':
         return 'sensor'
     return None
+
 
 class TahomaDevice(Entity):
     """Representation of a Tahoma device entity."""

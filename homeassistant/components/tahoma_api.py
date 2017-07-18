@@ -5,12 +5,12 @@ Connection to Somfy Tahoma REST API
 
 import json
 import requests
-import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
 
 BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web/externalAPI/json/'
 BASE_HEADERS = {'User-Agent': 'mine'}
+
 
 class TahomaApi:
 
@@ -37,6 +37,7 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         request = requests.post(BASE_URL + 'login',
             data=login, headers=header)
+
         try:
             result = request.json()
         except ValueError as e:
@@ -72,7 +73,7 @@ class TahomaApi:
         raises ValueError in case of protocol issues
 
         :Example:
-        
+
         >>> "creationTime": <time>,
         >>> "lastUpdateTime": <time>,
         >>> "userId": "<email for login>",
