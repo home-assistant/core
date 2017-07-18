@@ -20,7 +20,9 @@ STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get config"""
+    """Set up the Max! Cube Platform."""
+
+    """Get config."""
     trv_on_off = hass.data["maxcube_trv_on_off"]
 
     """Iterate through all MAX! Devices and add thermostats."""
@@ -91,9 +93,10 @@ class MaxCubeClimate(ClimateDevice):
 
     @property
     def current_operation(self):
+        """Return the current operation."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
 
-        """If we are only interested in whether the TRV is off or on"""
+        """If we are only interested in whether the TRV is off or on."""
         if self._trv_on_off and hasattr(device, 'valve_position'):
             if device.valve_position is 0:
                 return STATE_OFF
