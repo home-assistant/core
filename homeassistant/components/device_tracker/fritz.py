@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['fritzconnection==0.6.3']
+REQUIREMENTS = ['fritzconnection==0.6.5']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
