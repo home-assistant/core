@@ -6,12 +6,14 @@ https://home-assistant.io/components/media_extractor/
 """
 import logging
 import os
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_ENTITY_ID, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['youtube_dl==2017.7.9']
 
@@ -23,6 +25,14 @@ DEPENDENCIES = ['media_player']
 CONF_CUSTOMIZE_ENTITIES = 'customize'
 CONF_DEFAULT_STREAM_QUERY = 'default_query'
 DEFAULT_STREAM_QUERY = 'best'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_DEFAULT_STREAM_QUERY): cv.string,
+        vol.Optional(CONF_CUSTOMIZE_ENTITIES):
+            vol.Schema({cv.entity_id: vol.Schema({cv.string: cv.string})}),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
