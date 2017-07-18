@@ -7,8 +7,8 @@ https://home-assistant.io/components/cover.tahoma/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import (
-    TAHOMA_DEVICES, TahomaDevice, Action)
+from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
+from homeassistant.components.tahoma_api import (Action)
 
 DEPENDENCIES = ['tahoma']
 
