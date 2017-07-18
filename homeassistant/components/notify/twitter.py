@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 
-REQUIREMENTS = ['TwitterAPI==2.4.5']
+REQUIREMENTS = ['TwitterAPI==2.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
