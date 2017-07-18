@@ -116,9 +116,10 @@ class MediaExtractor:
         if 'entries' in all_media:
             _LOGGER.warning("Playlists are not supported, "
                             "looking for the first video")
-            try:
-                selected_media = next(all_media['entries'])
-            except StopIteration:
+            entries = list(all_media['entries'])
+            if len(entries) > 0:
+                selected_media = entries[0]
+            else:
                 _LOGGER.error("Playlist is empty")
                 raise MEDownloadException()
         else:
