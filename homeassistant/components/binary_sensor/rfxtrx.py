@@ -115,11 +115,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                          event.device.__class__.__name__,
                          event.device.subtype)
         if sensor.is_lighting4:
-          if sensor.data_bits is not None:
-              cmd = rfxtrx.get_pt2262_cmd(device_id, sensor.data_bits)
-              sensor.apply_cmd(int(cmd, 16))
-          else:
-              sensor.update_state(True)
+            if sensor.data_bits is not None:
+                cmd = rfxtrx.get_pt2262_cmd(device_id, sensor.data_bits)
+                sensor.apply_cmd(int(cmd, 16))
+            else:
+                sensor.update_state(True)
         else:
             rfxtrx.apply_received_command(event)
 
