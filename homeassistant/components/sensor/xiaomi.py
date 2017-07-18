@@ -73,7 +73,5 @@ class XiaomiSensor(XiaomiDevice):
             return False
         if self._data_key in ['temperature', 'humidity']:
             value /= 100
-        if self._data_key in ['illumination']:
-            value -= 300
         self.current_value = value
         return True
