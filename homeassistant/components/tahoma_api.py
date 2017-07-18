@@ -7,6 +7,8 @@ import json
 import requests
 import voluptuous as vol
 
+from homeassistant.exceptions import HomeAssistantError
+
 BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web/externalAPI/json/'
 BASE_HEADERS = {'User-Agent': 'mine'}
 
