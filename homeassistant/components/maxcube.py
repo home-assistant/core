@@ -34,8 +34,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
-    """Set up the Max! Cube."""
-
     """Establish connection to MAX! Cube."""
     from maxcube.connection import MaxCubeConnection
     from maxcube.cube import MaxCube
