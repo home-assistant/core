@@ -107,7 +107,7 @@ def async_setup(hass, config):
 
     # Set up example persistent notification
     persistent_notification.async_create(
-        hass, 'This is an example of a persistent notification.',
+        'This is an example of a persistent notification.',
         title='Example Notification')
 
     # Set up room groups
