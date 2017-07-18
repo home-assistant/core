@@ -36,7 +36,7 @@ PyMata==2.14
 SoCo==0.12
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.5
+TwitterAPI==2.4.6
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.4.0
