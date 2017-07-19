@@ -43,6 +43,7 @@ def _validate_conf(config):
         res_config.append(gw_conf)
     return res_config
 
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_GATEWAYS, default=[{"sid": None, "key": None}]):

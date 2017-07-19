@@ -180,7 +180,8 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         self._open_since = 0
         self._should_poll = False
         self._device_class = 'opening'
-        XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor', xiaomi_hub)
+        XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
+                                    xiaomi_hub)
 
     @property
     def should_poll(self):
