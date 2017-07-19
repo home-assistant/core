@@ -7,11 +7,10 @@ https://home-assistant.io/components/switch.velbus/
 
 import asyncio
 import logging
-import time
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_DEVICES, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
