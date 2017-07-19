@@ -113,7 +113,7 @@ class VelbusCover(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self.is_closed():
+        if self.is_closed:
             return 0
         return 100
 
