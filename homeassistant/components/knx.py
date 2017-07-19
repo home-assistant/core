@@ -128,7 +128,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN,
                            KNX_GROUP_WRITE,
                            handle_group_write,
-                           descriptions.get(KNX_GROUP_WRITE),
+                           descriptions.get(DOMAIN).get(KNX_GROUP_WRITE),
                            schema=KNX_WRITE_SCHEMA)
 
     return True
