@@ -28,6 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkLight(light, hass)])
+    for light in pywink.get_light_groups():
+        _id = light.object_id() + light.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):
@@ -101,7 +105,7 @@ class WinkLight(WinkDevice, Light):
                 xyb = color_util.color_RGB_to_xy(*rgb_color)
                 state_kwargs['color_xy'] = xyb[0], xyb[1]
                 state_kwargs['brightness'] = xyb[2]
-            elif self.wink.supports_hue_saturation():
+            if self.wink.supports_hue_saturation():
                 hsv = colorsys.rgb_to_hsv(
                     rgb_color[0], rgb_color[1], rgb_color[2])
                 state_kwargs['color_hue_saturation'] = hsv[0], hsv[1]
