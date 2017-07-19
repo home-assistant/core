@@ -39,7 +39,9 @@ class TahomaApi:
         login = {'userId': self.__username, 'userPassword': self.__password}
         header = BASE_HEADERS.copy()
         request = requests.post(BASE_URL + 'login',
-            data=login, headers=header, timeout=10)
+                                data=login,
+                                headers=header,
+                                timeout=10)
 
         try:
             result = request.json()
@@ -96,8 +98,9 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getEndUser', headers=header,
-                                timeout=10)
+        request = requests.get(BASE_URL + 'getEndUser',
+                               headers=header,
+                               timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -134,8 +137,9 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getSetup', headers=header,
-                                timeout=10)
+        request = requests.get(BASE_URL + 'getSetup', 
+                               headers=header,
+                               timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -309,7 +313,8 @@ class TahomaApi:
 
         request = requests.post(
                             BASE_URL + "apply",
-                            headers=header, data=js, timeout=10)
+                            headers=header, data=js,
+                            timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -358,8 +363,9 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.post(BASE_URL + 'getEvents', headers=header,
-                                    timeout=10)
+        request = requests.post(BASE_URL + 'getEvents',
+                                headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -419,7 +425,8 @@ class TahomaApi:
         request = requests.get(
                         BASE_URL +
                         'getCurrentExecutions',
-                        headers=header, timeout=10)
+                        headers=header,
+                        timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -476,8 +483,9 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'cancelExecutions', headers=header,
-                                timeout=10)
+        request = requests.get(BASE_URL + 'cancelExecutions',
+                               headers=header,
+                               timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -493,8 +501,9 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + "getActionGroups", headers=header,
-                                timeout=10)
+        request = requests.get(BASE_URL + "getActionGroups",
+                               headers=header,
+                               timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -526,7 +535,9 @@ class TahomaApi:
 
         request = requests.get(
                         BASE_URL + 'launchActionGroup?oid=' +
-                        id, headers=header, timeout=10)
+                        id,
+                        headers=header,
+                        timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -559,7 +570,9 @@ class TahomaApi:
 
         request = requests.post(
                     BASE_URL + 'getStates',
-                    headers=header, data=js, timeout=10)
+                    headers=header,
+                    data=js,
+                    timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
