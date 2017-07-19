@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
                                             SUPPORT_OPEN, SUPPORT_CLOSE,
                                             SUPPORT_STOP)
-from homeassistant.const import (CONF_COVERS, CONF_FRIENDLY_NAME)
+from homeassistant.const import (CONF_COVERS, CONF_NAME)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -23,7 +23,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Required('module'): cv.positive_int,
     vol.Required('open_channel'): cv.positive_int,
     vol.Required('close_channel'): cv.positive_int,
-    vol.Required(CONF_FRIENDLY_NAME): cv.string
+    vol.Required(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device_name, device_config in devices.items():
         covers.append(
             VelbusCover(
-                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                device_config.get(CONF_NAME, device_name),
                 device_config.get('module'),
                 device_config.get('open_channel'),
                 device_config.get('close_channel')
@@ -113,7 +113,9 @@ class VelbusCover(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._state
+        if self.is_closed():
+            return 0
+        return 100
 
     def _relay_off(self, channel):
         import velbus
