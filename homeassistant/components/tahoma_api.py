@@ -47,17 +47,17 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for login, " +
-                    "protocol error: " + request.status_code + ' - ' +
-                    request.reason + "(" + e + ")")
+                "Not a valid result for login, " +
+                "protocol error: " + request.status_code + ' - ' +
+                request.reason + "(" + e + ")")
 
         if 'error' in result.keys():
             raise HomeAssistantError("Could not login: " + result['error'])
 
         if request.status_code != 200:
             raise HomeAssistantError(
-                    "Could not login, HTTP code: " +
-                    str(request.status_code) + ' - ' + request.reason)
+                "Could not login, HTTP code: " +
+                str(request.status_code) + ' - ' + request.reason)
 
         if 'success' not in result.keys() or not result['success']:
             raise HomeAssistantError("Could not login, no success")
@@ -137,7 +137,7 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getSetup', 
+        request = requests.get(BASE_URL + 'getSetup',
                                headers=header,
                                timeout=10)
 
@@ -151,8 +151,8 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for getSetup, " +
-                    "protocol error: " + e)
+                "Not a valid result for getSetup, " +
+                "protocol error: " + e)
 
         self._getSetup(result)
 
@@ -161,9 +161,9 @@ class TahomaApi:
         self.__devices = {}
 
         if ('setup' not in result.keys() or
-                'devices' not in result['setup'].keys()):
-                    raise HomeAssistantError(
-                        "Did not find device definition.")
+            'devices' not in result['setup'].keys()):
+            raise HomeAssistantError(
+                "Did not find device definition.")
 
         for deviceData in result['setup']['devices']:
             device = Device(self, deviceData)
@@ -312,9 +312,9 @@ class TahomaApi:
         js = json.dumps(data, indent=None, sort_keys=True)
 
         request = requests.post(
-                            BASE_URL + "apply",
-                            headers=header, data=js,
-                            timeout=10)
+            BASE_URL + "apply",
+            headers=header, data=js,
+            timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -337,6 +337,7 @@ class TahomaApi:
 
     def getEvents(self):
         """Return a set of events.
+
         Which have been occured since the last call of this method.
 
         This method should be called regulary to get all occuring
@@ -377,8 +378,8 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for getEvent," +
-                    " protocol error: " + e)
+                "Not a valid result for getEvent," +
+                " protocol error: " + e)
 
         return self._getEvents(result)
 
@@ -396,9 +397,9 @@ class TahomaApi:
                     # change device state
                     if self.__devices[event.deviceURL] is None:
                         raise HomeAssistantError(
-                                "Received device change " +
-                                "state for unknown device '" +
-                                event.deviceURL + "'")
+                            "Received device change " +
+                            "state for unknown device '" +
+                            event.deviceURL + "'")
 
                     self.__devices[event.deviceURL].setActiveStates(
                         event.states)
@@ -423,10 +424,10 @@ class TahomaApi:
         header['Cookie'] = self.__cookie
 
         request = requests.get(
-                        BASE_URL +
-                        'getCurrentExecutions',
-                        headers=header,
-                        timeout=10)
+            BASE_URL +
+            'getCurrentExecutions',
+            headers=header,
+            timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -438,8 +439,8 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for" +
-                    "getCurrentExecutions, protocol error: " + e)
+                "Not a valid result for" +
+                "getCurrentExecutions, protocol error: " + e)
 
         if 'executions' not in result.keys():
             return None
@@ -453,12 +454,12 @@ class TahomaApi:
         return executions
 
     def getHistory(self):
-        """Get history"""
+        """Get history."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
         request = requests.get(BASE_URL + 'getHistory', headers=header,
-                                timeout=10)
+                               timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -470,8 +471,8 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for" +
-                    "getHistory, protocol error: " + e)
+                "Not a valid result for" +
+                "getHistory, protocol error: " + e)
 
         return result['history']
 
@@ -515,7 +516,7 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "getActionGroups: Not a valid result for ")
+                "getActionGroups: Not a valid result for ")
 
         if 'actionGroups' not in result.keys():
             return None
@@ -534,10 +535,10 @@ class TahomaApi:
         header['Cookie'] = self.__cookie
 
         request = requests.get(
-                        BASE_URL + 'launchActionGroup?oid=' +
-                        id,
-                        headers=header,
-                        timeout=10)
+            BASE_URL + 'launchActionGroup?oid=' +
+            id,
+            headers=header,
+            timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -549,15 +550,15 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for launch" +
-                    "action group, protocol error: " +
-                    request.status_code + ' - ' + request.reason +
-                    " (" + e + ")")
+            "Not a valid result for launch" +
+            "action group, protocol error: " +
+            request.status_code + ' - ' + request.reason +
+            " (" + e + ")")
 
         if 'actionGroup' not in result.keys():
             raise HomeAssistantError(
-                    "Could not launch action" +
-                    "group, missing execId.")
+                "Could not launch action" +
+                "group, missing execId.")
 
         return result['actionGroup'][0]['execId']
 
@@ -569,10 +570,10 @@ class TahomaApi:
         js = self._createGetStateRequest(devices)
 
         request = requests.post(
-                    BASE_URL + 'getStates',
-                    headers=header,
-                    data=js,
-                    timeout=10)
+            BASE_URL + 'getStates',
+            headers=header,
+            data=js,
+            timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -584,8 +585,8 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-                    "Not a valid result for" +
-                    "getStates, protocol error:" + e)
+                "Not a valid result for" +
+                "getStates, protocol error:" + e)
 
         self._getStates(result)
 
@@ -609,8 +610,8 @@ class TahomaApi:
             devList.append({'deviceURL': device.url, 'states': states})
 
         return json.dumps(
-                    devList, indent=None,
-                    sort_keys=True, separators=(',', ': '))
+            devList, indent=None,
+            sort_keys=True, separators=(',', ': '))
 
     def _getStates(self, result):
         """Get states of devices."""
@@ -678,7 +679,7 @@ class Device:
             for command in definition['commands']:
                 if command['commandName'] in self.__definitions['commands']:
                     raise ValueError("Command '" + command['commandName'] +
-                        "' double defined - " + debugOutput)
+                                     "' double defined - " + debugOutput)
 
                 self.__definitions['commands'].append(command['commandName'])
 
@@ -686,7 +687,7 @@ class Device:
             for state in definition['states']:
                 if state['qualifiedName'] in self.__definitions['states']:
                     raise ValueError("State '" + state['qualifiedName'] +
-                        "' double defined - " + debugOutput)
+                                     "' double defined - " + debugOutput)
 
                 self.__definitions['states'].append(state['qualifiedName'])
 
@@ -701,9 +702,9 @@ class Device:
         # make sure there are not more active states than definitions
         if activeStatesAmount > len(self.stateDefinitions):
             raise ValueError(
-                    "Missmatch of state definition and active states (" +
-                    str(len(self.stateDefinitions)) + "/" +
-                    str(activeStatesAmount) + "): " + debugOutput)
+                "Missmatch of state definition and active states (" +
+                str(len(self.stateDefinitions)) + "/" +
+                str(activeStatesAmount) + "): " + debugOutput)
 
         if len(self.stateDefinitions) > 0:
 
@@ -752,12 +753,12 @@ class Device:
             raise ValueError("Can not set unknown state '" + name + "'")
 
         if (isinstance(self.__activeStates[name], int) and
-                isinstance(value, str)):
+            isinstance(value, str)):
             # we get an update as str but current value is
             # an int, try to convert
             self.__activeStates[name] = int(value)
         elif (isinstance(self.__activeStates[name], float) and
-                isinstance(value, str)):
+              isinstance(value, str)):
             # we get an update as str but current value is
             # a float, try to convert
             self.__activeStates[name] = float(value)
@@ -821,7 +822,7 @@ class Action:
 
     @property
     def commands(self):
-        """Get commands"""
+        """Get commands."""
         return self.__commands
 
     def serialize(self):

@@ -5,16 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tahoma/
 """
 import logging
+from collections import defaultdict
 import voluptuous as vol
 
-from collections import defaultdict
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.components.tahoma_api import (TahomaApi)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
-
-TAHOMA_CONTROLLER = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,25 +39,22 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
     exclude = conf.get(CONF_EXCLUDE)
     try:
-        TAHOMA_CONTROLLER = TahomaApi(username, password)
-    except Exception:
+        api = TahomaApi(username, password)
+        hass.data['TAHOMA_CONTROLLER'] = api
+        TAHOMA_DEVICES['api'] = api
+    except HomeAssistantError:
         _LOGGER.exception("Error communicating with Tahoma API")
         return False
 
-    hass.data['TAHOMA_CONTROLLER'] = TAHOMA_CONTROLLER
-
-    TAHOMA_DEVICES['api'] = TAHOMA_CONTROLLER
     try:
         TAHOMA_CONTROLLER.getSetup()
         devices = TAHOMA_CONTROLLER.getDevices()
-    except Exception:
+    except HomeAssistantError:
         _LOGGER.exception("Cannot feht informations from Tahoma API")
         return False
 
     for device in devices:
         d = TAHOMA_CONTROLLER.getDevice(device)
-        _LOGGER.error(d.label)
-        _LOGGER.error(d.type)
         if any(ext not in d.type for ext in exclude):
             device_type = map_tahoma_device(d)
             if device_type is None:
