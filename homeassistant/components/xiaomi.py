@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP
 
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
-                '06a96433974c56d02aec7c5e3174b1fd5e133008.zip#'
+                '877faec36e1bfa4177cae2a0d4f49570af083e1d.zip#'
                 'PyXiaomiGateway==0.1.0']
 
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -153,7 +153,7 @@ class XiaomiDevice(Entity):
         self.xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'])
         self.parse_voltage(device['data'])
-        xiaomi_hub.ha_devices[self._sid].append(self)
+        xiaomi_hub.callbacks[self._sid].append(self.push_data)
 
     @property
     def name(self):
@@ -173,7 +173,6 @@ class XiaomiDevice(Entity):
     def push_data(self, data):
         """Push from Hub."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
-
         if self.parse_data(data) or self.parse_voltage(data):
             self.schedule_update_ha_state()
 
