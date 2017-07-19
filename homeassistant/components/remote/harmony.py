@@ -174,7 +174,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise True."""
-        return self._current_activity != 'PowerOff'
+        return self._current_activity not in [None, 'PowerOff']
 
     def update(self):
         """Return current activity."""
