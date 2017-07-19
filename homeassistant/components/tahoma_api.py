@@ -598,7 +598,7 @@ class TahomaApi:
             devices = given_devices
         else:
             devices = []
-            for dev_name in self.__devices.keys():
+            for dev_name, item in self.__devices.items():
                 devices.append(self.__devices[dev_name])
 
         for device in devices:
