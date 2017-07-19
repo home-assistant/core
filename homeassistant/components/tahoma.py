@@ -47,14 +47,14 @@ def setup(hass, config):
         return False
 
     try:
-        TAHOMA_CONTROLLER.getSetup()
-        devices = TAHOMA_CONTROLLER.getDevices()
+        api.getSetup()
+        devices = api.getDevices()
     except HomeAssistantError:
         _LOGGER.exception("Cannot feht informations from Tahoma API")
         return False
 
     for device in devices:
-        d = TAHOMA_CONTROLLER.getDevice(device)
+        d = api.getDevice(device)
         if any(ext not in d.type for ext in exclude):
             device_type = map_tahoma_device(d)
             if device_type is None:
