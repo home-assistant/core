@@ -14,7 +14,7 @@ BASE_HEADERS = {'User-Agent': 'mine'}
 
 
 class TahomaApi:
-    """Connection to Tahoma API"""
+    """Connection to Tahoma API."""
 
     def __init__(self, userName, userPassword, **kwargs):
         """Initalize the Tahoma protocol.
@@ -39,7 +39,7 @@ class TahomaApi:
         login = {'userId': self.__username, 'userPassword': self.__password}
         header = BASE_HEADERS.copy()
         request = requests.post(BASE_URL + 'login',
-            data=login, headers=header)
+            data=login, headers=header, timeout=10)
 
         try:
             result = request.json()
@@ -69,7 +69,7 @@ class TahomaApi:
         return self.__loggedIn
 
     def getUser(self):
-        """ Get the user informations from the server.
+        """Get the user informations from the server.
 
         :return: a dict with all the informations
         :rtype: dict
@@ -93,11 +93,11 @@ class TahomaApi:
 
         The type and amount of values in the dictionary can change any time.
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getEndUser', headers=header)
+        request = requests.get(BASE_URL + 'getEndUser', headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -131,11 +131,11 @@ class TahomaApi:
         - location
         - gateway
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getSetup', headers=header)
+        request = requests.get(BASE_URL + 'getSetup', headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -153,7 +153,7 @@ class TahomaApi:
         self._getSetup(result)
 
     def _getSetup(self, result):
-        """ Internal method which process the results from the server."""
+        """Internal method which process the results from the server."""
         self.__devices = {}
 
         if ('setup' not in result.keys() or
@@ -246,8 +246,9 @@ class TahomaApi:
         return self.__gateway
 
     def getDevices(self):
-        """Return all devices which have been found with last getSetup
-        request.
+        """Return all devices.
+
+        Which have been found with last getSetup request.
 
         With a previous getSetup call the devices which have
         been found will be returned.
@@ -262,8 +263,9 @@ class TahomaApi:
         return self.__devices
 
     def getDevice(self, url):
-        """Return a particular device which have been found with the
-        last getSetup request.
+        """Return a particular device.
+
+        Which have been found with the last getSetup request.
 
         :param url: The device URL of the device to be returned.
         :return: Return the device identified by url or None
@@ -294,7 +296,6 @@ class TahomaApi:
         - getEvents
         - getCurrentExecutions
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -308,7 +309,7 @@ class TahomaApi:
 
         request = requests.post(
                             BASE_URL + "apply",
-                            headers=header, data=js)
+                            headers=header, data=js, timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -330,8 +331,8 @@ class TahomaApi:
         return result['execId']
 
     def getEvents(self):
-        """Returns a set of events which have been occured
-        since the last call of this method.
+        """Return a set of events.
+        Which have been occured since the last call of this method.
 
         This method should be called regulary to get all occuring
         Events. There are three different Event types/classes
@@ -354,11 +355,11 @@ class TahomaApi:
         - launchActionGroup
         - getHistory
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.post(BASE_URL + 'getEvents', headers=header)
+        request = requests.post(BASE_URL + 'getEvents', headers=header,
+                                    timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -412,14 +413,13 @@ class TahomaApi:
         - launchActionGroup
         - getHistory
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
         request = requests.get(
                         BASE_URL +
                         'getCurrentExecutions',
-                        headers=header)
+                        headers=header, timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -446,10 +446,12 @@ class TahomaApi:
         return executions
 
     def getHistory(self):
+        """Get history"""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'getHistory', headers=header)
+        request = requests.get(BASE_URL + 'getHistory', headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -467,14 +469,15 @@ class TahomaApi:
         return result['history']
 
     def cancelAllExecutions(self):
-        """Cancels all running executions.
+        """Cancel all running executions.
 
         raises ValueError in case of any protocol issues.
         """
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + 'cancelExecutions', headers=header)
+        request = requests.get(BASE_URL + 'cancelExecutions', headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -490,7 +493,8 @@ class TahomaApi:
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        request = requests.get(BASE_URL + "getActionGroups", headers=header)
+        request = requests.get(BASE_URL + "getActionGroups", headers=header,
+                                timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -516,13 +520,13 @@ class TahomaApi:
         return groups
 
     def launchActionGroup(self, id):
-        """Starts action group."""
+        """Start action group."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
         request = requests.get(
                         BASE_URL + 'launchActionGroup?oid=' +
-                        id, headers=header)
+                        id, headers=header, timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -555,7 +559,7 @@ class TahomaApi:
 
         request = requests.post(
                     BASE_URL + 'getStates',
-                    headers=header, data=js)
+                    headers=header, data=js, timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
@@ -573,7 +577,7 @@ class TahomaApi:
         self._getStates(result)
 
     def _createGetStateRequest(self, givenDevices):
-        """Creates state request."""
+        """Create state request."""
         devList = []
 
         if isinstance(givenDevices, list):
@@ -611,15 +615,13 @@ class TahomaApi:
         header['Cookie'] = self.__cookie
 
         request = requests.get(
-            BASE_URL + "refreshAllStates",headers=header)
+            BASE_URL + "refreshAllStates", headers=header, timeout=10)
 
         if request.status_code != 200:
             self.__loggedIn = False
             self.login()
             self.refreshAllStates()
             return
-
-
 
 
 class Device:
@@ -728,11 +730,11 @@ class Device:
 
     @property
     def activeStates(self):
-        """Gets active states."""
+        """Get active states."""
         return self.__activeStates
 
     def setActiveState(self, name, value):
-        """Sets active state."""
+        """Set active state."""
         if name not in self.__activeStates.keys():
             raise ValueError("Can not set unknown state '" + name + "'")
 
@@ -750,21 +752,22 @@ class Device:
             self.__activeStates[name] = value
 
     def setActiveStates(self, states):
+        """Set active states to device."""
         for state in states:
             self.setActiveState(state['name'], state['value'])
 
     @property
     def type(self):
-        """Gets device type."""
+        """Get device type."""
         return self.__type
 
     @property
     def url(self):
-        """Gets device url."""
+        """Get device url."""
         return self.__url
 
     def executeAction(self, action):
-        """Exceutes action."""
+        """Exceute action."""
         self.__protocol
 
 
@@ -791,16 +794,16 @@ class Action:
 
     @property
     def deviceURL(self):
-        """Gets device url of action."""
+        """Get device url of action."""
         return self.__deviceURL
 
     @deviceURL.setter
     def deviceURL(self, url):
-        """Sets device url of action."""
+        """Set device url of action."""
         self.__deviceURL = url
 
     def addCommand(self, cmdName, *args):
-        """Adds command to action."""
+        """Add command to action."""
         self.__commands.append(Command(cmdName, args))
 
     @property
@@ -820,7 +823,7 @@ class Action:
         return out
 
     def __str__(self):
-        """Formats to json."""
+        """Format to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -829,7 +832,7 @@ class Action:
             )
 
     def __repr__(self):
-        """Formats to json."""
+        """Format to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
@@ -871,7 +874,7 @@ class Command:
         return {'name': self.__name, 'parameters': self.__args}
 
     def __str__(self):
-        """Formats to json."""
+        """Format to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -879,7 +882,7 @@ class Command:
             separators=(',', ': '))
 
     def __repr__(self):
-        """Formats to json."""
+        """Format to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
