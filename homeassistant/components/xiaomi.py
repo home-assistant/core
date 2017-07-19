@@ -21,10 +21,32 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 XIAOMI_COMPONENTS = ['binary_sensor', 'sensor', 'switch', 'light', 'cover']
 
+
+def _validate_conf(config):
+    """Validate a list of devices definitions."""
+    res_config = []
+    for gw_conf in config:
+        sid = gw_conf.get('sid')
+        if sid is not None:
+            gw_conf['sid'] = sid.replace(":", "").lower()
+            if len(sid) != 12:
+                raise vol.Invalid('Invalid sid %s.'
+                                  ' Sid must be 12 characters', sid)
+        key = gw_conf.get('key')
+        if key is None:
+            _LOGGER.warning(
+                'Gateway Key is not provided.'
+                ' Controlling gateway device will not be possible.')
+        elif len(key) != 16:
+            raise vol.Invalid('Invalid key %s.'
+                              ' Key must be 16 characters', key)
+        res_config.append(gw_conf)
+    return res_config
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_GATEWAYS, default=[{"sid": None, "key": None}]):
-            cv.ensure_list,
+            vol.All(cv.ensure_list, _validate_conf),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
     })
@@ -38,21 +60,6 @@ def setup(hass, config):
     gateways = config[DOMAIN][CONF_GATEWAYS]
     interface = config[DOMAIN][CONF_INTERFACE]
     discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
-
-    for gateway in gateways:
-        sid = gateway['sid']
-
-        if sid is not None:
-            gateway['sid'] = gateway['sid'].replace(":", "").lower()
-
-        key = gateway['key']
-        if key is None:
-            _LOGGER.warning('Gateway Key is not provided.'
-                            ' Controlling gateway device'
-                            ' will not be possible.')
-        elif len(key) != 16:
-            _LOGGER.error('Invalid key %s. Key must be 16 characters', key)
-            return False
 
     from PyXiaomiGateway import PyXiaomiGateway
     hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways,

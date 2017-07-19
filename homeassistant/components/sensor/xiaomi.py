@@ -61,7 +61,7 @@ class XiaomiSensor(XiaomiDevice):
         value = data.get(self._data_key)
         if value is None:
             return False
-        value = int(value)
+        value = float(value)
         if self._data_key == 'temperature' and value == 10000:
             return False
         elif self._data_key == 'humidity' and value == 0:
@@ -73,7 +73,6 @@ class XiaomiSensor(XiaomiDevice):
         if self._data_key in ['temperature', 'humidity']:
             value /= 100
         elif self._data_key in ['illumination']:
-                value -= 300
-                value = max(value, 0)
+            value = max(value - 300, 0)
         self._state = round(value, 2)
         return True
