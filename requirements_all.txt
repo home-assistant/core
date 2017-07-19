@@ -755,7 +755,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.2.4
+python-wink==1.3.1
 
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
