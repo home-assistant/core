@@ -781,7 +781,7 @@ class Device:
         """Get device url."""
         return self.__url
 
-    #def execute_action(self, action):
+    # def execute_action(self, action):
     #    """Exceute action."""
     #    self.__protocol
 
