@@ -54,9 +54,9 @@ class TahomaSensor(TahomaDevice, Entity):
 
     def update(self):
         """Update the state."""
-        self.controller.getStates([self.tahoma_device])
+        self.controller.get_states([self.tahoma_device])
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
-            _val = self.tahoma_device.activeStates['core:LuminanceState']
+            _val = self.tahoma_device.active_states['core:LuminanceState']
             self.current_value = _val
 
         self.schedule_update_ha_state()

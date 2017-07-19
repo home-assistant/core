@@ -32,7 +32,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def update(self):
         """Update method."""
-        self.controller.getStates([self.tahoma_device])
+        self.controller.get_states([self.tahoma_device])
         self.schedule_update_ha_state()
 
     @property
@@ -42,7 +42,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
         0 is closed, 100 is fully open.
         """
-        position = 100 - self.tahoma_device.activeStates['core:ClosureState']
+        position = 100 - self.tahoma_device.active_states['core:ClosureState']
         if position <= 5:
             return 0
         if position >= 95:
@@ -51,9 +51,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        a = Action(self.tahoma_device.url)
-        a.addCommand('setPosition', 100 - position)
-        self.controller.applyActions("", [a])
+        action = Action(self.tahoma_device.url)
+        action.add_command('setPosition', 100 - position)
+        self.controller.apply_actions("", [action])
         self.schedule_update_ha_state()
 
     @property
@@ -67,21 +67,21 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        a = Action(self.tahoma_device.url)
-        a.addCommand('open')
-        self.controller.applyActions('', [a])
+        action = Action(self.tahoma_device.url)
+        action.add_command('open')
+        self.controller.apply_actions('', [action])
         self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        a = Action(self.tahoma_device.url)
-        a.addCommand('close')
-        self.controller.applyActions('', [a])
+        action = Action(self.tahoma_device.url)
+        action.add_command('close')
+        self.controller.apply_actions('', [action])
         self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        a = Action(self.tahoma_device.url)
-        a.addCommand('stopIdentify')
-        self.controller.applyActions('', [a])
+        action = Action(self.tahoma_device.url)
+        action.add_command('stopIdentify')
+        self.controller.apply_actions('', [action])
         self.schedule_update_ha_state()

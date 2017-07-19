@@ -27,14 +27,14 @@ class TahomaApi:
         self.__gateway = {}
         self.__location = {}
         self.__cookie = ""
-        self.__loggedIn = False
+        self.__logged_in = False
         self.__username = userName
         self.__password = userPassword
         self.login()
 
     def login(self):
         """Login to Tahoma API."""
-        if self.__loggedIn:
+        if self.__logged_in:
             return
         login = {'userId': self.__username, 'userPassword': self.__password}
         header = BASE_HEADERS.copy()
@@ -45,11 +45,11 @@ class TahomaApi:
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for login, " +
                 "protocol error: " + request.status_code + ' - ' +
-                request.reason + "(" + e + ")")
+                request.reason + "(" + error + ")")
 
         if 'error' in result.keys():
             raise HomeAssistantError("Could not login: " + result['error'])
@@ -67,10 +67,10 @@ class TahomaApi:
             raise HomeAssistantError("Could not login, no cookie set")
 
         self.__cookie = cookie
-        self.__loggedIn = True
-        return self.__loggedIn
+        self.__logged_in = True
+        return self.__logged_in
 
-    def getUser(self):
+    def get_user(self):
         """Get the user informations from the server.
 
         :return: a dict with all the informations
@@ -103,9 +103,9 @@ class TahomaApi:
                                timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getUser()
+            self.get_user()
             return
 
         try:
@@ -116,12 +116,12 @@ class TahomaApi:
 
         return result['endUser']
 
-    def getSetup(self):
+    def get_setup(self):
         """Load the setup from the server.
 
         Loads the configuration from the server, nothing will
         be returned. After loading the configuration the devices
-        can be obtained through getDevice and getDevices.
+        can be obtained through get_device and get_devices.
         Also location and gateway will be set through this
         method.
 
@@ -129,8 +129,8 @@ class TahomaApi:
 
         :Seealso:
 
-        - getDevice
-        - getDevices
+        - get_device
+        - get_devices
         - location
         - gateway
         """
@@ -142,21 +142,21 @@ class TahomaApi:
                                timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getSetup()
+            self.get_setup()
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for getSetup, " +
-                "protocol error: " + e)
+                "protocol error: " + error)
 
-        self._getSetup(result)
+        self._get_setup(result)
 
-    def _getSetup(self, result):
+    def _get_setup(self, result):
         """Internal method which process the results from the server."""
         self.__devices = {}
 
@@ -165,8 +165,8 @@ class TahomaApi:
             raise HomeAssistantError(
                 "Did not find device definition.")
 
-        for deviceData in result['setup']['devices']:
-            device = Device(self, deviceData)
+        for device_data in result['setup']['devices']:
+            device = Device(self, device_data)
             self.__devices[device.url] = device
 
         self.__location = result['setup']['location']
@@ -176,7 +176,7 @@ class TahomaApi:
     def location(self):
         """Return the location information stored in your Tahoma box.
 
-        When the configuration has been loaded via getSetup this
+        When the configuration has been loaded via get_setup this
         method retrieves all the location details which have
         been saved for your Tahoma box.
         :return: a dict with all the informations
@@ -205,7 +205,7 @@ class TahomaApi:
 
         :Seealso:
 
-        - getSetup
+        - get_setup
         """
         return self.__location
 
@@ -213,7 +213,7 @@ class TahomaApi:
     def gateway(self):
         """Return information about your Tahoma box.
 
-        When the configuration has been loaded via getSetup this
+        When the configuration has been loaded via get_setup this
         method retrieves all  details your Tahoma box.
 
         :return: a list of all gateways with a dict per gateway with
@@ -245,31 +245,31 @@ class TahomaApi:
 
         :Seealso:
 
-        - getSetup
+        - get_setup
         """
         return self.__gateway
 
-    def getDevices(self):
+    def get_devices(self):
         """Return all devices.
 
-        Which have been found with last getSetup request.
+        Which have been found with last get_setup request.
 
-        With a previous getSetup call the devices which have
+        With a previous get_setup call the devices which have
         been found will be returned.
 
-        :return: Returns a dictionary {deviceURL -> Device }
+        :return: Returns a dictionary {device_url -> Device }
         :rtype: dict
 
         :Seealso:
 
-        - getSetup
+        - get_setup
         """
         return self.__devices
 
-    def getDevice(self, url):
+    def get_device(self, url):
         """Return a particular device.
 
-        Which have been found with the last getSetup request.
+        Which have been found with the last get_setup request.
 
         :param url: The device URL of the device to be returned.
         :return: Return the device identified by url or None
@@ -277,17 +277,17 @@ class TahomaApi:
 
         :Seealso:
 
-        - getSetup
+        - get_setup
         """
         return self.__devices[url]
 
-    def applyActions(self, nameOfAction, actions):
+    def apply_actions(self, name_of_action, actions):
         """Start to execute an action or a group of actions.
 
         This method takes a bunch of actions and runs them on your
         Tahoma box.
 
-        :param nameOfAction: the label/name for the action
+        :param name_of_action: the label/name for the action
         :param actions: an array of Action objects
         :return: the execution identifier  **************
         what if it fails
@@ -297,45 +297,45 @@ class TahomaApi:
 
         :Seealso:
 
-        - getEvents
-        - getCurrentExecutions
+        - get_events
+        - get_current_executions
         """
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        actionsSerialized = []
+        actions_serialized = []
 
         for action in actions:
-            actionsSerialized.append(action.serialize())
+            actions_serialized.append(action.serialize())
 
-        data = {"label": nameOfAction, "actions": actionsSerialized}
-        js = json.dumps(data, indent=None, sort_keys=True)
+        data = {"label": name_of_action, "actions": actions_serialized}
+        json_data = json.dumps(data, indent=None, sort_keys=True)
 
         request = requests.post(
             BASE_URL + "apply",
-            headers=header, data=js,
+            headers=header, data=json_data,
             timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.applyActions(nameOfAction, actions)
+            self.apply_actions(name_of_action, actions)
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for applying an " +
                 "action, protocol error: " + request.status_code +
-                ' - ' + request.reason + " (" + e + ")")
+                ' - ' + request.reason + " (" + error + ")")
 
         if 'execId' not in result.keys():
             raise HomeAssistantError("Could not run actions, missing execId.")
 
         return result['execId']
 
-    def getEvents(self):
+    def get_events(self):
         """Return a set of events.
 
         Which have been occured since the last call of this method.
@@ -357,9 +357,9 @@ class TahomaApi:
 
         :Seealso:
 
-        - applyActions
-        - launchActionGroup
-        - getHistory
+        - apply_actions
+        - launch_action_group
+        - get_history
         """
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
@@ -369,44 +369,44 @@ class TahomaApi:
                                 timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getEvents()
+            self.get_events()
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for getEvent," +
-                " protocol error: " + e)
+                " protocol error: " + error)
 
-        return self._getEvents(result)
+        return self._get_events(result)
 
-    def _getEvents(self, result):
+    def _get_events(self, result):
         """"Internal method for being able to run unit tests."""
         events = []
 
-        for eventData in result:
-            event = Event.factory(eventData)
+        for event_data in result:
+            event = Event.factory(event_data)
 
             if event is not None:
                 events.append(event)
 
                 if isinstance(event, DeviceStateChangedEvent):
                     # change device state
-                    if self.__devices[event.deviceURL] is None:
+                    if self.__devices[event.device_url] is None:
                         raise HomeAssistantError(
                             "Received device change " +
                             "state for unknown device '" +
-                            event.deviceURL + "'")
+                            event.device_url + "'")
 
-                    self.__devices[event.deviceURL].setActiveStates(
+                    self.__devices[event.device_url].set_active_states(
                         event.states)
 
         return events
 
-    def getCurrentExecutions(self):
+    def get_current_executions(self):
         """Get all current running executions.
 
         :return: Returns a set of running Executions or empty list.
@@ -416,9 +416,9 @@ class TahomaApi:
 
         :Seealso:
 
-        - applyActions
-        - launchActionGroup
-        - getHistory
+        - apply_actions
+        - launch_action_group
+        - get_history
         """
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
@@ -430,30 +430,30 @@ class TahomaApi:
             timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getCurrentExecutions()
+            self.get_current_executions()
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for" +
-                "getCurrentExecutions, protocol error: " + e)
+                "get_current_executions, protocol error: " + error)
 
         if 'executions' not in result.keys():
             return None
 
         executions = []
 
-        for executionData in result['executions']:
-            exe = Execution(executionData)
+        for execution_data in result['executions']:
+            exe = Execution(execution_data)
             executions.append(exe)
 
         return executions
 
-    def getHistory(self):
+    def get_history(self):
         """Get history."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
@@ -462,21 +462,21 @@ class TahomaApi:
                                timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getHistory()
+            self.get_history()
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for" +
-                "getHistory, protocol error: " + e)
+                "get_history, protocol error: " + error)
 
         return result['history']
 
-    def cancelAllExecutions(self):
+    def cancel_all_executions(self):
         """Cancel all running executions.
 
         raises ValueError in case of any protocol issues.
@@ -489,12 +489,12 @@ class TahomaApi:
                                timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.cancelAllExecutions()
+            self.cancel_all_executions()
             return
 
-    def getActionGroups(self):
+    def get_action_groups(self):
         """Get all Action Groups.
 
         :return: List of Action Groups
@@ -507,53 +507,53 @@ class TahomaApi:
                                timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.getActionGroups()
+            self.get_action_groups()
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
-                "getActionGroups: Not a valid result for ")
+                "get_action_groups: Not a valid result for ")
 
         if 'actionGroups' not in result.keys():
             return None
 
         groups = []
 
-        for groupData in result['actionGroups']:
-            group = ActionGroup(groupData)
+        for group_data in result['actionGroups']:
+            group = ActionGroup(group_data)
             groups.append(group)
 
         return groups
 
-    def launchActionGroup(self, id):
+    def launch_action_group(self, action_id):
         """Start action group."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
         request = requests.get(
             BASE_URL + 'launchActionGroup?oid=' +
-            id,
+            action_id,
             headers=header,
             timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.launchActionGroup(id)
+            self.launch_action_group(action_id)
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for launch" +
                 "action group, protocol error: " +
                 request.status_code + ' - ' + request.reason +
-                " (" + e + ")")
+                " (" + error + ")")
 
         if 'actionGroup' not in result.keys():
             raise HomeAssistantError(
@@ -562,68 +562,68 @@ class TahomaApi:
 
         return result['actionGroup'][0]['execId']
 
-    def getStates(self, devices):
+    def get_states(self, devices):
         """Get States of Devices."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
-        js = self._createGetStateRequest(devices)
+        json_data = self._create_get_state_request(devices)
 
         request = requests.post(
             BASE_URL + 'getStates',
             headers=header,
-            data=js,
+            data=json_data,
             timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
             self.getStates(devices)
             return
 
         try:
             result = request.json()
-        except ValueError as e:
+        except ValueError as error:
             raise HomeAssistantError(
                 "Not a valid result for" +
-                "getStates, protocol error:" + e)
+                "getStates, protocol error:" + error)
 
-        self._getStates(result)
+        self._get_states(result)
 
-    def _createGetStateRequest(self, givenDevices):
+    def _create_get_state_request(self, given_devices):
         """Create state request."""
-        devList = []
+        dev_list = []
 
-        if isinstance(givenDevices, list):
-            devices = givenDevices
+        if isinstance(given_devices, list):
+            devices = given_devices
         else:
             devices = []
-            for devName in self.__devices.keys():
-                devices.append(self.__devices[devName])
+            for dev_name in self.__devices.keys():
+                devices.append(self.__devices[dev_name])
 
         for device in devices:
             states = []
 
-            for stateName in sorted(device.activeStates.keys()):
-                states.append({'name': stateName})
+            for state_name in sorted(device.active_states.keys()):
+                states.append({'name': state_name})
 
-            devList.append({'deviceURL': device.url, 'states': states})
+            dev_list.append({'deviceURL': device.url, 'states': states})
 
         return json.dumps(
-            devList, indent=None,
+            dev_list, indent=None,
             sort_keys=True, separators=(',', ': '))
 
-    def _getStates(self, result):
+    def _get_states(self, result):
         """Get states of devices."""
         if 'devices' not in result.keys():
             return
 
-        for deviceStates in result['devices']:
-            device = self.__devices[deviceStates['deviceURL']]
+        for device_states in result['devices']:
+            device = self.__devices[device_states['deviceURL']]
 
-            device.setActiveStates(deviceStates['states'])
+            device.set_active_states(device_states['states'])
 
-    def refreshAllStates(self):
+    def refresh_all_states(self):
         """Update all states."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
@@ -632,9 +632,9 @@ class TahomaApi:
             BASE_URL + "refreshAllStates", headers=header, timeout=10)
 
         if request.status_code != 200:
-            self.__loggedIn = False
+            self.__logged_in = False
             self.login()
-            self.refreshAllStates()
+            self.refresh_all_states()
             return
 
 
@@ -644,29 +644,29 @@ class Device:
     def __init__(self, protocol, dataInput):
         """Initalize the Tahoma Device."""
         self.__protocol = protocol
-        self.__rawData = dataInput
+        self.__raw_data = dataInput
 
-        debugOutput = json.dumps(dataInput)
+        debug_output = json.dumps(dataInput)
 
         if 'label' not in dataInput.keys():
-            raise ValueError('No device name found: ' + debugOutput)
+            raise ValueError('No device name found: ' + debug_output)
 
         self.__label = dataInput['label']
 
         if 'controllableName' not in dataInput.keys():
-            raise ValueError('No control label name found: ' + debugOutput)
+            raise ValueError('No control label name found: ' + debug_output)
 
         self.__type = dataInput['controllableName']
 
         if 'deviceURL' not in dataInput.keys():
-            raise ValueError('No control URL: ' + debugOutput)
+            raise ValueError('No control URL: ' + debug_output)
 
         self.__url = dataInput['deviceURL']
 
         # Parse definitions
 
         if 'definition' not in dataInput.keys():
-            raise ValueError('No device definition found: ' + debugOutput)
+            raise ValueError('No device definition found: ' + debug_output)
 
         self.__definitions = {
             'commands': [],
@@ -679,7 +679,7 @@ class Device:
             for command in definition['commands']:
                 if command['commandName'] in self.__definitions['commands']:
                     raise ValueError("Command '" + command['commandName'] +
-                                     "' double defined - " + debugOutput)
+                                     "' double defined - " + debug_output)
 
                 self.__definitions['commands'].append(command['commandName'])
 
@@ -687,45 +687,45 @@ class Device:
             for state in definition['states']:
                 if state['qualifiedName'] in self.__definitions['states']:
                     raise ValueError("State '" + state['qualifiedName'] +
-                                     "' double defined - " + debugOutput)
+                                     "' double defined - " + debug_output)
 
                 self.__definitions['states'].append(state['qualifiedName'])
 
         # Parse active states
 
         # calculate the amount of known active states
-        activeStatesAmount = 0
+        active_states_amount = 0
         if 'states' in dataInput.keys():
             for state in dataInput['states']:
-                activeStatesAmount += 1
+                active_states_amount += 1
 
         # make sure there are not more active states than definitions
-        if activeStatesAmount > len(self.stateDefinitions):
+        if active_states_amount > len(self.state_definitions):
             raise ValueError(
                 "Missmatch of state definition and active states (" +
-                str(len(self.stateDefinitions)) + "/" +
-                str(activeStatesAmount) + "): " + debugOutput)
+                str(len(self.state_definitions)) + "/" +
+                str(active_states_amount) + "): " + debug_output)
 
-        if len(self.stateDefinitions) > 0:
+        if len(self.state_definitions) > 0:
 
             if 'states' not in dataInput.keys():
                 raise ValueError("No active states given.")
 
-            self.__activeStates = {}
+            self.__active_states = {}
 
             for state in dataInput['states']:
 
-                if state['name'] not in self.stateDefinitions:
+                if state['name'] not in self.state_definitions:
                     raise ValueError(
                         "Active state '" + state['name'] +
-                        "' has not been defined: " + debugOutput)
+                        "' has not been defined: " + debug_output)
 
-                if state['name'] in self.__activeStates.keys():
+                if state['name'] in self.__active_states.keys():
                     raise ValueError(
                         "Active state '" + state['name'] +
-                        "' has been double defined: " + debugOutput)
+                        "' has been double defined: " + debug_output)
 
-                self.__activeStates[state['name']] = state['value']
+                self.__active_states[state['name']] = state['value']
 
     @property
     def label(self):
@@ -733,42 +733,42 @@ class Device:
         return self.__label
 
     @property
-    def commandDefinitions(self):
+    def command_definitions(self):
         """List of command devinitions."""
         return self.__definitions['commands']
 
     @property
-    def stateDefinitions(self):
+    def state_definitions(self):
         """State of command devinition."""
         return self.__definitions['states']
 
     @property
-    def activeStates(self):
+    def active_states(self):
         """Get active states."""
-        return self.__activeStates
+        return self.__active_states
 
-    def setActiveState(self, name, value):
+    def set_active_state(self, name, value):
         """Set active state."""
-        if name not in self.__activeStates.keys():
+        if name not in self.__active_states.keys():
             raise ValueError("Can not set unknown state '" + name + "'")
 
-        if (isinstance(self.__activeStates[name], int) and
+        if (isinstance(self.__active_states[name], int) and
                 isinstance(value, str)):
             # we get an update as str but current value is
             # an int, try to convert
-            self.__activeStates[name] = int(value)
-        elif (isinstance(self.__activeStates[name], float) and
+            self.__active_states[name] = int(value)
+        elif (isinstance(self.__active_states[name], float) and
               isinstance(value, str)):
             # we get an update as str but current value is
             # a float, try to convert
-            self.__activeStates[name] = float(value)
+            self.__active_states[name] = float(value)
         else:
-            self.__activeStates[name] = value
+            self.__active_states[name] = value
 
-    def setActiveStates(self, states):
+    def set_active_states(self, states):
         """Set active states to device."""
         for state in states:
-            self.setActiveState(state['name'], state['value'])
+            self.set_active_state(state['name'], state['value'])
 
     @property
     def type(self):
@@ -780,7 +780,7 @@ class Device:
         """Get device url."""
         return self.__url
 
-    def executeAction(self, action):
+    def execute_action(self, action):
         """Exceute action."""
         self.__protocol
 
@@ -793,7 +793,7 @@ class Action:
         self.__commands = []
 
         if isinstance(data, dict):
-            self.__deviceURL = data['deviceURL']
+            self.__device_url = data['deviceURL']
 
             for cmd in data['commands']:
                 if 'parameters' in cmd.keys():
@@ -802,23 +802,23 @@ class Action:
                 else:
                     self.__commands.append(Command(cmd['name']))
         elif isinstance(data, str):
-            self.__deviceURL = data
+            self.__device_url = data
         else:
-            self.__deviceURL = ""
+            self.__device_url = ""
 
     @property
-    def deviceURL(self):
+    def device_url(self):
         """Get device url of action."""
-        return self.__deviceURL
+        return self.__device_url
 
-    @deviceURL.setter
-    def deviceURL(self, url):
+    @device_url.setter
+    def device_url(self, url):
         """Set device url of action."""
-        self.__deviceURL = url
+        self.__device_url = url
 
-    def addCommand(self, cmdName, *args):
+    def add_command(self, cmd_name, *args):
         """Add command to action."""
-        self.__commands.append(Command(cmdName, args))
+        self.__commands.append(Command(cmd_name, args))
 
     @property
     def commands(self):
@@ -832,7 +832,7 @@ class Action:
         for cmd in self.commands:
             commands.append(cmd.serialize())
 
-        out = {'commands': commands, 'deviceURL': self.__deviceURL}
+        out = {'commands': commands, 'deviceURL': self.__device_url}
 
         return out
 
@@ -857,9 +857,9 @@ class Action:
 class Command:
     """Represents an Tahoma Command."""
 
-    def __init__(self, cmdName, *args):
+    def __init__(self, cmd_name, *args):
         """Initalize the Tahoma Command."""
-        self.__name = cmdName
+        self.__name = cmd_name
 
         if len(args):
             for arg in args[0]:
@@ -909,7 +909,7 @@ class ActionGroup:
 
     def __init__(self, data):
         """Initalize the Tahoma Action Group."""
-        self.__lastUpdate = data['lastUpdateTime']
+        self.__last_update = data['lastUpdateTime']
         self.__name = data['label']
 
         self.__actions = []
@@ -918,9 +918,9 @@ class ActionGroup:
             self.__actions.append(Action(cmd))
 
     @property
-    def lastUpdate(self):
+    def last_update(self):
         """Get last update."""
-        return self.__lastUpdate
+        return self.__last_update
 
     @property
     def name(self):
@@ -954,13 +954,13 @@ class DeviceStateChangedEvent(Event):
 
     def __init__(self, data):
         """Initalize the Tahoma DeviceStateChangedEvent."""
-        self.__deviceURL = data['deviceURL']
+        self.__device_url = data['deviceURL']
         self.__states = data['deviceStates']
 
     @property
-    def deviceURL(self):
+    def device_url(self):
         """Get device url."""
-        return self.__deviceURL
+        return self.__device_url
 
     @property
     def states(self):
@@ -973,8 +973,8 @@ class CommandExecutionStateChangedEvent(Event):
 
     def __init__(self, data):
         """Initalize the Tahoma CommandExecutionStateChangedEvent."""
-        self.__execId = data['execId']
-        self.__deviceURL = data['deviceURL']
+        self.__exec_id = data['execId']
+        self.__device_url = data['deviceURL']
 
         try:
             self.__state = EventState(int(data['newState']))
@@ -982,19 +982,19 @@ class CommandExecutionStateChangedEvent(Event):
             self.__state = EventState.Unknown
 
         if self.__state == EventState.Failed:
-            self.__failureType = data['failureType']
+            self.__failure_type = data['failureType']
         else:
-            self.__failureType = None
+            self.__failure_type = None
 
     @property
-    def execId(self):
+    def exec_id(self):
         """Get exec id."""
-        return self.__execId
+        return self.__exec_id
 
     @property
-    def deviceURL(self):
+    def device_url(self):
         """Get device url."""
-        return self.__deviceURL
+        return self.__device_url
 
     @property
     def state(self):
@@ -1002,9 +1002,9 @@ class CommandExecutionStateChangedEvent(Event):
         return self.__state
 
     @property
-    def failureType(self):
+    def failure_type(self):
         """Get failure type."""
-        return self.__failureType
+        return self.__failure_type
 
 
 class ExecutionStateChangedEvent(Event):
@@ -1012,7 +1012,7 @@ class ExecutionStateChangedEvent(Event):
 
     def __init__(self, data):
         """Initalize the Tahoma ExecutionStateChangedEvent."""
-        self.__execId = data['execId']
+        self.__exec_id = data['execId']
 
         try:
             self.__state = EventState(int(data['newState']))
@@ -1020,17 +1020,17 @@ class ExecutionStateChangedEvent(Event):
             self.__state = EventState.Unknown
 
         if self.__state == EventState.Failed:
-            self.__failureType = data['failureType']
+            self.__failure_type = data['failureType']
             fail = data['failedCommands']['command']['deviceURL']
-            self.__failedDeviceURL = fail
+            self.__failed_device_url = fail
         else:
-            self.__failureType = None
-            self.__failedDeviceURL = None
+            self.__failure_type = None
+            self.__failed_device_url = None
 
     @property
-    def execId(self):
+    def exec_id(self):
         """Get exec id."""
-        return self.__execId
+        return self.__exec_id
 
     @property
     def state(self):
@@ -1038,14 +1038,14 @@ class ExecutionStateChangedEvent(Event):
         return self.__state
 
     @property
-    def failureType(self):
+    def failure_type(self):
         """Get failure url."""
-        return self.__failureType
+        return self.__failure_type
 
     @property
     def failureDeviceURL(self):
         """Get failure device url."""
-        return self.__failedDeviceURL
+        return self.__failed_device_url
 
 
 class EventState():
@@ -1119,7 +1119,7 @@ class Execution:
     def __init__(self, data):
         """Initalize the Tahoma Execution."""
         self.__id = data['id']
-        self.__startTime = data['startTime']
+        self.__start_time = data['startTime']
         self.__state = EventState(data['state'])
         self.__name = data['actionGroup']['label']
 
@@ -1136,7 +1136,7 @@ class Execution:
     @property
     def startTime(self):
         """Get start time."""
-        return self.__startTime
+        return self.__start_time
 
     @property
     def state(self):
