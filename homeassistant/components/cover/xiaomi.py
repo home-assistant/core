@@ -28,7 +28,6 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
 
     def __init__(self, device, name, data_key, xiaomi_hub):
         """Initialize the XiaomiPlug."""
-        self._state = False
         self._data_key = data_key
         self._pos = 0
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
@@ -37,6 +36,11 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     def current_cover_position(self):
         """Return the current position of the cover."""
         return self._pos
+
+    @property
+    def state(self):
+        """Return the state of the cover."""
+        return super(CoverDevice, self).state
 
     @property
     def is_closed(self):

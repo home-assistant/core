@@ -35,15 +35,9 @@ class XiaomiSensor(XiaomiDevice):
 
     def __init__(self, device, name, data_key, xiaomi_hub):
         """Initialize the XiaomiSensor."""
-        self._state = None
         self._data_key = data_key
         self._battery = None
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
-
-    @property
-    def state(self):
-        """Return the name of the sensor."""
-        return self._state
 
     @property
     def unit_of_measurement(self):

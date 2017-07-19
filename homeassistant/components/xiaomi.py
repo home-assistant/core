@@ -58,7 +58,7 @@ def setup(hass, config):
     hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways,
                                                    interface)
 
-    _LOGGER.info("Expecting %s gateways", len(gateways))
+    _LOGGER.debug("Expecting %s gateways", len(gateways))
     for _ in range(discovery_retry):
         _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', _ + 1)
         hass.data[PY_XIAOMI_GATEWAY].discover_gateways()
@@ -69,16 +69,16 @@ def setup(hass, config):
         _LOGGER.error("No gateway discovered")
         return False
     hass.data[PY_XIAOMI_GATEWAY].listen()
-    _LOGGER.info("Listening for broadcast")
+    _LOGGER.debug("Listening for broadcast")
+
+    for component in XIAOMI_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
         """Stop Xiaomi Socket."""
         _LOGGER.info("Shutting down Xiaomi Hub.")
         hass.data[PY_XIAOMI_GATEWAY].stop_listen()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
-
-    for component in XIAOMI_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
@@ -138,11 +138,12 @@ class XiaomiDevice(Entity):
 
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the xiaomi device."""
+        self._state = None
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
+        self._device_state_attributes = {}
         self.xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'])
-        self._device_state_attributes = {}
         self.parse_voltage(device['data'])
         xiaomi_hub.ha_devices[self._sid].append(self)
 
@@ -155,6 +156,16 @@ class XiaomiDevice(Entity):
     def should_poll(self):
         """Poll update device status."""
         return False
+
+    @property
+    def is_on(self):
+        """Return true if it is on."""
+        return self._state
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
 
     @property
     def device_state_attributes(self):
@@ -178,7 +189,7 @@ class XiaomiDevice(Entity):
         voltage = min(voltage, max_volt)
         voltage = max(voltage, min_volt)
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100
-        self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent)
+        self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
     def parse_data(self, data):

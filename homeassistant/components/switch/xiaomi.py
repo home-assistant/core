@@ -46,7 +46,6 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     def __init__(self, device, name, data_key, supports_power_consumption,
                  xiaomi_hub):
         """Initialize the XiaomiPlug."""
-        self._state = False
         self._data_key = data_key
         self._in_use = None
         self._load_power = None
@@ -60,11 +59,6 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         if self._data_key == 'status':
             return 'mdi:power-plug'
         return 'mdi:power-socket'
-
-    @property
-    def is_on(self):
-        """Return true if plug is on."""
-        return self._state
 
     @property
     def device_state_attributes(self):

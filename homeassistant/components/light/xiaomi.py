@@ -28,8 +28,6 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the XiaomiGatewayLight."""
         self._data_key = 'rgb'
-
-        self._state = False
         self._rgb = (255, 255, 255)
         self._brightness = 180
 
@@ -75,11 +73,6 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     def rgb_color(self):
         """Return the RBG color value."""
         return self._rgb
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
 
     @property
     def supported_features(self):
