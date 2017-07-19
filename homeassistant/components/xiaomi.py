@@ -11,13 +11,13 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
                 '877faec36e1bfa4177cae2a0d4f49570af083e1d.zip#'
                 'PyXiaomiGateway==0.1.0']
 
-ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_GW_SID = 'gw_sid'
+ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
-DOMAIN = 'xiaomi'
+CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
-CONF_DISCOVERY_RETRY = 'discovery_retry'
+DOMAIN = 'xiaomi'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 XIAOMI_COMPONENTS = ['binary_sensor', 'sensor', 'switch', 'light', 'cover']
 
@@ -149,11 +149,11 @@ class XiaomiDevice(Entity):
         self._state = None
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
+        self._write_to_hub = xiaomi_hub.write_to_hub
+        xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._device_state_attributes = {}
-        self.xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'])
         self.parse_voltage(device['data'])
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
 
     @property
     def name(self):

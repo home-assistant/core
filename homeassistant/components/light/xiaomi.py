@@ -96,10 +96,10 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         rgbhex = binascii.hexlify(struct.pack('BBBB', *rgba)).decode("ASCII")
         rgbhex = int(rgbhex, 16)
 
-        if self.xiaomi_hub.write_to_hub(self._sid, **{self._data_key: rgbhex}):
+        if self._write_to_hub(self._sid, **{self._data_key: rgbhex}):
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        if self.xiaomi_hub.write_to_hub(self._sid, **{self._data_key: 0}):
+        if self._write_to_hub(self._sid, **{self._data_key: 0}):
             self._state = False

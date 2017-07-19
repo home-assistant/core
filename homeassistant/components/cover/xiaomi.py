@@ -44,23 +44,19 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.xiaomi_hub.write_to_hub(self._sid,
-                                     self._data_key['status'], 'close')
+        self._write_to_hub(self._sid, self._data_key['status'], 'close')
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.xiaomi_hub.write_to_hub(self._sid,
-                                     self._data_key['status'], 'open')
+        self._write_to_hub(self._sid, self._data_key['status'], 'open')
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.xiaomi_hub.write_to_hub(self._sid,
-                                     self._data_key['status'], 'stop')
+        self._write_to_hub(self._sid, self._data_key['status'], 'stop')
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        self.xiaomi_hub.write_to_hub(self._sid,
-                                     self._data_key['pos'], str(position))
+        self._write_to_hub(self._sid, self._data_key['pos'], str(position))
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
