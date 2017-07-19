@@ -51,6 +51,11 @@ class XiaomiSensor(XiaomiDevice):
         elif self._data_key == 'pressure':
             return 'hPa'
 
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
     def parse_data(self, data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
@@ -67,5 +72,8 @@ class XiaomiSensor(XiaomiDevice):
             return False
         if self._data_key in ['temperature', 'humidity']:
             value /= 100
+        elif self._data_key in ['illumination']:
+                value -= 300
+                value = max(value, 0)
         self._state = round(value, 2)
         return True

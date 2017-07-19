@@ -33,6 +33,11 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
 
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
+    @property
+    def is_on(self):
+        """Return true if it is on."""
+        return self._state
+
     def parse_data(self, data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)

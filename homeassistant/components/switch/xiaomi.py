@@ -61,6 +61,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
         return 'mdi:power-socket'
 
     @property
+    def is_on(self):
+        """Return true if it is on."""
+        return self._state
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._supports_power_consumption:
@@ -92,10 +97,10 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
                 self._load_power = 0
 
         if POWER_CONSUMED in data:
-            self._power_consumed = int(data[POWER_CONSUMED])
+            self._power_consumed = round(float(data[POWER_CONSUMED]), 2)
 
         if LOAD_POWER in data:
-            self._load_power = float(data[LOAD_POWER])
+            self._load_power = round(float(data[LOAD_POWER]), 2)
 
         value = data.get(self._data_key)
         if value is None:

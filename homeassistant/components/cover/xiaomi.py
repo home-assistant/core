@@ -38,11 +38,6 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
         return self._pos
 
     @property
-    def state(self):
-        """Return the state of the cover."""
-        return super(CoverDevice, self).state
-
-    @property
     def is_closed(self):
         """Return if the cover is closed."""
         return self.current_cover_position < 0

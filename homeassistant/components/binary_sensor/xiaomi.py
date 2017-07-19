@@ -52,19 +52,36 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
+    """Representation of a XiaomiBinarySensor."""
+
+    def __init__(self, device, name, xiaomi_hub):
+        """Initialize the XiaomiSmokeSensor."""
+        self._data_key = None
+        self._device_class = None
+        self._density = 0
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of binary sensor."""
+        return self._device_class
+
+
+class XiaomiNatgasSensor(XiaomiBinarySensor):
     """Representation of a XiaomiNatgasSensor."""
 
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = 'alarm'
-        self._density = 0
-        XiaomiDevice.__init__(self, device, 'Natgas Sensor', xiaomi_hub)
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return 'gas'
+        self._density = None
+        self._device_class = 'gas'
+        XiaomiBinarySensor.__init__(self, device, 'Natgas Sensor', xiaomi_hub)
 
     @property
     def device_state_attributes(self):
@@ -94,7 +111,7 @@ class XiaomiNatgasSensor(XiaomiDevice, BinarySensorDevice):
             return False
 
 
-class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiMotionSensor(XiaomiBinarySensor):
     """Representation of a XiaomiMotionSensor."""
 
     def __init__(self, device, hass, xiaomi_hub):
@@ -103,17 +120,13 @@ class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
         self._data_key = 'status'
         self._no_motion_since = 0
         self._should_poll = False
-        XiaomiDevice.__init__(self, device, 'Motion Sensor', xiaomi_hub)
+        self._device_class = 'motion'
+        XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub)
 
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return self._should_poll
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return 'motion'
 
     @property
     def device_state_attributes(self):
@@ -158,7 +171,7 @@ class XiaomiMotionSensor(XiaomiDevice, BinarySensorDevice):
         self.xiaomi_hub.get_from_hub(self._sid)
 
 
-class XiaomiDoorSensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiDoorSensor(XiaomiBinarySensor):
     """Representation of a XiaomiDoorSensor."""
 
     def __init__(self, device, xiaomi_hub):
@@ -166,17 +179,13 @@ class XiaomiDoorSensor(XiaomiDevice, BinarySensorDevice):
         self._data_key = 'status'
         self._open_since = 0
         self._should_poll = False
-        XiaomiDevice.__init__(self, device, 'Door Window Sensor', xiaomi_hub)
+        self._device_class = 'opening'
+        XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor', xiaomi_hub)
 
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return self._should_poll
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return 'opening'
 
     @property
     def device_state_attributes(self):
@@ -215,19 +224,15 @@ class XiaomiDoorSensor(XiaomiDevice, BinarySensorDevice):
         self.xiaomi_hub.get_from_hub(self._sid)
 
 
-class XiaomiSmokeSensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiSmokeSensor(XiaomiBinarySensor):
     """Representation of a XiaomiSmokeSensor."""
 
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = 'alarm'
         self._density = 0
-        XiaomiDevice.__init__(self, device, 'Smoke Sensor', xiaomi_hub)
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return 'smoke'
+        self._device_class = 'smoke'
+        XiaomiBinarySensor.__init__(self, device, 'Smoke Sensor', xiaomi_hub)
 
     @property
     def device_state_attributes(self):
@@ -256,14 +261,14 @@ class XiaomiSmokeSensor(XiaomiDevice, BinarySensorDevice):
             return False
 
 
-class XiaomiButton(XiaomiDevice, BinarySensorDevice):
+class XiaomiButton(XiaomiBinarySensor):
     """Representation of a Xiaomi Button."""
 
     def __init__(self, device, name, data_key, hass, xiaomi_hub):
         """Initialize the XiaomiButton."""
         self._hass = hass
         self._data_key = data_key
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub)
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -295,7 +300,7 @@ class XiaomiButton(XiaomiDevice, BinarySensorDevice):
         return False
 
 
-class XiaomiCube(XiaomiDevice, BinarySensorDevice):
+class XiaomiCube(XiaomiBinarySensor):
     """Representation of a Xiaomi Cube."""
 
     STATUS = 'status'
@@ -305,7 +310,7 @@ class XiaomiCube(XiaomiDevice, BinarySensorDevice):
         """Initialize the XiaomiButton."""
         self._hass = hass
         self._state = False
-        XiaomiDevice.__init__(self, device, 'Cube', xiaomi_hub)
+        XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub)
 
     def parse_data(self, data):
         """Parse data sent by gateway."""

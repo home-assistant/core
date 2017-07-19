@@ -158,16 +158,6 @@ class XiaomiDevice(Entity):
         return False
 
     @property
-    def is_on(self):
-        """Return true if it is on."""
-        return self._state
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device_state_attributes
