@@ -599,7 +599,8 @@ class TahomaApi:
         else:
             devices = []
             for dev_name, item in self.__devices.items():
-                devices.append(self.__devices[dev_name])
+                if item:
+                    devices.append(self.__devices[dev_name])
 
         for device in devices:
             states = []
@@ -780,9 +781,9 @@ class Device:
         """Get device url."""
         return self.__url
 
-    def execute_action(self, action):
-        """Exceute action."""
-        self.__protocol
+    #def execute_action(self, action):
+    #    """Exceute action."""
+    #    self.__protocol
 
 
 class Action:
@@ -1099,7 +1100,7 @@ class EventState():
         if isinstance(other, int):
             return self.__state == other
         if isinstance(other, EventState):
-            return self.__state == other.__state
+            return self.__state == other.state
 
         return False
 
