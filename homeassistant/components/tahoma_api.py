@@ -514,7 +514,7 @@ class TahomaApi:
 
         try:
             result = request.json()
-        except ValueError as error:
+        except ValueError:
             raise HomeAssistantError(
                 "get_action_groups: Not a valid result for ")
 
@@ -578,7 +578,7 @@ class TahomaApi:
         if request.status_code != 200:
             self.__logged_in = False
             self.login()
-            self.getStates(devices)
+            self.get_states(devices)
             return
 
         try:
@@ -863,9 +863,9 @@ class Command:
 
         if len(args):
             for arg in args[0]:
-                if (type(arg) is not str and
-                        type(arg) is not int and
-                        type(arg) is not float):
+                if (isinstance(arg, str) == False and
+                        isinstance(arg, int) == False and
+                        isinstance(arg, float) == False):
                     raise ValueError(
                         "Type '" + type(arg) + "' is not Int, bool or .")
 
@@ -1043,7 +1043,7 @@ class ExecutionStateChangedEvent(Event):
         return self.__failure_type
 
     @property
-    def failureDeviceURL(self):
+    def failure_device_url(self):
         """Get failure device url."""
         return self.__failed_device_url
 
@@ -1118,7 +1118,7 @@ class Execution:
 
     def __init__(self, data):
         """Initalize the Tahoma Execution."""
-        self.__id = data['id']
+        self.__execution_id = data['id']
         self.__start_time = data['startTime']
         self.__state = EventState(data['state'])
         self.__name = data['actionGroup']['label']
@@ -1129,12 +1129,12 @@ class Execution:
             self.__actions.append(Action(cmd))
 
     @property
-    def id(self):
+    def execution_id(self):
         """Get id."""
-        return self.__id
+        return self.__execution_id
 
     @property
-    def startTime(self):
+    def start_time(self):
         """Get start time."""
         return self.__start_time
 
