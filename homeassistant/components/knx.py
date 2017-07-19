@@ -76,7 +76,7 @@ def setup(hass, config):
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
     descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'knx-services.yaml'))
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def received_knx_event(address, data):
         """Process received KNX message."""
