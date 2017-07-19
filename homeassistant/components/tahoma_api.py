@@ -863,9 +863,9 @@ class Command:
 
         if len(args):
             for arg in args[0]:
-                if (isinstance(arg, str) == False and
-                        isinstance(arg, int) == False and
-                        isinstance(arg, float) == False):
+                if (isinstance(arg, str) is False and
+                        isinstance(arg, int) is False and
+                        isinstance(arg, float) is False):
                     raise ValueError(
                         "Type '" + type(arg) + "' is not Int, bool or .")
 
