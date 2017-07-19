@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Switch."""
     devices = []
     for switch in config[CONF_DEVICES]:
-            devices.append(VelbusSwitch(switch))
+        devices.append(VelbusSwitch(switch))
     add_devices(devices)
     return True
 

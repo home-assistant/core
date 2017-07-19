@@ -748,6 +748,7 @@ python-twitch==1.3.0
 
 # homeassistant.components.velbus
 # homeassistant.components.binary_sensor.velbus
+# homeassistant.components.cover.velbus
 # homeassistant.components.fan.velbus
 # homeassistant.components.light.velbus
 # homeassistant.components.switch.velbus

@@ -90,7 +90,7 @@ class VelbusCover(CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP)
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
     @property
     def should_poll(self):
@@ -111,11 +111,9 @@ class VelbusCover(CoverDevice):
     def current_cover_position(self):
         """Return current position of cover.
 
-        None is unknown, 0 is closed, 100 is fully open.
+        None is unknown.
         """
-        if self.is_closed:
-            return 0
-        return 100
+        return None
 
     def _relay_off(self, channel):
         import velbus
