@@ -58,7 +58,7 @@ aiolifx_effects==0.1.1
 aiopvapi==1.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.1.0
+alarmdecoder==0.12.3
 
 # homeassistant.components.amcrest
 amcrest==1.2.0
