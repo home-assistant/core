@@ -1,5 +1,6 @@
 """
-Tahoma API
+Connection to Tahoma API.
+
 Connection to Somfy Tahoma REST API
 """
 
@@ -13,10 +14,11 @@ BASE_HEADERS = {'User-Agent': 'mine'}
 
 
 class TahomaApi:
+    """Connection to Tahoma API"""
 
     def __init__(self, userName, userPassword, **kwargs):
-
         """Initalize the Tahoma protocol.
+
         :param userName: Tahoma username
         :param userPassword: Password
         :param kwargs: Ignore, only for unit test reasons
@@ -31,6 +33,7 @@ class TahomaApi:
         self.login()
 
     def login(self):
+        """Login to Tahoma API."""
         if self.__loggedIn:
             return
         login = {'userId': self.__username, 'userPassword': self.__password}
@@ -67,6 +70,7 @@ class TahomaApi:
 
     def getUser(self):
         """ Get the user informations from the server.
+
         :return: a dict with all the informations
         :rtype: dict
 
@@ -149,8 +153,7 @@ class TahomaApi:
         self._getSetup(result)
 
     def _getSetup(self, result):
-        """ Internal method which process the
-            results from the server."""
+        """ Internal method which process the results from the server."""
         self.__devices = {}
 
         if ('setup' not in result.keys() or
@@ -480,11 +483,10 @@ class TahomaApi:
             return
 
     def getActionGroups(self):
-        """
+        """Get all Action Groups.
 
-        :return:
+        :return: List of Action Groups
         """
-
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -514,6 +516,7 @@ class TahomaApi:
         return groups
 
     def launchActionGroup(self, id):
+        """Starts action group."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -544,6 +547,7 @@ class TahomaApi:
         return result['actionGroup'][0]['execId']
 
     def getStates(self, devices):
+        """Get States of Devices."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -569,6 +573,7 @@ class TahomaApi:
         self._getStates(result)
 
     def _createGetStateRequest(self, givenDevices):
+        """Creates state request."""
         devList = []
 
         if isinstance(givenDevices, list):
@@ -591,7 +596,7 @@ class TahomaApi:
                     sort_keys=True, separators=(',', ': '))
 
     def _getStates(self, result):
-
+        """Get states of devices."""
         if 'devices' not in result.keys():
             return
 
@@ -601,6 +606,7 @@ class TahomaApi:
             device.setActiveStates(deviceStates['states'])
 
     def refreshAllStates(self):
+        """update all states."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -617,9 +623,10 @@ class TahomaApi:
 
 
 class Device:
+    """Represents an Tahoma Device."""
 
     def __init__(self, protocol, dataInput):
-
+        """Initalize the Tahoma Device."""
         self.__protocol = protocol
         self.__rawData = dataInput
 
@@ -706,21 +713,26 @@ class Device:
 
     @property
     def label(self):
+        """Label of device."""
         return self.__label
 
     @property
     def commandDefinitions(self):
+        """List of command devinitions."""
         return self.__definitions['commands']
 
     @property
     def stateDefinitions(self):
+        """State of command devinition."""
         return self.__definitions['states']
 
     @property
     def activeStates(self):
+        """Gets active states."""
         return self.__activeStates
 
     def setActiveState(self, name, value):
+        """Sets active state."""
         if name not in self.__activeStates.keys():
             raise ValueError("Can not set unknown state '" + name + "'")
 
@@ -743,20 +755,24 @@ class Device:
 
     @property
     def type(self):
+        """Gets device type."""
         return self.__type
 
     @property
     def url(self):
+        """Gets device url."""
         return self.__url
 
     def executeAction(self, action):
+        """exceutes action."""
         self.__protocol
 
 
 class Action:
+    """Represents an Tahoma Action."""
 
     def __init__(self, data):
-
+        """Initalize the Tahoma Action."""
         self.__commands = []
 
         if isinstance(data, dict):
@@ -775,20 +791,25 @@ class Action:
 
     @property
     def deviceURL(self):
+        """Gets device url of action."""
         return self.__deviceURL
 
     @deviceURL.setter
     def deviceURL(self, url):
+        """Sets device url of action."""
         self.__deviceURL = url
 
     def addCommand(self, cmdName, *args):
+        """Adds command to action."""
         self.__commands.append(Command(cmdName, args))
 
     @property
     def commands(self):
+        """Get commands"""
         return self.__commands
 
     def serialize(self):
+        """serialize action."""
         commands = []
 
         for cmd in self.commands:
@@ -799,6 +820,7 @@ class Action:
         return out
 
     def __str__(self):
+        """formats to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -807,6 +829,7 @@ class Action:
             )
 
     def __repr__(self):
+        """formats to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
@@ -815,8 +838,10 @@ class Action:
 
 
 class Command:
+    """Represents an Tahoma Command."""
 
     def __init__(self, cmdName, *args):
+        """Initalize the Tahoma Command."""
         self.__name = cmdName
 
         if len(args):
@@ -833,16 +858,20 @@ class Command:
 
     @property
     def name(self):
+        """Get name of command."""
         return self.__name
 
     @property
     def parameter(self):
+        """Get parameter of command."""
         return self.__args
 
     def serialize(self):
+        """serialize command."""
         return {'name': self.__name, 'parameters': self.__args}
 
     def __str__(self):
+        """formats to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -850,6 +879,7 @@ class Command:
             separators=(',', ': '))
 
     def __repr__(self):
+        """formats to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
@@ -858,8 +888,10 @@ class Command:
 
 
 class ActionGroup:
+    """Represents an Tahoma Action Group."""
 
     def __init__(self, data):
+        """Initalize the Tahoma Action Group."""
         self.__lastUpdate = data['lastUpdateTime']
         self.__name = data['label']
 
@@ -870,21 +902,26 @@ class ActionGroup:
 
     @property
     def lastUpdate(self):
+        """get last update."""
         return self.__lastUpdate
 
     @property
     def name(self):
+        """Get name of action group."""
         return self.__name
 
     @property
     def actions(self):
+        """Get list of actions."""
         return self.__actions
 
 
 class Event:
+    """Represents an Tahoma Event."""
 
     @staticmethod
     def factory(data):
+        """Tahoma Event factory."""
         if data['name'] is "DeviceStateChangedEvent":
             return DeviceStateChangedEvent(data)
         elif data['name'] is "ExecutionStateChangedEvent":
@@ -896,24 +933,29 @@ class Event:
 
 
 class DeviceStateChangedEvent(Event):
+    """Represents an Tahoma DeviceStateChangedEvent."""
 
     def __init__(self, data):
-
+        """Initalize the Tahoma DeviceStateChangedEvent."""
         self.__deviceURL = data['deviceURL']
         self.__states = data['deviceStates']
 
     @property
     def deviceURL(self):
+        """Get device url."""
         return self.__deviceURL
 
     @property
     def states(self):
+        """Get list of states."""
         return self.__states
 
 
 class CommandExecutionStateChangedEvent(Event):
-    def __init__(self, data):
+    """Represents an Tahoma CommandExecutionStateChangedEvent."""
 
+    def __init__(self, data):
+        """Initalize the Tahoma CommandExecutionStateChangedEvent."""
         self.__execId = data['execId']
         self.__deviceURL = data['deviceURL']
 
@@ -929,25 +971,30 @@ class CommandExecutionStateChangedEvent(Event):
 
     @property
     def execId(self):
+        """Get exec id."""
         return self.__execId
 
     @property
     def deviceURL(self):
+        """Get device url."""
         return self.__deviceURL
 
     @property
     def state(self):
+        """Get state."""
         return self.__state
 
     @property
     def failureType(self):
+        """Get failure type."""
         return self.__failureType
 
 
 class ExecutionStateChangedEvent(Event):
+    """Represents an Tahoma ExecutionStateChangedEvent."""
 
     def __init__(self, data):
-
+        """Initalize the Tahoma ExecutionStateChangedEvent."""
         self.__execId = data['execId']
 
         try:
@@ -965,25 +1012,30 @@ class ExecutionStateChangedEvent(Event):
 
     @property
     def execId(self):
+        """Get exec id."""
         return self.__execId
 
     @property
     def state(self):
+        """Get state."""
         return self.__state
 
     @property
     def failureType(self):
+        """Get failure url."""
         return self.__failureType
 
     @property
     def failureDeviceURL(self):
+        """Get failure device url."""
         return self.__failedDeviceURL
 
 
 class EventState():
+    """Represents an Tahoma EventState."""
 
     def __init__(self, state):
-
+        """Initalize the Tahoma EventState."""
         if isinstance(state, int):
             if state is EventState.Unknown0:
                 self.__state = EventState.Unknown0
@@ -1017,13 +1069,16 @@ class EventState():
 
     @property
     def state(self):
+        """Get state."""
         return self.__state
 
     def __int__(self):
+        """Get int state."""
         return self.__state
 
     # python > 3
     def __eq__(self, other):
+        """Compare State."""
         if isinstance(other, int):
             return self.__state == other
         if isinstance(other, EventState):
@@ -1042,8 +1097,10 @@ class EventState():
 
 
 class Execution:
+    """Represents an Tahoma Execution."""
 
     def __init__(self, data):
+        """Initalize the Tahoma Execution."""
         self.__id = data['id']
         self.__startTime = data['startTime']
         self.__state = EventState(data['state'])
@@ -1056,20 +1113,25 @@ class Execution:
 
     @property
     def id(self):
+        """Get id."""
         return self.__id
 
     @property
     def startTime(self):
+        """Get start time."""
         return self.__startTime
 
     @property
     def state(self):
+        """Get state."""
         return self.__state
 
     @property
     def name(self):
+        """Get name."""
         return self.__name
 
     @property
     def actions(self):
+        """Get actions."""
         return self.__actions

@@ -33,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
     """Activate Tahoma component."""
     conf = config[DOMAIN]
@@ -67,6 +68,7 @@ def setup(hass, config):
 
     return True
 
+
 def map_tahoma_device(tahoma_device):
     """Map tahoma classes to Home Assistant types."""
     if tahoma_device.type.lower().find("shutter") != -1:
@@ -78,6 +80,7 @@ def map_tahoma_device(tahoma_device):
 
 class TahomaDevice(Entity):
     """Representation of a Tahoma device entity."""
+    
     def __init__(self, tahoma_device, controller):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
