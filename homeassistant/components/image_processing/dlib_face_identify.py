@@ -65,7 +65,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
             except IndexError as err:
                 _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
 
-
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
