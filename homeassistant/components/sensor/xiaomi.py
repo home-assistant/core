@@ -36,7 +36,6 @@ class XiaomiSensor(XiaomiDevice):
     def __init__(self, device, name, data_key, xiaomi_hub):
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
-        self._battery = None
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property

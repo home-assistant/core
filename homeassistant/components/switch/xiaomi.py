@@ -95,10 +95,8 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._in_use = int(data[IN_USE])
             if not self._in_use:
                 self._load_power = 0
-
         if POWER_CONSUMED in data:
             self._power_consumed = round(float(data[POWER_CONSUMED]), 2)
-
         if LOAD_POWER in data:
             self._load_power = round(float(data[LOAD_POWER]), 2)
 

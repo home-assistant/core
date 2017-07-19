@@ -53,14 +53,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
-    """Representation of a XiaomiBinarySensor."""
+    """Representation of a base XiaomiBinarySensor."""
 
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = None
         self._device_class = None
+        self._should_poll = False
         self._density = 0
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return self._should_poll
 
     @property
     def state(self):
@@ -71,6 +77,11 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
     def device_class(self):
         """Return the class of binary sensor."""
         return self._device_class
+
+    def update(self):
+        """Update the sensor state."""
+        _LOGGER.debug('Updating xiaomi sensor by polling')
+        self._get_from_hub(self._sid)
 
 
 class XiaomiNatgasSensor(XiaomiBinarySensor):
@@ -119,14 +130,8 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self._hass = hass
         self._data_key = 'status'
         self._no_motion_since = 0
-        self._should_poll = False
         self._device_class = 'motion'
         XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._should_poll
 
     @property
     def device_state_attributes(self):
@@ -165,11 +170,6 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             self._state = False
             return True
 
-    def update(self):
-        """Update the sensor state."""
-        _LOGGER.debug('Updating xiaomi motion sensor by polling')
-        self.xiaomi_hub.get_from_hub(self._sid)
-
 
 class XiaomiDoorSensor(XiaomiBinarySensor):
     """Representation of a XiaomiDoorSensor."""
@@ -178,15 +178,9 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         """Initialize the XiaomiDoorSensor."""
         self._data_key = 'status'
         self._open_since = 0
-        self._should_poll = False
         self._device_class = 'opening'
         XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
                                     xiaomi_hub)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._should_poll
 
     @property
     def device_state_attributes(self):
@@ -218,11 +212,6 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
                 self._state = False
                 return True
             return False
-
-    def update(self):
-        """Update the sensor state."""
-        _LOGGER.debug('Updating xiaomi door sensor by polling')
-        self.xiaomi_hub.get_from_hub(self._sid)
 
 
 class XiaomiSmokeSensor(XiaomiBinarySensor):
@@ -304,27 +293,24 @@ class XiaomiButton(XiaomiBinarySensor):
 class XiaomiCube(XiaomiBinarySensor):
     """Representation of a Xiaomi Cube."""
 
-    STATUS = 'status'
-    ROTATE = 'rotate'
-
     def __init__(self, device, hass, xiaomi_hub):
-        """Initialize the XiaomiButton."""
+        """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._state = False
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub)
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
-        if self.STATUS in data:
+        if 'status' in data:
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': data[self.STATUS]
             })
 
-        if self.ROTATE in data:
+        if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
-                'action_type': self.ROTATE,
+                'action_type': 'rotate',
                 'action_value': float(data[self.ROTATE].replace(",", "."))
             })
         return False

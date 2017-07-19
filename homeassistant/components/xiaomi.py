@@ -19,7 +19,6 @@ CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 DOMAIN = 'xiaomi'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
-XIAOMI_COMPONENTS = ['binary_sensor', 'sensor', 'switch', 'light', 'cover']
 
 
 def _validate_conf(config):
@@ -79,7 +78,7 @@ def setup(hass, config):
     hass.data[PY_XIAOMI_GATEWAY].listen()
     _LOGGER.debug("Listening for broadcast")
 
-    for component in XIAOMI_COMPONENTS:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
@@ -150,6 +149,7 @@ class XiaomiDevice(Entity):
         self._sid = device['sid']
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
+        self._get_from_hub = xiaomi_hub.get_from_hub
         xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._device_state_attributes = {}
         self.parse_data(device['data'])

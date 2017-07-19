@@ -51,10 +51,8 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
 
         rgbhexstr = "%x" % value
         if len(rgbhexstr) == 7:
-            # from hex can't deal with odd strings
             rgbhexstr = '0' + rgbhexstr
-
-        if len(rgbhexstr) != 8:
+        elif len(rgbhexstr) != 8:
             _LOGGER.error('Light RGB data error.'
                           ' Must be 8 characters. Received: %s', rgbhexstr)
             return False
