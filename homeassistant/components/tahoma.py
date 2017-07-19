@@ -80,7 +80,7 @@ def map_tahoma_device(tahoma_device):
 
 class TahomaDevice(Entity):
     """Representation of a Tahoma device entity."""
-    
+
     def __init__(self, tahoma_device, controller):
         """Initialize the device."""
         self.tahoma_device = tahoma_device

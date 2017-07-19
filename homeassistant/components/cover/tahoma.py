@@ -31,7 +31,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(self.tahoma_id)
 
     def update(self):
-        """update method."""
+        """Update method."""
         self.controller.getStates([self.tahoma_device])
         self.schedule_update_ha_state()
 

@@ -606,7 +606,7 @@ class TahomaApi:
             device.setActiveStates(deviceStates['states'])
 
     def refreshAllStates(self):
-        """update all states."""
+        """Update all states."""
         header = BASE_HEADERS.copy()
         header['Cookie'] = self.__cookie
 
@@ -764,7 +764,7 @@ class Device:
         return self.__url
 
     def executeAction(self, action):
-        """exceutes action."""
+        """Exceutes action."""
         self.__protocol
 
 
@@ -809,7 +809,7 @@ class Action:
         return self.__commands
 
     def serialize(self):
-        """serialize action."""
+        """Serialize action."""
         commands = []
 
         for cmd in self.commands:
@@ -820,7 +820,7 @@ class Action:
         return out
 
     def __str__(self):
-        """formats to json."""
+        """Formats to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -829,7 +829,7 @@ class Action:
             )
 
     def __repr__(self):
-        """formats to json."""
+        """Formats to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
@@ -867,11 +867,11 @@ class Command:
         return self.__args
 
     def serialize(self):
-        """serialize command."""
+        """Serialize command."""
         return {'name': self.__name, 'parameters': self.__args}
 
     def __str__(self):
-        """formats to json."""
+        """Formats to json."""
         return json.dumps(
             self.serialize(),
             indent=4,
@@ -879,7 +879,7 @@ class Command:
             separators=(',', ': '))
 
     def __repr__(self):
-        """formats to json."""
+        """Formats to json."""
         return json.dumps(
             self.serialize(),
             indent=None,
@@ -902,7 +902,7 @@ class ActionGroup:
 
     @property
     def lastUpdate(self):
-        """get last update."""
+        """Get last update."""
         return self.__lastUpdate
 
     @property
