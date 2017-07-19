@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.components.tahoma_api import (TahomaApi)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
@@ -50,7 +51,7 @@ def setup(hass, config):
         api.getSetup()
         devices = api.getDevices()
     except HomeAssistantError:
-        _LOGGER.exception("Cannot feht informations from Tahoma API")
+        _LOGGER.exception("Cannot fetch informations from Tahoma API")
         return False
 
     for device in devices:

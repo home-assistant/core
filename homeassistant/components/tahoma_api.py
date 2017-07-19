@@ -161,7 +161,7 @@ class TahomaApi:
         self.__devices = {}
 
         if ('setup' not in result.keys() or
-            'devices' not in result['setup'].keys()):
+                'devices' not in result['setup'].keys()):
             raise HomeAssistantError(
                 "Did not find device definition.")
 
@@ -550,10 +550,10 @@ class TahomaApi:
             result = request.json()
         except ValueError as e:
             raise HomeAssistantError(
-            "Not a valid result for launch" +
-            "action group, protocol error: " +
-            request.status_code + ' - ' + request.reason +
-            " (" + e + ")")
+                "Not a valid result for launch" +
+                "action group, protocol error: " +
+                request.status_code + ' - ' + request.reason +
+                " (" + e + ")")
 
         if 'actionGroup' not in result.keys():
             raise HomeAssistantError(
@@ -753,7 +753,7 @@ class Device:
             raise ValueError("Can not set unknown state '" + name + "'")
 
         if (isinstance(self.__activeStates[name], int) and
-            isinstance(value, str)):
+                isinstance(value, str)):
             # we get an update as str but current value is
             # an int, try to convert
             self.__activeStates[name] = int(value)
