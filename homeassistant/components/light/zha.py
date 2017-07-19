@@ -72,8 +72,9 @@ class Light(zha.Entity, light.Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
-        duration = duration * 10 # tenths of s
+        duration = kwargs.get(
+            light.ATTR_TRANSITION, DEFAULT_DURATION)
+        duration = duration * 10  # tenths of s
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             yield from self._endpoint.light_color.move_to_color_temp(
