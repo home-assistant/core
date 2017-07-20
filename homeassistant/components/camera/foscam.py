@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_IP = 'ip'
 
+CAMERA_ARMED = "armed"
+CAMERA_DISARMED = "disarmed"
+
 DEFAULT_NAME = 'Foscam Camera'
 DEFAULT_PORT = 88
 
@@ -59,6 +62,7 @@ class FoscamCamera(Camera):
             self._password
         )
         self._name = device_info.get(CONF_NAME)
+        self._motion_status = False
 
         _LOGGER.info("Using the following URL for %s: %s",
                      self._name, uri_template.format('***', '***'))
@@ -78,3 +82,63 @@ class FoscamCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    def set_motion_status(self, mode):
+        """Post to the camera and enable motion detection."""
+        if mode == CAMERA_ARMED:
+            enabled = '1'
+        else:
+            enabled = '0'
+
+        # Fill the URI with the command to enable motion detection
+        # Along with that as per foscam spec we have to set
+        # sensitivity: how much sensitivity camera should detect
+        # trigger interval: interval between each motion triggers
+        # schedule: set schedule for days. default is 24x7
+        # area: sort of like zones. default is all areas visible to cam
+        uri_template = self._base_url \
+            + 'cgi-bin/CGIProxy.fcgi?' \
+            + 'cmd=setMotionDetectConfig' \
+            + '&Enable={}&usr={}&pwd={}' \
+            + '&linkage=0&snapInterval=3' \
+            + '&sensitivity=2&triggerInterval=0' \
+            + '&schedule0=281474976710655' \
+            + '&schedule1=281474976710655' \
+            + '&schedule2=281474976710655' \
+            + '&schedule3=281474976710655' \
+            + '&schedule4=281474976710655' \
+            + '&schedule5=281474976710655' \
+            + '&schedule6=281474976710655' \
+            + '&area0=1024&area1=1023' \
+            + '&area2=1024&area3=1023' \
+            + '&area4=1024&area5=1023' \
+            + '&area6=1024&area7=1023' \
+            + '&area8=1024&area9=1023'
+
+        _set_motion_status_url = uri_template.format(
+            enabled,
+            self._username,
+            self._password
+        )
+
+        try:
+            response = requests.get(_set_motion_status_url, timeout=10)
+        except requests.exceptions.ConnectionError:
+            return None
+        else:
+            return response.content
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        return self._motion_status
+
+    def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        self._motion_status = True
+        self.set_motion_status(CAMERA_ARMED)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        self._motion_status = False
+        self.set_motion_status(CAMERA_DISARMED)
