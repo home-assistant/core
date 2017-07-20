@@ -104,7 +104,10 @@ class PiHoleSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._api.data[self._var_id]
+        try:
+            return round(self._api.data[self._var_id], 2)
+        except TypeError:
+            return self._api.data[self._var_id]
 
     # pylint: disable=no-member
     @property

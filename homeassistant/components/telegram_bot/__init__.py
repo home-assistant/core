@@ -581,6 +581,8 @@ class BaseTelegramBotEntity:
             data[ATTR_FROM_LAST] = msg_data['from']['last_name']
         if 'chat' in msg_data:
             data[ATTR_CHAT_ID] = msg_data['chat']['id']
+        elif ATTR_MESSAGE in msg_data and 'chat' in msg_data[ATTR_MESSAGE]:
+            data[ATTR_CHAT_ID] = msg_data[ATTR_MESSAGE]['chat']['id']
 
         return True, data
 
