@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.2.4', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.3.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,8 @@ def setup(hass, config):
         password = config[DOMAIN][CONF_PASSWORD]
         client_id = config[DOMAIN]['client_id']
         client_secret = config[DOMAIN]['client_secret']
-        pywink.set_wink_credentials(email, password, client_id, client_secret)
+        pywink.legacy_set_wink_credentials(email, password,
+                                           client_id, client_secret)
         hass.data[DOMAIN]['oath'] = {"email": email,
                                      "password": password,
                                      "client_id": client_id,
