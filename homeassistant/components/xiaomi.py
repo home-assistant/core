@@ -107,7 +107,7 @@ def setup(hass, config):
         else:
             ringtone = {'mid': ring_id, 'vol': int(ring_vol)}
 
-        gw_sid = call.data.get(ATTR_GW_SID)
+        gw_sid = call.data.get(ATTR_GW_SID).replace(":", "").lower()
 
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
@@ -124,6 +124,7 @@ def setup(hass, config):
                           ATTR_GW_SID)
             return
 
+        gw_sid = gw_sid.replace(":", "").lower()
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 ringtone = {'mid': 10000}
