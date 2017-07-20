@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN
 
 REQUIREMENTS = ['fritzhome==1.0.2']
 
@@ -29,7 +29,6 @@ ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
 
-ATTR_TEMPERATURE = 'temperature'
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -89,20 +88,20 @@ class FritzDectSwitch(SwitchDevice):
         if self.data.has_powermeter and \
            self.data.current_consumption != STATE_UNKNOWN and \
            self.data.total_consumption != STATE_UNKNOWN:
-            attrs[ATTR_CURRENT_CONSUMPTION] = "%.1f" % \
-                self.data.current_consumption
-            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "%s" % \
-                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE
-            attrs[ATTR_TOTAL_CONSUMPTION] = "%.3f" % \
-                self.data.total_consumption
-            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "%s" % \
-                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
+            attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
+                self.data.current_consumption)
+            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
+                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE)
+            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
+                self.data.total_consumption)
+            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
+                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
 
         if self.data.has_temperature and \
            self.data.temperature != STATE_UNKNOWN:
-            attrs[ATTR_TEMPERATURE] = "%.1f" % \
-              self.units.temperature(self.data.temperature, TEMP_CELSIUS)
-            attrs[ATTR_TEMPERATURE_UNIT] = "%s" % self.units.temperature_unit
+            attrs[ATTR_TEMPERATURE] = "{}".format(
+              self.units.temperature(self.data.temperature, TEMP_CELSIUS))
+            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(self.units.temperature_unit)
         return attrs
 
     @property
