@@ -24,7 +24,7 @@ cp build/service_worker.js ..
 cd ..
 
 # Pack frontend
-gzip -f -k -9 *.html *.js ./panels/*.html
+gzip -f -n -k -9 *.html *.js ./panels/*.html
 cd ../../../..
 
 # Generate the MD5 hash of the new frontend
