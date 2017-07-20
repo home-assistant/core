@@ -154,6 +154,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
+        self.is_lighting4 = False
         self.delay_listener = None
         self._data_bits = data_bits
         self._cmd_on = cmd_on
