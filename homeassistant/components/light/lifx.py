@@ -159,12 +159,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 def lifxwhite(device):
     """Return whether this is a white-only bulb."""
-    return not aiolifx().products.features_map[device.product]["color"]
+    features = aiolifx().products.features_map.get(device.product, None)
+    if features:
+        return not features["color"]
+    return False
 
 
 def lifxmultizone(device):
     """Return whether this is a multizone bulb/strip."""
-    return aiolifx().products.features_map[device.product]["multizone"]
+    features = aiolifx().products.features_map.get(device.product, None)
+    if features:
+        return features["multizone"]
+    return False
 
 
 def find_hsbk(**kwargs):
