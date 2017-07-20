@@ -65,6 +65,7 @@ def execute(hass, filename, source, data=None):
     from RestrictedPython import compile_restricted_exec
     from RestrictedPython.Guards import safe_builtins, full_write_guard
     from RestrictedPython.Utilities import utility_builtins
+    from RestrictedPython.Eval import default_guarded_getitem
 
     compiled = compile_restricted_exec(source, filename=filename)
 
@@ -99,6 +100,7 @@ def execute(hass, filename, source, data=None):
         '_getattr_': protected_getattr,
         '_write_': full_write_guard,
         '_getiter_': iter,
+        '_getitem_': default_guarded_getitem
     }
     logger = logging.getLogger('{}.{}'.format(__name__, filename))
     local = {
