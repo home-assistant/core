@@ -116,7 +116,6 @@ class PingData(object):
 
     def ping(self):
         """Send ICMP echo request and return details if success."""
-        _LOGGER.error("running MY ping!!!!!!!!!!!!!!!!!!")
         pinger = subprocess.Popen(
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
@@ -135,7 +134,8 @@ class PingData(object):
                 match = PING_MATCHER_ALPINE.search(str(out).split('\n')[-1])
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 _LOGGER.debug(
-                    'ALPINE: min: ' + rtt_min + '\navg: ' + rtt_avg + '\nmax: ' + rtt_max + '\n')
+                    'ALPINE: min: ' + rtt_min + '\navg: ' + rtt_avg +
+                    '\nmax: ' + rtt_max + '\n')
                 return {
                     'min': rtt_min,
                     'avg': rtt_avg,
@@ -155,4 +155,3 @@ class PingData(object):
         """Retrieve the latest details from the host."""
         self.data = self.ping()
         self.available = bool(self.data)
-
