@@ -4,7 +4,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
+                                 CONF_MAC)
 
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
@@ -25,12 +26,11 @@ def _validate_conf(config):
     """Validate a list of devices definitions."""
     res_config = []
     for gw_conf in config:
-        sid = gw_conf.get('sid')
-        if sid is not None:
-            gw_conf['sid'] = sid.replace(":", "").lower()
-            if len(sid) != 12:
-                raise vol.Invalid('Invalid sid %s.'
-                                  ' Sid must be 12 characters', sid)
+        res_gw_conf = {'sid': gw_conf.get(CONF_MAC)}
+        if res_gw_conf['sid'] is not None:
+            res_gw_conf['sid'] = res_gw_conf['sid'].replace(":", "").lower()
+            if len(res_gw_conf['sid']) != 12:
+                raise vol.Invalid('Invalid mac address', gw_conf.get(CONF_MAC))
         key = gw_conf.get('key')
         if key is None:
             _LOGGER.warning(
@@ -39,13 +39,14 @@ def _validate_conf(config):
         elif len(key) != 16:
             raise vol.Invalid('Invalid key %s.'
                               ' Key must be 16 characters', key)
-        res_config.append(gw_conf)
+        res_gw_conf['key'] = key
+        res_config.append(res_gw_conf)
     return res_config
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=[{"sid": None, "key": None}]):
+        vol.Optional(CONF_GATEWAYS, default=[{CONF_MAC: None, "key": None}]):
             vol.All(cv.ensure_list, _validate_conf),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
