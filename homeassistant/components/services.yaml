@@ -520,3 +520,16 @@ wake_on_lan:
       broadcast_address:
         description: Optional broadcast IP where to send the magic packet.
         example: '192.168.255.255'
+
+knx:
+  group_write:
+    description: Turn a light on
+
+    fields:
+      address:
+        description: Group address(es) to write to
+        example: '1/1/0'
+
+      data:
+        description: KNX data to send
+        example: 1
