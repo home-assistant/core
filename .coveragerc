@@ -193,6 +193,9 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
+    homeassistant/components/xiaomi.py
+    homeassistant/components/*/xiaomi.py
+
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
 
@@ -274,7 +277,6 @@ omit =
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
-    homeassistant/components/device_tracker/xiaomi.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
