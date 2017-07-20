@@ -101,7 +101,8 @@ class FritzDectSwitch(SwitchDevice):
            self.data.temperature != STATE_UNKNOWN:
             attrs[ATTR_TEMPERATURE] = "{}".format(
               self.units.temperature(self.data.temperature, TEMP_CELSIUS))
-            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(self.units.temperature_unit)
+            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
+                self.units.temperature_unit)
         return attrs
 
     @property
