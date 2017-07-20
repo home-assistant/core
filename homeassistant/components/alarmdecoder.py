@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['alarmdecoder==0.12.1.0']
+REQUIREMENTS = ['alarmdecoder==0.12.3']
 
 _LOGGER = logging.getLogger(__name__)
 

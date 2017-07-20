@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_AT, CONF_PLATFORM, CONF_AFTER
+from homeassistant.const import CONF_AT, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
@@ -23,12 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'time',
     CONF_AT: cv.time,
-    CONF_AFTER: cv.time,
     CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES,
-                            CONF_SECONDS, CONF_AT, CONF_AFTER))
+}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AT))
 
 
 @asyncio.coroutine
@@ -36,11 +34,6 @@ def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     if CONF_AT in config:
         at_time = config.get(CONF_AT)
-        hours, minutes, seconds = at_time.hour, at_time.minute, at_time.second
-    elif CONF_AFTER in config:
-        _LOGGER.warning("'after' is deprecated for the time trigger. Please "
-                        "rename 'after' to 'at' in your configuration file.")
-        at_time = config.get(CONF_AFTER)
         hours, minutes, seconds = at_time.hour, at_time.minute, at_time.second
     else:
         hours = config.get(CONF_HOURS)

@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
@@ -63,12 +64,14 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
 })
 
 
+@bind_hass
 def is_on(hass, entity_id=None):
     """Return if the remote is on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_REMOTES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, activity=None, entity_id=None):
     """Turn all or specified remote on."""
     data = {ATTR_ACTIVITY: activity}
@@ -77,6 +80,7 @@ def turn_on(hass, activity=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@bind_hass
 def turn_off(hass, activity=None, entity_id=None):
     """Turn all or specified remote off."""
     data = {ATTR_ACTIVITY: activity}
@@ -85,6 +89,7 @@ def turn_off(hass, activity=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+@bind_hass
 def toggle(hass, activity=None, entity_id=None):
     """Toggle all or specified remote."""
     data = {ATTR_ACTIVITY: activity}
@@ -93,6 +98,7 @@ def toggle(hass, activity=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+@bind_hass
 def send_command(hass, device, command, entity_id=None,
                  num_repeats=None, delay_secs=None):
     """Send a command to a device."""

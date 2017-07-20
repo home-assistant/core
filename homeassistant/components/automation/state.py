@@ -12,13 +12,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_point_in_utc_time)
-from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 
 CONF_ENTITY_ID = 'entity_id'
 CONF_FROM = 'from'
 CONF_TO = 'to'
-CONF_STATE = 'state'
 CONF_FOR = 'for'
 
 TRIGGER_SCHEMA = vol.All(
@@ -28,11 +26,9 @@ TRIGGER_SCHEMA = vol.All(
         # These are str on purpose. Want to catch YAML conversions
         CONF_FROM: str,
         CONF_TO: str,
-        CONF_STATE: str,
         CONF_FOR: vol.All(cv.time_period, cv.positive_timedelta),
     }),
-    vol.Any(cv.key_dependency(CONF_FOR, CONF_TO),
-            cv.key_dependency(CONF_FOR, CONF_STATE))
+    cv.key_dependency(CONF_FOR, CONF_TO),
 )
 
 
@@ -41,7 +37,7 @@ def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = get_deprecated(config, CONF_TO, CONF_STATE, MATCH_ALL)
+    to_state = config.get(CONF_TO, MATCH_ALL)
     time_delta = config.get(CONF_FOR)
     async_remove_state_for_cancel = None
     async_remove_state_for_listener = None

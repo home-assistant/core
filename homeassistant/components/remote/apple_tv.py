@@ -45,6 +45,11 @@ class AppleTVRemote(remote.RemoteDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._atv.metadata.device_id
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._power.turned_on
