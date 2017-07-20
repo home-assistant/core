@@ -140,7 +140,6 @@ hass.async_stop()
 @asyncio.coroutine
 def test_using_complex_structures(hass, caplog):
     """Test that dicts and lists work."""
-
     caplog.set_level(logging.INFO)
     source = """
 mydict = {"a": 1, "b": 2}
