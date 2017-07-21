@@ -225,6 +225,16 @@ class CoverDevice(Entity):
         pass
 
     @property
+    def door_state(self):
+        """Return current state of cover."""
+        pass
+
+    @property
+    def door_state_list(self):
+        """Return list of posible door states."""
+        pass
+
+    @property
     def state(self):
         """Return the state of the cover."""
         closed = self.is_closed
@@ -247,9 +257,9 @@ class CoverDevice(Entity):
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
 
-        door_status = self.door_state
-        if door_status is not None:
-            data[ATTR_DOOR_STATE] = door_status
+        door_states = self.door_state
+        if door_states is not None:
+            data[ATTR_DOOR_STATE] = door_states
             if self.door_state_list:
                 data[ATTR_DOOR_STATE_LIST] = self.door_state_list
 
