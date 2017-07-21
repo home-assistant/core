@@ -3,6 +3,7 @@ Support for Z-Wave cover components.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
 """
+
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
@@ -117,30 +118,29 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def update_properties(self):
         """Handle data changes for node values."""
         self._door_state = self.values.primary.data
-        door_state_list =  self.values.primary.data_items
+        door_state_list = self.values.primary.data_items
         if door_state_list:
            self._door_state_list = list(door_state_list)
-        _LOGGER.debug("self._door_state_list=%s",self._door_state_list)
-        _LOGGER.debug("self._door_state=%s",self._door_state)
+        _LOGGER.debug("self._door_state_list=%s", self._door_state_list)
+        _LOGGER.debug("self._door_state=%s", self._door_state)
 
-		
     @property
     def door_state(self):
         """Return the current door state."""
         return self._door_state
-		
+
     @property
     def door_state_list(self):
         """Return the list of door states."""
         return self._door_state_list
-	
+
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
         if self._door_state == "Closed":
-           return True
+            return True
         else:
-           return False
+            return False
 
     def close_cover(self):
         """Close the garage door."""

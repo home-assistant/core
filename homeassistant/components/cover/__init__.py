@@ -246,13 +246,12 @@ class CoverDevice(Entity):
         current_tilt = self.current_cover_tilt_position
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
-			
+
         door_state = self.door_state
         if door_state is not None:
             data[ATTR_DOOR_STATE] = door_state
             if self.door_state_list:
                 data[ATTR_DOOR_STATE_LIST] = self.door_state_list
-
 
         return data
 
