@@ -1,9 +1,9 @@
 """
 Support for Z-Wave cover components.
+
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.zwave/
 """
-
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
@@ -139,8 +139,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Return the current position of Zwave garage door."""
         if self._door_state == "Closed":
             return True
-        else:
-            return False
+        return False
 
     def close_cover(self):
         """Close the garage door."""
