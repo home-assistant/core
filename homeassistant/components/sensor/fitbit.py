@@ -18,7 +18,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.2.3']
@@ -42,9 +41,7 @@ FITBIT_AUTH_START = '/auth/fitbit'
 FITBIT_CONFIG_FILE = 'fitbit.conf'
 FITBIT_DEFAULT_RESOURCES = ['activities/steps']
 
-ICON = 'mdi:walk'
-
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=30)
+SCAN_INTERVAL = datetime.timedelta(minutes=30)
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
@@ -420,7 +417,7 @@ class FitbitSensor(Entity):
         """Icon to use in the frontend, if any."""
         if self.resource_type == 'devices/battery':
             return 'mdi:battery-50'
-        return ICON
+        return 'mdi:walk'
 
     @property
     def device_state_attributes(self):
@@ -435,7 +432,6 @@ class FitbitSensor(Entity):
 
         return attrs
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Fitbit API and update the states."""
         if self.resource_type == 'devices/battery':
