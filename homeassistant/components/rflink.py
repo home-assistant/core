@@ -334,6 +334,16 @@ class RflinkCommand(RflinkDevice):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
+        # Cover options for RTS
+        elif command == 'roll_down':
+            cmd = 'DOWN'
+
+        elif command == 'roll_up':
+            cmd = 'UP'
+
+        elif command == 'roll_stop':
+            cmd = 'STOP'    
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
@@ -399,3 +409,15 @@ class SwitchableRflinkDevice(RflinkCommand):
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
+    
+    def async_roll_down(self, **kwargs):
+        """Roll the device down"""
+        return self._async_handle_command("roll_down")
+
+    def async_roll_up(self, **kwargs):
+        """Roll the device up"""
+        return self._async_handle_command("roll_up")
+
+    def async_roll_stop(self, **kwargs):
+        """Stop the device"""
+        return self._async_handle_command("roll_up")
