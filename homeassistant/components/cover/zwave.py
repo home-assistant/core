@@ -120,7 +120,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         self._door_state = self.values.primary.data
         door_state_list = self.values.primary.data_items
         if door_state_list:
-           self._door_state_list = list(door_state_list)
+            self._door_state_list = list(door_state_list)
         _LOGGER.debug("self._door_state_list=%s", self._door_state_list)
         _LOGGER.debug("self._door_state=%s", self._door_state)
 
