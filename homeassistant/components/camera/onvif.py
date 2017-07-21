@@ -54,6 +54,8 @@ class ONVIFCamera(Camera):
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
         from onvif import ONVIFService
+        import onvif
+        import os
         super().__init__()
 
         self._name = config.get(CONF_NAME)
@@ -63,7 +65,7 @@ class ONVIFCamera(Camera):
                 config.get(CONF_HOST), config.get(CONF_PORT)),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
-            '{}/deps/onvif/wsdl/media.wsdl'.format(hass.config.config_dir)
+            '{}/wsdl/media.wsdl'.format(os.path.dirname(onvif.__file__))
         )
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
