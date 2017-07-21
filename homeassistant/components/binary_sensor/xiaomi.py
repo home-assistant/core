@@ -73,8 +73,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
         return self._should_poll
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self):
+        """Return true if sensor is on."""
         return self._state
 
     @property
