@@ -269,7 +269,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 dev.append(FitbitSensor(
                     authd_client, config_path, resource,
                     hass.config.units.is_metric))
-        add_devices(dev)
+        add_devices(dev, True)
 
     else:
         oauth = fitbit.api.FitbitOauth2Client(
@@ -395,7 +395,6 @@ class FitbitSensor(Entity):
             unit_type = measurement_system[split_resource[-1]]
         self._unit_of_measurement = unit_type
         self._state = 0
-        self.update()
 
     @property
     def name(self):
