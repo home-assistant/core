@@ -62,11 +62,11 @@ class Device:
         """Return the name of the device."""
         return self._name
 
-    def ip(self):
+    def ipaddr(self):
         """Return the IP address of the device."""
         return self._ip
 
-    def mac(self):
+    def macaddr(self):
         """Return the MAC address of the device."""
         return self._mac
 
@@ -91,14 +91,14 @@ class HuaweiDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client.mac() for client in self.last_results]
+        return [client.macaddr() for client in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
-            if client.mac() == device:
+            if client.macaddr() == device:
                 return client.name()
         return None
 
@@ -117,7 +117,7 @@ class HuaweiDeviceScanner(DeviceScanner):
             self.last_results = active_clients
 
             _LOGGER.debug("Active clients: " + "\n"
-                          .join((client.mac() + " " + client.name())
+                          .join((client.macaddr() + " " + client.name())
                                 for client in active_clients))
             return True
 
