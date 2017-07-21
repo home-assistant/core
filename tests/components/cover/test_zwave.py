@@ -161,7 +161,7 @@ def test_roller_reverse_open_close(hass, mock_openzwave):
 def test_garage_value_changed(hass, mock_openzwave):
     """Test position changed."""
     node = MockNode()
-    value = MockValue(data=False, node=node,
+    value = MockValue(data="Opened", node=node, data_items=["Opened","Closed","Closing","Opening","Unknown"],
                       command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
     values = MockEntityValues(primary=value, node=node)
     device = zwave.get_device(hass=hass, node=node, values=values,
@@ -169,7 +169,7 @@ def test_garage_value_changed(hass, mock_openzwave):
 
     assert device.is_closed
 
-    value.data = True
+    value.data = "Closed"
     value_changed(value)
 
     assert not device.is_closed
@@ -178,14 +178,14 @@ def test_garage_value_changed(hass, mock_openzwave):
 def test_garage_commands(hass, mock_openzwave):
     """Test position changed."""
     node = MockNode()
-    value = MockValue(data=False, node=node,
+    value = MockValue(data="Opened", node=node, data_items=["Opened","Closed","Closing","Opening","Unknown"],
                       command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
     values = MockEntityValues(primary=value, node=node)
     device = zwave.get_device(hass=hass, node=node, values=values,
                               node_config={})
 
-    assert value.data is False
+    assert value.data == "Opened"
     device.open_cover()
-    assert value.data is True
+    assert value.data == "Closed"
     device.close_cover()
-    assert value.data is False
+    assert value.data == "Opened"
