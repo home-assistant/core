@@ -180,6 +180,5 @@ def convert_percent(raw_value):
     except (IndexError, ValueError):
         # pknx returns a non-iterable type for unsuccessful reads
         _LOGGER.error("Can't convert %s to percent value", raw_value)
-        pass
 
     return round(value * 100 / 255)
