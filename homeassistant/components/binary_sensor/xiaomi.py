@@ -78,11 +78,6 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
         return self._state
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def device_class(self):
         """Return the class of binary sensor."""
         return self._device_class
