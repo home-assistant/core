@@ -12,7 +12,7 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
                 'aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#'
                 'PyXiaomiGateway==0.2.0']
 
-ATTR_GW_SID = 'gw_sid'
+ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
 CONF_DISCOVERY_RETRY = 'discovery_retry'
@@ -90,12 +90,13 @@ def setup(hass, config):
 
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
-        if call.data.get(ATTR_RINGTONE_ID) is None \
-                or call.data.get(ATTR_GW_SID) is None:
+        ring_id = call.data.get(ATTR_RINGTONE_ID)
+        gw_sid = call.data.get(ATTR_GW_MAC)
+        if ring_id is None or gw_sid is None:
             _LOGGER.error("Mandatory parameters is not specified.")
             return
 
-        ring_id = int(call.data.get(ATTR_RINGTONE_ID))
+        ring_id = int(ring_id)
         if ring_id in [9, 14-19]:
             _LOGGER.error('Specified mid: %s is not defined in gateway.',
                           ring_id)
@@ -107,7 +108,7 @@ def setup(hass, config):
         else:
             ringtone = {'mid': ring_id, 'vol': int(ring_vol)}
 
-        gw_sid = call.data.get(ATTR_GW_SID)
+        gw_sid = gw_sid.replace(":", "").lower()
 
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
@@ -118,12 +119,13 @@ def setup(hass, config):
 
     def stop_ringtone_service(call):
         """Service to stop playing ringtone on Gateway."""
-        gw_sid = call.data.get(ATTR_GW_SID)
+        gw_sid = call.data.get(ATTR_GW_MAC)
         if gw_sid is None:
             _LOGGER.error("Mandatory parameter (%s) is not specified.",
-                          ATTR_GW_SID)
+                          ATTR_GW_MAC)
             return
 
+        gw_sid = gw_sid.replace(":", "").lower()
         for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
             if gateway.sid == gw_sid:
                 ringtone = {'mid': 10000}
