@@ -4,6 +4,7 @@ Support for switching devices via Pilight to on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pilight/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,9 +13,15 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
-                                 CONF_PROTOCOL)
+                                 CONF_PROTOCOL, STATE_ON)
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'switch'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_OFF_CODE = 'off_code'
 CONF_OFF_CODE_RECIEVE = 'off_code_receive'
@@ -119,6 +126,17 @@ class PilightSwitch(SwitchDevice):
 
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        if self.entity_id is None:
+            self.entity_id = generate_entity_id(
+                ENTITY_ID_FORMAT, self._name, hass=self._hass)
+
+        state = yield from async_get_last_state(self._hass, self.entity_id)
+        if state:
+            self._state = state.state == STATE_ON
 
     @property
     def name(self):
