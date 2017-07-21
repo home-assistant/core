@@ -15,8 +15,8 @@ DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = 'shopping_list_updated'
-INTENT_ADD_ITEM = 'ShoppingListAddItem'
-INTENT_LAST_ITEMS = 'ShoppingListLastItems'
+INTENT_ADD_ITEM = 'HassShoppingListAddItem'
+INTENT_LAST_ITEMS = 'HassShoppingListLastItems'
 
 
 @asyncio.coroutine

@@ -11,7 +11,7 @@ def test_add_item(hass):
     yield from async_setup_component(hass, 'shopping_list', {})
 
     response = yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
 
     assert response.speech['plain']['speech'] == \
@@ -24,17 +24,17 @@ def test_recent_items_intent(hass):
     yield from async_setup_component(hass, 'shopping_list', {})
 
     yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
     yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
     )
     yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'soda'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'soda'}}
     )
 
     response = yield from intent.async_handle(
-        hass, 'test', 'ShoppingListLastItems'
+        hass, 'test', 'HassShoppingListLastItems'
     )
 
     assert response.speech['plain']['speech'] == \
@@ -47,10 +47,10 @@ def test_api(hass, test_client):
     yield from async_setup_component(hass, 'shopping_list', {})
 
     yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'beer'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
     yield from intent.async_handle(
-        hass, 'test', 'ShoppingListAddItem', {'item': {'value': 'wine'}}
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
     )
 
     client = yield from test_client(hass.http.app)
