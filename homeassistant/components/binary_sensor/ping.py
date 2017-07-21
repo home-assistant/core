@@ -35,7 +35,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PING_MATCHER = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)')
 
-PING_MATCHER_ALPINE = re.compile(
+PING_MATCHER_BUSYBOX = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)')
 
 WIN32_PING_MATCHER = re.compile(
@@ -130,12 +130,8 @@ class PingData(object):
                     'max': rtt_max,
                     'mdev': ''}
             if 'max/' not in str(out):
-                _LOGGER.debug("Detected Alpine ping...")
-                match = PING_MATCHER_ALPINE.search(str(out).split('\n')[-1])
+                match = PING_MATCHER_BUSYBOX.search(str(out).split('\n')[-1])
                 rtt_min, rtt_avg, rtt_max = match.groups()
-                _LOGGER.debug(
-                    'ALPINE: min: ' + rtt_min + '\navg: ' + rtt_avg +
-                    '\nmax: ' + rtt_max + '\n')
                 return {
                     'min': rtt_min,
                     'avg': rtt_avg,
