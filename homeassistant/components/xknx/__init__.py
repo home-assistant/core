@@ -76,14 +76,7 @@ class XKNXModule(object):
         from xknx import XKNX
         self.xknx = XKNX(
             config=self.config_file(),
-            loop=self.hass.loop,
-            start=False,
-            telegram_received_cb=self.telegram_received_cb)
-
-    @staticmethod
-    def telegram_received_cb(xknx, device):
-        #print("{0}".format(device.name))
-        pass
+            loop=self.hass.loop)
 
     @asyncio.coroutine
     def start(self):
