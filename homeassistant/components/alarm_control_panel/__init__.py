@@ -77,7 +77,6 @@ def alarm_arm_away(hass, code=None, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
-
 def alarm_arm_night(hass, code=None, entity_id=None):
     """Send the alarm the command for arm night."""
     data = {}
@@ -88,7 +87,6 @@ def alarm_arm_night(hass, code=None, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data)
 
-    
 def alarm_trigger(hass, code=None, entity_id=None):
     """Send the alarm the command for trigger."""
     data = {}
@@ -204,7 +202,7 @@ class AlarmControlPanel(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.alarm_arm_night, code)
-    
+
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
