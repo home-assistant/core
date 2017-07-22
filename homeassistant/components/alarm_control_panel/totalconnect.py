@@ -13,8 +13,8 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN,
-    CONF_NAME)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
+    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_UNKNOWN, CONF_NAME)
 
 REQUIREMENTS = ['total_connect_client==0.11']
 
@@ -74,6 +74,12 @@ class TotalConnect(alarm.AlarmControlPanel):
             state = STATE_ALARM_ARMED_HOME
         elif status == self._client.ARMED_AWAY:
             state = STATE_ALARM_ARMED_AWAY
+        elif status == self._client.ARMED_STAY_NIGHT:
+            state = STATE_ALARM_ARMED_NIGHT
+        elif status == self._client.ARMING:
+            state = STATE_ALARM_ARMING
+        elif status == self._client.DISARMING:
+            state = STATE_ALARM_DISARMING
         else:
             state = STATE_UNKNOWN
 
@@ -90,3 +96,7 @@ class TotalConnect(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._client.arm_away()
+
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        self._client.arm_stay_night()
