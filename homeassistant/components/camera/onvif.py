@@ -6,6 +6,7 @@ https://home-assistant.io/components/camera.onvif/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
@@ -55,7 +56,6 @@ class ONVIFCamera(Camera):
         """Initialize a ONVIF camera."""
         from onvif import ONVIFService
         import onvif
-        import os
         super().__init__()
 
         self._name = config.get(CONF_NAME)
