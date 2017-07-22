@@ -82,30 +82,57 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if file_config:
         # Setup a configured PlexServer
-        host, token = file_config.popitem()
-        token = token['token']
+        host, host_config = file_config.popitem()
+        token = host_config['token']
+        try:
+            has_ssl = host_config['ssl']
+        except KeyError:
+            has_ssl = False
+        try:
+            verify_ssl = host_config['verify']
+        except KeyError:
+            verify_ssl = True
+
     # Via discovery
     elif discovery_info is not None:
         # Parse discovery data
         host = discovery_info.get('host')
+        port = discovery_info.get('port')
+        host = '%s:%s' % (host, port)
         _LOGGER.info("Discovered PLEX server: %s", host)
 
         if host in _CONFIGURING:
             return
         token = None
+        has_ssl = False
+        verify_ssl = True
     else:
         return
 
-    setup_plexserver(host, token, hass, config, add_devices_callback)
+    setup_plexserver(
+        host, token, has_ssl, verify_ssl,
+        hass, config, add_devices_callback
+    )
 
 
-def setup_plexserver(host, token, hass, config, add_devices_callback):
+def setup_plexserver(
+        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
+    cert_session = None
+    http_prefix = 'https' if has_ssl else 'http'
+    if has_ssl and (verify_ssl is False):
+        _LOGGER.info("Ignoring SSL verification")
+        cert_session = requests.Session()
+        cert_session.verify = False
     try:
-        plexserver = plexapi.server.PlexServer('http://%s' % host, token)
+        plexserver = plexapi.server.PlexServer(
+            '%s://%s' % (http_prefix, host),
+            token, cert_session
+        )
+        _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
@@ -123,18 +150,19 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     # Save config
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
-                'token': token
+                'token': token,
+                'ssl': has_ssl,
+                'verify': verify_ssl,
             }}):
         _LOGGER.error("Failed to save configuration file")
 
-    _LOGGER.info('Connected to: http://%s', host)
+    _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
     plex_clients = {}
     plex_sessions = {}
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    # pylint: disable=too-many-branches
     def update_devices():
         """Update the devices objects."""
         try:
@@ -142,9 +170,9 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-        except OSError:
-            _LOGGER.error("Could not connect to plex server at http://%s",
-                          host)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
             return
 
         new_plex_clients = []
@@ -191,6 +219,10 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
             return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
+            return
 
         plex_sessions.clear()
         for session in sessions:
@@ -215,7 +247,11 @@ def request_configuration(host, hass, config, add_devices_callback):
     def plex_configuration_callback(data):
         """Handle configuration changes."""
         setup_plexserver(
-            host, data.get('token'), hass, config, add_devices_callback)
+            host, data.get('token'),
+            cv.boolean(data.get('has_ssl')),
+            cv.boolean(data.get('do_not_verify')),
+            hass, config, add_devices_callback
+        )
 
     _CONFIGURING[host] = configurator.request_config(
         hass,
@@ -228,14 +264,20 @@ def request_configuration(host, hass, config, add_devices_callback):
             'id': 'token',
             'name': 'X-Plex-Token',
             'type': ''
+        }, {
+            'id': 'has_ssl',
+            'name': 'Use SSL',
+            'type': ''
+        }, {
+            'id': 'do_not_verify_ssl',
+            'name': 'Do not verify SSL',
+            'type': ''
         }])
 
 
-# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, config, device, session, plex_sessions,
                  update_devices, update_sessions):
         """Initialize the Plex device."""
@@ -299,7 +341,6 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
-    # pylint: disable=too-many-branches, too-many-statements
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
@@ -532,16 +573,16 @@ class PlexClient(MediaPlayerDevice):
         # type so that lower layers don't think it's a URL and choke on it
         if value is self.na_type:
             return None
-        else:
-            return value
+
+        return value
 
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
         if self.media_content_type is MEDIA_TYPE_MUSIC:
             return 'music'
-        else:
-            return 'video'
+
+        return 'video'
 
     @property
     def media_content_id(self):
@@ -561,8 +602,8 @@ class PlexClient(MediaPlayerDevice):
             return MEDIA_TYPE_VIDEO
         elif self._session_type == 'track':
             return MEDIA_TYPE_MUSIC
-        else:
-            return None
+
+        return None
 
     @property
     def media_artist(self):
@@ -658,8 +699,8 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
-        else:
-            return None
+
+        return None
 
     def _local_client_control_fix(self):
         """Detect if local client and adjust url to allow control."""

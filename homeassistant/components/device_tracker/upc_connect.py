@@ -12,11 +12,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -25,12 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_IP = '192.168.0.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
 })
 
-CMD_LOGIN = 15
-CMD_LOGOUT = 16
 CMD_DEVICES = 123
 
 
@@ -38,7 +34,7 @@ CMD_DEVICES = 123
 def async_get_scanner(hass, config):
     """Return the UPC device scanner."""
     scanner = UPCDeviceScanner(hass, config[DOMAIN])
-    success_init = yield from scanner.async_login()
+    success_init = yield from scanner.async_initialize_token()
 
     return scanner if success_init else None
 
@@ -50,7 +46,6 @@ class UPCDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.hass = hass
         self.host = config[CONF_HOST]
-        self.password = config[CONF_PASSWORD]
 
         self.data = {}
         self.token = None
@@ -65,21 +60,12 @@ class UPCDeviceScanner(DeviceScanner):
 
         self.websession = async_get_clientsession(hass)
 
-        @asyncio.coroutine
-        def async_logout(event):
-            """Logout from upc connect box."""
-            yield from self._async_ws_function(CMD_LOGOUT)
-            self.token = None
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, async_logout)
-
     @asyncio.coroutine
     def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         if self.token is None:
-            reconnect = yield from self.async_login()
-            if not reconnect:
+            token_initialized = yield from self.async_initialize_token()
+            if not token_initialized:
                 _LOGGER.error("Not connected to %s", self.host)
                 return []
 
@@ -95,55 +81,42 @@ class UPCDeviceScanner(DeviceScanner):
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
-        """Ge the firmware doesn't save the name of the wireless device."""
+        """The firmware doesn't save the name of the wireless device."""
         return None
 
     @asyncio.coroutine
-    def async_login(self):
-        """Login into firmware and get first token."""
+    def async_initialize_token(self):
+        """Get first token."""
         try:
             # get first token
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.get(
-                    "http://{}/common_page/login.html".format(self.host)
+                    "http://{}/common_page/login.html".format(self.host),
+                    headers=self.headers
                 )
 
                 yield from response.text()
 
             self.token = response.cookies['sessionToken'].value
 
-            # login
-            data = yield from self._async_ws_function(CMD_LOGIN, {
-                'Username': 'NULL',
-                'Password': self.password,
-            })
-
-            # Successful?
-            return data is not None
+            return True
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Can not load login page from %s", self.host)
             return False
 
     @asyncio.coroutine
-    def _async_ws_function(self, function, additional_form=None):
+    def _async_ws_function(self, function):
         """Execute a command on UPC firmware webservice."""
-        form_data = {
-            'token': self.token,
-            'fun': function
-        }
-
-        if additional_form:
-            form_data.update(additional_form)
-
-        redirects = function != CMD_DEVICES
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
+                # The 'token' parameter has to be first, and 'fun' second
+                # or the UPC firmware will return an error
                 response = yield from self.websession.post(
                     "http://{}/xml/getter.xml".format(self.host),
-                    data=form_data,
+                    data="token={}&fun={}".format(self.token, function),
                     headers=self.headers,
-                    allow_redirects=redirects
+                    allow_redirects=False
                 )
 
                 # error?

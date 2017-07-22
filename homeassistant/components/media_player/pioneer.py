@@ -47,9 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if pioneer.update():
         add_devices([pioneer])
-        return True
-    else:
-        return False
 
 
 class PioneerDevice(MediaPlayerDevice):

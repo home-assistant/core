@@ -9,6 +9,34 @@ from . import const
 _LOGGER = logging.getLogger(__name__)
 
 
+class ZWaveNodeValueView(HomeAssistantView):
+    """View to return the node values."""
+
+    url = r"/api/zwave/values/{node_id:\d+}"
+    name = "api:zwave:values"
+
+    @ha.callback
+    def get(self, request, node_id):
+        """Retrieve groups of node."""
+        nodeid = int(node_id)
+        hass = request.app['hass']
+        values_list = hass.data[const.DATA_ENTITY_VALUES]
+
+        values_data = {}
+        # Return a list of values for this node that are used as a
+        # primary value for an entity
+        for entity_values in values_list:
+            if entity_values.primary.node.node_id != nodeid:
+                continue
+
+            values_data[entity_values.primary.value_id] = {
+                'label': entity_values.primary.label,
+                'index': entity_values.primary.index,
+                'instance': entity_values.primary.instance,
+            }
+        return self.json(values_data)
+
+
 class ZWaveNodeGroupView(HomeAssistantView):
     """View to return the nodes group configuration."""
 

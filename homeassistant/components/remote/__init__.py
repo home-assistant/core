@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
@@ -30,6 +31,8 @@ ATTR_NUM_REPEATS = 'num_repeats'
 ATTR_DELAY_SECS = 'delay_secs'
 
 DOMAIN = 'remote'
+DEPENDENCIES = ['group']
+SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format('all_remotes')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -38,7 +41,6 @@ GROUP_NAME_ALL_REMOTES = 'all remotes'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
 
@@ -61,12 +63,14 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
 })
 
 
+@bind_hass
 def is_on(hass, entity_id=None):
     """Return if the remote is on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_REMOTES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, activity=None, entity_id=None):
     """Turn all or specified remote on."""
     data = {ATTR_ACTIVITY: activity}
@@ -75,12 +79,14 @@ def turn_on(hass, activity=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@bind_hass
 def turn_off(hass, entity_id=None):
     """Turn all or specified remote off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+@bind_hass
 def send_command(hass, device, command, entity_id=None,
                  num_repeats=None, delay_secs=None):
     """Send a command to a device."""

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-digitalocean==1.11']
+REQUIREMENTS = ['python-digitalocean==1.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ ATTR_VCPUS = 'vcpus'
 
 CONF_DROPLETS = 'droplets'
 
-DIGITAL_OCEAN = None
+DATA_DIGITAL_OCEAN = 'data_do'
 DIGITAL_OCEAN_PLATFORMS = ['switch', 'binary_sensor']
 DOMAIN = 'digital_ocean'
 
@@ -47,12 +47,13 @@ def setup(hass, config):
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
 
-    global DIGITAL_OCEAN
-    DIGITAL_OCEAN = DigitalOcean(access_token)
+    digital = DigitalOcean(access_token)
 
-    if not DIGITAL_OCEAN.manager.get_account():
+    if not digital.manager.get_account():
         _LOGGER.error("No Digital Ocean account found for the given API Token")
         return False
+
+    hass.data[DATA_DIGITAL_OCEAN] = digital
 
     return True
 

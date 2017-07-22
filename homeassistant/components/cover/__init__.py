@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -27,6 +28,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'cover'
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=15)
 
 GROUP_NAME_ALL_COVERS = 'all covers'
@@ -38,6 +40,8 @@ DEVICE_CLASSES = [
     'window',        # Window control
     'garage',        # Garage door control
 ]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2
@@ -83,24 +87,28 @@ SERVICE_TO_METHOD = {
 }
 
 
+@bind_hass
 def is_closed(hass, entity_id=None):
     """Return if the cover is closed based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_COVERS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
+@bind_hass
 def open_cover(hass, entity_id=None):
     """Open all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN_COVER, data)
 
 
+@bind_hass
 def close_cover(hass, entity_id=None):
     """Close all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE_COVER, data)
 
 
+@bind_hass
 def set_cover_position(hass, position, entity_id=None):
     """Move to specific position all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -108,24 +116,28 @@ def set_cover_position(hass, position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_COVER_POSITION, data)
 
 
+@bind_hass
 def stop_cover(hass, entity_id=None):
     """Stop all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_STOP_COVER, data)
 
 
+@bind_hass
 def open_cover_tilt(hass, entity_id=None):
     """Open all or specified cover tilt."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN_COVER_TILT, data)
 
 
+@bind_hass
 def close_cover_tilt(hass, entity_id=None):
     """Close all or specified cover tilt."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE_COVER_TILT, data)
 
 
+@bind_hass
 def set_cover_tilt_position(hass, tilt_position, entity_id=None):
     """Move to specific tilt position all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -133,6 +145,7 @@ def set_cover_tilt_position(hass, tilt_position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, data)
 
 
+@bind_hass
 def stop_cover_tilt(hass, entity_id=None):
     """Stop all or specified cover tilt."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None

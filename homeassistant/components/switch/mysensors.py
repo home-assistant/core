@@ -135,7 +135,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
             return self._values[self.value_type] == STATE_ON
         return False
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
@@ -144,7 +144,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
             self._values[self.value_type] = STATE_ON
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
@@ -191,7 +191,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
             # turn off switch after switch was turned on
             self.turn_off()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the IR switch off."""
         set_req = self.gateway.const.SetReq
         if set_req.V_LIGHT not in self._values:

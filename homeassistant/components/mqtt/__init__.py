@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
@@ -29,7 +30,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
-REQUIREMENTS = ['paho-mqtt==1.2.3']
+REQUIREMENTS = ['paho-mqtt==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ def valid_discovery_topic(value):
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
-                      'the mqtt broker config'
+                      'the MQTT broker configuration'
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
@@ -126,9 +127,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION,
-                     default=DEFAULT_TLS_PROTOCOL): vol.Any('auto', '1.0',
-                                                            '1.1', '1.2'),
+        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
+            vol.Any('auto', '1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
@@ -181,12 +181,14 @@ def _build_publish_data(topic, qos, retain):
     return data
 
 
+@bind_hass
 def publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
 @callback
+@bind_hass
 def async_publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
@@ -194,6 +196,7 @@ def async_publish(hass, topic, payload, qos=None, retain=None):
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
+@bind_hass
 def publish_template(hass, topic, payload_template, qos=None, retain=None):
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
@@ -202,6 +205,7 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
+@bind_hass
 def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                     encoding='utf-8'):
     """Subscribe to an MQTT topic."""
@@ -233,13 +237,12 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
     return async_remove
 
 
+@bind_hass
 def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
               encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback,
-                        qos, encoding),
-        hass.loop
+        async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
     def remove():
@@ -323,6 +326,9 @@ def async_setup(hass, config):
         broker, port, username, password, certificate, protocol = broker_config
         # Embedded broker doesn't have some ssl variables
         client_key, client_cert, tls_insecure = None, None, None
+        # hbmqtt requires a client id to be set.
+        if client_id is None:
+            client_id = 'home-assistant'
     else:
         err = "Unable to start MQTT broker."
         if conf.get(CONF_EMBEDDED) is not None:
@@ -455,8 +461,8 @@ class MQTT(object):
                 certificate, certfile=client_cert,
                 keyfile=client_key, tls_version=tls_version)
 
-        if tls_insecure is not None:
-            self._mqttc.tls_insecure_set(tls_insecure)
+            if tls_insecure is not None:
+                self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
@@ -649,7 +655,7 @@ def _match_topic(subscription, topic):
         if sub_part == "+":
             reg_ex_parts.append(r"([^\/]+)")
         else:
-            reg_ex_parts.append(sub_part)
+            reg_ex_parts.append(re.escape(sub_part))
 
     reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
 

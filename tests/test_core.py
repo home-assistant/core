@@ -1,11 +1,13 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+import logging
+import os
 import unittest
 from unittest.mock import patch, MagicMock, sentinel
 from datetime import datetime, timedelta
+from tempfile import TemporaryDirectory
 
-import logging
 import pytz
 import pytest
 
@@ -796,10 +798,40 @@ class TestConfig(unittest.TestCase):
             'time_zone': 'UTC',
             'components': set(),
             'config_dir': '/tmp/ha-config',
+            'whitelist_external_dirs': set(),
             'version': __version__,
         }
 
         self.assertEqual(expected, self.config.as_dict())
+
+    def test_is_allowed_path(self):
+        """Test is_allowed_path method."""
+        with TemporaryDirectory() as tmp_dir:
+            self.config.whitelist_external_dirs = set((
+                tmp_dir,
+            ))
+
+            test_file = os.path.join(tmp_dir, "test.jpg")
+            with open(test_file, "w") as tmp_file:
+                tmp_file.write("test")
+
+            valid = [
+                test_file,
+            ]
+            for path in valid:
+                assert self.config.is_allowed_path(path)
+
+            self.config.whitelist_external_dirs = set(('/home', '/var'))
+
+            unvalid = [
+                "/hass/config/secure",
+                "/etc/passwd",
+                "/root/secure_file",
+                "/var/../etc/passwd",
+                test_file,
+            ]
+            for path in unvalid:
+                assert not self.config.is_allowed_path(path)
 
 
 @patch('homeassistant.core.monotonic')

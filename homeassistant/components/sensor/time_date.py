@@ -52,7 +52,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devices.append(device)
 
     async_add_devices(devices, True)
-    return True
 
 
 class TimeDateSensor(Entity):
@@ -84,8 +83,7 @@ class TimeDateSensor(Entity):
             return 'mdi:calendar-clock'
         elif 'date' in self.type:
             return 'mdi:calendar'
-        else:
-            return 'mdi:clock'
+        return 'mdi:clock'
 
     def get_next_interval(self, now=None):
         """Compute next time an update should occur."""

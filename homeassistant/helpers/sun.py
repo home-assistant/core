@@ -9,7 +9,7 @@ DATA_LOCATION_CACHE = 'astral_location_cache'
 
 @callback
 def get_astral_location(hass):
-    """Get an astral location for the current hass configuration."""
+    """Get an astral location for the current Home Assistant configuration."""
     from astral import Location
 
     latitude = hass.config.latitude

@@ -108,6 +108,12 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(35, state.attributes.get('max_temp'))
         self.assertEqual(None, state.attributes.get('temperature'))
 
+    def test_get_operation_modes(self):
+        """Test that the operation list returns the correct modes."""
+        state = self.hass.states.get(ENTITY)
+        modes = state.attributes.get('operation_list')
+        self.assertEqual([climate.STATE_AUTO, STATE_OFF], modes)
+
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         climate.set_temperature(self.hass, 30)
@@ -210,6 +216,30 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual('switch', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_running_when_operating_mode_is_off(self):
+        """Test that the switch turns off when enabled is set False."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_no_state_change_when_operation_mode_off(self):
+        """Test that the switch doesn't turn on when enabled is False."""
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
@@ -320,6 +350,30 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.assertEqual('switch', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_running_when_operating_mode_is_off(self):
+        """Test that the switch turns off when enabled is set False."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_no_state_change_when_operation_mode_off(self):
+        """Test that the switch doesn't turn on when enabled is False."""
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
