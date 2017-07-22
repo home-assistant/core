@@ -12,11 +12,9 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from homeassistant.helpers import intent, dispatcher, entity, restore_state
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -45,8 +43,23 @@ def threadsafe_callback_factory(func):
     def threadsafe(*args, **kwargs):
         """Call func threadsafe."""
         hass = args[0]
-        run_callback_threadsafe(
+        return run_callback_threadsafe(
             hass.loop, ft.partial(func, *args, **kwargs)).result()
+
+    return threadsafe
+
+
+def threadsafe_coroutine_factory(func):
+    """Create threadsafe functions out of coroutine.
+
+    Callback needs to have `hass` as first argument.
+    """
+    @ft.wraps(func)
+    def threadsafe(*args, **kwargs):
+        """Call func threadsafe."""
+        hass = args[0]
+        return run_coroutine_threadsafe(
+            func(*args, **kwargs), hass.loop).result()
 
     return threadsafe
 
@@ -98,8 +111,6 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    loop._thread_ident = threading.get_ident()
-
     hass = ha.HomeAssistant(loop)
     INSTANCES.append(hass)
 
@@ -162,7 +173,8 @@ def get_test_instance_port():
     return _TEST_INSTANCE_PORT
 
 
-def mock_service(hass, domain, service):
+@ha.callback
+def async_mock_service(hass, domain, service):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -171,12 +183,31 @@ def mock_service(hass, domain, service):
         """Mock service call."""
         calls.append(call)
 
-    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
-        hass.services.async_register(domain, service, mock_service_log)
-    else:
-        hass.services.register(domain, service, mock_service_log)
+    hass.services.async_register(domain, service, mock_service_log)
 
     return calls
+
+
+mock_service = threadsafe_callback_factory(async_mock_service)
+
+
+@ha.callback
+def async_mock_intent(hass, intent_typ):
+    """Set up a fake intent handler."""
+    intents = []
+
+    class MockIntentHandler(intent.IntentHandler):
+        intent_type = intent_typ
+
+        @asyncio.coroutine
+        def async_handle(self, intent):
+            """Handle the intent."""
+            intents.append(intent)
+            return intent.create_response()
+
+    intent.async_register(hass, MockIntentHandler())
+
+    return intents
 
 
 @ha.callback
@@ -184,7 +215,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    async_dispatcher_send(
+    dispatcher.async_dispatcher_send(
         hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
         payload, qos)
 
@@ -258,16 +289,20 @@ def mock_http_component_app(hass, api_password=None):
     return app
 
 
-def mock_mqtt_component(hass):
+@asyncio.coroutine
+def async_mock_mqtt_component(hass):
     """Mock the MQTT component."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
-        setup_component(hass, mqtt.DOMAIN, {
+        yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
             }
         })
         return mock_mqtt
+
+
+mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
 
 
 @ha.callback
@@ -334,7 +369,7 @@ class MockPlatform(object):
             self._setup_platform(hass, config, add_devices, discovery_info)
 
 
-class MockToggleDevice(ToggleEntity):
+class MockToggleDevice(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
     def __init__(self, name, state):
@@ -488,10 +523,11 @@ def init_recorder_component(hass, add_config=None):
 
 def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
-    hass.data[DATA_RESTORE_CACHE] = {
+    key = restore_state.DATA_RESTORE_CACHE
+    hass.data[key] = {
         state.entity_id: state for state in states}
-    _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
-    assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
+    _LOGGER.debug('Restore cache: %s', hass.data[key])
+    assert len(hass.data[key]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)

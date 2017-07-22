@@ -22,13 +22,12 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
-    CONF_HOSTS)
+    CONF_HOSTS, ATTR_TIME)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['SoCo==0.12']
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +67,6 @@ ATTR_ALARM_ID = 'alarm_id'
 ATTR_VOLUME = 'volume'
 ATTR_ENABLED = 'enabled'
 ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
-ATTR_TIME = 'time'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 
@@ -222,9 +220,9 @@ def _parse_timespan(timespan):
     """Parse a time-span into number of seconds."""
     if timespan in ('', 'NOT_IMPLEMENTED', None):
         return None
-    else:
-        return sum(60 ** x[0] * int(x[1]) for x in enumerate(
-            reversed(timespan.split(':'))))
+
+    return sum(60 ** x[0] * int(x[1]) for x in enumerate(
+        reversed(timespan.split(':'))))
 
 
 class _ProcessSonosEventQueue():
@@ -526,7 +524,7 @@ class SonosDevice(MediaPlayerDevice):
             support_previous_track = False
             support_next_track = False
             support_play = False
-            support_stop = False
+            support_stop = True
             support_pause = False
 
             if is_playing_tv:
@@ -767,8 +765,8 @@ class SonosDevice(MediaPlayerDevice):
         """Content ID of current playing media."""
         if self._coordinator:
             return self._coordinator.media_content_id
-        else:
-            return self._media_content_id
+
+        return self._media_content_id
 
     @property
     def media_content_type(self):
@@ -780,16 +778,16 @@ class SonosDevice(MediaPlayerDevice):
         """Duration of current playing media in seconds."""
         if self._coordinator:
             return self._coordinator.media_duration
-        else:
-            return self._media_duration
+
+        return self._media_duration
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
         if self._coordinator:
             return self._coordinator.media_position
-        else:
-            return self._media_position
+
+        return self._media_position
 
     @property
     def media_position_updated_at(self):
@@ -799,40 +797,40 @@ class SonosDevice(MediaPlayerDevice):
         """
         if self._coordinator:
             return self._coordinator.media_position_updated_at
-        else:
-            return self._media_position_updated_at
+
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self._coordinator:
             return self._coordinator.media_image_url
-        else:
-            return self._media_image_url
+
+        return self._media_image_url
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
         if self._coordinator:
             return self._coordinator.media_artist
-        else:
-            return self._media_artist
+
+        return self._media_artist
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
         if self._coordinator:
             return self._coordinator.media_album_name
-        else:
-            return self._media_album_name
+
+        return self._media_album_name
 
     @property
     def media_title(self):
         """Title of current playing media."""
         if self._coordinator:
             return self._coordinator.media_title
-        else:
-            return self._media_title
+
+        return self._media_title
 
     @property
     def supported_features(self):
@@ -921,14 +919,14 @@ class SonosDevice(MediaPlayerDevice):
         """Name of the current input source."""
         if self._coordinator:
             return self._coordinator.source
-        else:
-            return self._source_name
+
+        return self._source_name
 
     @soco_error
     def turn_off(self):
         """Turn off media player."""
-        if self._support_pause:
-            self.media_pause()
+        if self._support_stop:
+            self.media_stop()
 
     @soco_error
     @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)

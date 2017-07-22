@@ -14,12 +14,15 @@ ATTR_BASIC_LEVEL = "basic_level"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
+ATTR_VALUE_INDEX = "value_index"
+ATTR_VALUE_INSTANCE = "value_instance"
 NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
 
 DATA_DEVICES = 'zwave_devices'
 DATA_NETWORK = 'zwave_network'
+DATA_ENTITY_VALUES = 'zwave_entity_values'
 
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
@@ -38,6 +41,7 @@ SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
 SERVICE_RESET_NODE_METERS = "reset_node_meters"
@@ -324,14 +328,42 @@ DISC_GENERIC_DEVICE_CLASS = "generic_device_class"
 DISC_GENRE = "genre"
 DISC_INDEX = "index"
 DISC_INSTANCE = "instance"
-DISC_LABEL = "label"
 DISC_NODE_ID = "node_id"
 DISC_OPTIONAL = "optional"
 DISC_PRIMARY = "primary"
-DISC_READONLY = "readonly"
+DISC_SCHEMAS = "schemas"
 DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
-DISC_WRITEONLY = "writeonly"
 
-METER_RESET_INDEX = 33
+# noqa
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49
+# See also:
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L278
+INDEX_ALARM_TYPE = 0
+INDEX_ALARM_LEVEL = 1
+INDEX_ALARM_ACCESS_CONTROL = 9
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/DoorLock.cpp#L77
+INDEX_DOOR_LOCK_LOCK = 0
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L114
+# See also:
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L279
+INDEX_METER_POWER = 8
+INDEX_METER_RESET = 33
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SensorMultilevel.cpp#L50
+INDEX_SENSOR_MULTILEVEL_TEMPERATURE = 1
+INDEX_SENSOR_MULTILEVEL_POWER = 4
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Color.cpp#L109
+INDEX_SWITCH_COLOR_COLOR = 0
+INDEX_SWITCH_COLOR_CHANNELS = 2
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SwitchMultilevel.cpp#L54
+INDEX_SWITCH_MULTILEVEL_LEVEL = 0
+INDEX_SWITCH_MULTILEVEL_BRIGHT = 1
+INDEX_SWITCH_MULTILEVEL_DIM = 2
+INDEX_SWITCH_MULTILEVEL_DURATION = 5

@@ -215,8 +215,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1])
             return master_state if master_state else STATE_OFF
-        else:
-            return None
+
+        return None
 
     @property
     def name(self):

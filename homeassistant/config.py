@@ -1,6 +1,8 @@
 """Module to help with parsing and generating configuration files."""
 import asyncio
 from collections import OrderedDict
+# pylint: disable=no-name-in-module
+from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
 import re
@@ -16,7 +18,8 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB)
+    __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
+    CONF_WHITELIST_EXTERNAL_DIRS)
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -37,8 +40,8 @@ CONFIG_DIR_NAME = '.homeassistant'
 DATA_CUSTOMIZE = 'hass_customize'
 
 FILE_MIGRATION = [
-    ["ios.conf", ".ios.conf"],
-    ]
+    ['ios.conf', '.ios.conf'],
+]
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -68,7 +71,7 @@ config:
 http:
   # Uncomment this to add a password (recommended!)
   # api_password: PASSWORD
-  # Uncomment this if you are using SSL or running in Docker etc
+  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
   # base_url: example.duckdns.org:8123
 
 # Checks for available updates
@@ -77,6 +80,8 @@ http:
 # For more information, please see:
 # https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
 updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
 
 # Discover some devices automatically
 discovery:
@@ -84,7 +89,7 @@ discovery:
 # Allows you to issue voice commands from the frontend in enabled browsers
 conversation:
 
-# Enables support for tracking state changes over time.
+# Enables support for tracking state changes over time
 history:
 
 # View all events in a logbook
@@ -93,13 +98,13 @@ logbook:
 # Track the sun
 sun:
 
-# Weather Prediction
+# Weather prediction
 sensor:
-  platform: yr
+  - platform: yr
 
 # Text to speech
 tts:
-  platform: google
+  - platform: google
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -128,22 +133,25 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
+    vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
+        # pylint: disable=no-value-for-parameter
+        vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
 
 def get_default_config_dir() -> str:
-    """Put together the default configuration directory based on OS."""
+    """Put together the default configuration directory based on the OS."""
     data_dir = os.getenv('APPDATA') if os.name == "nt" \
         else os.path.expanduser('~')
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
 def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
-    """Ensure a config file exists in given configuration directory.
+    """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
-    Return path to the config file.
+    Return path to the configuration file.
     """
     config_path = find_config_file(config_dir)
 
@@ -187,8 +195,8 @@ def create_default_config(config_dir, detect_location=True):
             info[attr] = getattr(location_info, prop) or default
 
         if location_info.latitude and location_info.longitude:
-            info[CONF_ELEVATION] = loc_util.elevation(location_info.latitude,
-                                                      location_info.longitude)
+            info[CONF_ELEVATION] = loc_util.elevation(
+                location_info.latitude, location_info.longitude)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -217,16 +225,16 @@ def create_default_config(config_dir, detect_location=True):
         return config_path
 
     except IOError:
-        print('Unable to create default configuration file', config_path)
+        print("Unable to create default configuration file", config_path)
         return None
 
 
 @asyncio.coroutine
 def async_hass_config_yaml(hass):
-    """Load YAML from hass config File.
+    """Load YAML from a Home Assistant configuration file.
 
-    This function allow component inside asyncio loop to reload his config by
-    self.
+    This function allow a component inside the asyncio loop to reload its
+    configuration by itself.
 
     This method is a coroutine.
     """
@@ -261,7 +269,7 @@ def load_yaml_config_file(config_path):
             getattr(err, 'filename', err)))
 
     if not isinstance(conf_dict, dict):
-        msg = 'The configuration file {} does not contain a dictionary'.format(
+        msg = "The configuration file {} does not contain a dictionary".format(
             os.path.basename(config_path))
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
@@ -270,7 +278,7 @@ def load_yaml_config_file(config_path):
 
 
 def process_ha_config_upgrade(hass):
-    """Upgrade config if necessary.
+    """Upgrade configuration if necessary.
 
     This method needs to run in an executor.
     """
@@ -286,30 +294,32 @@ def process_ha_config_upgrade(hass):
     if conf_version == __version__:
         return
 
-    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
-                 __version__)
+    _LOGGER.info("Upgrading configuration directory from %s to %s",
+                 conf_version, __version__)
 
-    lib_path = hass.config.path('deps')
-    if os.path.isdir(lib_path):
-        shutil.rmtree(lib_path)
+    if LooseVersion(conf_version) < LooseVersion('0.50'):
+        # 0.50 introduced persistent deps dir.
+        lib_path = hass.config.path('deps')
+        if os.path.isdir(lib_path):
+            shutil.rmtree(lib_path)
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
 
-    _LOGGER.info('Migrating old system config files to new locations')
+    _LOGGER.info("Migrating old system configuration files to new locations")
     for oldf, newf in FILE_MIGRATION:
         if os.path.isfile(hass.config.path(oldf)):
-            _LOGGER.info('Migrating %s to %s', oldf, newf)
+            _LOGGER.info("Migrating %s to %s", oldf, newf)
             os.rename(hass.config.path(oldf), hass.config.path(newf))
 
 
 @callback
 def async_log_exception(ex, domain, config, hass):
-    """Generate log exception for config validation.
+    """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
-    message = 'Invalid config for [{}]: '.format(domain)
+    message = "Invalid config for [{}]: ".format(domain)
     if hass is not None:
         async_notify_setup_error(hass, domain, True)
 
@@ -334,7 +344,7 @@ def async_log_exception(ex, domain, config, hass):
 
 @asyncio.coroutine
 def async_process_ha_core_config(hass, config):
-    """Process the [homeassistant] section from the config.
+    """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
     """
@@ -352,7 +362,7 @@ def async_process_ha_core_config(hass, config):
             hac.time_zone = time_zone
             date_util.set_default_time_zone(time_zone)
         else:
-            _LOGGER.error('Received invalid time zone %s', time_zone_str)
+            _LOGGER.error("Received invalid time zone %s", time_zone_str)
 
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
@@ -363,6 +373,12 @@ def async_process_ha_core_config(hass, config):
 
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
+
+    # Init whitelist external dir
+    hac.whitelist_external_dirs = set((hass.config.path('www'),))
+    if CONF_WHITELIST_EXTERNAL_DIRS in config:
+        hac.whitelist_external_dirs.update(
+            set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
@@ -378,7 +394,7 @@ def async_process_ha_core_config(hass, config):
         try:
             pkg_cust = CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
         except vol.Invalid:
-            _LOGGER.warning('Package %s contains invalid customize', name)
+            _LOGGER.warning("Package %s contains invalid customize", name)
             continue
 
         cust_exact.update(pkg_cust[CONF_CUSTOMIZE])
@@ -399,9 +415,9 @@ def async_process_ha_core_config(hass, config):
             hac.units = METRIC_SYSTEM
         else:
             hac.units = IMPERIAL_SYSTEM
-        _LOGGER.warning("Found deprecated temperature unit in core config, "
-                        "expected unit system. Replace '%s: %s' with "
-                        "'%s: %s'", CONF_TEMPERATURE_UNIT, unit,
+        _LOGGER.warning("Found deprecated temperature unit in core "
+                        "configuration expected unit system. Replace '%s: %s' "
+                        "with '%s: %s'", CONF_TEMPERATURE_UNIT, unit,
                         CONF_UNIT_SYSTEM, hac.units.name)
 
     # Shortcut if no auto-detection necessary
@@ -418,7 +434,7 @@ def async_process_ha_core_config(hass, config):
             loc_util.detect_location_info)
 
         if info is None:
-            _LOGGER.error('Could not detect location information')
+            _LOGGER.error("Could not detect location information")
             return
 
         if hac.latitude is None and hac.longitude is None:
@@ -447,8 +463,8 @@ def async_process_ha_core_config(hass, config):
 
     if discovered:
         _LOGGER.warning(
-            'Incomplete core config. Auto detected %s',
-            ', '.join('{}: {}'.format(key, val) for key, val in discovered))
+            "Incomplete core configuration. Auto detected %s",
+            ", ".join('{}: {}'.format(key, val) for key, val in discovered))
 
 
 def _log_pkg_error(package, component, config, message):
@@ -479,7 +495,7 @@ def _identify_config_schema(module):
 
 
 def merge_packages_config(config, packages):
-    """Merge packages into the top-level config. Mutate config."""
+    """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
@@ -533,7 +549,7 @@ def merge_packages_config(config, packages):
             if comp_name in config:
                 _log_pkg_error(
                     pack_name, comp_name, config, "may occur only once"
-                    " and it already exist in your main config")
+                    " and it already exist in your main configuration")
                 continue
             config[comp_name] = comp_conf
 
@@ -542,7 +558,7 @@ def merge_packages_config(config, packages):
 
 @callback
 def async_process_component_config(hass, config, domain):
-    """Check component config and return processed config.
+    """Check component configuration and return processed configuration.
 
     Raise a vol.Invalid exception on error.
 
@@ -603,7 +619,7 @@ def async_process_component_config(hass, config, domain):
 
 @asyncio.coroutine
 def async_check_ha_config_file(hass):
-    """Check if HA config file valid.
+    """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """

@@ -179,7 +179,7 @@ class HistoryStatsSensor(Entity):
         end = dt_util.as_utc(end)
         p_start = dt_util.as_utc(p_start)
         p_end = dt_util.as_utc(p_end)
-        now = dt_util.as_utc(datetime.datetime.now())
+        now = datetime.datetime.now()
 
         # Compute integer timestamps
         start_timestamp = math.floor(dt_util.as_timestamp(start))
@@ -296,8 +296,7 @@ class HistoryStatsHelper:
             return '%dd %dh %dm' % (days, hours, minutes)
         elif hours > 0:
             return '%dh %dm' % (hours, minutes)
-        else:
-            return '%dm' % minutes
+        return '%dm' % minutes
 
     @staticmethod
     def pretty_ratio(value, period):

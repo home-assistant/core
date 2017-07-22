@@ -92,8 +92,7 @@ class ThermostatDevice(ClimateDevice):
         """Return current operation i.e. heat, cool, idle."""
         if self._state:
             return STATE_HEAT
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     @property
     def current_temperature(self):

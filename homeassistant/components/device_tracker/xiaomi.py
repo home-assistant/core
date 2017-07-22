@@ -101,10 +101,10 @@ class XiaomiDeviceScanner(DeviceScanner):
         result = _retrieve_list(self.host, self.token)
         if result:
             return result
-        else:
-            _LOGGER.info("Refreshing token and retrying device list refresh")
-            self.token = _get_token(self.host, self.username, self.password)
-            return _retrieve_list(self.host, self.token)
+
+        _LOGGER.info("Refreshing token and retrying device list refresh")
+        self.token = _get_token(self.host, self.username, self.password)
+        return _retrieve_list(self.host, self.token)
 
     def _store_result(self, result):
         """Extract and store the device list in self.last_results."""

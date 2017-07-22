@@ -19,6 +19,8 @@ from .const import (
     KEY_FAILED_LOGIN_ATTEMPTS)
 from .util import get_real_ip
 
+_LOGGER = logging.getLogger(__name__)
+
 NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
@@ -28,8 +30,6 @@ ATTR_BANNED_AT = "banned_at"
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
     vol.Optional('banned_at'): vol.Any(None, cv.datetime)
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine

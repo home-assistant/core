@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.31']
+REQUIREMENTS = ['pyvera==0.2.35']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def setup(hass, base_config):
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
+        _LOGGER.info("Shutting down subscriptions")
         VERA_CONTROLLER.stop()
 
     config = base_config.get(DOMAIN)
@@ -100,7 +100,6 @@ def setup(hass, base_config):
     return True
 
 
-# pylint: disable=too-many-return-statements
 def map_vera_device(vera_device, remap):
     """Map vera classes to Home Assistant types."""
     import pyvera as veraApi
@@ -123,8 +122,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
-        else:
-            return 'switch'
+        return 'switch'
     return None
 
 
@@ -165,7 +163,7 @@ class VeraDevice(Entity):
         attr = {}
 
         if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level
 
         if self.vera_device.is_armable:
             armed = self.vera_device.is_armed
