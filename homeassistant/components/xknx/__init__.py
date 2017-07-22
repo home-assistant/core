@@ -88,14 +88,14 @@ class XKNXModule(object):
     @asyncio.coroutine
     def start(self):
 
-        yield from self.xknx.async_start(
+        yield from self.xknx.start(
             state_updater=True)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.initialized = True
 
     @asyncio.coroutine
     def stop(self, event):
-        yield from self.xknx.async_stop()
+        yield from self.xknx.stop()
 
 
     def config_file(self):
