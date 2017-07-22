@@ -21,7 +21,7 @@ astral==1.4
 PyISY==1.0.7
 
 # homeassistant.components.notify.html5
-PyJWT==1.5.0
+PyJWT==1.5.2
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
@@ -58,7 +58,7 @@ aiolifx_effects==0.1.1
 aiopvapi==1.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.1.0
+alarmdecoder==0.12.3
 
 # homeassistant.components.amcrest
 amcrest==1.2.0
@@ -92,7 +92,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.2
+bellows==0.3.4
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -276,8 +276,11 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
+# homeassistant.components.xiaomi
+https://github.com/Danielhiversen/PyXiaomiGateway/archive/aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#PyXiaomiGateway==0.2.0
+
 # homeassistant.components.sensor.dht
-# https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.0
+# https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
@@ -755,7 +758,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.2.4
+python-wink==1.3.1
 
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
@@ -773,7 +776,7 @@ pyunifi==2.13
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.34
+pyvera==0.2.35
 
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.2
@@ -782,7 +785,7 @@ pyvizio==0.0.2
 pyvlx==0.1.3
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.5
+pywebpush==1.0.6
 
 # homeassistant.components.wemo
 pywemo==0.4.19
@@ -840,7 +843,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.2
+simplisafe-python==1.0.3
 
 # homeassistant.components.notify.slack
 slacker==0.9.50

@@ -138,6 +138,22 @@ hass.async_stop()
 
 
 @asyncio.coroutine
+def test_using_complex_structures(hass, caplog):
+    """Test that dicts and lists work."""
+    caplog.set_level(logging.INFO)
+    source = """
+mydict = {"a": 1, "b": 2}
+mylist = [1, 2, 3, 4]
+logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
+    """
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert "Logging from inside script: 1 3" in caplog.text
+
+
+@asyncio.coroutine
 def test_accessing_forbidden_methods(hass, caplog):
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
