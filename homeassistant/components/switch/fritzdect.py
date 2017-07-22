@@ -100,7 +100,7 @@ class FritzDectSwitch(SwitchDevice):
         if self.data.has_temperature and \
            self.data.temperature != STATE_UNKNOWN:
             attrs[ATTR_TEMPERATURE] = "{}".format(
-              self.units.temperature(self.data.temperature, TEMP_CELSIUS))
+                self.units.temperature(self.data.temperature, TEMP_CELSIUS))
             attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
                 self.units.temperature_unit)
         return attrs
