@@ -83,13 +83,13 @@ class MqttSwitch(SwitchDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT state events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def state_message_received(topic, payload, qos):
-            """Handle new MQTT messages."""
+            """Handle new MQTT state messages."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -100,13 +100,9 @@ class MqttSwitch(SwitchDevice):
 
             self.hass.async_add_job(self.async_update_ha_state())
 
-        """Subscribe to MQTT availability events.
-
-        This method is a coroutine.
-        """
         @callback
         def availability_message_received(topic, payload, qos):
-            """Handle new MQTT messages."""
+            """Handle new MQTT availability messages."""
             if payload == self._payload_on:
                 self._available = True
             elif payload == self._payload_off:
