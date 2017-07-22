@@ -1,0 +1,8 @@
+process:
+  description: Process a given text.
+
+  fields:
+    text:
+      description: Text or command to process.
+      example: 'turn on the lights'
+
