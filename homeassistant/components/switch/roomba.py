@@ -46,7 +46,7 @@ class RoombaSwitch(ToggleEntity):
         roomba_data = self.roomba_hub._data
         roomba_name = roomba_data['state'].get('name', 'Roomba')
         if self.switch_type == SWITCH_TYPE_CLEAN:
-            self._state = roomba_data['status'] == 'clean'
+            self._state = roomba_data['status'] == 'run'
             _LOGGER.debug('Set roomba mission switch to %s', self._state)
             self._switch_name = '{} Mission'.format(roomba_name)
         _LOGGER.debug('Switch state: %s', self._state)
