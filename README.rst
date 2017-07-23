@@ -1,4 +1,4 @@
-Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant| |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs|
+Home Assistant |Build Status| |Coverage Status| | Join the chat `at discord <https://discordapp.com/channels/330944238910963714/330944238910963714>`_ | Join the dev chat `at discord <https://discordapp.com/channels/330944238910963714/330990195199442944>`_ |
 ==============================================================================================================================================================================================
 
 Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
