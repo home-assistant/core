@@ -74,7 +74,7 @@ class RoombaSwitch(ToggleEntity):
     def is_on(self):
         """Return true if switch is on."""
         # TODO
-        return self._clean_state == STATE_ON
+        return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
