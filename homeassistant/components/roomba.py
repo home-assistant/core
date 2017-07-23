@@ -40,6 +40,10 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_CLEAN = 'clean'
+SERVICE_DOCK = 'dock'
+SERVICE_PAUSE = 'pause'
+
 
 def setup(hass, config):
     """Set up the Roomba component."""
@@ -58,10 +62,26 @@ def setup(hass, config):
     if not roomba_hub.login():
         _LOGGER.debug('Failed to communicate with Roomba')
         return False
+
+    # Request data update
     roomba_hub.update()
-    for component in ['sensor', 'switch']:
+
+    # Setup sensors and switches
+    for component in ['sensor']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
+    def handle_clean(call):
+        roomba.send_command('clean')
+
+    def handle_dock(call):
+        roomba.send_command('dock')
+
+    def handle_pause(call):
+        roomba.send_command('pause')
+
+    hass.services.register(DOMAIN, SERVICE_CLEAN, handle_clean)
+    hass.services.register(DOMAIN, SERVICE_DOCK, handle_dock)
+    hass.services.register(DOMAIN, SERVICE_PAUSE, handle_pause)
     return True
 
 
@@ -125,4 +145,6 @@ class RoombaHub(object):
         from time import sleep
         sleep(3)
         self.data = self._roomba.master_state['state'].get('reported', None)
+        from pprint import pformat
+        _LOGGER.debug('Roomba data: %s', pformat(self.data))
         # self._roomba.disconnect()
