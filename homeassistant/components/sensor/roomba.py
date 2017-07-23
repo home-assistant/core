@@ -62,25 +62,23 @@ class RoombaSensor(Entity):
 
     def __set_sensor_state_from_hub(self):
         roomba_data = self.roomba_hub.data
-        roomba_name = roomba_data['state'].get('name', 'Roomba')
+        roomba_name = roomba_data.get('name', 'Roomba')
         if self.sensor_type == SENSOR_TYPE_BIN:
-            bin_data = roomba_data['state'].get('bin', {})
+            bin_data = roomba_data.get('bin', {})
             self._state = bin_data.get('full', None)
             self._attrs = {ATTR_BIN_PRESENT: bin_data.get('present', None)}
             if roomba_name:
                 self._sensor_name = '{} Bin'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_BATTERY:
-            clean_mission_status = \
-                roomba_data['state'].get('cleanMissionStatus', {})
+            clean_mission_status = roomba_data.get('cleanMissionStatus', {})
             phase_data = clean_mission_status.get('phase', None)
             charging = phase_data == 'charge' if phase_data else None
-            self._state = \
-                roomba_data['state'].get('batPct', None)
+            self._state = roomba_data.get('batPct', None)
             self._attrs = {ATTR_BATTERY_CHARGING: charging}
             if roomba_name:
                 self._sensor_name = '{} Battery'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_POSITION:
-            position_data = roomba_data['state'].get('pose', None)
+            position_data = roomba_data.get('pose', None)
             pos_x = position_data.get('point', {}).get('x', None)
             pos_y = position_data.get('point', {}).get('y', None)
             theta = position_data.get('theta', None)
@@ -96,7 +94,8 @@ class RoombaSensor(Entity):
             if roomba_name:
                 self._sensor_name = '{} Position'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_STATUS:
-            self._state = roomba_data['status']
+            clean_mission_status = roomba_data.get('cleanMissionStatus', {})
+            self._state = clean_mission_status.get('phase', None)
             if roomba_name:
                 self._sensor_name = '{} Status'.format(roomba_name)
         _LOGGER.debug('%s sensor state: %s', self.sensor_type, self._state)

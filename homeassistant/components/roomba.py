@@ -124,8 +124,5 @@ class RoombaHub(object):
         # self.wait_for_update()
         from time import sleep
         sleep(3)
-        self.data = {
-            'state': self._roomba.master_state['state'].get('reported', None),
-            'status': self._roomba.cleanMissionStatus_phase
-        }
+        self.data = self._roomba.master_state['state'].get('reported', None)
         # self._roomba.disconnect()
