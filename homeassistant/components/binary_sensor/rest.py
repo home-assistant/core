@@ -107,6 +107,8 @@ class RestBinarySensor(BinarySensorDevice):
         if self.rest.data is None:
             return False
 
+        response = self.rest.data
+
         if self._value_template is not None:
             response = self._value_template.\
                 async_render_with_possible_json_value(self.rest.data, False)
