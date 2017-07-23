@@ -82,7 +82,7 @@ class RoombaSensor(Entity):
             pos_x = position_data.get('point', {}).get('x', None)
             pos_y = position_data.get('point', {}).get('y', None)
             theta = position_data.get('theta', None)
-            if pos_x and pos_y and theta:
+            if all(item is not None for item in [pos_x, pos_y, theta]):
                 self._state = '({}, {}, {})'.format(pos_x, pos_y, theta)
             else:
                 self._state = None
