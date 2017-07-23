@@ -218,7 +218,7 @@ def setup(hass, config):
                                            client_id, client_secret)
     elif None not in [email, password]:
         _LOGGER.info("Using web form authentication")
-        pywink.disable_local_contro()
+        pywink.disable_local_control()
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
         _get_wink_token_from_web()
