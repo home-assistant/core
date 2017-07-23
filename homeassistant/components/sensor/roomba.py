@@ -12,12 +12,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['roomba']
 
+SENSOR_TYPE_BIN = 'bin'
 SENSOR_TYPE_BATTERY = 'battery'
 SENSOR_TYPE_POSITION = 'position'
 SENSOR_TYPE_STATUS = 'status'
 
 SENSOR_TYPES = {
     SENSOR_TYPE_BATTERY: ['Battery'],
+    SENSOR_TYPE_BIN: ['Bin'],
     SENSOR_TYPE_POSITION: ['Position'],
     SENSOR_TYPE_STATUS: ['Status']
 }
@@ -41,7 +43,9 @@ class RoombaSensor(Entity):
         self.roomba_hub = roomba_hub
         self.sensor_type = sensor_type
         self._state = None
-        if self.sensor_type == SENSOR_TYPE_BATTERY:
+        if self.sensor_type == SENSOR_TYPE_BIN:
+            self._sensor_name = 'Roomba Bin'
+        elif self.sensor_type == SENSOR_TYPE_BATTERY:
             self._sensor_name = 'Roomba Battery'
         elif self.sensor_type == SENSOR_TYPE_POSITION:
             self._sensor_name = 'Roomba Position'
@@ -52,20 +56,31 @@ class RoombaSensor(Entity):
     def __set_sensor_state_from_hub(self):
         roomba_data = self.roomba_hub.data
         roomba_name = roomba_data['state'].get('name', 'Roomba')
-        if self.sensor_type == SENSOR_TYPE_BATTERY:
+        if self.sensor_type == SENSOR_TYPE_BIN:
+            bin_data = roomba_data['state'].get('bin', [])
+            self._state = bin_data.get('full', None)
+            if roomba_name:
+                self._sensor_name = '{} Bin'.format(roomba_name)
+        elif self.sensor_type == SENSOR_TYPE_BATTERY:
             self._state = \
                 roomba_data['state'].get('batPct', None)
-            self._sensor_name = '{} Battery'.format(roomba_name)
+            if roomba_name:
+                self._sensor_name = '{} Battery'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_POSITION:
             position_data = roomba_data['state'].get('pose', None)
             pos_x = position_data.get('point', []).get('x', None)
             pos_y = position_data.get('point', []).get('y', None)
             theta = position_data.get('theta', None)
-            self._state = '({},{},{})'.format(pos_x, pos_y, theta)
-            self._sensor_name = '{} Position'.format(roomba_name)
+            if pos_x and pos_y and theta:
+                self._state = '({},{},{})'.format(pos_x, pos_y, theta)
+            else:
+                self._state = None
+            if roomba_name:
+                self._sensor_name = '{} Position'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_STATUS:
             self._state = roomba_data['status']
-            self._sensor_name = '{} Status'.format(roomba_name)
+            if roomba_name:
+                self._sensor_name = '{} Status'.format(roomba_name)
         _LOGGER.debug('Sensor state: %s', self._state)
 
     def update(self):
@@ -99,4 +114,6 @@ class RoombaSensor(Entity):
     def device_state_attributes(self):
         """Return the device specific attributes."""
         data = {}
+        # TODO Add x, y and theta attr for position sensor
+        # TODO Add bin present attr for bin sensor
         return data
