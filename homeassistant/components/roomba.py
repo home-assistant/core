@@ -16,7 +16,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/pschmitt/Roomba980-Python/archive/1.2.1.zip'
+REQUIREMENTS = ['https://github.com/pschmitt/Roomba980-Python/archive/'
+                '1.2.1.zip'
                 '#Roomba980-Python==1.2.1']
 
 DOMAIN = 'roomba'
@@ -27,7 +28,7 @@ CONF_CERT = 'certificate'
 CONF_CONTINUOUS = 'continuous'
 
 DEFAULT_CERT = '/etc/ssl/certs/ca-certificates.crt'
-DEFAULT_CONTINUOUS = False
+DEFAULT_CONTINUOUS = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -78,7 +79,7 @@ class RoombaHub(object):
         self.config = config
         self._roomba = roomba
         self._hass = hass
-        self._data = None
+        self.data = None
 
     def _wait_for_update(self, timeout=10):
         from time import sleep
@@ -91,7 +92,6 @@ class RoombaHub(object):
             if tries > timeout:
                 raise RoombaTimeoutError(
                     'No data received after {} seconds'.format(timeout))
-                break
             tries = tries + 1
         _LOGGER.debug('Communication with roomba succeeded')
 
@@ -124,7 +124,7 @@ class RoombaHub(object):
         # self.wait_for_update()
         from time import sleep
         sleep(3)
-        self._data = {
+        self.data = {
             'state': self._roomba.master_state['state'].get('reported', None),
             'status': self._roomba.cleanMissionStatus_phase
         }

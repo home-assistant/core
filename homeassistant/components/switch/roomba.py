@@ -43,7 +43,7 @@ class RoombaSwitch(ToggleEntity):
         self.__set_switch_state_from_hub()
 
     def __set_switch_state_from_hub(self):
-        roomba_data = self.roomba_hub._data
+        roomba_data = self.roomba_hub.data
         roomba_name = roomba_data['state'].get('name', 'Roomba')
         if self.switch_type == SWITCH_TYPE_CLEAN:
             if roomba_data['status'] == 'run':
