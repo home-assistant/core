@@ -101,11 +101,11 @@ class RoombaSensor(Entity):
             self._state = roomba_data['status']
             if roomba_name:
                 self._sensor_name = '{} Status'.format(roomba_name)
-        _LOGGER.debug('Sensor state: %s', self._state)
+        _LOGGER.debug('%s sensor state: %s', self.sensor_type, self._state)
 
     def update(self):
         """Update the properties of sensor."""
-        _LOGGER.debug('Update of roomba sensor')
+        _LOGGER.debug('Update of Roomba %s sensor', self.sensor_type)
         self.roomba_hub.update()
         self.__set_sensor_state_from_hub()
 
