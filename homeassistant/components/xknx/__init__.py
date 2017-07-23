@@ -35,7 +35,7 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-#REQUIREMENTS = ['xknx==0.5.0']
+REQUIREMENTS = ['xknx==0.6.0']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
