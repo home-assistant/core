@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP)
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (TEMP_CELSIUS, CONF_NAME)
 
 REQUIREMENTS = ["yahooweather==0.8"]
 
@@ -20,6 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
+
+ATTR_FORECAST_DATE = 'datetime'
+ATTR_FORECAST_TEMP = 'temperature'
 
 CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
@@ -33,17 +36,19 @@ CONDITION_CLASSES = {
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],
     'lightning': [37],
-    'lightning-rainy': [38, 39],
+    'lightning-rainy': [38, 39, 47],
     'partlycloudy': [44],
     'pouring': [40, 45],
     'rainy': [9, 11, 12],
     'snowy': [8, 13, 14, 15, 16, 41, 42, 43],
-    'snowy-rainy': [5, 6, 7, 10, 46, 47],
-    'sunny': [32],
+    'snowy-rainy': [5, 6, 7, 10, 46],
+    'sunny': [32, 33, 34],
     'windy': [24],
     'windy-variant': [],
     'exceptional': [0, 1, 2, 3, 4, 25, 36],
 }
+
+CONDITION_CLASSES_LIST = [str(x) for x in range(0, 50)]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
@@ -52,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
 })
 
+DEGREE_TO_TEXT = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather platform."""
@@ -82,8 +88,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       len(yahoo_api.yahoo.Forecast))
         return False
 
+    for cond, condlst in CONDITION_CLASSES.items():
+        for condi in condlst:
+            CONDITION_CLASSES_LIST[condi] = cond
+
     add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
 
+def _windtostring(degree):
+    return DEGREE_TO_TEXT[int((int(degree) + 22.5) / 45)]
 
 class YahooWeatherWeather(WeatherEntity):
     """Representation of Yahoo! weather data."""
@@ -102,11 +114,7 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        try:
-            return [k for k, v in CONDITION_CLASSES.items() if
-                    int(self._data.yahoo.Now['code']) in v][0]
-        except IndexError:
-            return STATE_UNKNOWN
+        return CONDITION_CLASSES_LIST[int(self._data.yahoo.Now['code'])]
 
     @property
     def temperature(self):
@@ -139,6 +147,11 @@ class YahooWeatherWeather(WeatherEntity):
         return self._data.yahoo.Wind['speed']
 
     @property
+    def wind_bearing(self):
+        """Return the wind speed."""
+        return self._data.yahoo.Wind['direction']
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -146,19 +159,9 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        try:
-            forecast_condition = \
-                [k for k, v in CONDITION_CLASSES.items() if
-                 int(self._data.yahoo.Forecast[self._forecast]['code'])
-                 in v][0]
-        except IndexError:
-            return STATE_UNKNOWN
-
-        return [{
-            ATTR_FORECAST_CONDITION: forecast_condition,
-            ATTR_FORECAST_TEMP:
-                self._data.yahoo.Forecast[self._forecast]['high'],
-        }]
+        return [{'datetime':v['date'], ATTR_FORECAST_TEMP:int(v['high']), 'templow': int(v['low']),
+                 'condition': CONDITION_CLASSES_LIST[int(v['code'])]}
+                for v in self._data.yahoo.Forecast]
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
