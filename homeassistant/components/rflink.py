@@ -27,9 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
+CONF_ALIASES = 'aliases'
 CONF_ALIASSES = 'aliasses'
+CONF_GROUP_ALIASES = 'group_aliases'
 CONF_GROUP_ALIASSES = 'group_aliasses'
 CONF_GROUP = 'group'
+CONF_NOGROUP_ALIASES = 'nogroup_aliases'
 CONF_NOGROUP_ALIASSES = 'nogroup_aliasses'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
@@ -220,8 +223,8 @@ class RflinkDevice(Entity):
     platform = None
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=None, group=True,
-                 group_aliasses=None, nogroup_aliasses=None, fire_event=False,
+    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
+                 group_aliases=None, nogroup_aliases=None, fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         self.hass = hass
@@ -336,13 +339,14 @@ class RflinkCommand(RflinkDevice):
 
         # Cover options for RTS
         elif command == 'roll_down':
-            cmd = 'DOWN'
+            cmd = 'down'
 
         elif command == 'roll_up':
-            cmd = 'UP'
+            cmd = 'up'
 
         elif command == 'roll_stop':
-            cmd = 'STOP'    
+            cmd = 'stop'
+            self._state = True
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
@@ -388,7 +392,6 @@ class RflinkCommand(RflinkDevice):
             self._repetition_task = self.hass.async_add_job(
                 self._async_send_command(cmd, repetitions - 1))
 
-
 class SwitchableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
@@ -409,15 +412,68 @@ class SwitchableRflinkDevice(RflinkCommand):
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
-    
-    def async_roll_down(self, **kwargs):
-        """Roll the device down"""
+
+
+class CoverableRflinkDevice(RflinkCommand):
+    """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
+
+    @property
+    def should_poll(self):
+        """No polling available in RFXtrx cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
+    def async_close_cover(self, **kwargs):
+        """Turn the device on."""
+        return self._async_handle_command("turn_on")
+
+    def async_open_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("turn_off")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("stop_roll")
+
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device up."""
+        return self._async_handle_command("roll_up")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device up."""
         return self._async_handle_command("roll_down")
 
-    def async_roll_up(self, **kwargs):
-        """Roll the device up"""
-        return self._async_handle_command("roll_up")
+DEPRECATED_CONFIG_OPTIONS = [
+    CONF_ALIASSES,
+    CONF_GROUP_ALIASSES,
+    CONF_NOGROUP_ALIASSES]
+REPLACEMENT_CONFIG_OPTIONS = [
+    CONF_ALIASES,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES]
 
-    def async_roll_stop(self, **kwargs):
-        """Stop the device"""
-        return self._async_handle_command("roll_up")
+
+def remove_deprecated(config):
+    """Remove deprecated config options from device config."""
+    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
+        if deprecated_option in config:
+            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
+            # generate deprecation warning
+            get_deprecated(config, replacement_option, deprecated_option)
+            # remove old config value replacing new one
+            config[replacement_option] = config.pop(deprecated_option)
