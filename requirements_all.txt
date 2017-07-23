@@ -49,7 +49,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.5.2
+aiolifx==0.5.4
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.1
