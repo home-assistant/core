@@ -24,6 +24,12 @@ SENSOR_TYPES = {
     SENSOR_TYPE_STATUS: ['Status']
 }
 
+ATTR_BIN_PRESENT = 'bin_present'
+ATTR_BATTERY_CHARGING = 'charging'
+ATTR_POSITION_X = 'pos_x'
+ATTR_POSITION_Y = 'pos_y'
+ATTR_POSITION_THETA = 'pos_theta'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Roomba sensor platform."""
@@ -43,6 +49,7 @@ class RoombaSensor(Entity):
         self.roomba_hub = roomba_hub
         self.sensor_type = sensor_type
         self._state = None
+        self._attrs = None
         if self.sensor_type == SENSOR_TYPE_BIN:
             self._sensor_name = 'Roomba Bin'
         elif self.sensor_type == SENSOR_TYPE_BATTERY:
@@ -57,24 +64,37 @@ class RoombaSensor(Entity):
         roomba_data = self.roomba_hub.data
         roomba_name = roomba_data['state'].get('name', 'Roomba')
         if self.sensor_type == SENSOR_TYPE_BIN:
-            bin_data = roomba_data['state'].get('bin', [])
+            bin_data = roomba_data['state'].get('bin', {})
             self._state = bin_data.get('full', None)
+            self._attrs = {ATTR_BIN_PRESENT: bin_data.get('present', None)}
             if roomba_name:
                 self._sensor_name = '{} Bin'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_BATTERY:
+            clean_mission_status = \
+                roomba_data['state'].get('cleanMissionStatus', {})
+            phase_data = clean_mission_status.get('phase', None)
             self._state = \
                 roomba_data['state'].get('batPct', None)
+            self._attrs = {
+                ATTR_BATTERY_CHARGING: phase_data == 'charge' \
+                    if phase_data else None
+            }
             if roomba_name:
                 self._sensor_name = '{} Battery'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_POSITION:
             position_data = roomba_data['state'].get('pose', None)
-            pos_x = position_data.get('point', []).get('x', None)
-            pos_y = position_data.get('point', []).get('y', None)
+            pos_x = position_data.get('point', {}).get('x', None)
+            pos_y = position_data.get('point', {}).get('y', None)
             theta = position_data.get('theta', None)
             if pos_x and pos_y and theta:
                 self._state = '({},{},{})'.format(pos_x, pos_y, theta)
             else:
                 self._state = None
+            self._attrs = {
+                ATTR_POSITION_X: pos_x,
+                ATTR_POSITION_Y: pos_y,
+                ATTR_POSITION_THETA: theta
+            }
             if roomba_name:
                 self._sensor_name = '{} Position'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_STATUS:
@@ -113,7 +133,4 @@ class RoombaSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device specific attributes."""
-        data = {}
-        # TODO Add x, y and theta attr for position sensor
-        # TODO Add bin present attr for bin sensor
-        return data
+        return self._attrs
