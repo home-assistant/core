@@ -46,6 +46,7 @@ REQUIREMENTS = ['xknx==0.6.1']
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT): cv.port,
+    vol.Required(CONF_XKNX_LOCAL_IP): cv.string,
 })
 
 ROUTING_SCHEMA = vol.Schema({
@@ -133,12 +134,14 @@ class XKNXModule(object):
         from xknx.io import ConnectionConfig, ConnectionType, DEFAULT_MCAST_PORT
         gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_HOST)
         gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
+        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
             gateway_ip=gateway_ip,
-            gateway_port=gateway_port)
+            gateway_port=gateway_port,
+            local_ip=local_ip)
 
     def connection_config_auto(self):
         #pylint: disable=no-self-use
