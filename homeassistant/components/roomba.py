@@ -71,12 +71,15 @@ def setup(hass, config):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def handle_clean(call):
+        """Start cleaning cycle."""
         roomba.send_command('clean')
 
     def handle_dock(call):
+        """Return to base."""
         roomba.send_command('dock')
 
     def handle_pause(call):
+        """Pause cleaning cycle."""
         roomba.send_command('pause')
 
     hass.services.register(DOMAIN, SERVICE_CLEAN, handle_clean)
