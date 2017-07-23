@@ -84,6 +84,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class RflinkCover(CoverableRflinkDevice, CoverDevice):
-    """Representation of a Rflink cover."""
+     """Representation of a rflink cover."""
 
-    pass
+    @property
+    def should_poll(self):
+        """No polling available in rflink cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
+    def open_cover(self, **kwargs):
+        """Move the cover up."""
+        self._send_command("roll_up")
+
+    def close_cover(self, **kwargs):
+        """Move the cover down."""
+        self._send_command("roll_down")
+
+    def stop_cover(self, **kwargs):
+        """Stop the cover."""
+        self._send_command("stop_roll")
