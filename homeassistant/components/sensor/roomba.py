@@ -68,7 +68,7 @@ class RoombaSensor(Entity):
             self._state = bin_data.get('full', None)
             self._attrs = {ATTR_BIN_PRESENT: bin_data.get('present', None)}
             if roomba_name:
-                self._sensor_name = '{} Bin'.format(roomba_name)
+                self._sensor_name = '{} Bin Full'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_BATTERY:
             clean_mission_status = roomba_data.get('cleanMissionStatus', {})
             phase_data = clean_mission_status.get('phase', None)
@@ -105,6 +105,19 @@ class RoombaSensor(Entity):
         _LOGGER.debug('Update of Roomba %s sensor', self.sensor_type)
         self.roomba_hub.update()
         self.__set_sensor_state_from_hub()
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        if self.sensor_type == SENSOR_TYPE_BATTERY:
+            # TODO Return a variant of mdi:battery depending on actual battery
+            # level
+            return 'mdi:battery'
+        elif self.sensor_type == SENSOR_TYPE_BIN:
+            return 'mdi:delete' if self._state else 'mdi:delete-empty'
+        elif self.sensor_type == SENSOR_TYPE_POSITION:
+            return 'mdi:crosshairs-gps'
+        return 'mdi:roomba'
 
     @property
     def unit_of_measurement(self):
