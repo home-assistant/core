@@ -73,12 +73,10 @@ class RoombaSensor(Entity):
             clean_mission_status = \
                 roomba_data['state'].get('cleanMissionStatus', {})
             phase_data = clean_mission_status.get('phase', None)
+            charging = phase_data == 'charge' if phase_data else None
             self._state = \
                 roomba_data['state'].get('batPct', None)
-            self._attrs = {
-                ATTR_BATTERY_CHARGING: phase_data == 'charge' \
-                    if phase_data else None
-            }
+            self._attrs = {ATTR_BATTERY_CHARGING: charging}
             if roomba_name:
                 self._sensor_name = '{} Battery'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_POSITION:
