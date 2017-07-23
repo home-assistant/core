@@ -16,6 +16,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_component
@@ -59,6 +60,7 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def scan(hass, entity_id=None):
     """Force process a image."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None

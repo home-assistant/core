@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['decora==0.6']
+REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ def retry(method):
         """Try send command and retry on error."""
         # pylint: disable=import-error
         import decora
+        import bluepy
 
         initial = time.monotonic()
         while True:
@@ -46,7 +47,10 @@ def retry(method):
                 return None
             try:
                 return method(device, *args, **kwds)
-            except (decora.decoraException, AttributeError):
+            except (decora.decoraException, AttributeError,
+                    bluepy.btle.BTLEException):
+                _LOGGER.warning("Decora connect error for device %s. "
+                                "Reconnecting...", device.name)
                 # pylint: disable=protected-access
                 device._switch.connect()
     return wrapper_retry
@@ -119,7 +123,7 @@ class DecoraLight(Light):
     @retry
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        self._switch.set_brightness(brightness / 2.55)
+        self._switch.set_brightness(int(brightness / 2.55))
         self._brightness = brightness
 
     @retry

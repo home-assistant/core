@@ -10,6 +10,7 @@ call get_component('switch.your_platform'). In both cases the config directory
 is checked to see if it contains a user provided version. If not available it
 will check the built-in components and platforms.
 """
+import functools as ft
 import importlib
 import logging
 import os
@@ -168,6 +169,49 @@ def get_component(comp_name) -> Optional[ModuleType]:
     _LOGGER.error("Unable to find component %s", comp_name)
 
     return None
+
+
+class Components:
+    """Helper to load components."""
+
+    def __init__(self, hass):
+        """Initialize the Components class."""
+        self._hass = hass
+
+    def __getattr__(self, comp_name):
+        """Fetch a component."""
+        component = get_component(comp_name)
+        if component is None:
+            raise ImportError('Unable to load {}'.format(comp_name))
+        wrapped = ComponentWrapper(self._hass, component)
+        setattr(self, comp_name, wrapped)
+        return wrapped
+
+
+class ComponentWrapper:
+    """Class to wrap a component and auto fill in hass argument."""
+
+    def __init__(self, hass, component):
+        """Initialize the component wrapper."""
+        self._hass = hass
+        self._component = component
+
+    def __getattr__(self, attr):
+        """Fetch an attribute."""
+        value = getattr(self._component, attr)
+
+        if hasattr(value, '__bind_hass'):
+            value = ft.partial(value, self._hass)
+
+        setattr(self, attr, value)
+        return value
+
+
+def bind_hass(func):
+    """Decorator to indicate that first argument is hass."""
+    # pylint: disable=protected-access
+    func.__bind_hass = True
+    return func
 
 
 def load_order_component(comp_name: str) -> OrderedSet:

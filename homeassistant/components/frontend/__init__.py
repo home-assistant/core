@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
@@ -75,6 +76,7 @@ SERVICE_SET_THEME_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def register_built_in_panel(hass, component_name, sidebar_title=None,
                             sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
@@ -96,6 +98,7 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
                    sidebar_icon, url_path, url, config)
 
 
+@bind_hass
 def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
                    sidebar_icon=None, url_path=None, url=None, config=None):
     """Register a panel for the frontend.
