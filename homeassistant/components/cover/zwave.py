@@ -158,4 +158,3 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_GARAGE
-
