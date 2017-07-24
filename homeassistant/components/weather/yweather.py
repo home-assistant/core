@@ -63,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather platform."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
