@@ -25,7 +25,7 @@ CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
-CONF_BLACKLIST_DOMAINS = "blacklist_domains"
+CONF_TAGS_ATTRIBUTES = "tags_attributes"
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -54,6 +54,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -96,6 +98,7 @@ def setup(hass, config):
     blacklist_e = set(exclude.get(CONF_ENTITIES, []))
     blacklist_d = set(exclude.get(CONF_DOMAINS, []))
     tags = conf.get(CONF_TAGS)
+    tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
 
@@ -153,7 +156,9 @@ def setup(hass, config):
         ]
 
         for key, value in state.attributes.items():
-            if key != 'unit_of_measurement':
+            if key in tags_attributes:
+                json_body[0]['tags'][key] = value
+            elif key != 'unit_of_measurement':
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"
