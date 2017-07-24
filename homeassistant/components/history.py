@@ -124,7 +124,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_state_ids = session.query(
                 States.state_id.label('max_state_id')
             ).filter(
-                (States.created < utc_point_in_time)
+                (States.created < utc_point_in_time) &
+                (States.entity_id.in_(entity_ids))
             ).order_by(
                 States.created.desc())
 
