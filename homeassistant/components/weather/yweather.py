@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP)
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME)
 
 REQUIREMENTS = ["yahooweather==0.8"]
@@ -21,11 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-ATTR_FORECAST_DATE = 'datetime'
-ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TIME = 'datetime'
+ATTR_FORECAST_TEMP_LOW = 'templow'
 
-CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
+CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'Yweather'
 
@@ -94,8 +94,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
 
+
 def _windtostring(degree):
     return DEGREE_TO_TEXT[int((int(degree) + 22.5) / 45)]
+
 
 class YahooWeatherWeather(WeatherEntity):
     """Representation of Yahoo! weather data."""
@@ -159,8 +161,8 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{'datetime':v['date'], ATTR_FORECAST_TEMP:int(v['high']), 'templow': int(v['low']),
-                 'condition': CONDITION_CLASSES_LIST[int(v['code'])]}
+        return [{ATTR_FORECAST_TIME: v['date'], ATTR_FORECAST_TEMP:int(v['high']), ATTR_FORECAST_TEMP_LOW: int(v['low']),
+                 ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[int(v['code'])]}
                 for v in self._data.yahoo.Forecast[:self._forecast]]
 
     def update(self):
