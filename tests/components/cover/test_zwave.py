@@ -169,7 +169,6 @@ def test_garage_value_changed(hass, mock_openzwave):
                               node_config={})
 
     assert device.is_closed
-
     value.data = "Opened"
     value_changed(value)
 
