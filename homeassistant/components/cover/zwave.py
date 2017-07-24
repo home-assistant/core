@@ -28,7 +28,7 @@ ZWAVE_STATES = {
     "Closed": STATE_CLOSED,
     "Opening": STATE_OPENING,
     "Closing": STATE_CLOSING,
-	"Stopped": STATE_STOPPED,
+    "Stopped": STATE_STOPPED,
     "Unknown": STATE_UNKNOWN
 }
 
