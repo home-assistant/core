@@ -74,8 +74,7 @@ class ONVIFCamera(Camera):
             self._input = self._input.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(
                     config.get(CONF_USERNAME),
-                    config.get(CONF_PASSWORD))
-                , 1)
+                    config.get(CONF_PASSWORD)), 1)
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
 
