@@ -61,7 +61,7 @@ aiopvapi==1.4
 alarmdecoder==0.12.1.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.0
+amcrest==1.2.1
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -92,7 +92,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.2
+bellows==0.3.4
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -519,7 +519,7 @@ pyasn1-modules==0.0.9
 pyasn1==0.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.3.2
+pyatv==0.3.4
 
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
