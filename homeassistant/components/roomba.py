@@ -40,10 +40,14 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+# https://github.com/koalazak/dorita980/issues/6#issuecomment-268682512
 PHASES = {
     'charge': 'Charging',
     'run': 'Cleaning',
-    'stop': 'Stopped'
+    'stuck': 'Stuck',
+    'stop': 'Stopped',
+    'hmPostMsn': 'Returning to base (Cleaning finished)',
+    'hmUsrDock': 'Returning to base (Button pressed)'
 }
 
 SERVICE_CLEAN = 'clean'
