@@ -6,8 +6,6 @@ https://home-assistant.io/components/device_tracker.aruba/
 """
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,13 +13,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pexpect==4.0.1']
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+))\s+' +
@@ -52,8 +47,6 @@ class ArubaDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.lock = threading.Lock()
-
         self.last_results = {}
 
         # Test the router is accessible.
@@ -74,7 +67,6 @@ class ArubaDeviceScanner(DeviceScanner):
                 return client['name']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Aruba Access Point is up to date.
 
@@ -83,13 +75,12 @@ class ArubaDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            data = self.get_aruba_data()
-            if not data:
-                return False
+        data = self.get_aruba_data()
+        if not data:
+            return False
 
-            self.last_results = data.values()
-            return True
+        self.last_results = data.values()
+        return True
 
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
