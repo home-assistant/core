@@ -23,7 +23,8 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
     SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
+    STATE_CLOSED, SATE_OPENED, STATE_CLOSING, STATE_OPENING, STATE_UNKNOWN, 
+    ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +57,8 @@ ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
-ATTR_cover_state = 'cover_state'
-ATTR_cover_state_LIST = 'cover_state_list'
+ATTR_COVER_STATE = 'cover_state'
+ATTR_COVER_STATE_LIST = 'cover_state_list'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
