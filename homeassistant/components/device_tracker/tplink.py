@@ -391,7 +391,8 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
                 "Cache-Control": "no-cache"
             }
 
-            password_md5 = hashlib.md5(self.password).hexdigest().upper()
+            password_md5 = hashlib.md5(
+                self.password.encode('utf')).hexdigest().upper()
 
             # create a session to handle cookie easier
             session = requests.session()
