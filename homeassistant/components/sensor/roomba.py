@@ -112,6 +112,27 @@ class RoombaSensor(Entity):
         if self.sensor_type == SENSOR_TYPE_BATTERY:
             # TODO Return a variant of mdi:battery depending on actual battery
             # level
+            if self._state is None:
+                return 'mdi:battery-unknown'
+            rounded_level = round(self._state, -1)
+            charging = self._attrs.get(ATTR_BATTERY_CHARGING, False)
+            if charging:
+                # Why is MDI missing 10, 50, 70?
+                if rounded_level == 10:
+                    return 'mdi:battery-charging-20'
+                elif rounded_level == 50:
+                    return 'mdi:battery-charging-60'
+                elif rounded_level == 70:
+                    return 'mdi:battery-charging-80'
+                else:
+                    return 'mdi:battery-charging-{}'.format(rounded_level)
+            else:
+                if rounded_level < 10:
+                    return 'mdi:battery-outline'
+                elif rounded_level == 100:
+                    return 'mdi:battery'
+                else:
+                    return 'mdi:battery-{}'.format(rounded_level)
             return 'mdi:battery'
         elif self.sensor_type == SENSOR_TYPE_BIN:
             return 'mdi:delete' if self._state else 'mdi:delete-empty'
