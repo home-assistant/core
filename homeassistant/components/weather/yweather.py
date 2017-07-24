@@ -11,7 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, PLATFORM_SCHEMA,
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME)
 
 REQUIREMENTS = ["yahooweather==0.8"]
@@ -21,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-ATTR_FORECAST_TIME = 'datetime'
 ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
@@ -161,9 +161,14 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{ATTR_FORECAST_TIME: v['date'], ATTR_FORECAST_TEMP:int(v['high']), ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                 ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[int(v['code'])]}
-                for v in self._data.yahoo.Forecast[:self._forecast]]
+        return [
+            {
+                ATTR_FORECAST_TIME: v['date'],
+                ATTR_FORECAST_TEMP:int(v['high']),
+                ATTR_FORECAST_TEMP_LOW: int(v['low']),
+                ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[
+                    int(v['code'])]
+            } for v in self._data.yahoo.Forecast[:self._forecast]]
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
