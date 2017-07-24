@@ -237,27 +237,12 @@ class CoverDevice(Entity):
     @property
     def state(self):
         """Return the state of the cover."""
-        type = self.device_class
-        if type == "garage":
-            if self.is_closed == "Opening":
-                return STATE_OPENING
-            elif self.is_closed == "Closing":
-                return STATE_CLOSING
-            elif self.is_closed == "Opened":
-                return STATE_OPEN
-            elif self.is_closed == "Closed":
-                return STATE_CLOSED
-            elif self.is_closed == "Stopped":
-                return STATE_STOPPED
-            elif self.is_closed == "Unknown":
-                return STATE_UNKNOWN
-        else:
-            closed = self.is_closed
+        closed = self.is_closed
 
-            if closed is None:
-                return STATE_UNKNOWN
+        if closed is None:
+            return STATE_UNKNOWN
 
-            return STATE_CLOSED if closed else STATE_OPEN
+        return STATE_CLOSED if closed else STATE_OPEN
 
     @property
     def state_attributes(self):

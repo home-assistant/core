@@ -168,12 +168,13 @@ def test_garage_value_changed(hass, mock_openzwave):
     device = zwave.get_device(hass=hass, node=node, values=values,
                               node_config={})
 
-    assert device.is_closed == "Closed"
+    assert device.is_closed
 
     value.data = "Opened"
     value_changed(value)
 
-    assert device.is_closed == "Open"
+    assert not device.is_closed
+
 
 def test_garage_commands(hass, mock_openzwave):
     """Test position changed."""
