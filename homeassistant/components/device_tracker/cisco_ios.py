@@ -14,9 +14,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
-from homeassistant.util import Throttle
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +62,6 @@ class CiscoDeviceScanner(DeviceScanner):
 
         return self.last_results
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """
         Ensure the information from the Cisco router is up to date.
