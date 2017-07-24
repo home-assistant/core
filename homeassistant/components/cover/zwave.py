@@ -18,7 +18,7 @@ from homeassistant.components.cover import CoverDevice
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
-ATTR_DOOR_STATE = 'door_state'
+ATTR_COVER_STATE = 'cover_state'
 
 
 def get_device(hass, values, node_config, **kwargs):
@@ -111,33 +111,33 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self._door_state_list = None
-        self._door_state = None
+        self._cover_state_list = None
+        self._cover_state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._door_state = self.values.primary.data
-        door_state_list = self.values.primary.data_items
-        if door_state_list:
-            self._door_state_list = list(door_state_list)
-        _LOGGER.debug("self._door_state_list=%s", self._door_state_list)
-        _LOGGER.debug("self._door_state=%s", self._door_state)
+        self._cover_state = self.values.primary.data
+        cover_state_list = self.values.primary.data_items
+        if cover_state_list:
+            self._cover_state_list = list(cover_state_list)
+        _LOGGER.debug("self._cover_state_list=%s", self._cover_state_list)
+        _LOGGER.debug("self._cover_state=%s", self._cover_state)
 
     @property
-    def door_state(self):
+    def cover_state(self):
         """Return the current door state."""
-        return self._door_state
+        return self._cover_state
 
     @property
-    def door_state_list(self):
+    def cover_state_list(self):
         """Return the list of door states."""
-        return self._door_state_list
+        return self._cover_state_list
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        if self._door_state == "Closed":
+        if self._cover_state == "Closed":
             return True
         return False
 
@@ -159,11 +159,3 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Flag supported features."""
         return SUPPORT_GARAGE
 
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        data = super().device_state_attributes
-        if self._door_state:
-            data[ATTR_DOOR_STATE] = self._door_state
-
-        return data

@@ -56,8 +56,8 @@ ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
-ATTR_DOOR_STATE = 'door_state'
-ATTR_DOOR_STATE_LIST = 'door_state_list'
+ATTR_cover_state = 'cover_state'
+ATTR_cover_state_LIST = 'cover_state_list'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -225,24 +225,39 @@ class CoverDevice(Entity):
         pass
 
     @property
-    def door_state(self):
+    def cover_state(self):
         """Return current state of cover."""
         pass
 
     @property
-    def door_state_list(self):
+    def cover_state_list(self):
         """Return list of posible door states."""
         pass
 
     @property
     def state(self):
         """Return the state of the cover."""
-        closed = self.is_closed
+		type = self.device_class
+        if type == "garage":
+            if self.is_closed == "Opening"
+                return STATE_OPENING
+            elif self.is_closed == "Closing"
+                return STATE_CLOSING
+            elif self.is_closed == "Opened"
+                return STATE_OPEN
+            elif self.is_closed == "Closed"
+                return STATE_CLOSED
+            elif self.is_closed == "Stopped"
+                return STATE_STOPPED
+            elif self.is_closed == "Unknown"
+                return STATE_UNKNOWN
+		else:
+            closed = self.is_closed
 
-        if closed is None:
-            return STATE_UNKNOWN
+            if closed is None:
+                return STATE_UNKNOWN
 
-        return STATE_CLOSED if closed else STATE_OPEN
+            return STATE_CLOSED if closed else STATE_OPEN
 
     @property
     def state_attributes(self):
@@ -257,11 +272,11 @@ class CoverDevice(Entity):
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
 
-        door_states = self.door_state
-        if door_states is not None:
-            data[ATTR_DOOR_STATE] = door_states
-            if self.door_state_list:
-                data[ATTR_DOOR_STATE_LIST] = self.door_state_list
+        cover_states = self.cover_state
+        if cover_states is not None:
+            data[ATTR_COVER_STATE] = cover_states
+            if self.cover_state_list:
+                data[ATTR_COVER_STATE_LIST] = self.cover_state_list
 
         return data
 
