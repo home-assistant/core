@@ -216,6 +216,9 @@ class Metrics:
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_zwave(self, state):
+        self._battery(state)
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""
