@@ -71,9 +71,11 @@ class ONVIFCamera(Camera):
         )
         self._input = media.GetStreamUri().Uri
         if config.get(CONF_STREAM_AUTH):
-            self._input = self._input.replace('rtsp://',
-                'rtsp://{}:{}@'.format(config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD)), 1)
+            self._input = self._input.replace(
+                'rtsp://', 'rtsp://{}:{}@'.format(
+                    config.get(CONF_USERNAME),
+                    config.get(CONF_PASSWORD))
+                , 1)
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
 
