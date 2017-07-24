@@ -2,12 +2,12 @@
 Support for Xiaomi Vacuum cleaner robot.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.xiaomi_vacuum/
+https://home-assistant.io/components/sensor.xiaomi_vacuum/
 """
 import asyncio
 
 from homeassistant.components.xiaomi_vacuum import (
-    DOMAIN, ICON, CONF_NAME, MiroboVacuumSwitch)
+    DOMAIN, CONF_NAME, CONF_SENSORS, MiroboVacuumSensor)
 
 
 DEPENDENCIES = ['xiaomi_vacuum']
@@ -20,7 +20,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     name = discovery_info[CONF_NAME]
+    sensors = discovery_info[CONF_SENSORS]
     mirobo_vacuum = hass.data[DOMAIN]
 
     yield from async_add_devices(
-        [MiroboVacuumSwitch(name, mirobo_vacuum, ICON)], True)
+        [MiroboVacuumSensor(mirobo_vacuum, name, s_type)
+         for s_type in sensors], True)
