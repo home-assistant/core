@@ -156,7 +156,7 @@ def async_setup(hass, config):
 
 
 class MiroboVacuum:
-    """Representation of a Xiaomi Vacuum."""
+    """Representation of a Xiaomi Vacuum cleaner robot."""
 
     def __init__(self, hass, host, token):
         """Initialize the vacuum switch."""
@@ -267,7 +267,7 @@ class MiroboVacuum:
 
 
 class MiroboVacuumSwitch(SwitchDevice):
-    """Representation of a Xiaomi Vacuum master switch."""
+    """Representation of the master switch of a Xiaomi Vacuum cleaner."""
 
     def __init__(self, name, mirobo_vacuum, icon):
         """Initialize the vacuum switch."""
@@ -317,10 +317,10 @@ class MiroboVacuumSwitch(SwitchDevice):
 
 
 class MiroboVacuumSensor(Entity):
-    """The Android device running IP Webcam."""
+    """Representation of a sensor of a Xiaomi Vacuum cleaner."""
 
     def __init__(self, mirobo_vacuum, name, sensor_type):
-        """Initialize the data oject."""
+        """Initialize the sensor object."""
         self._handler = mirobo_vacuum
         self._sensor = sensor_type
 
@@ -332,7 +332,7 @@ class MiroboVacuumSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor, if any."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -358,8 +358,6 @@ class MiroboVacuumSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        # attrs = self._handler.state_attrs.copy()
-        # attrs.update({"friendly_name": self._friendly_name})
         attrs = {"friendly_name": self._friendly_name}
         return attrs
 
