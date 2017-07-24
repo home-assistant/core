@@ -205,8 +205,13 @@ def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node):
 def _env_var_yaml(loader: SafeLineLoader,
                   node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
-    if node.value in os.environ:
-        return os.environ[node.value]
+    args = node.value.split()
+
+    # Check for a default value
+    if len(args) > 1:
+        return os.getenv(args[0], ' '.join(args[1:]))
+    elif args[0] in os.environ:
+        return os.environ[args[0]]
     else:
         _LOGGER.error("Environment variable %s not defined.", node.value)
         raise HomeAssistantError(node.value)

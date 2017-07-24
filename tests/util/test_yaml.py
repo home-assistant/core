@@ -60,6 +60,13 @@ class TestYaml(unittest.TestCase):
         assert doc['password'] == "secret_password"
         del os.environ["PASSWORD"]
 
+    def test_environment_variable_default(self):
+        """Test config file with default value for environment variable."""
+        conf = "password: !env_var PASSWORD secret_password"
+        with io.StringIO(conf) as file:
+            doc = yaml.yaml.safe_load(file)
+        assert doc['password'] == "secret_password"
+
     def test_invalid_enviroment_variable(self):
         """Test config file with no enviroment variable sat."""
         conf = "password: !env_var PASSWORD"
