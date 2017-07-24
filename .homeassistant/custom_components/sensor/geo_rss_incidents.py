@@ -61,7 +61,6 @@ CONF_RADIUS = 'radius'
 CONF_CATEGORIES = 'categories'
 
 DEFAULT_NAME = 'Incident Information Service'
-# DEFAULT_URL = 'http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml'
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMEMT = 'Incident'
 DEFAULT_ICON = 'mdi:alert'
@@ -71,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=None): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
-    vol.Required(CONF_CATEGORIES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMEMT): cv.string,
 })
 
@@ -99,15 +98,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # create all sensors
     devices = []
     devices_by_category = {}
-    for category in categories:
-        device = GeoRssServiceSensor(hass, category, [], name, icon, unit_of_measurement)
+    if not categories:
+        device = GeoRssServiceSensor(hass, None, [], name, icon, unit_of_measurement)
         devices.append(device)
-        devices_by_category[category] = device
+        devices_by_category[None] = device
+    else:
+        for category in categories:
+            device = GeoRssServiceSensor(hass, category, [], name, icon, unit_of_measurement)
+            devices.append(device)
+            devices_by_category[category] = device
     async_add_devices(devices)
 
     # initialise access to web resource
     updater = GeoRssServiceUpdater(hass, home_latitude, home_longitude, url, radius_in_km,
-                                   devices_by_category)
+                                   devices_by_category, categories)
     async_track_time_interval(hass, updater.async_update, interval_in_seconds)
     yield from updater.async_update()
     return True
@@ -124,16 +128,22 @@ class GeoRssServiceSensor(Entity):
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit_of_measurement
-        id_base = category
+        if category is not None:
+            id_base = category
+        else:
+            id_base = 'any'
         if name is not None:
-            id_base = '{}_{})'.format(name, category)
+            id_base = '{}_{}'.format(name, id_base)
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id_base,
                                                   hass=hass)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._category
+        if self._category is not None:
+            return self._category
+        else:
+            return 'Any'
 
     @property
     def state(self):
@@ -170,17 +180,18 @@ class GeoRssServiceUpdater:
     """Provides access to GeoRSS and creates and updates UI devices."""
 
     def __init__(self, hass, home_latitude, home_longitude, url,
-                 radius_in_km, devices_by_category):
+                 radius_in_km, devices_by_category, filter_by_category):
         """Initialize the sensor."""
         self._hass = hass
         self._feed = None
         self._home_latitude = home_latitude
         self._home_longitude = home_longitude
-        self._home_coordinates = [home_longitude, home_latitude]
+        self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
         self._state = STATE_UNKNOWN
         self._devices_by_category = devices_by_category
+        self._filter_by_category = filter_by_category
 
     @asyncio.coroutine
     def async_update(self, *_):
@@ -195,7 +206,6 @@ class GeoRssServiceUpdater:
                          len(self._feed.entries), self._url)
             # filter entries by distance from home
             for entry in self._feed.entries:
-                #print(entry)
                 if hasattr(entry, 'where'):
                     distance = self.calculate_distance_to_geometry(entry.where)
                 elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
@@ -204,28 +214,41 @@ class GeoRssServiceUpdater:
                 if distance <= self._radius_in_km:
                     incident = self.create_incident(distance, entry)
                     incidents.append(incident)
-            # group incidents by category
-            incidents_by_category = {}
-            for incident in incidents:
-                if incident.category in incidents_by_category:
-                    incidents_by_category[incident.category].append(incident)
-                else:
-                    incidents_by_category[incident.category] = [incident]
-            _LOGGER.info("Incidents by category: %s", incidents_by_category)
-            # set new state (incidents) on devices
             tasks = []
-            for category in incidents_by_category.keys():
-                # update existing device with new list of incidents
-                if category in self._devices_by_category:
-                    device = self._devices_by_category[category]
-                    device.state = incidents_by_category[category]
-                    tasks.append(device.async_update_ha_state())
-            _LOGGER.info("Devices by category: %s", self._devices_by_category)
+            if self._filter_by_category:
+                # group incidents by category
+                incidents_by_category = {}
+                for incident in incidents:
+                    if incident.category in incidents_by_category:
+                        incidents_by_category[incident.category].append(incident)
+                    else:
+                        incidents_by_category[incident.category] = [incident]
+                _LOGGER.debug("Incidents by category: %s", incidents_by_category)
+                # set new state (incidents) on devices
+                for category in incidents_by_category.keys():
+                    # update existing device with new list of incidents
+                    if category in self._devices_by_category:
+                        device = self._devices_by_category[category]
+                        device.state = incidents_by_category[category]
+                        tasks.append(device.async_update_ha_state())
+                _LOGGER.debug("Devices by category: %s", self._devices_by_category)
+            else:
+                # add all incidents regardless of category
+                device = self._devices_by_category[None]
+                device.state = incidents
+                tasks.append(device.async_update_ha_state())
+                _LOGGER.debug("Devices by category: %s", self._devices_by_category)
             if tasks:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
     @staticmethod
     def create_incident(distance, feature):
+        category_candidate = None
+        if hasattr(feature, 'category'):
+            category_candidate = feature.category
+        title_candidate = None
+        if hasattr(feature, 'title'):
+            title_candidate = feature.title
         id_candidate = None
         if hasattr(feature, 'id'):
             id_candidate = feature.id
@@ -236,13 +259,14 @@ class GeoRssServiceUpdater:
             pup_date_candidate = feature.updated_parsed
         elif hasattr(feature, 'published_parsed'):
             pup_date_candidate = feature.published_parsed
-        #print('Category:', feature.category)
-        #print('Tags: ', feature.tags)
-        return Incident(feature.category,
-                        feature.title,
+        summary_candidate = None
+        if hasattr(feature, 'summary'):
+            summary_candidate = feature.summary
+        return Incident(category_candidate,
+                        title_candidate,
                         id_candidate,
                         pup_date_candidate,
-                        feature.summary,
+                        summary_candidate,
                         distance)
 
     def calculate_distance_to_geometry(self, geometry):
@@ -258,7 +282,7 @@ class GeoRssServiceUpdater:
     def calculate_distance_to_point(self, point):
         # from shapely.geometry import shape
         from haversine import haversine
-        coordinates = point.coordinates
+        coordinates = (point.coordinates[1], point.coordinates[0])
         return self.calculate_distance_to_coordinates(coordinates)
 
     def calculate_distance_to_coordinates(self, coordinates):
@@ -281,7 +305,8 @@ class GeoRssServiceUpdater:
             n = len(polygon)
             for i in range(n):
                 polygon_point = polygon[i]
-                distance = min(distance, haversine(polygon_point, self._home_coordinates))
+                coordinates = (polygon_point[1], polygon_point[0])
+                distance = min(distance, self.calculate_distance_to_coordinates(coordinates))
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
                       polygon, distance)
         return distance
