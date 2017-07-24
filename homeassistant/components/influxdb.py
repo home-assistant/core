@@ -25,6 +25,7 @@ CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
+CONF_INFLUXDB_MEASUREMENT = 'influxdb_measurement'
 CONF_TAGS_ATTRIBUTES = "tags_attributes"
 
 DEFAULT_DATABASE = 'home_assistant'
@@ -131,15 +132,17 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
-        if override_measurement:
-            measurement = override_measurement
-        else:
-            measurement = state.attributes.get('unit_of_measurement')
-            if measurement in (None, ''):
-                if default_measurement:
-                    measurement = default_measurement
-                else:
-                    measurement = state.entity_id
+        measurement = state.attributes.get(CONF_INFLUXDB_MEASUREMENT)
+        if measurement in (None, ''):
+            if override_measurement:
+                measurement = override_measurement
+            else:
+                measurement = state.attributes.get('unit_of_measurement')
+                if measurement in (None, ''):
+                    if default_measurement:
+                        measurement = default_measurement
+                    else:
+                        measurement = state.entity_id
 
         json_body = [
             {
@@ -158,7 +161,7 @@ def setup(hass, config):
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json_body[0]['tags'][key] = value
-            elif key != 'unit_of_measurement':
+            elif not (key in ['unit_of_measurement', CONF_INFLUXDB_MEASUREMENT]):
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"
