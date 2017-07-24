@@ -120,7 +120,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
 
     with session_scope(hass=hass) as session:
         if entity_ids and len(entity_ids) == 1:
-            # Use an entirely different (and extremely fast) query if we only have a single entity id
+            # Use an entirely different (and extremely fast) query if we only
+            # have a single entity id
             most_recent_state_ids = session.query(
                 States.state_id.label('max_state_id')
             ).filter(
@@ -147,7 +148,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 most_recent_state_ids = filters.apply(most_recent_state_ids,
                                                       entity_ids)
 
-            most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
+            most_recent_state_ids = most_recent_state_ids.group_by(
+                States.entity_id)
 
         most_recent_state_ids = most_recent_state_ids.subquery()
 
