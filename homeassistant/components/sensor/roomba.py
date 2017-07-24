@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.roomba/
 """
 import logging
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.roomba import ROOMBA_ROBOTS
+from homeassistant.components.roomba import (PHASES, ROOMBA_ROBOTS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,16 +95,21 @@ class RoombaSensor(Entity):
                 self._sensor_name = '{} Position'.format(roomba_name)
         elif self.sensor_type == SENSOR_TYPE_STATUS:
             clean_mission_status = roomba_data.get('cleanMissionStatus', {})
-            self._state = clean_mission_status.get('phase', None)
+            phase = clean_mission_status.get('phase', None)
+            if phase in PHASES:
+                self._state = PHASES.get(phase)
+            else:
+                # Unknown phase. Use as is.
+                self._state = phase
             if roomba_name:
                 self._sensor_name = '{} Status'.format(roomba_name)
-        _LOGGER.debug('%s sensor state: %s', self.sensor_type, self._state)
 
     def update(self):
         """Update the properties of sensor."""
         _LOGGER.debug('Update of Roomba %s sensor', self.sensor_type)
         self.roomba_hub.update()
         self.__set_sensor_state_from_hub()
+        _LOGGER.debug('%s sensor state: %s', self.sensor_type, self._state)
 
     @property
     def icon(self):

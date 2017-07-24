@@ -40,6 +40,12 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+PHASES = {
+    'charge': 'Charging',
+    'run': 'Cleaning',
+    'stop': 'Stopped'
+}
+
 SERVICE_CLEAN = 'clean'
 SERVICE_DOCK = 'dock'
 SERVICE_PAUSE = 'pause'
