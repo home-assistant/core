@@ -4,6 +4,7 @@ Support for scanning a network with nmap.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
+from datetime import timedelta
 import logging
 import re
 import subprocess
