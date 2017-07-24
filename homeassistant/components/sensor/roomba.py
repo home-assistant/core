@@ -110,8 +110,6 @@ class RoombaSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         if self.sensor_type == SENSOR_TYPE_BATTERY:
-            # TODO Return a variant of mdi:battery depending on actual battery
-            # level
             if self._state is None:
                 return 'mdi:battery-unknown'
             rounded_level = round(self._state, -1)
