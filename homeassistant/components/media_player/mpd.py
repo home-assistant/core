@@ -70,24 +70,24 @@ class MpdDevice(MediaPlayerDevice):
         self._name = name
         self.password = password
 
-        self.status = None
-        self.currentsong = None
-        self.playlists = []
-        self.currentplaylist = None
+        self._status = None
+        self._currentsong = None
+        self._playlists = []
+        self._currentplaylist = None
         self._is_connected = False
 
         # set up MPD client
-        self.client = mpd.MPDClient()
-        self.client.timeout = 5
-        self.client.idletimeout = None
+        self._client = mpd.MPDClient()
+        self._client.timeout = 5
+        self._client.idletimeout = None
         if password is not None:
-            self.client.password(password)
+            self._client.password(password)
 
     def _connect(self):
         """Connect to MPD."""
         import mpd
         try:
-            self.client.connect(self.server, self.port)
+            self._client.connect(self.server, self.port)
         except mpd.ConnectionError:
             return
 
@@ -97,7 +97,7 @@ class MpdDevice(MediaPlayerDevice):
         """Disconnect from MPD."""
         import mpd
         try:
-            self.client.disconnect()
+            self._client.disconnect()
         except mpd.ConnectionError:
             pass
         self._is_connected = False
@@ -105,8 +105,8 @@ class MpdDevice(MediaPlayerDevice):
 
     def _fetch_status(self):
         """Fetch status from MPD."""
-        self.status = self.client.status()
-        self.currentsong = self.client.currentsong()
+        self._status = self._client.status()
+        self._currentsong = self._client.currentsong()
 
         self._update_playlists()
 
@@ -131,11 +131,11 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the media state."""
-        if not self.status:
+        if not self._status:
             return STATE_OFF
-        elif self.status['state'] == 'play':
+        elif self._status['state'] == 'play':
             return STATE_PLAYING
-        elif self.status['state'] == 'pause':
+        elif self._status['state'] == 'pause':
             return STATE_PAUSED
 
         return STATE_ON
@@ -143,7 +143,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return self.currentsong.get('file')
+        return self._currentsong.get('file')
 
     @property
     def media_content_type(self):
@@ -154,13 +154,13 @@ class MpdDevice(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
-        return self.currentsong.get('time')
+        return self._currentsong.get('time')
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        name = self.currentsong.get('name', None)
-        title = self.currentsong.get('title', None)
+        name = self._currentsong.get('name', None)
+        title = self._currentsong.get('title', None)
 
         if name is None and title is None:
             return "None"
@@ -174,17 +174,17 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.currentsong.get('artist')
+        return self._currentsong.get('artist')
 
     @property
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
-        return self.currentsong.get('album')
+        return self._currentsong.get('album')
 
     @property
     def volume_level(self):
         """Return the volume level."""
-        return int(self.status['volume'])/100
+        return int(self._status['volume'])/100
 
     @property
     def supported_features(self):
@@ -194,12 +194,12 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        return self.currentplaylist
+        return self._currentplaylist
 
     @property
     def source_list(self):
         """Return the list of available input sources."""
-        return self.playlists
+        return self._playlists
 
     def select_source(self, source):
         """Choose a different available playlist and play it."""
@@ -208,79 +208,79 @@ class MpdDevice(MediaPlayerDevice):
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self, **kwargs):
         """Update available MPD playlists."""
-        self.playlists = []
-        for playlist_data in self.client.listplaylists():
-            self.playlists.append(playlist_data['playlist'])
+        self._playlists = []
+        for playlist_data in self._client.listplaylists():
+            self._playlists.append(playlist_data['playlist'])
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
-        self.client.setvol(int(volume * 100))
+        self._client.setvol(int(volume * 100))
 
     def volume_up(self):
         """Service to send the MPD the command for volume up."""
-        current_volume = int(self.status['volume'])
+        current_volume = int(self._status['volume'])
 
         if current_volume <= 100:
-            self.client.setvol(current_volume + 5)
+            self._client.setvol(current_volume + 5)
 
     def volume_down(self):
         """Service to send the MPD the command for volume down."""
-        current_volume = int(self.status['volume'])
+        current_volume = int(self._status['volume'])
 
         if current_volume >= 0:
-            self.client.setvol(current_volume - 5)
+            self._client.setvol(current_volume - 5)
 
     def media_play(self):
         """Service to send the MPD the command for play/pause."""
-        self.client.pause(0)
+        self._client.pause(0)
 
     def media_pause(self):
         """Service to send the MPD the command for play/pause."""
-        self.client.pause(1)
+        self._client.pause(1)
 
     def media_stop(self):
         """Service to send the MPD the command for stop."""
-        self.client.stop()
+        self._client.stop()
 
     def media_next_track(self):
         """Service to send the MPD the command for next track."""
-        self.client.next()
+        self._client.next()
 
     def media_previous_track(self):
         """Service to send the MPD the command for previous track."""
-        self.client.previous()
+        self._client.previous()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.debug(str.format("Playing playlist: {0}", media_id))
         if media_type == MEDIA_TYPE_PLAYLIST:
-            if media_id in self.playlists:
-                self.currentplaylist = media_id
+            if media_id in self._playlists:
+                self._currentplaylist = media_id
             else:
-                self.currentplaylist = None
+                self._currentplaylist = None
                 _LOGGER.warning(str.format("Unknown playlist name %s.",
                                            media_id))
-            self.client.clear()
-            self.client.load(media_id)
-            self.client.play()
+            self._client.clear()
+            self._client.load(media_id)
+            self._client.play()
         else:
-            self.client.clear()
-            self.client.add(media_id)
-            self.client.play()
+            self._client.clear()
+            self._client.add(media_id)
+            self._client.play()
 
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(self.status['random'])
+        return bool(self._status['random'])
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        self.client.random(int(shuffle))
+        self._client.random(int(shuffle))
 
     def clear_playlist(self):
         """Clear players playlist."""
-        self.client.clear()
+        self._client.clear()
 
     def media_seek(self, position):
         """Send seek command."""
-        self.client.seekcur(position)
+        self._client.seekcur(position)
