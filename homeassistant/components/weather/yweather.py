@@ -53,8 +53,8 @@ CONDITION_CLASSES_LIST = [str(x) for x in range(0, 50)]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=0):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
+    vol.Optional(CONF_FORECAST, default=5):
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
 })
 
 DEGREE_TO_TEXT = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
@@ -161,7 +161,7 @@ class YahooWeatherWeather(WeatherEntity):
         """Return the forecast array."""
         return [{'datetime':v['date'], ATTR_FORECAST_TEMP:int(v['high']), 'templow': int(v['low']),
                  'condition': CONDITION_CLASSES_LIST[int(v['code'])]}
-                for v in self._data.yahoo.Forecast]
+                for v in self._data.yahoo.Forecast[:self._forecast]]
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
