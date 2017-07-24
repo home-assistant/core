@@ -24,7 +24,7 @@ SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 ATTR_COVER_STATE = 'cover_state'
 
 ZWAVE_STATES = {
-    "Open": STATE_OPEN,
+    "Opened": STATE_OPEN,
     "Closed": STATE_CLOSED,
     "Opening": STATE_OPENING,
     "Closing": STATE_CLOSING,
