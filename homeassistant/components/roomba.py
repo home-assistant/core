@@ -117,8 +117,6 @@ class RoombaHub(object):
     def _wait_for_update(self, timeout=10):
         from time import sleep
         tries = 0
-        # last_update = self._roomba.time
-        # while last_update == self._roomba.time:
         while not self._roomba.master_state:
             _LOGGER.debug('No data received from Roomba yet')
             sleep(1)
@@ -136,28 +134,19 @@ class RoombaHub(object):
             self._wait_for_update()
             _LOGGER.debug('Roomba state: %s',
                           self._roomba.cleanMissionStatus_phase)
-            # self._roomba.disconnect()
             return True
         except RoombaTimeoutError:
             _LOGGER.error('Unable to connect to Roomba')
             return False
 
-    def send_command(self, command):
-        """Send a command to the Roomba."""
-        # self._roomba.connect()
-        self._roomba.send_command(command)
-        # self._roomba.disconnect()
-
     @Throttle(timedelta(seconds=5))
     def update(self):
         """Reconnect to Roomba to request data update."""
+        from time import sleep
         _LOGGER.debug('Running Roomba update %s',
                       self._hass.data[ROOMBA_ROBOTS])
-        # self._roomba.connect()
-        # self.wait_for_update()
-        from time import sleep
+        # Wait a few seconds for the data
         sleep(3)
         self.data = self._roomba.master_state['state'].get('reported', None)
         from pprint import pformat
         _LOGGER.debug('Roomba data: %s', pformat(self.data))
-        # self._roomba.disconnect()

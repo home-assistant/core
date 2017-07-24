@@ -61,6 +61,7 @@ class RoombaSensor(Entity):
         self.__set_sensor_state_from_hub()
 
     def __set_sensor_state_from_hub(self):
+        """Set the state of the sensor from the hub data."""
         roomba_data = self.roomba_hub.data
         roomba_name = roomba_data.get('name', 'Roomba')
         if self.sensor_type == SENSOR_TYPE_BIN:
