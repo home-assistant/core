@@ -12,6 +12,11 @@ try:
 except ImportError:
     keyring = None
 
+try:
+    import credstash
+except ImportError:
+    credstash = None
+
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -256,6 +261,15 @@ def _secret_yaml(loader: SafeLineLoader,
         if pwd:
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
+
+    if credstash:
+        try:
+            pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
+            if pwd:
+                _LOGGER.debug("Secret %s retrieved from credstash", node.value)
+                return pwd
+        except credstash.ItemNotFound:
+            pass
 
     _LOGGER.error("Secret %s not defined", node.value)
     raise HomeAssistantError(node.value)

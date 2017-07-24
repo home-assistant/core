@@ -115,6 +115,9 @@ blockchain==1.3.3
 # homeassistant.components.tts.amazon_polly
 boto3==1.4.3
 
+# homeassistant.scripts.credstash
+botocore==1.4.93
+
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.5
@@ -135,6 +138,9 @@ colorlog>2.1,<3
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
 concord232==0.14
+
+# homeassistant.scripts.credstash
+credstash==1.13.2
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
