@@ -49,13 +49,13 @@ DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
 ICON = 'mdi:google-circles-group'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SENSORS):
             cv.ensure_list(vol.All(str, vol.In(SENSOR_MAP))),
-    })
+    })])
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SEND_COMMAND = 'send_command'
@@ -66,18 +66,21 @@ SERVICE_START_REMOTE_CONTROL = 'remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'remote_control_stop'
 
 SERVICE_SCHEMA_SEND_COMMAND = vol.Schema({
+    vol.Optional(CONF_HOST): cv.string,
     vol.Required(ATTR_COMMAND): cv.string,
     vol.Optional(ATTR_PARAMS): cv.string,
 })
 
 SERVICE_SCHEMA_SET_FANSPEED = vol.Schema({
+    vol.Optional(CONF_HOST): cv.string,
     vol.Required(ATTR_FANSPEED):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 SERVICE_SCHEMA_REMOTE_CONTROL = vol.Schema({
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(ATTR_RC_VELOCITY):
-        vol.All(vol.Coerce(float), vol.Range(min=-0.3, max=0.3)),
+        vol.All(vol.Coerce(float), vol.Range(min=-0.29, max=0.29)),
     vol.Optional(ATTR_RC_ROTATION):
         vol.All(vol.Coerce(int), vol.Range(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
@@ -101,56 +104,81 @@ def async_setup(hass, config):
     if not config[DOMAIN]:
         return False
 
-    config = config[DOMAIN]
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
-    sensors = config.get(CONF_SENSORS)
-
-    # Create handler
-    mirobo = MiroboVacuum(hass, host, token)
-    hass.data[DOMAIN] = mirobo
-
-    # Add entities
-    yield from hass.async_add_job(
-        async_load_platform(hass, 'switch', DOMAIN, {CONF_NAME: name}))
-
-    if sensors:
-        yield from hass.async_add_job(
-            async_load_platform(hass, 'sensor', DOMAIN,
-                                {CONF_NAME: name, CONF_SENSORS: sensors}))
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     @asyncio.coroutine
-    def async_vacuum_service_call(service):
-        """Handle service calls to the xiaomi vacuum component."""
-        kwargs = dict(service.data)
-        if service.service == SERVICE_SEND_COMMAND:
+    def async_setup_vacuum_cleaner(config_cleaner):
+        """Set up a vacuum cleaner."""
+        host = config_cleaner.get(CONF_HOST)
+        name = config_cleaner.get(CONF_NAME)
+        token = config_cleaner.get(CONF_TOKEN)
+        sensors = config_cleaner.get(CONF_SENSORS)
+
+        # Create handler
+        mirobo = MiroboVacuum(hass, host, token)
+        hass.data[DOMAIN][host] = mirobo
+
+        # Add entities
+        yield from hass.async_add_job(
+            async_load_platform(hass, 'switch', DOMAIN,
+                                {CONF_NAME: name, CONF_HOST: host}))
+
+        if sensors:
             yield from hass.async_add_job(
-                mirobo.raw_command,
-                kwargs[ATTR_COMMAND], kwargs.get(ATTR_PARAMS))
-        elif service.service == SERVICE_SET_FANSPEED:
-            yield from hass.async_add_job(
-                mirobo.set_fanspeed, kwargs[ATTR_FANSPEED])
-        elif service.service == SERVICE_START_REMOTE_CONTROL:
-            yield from hass.async_add_job(mirobo.remote_control_start)
-        elif service.service == SERVICE_STOP_REMOTE_CONTROL:
-            yield from hass.async_add_job(mirobo.remote_control_stop)
-        elif service.service == SERVICE_MOVE_REMOTE_CONTROL:
-            yield from hass.async_add_job(
-                partial(mirobo.remote_control_move, **kwargs))
-        else:  # elif service.service == SERVICE_MOVE_REMOTE_CONTROL_STEP:
-            yield from hass.async_add_job(
-                partial(mirobo.remote_control_move_step, **kwargs))
+                async_load_platform(
+                    hass, 'sensor', DOMAIN,
+                    {CONF_NAME: name, CONF_HOST: host,
+                     CONF_SENSORS: sensors}))
 
     # Register vacuum services
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
+    @asyncio.coroutine
+    def async_vacuum_service_call(service):
+        """Handle service calls to the xiaomi vacuum component."""
+        kwargs = {key: value for key, value in service.data.items()
+                  if key != 'entity_id'}
+        hosts_dest = service.data.get(CONF_HOST)
+        if hosts_dest:
+            hosts_to_call = [host for host in hass.data[DOMAIN]
+                             if host in hosts_dest]
+        else:
+            hosts_to_call = list(hass.data[DOMAIN].keys())
+
+        for host in hosts_to_call:
+            vacuum_handler = hass.data[DOMAIN][host]
+            if service.service == SERVICE_SEND_COMMAND:
+                yield from hass.async_add_job(
+                    vacuum_handler.raw_command,
+                    kwargs[ATTR_COMMAND], kwargs.get(ATTR_PARAMS))
+            elif service.service == SERVICE_SET_FANSPEED:
+                yield from hass.async_add_job(
+                    vacuum_handler.set_fanspeed, kwargs[ATTR_FANSPEED])
+            elif service.service == SERVICE_START_REMOTE_CONTROL:
+                yield from hass.async_add_job(
+                    vacuum_handler.remote_control_start)
+            elif service.service == SERVICE_STOP_REMOTE_CONTROL:
+                yield from hass.async_add_job(
+                    vacuum_handler.remote_control_stop)
+            elif service.service == SERVICE_MOVE_REMOTE_CONTROL:
+                yield from hass.async_add_job(
+                    partial(vacuum_handler.remote_control_move, **kwargs))
+            else:
+                yield from hass.async_add_job(
+                    partial(vacuum_handler.remote_control_move_step,
+                            **kwargs))
+
+    tasks = [async_setup_vacuum_cleaner(conf) for conf in config[DOMAIN]]
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
+
     for vacuum_service, schema in SERVICE_MAP.items():
         hass.services.async_register(
             DOMAIN, vacuum_service, async_vacuum_service_call,
-            descriptions.get(vacuum_service), schema=schema)
+            descriptions[DOMAIN].get(vacuum_service), schema=schema)
 
     return True
 
@@ -181,13 +209,14 @@ class MiroboVacuum:
 
         return self._vacuum
 
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    def _try_command(self, mask_error, func, *args,
+                     update=True, **kwargs):
         """Call a vacuum command handling error messages."""
         from mirobo import VacuumException
         try:
             func(*args, **kwargs)
-            self.available = True
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_DATA)
+            if update:
+                self.update_vacuum_state()
             return True
         except VacuumException as ex:
             _LOGGER.error(mask_error, ex)
@@ -220,7 +249,7 @@ class MiroboVacuum:
             velocity=velocity, rotation=rotation, duration=duration)
 
     def remote_control_move_step(self, rotation: int=0,
-                                 velocity: float=0.3, duration: int=1500):
+                                 velocity: float=0.2, duration: int=1500):
         """Move vacuum one step with remote control mode."""
         self._try_command(
             "Unable to remote control the vacuum: %s",
@@ -241,7 +270,7 @@ class MiroboVacuum:
     def turn_off_cleaning(self, **kwargs):
         """Turn the vacuum off and return to home."""
         if (self._try_command(
-                "Unable to turn off: %s", self.vacuum.stop) and
+                "Unable to turn off: %s", self.vacuum.stop, update=False) and
                 self._try_command(
                     "Unable to return home: %s", self.vacuum.home)):
             self.is_on = False
