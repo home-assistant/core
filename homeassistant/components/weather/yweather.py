@@ -160,16 +160,19 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if self._forecast == None:
+        if not self._forecast:
             return []
-        return [
-            {
-                ATTR_FORECAST_TIME: v['date'],
-                ATTR_FORECAST_TEMP:int(v['high']),
-                ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[
-                    int(v['code'])]
-            } for v in self._data.yahoo.Forecast[:self._forecast]]
+        try:
+            return [
+                {
+                    ATTR_FORECAST_TIME: v['date'],
+                    ATTR_FORECAST_TEMP:int(v['high']),
+                    ATTR_FORECAST_TEMP_LOW: int(v['low']),
+                    ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[
+                        int(v['code'])]
+                } for v in self._data.yahoo.Forecast[:self._forecast]]
+        except (ValueError, IndexError):
+            return []
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
