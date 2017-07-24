@@ -41,7 +41,7 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.6.1']
+REQUIREMENTS = ['xknx==0.6.2']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
