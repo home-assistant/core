@@ -48,16 +48,20 @@ CONDITION_CLASSES = {
     'exceptional': [0, 1, 2, 3, 4, 25, 36],
 }
 
-CONDITION_CLASSES_LIST = [str(x) for x in range(0, 50)]
+_CONDITION_CLASSES_MAX = 50
+
+CONDITION_CLASSES_LIST = [str(x) for x in range(0, _CONDITION_CLASSES_MAX)]
+
+for cond, condlst in CONDITION_CLASSES.items():
+    for condi in condlst:
+        CONDITION_CLASSES_LIST[condi] = cond
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=5):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
 })
-
-DEGREE_TO_TEXT = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather platform."""
@@ -88,15 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       len(yahoo_api.yahoo.Forecast))
         return False
 
-    for cond, condlst in CONDITION_CLASSES.items():
-        for condi in condlst:
-            CONDITION_CLASSES_LIST[condi] = cond
-
     add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
-
-
-def _windtostring(degree):
-    return DEGREE_TO_TEXT[int((int(degree) + 22.5) / 45)]
 
 
 class YahooWeatherWeather(WeatherEntity):
@@ -116,7 +112,10 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return CONDITION_CLASSES_LIST[int(self._data.yahoo.Now['code'])]
+        try:
+            return CONDITION_CLASSES_LIST[int(self._data.yahoo.Now['code'])]
+        except (ValueError, IndexError):
+            return ''
 
     @property
     def temperature(self):
@@ -161,6 +160,8 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
+        if self._forecast == None:
+            return []
         return [
             {
                 ATTR_FORECAST_TIME: v['date'],
