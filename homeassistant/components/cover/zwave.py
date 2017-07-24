@@ -20,6 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 ATTR_COVER_STATE = 'cover_state'
 
+ZWAVE_STATES = {
+    "Open": STATE_OPEN,
+    "Closed": STATE_CLOSE,
+    "Opening": STATE_OPENING,
+    "Closing": STATE_CLOSING,
+    "Unknown": STATE_UNKNOWN
+}
+
 
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
@@ -117,7 +125,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._cover_state = self.values.primary.data
+        self._cover_state = ZWAVE_STATES.get(self.values.primary.data)
         cover_state_list = self.values.primary.data_items
         if cover_state_list:
             self._cover_state_list = list(cover_state_list)
