@@ -1,5 +1,6 @@
 """
 Support for ONVIF Cameras with FFmpeg as decoder.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.onvif/
 """
