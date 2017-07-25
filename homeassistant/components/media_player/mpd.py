@@ -100,7 +100,7 @@ class MpdDevice(MediaPlayerDevice):
         except mpd.ConnectionError:
             pass
         self._is_connected = False
-        self._state = None
+        self._status = None
 
     def _fetch_status(self):
         """Fetch status from MPD."""
