@@ -45,20 +45,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lyft sensor."""
     from lyft_rides.auth import ClientCredentialGrant
+    from lyft_rides.errors import APIError
 
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
                                       scopes="public",
                                       is_sandbox_mode=False)
-    session = auth_flow.get_session()
+    try:
+        session = auth_flow.get_session()
+
+        timeandpriceest = LyftEstimate(
+            session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
+            config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
+        timeandpriceest.fetch_data()
+    except APIError as exc:
+        _LOGGER.error("Error setting up Lyft platform: %s", exc)
+        return False
 
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = LyftEstimate(
-        session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
-        config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
@@ -188,14 +195,18 @@ class LyftEstimate(object):
         self.end_latitude = end_latitude
         self.end_longitude = end_longitude
         self.products = None
-        self.__real_update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest product info and estimates from the Lyft API."""
-        self.__real_update()
+        from lyft_rides.errors import APIError
+        try:
+            self.fetch_data()
+        except APIError as exc:
+            _LOGGER.error("Error fetching Lyft data: %s", exc)
 
-    def __real_update(self):
+    def fetch_data(self):
+        """Get the latest product info and estimates from the Lyft API."""
         from lyft_rides.client import LyftRidesClient
         client = LyftRidesClient(self._session)
 
