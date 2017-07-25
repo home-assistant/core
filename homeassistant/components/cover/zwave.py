@@ -15,8 +15,8 @@ from homeassistant.components.zwave import async_setup_platform  # noqa # pylint
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
-    STATE_OPENED, STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_STOPPED,
-	STATE_UNKNOWN)
+    STATE_OPEN, STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_STOPPED,
+    STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 ATTR_COVER_STATE = 'cover_state'
 
 ZWAVE_STATES = {
-    "Opened": STATE_OPENED,
+    "Opened": STATE_OPEN,
     "Closed": STATE_CLOSED,
     "Opening": STATE_OPENING,
     "Closing": STATE_CLOSING,
@@ -150,7 +150,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        if self._cover_state == "Closed":
+        if self._cover_state == "closed":
             return True
         return False
 
