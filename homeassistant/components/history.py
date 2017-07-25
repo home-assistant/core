@@ -142,7 +142,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 func.max(States.state_id).label('max_state_id')
             ).filter(
                 (States.created >= run.start) &
-                (States.created < utc_point_in_time))
+                (States.created < utc_point_in_time) &
+                (~States.domain.in_(IGNORE_DOMAINS)))
 
             if filters:
                 most_recent_state_ids = filters.apply(most_recent_state_ids,
