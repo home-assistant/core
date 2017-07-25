@@ -38,7 +38,7 @@ def test_recent_items_intent(hass):
     )
 
     assert response.speech['plain']['speech'] == \
-        "These are the top 5 items in your shopping list: soda, wine, beer"
+        "These are the top 3 items on your shopping list: soda, wine, beer"
 
 
 @asyncio.coroutine

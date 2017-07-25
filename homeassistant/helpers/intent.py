@@ -134,7 +134,7 @@ class Intent:
 class IntentResponse:
     """Response to an intent."""
 
-    def __init__(self, intent):
+    def __init__(self, intent=None):
         """Initialize an IntentResponse."""
         self.intent = intent
         self.speech = {}
