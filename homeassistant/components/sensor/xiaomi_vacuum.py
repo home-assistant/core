@@ -6,11 +6,11 @@ https://home-assistant.io/components/sensor.xiaomi_vacuum/
 """
 import asyncio
 
-from homeassistant.components.xiaomi_vacuum import (
-    DOMAIN, CONF_HOST, CONF_NAME, CONF_SENSORS, MiroboVacuumSensor)
+from homeassistant.components.vacuum.xiaomi_vacuum import (
+    PLATFORM, CONF_HOST, CONF_NAME, CONF_SENSORS, MiroboVacuumSensor)
 
 
-DEPENDENCIES = ['xiaomi_vacuum']
+DEPENDENCIES = ['vacuum']
 
 
 @asyncio.coroutine
@@ -22,7 +22,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = discovery_info[CONF_HOST]
     name = discovery_info[CONF_NAME]
     sensors = discovery_info[CONF_SENSORS]
-    mirobo_vacuum = hass.data[DOMAIN][host]
+    mirobo_vacuum = hass.data[PLATFORM][host]
 
     async_add_devices(
         [MiroboVacuumSensor(mirobo_vacuum, name, s_type)
