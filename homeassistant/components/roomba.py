@@ -148,5 +148,4 @@ class RoombaHub(object):
         # Wait a few seconds for the data
         sleep(3)
         self.data = self._roomba.master_state['state'].get('reported', None)
-        from pprint import pformat
-        _LOGGER.debug('Roomba data: %s', pformat(self.data))
+        _LOGGER.debug('Roomba data: %s', self.data)

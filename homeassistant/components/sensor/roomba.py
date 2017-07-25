@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for type_name in SENSOR_TYPES:
             dev.append(RoombaSensor(hass, roomba_hub, type_name))
     _LOGGER.debug('Adding sensors %s', dev)
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class RoombaSensor(Entity):
@@ -58,10 +58,11 @@ class RoombaSensor(Entity):
             self._sensor_name = 'Roomba Position'
         elif self.sensor_type == SENSOR_TYPE_STATUS:
             self._sensor_name = 'Roomba State'
-        self.__set_sensor_state_from_hub()
 
-    def __set_sensor_state_from_hub(self):
-        """Set the state of the sensor from the hub data."""
+    def update(self):
+        """Update the properties of sensor."""
+        _LOGGER.debug('Update of Roomba %s sensor', self.sensor_type)
+        self.roomba_hub.update()
         roomba_data = self.roomba_hub.data
         roomba_name = roomba_data.get('name', 'Roomba')
         if self.sensor_type == SENSOR_TYPE_BIN:
@@ -104,12 +105,6 @@ class RoombaSensor(Entity):
                 self._state = phase
             if roomba_name:
                 self._sensor_name = '{} Status'.format(roomba_name)
-
-    def update(self):
-        """Update the properties of sensor."""
-        _LOGGER.debug('Update of Roomba %s sensor', self.sensor_type)
-        self.roomba_hub.update()
-        self.__set_sensor_state_from_hub()
         _LOGGER.debug('%s sensor state: %s', self.sensor_type, self._state)
 
     @property
