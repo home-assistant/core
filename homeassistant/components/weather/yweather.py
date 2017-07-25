@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA,
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME)
+from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
 REQUIREMENTS = ["yahooweather==0.8"]
 
@@ -116,7 +116,7 @@ class YahooWeatherWeather(WeatherEntity):
         try:
             return CONDITION_CLASSES_LIST[int(self._data.yahoo.Now['code'])]
         except (ValueError, IndexError):
-            return ''
+            return STATE_UNKNOWN
 
     @property
     def temperature(self):
@@ -150,7 +150,7 @@ class YahooWeatherWeather(WeatherEntity):
 
     @property
     def wind_bearing(self):
-        """Return the wind speed."""
+        """Return the wind direction."""
         return self._data.yahoo.Wind['direction']
 
     @property
@@ -161,7 +161,7 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if not self._forecast:
+        if self._forecast == 0:
             return []
         try:
             return [
