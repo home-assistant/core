@@ -15,7 +15,7 @@ from homeassistant.components.zwave import async_setup_platform  # noqa # pylint
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
-    STATE_OPEN, STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_STOPPED,
+    STATE_OPENED, STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_STOPPED,
 	STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 ATTR_COVER_STATE = 'cover_state'
 
 ZWAVE_STATES = {
-    "Opened": STATE_OPEN,
+    "Opened": STATE_OPENED,
     "Closed": STATE_CLOSED,
     "Opening": STATE_OPENING,
     "Closing": STATE_CLOSING,
