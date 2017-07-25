@@ -137,7 +137,9 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_state_ids = most_recent_state_ids.limit(1)
 
         else:
-            # We have more than one entity to look at, so we need to do a much
+            # We have more than one entity to look at (most commonly we want
+            # all entities,) so we need to do a search on all states since the
+            # last recorder run started.
             most_recent_state_ids = session.query(
                 func.max(States.state_id).label('max_state_id')
             ).filter(
