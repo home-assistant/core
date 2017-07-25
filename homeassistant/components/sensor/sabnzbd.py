@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def _check_sabnzbd(sab_api, base_url, api_key):
-    """Checks if we can reach SABnzbd."""
+    """Check if we can reach SABnzbd."""
     from pysabnzbd import SabnzbdApiException
     sab_api = sab_api(base_url, api_key)
 
@@ -155,8 +155,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     setup_sabnzbd(base_url, api_key, name, hass,
                   config, add_devices, SabnzbdApi)
 
-    #return True
-
 
 class SabnzbdSensor(Entity):
     """Representation of an SABnzbd sensor."""
@@ -217,9 +215,8 @@ class SabnzbdSensor(Entity):
                 self._state = 'Unknown'
 
 
-
 def _read_config(hass):
-    """Read sabnzbd config."""
+    """Read SABnzbd config."""
     path = hass.config.path(CONFIG_FILE)
 
     if not os.path.isfile(path):
@@ -231,7 +228,7 @@ def _read_config(hass):
 
 
 def _write_config(hass, config):
-    """Write sabnzbd config."""
+    """Write SABnzbd config."""
     data = json.dumps(config)
     with open(hass.config.path(CONFIG_FILE), 'w', encoding='utf-8') as outfile:
         outfile.write(data)
