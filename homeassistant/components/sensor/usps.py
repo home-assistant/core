@@ -8,7 +8,7 @@ from collections import defaultdict
 import logging
 
 from homeassistant.components.usps import DATA_USPS
-from homeassistant.const import (ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.dt import now, parse_datetime
@@ -26,7 +26,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     usps = hass.data[DATA_USPS]
-    _LOGGER.debug("Adding USPS Sensor devices...")
     add_devices([USPSPackageSensor(usps),
                  USPSMailSensor(usps)], True)
 
@@ -101,13 +100,19 @@ class USPSMailSensor(Entity):
         """Update device state."""
         if self._usps.mail is not None:
             self._state = len(self._usps.mail)
+        else:
+            self._state = 0
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: self._usps.attribution
-        }
+        attr = {}
+        attr[ATTR_ATTRIBUTION] = self._usps.attribution
+        try:
+            attr[ATTR_DATE] = self._usps.mail[0]['date']
+        except IndexError:
+            pass
+        return attr
 
     @property
     def icon(self):

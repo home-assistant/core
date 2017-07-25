@@ -23,13 +23,17 @@ DATA_USPS = 'data_usps'
 SCAN_INTERVAL = timedelta(minutes=30)
 COOKIE = 'usps_cookies.pickle'
 
+CONF_INTERVAL = 'interval'
+DEFAULT_INTERVAL = 10
+
 USPS_TYPE = ['sensor', 'camera']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME): cv.string
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,9 +45,9 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     name = conf.get(CONF_NAME)
+    interval = conf.get(CONF_INTERVAL)
 
     import myusps
-    _LOGGER.debug("Starting myUSPS session...")
     try:
         cookie = hass.config.path(COOKIE)
         session = myusps.get_session(username, password, cookie_path=cookie)
@@ -51,10 +55,9 @@ def setup(hass, config):
         _LOGGER.exception('Could not connect to My USPS')
         return False
 
-    hass.data[DATA_USPS] = USPSData(session, name)
+    hass.data[DATA_USPS] = USPSData(session, name, interval)
 
     for component in USPS_TYPE:
-        _LOGGER.debug("Discovery added for USPS %s", component)
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -67,10 +70,11 @@ class USPSData(object):
     updates from the server.
     """
 
-    def __init__(self, session, name):
+    def __init__(self, session, name, interval):
         """Initialize the data oject."""
         self._session = session
         self._name = name or DOMAIN
+        self._interval = interval
         self._packages = []
         self._mail = []
         self._attr = None
@@ -80,6 +84,11 @@ class USPSData(object):
     def name(self):
         """Return name for sensors/camera."""
         return self._name
+
+    @property
+    def interval(self):
+        """Return interval to update mail camera images."""
+        return self._interval
 
     @property
     def attribution(self):
@@ -110,4 +119,5 @@ class USPSData(object):
         self._packages = myusps.get_packages(self._session)
         self._mail = myusps.get_mail(self._session)
         self._attr = myusps.ATTRIBUTION
-        _LOGGER.debug("USPS update performed.")
+        _LOGGER.debug("Mail list: %s", self._mail)
+        _LOGGER.debug("Package list: %s", self._packages)
