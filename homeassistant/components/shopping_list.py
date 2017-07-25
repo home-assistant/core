@@ -70,11 +70,16 @@ class ListTopItemsIntent(intent.IntentHandler):
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
+        items = intent_obj.hass.data[DOMAIN][-5:]
         response = intent_obj.create_response()
-        response.async_set_speech(
-            "These are the top 5 items in your shopping list: {}".format(
-                ', '.join(reversed(intent_obj.hass.data[DOMAIN][-5:]))))
-        intent_obj.hass.bus.async_fire(EVENT)
+
+        if len(items) == 0:
+            response.async_set_speech(
+                "There are no items on your shopping list")
+        else:
+            response.async_set_speech(
+                "These are the top {} items on your shopping list: {}".format(
+                    min(len(items), 5), ', '.join(reversed(items))))
         return response
 
 
