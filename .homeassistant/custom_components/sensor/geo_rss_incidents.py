@@ -30,6 +30,7 @@ Fire
 Earthquake
 - USGS: https://earthquake.usgs.gov/earthquakes/feed/v1.0/atom.php
 - BGS: http://www.bgs.ac.uk/feeds/worldSeismology.xml
+- Natural Resources Canada: http://www.earthquakescanada.nrcan.gc.ca/index-en.php?tpl_region=canada&tpl_output=rss
 
 
 """
@@ -62,7 +63,7 @@ CONF_CATEGORIES = 'categories'
 
 DEFAULT_NAME = 'Incident Information Service'
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMEMT = 'Incident'
+DEFAULT_UNIT_OF_MEASUREMEMT = 'Incidents'
 DEFAULT_ICON = 'mdi:alert'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
