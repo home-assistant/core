@@ -16,7 +16,7 @@ def async_setup_platform(hass, config, async_add_devices_callback, \
     entities = []
 
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Outlet):
+        if isinstance(device, xknx.Switch):
             entities.append(XKNXSwitch(hass, device))
 
     async_add_devices_callback(entities)
