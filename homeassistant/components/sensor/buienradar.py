@@ -23,11 +23,18 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.6']
+REQUIREMENTS = ['buienradar==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
+TIMEFRAME_LABEL = 'Timeframe'
+# Schedule next call after (minutes):
+SCHEDULE_OK = 10
+# When an error occurred, new call after (minutes):
+SCHEDULE_NOK = 2
+
 # Supported sensor types:
+# Key: ['label', unit, icon]
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
     'symbol': ['Symbol', None, None],
@@ -47,7 +54,7 @@ SENSOR_TYPES = {
     'precipitation_forecast_average': ['Precipitation forecast average',
                                        'mm/h', 'mdi:weather-pouring'],
     'precipitation_forecast_total': ['Precipitation forecast total',
-                                     'mm/h', 'mdi:weather-pouring']
+                                     'mm', 'mdi:weather-pouring']
 }
 
 CONF_TIMEFRAME = 'timeframe'
@@ -61,13 +68,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Optional(CONF_TIMEFRAME): cv.positive_int
+    vol.Optional(CONF_TIMEFRAME, default=60):
+        vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the buienradar sensor."""
+    """Create the buienradar sensor."""
     from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -81,6 +89,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     coordinates = {CONF_LATITUDE: float(latitude),
                    CONF_LONGITUDE: float(longitude)}
 
+    _LOGGER.debug("Initializing buienradar sensor coordinate %s, timeframe %s",
+                  coordinates, timeframe)
+
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
@@ -88,7 +99,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
-    _LOGGER.debug("Start running....")
     yield from data.schedule_update(1)
 
 
@@ -97,6 +107,8 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name):
         """Initialize the sensor."""
+        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -104,16 +116,22 @@ class BrSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._entity_picture = None
         self._attribution = None
+        self._measured = None
         self._stationname = None
+
+        if self.type.startswith(PRECIPITATION_FORECAST):
+            self._timeframe = None
 
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, IMAGE, STATIONNAME,
-                                           SYMBOL, PRECIPITATION_FORECAST)
+        from buienradar.buienradar import (ATTRIBUTION, IMAGE, MEASURED,
+                                           PRECIPITATION_FORECAST, STATIONNAME,
+                                           SYMBOL, TIMEFRAME)
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
+        self._measured = data.get(MEASURED)
         if self.type == SYMBOL:
             # update weather symbol & status text
             new_state = data.get(self.type)
@@ -124,21 +142,26 @@ class BrSensor(Entity):
                 self._state = new_state
                 self._entity_picture = img
                 return True
-        elif self.type.startswith(PRECIPITATION_FORECAST):
+            return False
+
+        if self.type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            self._timeframe = nested.get(TIMEFRAME)
             # pylint: disable=protected-access
             if new_state != self._state:
                 self._state = new_state
                 return True
-        else:
-            # update all other sensors
-            new_state = data.get(self.type)
-            # pylint: disable=protected-access
-            if new_state != self._state:
-                self._state = new_state
-                return True
+            return False
+
+        # update all other sensors
+        new_state = data.get(self.type)
+        # pylint: disable=protected-access
+        if new_state != self._state:
+            self._state = new_state
+            return True
+        return False
 
     @property
     def attribution(self):
@@ -167,12 +190,21 @@ class BrSensor(Entity):
 
         if self.type != SYMBOL:
             return None
-        else:
-            return self._entity_picture
+
+        return self._entity_picture
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+
+        if self.type.startswith(PRECIPITATION_FORECAST):
+            result = {ATTR_ATTRIBUTION: self._attribution}
+            if self._timeframe is not None:
+                result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
+
+            return result
+
         return {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
@@ -223,7 +255,7 @@ class BrData(object):
 
     @asyncio.coroutine
     def get_data(self, url):
-        """Load xmpl data from specified url."""
+        """Load data from specified url."""
         from buienradar.buienradar import (CONTENT,
                                            MESSAGE, STATUS_CODE, SUCCESS)
 
@@ -235,14 +267,20 @@ class BrData(object):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 resp = yield from websession.get(url)
 
-                result[SUCCESS] = (resp.status == 200)
                 result[STATUS_CODE] = resp.status
                 result[CONTENT] = yield from resp.text()
+                if resp.status == 200:
+                    result[SUCCESS] = True
+                else:
+                    result[MESSAGE] = "Got http statuscode: %d" % (resp.status)
 
                 return result
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             result[MESSAGE] = "%s" % err
             return result
+        finally:
+            if resp is not None:
+                yield from resp.release()
 
     @asyncio.coroutine
     def async_update(self, *_):
@@ -254,6 +292,16 @@ class BrData(object):
         if not content.get(SUCCESS, False):
             content = yield from self.get_data('http://api.buienradar.nl')
 
+        if content.get(SUCCESS) is not True:
+            # unable to get the data
+            _LOGGER.warning("Unable to retrieve xml data from Buienradar."
+                            "(Msg: %s, status: %s,)",
+                            content.get(MESSAGE),
+                            content.get(STATUS_CODE),)
+            # schedule new call
+            yield from self.schedule_update(SCHEDULE_NOK)
+            return
+
         # rounding coordinates prevents unnecessary redirects/calls
         rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
         rainurl = rainurl.format(
@@ -262,28 +310,33 @@ class BrData(object):
             )
         raincontent = yield from self.get_data(rainurl)
 
-        if content.get(SUCCESS) and raincontent.get(SUCCESS):
-            result = parse_data(content.get(CONTENT),
-                                raincontent.get(CONTENT),
-                                self.coordinates[CONF_LATITUDE],
-                                self.coordinates[CONF_LONGITUDE],
-                                self.timeframe)
-            if result.get(SUCCESS):
-                self.data = result.get(DATA)
-
-                yield from self.update_devices()
-
-                yield from self.schedule_update(10)
-            else:
-                yield from self.schedule_update(2)
-        else:
+        if raincontent.get(SUCCESS) is not True:
             # unable to get the data
-            _LOGGER.warning("Unable to retrieve data from Buienradar."
+            _LOGGER.warning("Unable to retrieve raindata from Buienradar."
                             "(Msg: %s, status: %s,)",
-                            result.get(MESSAGE),
-                            result.get(STATUS_CODE),)
+                            raincontent.get(MESSAGE),
+                            raincontent.get(STATUS_CODE),)
             # schedule new call
-            yield from self.schedule_update(2)
+            yield from self.schedule_update(SCHEDULE_NOK)
+            return
+
+        result = parse_data(content.get(CONTENT),
+                            raincontent.get(CONTENT),
+                            self.coordinates[CONF_LATITUDE],
+                            self.coordinates[CONF_LONGITUDE],
+                            self.timeframe)
+
+        _LOGGER.debug("Buienradar parsed data: %s", result)
+        if result.get(SUCCESS) is not True:
+            _LOGGER.warning("Unable to parse data from Buienradar."
+                            "(Msg: %s)",
+                            result.get(MESSAGE),)
+            yield from self.schedule_update(SCHEDULE_NOK)
+            return
+
+        self.data = result.get(DATA)
+        yield from self.update_devices()
+        yield from self.schedule_update(SCHEDULE_OK)
 
     @property
     def attribution(self):

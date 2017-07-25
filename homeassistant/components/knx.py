@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
 import logging
+import os
 
 import voluptuous as vol
 
@@ -12,8 +13,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['knxip==0.4']
+REQUIREMENTS = ['knxip==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,15 +24,27 @@ DEFAULT_PORT = 3671
 DOMAIN = 'knx'
 
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
+EVENT_KNX_FRAME_SEND = 'knx_frame_send'
 
 KNXTUNNEL = None
+KNX_ADDRESS = "address"
+KNX_DATA = "data"
+KNX_GROUP_WRITE = "group_write"
+CONF_LISTEN = "listen"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_LISTEN, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+KNX_WRITE_SCHEMA = vol.Schema({
+    vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(KNX_DATA): vol.All(cv.ensure_list, [cv.byte])
+})
 
 
 def setup(hass, config):
@@ -38,12 +52,12 @@ def setup(hass, config):
     global KNXTUNNEL
 
     from knxip.ip import KNXIPTunnel
-    from knxip.core import KNXException
+    from knxip.core import KNXException, parse_group_address
 
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
 
-    if host is '0.0.0.0':
+    if host == '0.0.0.0':
         _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
 
     KNXTUNNEL = KNXIPTunnel(host, port)
@@ -61,7 +75,62 @@ def setup(hass, config):
 
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    def received_knx_event(address, data):
+        """Process received KNX message."""
+        if len(data) == 1:
+            data = data[0]
+        hass.bus.fire('knx_event', {
+            'address': address,
+            'data': data
+        })
+
+    for listen in config[DOMAIN].get(CONF_LISTEN):
+        _LOGGER.debug("Registering listener for %s", listen)
+        try:
+            KNXTUNNEL.register_listener(parse_group_address(listen),
+                                        received_knx_event)
+        except KNXException as knxexception:
+            _LOGGER.error("Can't register KNX listener for address %s (%s)",
+                          listen, knxexception)
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
+
+    # Listen to KNX events and send them to the bus
+    def handle_group_write(call):
+        """Bridge knx_frame_send events to the KNX bus."""
+        # parameters are pre-validated using KNX_WRITE_SCHEMA
+        addrlist = call.data.get("address")
+        knxdata = call.data.get("data")
+
+        knxaddrlist = []
+        for addr in addrlist:
+            try:
+                _LOGGER.debug("Found %s", addr)
+                knxaddr = int(addr)
+            except ValueError:
+                knxaddr = None
+
+            if knxaddr is None:
+                try:
+                    knxaddr = parse_group_address(addr)
+                except KNXException:
+                    _LOGGER.error("KNX address format incorrect: %s", addr)
+
+            knxaddrlist.append(knxaddr)
+
+        for addr in knxaddrlist:
+            KNXTUNNEL.group_write(addr, knxdata)
+
+    # Listen for when knx_frame_send event is fired
+    hass.services.register(DOMAIN,
+                           KNX_GROUP_WRITE,
+                           handle_group_write,
+                           descriptions[DOMAIN][KNX_GROUP_WRITE],
+                           schema=KNX_WRITE_SCHEMA)
+
     return True
 
 

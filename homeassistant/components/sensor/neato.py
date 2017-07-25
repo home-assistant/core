@@ -136,10 +136,7 @@ class NeatoConnectedSensor(Entity):
     @property
     def available(self):
         """Return True if sensor data is available."""
-        if not self._state:
-            return False
-        else:
-            return True
+        return self._state
 
     @property
     def state(self):

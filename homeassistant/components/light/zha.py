@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except (AttributeError, KeyError):
         pass
 
-    async_add_devices([Light(**discovery_info)])
+    async_add_devices([Light(**discovery_info)], update_before_add=True)
 
 
 class Light(zha.Entity, light.Light):
@@ -46,10 +46,10 @@ class Light(zha.Entity, light.Light):
         self._brightness = None
 
         import bellows.zigbee.zcl.clusters as zcl_clusters
-        if zcl_clusters.general.LevelControl.cluster_id in self._clusters:
+        if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._brightness = 0
-        if zcl_clusters.lighting.Color.cluster_id in self._clusters:
+        if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
             # Not sure all color lights necessarily support this directly
             # Should we emulate it?
             self._supported_features |= light.SUPPORT_COLOR_TEMP
@@ -99,16 +99,19 @@ class Light(zha.Entity, light.Light):
                 duration
             )
             self._state = 1
+            self.hass.async_add_job(self.async_update_ha_state())
             return
 
         yield from self._endpoint.on_off.on()
         self._state = 1
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         yield from self._endpoint.on_off.off()
         self._state = 0
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def brightness(self):
@@ -129,3 +132,52 @@ class Light(zha.Entity, light.Light):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        @asyncio.coroutine
+        def safe_read(cluster, attributes):
+            """Swallow all exceptions from network read.
+
+            If we throw during initialization, setup fails. Rather have an
+            entity that exists, but is in a maybe wrong state, than no entity.
+            """
+            try:
+                result, _ = yield from cluster.read_attributes(
+                    attributes,
+                    allow_cache=False,
+                )
+                return result
+            except Exception:  # pylint: disable=broad-except
+                return {}
+
+        result = yield from safe_read(self._endpoint.on_off, ['on_off'])
+        self._state = result.get('on_off', self._state)
+
+        if self._supported_features & light.SUPPORT_BRIGHTNESS:
+            result = yield from safe_read(self._endpoint.level,
+                                          ['current_level'])
+            self._brightness = result.get('current_level', self._brightness)
+
+        if self._supported_features & light.SUPPORT_COLOR_TEMP:
+            result = yield from safe_read(self._endpoint.light_color,
+                                          ['color_temperature'])
+            self._color_temp = result.get('color_temperature',
+                                          self._color_temp)
+
+        if self._supported_features & light.SUPPORT_XY_COLOR:
+            result = yield from safe_read(self._endpoint.light_color,
+                                          ['current_x', 'current_y'])
+            if 'current_x' in result and 'current_y' in result:
+                self._xy_color = (result['current_x'], result['current_y'])
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+        return False

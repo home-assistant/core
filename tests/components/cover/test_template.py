@@ -54,10 +54,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
                         }
                     }
                 }
@@ -79,7 +75,7 @@ class TestTemplateCover(unittest.TestCase):
         assert state.state == STATE_CLOSED
 
     def test_template_state_boolean(self):
-        """Test the state text of a template."""
+        """Test the value_template attribute."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -96,10 +92,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
                         }
                     }
                 }
@@ -112,7 +104,7 @@ class TestTemplateCover(unittest.TestCase):
         assert state.state == STATE_OPEN
 
     def test_template_position(self):
-        """Test the state text of a template."""
+        """Test the position_template attribute."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -126,10 +118,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'entity_id': 'cover.test'
                             },
                             'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test'
-                            },
-                            'stop_cover': {
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test'
                             },
@@ -170,7 +158,7 @@ class TestTemplateCover(unittest.TestCase):
         assert state.state == STATE_CLOSED
 
     def test_template_tilt(self):
-        """Test the state text of a template."""
+        """Test the tilt_template attribute."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -189,10 +177,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
                         }
                     }
                 }
@@ -205,7 +189,7 @@ class TestTemplateCover(unittest.TestCase):
         assert state.attributes.get('current_tilt_position') == 42.0
 
     def test_template_out_of_bounds(self):
-        """Test the state text of a template."""
+        """Test template out-of-bounds condition."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -221,10 +205,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'entity_id': 'cover.test_state'
                             },
                             'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
@@ -260,10 +240,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
                             'icon_template':
                                 "{% if states.cover.test_state.state %}"
                                 "mdi:check"
@@ -294,14 +270,26 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'icon_template':
-                                "{% if states.cover.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}"
+                        },
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        assert self.hass.states.all() == []
+
+    def test_template_open_or_position(self):
+        """Test that at least one of open_cover or set_position is used."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'value_template':
+                                "{{ 1 == 1 }}",
                         }
                     }
                 }
@@ -312,8 +300,32 @@ class TestTemplateCover(unittest.TestCase):
 
         assert self.hass.states.all() == []
 
+    def test_template_open_and_close(self):
+        """Test that if open_cover is specified, cose_cover is too."""
+        with assert_setup_component(0, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'value_template':
+                                "{{ 1 == 1 }}",
+                            'open_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                        },
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        assert self.hass.states.all() == []
+
     def test_template_non_numeric(self):
-        """Test the state text of a template."""
+        """Test that tilt_template values are numeric."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -336,10 +348,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'stop_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
                         }
                     }
                 }
@@ -353,7 +361,7 @@ class TestTemplateCover(unittest.TestCase):
         assert state.attributes.get('current_position') is None
 
     def test_open_action(self):
-        """Test the state text of a template."""
+        """Test the open_cover command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -366,10 +374,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'test.automation',
                             },
                             'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
@@ -390,7 +394,7 @@ class TestTemplateCover(unittest.TestCase):
         assert len(self.calls) == 1
 
     def test_close_stop_action(self):
-        """Test the state text of a template."""
+        """Test the close-cover and stop_cover commands."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -429,29 +433,30 @@ class TestTemplateCover(unittest.TestCase):
         assert len(self.calls) == 2
 
     def test_set_position(self):
-        """Test the state text of a template."""
+        """Test the set_position command."""
         with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'input_slider', {
+               'input_slider': {
+                   'test': {
+                       'min': '0',
+                       'max': '100',
+                       'initial': '42',
+                   }
+               }
+            })
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
                             'position_template':
-                                "{{ 100 }}",
-                            'open_cover': {
-                                'service': 'cover.open_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
-                                'service': 'cover.stop_cover',
-                                'entity_id': 'cover.test_state'
-                            },
+                                "{{ states.input_slider.test.state | int }}",
                             'set_cover_position': {
-                                'service': 'test.automation',
+                                'service': 'input_slider.select_value',
+                                'entity_id': 'input_slider.test',
+                                'data_template': {
+                                    'value': '{{ position }}'
+                                },
                             },
                         }
                     }
@@ -461,17 +466,29 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
+        state = self.hass.states.set('input_slider.test', 42)
+        self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
 
-        cover.set_cover_position(self.hass, 42,
+        cover.open_cover(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_position') == 100.0
+
+        cover.close_cover(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_position') == 0.0
+
+        cover.set_cover_position(self.hass, 25,
                                  'cover.test_template_cover')
         self.hass.block_till_done()
-
-        assert len(self.calls) == 1
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_position') == 25.0
 
     def test_set_tilt_position(self):
-        """Test the state text of a template."""
+        """Test the set_tilt_position command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -486,10 +503,6 @@ class TestTemplateCover(unittest.TestCase):
                             },
                             'close_cover': {
                                 'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
-                                'service': 'cover.stop_cover',
                                 'entity_id': 'cover.test_state'
                             },
                             'set_cover_tilt_position': {
@@ -510,7 +523,7 @@ class TestTemplateCover(unittest.TestCase):
         assert len(self.calls) == 1
 
     def test_open_tilt_action(self):
-        """Test the state text of a template."""
+        """Test the open_cover_tilt command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -525,10 +538,6 @@ class TestTemplateCover(unittest.TestCase):
                             },
                             'close_cover': {
                                 'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
-                                'service': 'cover.stop_cover',
                                 'entity_id': 'cover.test_state'
                             },
                             'set_cover_tilt_position': {
@@ -548,7 +557,7 @@ class TestTemplateCover(unittest.TestCase):
         assert len(self.calls) == 1
 
     def test_close_tilt_action(self):
-        """Test the state text of a template."""
+        """Test the close_cover_tilt command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -563,10 +572,6 @@ class TestTemplateCover(unittest.TestCase):
                             },
                             'close_cover': {
                                 'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
-                                'service': 'cover.stop_cover',
                                 'entity_id': 'cover.test_state'
                             },
                             'set_cover_tilt_position': {
@@ -600,10 +605,6 @@ class TestTemplateCover(unittest.TestCase):
                                 'entity_id': 'cover.test_state'
                             },
                             'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'stop_cover': {
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },

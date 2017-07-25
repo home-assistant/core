@@ -38,6 +38,13 @@ def discover_sensors(topic, payload):
         else:
             unit = TEMP_CELSIUS
         return ArwnSensor(name, 'temp', unit)
+    if domain == "moisture":
+        name = parts[2] + " Moisture"
+        return ArwnSensor(name, 'moisture', unit, "mdi:water-percent")
+    if domain == "rain":
+        if len(parts) >= 2 and parts[2] == "today":
+            return ArwnSensor("Rain Since Midnight", 'since_midnight',
+                              "in", "mdi:water")
     if domain == 'barometer':
         return ArwnSensor('Barometer', 'pressure', unit,
                           "mdi:thermometer-lines")
@@ -146,7 +153,4 @@ class ArwnSensor(Entity):
     @property
     def icon(self):
         """Return the icon of device based on its type."""
-        if self._icon:
-            return self._icon
-        else:
-            return super().icon
+        return self._icon

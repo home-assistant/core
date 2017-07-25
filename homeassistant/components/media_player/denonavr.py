@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.5.1']
+REQUIREMENTS = ['denonavr==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,8 +197,7 @@ class DenonDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self._current_source in self._receiver.netaudio_func_list:
             return SUPPORT_DENON | SUPPORT_MEDIA_MODES
-        else:
-            return SUPPORT_DENON
+        return SUPPORT_DENON
 
     @property
     def media_content_id(self):
@@ -210,8 +209,7 @@ class DenonDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self._state == STATE_PLAYING or self._state == STATE_PAUSED:
             return MEDIA_TYPE_MUSIC
-        else:
-            return MEDIA_TYPE_CHANNEL
+        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_duration(self):
@@ -223,8 +221,7 @@ class DenonDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self._current_source in self._receiver.playing_func_list:
             return self._media_image_url
-        else:
-            return None
+        return None
 
     @property
     def media_title(self):
@@ -233,24 +230,21 @@ class DenonDevice(MediaPlayerDevice):
             return self._current_source
         elif self._title is not None:
             return self._title
-        else:
-            return self._frequency
+        return self._frequency
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
         if self._artist is not None:
             return self._artist
-        else:
-            return self._band
+        return self._band
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
         if self._album is not None:
             return self._album
-        else:
-            return self._station
+        return self._station
 
     @property
     def media_album_artist(self):
@@ -297,17 +291,11 @@ class DenonDevice(MediaPlayerDevice):
         """Turn on media player."""
         if self._receiver.power_on():
             self._state = STATE_ON
-            return True
-        else:
-            return False
 
     def turn_off(self):
         """Turn off media player."""
         if self._receiver.power_off():
             self._state = STATE_OFF
-            return True
-        else:
-            return False
 
     def volume_up(self):
         """Volume up the media player."""
@@ -327,11 +315,8 @@ class DenonDevice(MediaPlayerDevice):
         try:
             if self._receiver.set_volume(volume_denon):
                 self._volume = volume_denon
-                return True
-            else:
-                return False
         except ValueError:
-            return False
+            pass
 
     def mute_volume(self, mute):
         """Send mute command."""

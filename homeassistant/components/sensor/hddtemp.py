@@ -77,8 +77,7 @@ class HddTempSensor(Entity):
         """Return the unit the value is expressed in."""
         if self._details[4] == 'C':
             return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     @property
     def device_state_attributes(self):

@@ -165,6 +165,5 @@ class WeatherEntity(Entity):
 
         if hass_unit == TEMP_CELSIUS:
             return round(value, 1)
-        else:
-            # Users of fahrenheit generally expect integer units.
-            return round(value)
+        # Users of fahrenheit generally expect integer units.
+        return round(value)
