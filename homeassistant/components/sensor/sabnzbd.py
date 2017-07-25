@@ -102,8 +102,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
         """Handle configuration changes."""
         if _check_sabnzbd(sab_api, host, data.get('api_key')):
             setup_sabnzbd(host, data.get('api_key'), name,
-                          hass, config, add_devices, sab_api
-                          )
+                          hass, config, add_devices, sab_api)
 
             def success():
                 """Set up was successful."""
@@ -137,8 +136,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST) or discovery_info.get(CONF_HOST)
     port = config.get(CONF_PORT) or discovery_info.get(CONF_PORT)
     name = config.get(CONF_NAME, DEFAULT_NAME)
+    use_ssl = DEFAULT_SSL
 
-    uri_scheme = 'https://' if config.get(CONF_SSL) else 'http://'
+    if config.get(CONF_SSL):
+        use_ssl = True
+    elif discovery_info.get('properties', {}).get('https', '0') == '1':
+        use_ssl = True
+
+    uri_scheme = 'https://' if use_ssl else 'http://'
     base_url = "{}{}:{}/".format(uri_scheme, host, port)
     api_key = config.get(CONF_API_KEY)
 
