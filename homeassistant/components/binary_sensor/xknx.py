@@ -16,8 +16,7 @@ def async_setup_platform(hass, config, add_devices, \
     entities = []
 
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Sensor) and \
-                device.is_binary():
+        if isinstance(device, xknx.BinarySensor):
             entities.append(XKNXBinarySensor(hass, device))
 
     add_devices(entities)

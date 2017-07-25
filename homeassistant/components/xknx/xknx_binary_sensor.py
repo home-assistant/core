@@ -39,4 +39,4 @@ class XKNXBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.device.binary_state()
+        return self.device.is_on()
