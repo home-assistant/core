@@ -509,6 +509,7 @@ py-cpuinfo==3.3.0
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
+# homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
 pyHS100==0.2.4.2
 
