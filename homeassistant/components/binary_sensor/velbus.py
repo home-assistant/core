@@ -14,7 +14,6 @@ from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.velbus import DOMAIN
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 
@@ -61,7 +60,6 @@ class VelbusBinarySensor(BinarySensorDevice):
         yield from self.hass.async_add_job(
             self._velbus.subscribe, self._on_message)
 
-    @callback
     def _on_message(self, message):
         import velbus
         if isinstance(message, velbus.PushButtonStatusMessage):
