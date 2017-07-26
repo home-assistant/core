@@ -410,7 +410,7 @@ myusps==1.1.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.0.1
+netdisco==1.1.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -541,7 +541,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.1
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
