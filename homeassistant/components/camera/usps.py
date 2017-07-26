@@ -4,6 +4,7 @@ Support for a camera made up of usps mail images.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera.usps/
 """
+import os
 import logging
 from datetime import timedelta
 
@@ -15,8 +16,6 @@ from homeassistant.components.camera import Camera
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['usps']
-
-NOMAIL_IMAGE_PATH = 'http://imgur.com/a/bZc6n'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -45,14 +44,13 @@ class USPSCamera(Camera):
         self._mail_index = 0
         self._mail_count = 0
 
-        self._no_mail_img = self.no_mail_image()
-
         self._timer = None
 
-    def no_mail_image(self):
-        """Fetch no mail camera image."""
-        img = self._session.get(NOMAIL_IMAGE_PATH).content
-        return img
+        # Fetch no mail camera image
+        image_path = os.path.join(
+            os.path.dirname(__file__), 'nomail.jpg')
+        with open(image_path, 'rb') as file:
+            self._no_mail_img = file.read()
 
     def camera_image(self):
         """Update the camera's image if it has changed."""
