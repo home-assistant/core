@@ -11,12 +11,10 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.light import Light, PLATFORM_SCHEMA
-from homeassistant.core import callback
+from homeassistant.components.velus import DOMAIN
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
-DOMAIN = 'light'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,15 +31,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Lights."""
-    add_devices(VelbusLight(light) for light in config[CONF_DEVICES])
-    return True
+    velbus = hass.data[DOMAIN]
+    add_devices(VelbusLight(light, velbus) for light in config[CONF_DEVICES])
 
 
 class VelbusLight(Light):
     """Representation of a Velbus Light."""
 
-    def __init__(self, light):
+    def __init__(self, light, velbus):
         """Initialize a Velbus light."""
+        self._velbus = velbus
         self._name = light[CONF_NAME]
         self._module = light['module']
         self._channel = light['channel']
@@ -50,10 +49,13 @@ class VelbusLight(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        self.hass.data['VelbusController'].subscribe(self._on_message)
-        self.get_status()
+        def _init_velbus():
+            "Initialize Velbus on startup."
+            self._velbus.subscribe(self._on_message)
+            self.get_status()
 
-    @callback
+        yield from self.hass.async_add_job(_init_velbus)
+
     def _on_message(self, message):
         import velbus
         if isinstance(message, velbus.RelayStatusMessage) and \
@@ -83,7 +85,7 @@ class VelbusLight(Light):
         message = velbus.SwitchRelayOnMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -91,7 +93,7 @@ class VelbusLight(Light):
         message = velbus.SwitchRelayOffMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def get_status(self):
         """Retrieve current status."""
@@ -99,4 +101,4 @@ class VelbusLight(Light):
         message = velbus.ModuleStatusRequestMessage()
         message.set_defaults(self._module)
         message.channels = [self._channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
