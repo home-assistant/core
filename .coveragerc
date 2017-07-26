@@ -199,9 +199,6 @@ omit =
     homeassistant/components/xiaomi.py
     homeassistant/components/*/xiaomi.py
 
-    homeassistant/components/xiaomi_vacuum.py
-    homeassistant/components/*/xiaomi_vacuum.py
-
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
 
@@ -511,6 +508,7 @@ omit =
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
+    homeassistant/components/sensor/xiaomi_vacuum.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
     homeassistant/components/shiftr.py
