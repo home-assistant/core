@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.components.velus import DOMAIN
+from homeassistant.components.velbus import DOMAIN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class VelbusSwitch(SwitchDevice):
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
         def _init_velbus():
-            "Initialize Velbus on startup."
+            """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)
             self.get_status()
 
