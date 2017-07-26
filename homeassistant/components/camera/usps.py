@@ -94,8 +94,12 @@ class USPSCamera(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
+        return '{} mail'.format(self._name)
+
+    @property
+    def model(self):
+        """Return date of mail as model."""
         try:
-            # Include date if available
-            return '{} mail {}'.format(self._name, self._usps.mail[0]['date'])
+            return 'Date: {}'.format(self._name, self._usps.mail[0]['date'])
         except IndexError:
-            return '{} mail'.format(self._name)
+            return None
