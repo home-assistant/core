@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.foscam/
 """
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
