@@ -194,10 +194,11 @@ class YrData(object):
         now = dt_util.utcnow()
         forecast_time = now + dt_util.dt.timedelta(hours=self._forecast)
 
-        # Find the correct time entry. Since not all time entries contain all types
-        # of data, we cannot just select one. Instead, we order them by distance from the
-        # desired forecast_time, and for every device iterate them in order of increasing distance,
-        # taking the first time_point that contains the desired data
+        # Find the correct time entry. Since not all time entries contain all
+        # types of data, we cannot just select one. Instead, we order  #them by
+        # distance from the desired forecast_time, and for every device iterate
+        # them in order of increasing distance, taking the first time_point
+        # that contains the desired data.
 
         ordered_entries = []
 
@@ -209,11 +210,12 @@ class YrData(object):
                 # Has already passed. Never select this.
                 continue
 
-            average_dist = abs((valid_to - forecast_time).total_seconds()) + abs((valid_from - forecast_time).total_seconds())
+            average_dist = abs((valid_to - forecast_time).total_seconds()) \
+                         + abs((valid_from - forecast_time).total_seconds())
 
             ordered_entries.append((average_dist, time_entry))
 
-        ordered_entries.sort(key=lambda item : item[0])
+        ordered_entries.sort(key=lambda item: item[0])
 
         # Update all devices
         tasks = []
