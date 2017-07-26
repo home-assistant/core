@@ -41,7 +41,7 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.6.2']
+#REQUIREMENTS = ['xknx==0.6.2']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -125,16 +125,21 @@ class XKNXModule(object):
 
     def connection_config_routing(self):
         from xknx.io import ConnectionConfig, ConnectionType
-        local_ip = self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
+        local_ip = \
+            self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
         return ConnectionConfig(
             connection_type=ConnectionType.ROUTING,
             local_ip=local_ip)
 
     def connection_config_tunneling(self):
-        from xknx.io import ConnectionConfig, ConnectionType, DEFAULT_MCAST_PORT
-        gateway_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_HOST)
-        gateway_port = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
-        local_ip = self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
+        from xknx.io import ConnectionConfig, ConnectionType, \
+            DEFAULT_MCAST_PORT
+        gateway_ip = \
+            self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_HOST)
+        gateway_port = \
+            self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_PORT)
+        local_ip = \
+            self.config[DOMAIN][CONF_XKNX_TUNNELING].get(CONF_XKNX_LOCAL_IP)
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
