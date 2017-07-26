@@ -58,7 +58,7 @@ def add_devices_from_platform(hass, config, add_devices):
                       config.get(CONF_NAME),
                   group_address_switch= \
                       config.get(CONF_ADDRESS),
-                  group_address_state= \
+                  group_address_switch_state= \
                       config.get(CONF_STATE_ADDRESS),
                   group_address_brightness= \
                       config.get(CONF_BRIGHTNESS_ADDRESS),
