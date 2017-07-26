@@ -28,6 +28,10 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+LUTRON_CASETA_COMPONENTS = [
+    'light', 'switch', 'cover', 'scene'
+]
+
 
 def setup(hass, base_config):
     """Set up the Lutron component."""
@@ -44,7 +48,7 @@ def setup(hass, base_config):
 
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
-    for component in ('light', 'switch', 'cover'):
+    for component in LUTRON_CASETA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
