@@ -100,6 +100,6 @@ class USPSCamera(Camera):
     def model(self):
         """Return date of mail as model."""
         try:
-            return 'Date: {}'.format(self._name, self._usps.mail[0]['date'])
+            return 'Date: {}'.format(self._usps.mail[0]['date'])
         except IndexError:
             return None
