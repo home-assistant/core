@@ -17,6 +17,7 @@ DEPENDENCIES = ['zha']
 
 DEFAULT_DURATION = 0.5
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Zigbee Home Automation lights."""
