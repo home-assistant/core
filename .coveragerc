@@ -172,6 +172,9 @@ omit =
     homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
+  
+    homeassistant/components/velbus.py
+    homeassistant/components/*/velbus.py
 
     homeassistant/components/velux.py
     homeassistant/components/*/velux.py
@@ -306,6 +309,7 @@ omit =
     homeassistant/components/light/piglow.py
     homeassistant/components/light/sensehat.py
     homeassistant/components/light/tikteck.py
+    homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
