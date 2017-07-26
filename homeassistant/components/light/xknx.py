@@ -2,8 +2,7 @@ import asyncio
 import xknx
 import voluptuous as vol
 
-from homeassistant.components.xknx import _LOGGER, DATA_XKNX, \
-    XKNXLight
+from homeassistant.components.xknx import DATA_XKNX, XKNXLight
 
 from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
