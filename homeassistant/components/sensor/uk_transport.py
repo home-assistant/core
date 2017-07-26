@@ -88,6 +88,7 @@ class UkTransportSensor(Entity):
     """
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
+    ICON = 'mdi:train'
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -207,6 +208,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         """Construct a live bus time sensor."""
         self._station_code = station_code
         self._calling_at = calling_at
+        self._next_trains = []
 
         sensor_name = 'Next train to {}'.format(calling_at)
         query_url = 'train/station/{}/live.json'.format(station_code)
