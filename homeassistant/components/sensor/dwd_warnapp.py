@@ -13,8 +13,6 @@ Wetterwarnungen (Stufe 1)
 """
 import logging
 import json
-import time
-import datetime
 from datetime import timedelta
 
 import voluptuous as vol
