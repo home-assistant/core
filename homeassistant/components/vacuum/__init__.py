@@ -26,16 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vacuum'
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=20)
 
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
 
-ATTR_BATTERY = 'Battery'
-ATTR_BATTERY_ICON = 'Battery_icon'
 ATTR_COMMAND = 'command'
 ATTR_FANSPEED = 'fanspeed'
 ATTR_PARAMS = 'params'
-ATTR_STATUS = 'Status'
 
 SERVICE_CLEANING_PLAY_PAUSE = 'cleaning_play_pause'
 SERVICE_LOCATE = 'locate'
@@ -184,14 +181,14 @@ class VacuumDevice(ToggleEntity):
         data = {}
 
         if self.status is not None:
-            data[ATTR_STATUS] = self.status
+            data['vacuum_status'] = self.status
 
         if self.battery_level is not None:
-            data[ATTR_BATTERY] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
+            data['vacuum_battery'] = self.battery_level
+            data['vacuum_battery_icon'] = self.battery_icon
 
         if self.fanspeed is not None:
-            data[ATTR_FANSPEED.capitalize()] = self.fanspeed
+            data['vacuum_fanspeed'] = self.fanspeed
 
         return data
 

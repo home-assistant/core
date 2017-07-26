@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
 ICON = DEFAULT_ICON
-PLATFORM = 'xiaomi_vacuum'
+PLATFORM = 'xiaomi'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -68,8 +68,6 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FANSPEED | \
                  SUPPORT_SENDCOMMAND | SUPPORT_LOCATE | \
                  SUPPORT_STATUS | SUPPORT_BATTERY
-
-SIGNAL_UPDATE_DATA = PLATFORM + '_update'
 
 
 @asyncio.coroutine
@@ -346,7 +344,7 @@ class MiroboVacuum(VacuumDevice):
             self._available = True
         except DeviceException as ex:
             _LOGGER.warning("Got exception while fetching the state: %s", ex)
-            self._available = False
+            # self._available = False
         except OSError as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-            self._available = False
+            # self._available = False
