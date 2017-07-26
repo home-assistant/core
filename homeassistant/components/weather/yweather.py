@@ -25,7 +25,7 @@ ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
-CONF_FORECAST_DAYS = 'forecast_days'
+CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'Yweather'
 
@@ -57,7 +57,7 @@ for cond, condlst in CONDITION_CLASSES.items():
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST_DAYS, default=0):
+    vol.Optional(CONF_FORECAST, default=0):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
 })
 
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
-    forecast = config.get(CONF_FORECAST_DAYS)
+    forecast = config.get(CONF_FORECAST)
     name = config.get(CONF_NAME)
 
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
