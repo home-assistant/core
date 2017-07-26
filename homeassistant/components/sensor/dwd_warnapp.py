@@ -43,9 +43,9 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 MONITORED_CONDITIONS = {
     'current_warning_level': ['Current Warning Level',
-                          None, 'mdi:close-octagon-outline'],
+                              None, 'mdi:close-octagon-outline'],
     'advance_warning_level': ['Advance Warning Level',
-                          None, 'mdi:close-octagon-outline'],
+                              None, 'mdi:close-octagon-outline'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -122,15 +122,16 @@ class DwdWarnappSensor(Entity):
         data = {}
         data['region_name'] = self._api.region_name
 
-        if  self._api.region_id is not None:
+        if self._api.region_id is not None:
             data['region_id'] = self._api.region_id
 
-        if  self._api.region_state is not None:
+        if self._api.region_state is not None:
             data['region_state'] = self._api.region_state
             # data['region_map_url'] = 'https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnungen_gemeinde_map_' + str(data['region_state'].lower()) + '.png'
 
         if self._api.data['time'] is not None:
-            data['last_update'] = dt_util.as_local(dt_util.utc_from_timestamp(self._api.data['time']  / 1000))
+            data['last_update'] = dt_util.as_local(
+                dt_util.utc_from_timestamp(self._api.data['time'] / 1000))
 
         if self._var_id == 'current_warning_level':
             prefix = 'current'
@@ -153,10 +154,12 @@ class DwdWarnappSensor(Entity):
                 data['warning_{}_instruction'.format(i)] = event['instruction']
 
             if event['start'] is not None:
-                data['warning_{}_start'.format(i)] = dt_util.as_local(dt_util.utc_from_timestamp(event['start'] / 1000))
+                data['warning_{}_start'.format(i)] = dt_util.as_local(
+                    dt_util.utc_from_timestamp(event['start'] / 1000))
 
             if event['end'] is not None:
-                data['warning_{}_end'.format(i)] = dt_util.as_local(dt_util.utc_from_timestamp(event['end'] / 1000))
+                data['warning_{}_end'.format(i)] = dt_util.as_local(
+                    dt_util.utc_from_timestamp(event['end'] / 1000))
 
         return data
 
@@ -203,12 +206,13 @@ class DwdWarnappAPI(object):
 
             for mykey, myvalue in {'current': 'warnings', 'advance': 'vorabInformation'}.items():
 
-                _LOGGER.debug("Found {} {} global DWD warnings".format(len(json_obj[myvalue]), mykey))
+                _LOGGER.debug("Found {} {} global DWD warnings".format(
+                    len(json_obj[myvalue]), mykey))
 
                 data['{}_warning_level'.format(mykey)] = 0
                 my_warnings = []
 
-                if  self.region_id is not None:
+                if self.region_id is not None:
                     # get a specific region_id
                     if self.region_id in json_obj[myvalue]:
                         my_warnings = json_obj[myvalue][self.region_id]
@@ -231,7 +235,8 @@ class DwdWarnappAPI(object):
                 data['{}_warning_count'.format(mykey)] = len(my_warnings)
                 data['{}_warnings'.format(mykey)] = my_warnings
 
-                _LOGGER.debug("Found {} {} local DWD warnings".format(len(my_warnings), mykey))
+                _LOGGER.debug("Found {} {} local DWD warnings".format(
+                    len(my_warnings), mykey))
 
             self.data = data
             self.available = True
