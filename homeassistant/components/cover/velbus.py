@@ -10,9 +10,10 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
-                                            SUPPORT_OPEN, SUPPORT_CLOSE,
-                                            SUPPORT_STOP)
+from homeassistant.components.cover import (
+  CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
+  SUPPORT_STOP)
+from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import (CONF_COVERS, CONF_NAME)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
-DOMAIN = 'switch'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -40,9 +40,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = config.get(CONF_COVERS, {})
     covers = []
 
+    velbus = self.hass.data[DOMAIN]
     for device_name, device_config in devices.items():
         covers.append(
             VelbusCover(
+                velbus,
                 device_config.get(CONF_NAME, device_name),
                 device_config.get('module'),
                 device_config.get('open_channel'),
@@ -60,8 +62,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VelbusCover(CoverDevice):
     """Representation a Velbus cover."""
 
-    def __init__(self, name, module, open_channel, close_channel):
+    def __init__(self, velbus, name, module, open_channel, close_channel):
         """Initialize the cover."""
+        self._velbus = velbus
         self._name = name
         self._close_channel_state = None
         self._open_channel_state = None
@@ -72,8 +75,12 @@ class VelbusCover(CoverDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        self.hass.data['VelbusController'].subscribe(self._on_message)
-        self.get_status()
+        def _init_velbus():
+            "Initialize Velbus on startup."
+            self._velbus.subscribe(self._on_message)
+            self.get_status()
+
+        yield from self.hass.async_add_job(_init_velbus)
 
     @callback
     def _on_message(self, message):
@@ -120,14 +127,14 @@ class VelbusCover(CoverDevice):
         message = velbus.SwitchRelayOffMessage()
         message.set_defaults(self._module)
         message.relay_channels = [channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def _relay_on(self, channel):
         import velbus
         message = velbus.SwitchRelayOnMessage()
         message.set_defaults(self._module)
         message.relay_channels = [channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -153,4 +160,4 @@ class VelbusCover(CoverDevice):
         message = velbus.ModuleStatusRequestMessage()
         message.set_defaults(self._module)
         message.channels = [self._open_channel, self._close_channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
