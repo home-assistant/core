@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import now
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['myusps==1.1.2']
@@ -117,7 +118,7 @@ class USPSData(object):
         """Fetch the latest info from USPS."""
         import myusps
         self._packages = myusps.get_packages(self._session)
-        self._mail = myusps.get_mail(self._session)
+        self._mail = myusps.get_mail(self._session, now().date())
         self._attr = myusps.ATTRIBUTION
-        _LOGGER.debug("Mail list: %s", self._mail)
+        _LOGGER.debug("Mail, request date: %s, list: %s", now().date(), self._mail)
         _LOGGER.debug("Package list: %s", self._packages)
