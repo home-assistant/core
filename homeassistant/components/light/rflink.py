@@ -1,281 +1,482 @@
 """
-Support for Rflink lights.
+Support for Rflink components.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/rflink/
 """
 import asyncio
+from collections import defaultdict
+import functools as ft
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
-    CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES,
-    CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
-    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
-from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
+import async_timeout
+import voluptuous as vol
 
-DEPENDENCIES = ['rflink']
+import async_timeout
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN)
+from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.helpers.entity import Entity
+import voluptuous as vol
+
+REQUIREMENTS = ['rflink==0.0.34']
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_DIMMABLE = 'dimmable'
-TYPE_SWITCHABLE = 'switchable'
-TYPE_HYBRID = 'hybrid'
-TYPE_TOGGLE = 'toggle'
+ATTR_EVENT = 'event'
+ATTR_STATE = 'state'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
-        cv.string: {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_TYPE):
-                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
-                        TYPE_HYBRID, TYPE_TOGGLE),
-            vol.Optional(CONF_ALIASSES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASSES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASSES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True): cv.boolean,
-        },
-    }),
+CONF_ALIASES = 'aliases'
+CONF_ALIASSES = 'aliases'
+CONF_GROUP_ALIASES = 'group_aliases'
+CONF_GROUP_ALIASSES = 'group_aliases'
+CONF_GROUP = 'group'
+CONF_NOGROUP_ALIASES = 'nogroup_aliases'
+CONF_NOGROUP_ALIASSES = 'nogroup_aliases'
+CONF_DEVICE_DEFAULTS = 'device_defaults'
+CONF_DEVICES = 'devices'
+CONF_AUTOMATIC_ADD = 'automatic_add'
+CONF_FIRE_EVENT = 'fire_event'
+CONF_IGNORE_DEVICES = 'ignore_devices'
+CONF_RECONNECT_INTERVAL = 'reconnect_interval'
+CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
+CONF_WAIT_FOR_ACK = 'wait_for_ack'
+
+DATA_DEVICE_REGISTER = 'rflink_device_register'
+DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
+DATA_ENTITY_GROUP_LOOKUP = 'rflink_entity_group_only_lookup'
+DEFAULT_RECONNECT_INTERVAL = 10
+DEFAULT_SIGNAL_REPETITIONS = 1
+CONNECTION_TIMEOUT = 10
+
+EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_KEY_COMMAND = 'command'
+EVENT_KEY_ID = 'id'
+EVENT_KEY_SENSOR = 'sensor'
+EVENT_KEY_UNIT = 'unit'
+
+RFLINK_GROUP_COMMANDS = ['allon', 'alloff']
+
+DOMAIN = 'rflink'
+
+DEVICE_DEFAULTS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS,
+                 default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
 })
 
-
-def entity_type_for_device_id(device_id):
-    """Return entity class for protocol of a given device_id.
-
-    Async friendly.
-    """
-    entity_type_mapping = {
-        # KlikAanKlikUit support both dimmers and on/off switches on the same
-        # protocol
-        'newkaku': TYPE_HYBRID,
-    }
-    protocol = device_id.split('_')[0]
-    return entity_type_mapping.get(protocol, None)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
+        vol.Optional(CONF_HOST, default=None): cv.string,
+        vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+        vol.Optional(CONF_RECONNECT_INTERVAL,
+                     default=DEFAULT_RECONNECT_INTERVAL): int,
+        vol.Optional(CONF_IGNORE_DEVICES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
-def entity_class_for_type(entity_type):
-    """Translate entity type to entity class.
+def identify_event_type(event):
+    """Look at event to determine type of device.
 
     Async friendly.
     """
-    entity_device_mapping = {
-        # sends only 'dim' commands not compatible with on/off switches
-        TYPE_DIMMABLE: DimmableRflinkLight,
-        # sends only 'on/off' commands not advices with dimmers and signal
-        # repetition
-        TYPE_SWITCHABLE: RflinkLight,
-        # sends 'dim' and 'on' command to support both dimmers and on/off
-        # switches. Not compatible with signal repetition.
-        TYPE_HYBRID: HybridRflinkLight,
-        # sends only 'on' commands for switches which turn on and off
-        # using the same 'on' command for both.
-        TYPE_TOGGLE: ToggleRflinkLight,
-    }
-
-    return entity_device_mapping.get(entity_type, RflinkLight)
-
-
-def devices_from_config(domain_config, hass=None):
-    """Parse configuration and add Rflink light devices."""
-    devices = []
-    for device_id, config in domain_config[CONF_DEVICES].items():
-        # Determine which kind of entity to create
-        if CONF_TYPE in config:
-            # Remove type from config to not pass it as and argument to entity
-            # instantiation
-            entity_type = config.pop(CONF_TYPE)
-        else:
-            entity_type = entity_type_for_device_id(device_id)
-        entity_class = entity_class_for_type(entity_type)
-
-        device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-
-        is_hybrid = entity_class is HybridRflinkLight
-
-        # Make user aware this can cause problems
-        repetitions_enabled = device_config[CONF_SIGNAL_REPETITIONS] != 1
-        if is_hybrid and repetitions_enabled:
-            _LOGGER.warning(
-                "Hybrid type for %s not compatible with signal "
-                "repetitions. Please set 'dimmable' or 'switchable' "
-                "type explicity in configuration", device_id)
-
-        device = entity_class(device_id, hass, **device_config)
-        devices.append(device)
-
-        # Register entity (and aliasses) to listen to incoming rflink events
-
-        # Device id and normal aliasses respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
-        if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASSES]:
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliasses only respond to group commands
-        for _id in config[CONF_GROUP_ALIASSES]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliasses only respond to normal commands
-        for _id in config[CONF_NOGROUP_ALIASSES]:
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-
-    return devices
+    if EVENT_KEY_COMMAND in event:
+        return EVENT_KEY_COMMAND
+    elif EVENT_KEY_SENSOR in event:
+        return EVENT_KEY_SENSOR
+    else:
+        return 'unknown'
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Rflink light platform."""
-    async_add_devices(devices_from_config(config, hass))
+def async_setup(hass, config):
+    """Set up the Rflink component."""
+    from rflink.protocol import create_rflink_connection
+    import serial
+
+    # Allow entities to register themselves by device_id to be looked up when
+    # new rflink events arrive to be handled
+    hass.data[DATA_ENTITY_LOOKUP] = {
+        EVENT_KEY_COMMAND: defaultdict(list),
+        EVENT_KEY_SENSOR: defaultdict(list),
+    }
+    hass.data[DATA_ENTITY_GROUP_LOOKUP] = {
+        EVENT_KEY_COMMAND: defaultdict(list),
+        EVENT_KEY_SENSOR: defaultdict(list),
+    }
+
+    # Allow platform to specify function to register new unknown devices
+    hass.data[DATA_DEVICE_REGISTER] = {}
+
+    @callback
+    def event_callback(event):
+        """Handle incoming Rflink events.
+
+        Rflink events arrive as dictionaries of varying content
+        depending on their type. Identify the events and distribute
+        accordingly.
+        """
+        event_type = identify_event_type(event)
+        _LOGGER.debug('event of type %s: %s', event_type, event)
+
+        # Don't propagate non entity events (eg: version string, ack response)
+        if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
+            _LOGGER.debug('unhandled event of type: %s', event_type)
+            return
+
+        # Lookup entities who registered this device id as device id or alias
+        event_id = event.get('id', None)
+
+        is_group_event = (event_type == EVENT_KEY_COMMAND and
+                          event[EVENT_KEY_COMMAND] in RFLINK_GROUP_COMMANDS)
+        if is_group_event:
+            entities = hass.data[DATA_ENTITY_GROUP_LOOKUP][event_type].get(
+                event_id, [])
+        else:
+            entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
+
+        if entities:
+            # Propagate event to every entity matching the device id
+            for entity in entities:
+                _LOGGER.debug('passing event to %s', entities)
+                entity.handle_event(event)
+        else:
+            _LOGGER.debug('device_id not known, adding new device')
+
+            # If device is not yet known, register with platform (if loaded)
+            if event_type in hass.data[DATA_DEVICE_REGISTER]:
+                hass.async_run_job(
+                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
+
+    # When connecting to tcp host instead of serial port (optional)
+    host = config[DOMAIN][CONF_HOST]
+    # TCP port when host configured, otherwise serial port
+    port = config[DOMAIN][CONF_PORT]
+
+    @callback
+    def reconnect(exc=None):
+        """Schedule reconnect after connection has been unexpectedly lost."""
+        # Reset protocol binding before starting reconnect
+        RflinkCommand.set_rflink_protocol(None)
+
+        # If HA is not stopping, initiate new connection
+        if hass.state != CoreState.stopping:
+            _LOGGER.warning('disconnected from Rflink, reconnecting')
+            hass.async_add_job(connect)
 
     @asyncio.coroutine
-    def add_new_device(event):
-        """Check if device is known, otherwise add to list of known devices."""
-        device_id = event[EVENT_KEY_ID]
+    def connect():
+        """Set up connection and hook it into HA for reconnect/shutdown."""
+        _LOGGER.info('Initiating Rflink connection')
 
-        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
-        entity_class = entity_class_for_type(entity_type)
+        # Rflink create_rflink_connection decides based on the value of host
+        # (string or None) if serial or tcp mode should be used
 
-        device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, hass, **device_config)
-        async_add_devices([device])
+        # Initiate serial/tcp connection to Rflink gateway
+        connection = create_rflink_connection(
+            port=port,
+            host=host,
+            event_callback=event_callback,
+            disconnect_callback=reconnect,
+            loop=hass.loop,
+            ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
+        )
 
-        # Register entity to listen to incoming Rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
+        try:
+            with async_timeout.timeout(CONNECTION_TIMEOUT,
+                                       loop=hass.loop):
+                transport, protocol = yield from connection
 
-        # Schedule task to process event after entity is created
-        hass.async_add_job(device.handle_event, event)
+        except (serial.serialutil.SerialException, ConnectionRefusedError,
+                TimeoutError, OSError, asyncio.TimeoutError) as exc:
+            reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
+            _LOGGER.exception(
+                "Error connecting to Rflink, reconnecting in %s",
+                reconnect_interval)
+            hass.loop.call_later(reconnect_interval, reconnect, exc)
+            return
 
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+        # Bind protocol to command class to allow entities to send commands
+        RflinkCommand.set_rflink_protocol(
+            protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
 
+        # handle shutdown of Rflink asyncio transport
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   lambda x: transport.close())
 
-class RflinkLight(SwitchableRflinkDevice, Light):
-    """Representation of a Rflink light."""
+        _LOGGER.info('Connected to Rflink')
 
-    pass
-
-
-class DimmableRflinkLight(SwitchableRflinkDevice, Light):
-    """Rflink light device that support dimming."""
-
-    _brightness = 255
-
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn the device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
-
-        # Turn on light at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    hass.async_add_job(connect)
+    return True
 
 
-class HybridRflinkLight(SwitchableRflinkDevice, Light):
-    """Rflink light device that sends out both dim and on/off commands.
+class RflinkDevice(Entity):
+    """Representation of a Rflink device.
 
-    Used for protocols which support lights that are not exclusively on/off
-    style. For example KlikAanKlikUit supports both on/off and dimmable light
-    switches using the same protocol. This type allows unconfigured
-    KlikAanKlikUit devices to support dimming without breaking support for
-    on/off switches.
-
-    This type is not compatible with signal repetitions as the 'dim' and 'on'
-    command are send sequential and multiple 'on' commands to a dimmable
-    device can cause the dimmer to switch into a pulsating brightness mode.
-    Which results in a nice house disco :)
+    Contains the common logic for Rflink entities.
     """
 
-    _brightness = 255
+    platform = None
+    _state = STATE_UNKNOWN
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn the device on and set dim level."""
-        if ATTR_BRIGHTNESS in kwargs:
-            # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
+    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
+                 group_aliases=None, nogroup_aliases=None, fire_event=False,
+                 signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
+        """Initialize the device."""
+        self.hass = hass
 
-        # if receiver supports dimming this will turn on the light
-        # at the requested dim level
-        yield from self._async_handle_command('dim', self._brightness)
+        # Rflink specific attributes for every component type
+        self._device_id = device_id
+        if name:
+            self._name = name
+        else:
+            self._name = device_id
 
-        # if the receiving device does not support dimlevel this
-        # will ensure it is turned on when full brightness is set
-        if self._brightness == 255:
-            yield from self._async_handle_command('turn_on')
+        self._should_fire_event = fire_event
+        self._signal_repetitions = signal_repetitions
+
+    def handle_event(self, event):
+        """Handle incoming event for device type."""
+        # Call platform specific event handler
+        self._handle_event(event)
+
+        # Propagate changes through ha
+        self.hass.async_add_job(self.async_update_ha_state())
+
+        # Put command onto bus for user to subscribe to
+        if self._should_fire_event and identify_event_type(
+                event) == EVENT_KEY_COMMAND:
+            self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_STATE: event[EVENT_KEY_COMMAND],
+            })
+            _LOGGER.debug("Fired bus event for %s: %s",
+                          self.entity_id, event[EVENT_KEY_COMMAND])
+
+    def _handle_event(self, event):
+        """Platform specific event handler."""
+        raise NotImplementedError()
 
     @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
+    def should_poll(self):
+        """No polling needed."""
+        return False
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    def name(self):
+        """Return a name for the device."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        if self.assumed_state:
+            return False
+        return self._state
+
+    @property
+    def assumed_state(self):
+        """Assume device state until first device event sets state."""
+        return self._state is STATE_UNKNOWN
 
 
-class ToggleRflinkLight(SwitchableRflinkDevice, Light):
-    """Rflink light device which sends out only 'on' commands.
+class RflinkCommand(RflinkDevice):
+    """Singleton class to make Rflink command interface available to entities.
 
-    Some switches like for example Livolo light switches use the
-    same 'on' command to switch on and switch off the lights.
-    If the light is on and 'on' gets sent, the light will turn off
-    and if the light is off and 'on' gets sent, the light will turn on.
+    This class is to be inherited by every Entity class that is actionable
+    (switches/lights). It exposes the Rflink command interface for these
+    entities.
+
+    The Rflink interface is managed as a class level and set during setup (and
+    reset on reconnect).
     """
 
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return "light.{}".format(self.name)
+    # Keep repetition tasks to cancel if state is changed before repetitions
+    # are sent
+    _repetition_task = None
+
+    _protocol = None
+
+    @classmethod
+    def set_rflink_protocol(cls, protocol, wait_ack=None):
+        """Set the Rflink asyncio protocol as a class variable."""
+        cls._protocol = protocol
+        if wait_ack is not None:
+            cls._wait_ack = wait_ack
+
+    @classmethod
+    def is_connected(cls):
+        """Return connection status."""
+        return bool(cls._protocol)
+
+    @asyncio.coroutine
+    def _async_handle_command(self, command, *args):
+        """Do bookkeeping for command, send it to rflink and update state."""
+        self.cancel_queued_send_commands()
+
+        if command == 'turn_on':
+            cmd = 'on'
+            self._state = True
+
+        elif command == 'turn_off':
+            cmd = 'off'
+            self._state = False
+
+        elif command == 'dim':
+            # convert brightness to rflink dim level
+            cmd = str(int(args[0] / 17))
+            self._state = True
+
+        elif command == 'toggle':
+            cmd = 'on'
+            # if the state is unknown or false, it gets set as true
+            # if the state is true, it gets set as false
+            self._state = self._state in [STATE_UNKNOWN, False]
+
+        # Cover options for RTS
+        elif command == 'roll_down':
+            cmd = 'down'
+
+        elif command == 'roll_up':
+            cmd = 'up'
+
+        elif command == 'roll_stop':
+            cmd = 'stop'
+            self._state = True
+
+        # Send initial command and queue repetitions.
+        # This allows the entity state to be updated quickly and not having to
+        # wait for all repetitions to be sent
+        yield from self._async_send_command(cmd, self._signal_repetitions)
+
+        # Update state of entity
+        yield from self.async_update_ha_state()
+
+    def cancel_queued_send_commands(self):
+        """Cancel queued signal repetition commands.
+
+        For example when user changed state while repetitions are still
+        queued for broadcast. Or when a incoming Rflink command (remote
+        switch) changes the state.
+        """
+        # cancel any outstanding tasks from the previous state change
+        if self._repetition_task:
+            self._repetition_task.cancel()
+
+    @asyncio.coroutine
+    def _async_send_command(self, cmd, repetitions):
+        """Send a command for device to Rflink gateway."""
+        _LOGGER.debug(
+            "Sending command: %s to Rflink device: %s", cmd, self._device_id)
+
+        if not self.is_connected():
+            raise HomeAssistantError('Cannot send command, not connected!')
+
+        if self._wait_ack:
+            # Puts command on outgoing buffer then waits for Rflink to confirm
+            # the command has been send out in the ether.
+            yield from self._protocol.send_command_ack(self._device_id, cmd)
+        else:
+            # Puts command on outgoing buffer and returns straight away.
+            # Rflink protocol/transport handles asynchronous writing of buffer
+            # to serial/tcp device. Does not wait for command send
+            # confirmation.
+            self.hass.async_add_job(ft.partial(
+                self._protocol.send_command, self._device_id, cmd))
+
+        if repetitions > 1:
+            self._repetition_task = self.hass.async_add_job(
+                self._async_send_command(cmd, repetitions - 1))
+
+class SwitchableRflinkDevice(RflinkCommand):
+    """Rflink entity which can switch on/off (eg: light, switch)."""
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
 
         command = event['command']
-        if command == 'on':
-            # if the state is unknown or false, it gets set as true
-            # if the state is true, it gets set as false
-            self._state = self._state in [STATE_UNKNOWN, False]
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
 
-    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_handle_command('toggle')
+        return self._async_handle_command("turn_on")
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_handle_command('toggle')
+        return self._async_handle_command("turn_off")
+
+
+class CoverableRflinkDevice(RflinkCommand):
+    """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
+
+    @property
+    def should_poll(self):
+        """No polling available in RFXtrx cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
+    def async_close_cover(self, **kwargs):
+        """Turn the device on."""
+        return self._async_handle_command("turn_on")
+
+    def async_open_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("turn_off")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("stop_roll")
+
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device up."""
+        return self._async_handle_command("roll_up")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device up."""
+        return self._async_handle_command("roll_down")
+
+DEPRECATED_CONFIG_OPTIONS = [
+    CONF_ALIASSES,
+    CONF_GROUP_ALIASSES,
+    CONF_NOGROUP_ALIASSES]
+REPLACEMENT_CONFIG_OPTIONS = [
+    CONF_ALIASES,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES]
+
+
+def remove_deprecated(config):
+    """Remove deprecated config options from device config."""
+    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
+        if deprecated_option in config:
+            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
+            # generate deprecation warning
+            get_deprecated(config, replacement_option, deprecated_option)
+            # remove old config value replacing new one
+            config[replacement_option] = config.pop(deprecated_option)
