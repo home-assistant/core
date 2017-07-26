@@ -13,13 +13,13 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
+from homeassistant.components.velbus import DOMAIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 
 REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
-DOMAIN = 'binary_sensor'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +37,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
-    add_devices(VelbusBinarySensor(sensor) for sensor in config[CONF_DEVICES])
-    return True
+    velbus = self.hass.data[DOMAIN]
+
+    add_devices(VelbusBinarySensor(sensor, velbus)
+                for sensor in config[CONF_DEVICES])
 
 
 class VelbusBinarySensor(BinarySensorDevice):
     """Representation of a Velbus Binary Sensor."""
 
-    def __init__(self, binary_sensor):
+    def __init__(self, binary_sensor, velbus):
         """Initialize a Velbus light."""
+        self._velbus = velbus
         self._name = binary_sensor[CONF_NAME]
         self._module = binary_sensor['module']
         self._channel = binary_sensor['channel']
@@ -56,7 +59,8 @@ class VelbusBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        self.hass.data['VelbusController'].subscribe(self._on_message)
+        yield from self.hass.async_add_job(
+            self._velbus.subscribe, self._on_message)
 
     @callback
     def _on_message(self, message):
