@@ -58,7 +58,7 @@ class VelbusFan(FanEntity):
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
         def _init_velbus():
-            "Initialize Velbus on startup."
+            """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)
             self.get_status()
 
