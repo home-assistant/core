@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from functools import partial
 from contextlib import suppress
 
 import async_timeout
@@ -150,19 +151,16 @@ class AsteriskMboxMP3View(HomeAssistantView):
         hass = request.app['hass']
         client = hass.data[DOMAIN].client
 
-        def fetch():
-            """Read MP3 from server."""
-            from asterisk_mbox import ServerError
-
-            try:
-                return client.mp3(sha, sync=True)
-            except ServerError as err:
-                _LOGGER.error("Error getting MP3: %s", err)
-                return self.json_message(err, HTTP_NOT_FOUND)
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10, loop=request.app['hass'].loop):
-                stream = yield from hass.async_add_job(fetch)
+                from asterisk_mbox import ServerError
+                try:
+                    stream = yield from hass.async_add_job(partial(client.mp3, sha, sync=True))
+                except ServerError as err:
+                    error_msg = "Error getting MP3: %s" % (err)
+                    _LOGGER.error(error_msg)
+                    return web.Response(status=500)
 
             if stream:
                 return web.Response(body=stream,
