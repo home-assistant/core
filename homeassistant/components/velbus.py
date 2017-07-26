@@ -8,7 +8,6 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 
 REQUIREMENTS = ['python-velbus==2.0.11']
@@ -35,7 +34,6 @@ def setup(hass, config):
     controller = velbus.Controller(connection)
     hass.data[DOMAIN] = controller
 
-    @callback
     def stop_velbus(event):
         """Disconnect from serial port."""
         _LOGGER.debug("Shutting down ")
