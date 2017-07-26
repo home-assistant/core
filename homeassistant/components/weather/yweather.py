@@ -27,7 +27,6 @@ ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
-CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'Yweather'
 
@@ -54,8 +53,6 @@ CONDITION_CLASSES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=0):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
 })
 
 
@@ -65,7 +62,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
-    forecast = config.get(CONF_FORECAST)
     name = config.get(CONF_NAME)
 
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
@@ -82,11 +78,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not yahoo_api.update():
         _LOGGER.critical("Can't retrieve weather data from Yahoo!")
         return False
-
-    if forecast >= len(yahoo_api.yahoo.Forecast):
-        _LOGGER.error("Yahoo! only support %d days forecast",
-                      len(yahoo_api.yahoo.Forecast))
-        return False
     
     # create condition helper
     if DATA_CONDITION not in hass.data:
@@ -95,17 +86,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
+    add_devices([YahooWeatherWeather(yahoo_api, name)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):
     """Representation of Yahoo! weather data."""
 
-    def __init__(self, weather_data, name, forecast):
+    def __init__(self, weather_data, name):
         """Initialize the sensor."""
         self._name = name
         self._data = weather_data
-        self._forecast = forecast
 
     @property
     def name(self):
@@ -116,7 +106,8 @@ class YahooWeatherWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         try:
-            return hass.data[DATA_CONDITION][int(self._data.yahoo.Now['code'])]
+            return self.hass.data[DATA_CONDITION][int(
+                self._data.yahoo.Now['code'])]
         except (ValueError, IndexError):
             return STATE_UNKNOWN
 
@@ -163,8 +154,6 @@ class YahooWeatherWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if self._forecast == 0:
-            return []
         try:
             return [
                 {
@@ -173,9 +162,9 @@ class YahooWeatherWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP_LOW: int(v['low']),
                     ATTR_FORECAST_CONDITION: hass.data[DATA_CONDITION][
                         int(v['code'])]
-                } for v in self._data.yahoo.Forecast[:self._forecast]]
+                } for v in self._data.yahoo.Forecast[]]
         except (ValueError, IndexError):
-            return []
+            return STATE_UNKNOWN
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
