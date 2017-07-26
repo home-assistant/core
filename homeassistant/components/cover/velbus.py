@@ -15,7 +15,6 @@ from homeassistant.components.cover import (
   SUPPORT_STOP)
 from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import (CONF_COVERS, CONF_NAME)
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +80,6 @@ class VelbusCover(CoverDevice):
 
         yield from self.hass.async_add_job(_init_velbus)
 
-    @callback
     def _on_message(self, message):
         import velbus
         if isinstance(message, velbus.RelayStatusMessage):
