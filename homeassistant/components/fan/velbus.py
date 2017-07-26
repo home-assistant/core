@@ -8,16 +8,14 @@ import asyncio
 import logging
 import voluptuous as vol
 
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-                                          FanEntity, SUPPORT_SET_SPEED,
-                                          PLATFORM_SCHEMA)
+from homeassistant.components.fan import (
+    SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, FanEntity, SUPPORT_SET_SPEED,
+    PLATFORM_SCHEMA)
+from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_DEVICES, STATE_OFF
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
-DOMAIN = 'fan'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,15 +34,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Fans."""
-    add_devices(VelbusFan(fan) for fan in config[CONF_DEVICES])
-    return True
+    velbus = hass.data[DOMAIN]
+    add_devices(VelbusFan(fan, velbus) for fan in config[CONF_DEVICES])
 
 
 class VelbusFan(FanEntity):
     """Representation of a Velbus Fan."""
 
-    def __init__(self, fan):
+    def __init__(self, fan, velbus):
         """Initialize a Velbus light."""
+        self._velbus = velbus
         self._name = fan[CONF_NAME]
         self._module = fan['module']
         self._channel_low = fan['channel_low']
@@ -58,10 +57,13 @@ class VelbusFan(FanEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        self.hass.data['VelbusController'].subscribe(self._on_message)
-        self.get_status()
+        def _init_velbus():
+            "Initialize Velbus on startup."
+            self._velbus.subscribe(self._on_message)
+            self.get_status()
 
-    @callback
+        yield from self.hass.async_add_job(_init_velbus)
+
     def _on_message(self, message):
         import velbus
         if isinstance(message, velbus.RelayStatusMessage) and \
@@ -162,14 +164,14 @@ class VelbusFan(FanEntity):
         message = velbus.SwitchRelayOnMessage()
         message.set_defaults(self._module)
         message.relay_channels = [channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def _relay_off(self, channel):
         import velbus
         message = velbus.SwitchRelayOffMessage()
         message.set_defaults(self._module)
         message.relay_channels = [channel]
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     def get_status(self):
         """Retrieve current status."""
@@ -177,7 +179,7 @@ class VelbusFan(FanEntity):
         message = velbus.ModuleStatusRequestMessage()
         message.set_defaults(self._module)
         message.channels = self._channels
-        self.hass.data['VelbusController'].send(message)
+        self._velbus.send(message)
 
     @property
     def supported_features(self):
