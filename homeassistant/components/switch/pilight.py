@@ -16,7 +16,6 @@ from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
                                  CONF_PROTOCOL, STATE_ON)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
