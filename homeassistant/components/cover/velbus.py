@@ -11,8 +11,8 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-  CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
-  SUPPORT_STOP)
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
+    SUPPORT_STOP)
 from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import (CONF_COVERS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -74,7 +74,7 @@ class VelbusCover(CoverDevice):
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
         def _init_velbus():
-            "Initialize Velbus on startup."
+            """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)
             self.get_status()
 
