@@ -19,38 +19,21 @@ from homeassistant.components.vacuum import (
     SUPPORT_FANSPEED, SUPPORT_SENDCOMMAND)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ENTITY_ID,
-    CONF_NAME, CONF_HOST, CONF_TOKEN, CONF_SENSORS)
-from homeassistant.core import callback
+    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, CONF_NAME, CONF_HOST, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-mirobo==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:google-circles-group'
+ICON = DEFAULT_ICON
 PLATFORM = 'xiaomi_vacuum'
-
-# SENSOR_MAP = {
-#     'state': ('Status', None, 'mdi:broom'),
-#     'error': ('Error', None, 'mdi:alert-circle'),
-#     'battery': ('Battery', '%', None),  # 'mdi:battery'
-#     'fanspeed': ('Fan', '%', 'mdi:fan'),
-#     'clean_time': ('Cleaning time', None, 'mdi:clock'),
-#     'clean_area': ('Cleaned area', 'm²', 'mdi:flip-to-back'),
-# }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    # vol.Optional(CONF_SENSORS):
-    #     cv.ensure_list(vol.All(str, vol.In(SENSOR_MAP))),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
@@ -98,18 +81,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
-    # sensors = config.get(CONF_SENSORS)
 
     # Create handler
     mirobo = MiroboVacuum(hass, name, host, token)
     hass.data[PLATFORM][host] = mirobo
-
-    # Add asociated sensors as new entities
-    # if sensors:
-    #     yield from hass.async_add_job(
-    #         async_load_platform(
-    #             hass, 'sensor', PLATFORM,
-    #             {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors}))
 
     async_add_devices([mirobo], update_before_add=True)
 
@@ -162,7 +137,7 @@ class MiroboVacuum(VacuumDevice):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self.hass = hass
         self._name = name
-        self._icon = DEFAULT_ICON
+        self._icon = ICON
         self._host = host
         self._token = token
         self._vacuum = None
@@ -214,8 +189,8 @@ class MiroboVacuum(VacuumDevice):
             return {
                 'Do not disturb':
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
-                'Cleaning mode':
-                    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
+                # Not working --> 'Cleaning mode':
+                #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 'Cleaning time': str(self.vacuum_state.clean_time),
                 'Cleaned area': self.vacuum_state.clean_area,
                 'Error': self.vacuum_state.error}
@@ -365,81 +340,13 @@ class MiroboVacuum(VacuumDevice):
         try:
             state = yield from self.hass.async_add_job(self.vacuum.status)
 
-            _LOGGER.debug("Got new state from the vacuum: %s", state)
+            _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
             self._is_on = state.is_on
             self._available = True
-            # async_dispatcher_send(self.hass, SIGNAL_UPDATE_DATA)
         except DeviceException as ex:
             _LOGGER.warning("Got exception while fetching the state: %s", ex)
             self._available = False
         except OSError as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
             self._available = False
-
-
-# class MiroboVacuumSensor(Entity):
-#     """Representation of a sensor of a Xiaomi Vacuum cleaner."""
-#
-#     def __init__(self, mirobo_vacuum, name, sensor_type):
-#         """Initialize the sensor object."""
-#         self._handler = mirobo_vacuum
-#         self._sensor = sensor_type
-#
-#         friendly_name, unit, icon = SENSOR_MAP[sensor_type]
-#         self._name = '{}_{}'.format(name, sensor_type)
-#         self._friendly_name = friendly_name
-#         self._icon = icon
-#         self._unit = unit
-#
-#     @property
-#     def name(self):
-#         """Return the name of the sensor."""
-#         return self._name
-#
-#     @property
-#     def unit_of_measurement(self):
-#         """Return the unit the value is expressed in."""
-#         return self._unit
-#
-#     @property
-#     def state(self):
-#         """Return the state of the sensor."""
-#         return getattr(self._handler.vacuum_state, self._sensor)
-#
-#     @property
-#     def should_poll(self):
-#         """Return True if entity has to be polled for state."""
-#         return False
-#
-#     @property
-#     def available(self):
-#         """Return true when state is known."""
-#         return self._handler.available
-#
-#     @property
-#     def device_state_attributes(self):
-#         """Return the state attributes."""
-#         attrs = {"friendly_name": self._friendly_name}
-#         return attrs
-#
-#     @property
-#     def icon(self):
-#         """Return the icon for the sensor."""
-#         # if self._sensor == 'battery':
-#         #     return icon_for_battery_level(
-#         #         battery_level=self.state,
-#         #         charging=getattr(
-#         #             self._handler.vacuum_state, 'state') == 'Charging')
-#         return self._icon
-#
-#     @asyncio.coroutine
-#     def async_added_to_hass(self):
-#         """Register update dispatcher."""
-#         @callback
-#         def async_sensor_update():
-#             """Update callback."""
-#             self.hass.async_add_job(self.async_update_ha_state(True))
-#
-#         async_dispatcher_connect(
-#             self.hass, SIGNAL_UPDATE_DATA, async_sensor_update)

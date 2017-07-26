@@ -30,9 +30,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
 
+ATTR_BATTERY = 'Battery'
+ATTR_BATTERY_ICON = 'Battery_icon'
 ATTR_COMMAND = 'command'
 ATTR_FANSPEED = 'fanspeed'
 ATTR_PARAMS = 'params'
+ATTR_STATUS = 'Status'
 
 SERVICE_CLEANING_PLAY_PAUSE = 'cleaning_play_pause'
 SERVICE_LOCATE = 'locate'
@@ -181,14 +184,14 @@ class VacuumDevice(ToggleEntity):
         data = {}
 
         if self.status is not None:
-            data['Status'] = self.status
+            data[ATTR_STATUS] = self.status
 
         if self.battery_level is not None:
-            data['Battery'] = self.battery_level
-            data['Battery_icon'] = self.battery_icon
+            data[ATTR_BATTERY] = self.battery_level
+            data[ATTR_BATTERY_ICON] = self.battery_icon
 
         if self.fanspeed is not None:
-            data['Fan'] = self.fanspeed
+            data[ATTR_FANSPEED.capitalize()] = self.fanspeed
 
         return data
 
