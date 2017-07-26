@@ -125,7 +125,6 @@ class DwdWarnappSensor(Entity):
 
         if self._api.region_state is not None:
             data['region_state'] = self._api.region_state
-            # data['region_map_url'] = 'https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnungen_gemeinde_map_' + str(data['region_state'].lower()) + '.png'
 
         if self._api.data['time'] is not None:
             data['last_update'] = dt_util.as_local(
