@@ -4,11 +4,11 @@ Support for scanning a network with nmap.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
+from datetime import timedelta
 import logging
 import re
 import subprocess
 from collections import namedtuple
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -17,7 +17,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOSTS
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-nmap==0.6.1']
 
@@ -28,8 +27,6 @@ CONF_EXCLUDE = 'exclude'
 CONF_HOME_INTERVAL = 'home_interval'
 CONF_OPTIONS = 'scan_options'
 DEFAULT_OPTIONS = '-F --host-timeout 5s'
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -97,7 +94,6 @@ class NmapDeviceScanner(DeviceScanner):
             return filter_named[0]
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Scan the network for devices.
 

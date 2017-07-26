@@ -433,9 +433,8 @@ class FitbitSensor(Entity):
 
     def update(self):
         """Get the latest data from the Fitbit API and update the states."""
-        if self.resource_type == 'devices/battery':
-            response = self.client.get_devices()
-            self._state = response[0].get('battery')
+        if self.resource_type == 'devices/battery' and self.extra:
+            self._state = self.extra.get('battery')
         else:
             container = self.resource_type.replace("/", "-")
             response = self.client.time_series(self.resource_type, period='7d')

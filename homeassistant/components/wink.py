@@ -103,7 +103,7 @@ def _read_config_file(file_path):
 
 def _request_app_setup(hass, config):
     """Assist user with configuring the Wink dev application."""
-    hass.data['configurator'] = True
+    hass.data[DOMAIN]['configurator'] = True
     configurator = get_component('configurator')
 
     # pylint: disable=unused-argument
@@ -151,7 +151,7 @@ def _request_app_setup(hass, config):
 
 def _request_oauth_completion(hass, config):
     """Request user complete Wink OAuth2 flow."""
-    hass.data['configurator'] = True
+    hass.data[DOMAIN]['configurator'] = True
     configurator = get_component('configurator')
     if DOMAIN in hass.data[DOMAIN]['configuring']:
         configurator.notify_errors(
