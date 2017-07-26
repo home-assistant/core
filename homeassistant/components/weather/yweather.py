@@ -160,9 +160,9 @@ class YahooWeatherWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: v['date'],
                     ATTR_FORECAST_TEMP:int(v['high']),
                     ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                    ATTR_FORECAST_CONDITION: self.hass.data[DATA_CONDITION][
-                        int(v['code'])]
-                } for v in self._data.yahoo.Forecast[]]
+                    ATTR_FORECAST_CONDITION: 
+                        self.hass.data[DATA_CONDITION][int(v['code'])]
+                } for v in self._data.yahoo.Forecast]
         except (ValueError, IndexError):
             return STATE_UNKNOWN
 
