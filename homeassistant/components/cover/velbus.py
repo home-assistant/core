@@ -31,7 +31,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })
 
-REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
 
 
@@ -40,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = config.get(CONF_COVERS, {})
     covers = []
 
-    velbus = self.hass.data[DOMAIN]
+    velbus = hass.data[DOMAIN]
     for device_name, device_config in devices.items():
         covers.append(
             VelbusCover(
