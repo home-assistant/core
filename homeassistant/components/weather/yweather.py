@@ -19,6 +19,8 @@ REQUIREMENTS = ["yahooweather==0.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_CONDITION = 'yahoo_condition'
+
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
@@ -48,11 +50,6 @@ CONDITION_CLASSES = {
     'exceptional': [0, 1, 2, 3, 4, 25, 36],
 }
 
-CONDITION_CLASSES_LIST = [str(x) for x in range(0, 50)]
-
-for cond, condlst in CONDITION_CLASSES.items():
-    for condi in condlst:
-        CONDITION_CLASSES_LIST[condi] = cond
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
@@ -90,6 +87,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Yahoo! only support %d days forecast",
                       len(yahoo_api.yahoo.Forecast))
         return False
+    
+    # create condition helper
+    if DATA_CONDITION not in hass.data:
+        hass.data[DATA_CONDITION] = [str(x) for x in range(0, 50)]
+        for cond, condlst in CONDITION_CLASSES.items():
+            for condi in condlst:
+                hass.data[DATA_CONDITION][condi] = cond
 
     add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
 
@@ -112,7 +116,7 @@ class YahooWeatherWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         try:
-            return CONDITION_CLASSES_LIST[int(self._data.yahoo.Now['code'])]
+            return hass.data[DATA_CONDITION][int(self._data.yahoo.Now['code'])]
         except (ValueError, IndexError):
             return STATE_UNKNOWN
 
@@ -167,7 +171,7 @@ class YahooWeatherWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: v['date'],
                     ATTR_FORECAST_TEMP:int(v['high']),
                     ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                    ATTR_FORECAST_CONDITION: CONDITION_CLASSES_LIST[
+                    ATTR_FORECAST_CONDITION: hass.data[DATA_CONDITION][
                         int(v['code'])]
                 } for v in self._data.yahoo.Forecast[:self._forecast]]
         except (ValueError, IndexError):
