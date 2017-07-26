@@ -82,7 +82,12 @@ class TradfriGroup(Light):
 
     def update(self):
         """Fetch new state data for this group."""
-        self._group.update()
+        _LOGGER.info('Updating tradfri group')  # FIXME: Remove after testing
+        from pytradfri import RequestTimeout
+        try:
+            self._group.update()
+        except RequestTimeout:
+            _LOGGER.error("Tradfri update request timed out")
 
 
 class Tradfri(Light):
@@ -181,7 +186,11 @@ class Tradfri(Light):
 
     def update(self):
         """Fetch new state data for this light."""
-        self._light.update()
+        from pytradfri import RequestTimeout
+        try:
+            self._light.update()
+        except RequestTimeout:
+            _LOGGER.error("Tradfri update request timed out")
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
