@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +78,11 @@ SUPPORT_PAUSE = 4
 SUPPORT_STOP = 8
 SUPPORT_RETURN_HOME = 16
 SUPPORT_FANSPEED = 32
-SUPPORT_SENDCOMMAND = 64
-SUPPORT_LOCATE = 128
+SUPPORT_BATTERY = 64
+SUPPORT_STATUS = 128
+SUPPORT_SENDCOMMAND = 256
+SUPPORT_LOCATE = 512
+SUPPORT_MAP = 1024
 
 
 @asyncio.coroutine
@@ -146,6 +150,47 @@ class VacuumDevice(ToggleEntity):
     def state(self):
         """State of the vacuum cleaner."""
         return STATE_UNKNOWN
+
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
+        return None
+
+    @property
+    def battery_level(self):
+        """Return the battery level of the vacuum cleaner."""
+        return None
+
+    @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        charging = False
+        if self.status is not None:
+            charging = 'charg' in self.status.lower()
+        return icon_for_battery_level(
+            battery_level=self.battery_level, charging=charging)
+
+    @property
+    def fanspeed(self):
+        """Return the fan speed of the vacuum cleaner."""
+        return None
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the vacuum cleaner."""
+        data = {}
+
+        if self.status is not None:
+            data['Status'] = self.status
+
+        if self.battery_level is not None:
+            data['Battery'] = self.battery_level
+            data['Battery_icon'] = self.battery_icon
+
+        if self.fanspeed is not None:
+            data['Fan'] = self.fanspeed
+
+        return data
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""

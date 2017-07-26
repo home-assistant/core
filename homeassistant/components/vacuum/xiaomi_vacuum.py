@@ -15,7 +15,8 @@ from homeassistant.components.vacuum import (
     VacuumDevice, DOMAIN,
     DEFAULT_ICON, PLATFORM_SCHEMA, VACUUM_SERVICE_SCHEMA,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STOP, SUPPORT_FANSPEED, SUPPORT_SENDCOMMAND, SUPPORT_LOCATE)
+    SUPPORT_STOP, SUPPORT_LOCATE, SUPPORT_STATUS, SUPPORT_BATTERY,
+    SUPPORT_FANSPEED, SUPPORT_SENDCOMMAND)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID,
@@ -26,7 +27,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.icon import icon_for_battery_level
 
 REQUIREMENTS = ['python-mirobo==0.1.2']
 
@@ -36,21 +36,21 @@ DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
 ICON = 'mdi:google-circles-group'
 PLATFORM = 'xiaomi_vacuum'
 
-SENSOR_MAP = {
-    'state': ('Status', None, 'mdi:broom'),
-    'error': ('Error', None, 'mdi:alert-circle'),
-    'battery': ('Battery', '%', None),  # 'mdi:battery'
-    'fanspeed': ('Fan', '%', 'mdi:fan'),
-    'clean_time': ('Cleaning time', None, 'mdi:clock'),
-    'clean_area': ('Cleaned area', 'm²', 'mdi:flip-to-back'),
-}
+# SENSOR_MAP = {
+#     'state': ('Status', None, 'mdi:broom'),
+#     'error': ('Error', None, 'mdi:alert-circle'),
+#     'battery': ('Battery', '%', None),  # 'mdi:battery'
+#     'fanspeed': ('Fan', '%', 'mdi:fan'),
+#     'clean_time': ('Cleaning time', None, 'mdi:clock'),
+#     'clean_area': ('Cleaned area', 'm²', 'mdi:flip-to-back'),
+# }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SENSORS):
-        cv.ensure_list(vol.All(str, vol.In(SENSOR_MAP))),
+    # vol.Optional(CONF_SENSORS):
+    #     cv.ensure_list(vol.All(str, vol.In(SENSOR_MAP))),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
@@ -83,7 +83,8 @@ SERVICE_TO_METHOD = {
 
 SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FANSPEED | \
-                 SUPPORT_SENDCOMMAND | SUPPORT_LOCATE
+                 SUPPORT_SENDCOMMAND | SUPPORT_LOCATE | \
+                 SUPPORT_STATUS | SUPPORT_BATTERY
 
 SIGNAL_UPDATE_DATA = PLATFORM + '_update'
 
@@ -97,18 +98,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
-    sensors = config.get(CONF_SENSORS)
+    # sensors = config.get(CONF_SENSORS)
 
     # Create handler
     mirobo = MiroboVacuum(hass, name, host, token)
     hass.data[PLATFORM][host] = mirobo
 
     # Add asociated sensors as new entities
-    if sensors:
-        yield from hass.async_add_job(
-            async_load_platform(
-                hass, 'sensor', PLATFORM,
-                {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors}))
+    # if sensors:
+    #     yield from hass.async_add_job(
+    #         async_load_platform(
+    #             hass, 'sensor', PLATFORM,
+    #             {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors}))
 
     async_add_devices([mirobo], update_before_add=True)
 
@@ -166,7 +167,6 @@ class MiroboVacuum(VacuumDevice):
         self._token = token
         self._vacuum = None
 
-        self._state_attrs = {}
         self.vacuum_state = None
         self._is_on = False
         self._available = False
@@ -181,15 +181,46 @@ class MiroboVacuum(VacuumDevice):
         """Return the icon to use for device."""
         return self._icon
 
-    # @property
-    # def should_poll(self):
-    #     """Return True if entity has to be polled for state."""
-    #     return False
+    @property
+    def state(self) -> str:
+        """Return the state of the vacuum cleaner as a binary state."""
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
+        if self.vacuum_state is not None:
+            return self.vacuum_state.state
+        return None
+
+    @property
+    def battery_level(self):
+        """Return the battery level of the vacuum cleaner."""
+        if self.vacuum_state is not None:
+            return self.vacuum_state.battery
+        return None
+
+    @property
+    def fanspeed(self):
+        """Return the fan speed of the vacuum cleaner."""
+        if self.vacuum_state is not None:
+            return self.vacuum_state.fanspeed
+        return None
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
+        """Return the specific state attributes of this vacuum cleaner."""
+        if self.vacuum_state is not None:
+            return {
+                'Do not disturb':
+                    STATE_ON if self.vacuum_state.dnd else STATE_OFF,
+                'Cleaning mode':
+                    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
+                'Cleaning time': str(self.vacuum_state.clean_time),
+                'Cleaned area': self.vacuum_state.clean_area,
+                'Error': self.vacuum_state.error}
+
+        return {}
 
     @property
     def vacuum(self):
@@ -201,11 +232,6 @@ class MiroboVacuum(VacuumDevice):
             self._vacuum = Vacuum(self._host, self._token)
 
         return self._vacuum
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def is_on(self) -> bool:
@@ -340,15 +366,10 @@ class MiroboVacuum(VacuumDevice):
             state = yield from self.hass.async_add_job(self.vacuum.status)
 
             _LOGGER.debug("Got new state from the vacuum: %s", state)
-            self._state_attrs = {
-                'Status': state.state, 'Error': state.error,
-                'Battery': state.battery, 'Fan': state.fanspeed,
-                'Cleaning time': str(state.clean_time),
-                'Cleaned area': state.clean_area}
             self.vacuum_state = state
             self._is_on = state.is_on
             self._available = True
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_DATA)
+            # async_dispatcher_send(self.hass, SIGNAL_UPDATE_DATA)
         except DeviceException as ex:
             _LOGGER.warning("Got exception while fetching the state: %s", ex)
             self._available = False
@@ -357,68 +378,68 @@ class MiroboVacuum(VacuumDevice):
             self._available = False
 
 
-class MiroboVacuumSensor(Entity):
-    """Representation of a sensor of a Xiaomi Vacuum cleaner."""
-
-    def __init__(self, mirobo_vacuum, name, sensor_type):
-        """Initialize the sensor object."""
-        self._handler = mirobo_vacuum
-        self._sensor = sensor_type
-
-        friendly_name, unit, icon = SENSOR_MAP[sensor_type]
-        self._name = '{}_{}'.format(name, sensor_type)
-        self._friendly_name = friendly_name
-        self._icon = icon
-        self._unit = unit
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return getattr(self._handler.vacuum_state, self._sensor)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._handler.available
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {"friendly_name": self._friendly_name}
-        return attrs
-
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        if self._sensor == 'battery':
-            return icon_for_battery_level(
-                battery_level=self.state,
-                charging=getattr(
-                    self._handler.vacuum_state, 'state') == 'Charging')
-        return self._icon
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register update dispatcher."""
-        @callback
-        def async_sensor_update():
-            """Update callback."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
-
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_DATA, async_sensor_update)
+# class MiroboVacuumSensor(Entity):
+#     """Representation of a sensor of a Xiaomi Vacuum cleaner."""
+#
+#     def __init__(self, mirobo_vacuum, name, sensor_type):
+#         """Initialize the sensor object."""
+#         self._handler = mirobo_vacuum
+#         self._sensor = sensor_type
+#
+#         friendly_name, unit, icon = SENSOR_MAP[sensor_type]
+#         self._name = '{}_{}'.format(name, sensor_type)
+#         self._friendly_name = friendly_name
+#         self._icon = icon
+#         self._unit = unit
+#
+#     @property
+#     def name(self):
+#         """Return the name of the sensor."""
+#         return self._name
+#
+#     @property
+#     def unit_of_measurement(self):
+#         """Return the unit the value is expressed in."""
+#         return self._unit
+#
+#     @property
+#     def state(self):
+#         """Return the state of the sensor."""
+#         return getattr(self._handler.vacuum_state, self._sensor)
+#
+#     @property
+#     def should_poll(self):
+#         """Return True if entity has to be polled for state."""
+#         return False
+#
+#     @property
+#     def available(self):
+#         """Return true when state is known."""
+#         return self._handler.available
+#
+#     @property
+#     def device_state_attributes(self):
+#         """Return the state attributes."""
+#         attrs = {"friendly_name": self._friendly_name}
+#         return attrs
+#
+#     @property
+#     def icon(self):
+#         """Return the icon for the sensor."""
+#         # if self._sensor == 'battery':
+#         #     return icon_for_battery_level(
+#         #         battery_level=self.state,
+#         #         charging=getattr(
+#         #             self._handler.vacuum_state, 'state') == 'Charging')
+#         return self._icon
+#
+#     @asyncio.coroutine
+#     def async_added_to_hass(self):
+#         """Register update dispatcher."""
+#         @callback
+#         def async_sensor_update():
+#             """Update callback."""
+#             self.hass.async_add_job(self.async_update_ha_state(True))
+#
+#         async_dispatcher_connect(
+#             self.hass, SIGNAL_UPDATE_DATA, async_sensor_update)
