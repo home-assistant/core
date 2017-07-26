@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     device = MpdDevice(host, port, password, name)
-    add_devices([device])
+    add_devices([device], True)
 
 
 class MpdDevice(MediaPlayerDevice):
