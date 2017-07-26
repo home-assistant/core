@@ -16,8 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_HOST,
                                  CONF_PORT, CONF_PASSWORD)
 
-from homeassistant.const import (HTTP_BAD_REQUEST,
-                                 HTTP_NOT_FOUND)
+from homeassistant.const import (HTTP_BAD_REQUEST)
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
@@ -144,19 +143,20 @@ class AsteriskMboxMP3View(HomeAssistantView):
     name = "api:asteriskmbox:mp3"
 
     @asyncio.coroutine
-    def get(self, request, sha):
+    @classmethod
+    def get(cls, request, sha):
         """Retrieve Asterisk mp3."""
         _LOGGER.info("Sending mp3 for %s", sha)
 
         hass = request.app['hass']
         client = hass.data[DOMAIN].client
 
-
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10, loop=request.app['hass'].loop):
                 from asterisk_mbox import ServerError
                 try:
-                    stream = yield from hass.async_add_job(partial(client.mp3, sha, sync=True))
+                    stream = yield from hass.async_add_job(
+                        partial(client.mp3, sha, sync=True))
                 except ServerError as err:
                     error_msg = "Error getting MP3: %s" % (err)
                     _LOGGER.error(error_msg)
