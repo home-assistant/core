@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not yahoo_api.update():
         _LOGGER.critical("Can't retrieve weather data from Yahoo!")
         return False
-    
+
     # create condition helper
     if DATA_CONDITION not in hass.data:
         hass.data[DATA_CONDITION] = [str(x) for x in range(0, 50)]
@@ -160,7 +160,7 @@ class YahooWeatherWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: v['date'],
                     ATTR_FORECAST_TEMP:int(v['high']),
                     ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                    ATTR_FORECAST_CONDITION: hass.data[DATA_CONDITION][
+                    ATTR_FORECAST_CONDITION: self.hass.data[DATA_CONDITION][
                         int(v['code'])]
                 } for v in self._data.yahoo.Forecast[]]
         except (ValueError, IndexError):
