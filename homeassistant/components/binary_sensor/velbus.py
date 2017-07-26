@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
-    velbus = self.hass.data[DOMAIN]
+    velbus = hass.data[DOMAIN]
 
     add_devices(VelbusBinarySensor(sensor, velbus)
                 for sensor in config[CONF_DEVICES])
