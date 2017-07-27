@@ -207,14 +207,17 @@ class GeoRssServiceUpdater:
                          len(self._feed.entries), self._url)
             # filter entries by distance from home
             for entry in self._feed.entries:
-                distance = float("inf")
+                geometry = None
+                print(entry)
                 if hasattr(entry, 'where'):
-                    distance = self.calculate_distance_to_geometry(entry.where)
+                    geometry = entry.where
                 elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
-                    coordinates = (float(entry.geo_lat), float(entry.geo_long))
-                    distance = self.calculate_distance_to_coordinates(coordinates)
+                    coordinates = (float(entry.geo_long), float(entry.geo_lat))
+                    geometry = {'type': 'Point', 'coordinates': coordinates}
+                if geometry:
+                    distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
-                    incident = self.create_incident(distance, entry)
+                    incident = self.create_incident(entry, distance, geometry)
                     incidents.append(incident)
             tasks = []
             if self._filter_by_category:
@@ -244,7 +247,7 @@ class GeoRssServiceUpdater:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
     @staticmethod
-    def create_incident(distance, feature):
+    def create_incident(feature, distance, geometry):
         category_candidate = None
         if hasattr(feature, 'category'):
             category_candidate = feature.category
@@ -269,6 +272,7 @@ class GeoRssServiceUpdater:
                         id_candidate,
                         pup_date_candidate,
                         summary_candidate,
+                        geometry,
                         distance)
 
     def calculate_distance_to_geometry(self, geometry):
@@ -282,13 +286,12 @@ class GeoRssServiceUpdater:
         return distance
 
     def calculate_distance_to_point(self, point):
-        # from shapely.geometry import shape
-        from haversine import haversine
+        # Swap coordinates to match: (lat, lon).
         coordinates = (point.coordinates[1], point.coordinates[0])
         return self.calculate_distance_to_coordinates(coordinates)
 
     def calculate_distance_to_coordinates(self, coordinates):
-        # from shapely.geometry import shape
+        # Expecting coordinates in format: (lat, lon).
         from haversine import haversine
         distance = haversine(coordinates, self._home_coordinates)
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
@@ -296,7 +299,6 @@ class GeoRssServiceUpdater:
         return distance
 
     def calculate_distance_to_polygon(self, polygon):
-        from haversine import haversine
         distance = float("inf")
         # 1. Check if home coordinates are within polygon
         if self.point_in_polygon(self._home_coordinates, polygon):
@@ -355,13 +357,14 @@ class GeoRssServiceUpdater:
 class Incident(object):
     """Class for storing incidents retrieved."""
 
-    def __init__(self, category, title, guid, pub_date, description, distance):
+    def __init__(self, category, title, guid, pub_date, description, geometry, distance):
         """Initialize the data object."""
         self._category = category
         self._title = title
         self._guid = guid
         self._pub_date = pub_date
         self._description = description
+        self._geometry = geometry
         self._distance = distance
 
     @property
@@ -379,6 +382,10 @@ class Incident(object):
     @property
     def description(self):
         return self._description
+
+    @property
+    def geometry(self):
+        return self._geometry
 
     @property
     def distance(self):
