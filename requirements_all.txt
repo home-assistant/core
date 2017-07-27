@@ -49,7 +49,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.5.2
+aiolifx==0.5.4
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.1
@@ -61,7 +61,7 @@ aiopvapi==1.4
 alarmdecoder==0.12.3
 
 # homeassistant.components.amcrest
-amcrest==1.2.0
+amcrest==1.2.1
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -115,6 +115,9 @@ blockchain==1.3.3
 # homeassistant.components.tts.amazon_polly
 boto3==1.4.3
 
+# homeassistant.scripts.credstash
+botocore==1.4.93
+
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.5
@@ -135,6 +138,9 @@ colorlog>2.1,<3
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
 concord232==0.14
+
+# homeassistant.scripts.credstash
+credstash==1.13.2
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
@@ -229,7 +235,7 @@ fritzhome==1.0.2
 fsapi==0.0.7
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.15.0
+fuzzywuzzy==0.15.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -347,7 +353,7 @@ keyring>=9.3,<10.0
 knxip==0.5
 
 # homeassistant.components.device_tracker.owntracks
-libnacl==1.5.1
+libnacl==1.5.2
 
 # homeassistant.components.dyson
 libpurecoollink==0.2.0
@@ -404,7 +410,7 @@ myusps==1.1.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.0.1
+netdisco==1.1.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -503,6 +509,7 @@ py-cpuinfo==3.3.0
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
+# homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
 pyHS100==0.2.4.2
 
@@ -535,7 +542,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.1
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -583,7 +590,7 @@ pyharmony==1.0.16
 pyhik==0.1.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.29
+pyhomematic==0.1.30
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -754,6 +761,9 @@ python-telegram-bot==6.1.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.velbus
+python-velbus==2.0.11
+
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
@@ -871,7 +881,7 @@ speedtest-cli==1.0.6
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.11
+sqlalchemy==1.1.12
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -974,7 +984,7 @@ yeelight==0.3.0
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.7.9
+youtube_dl==2017.7.23
 
 # homeassistant.components.light.zengge
 zengge==0.2

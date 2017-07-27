@@ -19,7 +19,7 @@ from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import http
 
 
-REQUIREMENTS = ['fuzzywuzzy==0.15.0']
+REQUIREMENTS = ['fuzzywuzzy==0.15.1']
 DEPENDENCIES = ['http']
 
 ATTR_TEXT = 'text'
@@ -151,7 +151,7 @@ def _process(hass, text):
     if not entity_ids:
         _LOGGER.error(
             "Could not find entity id %s from text %s", name, text)
-        return
+        return None
 
     if command == 'on':
         yield from hass.services.async_call(
@@ -168,6 +168,8 @@ def _process(hass, text):
     else:
         _LOGGER.error('Got unsupported command %s from text %s',
                       command, text)
+
+    return None
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -193,5 +195,9 @@ class ConversationProcessView(http.HomeAssistantView):
                                      HTTP_BAD_REQUEST)
 
         intent_result = yield from _process(hass, text)
+
+        if intent_result is None:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech("Sorry, I didn't understand that")
 
         return self.json(intent_result)
