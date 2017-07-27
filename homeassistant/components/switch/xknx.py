@@ -74,34 +74,35 @@ class XKNXSwitch(SwitchDevice):
         self.hass = hass
         self.register_callbacks()
 
-
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
             self.update_ha()
         self.device.register_device_updated_cb(after_update_callback)
 
-
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
-
     @property
     def name(self):
+        """Return the name of the XKNX device."""
         return self.device.name
 
+    @property
+    def should_poll(self):
+        """No polling needed within XKNX."""
+        return False
 
     @property
     def is_on(self):
-        """Return true if pin is high/on."""
+        """Return true if device is on."""
         return self.device.state
 
-
     def turn_on(self):
-        """Turn the pin to high/on."""
+        """Turn the device on."""
         self.device.set_on()
 
-
     def turn_off(self):
-        """Turn the pin to low/off."""
+        """Turn the device off."""
         self.device.set_off()

@@ -80,6 +80,7 @@ class XKNXClimate(ClimateDevice):
 
 
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
             self.update_ha()
@@ -88,31 +89,30 @@ class XKNXClimate(ClimateDevice):
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
-
+    @property
+    def name(self):
+        """Return the name of the XKNX device."""
+        return self.device.name
 
     @property
     def should_poll(self):
-        """Polling not needed """
+        """No polling needed within XKNX."""
         return False
-
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-
     @property
     def current_temperature(self):
         """Return the current temperature."""
         return self.device.temperature
 
-
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self.device.setpoint
-
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -126,12 +126,6 @@ class XKNXClimate(ClimateDevice):
 
         self.update_ha()
 
-
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         raise NotImplementedError()
-
-
-    @property
-    def name(self):
-        return self.device.name

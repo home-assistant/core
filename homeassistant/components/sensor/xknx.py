@@ -75,28 +75,25 @@ class XKNXSensor(Entity):
         self.hass = hass
         self.register_callbacks()
 
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo sensor."""
-        return False
-
-
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
             self.update_ha()
         self.device.register_device_updated_cb(after_update_callback)
 
-
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
-
     @property
     def name(self):
-        """Return the name of the light if any."""
+        """Return the name of the XKNX device."""
         return self.device.name
+
+    @property
+    def should_poll(self):
+        """No polling needed within XKNX."""
+        return False
 
     @property
     def state(self):
@@ -111,7 +108,4 @@ class XKNXSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        #return {
-        #    "FNORD": "FNORD",
-        #}
         return None

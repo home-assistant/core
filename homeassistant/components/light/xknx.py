@@ -83,28 +83,25 @@ class XKNXLight(Light):
         self.hass = hass
         self.register_callbacks()
 
-
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
             self.update_ha()
         self.device.register_device_updated_cb(after_update_callback)
 
-
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
+    @property
+    def name(self):
+        """Return the name of the XKNX device."""
+        return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed for a demo light."""
+        """No polling needed within XKNX."""
         return False
-
-
-    @property
-    def name(self):
-        """Return the name of the light if any."""
-        return self.device.name
 
     @property
     def brightness(self):
@@ -155,7 +152,6 @@ class XKNXLight(Light):
         if self.device.supports_dimming:
             flags |= SUPPORT_BRIGHTNESS
         return flags
-
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

@@ -99,23 +99,23 @@ class XKNXCover(CoverDevice):
         self._unsubscribe_auto_updater = None
 
     def register_callbacks(self):
+        """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             #pylint: disable=unused-argument
             self.update_ha()
         self.device.register_device_updated_cb(after_update_callback)
-
 
     def update_ha(self):
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
-        """Return the name of the cover."""
+        """Return the name of the XKNX device."""
         return self.device.name
 
     @property
     def should_poll(self):
-        """No polling needed for a demo cover."""
+        """No polling needed within XKNX."""
         return False
 
     @property
