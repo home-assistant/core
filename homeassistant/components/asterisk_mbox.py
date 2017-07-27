@@ -1,33 +1,22 @@
 """Support for Asterisk Voicemail interface."""
 
-import asyncio
 import logging
-from functools import partial
-from contextlib import suppress
 
-import async_timeout
 import voluptuous as vol
 
-
-from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_HOST,
                                  CONF_PORT, CONF_PASSWORD)
 
-from homeassistant.const import (HTTP_BAD_REQUEST)
-
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
-from homeassistant.components.http import HomeAssistantView
-
 REQUIREMENTS = ['asterisk_mbox==0.4.0']
 DEPENDENCIES = ['http']
 
-CONTENT_TYPE_MPEG = 'audio/mpeg'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 
@@ -56,12 +45,7 @@ def setup(hass, config):
     hass.data[DOMAIN] = AsteriskData(hass, host, port, password)
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-
-    hass.components.frontend.register_built_in_panel(
-        'mailbox', 'Mailbox', 'mdi:account-location')
-    hass.http.register_view(AsteriskMboxMsgView())
-    hass.http.register_view(AsteriskMboxMP3View())
-    hass.http.register_view(AsteriskMboxDeleteView())
+    discovery.load_platform(hass, "mailbox", DOMAIN, {}, config)
 
     return True
 
@@ -98,72 +82,3 @@ class AsteriskData(object):
         """Handle changes to the mailbox."""
         _LOGGER.info("Requesting message list")
         self.client.messages()
-
-
-class AsteriskMboxMsgView(HomeAssistantView):
-    """View to return the list of messages."""
-
-    url = "/api/asteriskmbox/messages"
-    name = "api:asteriskmbox:messages"
-
-    @asyncio.coroutine
-    def get(self, request):
-        """Retrieve Asterisk messages."""
-        hass = request.app['hass']
-        msgs = hass.data[DOMAIN].messages
-        _LOGGER.info("Sending: %s", msgs)
-        return self.json(msgs)
-
-
-class AsteriskMboxDeleteView(HomeAssistantView):
-    """View to delete selected messages."""
-
-    url = "/api/asteriskmbox/delete"
-    name = "api:asteriskmbox:delete"
-
-    @asyncio.coroutine
-    def post(self, request):
-        """Delete items."""
-        try:
-            data = yield from request.json()
-
-            hass = request.app['hass']
-            client = hass.data[DOMAIN].client
-            for sha in data:
-                _LOGGER.info("Deleting: %s", sha)
-                client.delete(sha)
-        except ValueError:
-            return self.json_message('Bad item id', HTTP_BAD_REQUEST)
-
-
-class AsteriskMboxMP3View(HomeAssistantView):
-    """View to return an MP3."""
-
-    url = r"/api/asteriskmbox/mp3/{sha:[0-9a-f]+}"
-    name = "api:asteriskmbox:mp3"
-
-    @asyncio.coroutine
-    @classmethod
-    def get(cls, request, sha):
-        """Retrieve Asterisk mp3."""
-        _LOGGER.info("Sending mp3 for %s", sha)
-
-        hass = request.app['hass']
-        client = hass.data[DOMAIN].client
-
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=request.app['hass'].loop):
-                from asterisk_mbox import ServerError
-                try:
-                    stream = yield from hass.async_add_job(
-                        partial(client.mp3, sha, sync=True))
-                except ServerError as err:
-                    error_msg = "Error getting MP3: %s" % (err)
-                    _LOGGER.error(error_msg)
-                    return web.Response(status=500)
-
-            if stream:
-                return web.Response(body=stream,
-                                    content_type=CONTENT_TYPE_MPEG)
-
-        return web.Response(status=500)
