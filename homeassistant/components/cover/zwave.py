@@ -121,23 +121,17 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def is_opening(self):
         """Return true if cover is in an opening state."""
-        if self._state == "Opening":
-            return True
-        return False
+        return self._state == "Opening"
 
     @property
     def is_closing(self):
         """Return true if cover is in an closing state."""
-        if self._state == "Closing":
-            return True
-        return False
+        return self._state == "Closing"
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        if self._state == "Closed":
-            return True
-        return False
+        return self._state == "Closed"
 
     def close_cover(self):
         """Close the garage door."""
