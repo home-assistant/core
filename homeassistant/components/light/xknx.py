@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP lights via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -27,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX light platform."""
+    """Setup light for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -68,7 +74,7 @@ def add_devices_from_platform(hass, config, add_devices):
 
 
 class XKNXLight(Light):
-    """Representation of XKNX lights."""
+    """Representation of a XKNX light."""
 
     def __init__(self, hass, device):
         self.device = device

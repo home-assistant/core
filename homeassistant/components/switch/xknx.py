@@ -1,3 +1,9 @@
+"""
+Support for KNX/IP switches via XKNX
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.xknx/
+"""
 import asyncio
 import xknx
 import voluptuous as vol
@@ -22,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the XKNX switch platform."""
+    """Setup switch for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -59,7 +65,7 @@ def add_devices_from_platform(hass, config, add_devices):
 
 
 class XKNXSwitch(SwitchDevice):
-    """Representation of XKNX switches."""
+    """Representation of a XKNX switch."""
 
     def __init__(self, hass, device):
         self.device = device
