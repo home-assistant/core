@@ -119,19 +119,42 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
     from sqlalchemy import and_, func
 
     with session_scope(hass=hass) as session:
-        most_recent_state_ids = session.query(
-            func.max(States.state_id).label('max_state_id')
-        ).filter(
-            (States.created >= run.start) &
-            (States.created < utc_point_in_time) &
-            (~States.domain.in_(IGNORE_DOMAINS)))
+        if entity_ids and len(entity_ids) == 1:
+            # Use an entirely different (and extremely fast) query if we only
+            # have a single entity id
+            most_recent_state_ids = session.query(
+                States.state_id.label('max_state_id')
+            ).filter(
+                (States.created < utc_point_in_time) &
+                (States.entity_id.in_(entity_ids))
+            ).order_by(
+                States.created.desc())
 
-        if filters:
-            most_recent_state_ids = filters.apply(most_recent_state_ids,
-                                                  entity_ids)
+            if filters:
+                most_recent_state_ids = filters.apply(most_recent_state_ids,
+                                                      entity_ids)
 
-        most_recent_state_ids = most_recent_state_ids.group_by(
-            States.entity_id).subquery()
+            most_recent_state_ids = most_recent_state_ids.limit(1)
+
+        else:
+            # We have more than one entity to look at (most commonly we want
+            # all entities,) so we need to do a search on all states since the
+            # last recorder run started.
+            most_recent_state_ids = session.query(
+                func.max(States.state_id).label('max_state_id')
+            ).filter(
+                (States.created >= run.start) &
+                (States.created < utc_point_in_time) &
+                (~States.domain.in_(IGNORE_DOMAINS)))
+
+            if filters:
+                most_recent_state_ids = filters.apply(most_recent_state_ids,
+                                                      entity_ids)
+
+            most_recent_state_ids = most_recent_state_ids.group_by(
+                States.entity_id)
+
+        most_recent_state_ids = most_recent_state_ids.subquery()
 
         query = session.query(States).join(most_recent_state_ids, and_(
             States.state_id == most_recent_state_ids.c.max_state_id))
