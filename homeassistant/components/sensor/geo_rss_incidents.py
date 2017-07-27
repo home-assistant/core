@@ -1,7 +1,8 @@
 """
-Generic GeoRSS service
-Retrieves current incidents or alerts in GeoRSS format, and shows information on incidents filtered by distance
-to the HA instance's location and grouped by category.
+Generic GeoRSS incident service
+Retrieves current incidents or alerts in GeoRSS format, and shows information
+on incidents filtered by distance to the HA instance's location and grouped
+by category.
 
 Example configuration:
 
@@ -21,29 +22,39 @@ sensor:
 Sample feeds
 
 Fire
-- NSW Rural Fire Service: http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml
-- Qld Rural Fire Service: https://www.qfes.qld.gov.au/data/alerts/bushfireAlert.xml
-- ACT Emergency Services Agency: http://www.esa.act.gov.au/feeds/currentincidents.xml
-- WA Department of Fire and Emergency Services: https://www.emergency.wa.gov.au/data/incident_FCAD.rss
-- Tasmania Fire Service: http://www.fire.tas.gov.au/Show?pageId=colBushfireSummariesRss
+- NSW Rural Fire Service
+  http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml
+- Qld Rural Fire Service
+  https://www.qfes.qld.gov.au/data/alerts/bushfireAlert.xml
+- ACT Emergency Services Agency
+  http://www.esa.act.gov.au/feeds/currentincidents.xml
+- WA Department of Fire and Emergency Services
+  https://www.emergency.wa.gov.au/data/incident_FCAD.rss
+- Tasmania Fire Service
+  http://www.fire.tas.gov.au/Show?pageId=colBushfireSummariesRss
 
 Earthquake
-- USGS: https://earthquake.usgs.gov/earthquakes/feed/v1.0/atom.php
-- BGS: http://www.bgs.ac.uk/feeds/worldSeismology.xml
-- Natural Resources Canada: http://www.earthquakescanada.nrcan.gc.ca/index-en.php?tpl_region=canada&tpl_output=rss
-
+- USGS
+  https://earthquake.usgs.gov/earthquakes/feed/v1.0/atom.php
+- BGS
+  http://www.bgs.ac.uk/feeds/worldSeismology.xml
+- Natural Resources Canada
+  http://www.earthquakescanada.nrcan.gc.ca/index-en.php?tpl_region=canada&tpl_output=rss
 
 """
+
 import asyncio
-import logging
 import json
+import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL, CONF_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_ICON)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL,
+                                 CONF_UNIT_OF_MEASUREMENT, CONF_NAME,
+                                 CONF_ICON)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -51,28 +62,29 @@ REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CATEGORIES = 'categories'
+CONF_RADIUS = 'radius'
+CONF_URL = 'url'
+
+DEFAULT_ICON = 'mdi:alert'
+DEFAULT_NAME = "Incident Information Service"
+DEFAULT_RADIUS_IN_KM = 20.0
+DEFAULT_UNIT_OF_MEASUREMENT = 'Incidents'
+
 DOMAIN = 'geo_rss'
 ENTITY_ID_FORMAT = 'sensor.' + DOMAIN + '_{}'
 INCIDENTS = 'incidents'
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-
-CONF_URL = 'url'
-CONF_RADIUS = 'radius'
-CONF_CATEGORIES = 'categories'
-
-DEFAULT_NAME = 'Incident Information Service'
-DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMEMT = 'Incidents'
-DEFAULT_ICON = 'mdi:alert'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=None): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
-    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMEMT): cv.string,
+    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list,
+                                                       [cv.string]),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT,
+                 default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 
@@ -86,33 +98,37 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     icon = config.get(CONF_ICON)
     categories = config.get(CONF_CATEGORIES)
-    interval_in_seconds = config.get(CONF_SCAN_INTERVAL) or timedelta(minutes=5)
+    interval_in_seconds = config.get(CONF_SCAN_INTERVAL) or timedelta(
+        minutes=5)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     if None in (home_latitude, home_longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s", home_latitude,
-                  home_longitude, url, radius_in_km)
+    _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
+                  home_latitude, home_longitude, url, radius_in_km)
 
-    # create all sensors
+    # Create all sensors based on categories.
     devices = []
     devices_by_category = {}
     if not categories:
-        device = GeoRssServiceSensor(hass, None, [], name, icon, unit_of_measurement)
+        device = GeoRssServiceSensor(hass, None, [], name, icon,
+                                     unit_of_measurement)
         devices.append(device)
         devices_by_category[None] = device
     else:
         for category in categories:
-            device = GeoRssServiceSensor(hass, category, [], name, icon, unit_of_measurement)
+            device = GeoRssServiceSensor(hass, category, [], name, icon,
+                                         unit_of_measurement)
             devices.append(device)
             devices_by_category[category] = device
     async_add_devices(devices)
 
-    # initialise access to web resource
-    updater = GeoRssServiceUpdater(hass, home_latitude, home_longitude, url, radius_in_km,
-                                   devices_by_category, categories)
+    # Initialise update service.
+    updater = GeoRssServiceUpdater(hass, home_latitude, home_longitude, url,
+                                   radius_in_km, devices_by_category,
+                                   categories)
     async_track_time_interval(hass, updater.async_update, interval_in_seconds)
     yield from updater.async_update()
     return True
@@ -121,7 +137,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, hass, category, incidents, name, icon, unit_of_measurement):
+    def __init__(self, hass, category, incidents, name, icon,
+                 unit_of_measurement):
         """Initialize the sensor."""
         self.hass = hass
         self._category = category
@@ -178,11 +195,11 @@ class GeoRssServiceSensor(Entity):
 
 
 class GeoRssServiceUpdater:
-    """Provides access to GeoRSS and creates and updates UI devices."""
+    """Provides access to GeoRSS feed and creates and updates UI devices."""
 
     def __init__(self, hass, home_latitude, home_longitude, url,
                  radius_in_km, devices_by_category, filter_by_category):
-        """Initialize the sensor."""
+        """Initialize the update service."""
         self._hass = hass
         self._feed = None
         self._home_latitude = home_latitude
@@ -197,7 +214,7 @@ class GeoRssServiceUpdater:
     @asyncio.coroutine
     def async_update(self, *_):
         import feedparser
-        # retrieve data
+        # Retrieve data from GeoRSS feed.
         self._feed = feedparser.parse(self._url)
         if not self._feed:
             _LOGGER.error("Error fetching feed data from %s", self._url)
@@ -205,7 +222,7 @@ class GeoRssServiceUpdater:
             incidents = []
             _LOGGER.info("%s entri(es) available in feed %s",
                          len(self._feed.entries), self._url)
-            # filter entries by distance from home
+            # Filter entries by distance from home coordinates.
             for entry in self._feed.entries:
                 geometry = None
                 print(entry)
@@ -221,28 +238,32 @@ class GeoRssServiceUpdater:
                     incidents.append(incident)
             tasks = []
             if self._filter_by_category:
-                # group incidents by category
+                # Group incidents by category.
                 incidents_by_category = {}
                 for incident in incidents:
                     if incident.category in incidents_by_category:
-                        incidents_by_category[incident.category].append(incident)
+                        incidents_by_category[incident.category].append(
+                            incident)
                     else:
                         incidents_by_category[incident.category] = [incident]
-                _LOGGER.debug("Incidents by category: %s", incidents_by_category)
-                # set new state (incidents) on devices
+                _LOGGER.debug("Incidents by category: %s",
+                              incidents_by_category)
+                # Set new state (incidents) on devices.
                 for category in incidents_by_category.keys():
-                    # update existing device with new list of incidents
+                    # Update existing device with new list of incidents.
                     if category in self._devices_by_category:
                         device = self._devices_by_category[category]
                         device.state = incidents_by_category[category]
                         tasks.append(device.async_update_ha_state())
-                _LOGGER.debug("Devices by category: %s", self._devices_by_category)
+                _LOGGER.debug("Devices by category: %s",
+                              self._devices_by_category)
             else:
-                # add all incidents regardless of category
+                # Add all incidents regardless of category.
                 device = self._devices_by_category[None]
                 device.state = incidents
                 tasks.append(device.async_update_ha_state())
-                _LOGGER.debug("Devices by category: %s", self._devices_by_category)
+                _LOGGER.debug("Devices by category: %s",
+                              self._devices_by_category)
             if tasks:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
@@ -280,7 +301,8 @@ class GeoRssServiceUpdater:
         if geometry.type == 'Point':
             distance = self.calculate_distance_to_point(geometry)
         elif geometry.type == 'Polygon':
-            distance = self.calculate_distance_to_polygon(geometry.coordinates[0])
+            distance = self.calculate_distance_to_polygon(
+                geometry.coordinates[0])
         else:
             _LOGGER.info("Not yet implemented: %s", geometry.type)
         return distance
@@ -304,36 +326,41 @@ class GeoRssServiceUpdater:
         if self.point_in_polygon(self._home_coordinates, polygon):
             distance = 0
         else:
-            # 2. Calculate distance from polygon by calculating the distance to each point of the polygon
-            #    but not to each edge of the polygon; should be good enough
+            # 2. Calculate distance from polygon by calculating the distance
+            #    to each point of the polygon but not to each edge of the
+            #    polygon; should be good enough
             n = len(polygon)
             for i in range(n):
                 polygon_point = polygon[i]
                 coordinates = (polygon_point[1], polygon_point[0])
-                distance = min(distance, self.calculate_distance_to_coordinates(coordinates))
+                distance = min(distance,
+                               self.calculate_distance_to_coordinates(
+                                   coordinates))
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
                       polygon, distance)
         return distance
 
     @staticmethod
     def point_in_polygon(point, polygon):
-        # Source: http://geospatialpython.com/2011/08/point-in-polygon-2-on-line.html
+        # Source:
+        # http://geospatialpython.com/2011/08/point-in-polygon-2-on-line.html
         x = point[0]
         y = point[1]
-        # check if point is a vertex
-        if point in polygon: return True
+        # Check if point is a vertex.
+        if point in polygon:
+            return True
 
-        # check if point is on a boundary
+        # Check if point is on a boundary.
         for i in range(len(polygon)):
-            p1 = None
-            p2 = None
             if i == 0:
                 p1 = polygon[0]
                 p2 = polygon[1]
             else:
                 p1 = polygon[i - 1]
                 p2 = polygon[i]
-            if p1[1] == p2[1] and p1[1] == y and x > min(p1[0], p2[0]) and x < max(p1[0], p2[0]):
+            if p1[1] == p2[1] and p1[1] == y and x > min(p1[0],
+                                                         p2[0]) and x < max(
+                p1[0], p2[0]):
                 return True
 
         n = len(polygon)
@@ -357,7 +384,8 @@ class GeoRssServiceUpdater:
 class Incident(object):
     """Class for storing incidents retrieved."""
 
-    def __init__(self, category, title, guid, pub_date, description, geometry, distance):
+    def __init__(self, category, title, guid, pub_date, description, geometry,
+                 distance):
         """Initialize the data object."""
         self._category = category
         self._title = title
