@@ -109,6 +109,11 @@ class MpdDevice(MediaPlayerDevice):
 
         self._update_playlists()
 
+    @property
+    def avaiable(self):
+        """True if MPD is available and connected."""
+        return self._is_connected
+
     def update(self):
         """Get the latest data and update the state."""
         import mpd
@@ -130,7 +135,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the media state."""
-        if not self._status:
+        if self._status is None:
             return STATE_OFF
         elif self._status['state'] == 'play':
             return STATE_PLAYING
