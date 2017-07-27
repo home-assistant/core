@@ -11,7 +11,8 @@ from hashlib import sha1
 
 import homeassistant.util.dt as dt
 
-from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG)
+from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
+                                              StreamError)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,9 @@ class DemoMailbox(Mailbox):
 
     def get_media(self, msgid):
         """Return the media blob for the msgid."""
+        if msgid not in self._messages:
+            raise StreamError("Message not found")
+
         audio_path = os.path.join(
             os.path.dirname(__file__), 'demo.mp3')
         with open(audio_path, 'rb') as file:

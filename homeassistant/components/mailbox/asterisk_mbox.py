@@ -9,10 +9,12 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import DOMAIN
-from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG)
+from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
+                                              StreamError)
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
+DEPENDENCIES = ['asterisk_mbox']
 _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
@@ -60,8 +62,12 @@ class AsteriskMailbox(Mailbox):
 
     def get_media(self, msgid):
         """Return the media blob for the msgid."""
+        from asterisk_mbox import ServerError
         client = self.hass.data[DOMAIN].client
-        return client.mp3(msgid, sync=True)
+        try:
+            return client.mp3(msgid, sync=True)
+        except ServerError as err:
+            raise StreamError(err)
 
     def get_messages(self):
         """Return a list of the current messages."""
