@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 
-DEFAULT_NAME = 'XKNX Thermostat'
+DEFAULT_NAME = 'XKNX Climate'
 DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -39,15 +39,15 @@ def async_setup_platform(hass, config, add_devices, \
 def add_devices_from_component(hass, add_devices):
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Thermostat) and \
+        if isinstance(device, xknx.Climate) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXClimate(hass, device))
     add_devices(entities)
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
-    from xknx import Thermostat
-    climate = Thermostat(hass.data[DATA_XKNX].xknx,
+    from xknx import Climate
+    climate = Climate(hass.data[DATA_XKNX].xknx,
                          name= \
                              config.get(CONF_NAME),
                          group_address_temperature= \
