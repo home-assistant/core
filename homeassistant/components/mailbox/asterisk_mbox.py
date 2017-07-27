@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import DOMAIN
-from homeassistant.components.mailbox import Mailbox
+from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG)
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
-
-CONTENT_TYPE_MPEG = 'audio/mpeg'
 
 
 @asyncio.coroutine

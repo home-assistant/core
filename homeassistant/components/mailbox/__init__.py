@@ -23,6 +23,7 @@ from homeassistant.components.http import HomeAssistantView
 
 
 DOMAIN = 'mailbox'
+CONTENT_TYPE_MPEG = 'audio/mpeg'
 SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
