@@ -19,7 +19,7 @@ from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import http
 
 
-REQUIREMENTS = ['fuzzywuzzy==0.15.0']
+REQUIREMENTS = ['fuzzywuzzy==0.15.1']
 DEPENDENCIES = ['http']
 
 ATTR_TEXT = 'text'

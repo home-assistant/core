@@ -235,7 +235,7 @@ fritzhome==1.0.2
 fsapi==0.0.7
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.15.0
+fuzzywuzzy==0.15.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
