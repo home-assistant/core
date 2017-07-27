@@ -25,8 +25,15 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
-TIMEOUT = 10
-NO_TIMEOUT = set(['homeassistant/update', 'host/update', 'supervisor/update'])
+NO_TIMEOUT = {
+    re.compile(r'^homeassistant/update$'), re.compile(r'^host/update$'),
+    re.compile(r'^supervisor/update$'), re.compile(r'^addons/[^/]*/update$'),
+    re.compile(r'^addons/[^/]*/install$')
+}
+
+NO_AUTH = {
+    re.compile(r'^panel$'), re.compile(r'^addons/[^/]*/logo$')
+}
 
 
 @asyncio.coroutine
@@ -71,7 +78,7 @@ class HassIO(object):
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(TIMEOUT, loop=self.loop):
+            with async_timeout.timeout(10, loop=self.loop):
                 request = yield from self.websession.get(
                     "http://{}{}".format(self._ip, "/supervisor/ping")
                 )
@@ -97,12 +104,12 @@ class HassIO(object):
 
         This method is a coroutine.
         """
-        read_timeout = 0 if path in NO_TIMEOUT else 300
+        read_timeout = _get_timeout(path)
 
         try:
             data = None
             headers = None
-            with async_timeout.timeout(TIMEOUT, loop=self.loop):
+            with async_timeout.timeout(10, loop=self.loop):
                 data = yield from request.read()
                 if data:
                     headers = {CONTENT_TYPE: request.content_type}
@@ -140,7 +147,7 @@ class HassIOView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, request, path):
         """Route data to hassio."""
-        if path != 'panel' and not request[KEY_AUTHENTICATED]:
+        if _need_auth(path) and not request[KEY_AUTHENTICATED]:
             return web.Response(status=401)
 
         client = yield from self.hassio.command_proxy(path, request)
@@ -173,3 +180,19 @@ def _create_response_log(client, data):
         status=client.status,
         content_type=CONTENT_TYPE_TEXT_PLAIN,
     )
+
+
+def _get_timeout(path):
+    """Return timeout for a url path."""
+    for re_path in NO_TIMEOUT:
+        if re_path.match(path):
+            return 0
+    return 300
+
+
+def _need_auth(path):
+    """Return if a path need a auth."""
+    for re_path in NO_AUTH:
+        if re_path.match(path):
+            return False
+    return True
