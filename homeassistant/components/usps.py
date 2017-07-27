@@ -120,5 +120,6 @@ class USPSData(object):
         self._packages = myusps.get_packages(self._session)
         self._mail = myusps.get_mail(self._session, now().date())
         self._attr = myusps.ATTRIBUTION
-        _LOGGER.debug("Mail, request date: %s, list: %s", now().date(), self._mail)
+        _LOGGER.debug("Mail, request date: %s, list: %s",
+                      now().date(), self._mail)
         _LOGGER.debug("Package list: %s", self._packages)
