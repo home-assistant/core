@@ -84,6 +84,7 @@ class XKNXModule(object):
         self.init_xknx()
 
     def init_xknx(self):
+        """Initialization of XKNX object."""
         from xknx import XKNX
         self.xknx = XKNX(
             config=self.config_file(),
@@ -91,6 +92,7 @@ class XKNXModule(object):
 
     @asyncio.coroutine
     def start(self):
+        """Start XKNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         yield from self.xknx.start(
             state_updater=True,
@@ -100,15 +102,20 @@ class XKNXModule(object):
 
     @asyncio.coroutine
     def stop(self, event):
+        """Stop XKNX object. Disconnect from tunneling or Routing device."""
         yield from self.xknx.stop()
 
     def config_file(self):
+        """Resolve and return the full path of xknx.yaml if configured."""
         config_file = self.config[DOMAIN].get(CONF_XKNX_CONFIG)
+        if not config_file:
+            return None
         if not config_file.startswith("/"):
             return  self.hass.config.path(config_file)
         return config_file
 
     def connection_config(self):
+        """Resolve and return the connection_config."""
         if CONF_XKNX_TUNNELING in self.config[DOMAIN]:
             return self.connection_config_tunneling()
         elif CONF_XKNX_ROUTING in self.config[DOMAIN]:
@@ -117,6 +124,7 @@ class XKNXModule(object):
             return self.connection_config_auto()
 
     def connection_config_routing(self):
+        """Resolve and return the connection_config if routing is configured."""
         from xknx.io import ConnectionConfig, ConnectionType
         local_ip = \
             self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
@@ -125,6 +133,7 @@ class XKNXModule(object):
             local_ip=local_ip)
 
     def connection_config_tunneling(self):
+        """Resolve and return the connection_config if tunneling is configured."""
         from xknx.io import ConnectionConfig, ConnectionType, \
             DEFAULT_MCAST_PORT
         gateway_ip = \
@@ -142,6 +151,7 @@ class XKNXModule(object):
             local_ip=local_ip)
 
     def connection_config_auto(self):
+        """Resolve and return the connection_config if auto is configured."""
         #pylint: disable=no-self-use
         from xknx.io import ConnectionConfig
         return ConnectionConfig()
