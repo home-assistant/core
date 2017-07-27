@@ -168,10 +168,26 @@ def test_garage_value_changed(hass, mock_openzwave):
                               node_config={})
 
     assert device.is_closed
+    assert not device.is_opening
+    assert not device.is_closing
+
+    value.data = "Opening"
+    value_changed(value)
+    assert not device.is_closed
+    assert device.is_opening
+    assert not device.is_closing
+
     value.data = "Opened"
     value_changed(value)
-
     assert not device.is_closed
+    assert not device.is_opening
+    assert not device.is_closing
+
+    value.data = "Closing"
+    value_changed(value)
+    assert not device.is_closed
+    assert not device.is_opening
+    assert device.is_closing
 
 
 def test_garage_commands(hass, mock_openzwave):
