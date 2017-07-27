@@ -109,7 +109,7 @@ class HassIO(object):
         try:
             data = None
             headers = None
-            with async_timeout.timeout(TIMEOUT, loop=self.loop):
+            with async_timeout.timeout(10, loop=self.loop):
                 data = yield from request.read()
                 if data:
                     headers = {CONTENT_TYPE: request.content_type}
