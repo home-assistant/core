@@ -15,7 +15,7 @@ class TestSetupMailbox(object):
     """Verify mailbox creation."""
 
     def setup_method(self):
-        """Things to be run when tests are started."""
+        """Initialize mailbox platform."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -23,7 +23,7 @@ class TestSetupMailbox(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platfrom on camera component."""
+        """Initialize demo platform on mailbox component."""
         config = {
             mailbox.DOMAIN: {
                 'platform': 'demo'
@@ -35,10 +35,10 @@ class TestSetupMailbox(object):
 
 
 class TestMailbox(object):
-    """Test class for camera."""
+    """Test class for mailbox."""
 
     def setup_method(self):
-        """Things to be run when tests are started."""
+        """Initialize platform."""
         self.hass = get_test_home_assistant()
 
         setup_component(
