@@ -46,8 +46,7 @@ VACUUM_SERVICE_SCHEMA = vol.Schema({
 })
 
 VACUUM_SET_FANSPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_FANSPEED):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.Required(ATTR_FANSPEED): cv.string,
 })
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
@@ -176,6 +175,11 @@ class VacuumDevice(ToggleEntity):
         return None
 
     @property
+    def fanspeed_list(self) -> list:
+        """Get the list of available fan speed steps of the vacuum cleaner."""
+        return []
+
+    @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
@@ -189,6 +193,7 @@ class VacuumDevice(ToggleEntity):
 
         if self.fanspeed is not None:
             data['vacuum_fanspeed'] = self.fanspeed
+            data['vacuum_fanspeed_list'] = self.fanspeed_list
 
         return data
 

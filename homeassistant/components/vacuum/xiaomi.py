@@ -41,6 +41,13 @@ SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 
+SPEED_LOW = ('Quiet', 38)
+SPEED_MEDIUM = ('Balanced', 60)
+SPEED_HIGH = ('Turbo', 77)
+SPEED_MAX = ('Max', 90)
+FANSPEED_LABELS, FANSPEED_VALUES = list(
+    zip(*[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_MAX]))
+
 ATTR_RC_VELOCITY = 'velocity'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_DURATION = 'duration'
@@ -177,8 +184,16 @@ class MiroboVacuum(VacuumDevice):
     def fanspeed(self):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            return self.vacuum_state.fanspeed
+            speed = self.vacuum_state.fanspeed
+            if speed in FANSPEED_VALUES:
+                return FANSPEED_LABELS[FANSPEED_VALUES.index(speed)]
+            return speed
         return None
+
+    @property
+    def fanspeed_list(self):
+        """Get the list of available fan speed steps of the vacuum cleaner."""
+        return list(FANSPEED_LABELS)
 
     @property
     def device_state_attributes(self):
@@ -254,8 +269,18 @@ class MiroboVacuum(VacuumDevice):
             "Unable to stop: %s", self.vacuum.stop)
 
     @asyncio.coroutine
-    def async_set_fanspeed(self, fanspeed=60, **kwargs):
+    def async_set_fanspeed(self, fanspeed: str, **kwargs):
         """Set the fanspeed."""
+        if fanspeed.capitalize() in FANSPEED_LABELS:
+            fanspeed = FANSPEED_VALUES[FANSPEED_LABELS.index(
+                fanspeed.capitalize())]
+        else:
+            try:
+                fanspeed = int(fanspeed)
+            except ValueError as exc:
+                _LOGGER.error("Fan speed step not recognized (%s). "
+                              "Valid speeds are: %s", exc, self.fanspeed_list)
+                return
         yield from self._try_command(
             "Unable to set fanspeed: %s", self.vacuum.set_fan_speed, fanspeed)
 

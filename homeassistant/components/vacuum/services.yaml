@@ -71,8 +71,8 @@ set_fanspeed:
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
     fanspeed:
-      description: Fanspeed, between 0 and 100.
-      example: '60'
+      description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium', or by percentage, between 0 and 100.
+      example: 'low'
 
 xiaomi_remote_control_start:
   description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
