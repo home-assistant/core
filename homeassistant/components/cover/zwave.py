@@ -14,9 +14,6 @@ from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
-from homeassistant.const import (
-    STATE_OPEN, STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_STOPPED,
-    STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
