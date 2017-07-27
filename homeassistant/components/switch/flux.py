@@ -133,6 +133,7 @@ class FluxSwitch(SwitchDevice):
         self._disable_brightness_adjust = disable_brightness_adjust
         self._mode = mode
         self.unsub_tracker = None
+        self._last_update = None
 
     @property
     def name(self):
@@ -229,6 +230,9 @@ class FluxSwitch(SwitchDevice):
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
 
+        self._last_update = now
+        self.schedule_update_ha_state()
+
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
@@ -238,3 +242,11 @@ class FluxSwitch(SwitchDevice):
         else:
             sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
         return sunrise
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+        attributes['lights'] = self._lights
+        attributes['last_update'] = self._last_update
+        return attributes

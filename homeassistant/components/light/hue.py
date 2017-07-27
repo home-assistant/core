@@ -26,6 +26,7 @@ from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
 from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['phue==1.0']
 
@@ -223,6 +224,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
+                lights[light_id].last_update = dt_util.now()
                 lights[light_id].schedule_update_ha_state()
 
         for lightgroup_id, info in api_groups.items():
@@ -240,6 +242,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                 new_lights.append(lightgroups[lightgroup_id])
             else:
                 lightgroups[lightgroup_id].info = info
+                lightgroups[lightgroup_id].last_update = dt_util.now()
                 lightgroups[lightgroup_id].schedule_update_ha_state()
 
         if new_lights:
@@ -301,6 +304,7 @@ class HueLight(Light):
                  is_group=False):
         """Initialize the light."""
         self.light_id = light_id
+        self.last_update = None
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights
@@ -459,6 +463,9 @@ class HueLight(Light):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
+        attributes['bridge_ip'] = self.bridge.ip
+        #attributes['bridge_name'] = self.bridge.name()
+        attributes['last_update'] = self.last_update
         if not self.allow_in_emulated_hue:
             attributes[ATTR_EMULATED_HUE] = self.allow_in_emulated_hue
         if self.is_group:
