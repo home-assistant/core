@@ -2,9 +2,8 @@ import asyncio
 import xknx
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX, XKNXSwitch
-
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.xknx import DATA_XKNX
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -57,3 +56,44 @@ def add_devices_from_platform(hass, config, add_devices):
     switch.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(switch)
     add_devices([XKNXSwitch(hass, switch)])
+
+
+class XKNXSwitch(SwitchDevice):
+    """Representation of XKNX switches."""
+
+    def __init__(self, hass, device):
+        self.device = device
+        self.hass = hass
+        self.register_callbacks()
+
+
+    def register_callbacks(self):
+        def after_update_callback(device):
+            # pylint: disable=unused-argument
+            self.update_ha()
+        self.device.register_device_updated_cb(after_update_callback)
+
+
+    def update_ha(self):
+        self.hass.async_add_job(self.async_update_ha_state())
+
+
+    @property
+    def name(self):
+        return self.device.name
+
+
+    @property
+    def is_on(self):
+        """Return true if pin is high/on."""
+        return self.device.state
+
+
+    def turn_on(self):
+        """Turn the pin to high/on."""
+        self.device.set_on()
+
+
+    def turn_off(self):
+        """Turn the pin to low/off."""
+        self.device.set_off()

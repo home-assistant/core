@@ -16,13 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     CONF_HOST, CONF_PORT
 
-from .xknx_binary_sensor import XKNXBinarySensor
-from .xknx_sensor import XKNXSensor
-from .xknx_switch import XKNXSwitch
-from .xknx_climate import XKNXClimate
-from .xknx_cover import XKNXCover
-from .xknx_light import XKNXLight
-
 DOMAIN = "xknx"
 DATA_XKNX = "data_xknx"
 CONF_XKNX_CONFIG = "config_file"
