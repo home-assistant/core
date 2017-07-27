@@ -225,7 +225,6 @@ class CoverDevice(Entity):
     @property
     def state(self):
         """Return the state of the cover."""
-
         if self.is_opening:
             return STATE_OPENING
         if self.is_closing:
