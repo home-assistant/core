@@ -107,6 +107,28 @@ def test_forward_request_no_auth_for_panel(hassio_client):
 
 
 @asyncio.coroutine
+def test_forward_request_no_auth_for_logo(hassio_client):
+    """Test no auth needed for ."""
+    response = MagicMock()
+    response.read.return_value = mock_coro('data')
+
+    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+               Mock(return_value=mock_coro(response))), \
+            patch('homeassistant.components.hassio._create_response') as mresp:
+        mresp.return_value = 'response'
+        resp = yield from hassio_client.get('/api/hassio/addons/bl_b392/logo')
+
+    # Check we got right response
+    assert resp.status == 200
+    body = yield from resp.text()
+    assert body == 'response'
+
+    # Check we forwarded command
+    assert len(mresp.mock_calls) == 1
+    assert mresp.mock_calls[0][1] == (response, 'data')
+
+
+@asyncio.coroutine
 def test_forward_log_request(hassio_client):
     """Test fetching normal log path."""
     response = MagicMock()
