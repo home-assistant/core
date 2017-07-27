@@ -87,11 +87,8 @@ class XKNXLight(Light):
         """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
-            self.update_ha()
+            self.update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
@@ -159,9 +156,7 @@ class XKNXLight(Light):
             self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         else:
             self.device.set_on()
-        self.update_ha()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.device.set_off()
-        self.update_ha()

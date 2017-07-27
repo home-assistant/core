@@ -102,11 +102,8 @@ class XKNXCover(CoverDevice):
         """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             #pylint: disable=unused-argument
-            self.update_ha()
+            self.update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
@@ -167,7 +164,7 @@ class XKNXCover(CoverDevice):
 
     def auto_updater_hook(self, now):
         # pylint: disable=unused-argument
-        self.update_ha()
+        self.update_ha_state()
         print(self.device.current_position())
         if self.device.position_reached():
             self.stop_auto_updater()

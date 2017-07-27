@@ -83,11 +83,8 @@ class XKNXClimate(ClimateDevice):
         """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
             # pylint: disable=unused-argument
-            self.update_ha()
+            self.update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
-
-    def update_ha(self):
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
@@ -123,8 +120,6 @@ class XKNXClimate(ClimateDevice):
         self.device.setpoint = temperature
 
         #TODO Sent to KNX bus
-
-        self.update_ha()
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
