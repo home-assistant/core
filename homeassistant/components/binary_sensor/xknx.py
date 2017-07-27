@@ -83,8 +83,9 @@ class XKNXBinarySensor(BinarySensorDevice):
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property

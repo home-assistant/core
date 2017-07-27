@@ -101,8 +101,9 @@ class XKNXCover(CoverDevice):
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         def after_update_callback(device):
+            """Callback after device was updated."""
             #pylint: disable=unused-argument
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -148,24 +149,22 @@ class XKNXCover(CoverDevice):
         self.device.stop()
         self.stop_auto_updater()
 
-    #
-    # UPDATER
-    #
-
-    def stop_auto_updater(self):
-        if self._unsubscribe_auto_updater is not None:
-            self._unsubscribe_auto_updater()
-            self._unsubscribe_auto_updater = None
-
     def start_auto_updater(self):
+        """Start the autoupdater to update HASS while cover is moving."""
         if self._unsubscribe_auto_updater is None:
             self._unsubscribe_auto_updater = track_utc_time_change(
                 self.hass, self.auto_updater_hook)
 
+    def stop_auto_updater(self):
+        """Stop the autoupdater."""
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+            self._unsubscribe_auto_updater = None
+
     def auto_updater_hook(self, now):
+        """Callback for autoupdater."""
         # pylint: disable=unused-argument
-        self.update_ha_state()
-        print(self.device.current_position())
+        self.schedule_update_ha_state()
         if self.device.position_reached():
             self.stop_auto_updater()
 
@@ -191,9 +190,6 @@ class XKNXCover(CoverDevice):
     def to_knx(value):
         return 255-round(value/100*255.4)
 
-    #
-    # UNUSED FUNCTIONS
-    #
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
         print("stop_cover_tilt - not implemented")
