@@ -2,7 +2,7 @@
 Sensor for Asterisk Voicemail box.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.asteriskvm/
+https://home-assistant.io/components/sensor.mailbox/
 """
 import asyncio
 import logging
@@ -10,44 +10,43 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.components.mailbox import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
-SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
-DOMAIN = 'Voicemail'
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Asterix VM platform."""
-    async_add_devices([AsteriskVMSensor(hass)])
+    """Set up sensor for the Mailbox platform."""
+    async_add_devices([MailboxSensor(hass, discovery_info['mailbox_id'])])
 
 
-class AsteriskVMSensor(Entity):
-    """Asterisk VM Sensor."""
+class MailboxSensor(Entity):
+    """Mailbox Sensor."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, mailbox_id):
         """Initialize the sensor."""
         self._name = None
         self._attributes = None
         self._state = 0
+        self._mailbox_id = mailbox_id
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
-        async_dispatcher_send(self.hass, SIGNAL_MESSAGE_REQUEST)
+        state = self.hass.states.get(self._mailbox_id)
+        if state:
+            self._state = state.state
 
-    @callback
-    def _update_callback(self, msg):
-        """Update the message count in HA, if needed."""
-        self._state = len(msg)
-        _LOGGER.info("Update Callback")
-        self.hass.async_add_job(self.async_update_ha_state(True))
+        @callback
+        def update_callback(entity, old_state, new_state):
+            """Update the message count in HA, if needed."""
+            self._state = new_state.state
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        async_track_state_change(self.hass,
+                                 [self._mailbox_id], update_callback)
 
     @property
     def name(self):

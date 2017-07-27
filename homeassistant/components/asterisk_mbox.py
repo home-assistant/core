@@ -44,7 +44,6 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = AsteriskData(hass, host, port, password)
 
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     discovery.load_platform(hass, "mailbox", DOMAIN, {}, config)
 
     return True

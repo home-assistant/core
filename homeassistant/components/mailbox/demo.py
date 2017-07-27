@@ -15,19 +15,21 @@ from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
                                               StreamError)
 
 _LOGGER = logging.getLogger(__name__)
+DOMAIN = "DemoMailbox"
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Demo mailbox."""
-    async_add_devices([DemoMailbox(hass)])
+    async_add_devices([DemoMailbox(hass, config)])
 
 
 class DemoMailbox(Mailbox):
     """Demo Mailbox."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, config):
         """Initialize Demo mailbox."""
+        super().__init__(hass, DOMAIN, config)
         self._messages = {}
         for idx in range(0, 10):
             msgtime = int(dt.as_timestamp(

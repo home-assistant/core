@@ -17,6 +17,7 @@ from aiohttp import web
 
 from homeassistant.const import (HTTP_BAD_REQUEST)
 
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
@@ -41,11 +42,25 @@ def async_setup(hass, config):
     hass.http.register_view(MailboxDeleteView(component.entities))
 
     yield from component.async_setup(config)
+
     return True
 
 
 class Mailbox(Entity):
     """Represent an mailbox device."""
+
+    def __init__(self, hass, domain, config):
+        """Init the Mailbox data object."""
+        self._domain = domain
+        self._config = config
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        yield from discovery.async_load_platform(
+            self.hass, "sensor", DOMAIN,
+            {'domain': self._domain, 'mailbox_id': self.entity_id},
+            self._config)
 
     @property
     def state(self):

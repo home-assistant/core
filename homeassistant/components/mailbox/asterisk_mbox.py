@@ -24,17 +24,16 @@ SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Asterix VM platform."""
-    async_add_devices([AsteriskMailbox(hass)])
+    async_add_devices([AsteriskMailbox(hass, config)])
 
 
 class AsteriskMailbox(Mailbox):
     """Asterisk VM Sensor."""
 
-    def __init__(self, hass):
-        """Initialize the sensor."""
+    def __init__(self, hass, config):
+        """Initialize the asterisk mailbox."""
+        super().__init__(hass, DOMAIN, config)
         self._name = None
-        self._attributes = None
-        self._state = 0
 
     @property
     def name(self):
@@ -44,6 +43,7 @@ class AsteriskMailbox(Mailbox):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
+        yield from super().async_added_to_hass()
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
         async_dispatcher_send(self.hass, SIGNAL_MESSAGE_REQUEST)
@@ -51,8 +51,6 @@ class AsteriskMailbox(Mailbox):
     @callback
     def _update_callback(self, msg):
         """Update the message count in HA, if needed."""
-        self._state = len(msg)
-        _LOGGER.info("Update Callback")
         self.hass.async_add_job(self.async_update_ha_state(True))
 
     @property
