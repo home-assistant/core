@@ -31,6 +31,8 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
+CONF_STREAM_AUTH = 'stream_auth'
+DEFAULT_STREAM_AUTH = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -38,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_STREAM_AUTH, default=DEFAULT_STREAM_AUTH): cv.boolean,
 })
 
 
@@ -68,6 +71,11 @@ class ONVIFCamera(Camera):
             '{}/wsdl/media.wsdl'.format(os.path.dirname(onvif.__file__))
         )
         self._input = media.GetStreamUri().Uri
+        if config.get(CONF_STREAM_AUTH):
+            self._input = self._input.replace(
+                'rtsp://', 'rtsp://{}:{}@'.format(
+                    config.get(CONF_USERNAME),
+                    config.get(CONF_PASSWORD)), 1)
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
 
