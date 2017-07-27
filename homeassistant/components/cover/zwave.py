@@ -23,15 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 ATTR_COVER_STATE = 'cover_state'
 
-ZWAVE_STATES = {
-    "Opened": STATE_OPEN,
-    "Closed": STATE_CLOSED,
-    "Opening": STATE_OPENING,
-    "Closing": STATE_CLOSING,
-    "Stopped": STATE_STOPPED,
-    "Unknown": STATE_UNKNOWN
-}
-
 
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
@@ -123,29 +114,27 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self._cover_state_list = None
         self._cover_state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._cover_state = ZWAVE_STATES.get(self.values.primary.data)
-        cover_state_list = self.values.primary.data_items
-        if cover_state_list:
-            self._cover_state_list = \
-                [ZWAVE_STATES[item] for item in cover_state_list]
-        _LOGGER.debug("self._cover_state_list=%s", self._cover_state_list)
+        self._cover_state = self.values.primary.data
         _LOGGER.debug("self._cover_state=%s", self._cover_state)
 
     @property
-    def cover_state(self):
-        """Return the current door state."""
-        return self._cover_state
+    def is_opening(self):
+        """Return true if cover is in an opening state."""
+		if self._cover_state == "opening":
+            return True
+        return False
 
     @property
-    def cover_state_list(self):
-        """Return the list of door states."""
-        return self._cover_state_list
+    def is_closing(self):
+        """Return true if cover is in an closing state."""
+		if self._cover_state == "closing":
+            return True
+        return False
 
     @property
     def is_closed(self):

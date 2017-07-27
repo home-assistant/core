@@ -56,8 +56,6 @@ ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
-ATTR_COVER_STATE = 'cover_state'
-ATTR_COVER_STATE_LIST = 'cover_state_list'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -225,18 +223,14 @@ class CoverDevice(Entity):
         pass
 
     @property
-    def cover_state(self):
-        """Return current state of cover."""
-        pass
-
-    @property
-    def cover_state_list(self):
-        """Return list of posible door states."""
-        pass
-
-    @property
     def state(self):
         """Return the state of the cover."""
+		
+        if self.is_opening:
+            return STATE_OPENING
+        if self.is_closing:
+            return STATE_CLOSING
+		
         closed = self.is_closed
 
         if closed is None:
@@ -257,12 +251,6 @@ class CoverDevice(Entity):
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
 
-        cover_states = self.cover_state
-        if cover_states is not None:
-            data[ATTR_COVER_STATE] = cover_states
-            if self.cover_state_list:
-                data[ATTR_COVER_STATE_LIST] = self.cover_state_list
-
         return data
 
     @property
@@ -279,6 +267,16 @@ class CoverDevice(Entity):
                 SUPPORT_SET_TILT_POSITION)
 
         return supported_features
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        pass
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        pass
 
     @property
     def is_closed(self):
