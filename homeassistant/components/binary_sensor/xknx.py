@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup binary sensor for XKNX platform."""
+    """Set up binary sensor(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -46,6 +46,7 @@ def async_setup_platform(hass, config, add_devices, \
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
+    """Set up binary sensors for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.BinarySensor) and \
@@ -55,6 +56,7 @@ def add_devices_from_component(hass, add_devices):
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
+    """Set up binary senor for XKNX platform configured within plattform."""
     from xknx import BinarySensor
     binary_sensor = BinarySensor(hass.data[DATA_XKNX].xknx,
                                  name= \
