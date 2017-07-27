@@ -71,7 +71,7 @@ class TradfriGroup(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        return self._group.set_state(0)
+        self._group.set_state(0)
 
     def turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
@@ -158,7 +158,7 @@ class Tradfri(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        return self._light_control.set_state(False)
+        self._light_control.set_state(False)
 
     def turn_on(self, **kwargs):
         """
