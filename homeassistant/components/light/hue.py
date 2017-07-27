@@ -464,7 +464,7 @@ class HueLight(Light):
         """Return the device state attributes."""
         attributes = {}
         attributes['bridge_ip'] = self.bridge.ip
-        #attributes['bridge_name'] = self.bridge.name()
+        # attributes['bridge_name'] = self.bridge.name()
         attributes['last_update'] = self.last_update
         if not self.allow_in_emulated_hue:
             attributes[ATTR_EMULATED_HUE] = self.allow_in_emulated_hue
