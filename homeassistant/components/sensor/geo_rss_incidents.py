@@ -207,6 +207,7 @@ class GeoRssServiceUpdater:
                          len(self._feed.entries), self._url)
             # filter entries by distance from home
             for entry in self._feed.entries:
+                distance = float("inf")
                 if hasattr(entry, 'where'):
                     distance = self.calculate_distance_to_geometry(entry.where)
                 elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
