@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
+
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
