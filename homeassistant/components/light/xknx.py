@@ -34,11 +34,10 @@ def async_setup_platform(hass, config, add_devices, \
 
     if discovery_info is not None:
         yield from add_devices_from_component(hass, add_devices)
-        return True
-
     else:
         yield from add_devices_from_platform(hass, config, add_devices)
-        return True
+
+    return True
 
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
