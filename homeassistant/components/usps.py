@@ -41,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
-
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
