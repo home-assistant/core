@@ -43,13 +43,18 @@ def async_setup(hass, config):
     return True
 
 
-class MailboxDevice(Entity):
+class Mailbox(Entity):
     """Represent an mailbox device."""
 
     @property
     def state(self):
         """Return the state of the binary sensor."""
         return str(len(self.get_messages()))
+
+    @property
+    def hidden(self) -> bool:
+        """Return whether the component should be hidden."""
+        return True
 
     @property
     def supports_delete(self):

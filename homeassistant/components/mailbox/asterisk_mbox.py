@@ -7,9 +7,9 @@ https://home-assistant.io/components/mailbox.asteriskvm/
 import asyncio
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import DOMAIN
+from homeassistant.components.mailbox import Mailbox
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
@@ -27,7 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([AsteriskMailbox(hass)])
 
 
-class AsteriskMailbox(Entity):
+class AsteriskMailbox(Mailbox):
     """Asterisk VM Sensor."""
 
     def __init__(self, hass):
@@ -35,7 +35,6 @@ class AsteriskMailbox(Entity):
         self._name = None
         self._attributes = None
         self._state = 0
-        _LOGGER.error("Initializing!")
 
     @property
     def name(self):
