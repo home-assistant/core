@@ -1,6 +1,5 @@
 import asyncio
 import xknx
-
 import voluptuous as vol
 
 from homeassistant.components.xknx import DATA_XKNX, XKNXSwitch
@@ -42,7 +41,7 @@ def add_devices_from_component(hass, add_devices):
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Switch) and \
-			not hasattr(device, "already_added_to_hass"):
+			    not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXSwitch(hass, device))
     add_devices(entities)
 

@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, \
         discovery_info=None):
-    """Setup the demo light platform."""
+    """Setup the XKNX light platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
         return False
@@ -45,7 +45,7 @@ def add_devices_from_component(hass, add_devices):
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
         if isinstance(device, xknx.Light) and \
-            not hasattr(device, "already_added_to_hass"):
+                not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXLight(hass, device))
     add_devices(entities)
 
