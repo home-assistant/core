@@ -21,8 +21,6 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
-ATTR_COVER_STATE = 'cover_state'
-
 
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
@@ -114,32 +112,32 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self._cover_state = None
+        self._state = None
         self.update_properties()
 
     def update_properties(self):
         """Handle data changes for node values."""
-        self._cover_state = self.values.primary.data
-        _LOGGER.debug("self._cover_state=%s", self._cover_state)
+        self._state = self.values.primary.data
+        _LOGGER.debug("self._state=%s", self._state)
 
     @property
     def is_opening(self):
         """Return true if cover is in an opening state."""
-		if self._cover_state == "opening":
+        if self._state == "opening":
             return True
         return False
 
     @property
     def is_closing(self):
         """Return true if cover is in an closing state."""
-		if self._cover_state == "closing":
+        if self._state == "closing":
             return True
         return False
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        if self._cover_state == "closed":
+        if self._state == "closed":
             return True
         return False
 
