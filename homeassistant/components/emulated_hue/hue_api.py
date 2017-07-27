@@ -209,6 +209,14 @@ class HueOneLightChangeView(HomeAssistantView):
             else:
                 service = SERVICE_CLOSE_COVER
 
+        # If the requested entity is a lock, convert to lock/unlock
+        elif entity.domain == "lock":
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_LOCK
+            else:
+                service = SERVICE_UNLOCK
+        
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
             if entity_features & SUPPORT_SET_SPEED:
