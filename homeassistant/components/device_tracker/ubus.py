@@ -108,6 +108,7 @@ class UbusDeviceScanner(DeviceScanner):
         return self.mac2name.get(device.upper(), None)
 
     @_refresh_on_acccess_denied
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Luci router is up to date.
 
