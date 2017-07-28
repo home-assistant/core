@@ -54,14 +54,11 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up sensor for XKNX platform configured within plattform."""
-    from xknx import Sensor
-    sensor = Sensor(hass.data[DATA_XKNX].xknx,
-                    name= \
-                        config.get(CONF_NAME),
-                    group_address= \
-                        config.get(CONF_ADDRESS),
-                    value_type= \
-                        config.get(CONF_VALUE_TYPE))
+    sensor = xknx.Sensor(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address=config.get(CONF_ADDRESS),
+        value_type=config.get(CONF_VALUE_TYPE))
     sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(sensor)
     add_devices([XKNXSensor(hass, sensor)])

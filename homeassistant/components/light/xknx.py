@@ -58,18 +58,13 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up light for XKNX platform configured within plattform."""
-    from xknx import Light
-    light = Light(hass.data[DATA_XKNX].xknx,
-                  name= \
-                      config.get(CONF_NAME),
-                  group_address_switch= \
-                      config.get(CONF_ADDRESS),
-                  group_address_switch_state= \
-                      config.get(CONF_STATE_ADDRESS),
-                  group_address_brightness= \
-                      config.get(CONF_BRIGHTNESS_ADDRESS),
-                  group_address_brightness_state= \
-                      config.get(CONF_BRIGHTNESS_STATE_ADDRESS))
+    light = xknx.Light(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address_switch=config.get(CONF_ADDRESS),
+        group_address_switch_state=config.get(CONF_STATE_ADDRESS),
+        group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
+        group_address_brightness_state=config.get(CONF_BRIGHTNESS_STATE_ADDRESS))
     light.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(light)
     add_devices([XKNXLight(hass, light)])

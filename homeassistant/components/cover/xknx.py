@@ -65,22 +65,15 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up cover for XKNX platform configured within plattform."""
-    from xknx import Cover
-    cover = Cover(hass.data[DATA_XKNX].xknx,
-                  name= \
-                      config.get(CONF_NAME),
-                  group_address_long= \
-                      config.get(CONF_MOVE_LONG_ADDRESS),
-                  group_address_short= \
-                      config.get(CONF_MOVE_SHORT_ADDRESS),
-                  group_address_position_feedback= \
-                      config.get(CONF_POSITION_STATE_ADDRESS),
-                  group_address_position= \
-                      config.get(CONF_POSITION_ADDRESS),
-                  travel_time_down= \
-                      config.get(CONF_TRAVELLING_TIME_DOWN),
-                  travel_time_up= \
-                      config.get(CONF_TRAVELLING_TIME_UP))
+    cover = xknx.Cover(
+        hass.data[DATA_XKNX].xknx,
+        name=config.get(CONF_NAME),
+        group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
+        group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
+        group_address_position_feedback=config.get(CONF_POSITION_STATE_ADDRESS),
+        group_address_position=config.get(CONF_POSITION_ADDRESS),
+        travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
+        travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
 
     cover.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(cover)
