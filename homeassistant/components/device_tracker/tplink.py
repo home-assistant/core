@@ -8,7 +8,7 @@ import base64
 import hashlib
 import logging
 import re
-from datetime import datetime
+import time
 
 import requests
 import voluptuous as vol
@@ -20,21 +20,31 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_VERSION = "version"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_VERSION, default=0):
+        vol.Range(min=0, max=6)
 })
 
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
-                Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
-        scanner = cls(config[DOMAIN])
-        if scanner.success_init:
-            return scanner
+    scanners = [TplinkDeviceScanner, Tplink2DeviceScanner,
+                Tplink3DeviceScanner, Tplink4DeviceScanner,
+                Tplink5DeviceScanner, Tplink6DeviceScanner]
+    cfg = config[DOMAIN]    
+    scannerversion = cfg[CONF_VERSION]
+    if scannerversion == 0:
+        for cls in scanners[::-1]:
+            scanner = cls(cfg)
+            if scanner.success_init:
+                return scanner
+    else:
+        return scanners[scannerversion - 1](cfg)
 
     return None
 
@@ -386,7 +396,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         session.post(base_url, login_data, headers=header)
 
         # a timestamp is required to be sent as get parameter
-        timestamp = int(datetime.now().timestamp() * 1e3)
+        timestamp = int(time.time() * 1e3)
 
         client_list_url = '{}/data/monitor.client.client.json'.format(
             base_url)
@@ -415,3 +425,223 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             return True
 
         return False
+
+"""
+openwrt ap:
+GET: /data/version.json?_dc=[[timestamp]]&id=10
+setcookie as nonce
+POST: /data/version.json
+{
+    nonce:getcookie(),
+    encoded:user + ":" + upper( md5( upper( md5( pwd ) ) + ":" + nonce) )
+}
+{
+	"success":	true,
+	"status":	4,
+}
+!! STATUS:
+{
+	standby: -1,
+	success: 0,
+	passError: 1,
+	timeout: 2,
+	convFull: 3,
+	otherLogin: 4,
+	changePwd: 5
+}
+if status == 4 {
+    delay 120s
+    // login conflict, delay for some seconds (300)
+    GET data/loginConfirm.json?_dc=[[timestamp]]
+}
+for radioid in range(0+):
+    GET: /data/station.json?_dc=[[timestamp]]&radioID=[[radioid]]
+    if(ret.success): maxradioid = radioid
+    else: break
+
+loop(
+    GET: /data/station.json?_dc=[[timestamp]]&radioID=[[radioid]]
+    if(timeout==true or status == -1):
+        startover
+)
+
+
+
+GET /data/station.json?_dc=[[unix time im ms]]&radioID=[[radio id]]
+return json:'status':'true' exists
+
+timeout:return json:'timeout': 'true'
+
+{
+	"success":	true,
+	"data":	[{
+			"mac":	"00-00-00-00-00-00",
+			"ssid":	"HOME001",
+			"connTime":	"0 days 17:14:20"
+		}]
+}
+
+
+if __name__ == "__main__":
+    _CONFIG = {"username":"admin", "host":"192.168.102.254", "password":"routeadmin11"}
+    x = Tplink6DeviceScanner(_CONFIG)
+    for _ in range(20):
+        print(x.scan_devices())
+        time.sleep(5)
+"""
+def timems():
+    """Return Unix Timestamp in milliseconds."""
+    return int(time.time()*1000)
+
+
+class Tplink6DeviceScanner(DeviceScanner):
+    """This class queries a TP-Link TL-AP1308GI-PoE or simular device."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        host = config[CONF_HOST]
+        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+
+        self.parse_macs = re.compile('[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}-' +
+                                     '[0-9A-F]{2}-[0-9A-F]{2}-[0-9A-F]{2}')
+
+        self.host = host
+        self.username = username
+        self.password = password
+        self.multiloginwait = 10
+
+        self._session = requests.session()
+        self._session.headers.update({
+            "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                " (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Content-Type": "application/x-www-form-urlencoded; "
+                            "charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": "http://" + self.host + "/",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache"
+        })
+
+        self.base_url = 'http://' + self.host
+        self._login_url = self.base_url + "/data/version.json"
+        self._login_confirm_url = self.base_url + "/data/loginConfirm.json?_dc={}"
+        self._version_url = self.base_url + "/data/version.json?_dc={}&id=10"
+        self._station_url = self.base_url + "/data/station.json?_dc={}&radioID={}"
+
+        self._wait_login_until = 0
+        self._loggedin = False
+        self._confirm_login = False
+
+        self._radiocount = 0
+
+        self.last_results = []
+        self.success_init = self._update_info()
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found MAC IDs."""
+        self._update_info()
+        return self.last_results
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """This device does not provide API for DHCP client list."""
+        return None
+
+    def _login(self):
+        def md5calc(text):
+            return hashlib.md5(text.encode()).hexdigest()
+
+        def getdata(user, pwd, nonce):
+            return user + ':' + md5calc(md5calc(pwd).upper() + ':' + nonce).upper()
+
+        if self._wait_login_until > time.monotonic():
+            return
+        
+        if self._confirm_login:
+            response = self._session.get(self._login_confirm_url.format(timems()))
+            self._loggedin = True
+            self._confirm_login = False
+            #print(response.text)
+            return
+
+        response = self._session.get(self._login_url)
+
+        nonce = self._session.cookies['COOKIE']
+        login_data = {"nonce": nonce,
+                      "encoded": getdata(self.username, self.password, nonce)}
+
+        response = self._session.post(self._login_url, login_data)
+        #print(response.text)
+
+        try:
+            loginresp = response.json()
+        except ValueError:
+            self.success_init = False
+            self._loggedin = False
+            self._session = requests.session()
+            return
+
+        self.success_init = True
+        if loginresp["success"] != True:
+            self._loggedin = False
+            return
+        status = loginresp["status"]
+        if status == 0:
+            self._loggedin = True
+            return
+        if status == 2:
+            self._loggedin = False
+            self._wait_login_until = time.monotonic() + 10
+            return
+        if status == 4:
+            self._loggedin = False
+            self._wait_login_until = time.monotonic() + self.multiloginwait
+            self._confirm_login = True
+            return
+        self._loggedin = False
+        return
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link AP is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients...")
+
+        if not self._loggedin:
+            self._login()
+            if not self._loggedin:
+                return
+        if self._radiocount == 0:
+            for radioid in range(10):
+                response = self._session.get(
+                    self._station_url.format(timems(), radioid))
+                #print(response.text)
+                try:
+                    respjson = response.json()
+                except ValueError:
+                    return
+                if respjson["success"] != True:
+                    self._radiocount = radioid
+                    break
+        devicelist = []
+        for radioid in range(self._radiocount):
+            response = self._session.get(
+                self._station_url.format(timems(), radioid))
+            try:
+                #print(response.text)
+                respjson = response.json()
+                if "status" in respjson:
+                    self._loggedin = False
+                    return
+                resplist = respjson["data"]
+                for device in resplist:
+                    devicelist.append(device["mac"].replace('-', ':'))
+            except ValueError:
+                self._loggedin = False
+                return
+
+        self.last_results = devicelist
+        return
