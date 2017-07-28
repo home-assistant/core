@@ -895,33 +895,37 @@ class SonosDevice(MediaPlayerDevice):
                 self._source_name = src['title']
 
                 if 'object.container.playlistContainer' in src['meta']:
-                    """Favorite is a playlist"""
-                    import soco
-                    import xml.etree.ElementTree as ET
-
-                    root = ET.fromstring(src['meta'])
-                    namespaces = {'item':
-                                  'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-                                  'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
-                    desc = root.find('item:item', namespaces).find('desc:desc',
-                                                                   namespaces).text
-
-                    res = [soco.data_structures.DidlResource(uri=src['uri'],
-                                                             protocol_info="DUMMY")]
-                    didl = soco.data_structures.DidlItem(title="DUMMY",
-                                                         parent_id="DUMMY",
-                                                         item_id=src['uri'],
-                                                         desc=desc,
-                                                         resources=res)
-
-                    self._player.stop()
-                    self._player.clear_queue()
-                    self._player.play_mode = 'NORMAL'
-                    self._player.add_to_queue(didl)
+                    self.replace_queue_with_playlist(src)
                     self._player.play_from_queue(0)
                 else:
                     self._player.play_uri(src['uri'], src['meta'],
                                           src['title'])
+
+    @soco_error
+    @soco_coordinator
+    def replace_queue_with_playlist(self, src):
+        import soco
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(src['meta'])
+        namespaces = {'item':
+                      'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+                      'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
+        desc = root.find('item:item', namespaces).find('desc:desc',
+                                                       namespaces).text
+
+        res = [soco.data_structures.DidlResource(uri=src['uri'],
+                                                 protocol_info="DUMMY")]
+        didl = soco.data_structures.DidlItem(title="DUMMY",
+                                             parent_id="DUMMY",
+                                             item_id=src['uri'],
+                                             desc=desc,
+                                             resources=res)
+
+        self._player.stop()
+        self._player.clear_queue()
+        self._player.play_mode = 'NORMAL'
+        self._player.add_to_queue(didl)
 
     @property
     def source_list(self):
