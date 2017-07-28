@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pushbullet.py==0.10.0']
+REQUIREMENTS = ['pushbullet.py==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
