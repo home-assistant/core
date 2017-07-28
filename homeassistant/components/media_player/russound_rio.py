@@ -1,4 +1,5 @@
-""" Support for interfacing with Russound via RIO Protocol.
+"""
+Support for interfacing with Russound via RIO Protocol.
 
 The RIO protocol is supported by newer Russound devices such as the MCA-88.
 
@@ -16,7 +17,8 @@ media_player:
 
 Each zone is added as a separate media player device. If the source that the
 zone is assigned to is capable of sending metadata such as artist/album name
-then this data will be reported back via the media_* properties.  """
+then this data will be reported back via the media_* properties.
+"""
 
 import asyncio
 import logging
@@ -62,12 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     russ = Russound(hass.loop, host, port)
 
-    try:
-        yield from russ.connect()
-    except:
-        _LOGGER.error('Could not connect to Russound RIO device at %s:%d',
-                      host, port)
-        return False
+    yield from russ.connect()
 
     # Discover sources
     sources = []
@@ -84,6 +81,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def try_watch_zone(zone_id):
+        """
+        Set a watch on a zone.
+
+        Return the zone_id one success, otherwise return None.
+        """
         try:
             yield from russ.watch_zone(zone_id)
             return zone_id
@@ -118,6 +120,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class RussoundZoneDevice(MediaPlayerDevice):
     """Representation of a Russound Zone."""
+
     def _zone_var(self, name, default=None):
         return self._russ.get_cached_zone_variable(self._zone_id,
                                                    name,
@@ -127,28 +130,27 @@ class RussoundZoneDevice(MediaPlayerDevice):
         current = int(self._zone_var('currentsource', 0))
         if current:
             return self._russ.get_cached_source_variable(
-                    current, name, default)
-        else:
-            return default
+                current, name, default)
+        return default
 
     def _source_na_var(self, name):
-        """Retrieve a source variable and replace invalid responses with
-        None"""
+        """Will replace invalid values with None."""
         current = int(self._zone_var('currentsource', 0))
         if current:
-            v = self._russ.get_cached_source_variable(
-                    current, name, None)
-            if v is None:
+            value = self._russ.get_cached_source_variable(
+                current, name, None)
+            if value is None:
                 return None
-            if v == "":
+            if value == "":
                 return None
-            if v == "------":
+            if value == "------":
                 return None
-            return v
+            return value
         else:
             return None
 
     def __init__(self, russ, zone_id, name, sources):
+        """Initialize the zone device."""
         super().__init__()
         self._name = name
         self._russ = russ
@@ -179,10 +181,10 @@ class RussoundZoneDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        s = self._zone_var('status', "OFF")
-        if s == 'ON':
+        status = self._zone_var('status', "OFF")
+        if status == 'ON':
             return STATE_ON
-        elif s == 'OFF':
+        elif status == 'OFF':
             return STATE_OFF
 
     @property
@@ -258,8 +260,8 @@ class RussoundZoneDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_select_source(self, source):
         """Select the source input for this zone."""
-        for id, name in self._sources:
+        for source_id, name in self._sources:
             if name.lower() != source.lower():
                 continue
             yield from self._russ.send_zone_event(
-                    self._zone_id, "SelectSource", id)
+                self._zone_id, "SelectSource", source_id)
