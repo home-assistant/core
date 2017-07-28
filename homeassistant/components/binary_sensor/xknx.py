@@ -61,8 +61,8 @@ def add_devices_from_platform(hass, config, add_devices):
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),
-       device_class=config.get(CONF_DEVICE_CLASS),
-       significant_bit=config.get(CONF_SIGNIFICANT_BIT))
+        device_class=config.get(CONF_DEVICE_CLASS),
+        significant_bit=config.get(CONF_SIGNIFICANT_BIT))
     binary_sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
     add_devices([XKNXBinarySensor(hass, binary_sensor)])
