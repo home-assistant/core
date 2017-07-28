@@ -34,7 +34,7 @@ ATTR_COMMAND = 'command'
 ATTR_FANSPEED = 'fanspeed'
 ATTR_PARAMS = 'params'
 
-SERVICE_CLEANING_PLAY_PAUSE = 'cleaning_play_pause'
+SERVICE_START_PAUSE = 'start_pause'
 SERVICE_LOCATE = 'locate'
 SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
@@ -58,7 +58,7 @@ SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
     SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_CLEANING_PLAY_PAUSE: {'method': 'async_cleaning_play_pause'},
+    SERVICE_START_PAUSE: {'method': 'async_start_pause'},
     SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
     SERVICE_LOCATE: {'method': 'async_locate'},
     SERVICE_STOP: {'method': 'async_stop'},
@@ -263,17 +263,17 @@ class VacuumDevice(ToggleEntity):
         """
         return self.hass.async_add_job(partial(self.set_fanspeed, **kwargs))
 
-    def cleaning_play_pause(self, **kwargs):
-        """Pause the cleaning task or replay it."""
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
         raise NotImplementedError()
 
-    def async_cleaning_play_pause(self, **kwargs):
-        """Pause the cleaning task or replay it.
+    def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(
-            partial(self.cleaning_play_pause, **kwargs))
+            partial(self.start_pause, **kwargs))
 
     def send_command(self, **kwargs):
         """Send a command to a vacuum cleaner."""

@@ -30,8 +30,8 @@ locate:
       description: Name of the botvac entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
-cleaning_play_pause:
-  description: Pause the cleaning task or replay it.
+start_pause:
+  description: Start, pause, or resume the cleaning task.
 
   fields:
     entity_id:
@@ -47,7 +47,7 @@ return_to_base:
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
 send_command:
-  description: Send 'raw' command to the vacuum cleaner.
+  description: Send a raw command to the vacuum cleaner.
 
   fields:
     entity_id:

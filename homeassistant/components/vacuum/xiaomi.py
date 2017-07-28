@@ -41,12 +41,11 @@ SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 
-SPEED_LOW = ('Quiet', 38)
-SPEED_MEDIUM = ('Balanced', 60)
-SPEED_HIGH = ('Turbo', 77)
-SPEED_MAX = ('Max', 90)
-FANSPEED_LABELS, FANSPEED_VALUES = list(
-    zip(*[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_MAX]))
+FANSPEEDS = {
+    'Quiet': 38,
+    'Balanced': 60,
+    'Turbo': 77,
+    'Max': 90}
 
 ATTR_RC_VELOCITY = 'velocity'
 ATTR_RC_ROTATION = 'rotation'
@@ -171,42 +170,42 @@ class MiroboVacuum(VacuumDevice):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
             return self.vacuum_state.state
-        return None
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         if self.vacuum_state is not None:
             return self.vacuum_state.battery
-        return None
 
     @property
     def fanspeed(self):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
             speed = self.vacuum_state.fanspeed
-            if speed in FANSPEED_VALUES:
-                return FANSPEED_LABELS[FANSPEED_VALUES.index(speed)]
+            if speed in FANSPEEDS.values():
+                return [key for key, value in FANSPEEDS.items()
+                        if value == speed][0]
             return speed
-        return None
 
     @property
     def fanspeed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FANSPEED_LABELS)
+        return list(FANSPEEDS.keys())
 
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         if self.vacuum_state is not None:
-            return {
+            attrs = {
                 'Do not disturb':
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 'Cleaning time': str(self.vacuum_state.clean_time),
-                'Cleaned area': self.vacuum_state.clean_area,
-                'Error': self.vacuum_state.error}
+                'Cleaned area': self.vacuum_state.clean_area}
+            if self.vacuum_state.got_error:
+                attrs['Error'] = self.vacuum_state.error
+            return attrs
 
         return {}
 
@@ -271,9 +270,8 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_set_fanspeed(self, fanspeed: str, **kwargs):
         """Set the fanspeed."""
-        if fanspeed.capitalize() in FANSPEED_LABELS:
-            fanspeed = FANSPEED_VALUES[FANSPEED_LABELS.index(
-                fanspeed.capitalize())]
+        if fanspeed.capitalize() in FANSPEEDS:
+            fanspeed = FANSPEEDS[fanspeed.capitalize()]
         else:
             try:
                 fanspeed = int(fanspeed)
@@ -285,11 +283,11 @@ class MiroboVacuum(VacuumDevice):
             "Unable to set fanspeed: %s", self.vacuum.set_fan_speed, fanspeed)
 
     @asyncio.coroutine
-    def async_cleaning_play_pause(self, **kwargs):
-        """Pause the cleaning task or replay it."""
+    def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
         if self.vacuum_state and self.is_on:
             yield from self._try_command(
-                "Unable to set play/pause: %s", self.vacuum.pause)
+                "Unable to set start/pause: %s", self.vacuum.pause)
         else:
             yield from self.async_turn_on()
 
