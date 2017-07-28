@@ -119,7 +119,7 @@ class XKNXCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return int(self.from_knx(self.device.current_position()))
+        return int(self.from_xknx_position(self.device.current_position()))
 
     @property
     def is_closed(self):
@@ -140,7 +140,7 @@ class XKNXCover(CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        knx_position = self.to_knx(position)
+        knx_position = self.to_xknx_position(position)
         self.device.set_position(knx_position)
         self.start_auto_updater()
 
@@ -170,24 +170,14 @@ class XKNXCover(CoverDevice):
 
         self.device.auto_stop_if_necessary()
 
-    #
-    # HELPER FUNCTIONS
-    #
-
-    # KNX and HASS have different understanding of open and closed:
-    #
-    #            KNX     HASS
-    #    UP      0       100
-    #    DOWN    255     0
-
-
-    #TODO: use DPTScaling
     @staticmethod
-    def from_knx(raw):
+    def from_xknx_position(raw):
+        """Converts XKNX position [0...255] to hass position [100...0]."""
         return 100-round((raw/256)*100)
 
     @staticmethod
-    def to_knx(value):
+    def to_xknx_position(value):
+        """Converts hass position [100...0] to XKNX position [0...255]."""
         return 255-round(value/100*255.4)
 
     def stop_cover_tilt(self, **kwargs):
