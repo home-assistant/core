@@ -115,9 +115,7 @@ class XKNXClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self.device.setpoint = temperature
-
-        #TODO Sent to KNX bus
+        self.device.set_setpoint(temperature)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
