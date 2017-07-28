@@ -110,7 +110,7 @@ class MpdDevice(MediaPlayerDevice):
         self._update_playlists()
 
     @property
-    def avaiable(self):
+    def available(self):
         """True if MPD is available and connected."""
         return self._is_connected
 
