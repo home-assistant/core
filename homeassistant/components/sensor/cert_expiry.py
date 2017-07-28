@@ -8,12 +8,12 @@ import datetime
 import logging
 import socket
 import ssl
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from datetime import timedelta
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
@@ -100,6 +100,6 @@ class SSLCertificate(Entity):
             return
 
         ts_seconds = ssl.cert_time_to_seconds(cert['notAfter'])
-        timestamp = datetime.datetime.fromtimestamp(ts_seconds)
-        expiry = timestamp - datetime.datetime.today()
+        timestamp = datetime.fromtimestamp(ts_seconds)
+        expiry = timestamp - datetime.today()
         self._state = expiry.days
