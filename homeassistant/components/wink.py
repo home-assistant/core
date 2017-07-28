@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.3.1', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.4.2', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,10 @@ SUBSCRIPTION_HANDLER = None
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_USER_AGENT = 'user_agent'
-CONF_OATH = 'oath'
+CONF_OAUTH = 'oauth'
+CONF_LOCAL_CONTROL = 'local_control'
 CONF_APPSPOT = 'appspot'
-CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
-CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
+CONF_MISSING_OAUTH_MSG = 'Missing oauth2 credentials.'
 CONF_TOKEN_URL = "https://winkbearertoken.appspot.com/token"
 
 ATTR_ACCESS_TOKEN = 'access_token'
@@ -64,15 +64,14 @@ SERVICE_KEEP_ALIVE = 'keep_pubnub_updates_flowing'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_EMAIL, CONF_APPSPOT,
-                      msg=CONF_MISSING_OATH_MSG): cv.string,
+                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
         vol.Inclusive(CONF_PASSWORD, CONF_APPSPOT,
-                      msg=CONF_MISSING_OATH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_ID, CONF_OATH,
-                      msg=CONF_MISSING_OATH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OATH,
-                      msg=CONF_MISSING_OATH_MSG): cv.string,
-        vol.Exclusive(CONF_EMAIL, CONF_OATH,
-                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
+                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_ID, CONF_OAUTH,
+                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OAUTH,
+                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
+        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -206,8 +205,11 @@ def setup(hass, config):
     client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
     email = config[DOMAIN].get(CONF_EMAIL)
     password = config[DOMAIN].get(CONF_PASSWORD)
+    local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
     if None not in [client_id, client_secret]:
         _LOGGER.info("Using legacy oauth authentication")
+        if not local_control:
+            pywink.disable_local_control()
         hass.data[DOMAIN]["oauth"]["client_id"] = client_id
         hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
         hass.data[DOMAIN]["oauth"]["email"] = email
@@ -216,11 +218,14 @@ def setup(hass, config):
                                            client_id, client_secret)
     elif None not in [email, password]:
         _LOGGER.info("Using web form authentication")
+        pywink.disable_local_control()
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
         _get_wink_token_from_web()
     else:
         _LOGGER.info("Using new oauth authentication")
+        if not local_control:
+            pywink.disable_local_control()
         config_path = hass.config.path(WINK_CONFIG_FILE)
         if os.path.isfile(config_path):
             config_file = _read_config_file(config_path)
@@ -303,6 +308,15 @@ def setup(hass, config):
         hass.data[DOMAIN]['pubnub'].unsubscribe()
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+
+    def save_credentials(event):
+        """Save currently set oauth credentials."""
+        if hass.data[DOMAIN]["oauth"].get("email") is None:
+            config_path = hass.config.path(WINK_CONFIG_FILE)
+            _config = pywink.get_current_oauth_credentials()
+            _write_config_file(config_path, _config)
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, save_credentials)
 
     def force_update(call):
         """Force all devices to poll the Wink API."""
