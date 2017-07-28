@@ -60,6 +60,7 @@ class USPSPackageSensor(Entity):
         self._name = name
         self._attributes = None
         self._state = None
+        self.update()
 
     @property
     def name(self):
@@ -107,6 +108,7 @@ class USPSMailSensor(Entity):
         self._name = name
         self._attributes = None
         self._state = None
+        self.update()
 
     @property
     def name(self):
@@ -120,8 +122,10 @@ class USPSMailSensor(Entity):
 
     def update(self):
         """Update device state."""
+        import datetime
         import myusps
-        self._state = len(myusps.get_mail(self._session))
+        self._state = len(myusps.get_mail(
+            self._session, datetime.datetime.now().date()))
 
     @property
     def device_state_attributes(self):
