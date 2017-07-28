@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pynuki==1.3.0']
+REQUIREMENTS = ['pynuki==1.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ ATTR_NUKI_ID = 'nuki_id'
 ATTR_UNLATCH = 'unlatch'
 DOMAIN = 'nuki'
 SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
+SERVICE_UNLATCH = 'nuki_unlatch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -40,6 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_UNLATCH, default=False): cv.boolean
+})
+
+UNLATCH_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -53,9 +58,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
     add_devices([NukiLock(lock, hass) for lock in bridge.locks])
 
-    def lock_n_go(service):
-        """Service handler for nuki.lock_n_go."""
-        unlatch = service.data.get(ATTR_UNLATCH, False)
+    def service_handler(service):
+        """Service handler for nuki services."""
         entity_ids = extract_entity_ids(hass, service)
         all_locks = hass.data[DOMAIN]['lock']
         target_locks = []
@@ -66,14 +70,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if lock.entity_id in entity_ids:
                     target_locks.append(lock)
         for lock in target_locks:
-            lock.lock_n_go(unlatch=unlatch)
+            if service.service == SERVICE_LOCK_N_GO:
+                unlatch = service.data.get(ATTR_UNLATCH, False)
+                lock.lock_n_go(unlatch=unlatch)
+            elif service.service == SERVICE_UNLATCH:
+                lock.unlatch()
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
-        DOMAIN, SERVICE_LOCK_N_GO, lock_n_go,
+        DOMAIN, SERVICE_LOCK_N_GO, service_handler,
         descriptions.get(SERVICE_LOCK_N_GO), schema=LOCK_N_GO_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_UNLATCH, service_handler,
+        descriptions.get(SERVICE_UNLATCH), schema=UNLATCH_SERVICE_SCHEMA)
 
 
 class NukiLock(LockDevice):
@@ -90,9 +101,9 @@ class NukiLock(LockDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
-        if not DOMAIN in self.hass.data:
+        if DOMAIN not in self.hass.data:
             self.hass.data[DOMAIN] = {}
-        if not 'lock' in self.hass.data[DOMAIN]:
+        if 'lock' not in self.hass.data[DOMAIN]:
             self.hass.data[DOMAIN]['lock'] = []
         self.hass.data[DOMAIN]['lock'].append(self)
 
@@ -137,3 +148,7 @@ class NukiLock(LockDevice):
         amount of time depending on the lock settings) and relock.
         """
         self._nuki_lock.lock_n_go(kwargs)
+
+    def unlatch(self, **kwargs):
+        """Unlatch door."""
+        self._nuki_lock.unlatch()
