@@ -4,14 +4,15 @@ Counter for the days till a HTTPS (TLS) certificate will expire.
 For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.cert_expiry/
 """
-import datetime
 import logging
 import socket
 import ssl
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'SSL Certificate Expiry'
 DEFAULT_PORT = 443
 
-SCAN_INTERVAL = datetime.timedelta(hours=12)
+SCAN_INTERVAL = timedelta(hours=12)
 
 TIMEOUT = 10.0
 
@@ -71,6 +72,7 @@ class SSLCertificate(Entity):
         """Icon to use in the frontend, if any."""
         return 'mdi:certificate'
 
+    @Throttle(timedelta(seconds=120))
     def update(self):
         """Fetch the certificate information."""
         try:
@@ -97,6 +99,6 @@ class SSLCertificate(Entity):
             return
 
         ts_seconds = ssl.cert_time_to_seconds(cert['notAfter'])
-        timestamp = datetime.datetime.fromtimestamp(ts_seconds)
-        expiry = timestamp - datetime.datetime.today()
+        timestamp = datetime.fromtimestamp(ts_seconds)
+        expiry = timestamp - datetime.today()
         self._state = expiry.days
