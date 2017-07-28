@@ -17,13 +17,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
                                             'humidity', gateway))
-            if device['model'] == 'weather.v1':
+            elif device['model'] == 'weather.v1':
                 devices.append(XiaomiSensor(device, 'Temperature',
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
                                             'humidity', gateway))
                 devices.append(XiaomiSensor(device, 'Pressure',
                                             'pressure', gateway))
+            elif device['model'] == 'sensor_motion.aq2':
+                devices.append(XiaomiSensor(device, 'Illumination',
+                                            'lux', gateway))
             elif device['model'] == 'gateway':
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
@@ -47,6 +50,8 @@ class XiaomiSensor(XiaomiDevice):
             return '%'
         elif self._data_key == 'illumination':
             return 'lm'
+        elif self._data_key == 'lux':
+            return 'lx'
         elif self._data_key == 'pressure':
             return 'hPa'
 
@@ -69,7 +74,7 @@ class XiaomiSensor(XiaomiDevice):
             return False
         elif self._data_key == 'pressure' and value == 0:
             return False
-        if self._data_key in ['temperature', 'humidity']:
+        if self._data_key in ['temperature', 'humidity', 'pressure']:
             value /= 100
         elif self._data_key in ['illumination']:
             value = max(value - 300, 0)
