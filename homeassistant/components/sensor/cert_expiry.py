@@ -4,11 +4,10 @@ Counter for the days till a HTTPS (TLS) certificate will expire.
 For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.cert_expiry/
 """
-import datetime
 import logging
 import socket
 import ssl
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
