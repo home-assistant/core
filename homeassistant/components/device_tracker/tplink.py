@@ -480,11 +480,13 @@ class Tplink6DeviceScanner(DeviceScanner):
         self._wait_login_until = 0
         self._loggedin = False
         self._confirm_login = False
+        self.success_init = False
 
         self._radiocount = 0
 
         self.last_results = []
-        self.success_init = self._update_info()
+
+        self._update_info()
 
     def scan_devices(self):
         """Scan for new devices and return a list with found MAC IDs."""
@@ -527,6 +529,11 @@ class Tplink6DeviceScanner(DeviceScanner):
             self.success_init = False
             self._loggedin = False
             self._session = requests.session()
+            return
+
+        if "success" not in loginresp:
+            self.success_init = False
+            self._loggedin = False
             return
 
         self.success_init = True
