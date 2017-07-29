@@ -110,6 +110,17 @@ DISCOVERY_SCHEMAS = [
                  const.COMMAND_CLASS_SWITCH_BINARY],
              const.DISC_GENRE: const.GENRE_USER,
          }})},
+    {const.DISC_COMPONENT: 'fan',
+     const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_SWITCH_MULTILEVEL],
+     const.DISC_SPECIFIC_DEVICE_CLASS: [
+         const.SPECIFIC_TYPE_FAN_SWITCH],
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+         const.DISC_PRIMARY: {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
+             const.DISC_INDEX: [const.INDEX_SWITCH_MULTILEVEL_LEVEL],
+             const.DISC_TYPE: const.TYPE_BYTE,
+         }})},
     {const.DISC_COMPONENT: 'light',
      const.DISC_GENERIC_DEVICE_CLASS: [
          const.GENERIC_TYPE_SWITCH_MULTILEVEL,
