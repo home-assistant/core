@@ -233,19 +233,19 @@ def write_constraints_file(data):
 def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
-        return data == ''.join(req_file)
+        return data == req_file.read()
 
 
 def validate_requirements_test_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_test_all.txt', 'r') as req_file:
-        return data == ''.join(req_file)
+        return data == req_file.read()
 
 
 def validate_constraints_file(data):
     """Validate if constraints is up to date."""
     with open(CONSTRAINT_PATH, 'r') as req_file:
-        return data == ''.join(req_file)
+        return data + CONSTRAINT_BASE == req_file.read()
 
 
 def main():
