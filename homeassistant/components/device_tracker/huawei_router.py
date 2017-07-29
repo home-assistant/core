@@ -102,7 +102,8 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         devices = []
         if array_regex_res:
-            device_regex_res = self.DEVICE_REGEX.findall(array_regex_res.group(1))
+            device_regex_res = self.DEVICE_REGEX.findall(
+                array_regex_res.group(1))
 
             for device in device_regex_res:
                 device_attrs_regex_res = self.DEVICE_ATTR_REGEX.search(device)
