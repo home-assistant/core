@@ -9,7 +9,6 @@ import time
 
 import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
-import homeassistant.loader as loader
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
@@ -38,9 +37,9 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the demo environment."""
-    group = loader.get_component('group')
-    configurator = loader.get_component('configurator')
-    persistent_notification = loader.get_component('persistent_notification')
+    group = hass.components.group
+    configurator = hass.components.configurator
+    persistent_notification = hass.components.persistent_notification
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -108,7 +107,7 @@ def async_setup(hass, config):
 
     # Set up example persistent notification
     persistent_notification.async_create(
-        hass, 'This is an example of a persistent notification.',
+        'This is an example of a persistent notification.',
         title='Example Notification')
 
     # Set up room groups
@@ -206,7 +205,7 @@ def async_setup(hass, config):
     def setup_configurator():
         """Set up a configurator."""
         request_id = configurator.request_config(
-            hass, "Philips Hue", hue_configuration_callback,
+            "Philips Hue", hue_configuration_callback,
             description=("Press the button on the bridge to register Philips "
                          "Hue with Home Assistant."),
             description_image="/static/images/config_philips_hue.jpg",

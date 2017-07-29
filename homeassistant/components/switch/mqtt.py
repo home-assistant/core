@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_QOS,
+    CONF_RETAIN)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
@@ -50,6 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_QOS),
         config.get(CONF_RETAIN),
         config.get(CONF_PAYLOAD_ON),
@@ -62,13 +64,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
-    def __init__(self, name, state_topic, command_topic, qos, retain,
-                 payload_on, payload_off, optimistic, value_template):
+    def __init__(self, name, state_topic, command_topic, availability_topic,
+                 qos, retain, payload_on, payload_off, optimistic,
+                 value_template):
         """Initialize the MQTT switch."""
         self._state = False
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
+        self._availability_topic = availability_topic
+        self._available = True if availability_topic is None else False
         self._qos = qos
         self._retain = retain
         self._payload_on = payload_on
@@ -83,8 +88,8 @@ class MqttSwitch(SwitchDevice):
         This method is a coroutine.
         """
         @callback
-        def message_received(topic, payload, qos):
-            """Handle new MQTT messages."""
+        def state_message_received(topic, payload, qos):
+            """Handle new MQTT state messages."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -95,12 +100,28 @@ class MqttSwitch(SwitchDevice):
 
             self.hass.async_add_job(self.async_update_ha_state())
 
+        @callback
+        def availability_message_received(topic, payload, qos):
+            """Handle new MQTT availability messages."""
+            if payload == self._payload_on:
+                self._available = True
+            elif payload == self._payload_off:
+                self._available = False
+
+            self.hass.async_add_job(self.async_update_ha_state())
+
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
             yield from mqtt.async_subscribe(
-                self.hass, self._state_topic, message_received, self._qos)
+                self.hass, self._state_topic, state_message_received,
+                self._qos)
+
+        if self._availability_topic is not None:
+            yield from mqtt.async_subscribe(
+                self.hass, self._availability_topic,
+                availability_message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -111,6 +132,11 @@ class MqttSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if switch is available."""
+        return self._available
 
     @property
     def is_on(self):
