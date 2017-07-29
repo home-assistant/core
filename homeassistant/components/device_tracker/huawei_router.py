@@ -87,8 +87,6 @@ class HuaweiDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = base64.b64encode(bytes(config[CONF_PASSWORD], 'utf-8'))
 
-        self.lock = threading.Lock()
-
         self.last_results = []
 
     def scan_devices(self):
@@ -111,18 +109,17 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        with self.lock:
-            data = self._get_data()
-            if not data:
-                return False
+        data = self._get_data()
+        if not data:
+            return False
 
-            active_clients = [client for client in data if client.state()]
-            self.last_results = active_clients
+        active_clients = [client for client in data if client.state()]
+        self.last_results = active_clients
 
-            _LOGGER.debug("Active clients: " + "\n"
-                          .join((client.macaddr() + " " + client.name())
-                                for client in active_clients))
-            return True
+        _LOGGER.debug("Active clients: " + "\n"
+                      .join((client.macaddr() + " " + client.name())
+                            for client in active_clients))
+        return True
 
     def _get_data(self):
         """Get the devices' data from the router.
@@ -148,11 +145,11 @@ class HuaweiDeviceScanner(DeviceScanner):
 
     def _get_devices_response(self):
         """Get the raw string with the devices from the router."""
-        cnt = requests.post('http://%s/asp/GetRandCount.asp' % self.host)
+        cnt = requests.post('http://{}/asp/GetRandCount.asp'.format(self.host))
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors='replace')
 
         _LOGGER.debug("Loggin in")
-        cookie = requests.post('http://%s/login.cgi' % self.host,
+        cookie = requests.post('http://{}/login.cgi'.format(self.host),
                                data=[('UserName', self.username),
                                      ('PassWord', self.password),
                                      ('x.X_HW_Token', cnt_str)],
@@ -160,12 +157,14 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("Requesting lan user info update")
         # this request is needed or else some devices' state won't be updated
-        requests.get('http://%s/html/bbsp/common/lanuserinfo.asp' % self.host,
-                     cookies=cookie.cookies)
+        requests.get(
+            'http://{}/html/bbsp/common/lanuserinfo.asp'.format(self.host),
+            cookies=cookie.cookies)
 
         _LOGGER.debug("Requesting lan user info data")
         devices = requests.get(
-            'http://%s/html/bbsp/common/GetLanUserDevInfo.asp' % self.host,
+            'http://{}/html/bbsp/common/GetLanUserDevInfo.asp'
+                .format(self.host),
             cookies=cookie.cookies)
 
         return str(devices.content, devices.apparent_encoding,
