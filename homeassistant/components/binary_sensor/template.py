@@ -15,11 +15,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_SENSOR_CLASS, CONF_SENSORS, CONF_DEVICE_CLASS,
-    EVENT_HOMEASSISTANT_START, STATE_ON)
+    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, STATE_ON)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -30,7 +28,6 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -49,8 +46,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        device_class = get_deprecated(
-            device_config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
 
         if value_template is not None:
             value_template.hass = hass
