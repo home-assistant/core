@@ -58,7 +58,7 @@ def timems():
 
 
 def md5hash(text):
-    """Shortcut to calculate MD5 for text"""
+    """Shortcut to calculate MD5 for text."""
     return hashlib.md5(text).hexdigest()
 
 
@@ -495,7 +495,7 @@ class Tplink6DeviceScanner(DeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """This device does not provide API for DHCP client list."""
+        """Return. Feature does not supported."""
         return None
 
     def _login(self):
