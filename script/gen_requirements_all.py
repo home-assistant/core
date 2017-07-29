@@ -88,6 +88,10 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
+CONSTRAINT_BASE = """
+# Breaks Python 3.6 and is not needed for our supported Pythons
+enum34==1000000000.0.0
+"""
 
 
 def explore_module(package, explore_children):
@@ -223,7 +227,7 @@ def write_test_requirements_file(data):
 def write_constraints_file(data):
     """Write constraints to a file."""
     with open(CONSTRAINT_PATH, 'w+', newline="\n") as req_file:
-        req_file.write(data)
+        req_file.write(data + CONSTRAINT_BASE)
 
 
 def validate_requirements_file(data):
