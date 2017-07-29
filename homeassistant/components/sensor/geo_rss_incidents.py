@@ -109,26 +109,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
 
+    data = GeoRssServiceData()
+
     # Create all sensors based on categories.
     devices = []
-    devices_by_category = {}
     if not categories:
         device = GeoRssServiceSensor(hass, None, [], name, icon,
                                      unit_of_measurement)
         devices.append(device)
-        devices_by_category[None] = device
     else:
         for category in categories:
-            device = GeoRssServiceSensor(hass, category, [], name, icon,
+            device = GeoRssServiceSensor(hass, category, data, name, icon,
                                          unit_of_measurement)
             devices.append(device)
-            devices_by_category[category] = device
     async_add_devices(devices)
 
     # Initialise update service.
-    updater = GeoRssServiceUpdater(hass, home_latitude, home_longitude, url,
-                                   radius_in_km, devices_by_category,
-                                   categories)
+    updater = GeoRssServiceUpdater(hass, data, home_latitude, home_longitude,
+                                   url, radius_in_km, devices)
     async_track_time_interval(hass, updater.async_update, interval_in_seconds)
     yield from updater.async_update()
     return True
@@ -137,12 +135,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, hass, category, incidents, name, icon,
+    def __init__(self, hass, category, data, name, icon,
                  unit_of_measurement):
         """Initialize the sensor."""
         self.hass = hass
         self._category = category
-        self._state = incidents
+        self._data = data
+        self._state = None
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit_of_measurement
@@ -171,9 +170,10 @@ class GeoRssServiceSensor(Entity):
         else:
             return self._state
 
-    @state.setter
-    def state(self, value):
-        self._state = value
+    @property
+    def should_poll(self):  # pylint: disable=no-self-use
+        """No polling needed."""
+        return False
 
     @property
     def unit_of_measurement(self):
@@ -189,27 +189,52 @@ class GeoRssServiceSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         matrix = {}
-        for incident in self._state:
-            matrix[incident.title] = '{:.0f}km'.format(incident.distance)
+        if self._state is not None:
+            for incident in self._state:
+                matrix[incident.title] = '{:.0f}km'.format(incident.distance)
         return matrix
+
+    def update(self):
+        """Update this sensor from the GeoRSS service."""
+        all_incidents = self._data.incidents
+        _LOGGER.info("All incidents: %s", all_incidents)
+        _LOGGER.info("My category: %s", self._category)
+        if self._category is None:
+            # Add all incidents regardless of category.
+            self._state = all_incidents
+        else:
+            # Group incidents by category.
+            my_incidents = []
+            for incident in all_incidents:
+                _LOGGER.info("Category: %s", incident.category)
+                if incident.category == self._category:
+                    my_incidents.append(incident)
+            self._state = my_incidents
+            _LOGGER.info("New state: %s", self._state)
+
+
+class GeoRssServiceData(object):
+    """Stores the latest data from the GeoRSS service."""
+
+    def __init__(self):
+        """Initialize the data object."""
+        self.incidents = None
 
 
 class GeoRssServiceUpdater:
     """Provides access to GeoRSS feed and creates and updates UI devices."""
 
-    def __init__(self, hass, home_latitude, home_longitude, url,
-                 radius_in_km, devices_by_category, filter_by_category):
+    def __init__(self, hass, data, home_latitude, home_longitude, url,
+                 radius_in_km, devices):
         """Initialize the update service."""
         self._hass = hass
+        self._data = data
         self._feed = None
-        self._home_latitude = home_latitude
-        self._home_longitude = home_longitude
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
         self._state = STATE_UNKNOWN
-        self._devices_by_category = devices_by_category
-        self._filter_by_category = filter_by_category
+        self._devices = devices
 
     @asyncio.coroutine
     def async_update(self, *_):
@@ -225,7 +250,6 @@ class GeoRssServiceUpdater:
             # Filter entries by distance from home coordinates.
             for entry in self._feed.entries:
                 geometry = None
-                print(entry)
                 if hasattr(entry, 'where'):
                     geometry = entry.where
                 elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
@@ -236,34 +260,12 @@ class GeoRssServiceUpdater:
                 if distance <= self._radius_in_km:
                     incident = self.create_incident(entry, distance, geometry)
                     incidents.append(incident)
+            #_LOGGER.info("Incidents found nearby: %s", incidents)
+            self._data.incidents = incidents
             tasks = []
-            if self._filter_by_category:
-                # Group incidents by category.
-                incidents_by_category = {}
-                for incident in incidents:
-                    if incident.category in incidents_by_category:
-                        incidents_by_category[incident.category].append(
-                            incident)
-                    else:
-                        incidents_by_category[incident.category] = [incident]
-                _LOGGER.debug("Incidents by category: %s",
-                              incidents_by_category)
-                # Set new state (incidents) on devices.
-                for category in incidents_by_category.keys():
-                    # Update existing device with new list of incidents.
-                    if category in self._devices_by_category:
-                        device = self._devices_by_category[category]
-                        device.state = incidents_by_category[category]
-                        tasks.append(device.async_update_ha_state())
-                _LOGGER.debug("Devices by category: %s",
-                              self._devices_by_category)
-            else:
-                # Add all incidents regardless of category.
-                device = self._devices_by_category[None]
-                device.state = incidents
-                tasks.append(device.async_update_ha_state())
-                _LOGGER.debug("Devices by category: %s",
-                              self._devices_by_category)
+            if self._devices:
+                for device in self._devices:
+                    tasks.append(device.async_update_ha_state(True))
             if tasks:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
