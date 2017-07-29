@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pushbullet.py==0.10.0']
+REQUIREMENTS = ['pushbullet.py==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
