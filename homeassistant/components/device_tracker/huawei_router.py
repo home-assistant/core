@@ -21,16 +21,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
-DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
-DEVICE_ATTR_REGEX = re.compile('"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
-                               '"(?P<MacAddr>.*?)","(?P<Port>.*?)",'
-                               '"(?P<IpType>.*?)","(?P<DevType>.*?)",'
-                               '"(?P<DevStatus>.*?)","(?P<PortType>.*?)",'
-                               '"(?P<Time>.*?)","(?P<HostName>.*?)",'
-                               '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
-                               '"(?P<DeviceType>.*?)"')
-LOGIN_COOKIE = dict(Cookie='body:Language:portuguese:id=-1')
+
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -77,6 +68,18 @@ class Device:
 
 class HuaweiDeviceScanner(DeviceScanner):
     """This class queries a router running HUAWEI firmware."""
+
+    ARRAY_REGEX = re.compile(r'var UserDevinfo = new Array\((.*),null\);')
+    DEVICE_REGEX = re.compile(r'new USERDevice\((.*?)\),')
+    DEVICE_ATTR_REGEX = re.compile(
+        '"(?P<Domain>.*?)","(?P<IpAddr>.*?)",'
+        '"(?P<MacAddr>.*?)","(?P<Port>.*?)",'
+        '"(?P<IpType>.*?)","(?P<DevType>.*?)",'
+        '"(?P<DevStatus>.*?)","(?P<PortType>.*?)",'
+        '"(?P<Time>.*?)","(?P<HostName>.*?)",'
+        '"(?P<IPv4Enabled>.*?)","(?P<IPv6Enabled>.*?)",'
+        '"(?P<DeviceType>.*?)"')
+    LOGIN_COOKIE = dict(Cookie='body:Language:portuguese:id=-1')
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -126,14 +129,14 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         Returns a list with all the devices known to the router DHCP server.
         """
-        array_regex_res = ARRAY_REGEX.search(self._get_devices_response())
+        array_regex_res = self.ARRAY_REGEX.search(self._get_devices_response())
 
         devices = []
         if array_regex_res:
-            device_regex_res = DEVICE_REGEX.findall(array_regex_res.group(1))
+            device_regex_res = self.DEVICE_REGEX.findall(array_regex_res.group(1))
 
             for device in device_regex_res:
-                device_attrs_regex_res = DEVICE_ATTR_REGEX.search(device)
+                device_attrs_regex_res = self.DEVICE_ATTR_REGEX.search(device)
 
                 devices.append(Device(device_attrs_regex_res.group('HostName'),
                                       device_attrs_regex_res.group('IpAddr'),
@@ -153,7 +156,7 @@ class HuaweiDeviceScanner(DeviceScanner):
                                data=[('UserName', self.username),
                                      ('PassWord', self.password),
                                      ('x.X_HW_Token', cnt_str)],
-                               cookies=LOGIN_COOKIE)
+                               cookies=self.LOGIN_COOKIE)
 
         _LOGGER.debug("Requesting lan user info update")
         # this request is needed or else some devices' state won't be updated
