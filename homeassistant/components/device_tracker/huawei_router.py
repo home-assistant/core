@@ -7,7 +7,7 @@ https://home-assistant.io/components/device_tracker.huawei/
 import base64
 import logging
 import re
-import threading
+from collections import namedtuple
 from datetime import timedelta
 import requests
 import voluptuous as vol
@@ -38,32 +38,7 @@ def get_scanner(hass, config):
 
     return scanner
 
-
-class Device:
-    """This class represents a network device."""
-
-    def __init__(self, name, ip, mac, state):
-        """Init the network device."""
-        self._name = name
-        self._ip = ip
-        self._mac = mac
-        self._state = state
-
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    def ipaddr(self):
-        """Return the IP address of the device."""
-        return self._ip
-
-    def macaddr(self):
-        """Return the MAC address of the device."""
-        return self._mac
-
-    def state(self):
-        """Return the state of the device (true -> online)."""
-        return self._state
+Device = namedtuple('Device', ['name', 'mac', 'ip', 'state'])
 
 
 class HuaweiDeviceScanner(DeviceScanner):
@@ -92,15 +67,15 @@ class HuaweiDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client.macaddr() for client in self.last_results]
+        return [client.mac for client in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
-            if client.macaddr() == device:
-                return client.name()
+            if client.mac == device:
+                return client.name
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -113,11 +88,11 @@ class HuaweiDeviceScanner(DeviceScanner):
         if not data:
             return False
 
-        active_clients = [client for client in data if client.state()]
+        active_clients = [client for client in data if client.state]
         self.last_results = active_clients
 
         _LOGGER.debug("Active clients: " + "\n"
-                      .join((client.macaddr() + " " + client.name())
+                      .join((client.mac + " " + client.name)
                             for client in active_clients))
         return True
 
