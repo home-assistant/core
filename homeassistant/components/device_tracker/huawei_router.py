@@ -35,6 +35,7 @@ def get_scanner(hass, config):
 
     return scanner
 
+
 Device = namedtuple('Device', ['name', 'mac', 'ip', 'state'])
 
 
@@ -136,8 +137,8 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("Requesting lan user info data")
         devices = requests.get(
-            'http://{}/html/bbsp/common/GetLanUserDevInfo.asp'
-                .format(self.host),
+            'http://{}/html/bbsp/common/GetLanUserDevInfo.asp'.format(
+                self.host),
             cookies=cookie.cookies)
 
         return str(devices.content, devices.apparent_encoding,
