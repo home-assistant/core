@@ -185,15 +185,15 @@ class VacuumDevice(ToggleEntity):
         data = {}
 
         if self.status is not None:
-            data['vacuum_status'] = self.status
+            data['Status'] = self.status
 
         if self.battery_level is not None:
-            data['vacuum_battery'] = self.battery_level
-            data['vacuum_battery_icon'] = self.battery_icon
+            data['Battery'] = self.battery_level
+            data['Battery_icon'] = self.battery_icon
 
         if self.fanspeed is not None:
-            data['vacuum_fanspeed'] = self.fanspeed
-            data['vacuum_fanspeed_list'] = self.fanspeed_list
+            data['Fanspeed'] = self.fanspeed
+            data['Fanspeed_list'] = self.fanspeed_list
 
         return data
 
