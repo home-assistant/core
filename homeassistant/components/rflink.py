@@ -19,6 +19,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.deprecation import get_deprecated
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -338,14 +339,14 @@ class RflinkCommand(RflinkDevice):
             self._state = self._state in [STATE_UNKNOWN, False]
 
         # Cover options for RTS
-        elif command == 'roll_down':
-            cmd = 'down'
+        elif command == 'close_cover':
+            cmd = 'DOWN'
 
-        elif command == 'roll_up':
-            cmd = 'up'
+        elif command == 'open_cover':
+            cmd = 'UP'
 
-        elif command == 'roll_stop':
-            cmd = 'stop'
+        elif command == 'stop_cover':
+            cmd = 'STOP'
             self._state = True
 
         # Send initial command and queue repetitions.
@@ -413,7 +414,6 @@ class SwitchableRflinkDevice(RflinkCommand):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
 
-
 class CoverableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
@@ -439,24 +439,15 @@ class CoverableRflinkDevice(RflinkCommand):
 
     def async_close_cover(self, **kwargs):
         """Turn the device on."""
-        return self._async_handle_command("turn_on")
+        return self._async_handle_command("close_cover")
 
     def async_open_cover(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("turn_off")
+        return self._async_handle_command("open_cover")
 
     def async_stop_cover(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("stop_roll")
-
-
-    def async_stop_cover(self, **kwargs):
-        """Turn the device up."""
-        return self._async_handle_command("roll_up")
-
-    def async_stop_cover(self, **kwargs):
-        """Turn the device up."""
-        return self._async_handle_command("roll_down")
+        return self._async_handle_command("stop_cover")
 
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
