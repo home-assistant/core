@@ -983,7 +983,7 @@ yahoo-finance==1.4.0
 yahooweather==0.8
 
 # homeassistant.components.light.yeelight
-yeelight==0.3.0
+yeelight==0.3.2
 
 # homeassistant.components.light.yeelightsunflower
 yeelightsunflower==0.0.8
