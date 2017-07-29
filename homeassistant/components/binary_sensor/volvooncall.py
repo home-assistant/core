@@ -34,5 +34,5 @@ class VolvoSensor(VolvoEntity, BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return 'safety'
