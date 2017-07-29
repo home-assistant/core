@@ -1,7 +1,7 @@
 """Component to manage a shoppling list."""
 import asyncio
 import logging
-from time import time
+import uuid
 
 import voluptuous as vol
 
@@ -55,7 +55,7 @@ class ShoppingData:
         """Add a shopping list item."""
         self.items.append({
             'name': name,
-            'id': str(time()),
+            'id': uuid.uuid4().hex,
             'complete': False
         })
 
