@@ -9,11 +9,12 @@ from collections import defaultdict
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
-from homeassistant.components.tahoma_api import (TahomaApi)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
+
+REQUIREMENTS = ['tahoma-api==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Activate Tahoma component."""
+    from tahoma_api import TahomaApi
+
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)

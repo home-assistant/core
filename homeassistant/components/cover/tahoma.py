@@ -8,7 +8,8 @@ import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
-from homeassistant.components.tahoma_api import (Action)
+
+REQUIREMENTS = ['tahoma-api==0.0.3']
 
 DEPENDENCIES = ['tahoma']
 
@@ -51,6 +52,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
+        from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command('setPosition', 100 - position)
         self.controller.apply_actions("", [action])
@@ -67,6 +69,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
+        from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command('open')
         self.controller.apply_actions('', [action])
@@ -74,6 +77,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
+        from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command('close')
         self.controller.apply_actions('', [action])
@@ -81,6 +85,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
+        from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command('stopIdentify')
         self.controller.apply_actions('', [action])
