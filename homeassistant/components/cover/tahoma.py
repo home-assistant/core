@@ -1,5 +1,5 @@
 """
-Support for Tahoma cover - rollershutters etc.
+Support for Tahoma cover - shutters etc.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
