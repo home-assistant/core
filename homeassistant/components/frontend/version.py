@@ -3,7 +3,7 @@
 FINGERPRINTS = {
     "compatibility.js": "8e4c44b5f4288cc48ec1ba94a9bec812",
     "core.js": "d4a7cb8c80c62b536764e0e81385f6aa",
-    "frontend.html": "c544d43b2305b922e230c7c4e74d7613",
+    "frontend.html": "7d599996578579600f1000d6d25e649d",
     "mdi.html": "e91f61a039ed0a9936e7ee5360da3870",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
     "panels/ha-panel-automation.html": "1982116c49ad26ee8d89295edc797084",
@@ -19,6 +19,6 @@ FINGERPRINTS = {
     "panels/ha-panel-kiosk.html": "2ac2df41bd447600692a0054892fc094",
     "panels/ha-panel-logbook.html": "7c45bd41c146ec38b9938b8a5188bb0d",
     "panels/ha-panel-map.html": "50501cd53eb4304e9e46eb719aa894b7",
-    "panels/ha-panel-shopping-list.html": "0a6020ff6aec96a1e6220e00ea5b15f8",
+    "panels/ha-panel-shopping-list.html": "1d7126efc9ff9a102df7465d803a11d1",
     "panels/ha-panel-zwave.html": "422f95f820f8b6b231265351ffcf4dd1"
 }
