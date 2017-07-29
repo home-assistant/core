@@ -36,7 +36,7 @@ def get_scanner(hass, config):
     scanners = [TplinkDeviceScanner, Tplink2DeviceScanner,
                 Tplink3DeviceScanner, Tplink4DeviceScanner,
                 Tplink5DeviceScanner, Tplink6DeviceScanner]
-    cfg = config[DOMAIN]    
+    cfg = config[DOMAIN]
     scannerversion = cfg[CONF_VERSION]
     if scannerversion == 0:
         for cls in scanners[::-1]:
@@ -48,9 +48,16 @@ def get_scanner(hass, config):
 
     return None
 
+
 def timems():
     """Return Unix Timestamp in milliseconds."""
     return int(time.time()*1000)
+
+
+def md5hash(text):
+    """Shortcut to calculate MD5 for text"""
+    return hashlib.md5(text).hexdigest()
+
 
 class TplinkDeviceScanner(DeviceScanner):
     """This class queries a wireless router running TP-Link firmware."""
@@ -296,7 +303,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         # Generate md5 hash of password. The C7 appears to use the first 15
         # characters of the password only, so we truncate to remove additional
         # characters from being hashed.
-        password = hashlib.md5(self.password.encode('utf')[:15]).hexdigest()
+        password = md5hash(self.password.encode('utf')[:15])
         credentials = '{}:{}'.format(self.username, password).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
@@ -388,8 +395,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             "Cache-Control": "no-cache"
         }
 
-        password_md5 = hashlib.md5(
-            self.password.encode('utf')).hexdigest().upper()
+        password_md5 = md5hash(self.password.encode('utf')).upper()
 
         # create a session to handle cookie easier
         session = requests.session()
@@ -462,9 +468,11 @@ class Tplink6DeviceScanner(DeviceScanner):
 
         self.base_url = 'http://' + self.host
         self._login_url = self.base_url + "/data/version.json"
-        self._login_confirm_url = self.base_url + "/data/loginConfirm.json?_dc={}"
+        self._login_confirm_url = self.base_url + \
+            "/data/loginConfirm.json?_dc={}"
         self._version_url = self.base_url + "/data/version.json?_dc={}&id=10"
-        self._station_url = self.base_url + "/data/station.json?_dc={}&radioID={}"
+        self._station_url = self.base_url + \
+            "/data/station.json?_dc={}&radioID={}"
 
         self._wait_login_until = 0
         self._loggedin = False
@@ -486,31 +494,29 @@ class Tplink6DeviceScanner(DeviceScanner):
         return None
 
     def _login(self):
-        def md5calc(text):
-            return hashlib.md5(text.encode()).hexdigest()
-
-        def getdata(user, pwd, nonce):
-            return user + ':' + md5calc(md5calc(pwd).upper() + ':' + nonce).upper()
-
+        """Login to router and get session code."""
         if self._wait_login_until > time.monotonic():
             return
-        
+
         if self._confirm_login:
-            response = self._session.get(self._login_confirm_url.format(timems()))
+            response = self._session.get(
+                self._login_confirm_url.format(timems()))
             self._loggedin = True
             self._confirm_login = False
-            _LOGGER.warn("Login confirmed")
-            #print(response.text)
+            _LOGGER.warning("Login confirmed")
             return
 
         response = self._session.get(self._login_url)
 
         nonce = self._session.cookies['COOKIE']
-        login_data = {"nonce": nonce,
-                      "encoded": getdata(self.username, self.password, nonce)}
+        login_data = {
+            "nonce": nonce,
+            "encoded":
+                self.username + ':' +
+                md5hash(md5hash(self.password).upper() + ':' + nonce).upper()
+            }
 
         response = self._session.post(self._login_url, login_data)
-        #print(response.text)
 
         try:
             loginresp = response.json()
@@ -521,7 +527,7 @@ class Tplink6DeviceScanner(DeviceScanner):
             return
 
         self.success_init = True
-        if loginresp["success"] != True:
+        if not loginresp["success"]:
             self._loggedin = False
             return
         status = loginresp["status"]
@@ -536,7 +542,8 @@ class Tplink6DeviceScanner(DeviceScanner):
             self._loggedin = False
             self._wait_login_until = time.monotonic() + self.multiloginwait
             self._confirm_login = True
-            _LOGGER.warn("Login needs confirm. Wiat for {} seconds".format(self.multiloginwait))
+            _LOGGER.warning("Login needs confirm. Wiat for {} seconds"
+                            .format(self.multiloginwait))
             return
         self._loggedin = False
         return
@@ -556,12 +563,12 @@ class Tplink6DeviceScanner(DeviceScanner):
             for radioid in range(10):
                 response = self._session.get(
                     self._station_url.format(timems(), radioid))
-                #print(response.text)
+
                 try:
                     respjson = response.json()
                 except ValueError:
                     return
-                if respjson["success"] != True:
+                if not respjson["success"]:
                     self._radiocount = radioid
                     break
         devicelist = []
@@ -569,7 +576,6 @@ class Tplink6DeviceScanner(DeviceScanner):
             response = self._session.get(
                 self._station_url.format(timems(), radioid))
             try:
-                #print(response.text)
                 respjson = response.json()
                 if "status" in respjson:
                     self._loggedin = False
