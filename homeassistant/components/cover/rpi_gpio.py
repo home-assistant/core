@@ -24,9 +24,11 @@ CONF_RELAY_PIN = 'relay_pin'
 CONF_RELAY_TIME = 'relay_time'
 CONF_STATE_PIN = 'state_pin'
 CONF_STATE_PULL_MODE = 'state_pull_mode'
+CONF_STATE_INVERT = 'state_invert'
 
 DEFAULT_RELAY_TIME = .2
 DEFAULT_STATE_PULL_MODE = 'UP'
+DEFAULT_STATE_INVERT = False
 DEPENDENCIES = ['rpi_gpio']
 
 _COVERS_SCHEMA = vol.All(
@@ -45,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE):
         cv.string,
     vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
+    vol.Optional(CONF_STATE_INVERT, default=DEFAULT_STATE_INVERT): cv.boolean,
 })
 
 
@@ -53,13 +56,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the RPi cover platform."""
     relay_time = config.get(CONF_RELAY_TIME)
     state_pull_mode = config.get(CONF_STATE_PULL_MODE)
+    state_invert = config.get(CONF_STATE_INVERT)
     covers = []
     covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
         covers.append(RPiGPIOCover(
             cover[CONF_NAME], cover[CONF_RELAY_PIN], cover[CONF_STATE_PIN],
-            state_pull_mode, relay_time))
+            state_pull_mode, relay_time, state_invert))
     add_devices(covers)
 
 
@@ -67,7 +71,7 @@ class RPiGPIOCover(CoverDevice):
     """Representation of a Raspberry GPIO cover."""
 
     def __init__(self, name, relay_pin, state_pin, state_pull_mode,
-                 relay_time):
+                 relay_time, state_invert):
         """Initialize the cover."""
         self._name = name
         self._state = False
@@ -75,6 +79,7 @@ class RPiGPIOCover(CoverDevice):
         self._state_pin = state_pin
         self._state_pull_mode = state_pull_mode
         self._relay_time = relay_time
+        self._state_invert = state_invert
         rpi_gpio.setup_output(self._relay_pin)
         rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
         rpi_gpio.write_output(self._relay_pin, True)
@@ -92,6 +97,8 @@ class RPiGPIOCover(CoverDevice):
     def update(self):
         """Update the state of the cover."""
         self._state = rpi_gpio.read_input(self._state_pin)
+        if (self._state_invert):
+            self._state = not self._state
 
     @property
     def is_closed(self):
