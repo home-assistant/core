@@ -97,7 +97,7 @@ class RPiGPIOCover(CoverDevice):
     def update(self):
         """Update the state of the cover."""
         self._state = rpi_gpio.read_input(self._state_pin)
-        if (self._state_invert):
+        if self._state_invert:
             self._state = not self._state
 
     @property
