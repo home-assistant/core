@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
 
-REQUIREMENTS = ['tahoma-api==0.0.4']
+REQUIREMENTS = ['tahoma-api==0.0.5']
 
 DEPENDENCIES = ['tahoma']
 
