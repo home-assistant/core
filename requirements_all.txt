@@ -948,4 +948,4 @@ zengge==0.2
 zeroconf==0.19.1
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.3
+tahoma-api==0.0.4
