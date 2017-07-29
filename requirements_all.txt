@@ -495,7 +495,7 @@ pubnubsub-handler==1.0.2
 
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
-pushbullet.py==0.10.0
+pushbullet.py==0.11.0
 
 # homeassistant.components.notify.pushetta
 pushetta==1.0.15
