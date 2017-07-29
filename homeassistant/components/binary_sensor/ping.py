@@ -28,7 +28,7 @@ CONF_PING_COUNT = 'count'
 
 DEFAULT_NAME = 'Ping Binary sensor'
 DEFAULT_PING_COUNT = 5
-DEFAULT_SENSOR_CLASS = 'connectivity'
+DEFAULT_DEVICE_CLASS = 'connectivity'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -73,7 +73,7 @@ class PingBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_SENSOR_CLASS
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def is_on(self):
