@@ -1,8 +1,18 @@
 """Test shopping list component."""
 import asyncio
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.helpers import intent
+
+
+@pytest.fixture(autouse=True)
+def mock_shopping_list_save():
+    """Stub out the persistence."""
+    with patch('homeassistant.components.shopping_list.ShoppingData.save'):
+        yield
 
 
 @asyncio.coroutine
@@ -82,7 +92,7 @@ def test_api_update(hass, test_client):
 
     client = yield from test_client(hass.http.app)
     resp = yield from client.post(
-        '/api/shopping_list/{}'.format(beer_id), json={
+        '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 'soda'
         })
 
@@ -95,7 +105,7 @@ def test_api_update(hass, test_client):
     }
 
     resp = yield from client.post(
-        '/api/shopping_list/{}'.format(wine_id), json={
+        '/api/shopping_list/item/{}'.format(wine_id), json={
             'complete': True
         })
 
@@ -140,8 +150,45 @@ def test_api_update_fails(hass, test_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     client = yield from test_client(hass.http.app)
     resp = yield from client.post(
-        '/api/shopping_list/{}'.format(beer_id), json={
+        '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 123,
         })
 
     assert resp.status == 400
+
+
+@asyncio.coroutine
+def test_api_clear_completed(hass, test_client):
+    """Test the API."""
+    yield from async_setup_component(hass, 'shopping_list', {})
+
+    yield from intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
+    )
+    yield from intent.async_handle(
+        hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
+    )
+
+    beer_id = hass.data['shopping_list'].items[0]['id']
+    wine_id = hass.data['shopping_list'].items[1]['id']
+
+    client = yield from test_client(hass.http.app)
+
+    # Mark beer as completed
+    resp = yield from client.post(
+        '/api/shopping_list/item/{}'.format(beer_id), json={
+            'complete': True
+        })
+    assert resp.status == 200
+
+    resp = yield from client.post('/api/shopping_list/clear_completed')
+    assert resp.status == 200
+
+    items = hass.data['shopping_list'].items
+    assert len(items) == 1
+
+    assert items[0] == {
+        'id': wine_id,
+        'name': 'wine',
+        'complete': False
+    }
