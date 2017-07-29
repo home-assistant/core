@@ -21,7 +21,7 @@ from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.1']
+REQUIREMENTS = ['libnacl==1.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -353,12 +353,20 @@ def _parse_see_args(topic, data):
     kwargs = {
         'dev_id': dev_id,
         'host_name': host_name,
-        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY])
+        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY]),
+        'attributes': {}
     }
     if 'acc' in data:
         kwargs['gps_accuracy'] = data['acc']
     if 'batt' in data:
         kwargs['battery'] = data['batt']
+    if 'vel' in data:
+        kwargs['attributes']['velocity'] = data['vel']
+    if 'tid' in data:
+        kwargs['attributes']['tid'] = data['tid']
+    if 'addr' in data:
+        kwargs['attributes']['address'] = data['addr']
+
     return dev_id, kwargs
 
 

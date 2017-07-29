@@ -15,7 +15,6 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import discovery
 from homeassistant.components.discovery import SERVICE_APPLE_TV
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyatv==0.3.4']
@@ -66,27 +65,24 @@ APPLE_TV_AUTHENTICATE_SCHEMA = vol.Schema({
 
 def request_configuration(hass, config, atv, credentials):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     @asyncio.coroutine
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         from pyatv import exceptions
         pin = callback_data.get('pin')
-        notification = get_component('persistent_notification')
 
         try:
             yield from atv.airplay.finish_authentication(pin)
-            notification.async_create(
-                hass,
+            hass.components.persistent_notification.async_create(
                 'Authentication succeeded!<br /><br />Add the following '
                 'to credentials: in your apple_tv configuration:<br /><br />'
                 '{0}'.format(credentials),
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
         except exceptions.DeviceAuthenticationError as ex:
-            notification.async_create(
-                hass,
+            hass.components.persistent_notification.async_create(
                 'Authentication failed! Did you enter correct PIN?<br /><br />'
                 'Details: {0}'.format(ex),
                 title=NOTIFICATION_AUTH_TITLE,
@@ -119,9 +115,7 @@ def scan_for_apple_tvs(hass):
     if not devices:
         devices = ['No device(s) found']
 
-    notification = get_component('persistent_notification')
-    notification.async_create(
-        hass,
+    hass.components.persistent_notification.async_create(
         'The following devices were found:<br /><br />' +
         '<br /><br />'.join(devices),
         title=NOTIFICATION_SCAN_TITLE,

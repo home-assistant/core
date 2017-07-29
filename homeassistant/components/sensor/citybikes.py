@@ -82,7 +82,7 @@ NETWORKS_RESPONSE_SCHEMA = vol.Schema({
 
 STATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_FREE_BIKES): cv.positive_int,
-    vol.Required(ATTR_EMPTY_SLOTS): cv.positive_int,
+    vol.Required(ATTR_EMPTY_SLOTS): vol.Any(cv.positive_int, None),
     vol.Required(ATTR_LATITUDE): cv.latitude,
     vol.Required(ATTR_LONGITUDE): cv.longitude,
     vol.Required(ATTR_ID): cv.string,

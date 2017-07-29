@@ -25,6 +25,8 @@ SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
     'Current State': ['printer', 'state', 'text', None],
     'Job Percentage': ['job', 'progress', 'completion', '%'],
+    'Time Remaining': ['job', 'progress', 'printTimeLeft', 'seconds'],
+    'Time Elapsed': ['job', 'progress', 'printTime', 'seconds'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

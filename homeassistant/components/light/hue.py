@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         if "HASS Bridge" in discovery_info.get('name', ''):
-            _LOGGER.info('Emulated hue found, will not add')
+            _LOGGER.info("Emulated hue found, will not add")
             return False
 
         host = discovery_info.get('host')
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             host = _find_host_from_config(hass, filename)
 
         if host is None:
-            _LOGGER.error('No host found in configuration')
+            _LOGGER.error("No host found in configuration")
             return False
 
     # Only act if we are not already configuring this host
@@ -180,6 +180,12 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         try:
             api = bridge.get_api()
+        except phue.PhueRequestTimeout:
+            _LOGGER.warning("Timeout trying to reach the bridge")
+            return
+        except ConnectionRefusedError:
+            _LOGGER.error("The bridge refused the connection")
+            return
         except socket.error:
             # socket.error when we cannot reach Hue
             _LOGGER.exception("Cannot reach the bridge")
@@ -221,8 +227,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         for lightgroup_id, info in api_groups.items():
             if 'state' not in info:
-                _LOGGER.warning('Group info does not contain state. '
-                                'Please update your hub.')
+                _LOGGER.warning("Group info does not contain state. "
+                                "Please update your hub.")
                 skip_groups = True
                 break
 

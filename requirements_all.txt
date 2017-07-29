@@ -2,7 +2,7 @@
 requests==2.14.2
 pyyaml>=3.11,<4
 pytz>=2017.02
-pip>=7.1.0
+pip>=8.0.3
 jinja2>=2.9.5
 voluptuous==0.10.5
 typing>=3,<4
@@ -21,7 +21,7 @@ astral==1.4
 PyISY==1.0.7
 
 # homeassistant.components.notify.html5
-PyJWT==1.5.0
+PyJWT==1.5.2
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
@@ -36,7 +36,7 @@ PyMata==2.14
 SoCo==0.12
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.5
+TwitterAPI==2.4.6
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.4.0
@@ -49,7 +49,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.5.2
+aiolifx==0.5.4
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.1
@@ -58,7 +58,7 @@ aiolifx_effects==0.1.1
 aiopvapi==1.4
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==0.12.1.0
+alarmdecoder==0.12.3
 
 # homeassistant.components.amcrest
 amcrest==1.2.1
@@ -106,11 +106,17 @@ blinkstick==1.1.8
 # homeassistant.components.sensor.bitcoin
 blockchain==1.3.3
 
+# homeassistant.components.light.decora
+# bluepy==1.1.1
+
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
 # homeassistant.components.tts.amazon_polly
 boto3==1.4.3
+
+# homeassistant.scripts.credstash
+botocore==1.4.93
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
@@ -132,6 +138,9 @@ colorlog>2.1,<3
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
 concord232==0.14
+
+# homeassistant.scripts.credstash
+credstash==1.13.2
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
@@ -226,7 +235,7 @@ fritzhome==1.0.2
 fsapi==0.0.7
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.15.0
+fuzzywuzzy==0.15.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -273,8 +282,11 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
+# homeassistant.components.xiaomi
+https://github.com/Danielhiversen/PyXiaomiGateway/archive/aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#PyXiaomiGateway==0.2.0
+
 # homeassistant.components.sensor.dht
-# https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.0
+# https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
@@ -338,10 +350,10 @@ jsonrpc-websocket==0.5
 keyring>=9.3,<10.0
 
 # homeassistant.components.knx
-knxip==0.4
+knxip==0.5
 
 # homeassistant.components.device_tracker.owntracks
-libnacl==1.5.1
+libnacl==1.5.2
 
 # homeassistant.components.dyson
 libpurecoollink==0.2.0
@@ -398,7 +410,7 @@ myusps==1.1.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.0.1
+netdisco==1.1.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -497,6 +509,7 @@ py-cpuinfo==3.3.0
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
+# homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
 pyHS100==0.2.4.2
 
@@ -529,7 +542,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.1
+pychromecast==0.8.2
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -577,7 +590,7 @@ pyharmony==1.0.16
 pyhik==0.1.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.29
+pyhomematic==0.1.30
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -671,7 +684,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
-pysnmp==4.3.8
+pysnmp==4.3.9
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
@@ -712,7 +725,7 @@ python-juicenet==0.0.5
 # python-lirc==1.2.3
 
 # homeassistant.components.switch.xiaomi_vacuum
-python-mirobo==0.1.1
+python-mirobo==0.1.2
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -748,11 +761,14 @@ python-telegram-bot==6.1.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.velbus
+python-velbus==2.0.11
+
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.2.4
+python-wink==1.4.2
 
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
@@ -770,7 +786,7 @@ pyunifi==2.13
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.34
+pyvera==0.2.35
 
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.2
@@ -779,7 +795,7 @@ pyvizio==0.0.2
 pyvlx==0.1.3
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.5
+pywebpush==1.0.6
 
 # homeassistant.components.wemo
 pywemo==0.4.19
@@ -837,7 +853,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.2
+simplisafe-python==1.0.3
 
 # homeassistant.components.notify.slack
 slacker==0.9.50
@@ -865,7 +881,7 @@ speedtest-cli==1.0.6
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.11
+sqlalchemy==1.1.12
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -965,7 +981,7 @@ yeelight==0.3.0
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.7.9
+youtube_dl==2017.7.23
 
 # homeassistant.components.light.zengge
 zengge==0.2
