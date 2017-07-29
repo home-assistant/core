@@ -35,6 +35,9 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PING_MATCHER = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)')
 
+PING_MATCHER_BUSYBOX = re.compile(
+    r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)')
+
 WIN32_PING_MATCHER = re.compile(
     r'(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms')
 
@@ -126,7 +129,14 @@ class PingData(object):
                     'avg': rtt_avg,
                     'max': rtt_max,
                     'mdev': ''}
-
+            if 'max/' not in str(out):
+                match = PING_MATCHER_BUSYBOX.search(str(out).split('\n')[-1])
+                rtt_min, rtt_avg, rtt_max = match.groups()
+                return {
+                    'min': rtt_min,
+                    'avg': rtt_avg,
+                    'max': rtt_max,
+                    'mdev': ''}
             match = PING_MATCHER.search(str(out).split('\n')[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {

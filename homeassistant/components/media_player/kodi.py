@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
+from collections import OrderedDict
 from functools import wraps
 import logging
 import urllib
@@ -20,15 +21,18 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN,
+    SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.helpers.template import Template
+from homeassistant.util.yaml import dump
 
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
@@ -37,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 
 CONF_TCP_PORT = 'tcp_port'
+CONF_TURN_ON_ACTION = 'turn_on_action'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
 CONF_ENABLE_WEBSOCKET = 'enable_websocket'
 
@@ -47,7 +52,14 @@ DEFAULT_TIMEOUT = 5
 DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
-TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
+DEPRECATED_TURN_OFF_ACTIONS = {
+    None: None,
+    'quit': 'Application.Quit',
+    'hibernate': 'System.Hibernate',
+    'suspend': 'System.Suspend',
+    'reboot': 'System.Reboot',
+    'shutdown': 'System.Shutdown'
+}
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -75,7 +87,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-    vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
+    vol.Optional(CONF_TURN_ON_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TURN_OFF_ACTION):
+        vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -114,11 +128,36 @@ SERVICE_TO_METHOD = {
 }
 
 
+def _check_deprecated_turn_off(hass, turn_off_action):
+    """Create an equivalent script for old turn off actions."""
+    if isinstance(turn_off_action, str):
+        method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
+        new_config = OrderedDict(
+            [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
+             ('data_template', OrderedDict(
+                 [('entity_id', '{{ entity_id }}'),
+                  ('method', method)]))])
+        example_conf = dump(OrderedDict(
+            [(CONF_TURN_OFF_ACTION, new_config)]))
+        _LOGGER.warning(
+            "The '%s' action for turn off Kodi is deprecated and "
+            "will cease to function in a future release. You need to "
+            "change it for a generic Home Assistant script sequence, "
+            "which is, for this turn_off action, like this:\n%s",
+            turn_off_action, example_conf)
+        new_config['data_template'] = OrderedDict(
+            [(key, Template(value, hass))
+             for key, value in new_config['data_template'].items()])
+        turn_off_action = [new_config]
+    return turn_off_action
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
         hass.data[DATA_KODI] = []
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     tcp_port = config.get(CONF_TCP_PORT)
@@ -134,10 +173,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     entity = KodiDevice(
         hass,
-        name=config.get(CONF_NAME),
+        name=name,
         host=host, port=port, tcp_port=tcp_port, encryption=encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
+        turn_on_action=config.get(CONF_TURN_ON_ACTION),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
@@ -210,7 +250,8 @@ class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
-                 username=None, password=None, turn_off_action=None,
+                 username=None, password=None,
+                 turn_on_action=None, turn_off_action=None,
                  timeout=DEFAULT_TIMEOUT, websocket=True):
         """Initialize the Kodi device."""
         import jsonrpc_async
@@ -262,6 +303,17 @@ class KodiDevice(MediaPlayerDevice):
         else:
             self._ws_server = None
 
+        # Script creation for the turn on/off config options
+        if turn_on_action is not None:
+            turn_on_action = script.Script(
+                self.hass, turn_on_action,
+                "{} turn ON script".format(self.name),
+                self.async_update_ha_state(True))
+        if turn_off_action is not None:
+            turn_off_action = script.Script(
+                self.hass, _check_deprecated_turn_off(hass, turn_off_action),
+                "{} turn OFF script".format(self.name))
+        self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
         self._players = list()
@@ -304,7 +356,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_quit(self, sender, data):
-        """Handle the muted volume."""
+        """Reset the player state on quit action."""
         self._players = None
         self._properties = {}
         self._item = {}
@@ -520,25 +572,31 @@ class KodiDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         supported_features = SUPPORT_KODI
 
-        if self._turn_off_action in TURN_OFF_ACTION:
+        if self._turn_on_action is not None:
+            supported_features |= SUPPORT_TURN_ON
+
+        if self._turn_off_action is not None:
             supported_features |= SUPPORT_TURN_OFF
 
         return supported_features
 
     @cmd
     @asyncio.coroutine
+    def async_turn_on(self):
+        """Execute turn_on_action to turn on media player."""
+        if self._turn_on_action is not None:
+            yield from self._turn_on_action.async_run(
+                variables={"entity_id": self.entity_id})
+        else:
+            _LOGGER.warning("turn_on requested but turn_on_action is none")
+
+    @cmd
+    @asyncio.coroutine
     def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
-        if self._turn_off_action == 'quit':
-            yield from self.server.Application.Quit()
-        elif self._turn_off_action == 'hibernate':
-            yield from self.server.System.Hibernate()
-        elif self._turn_off_action == 'suspend':
-            yield from self.server.System.Suspend()
-        elif self._turn_off_action == 'reboot':
-            yield from self.server.System.Reboot()
-        elif self._turn_off_action == 'shutdown':
-            yield from self.server.System.Shutdown()
+        if self._turn_off_action is not None:
+            yield from self._turn_off_action.async_run(
+                variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
 

@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 49
-PATCH_VERSION = '1'
+MINOR_VERSION = 50
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -188,7 +188,9 @@ STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
+STATE_OPENING = 'opening'
 STATE_CLOSED = 'closed'
+STATE_CLOSING = 'closing'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'

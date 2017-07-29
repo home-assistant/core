@@ -33,7 +33,7 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.5.2', 'aiolifx_effects==0.1.1']
+REQUIREMENTS = ['aiolifx==0.5.4', 'aiolifx_effects==0.1.1']
 
 UDP_BROADCAST_PORT = 56700
 

@@ -7,8 +7,6 @@ https://home-assistant.io/components/device_tracker.ubus/
 import json
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -17,11 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 from homeassistant.exceptions import HomeAssistantError
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +64,6 @@ class UbusDeviceScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
-        self.lock = threading.Lock()
         self.last_results = {}
         self.url = 'http://{}/ubus'.format(host)
 
@@ -87,36 +80,34 @@ class UbusDeviceScanner(DeviceScanner):
         return self.last_results
 
     @_refresh_on_acccess_denied
-    def get_device_name(self, device):
+    def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
-        with self.lock:
-            if self.leasefile is None:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', 'uci', 'get',
-                    config="dhcp", type="dnsmasq")
-                if result:
-                    values = result["values"].values()
-                    self.leasefile = next(iter(values))["leasefile"]
-                else:
-                    return
+        if self.leasefile is None:
+            result = _req_json_rpc(
+                self.url, self.session_id, 'call', 'uci', 'get',
+                config="dhcp", type="dnsmasq")
+            if result:
+                values = result["values"].values()
+                self.leasefile = next(iter(values))["leasefile"]
+            else:
+                return
 
-            if self.mac2name is None:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', 'file', 'read',
-                    path=self.leasefile)
-                if result:
-                    self.mac2name = dict()
-                    for line in result["data"].splitlines():
-                        hosts = line.split(" ")
-                        self.mac2name[hosts[1].upper()] = hosts[3]
-                else:
-                    # Error, handled in the _req_json_rpc
-                    return
+        if self.mac2name is None:
+            result = _req_json_rpc(
+                self.url, self.session_id, 'call', 'file', 'read',
+                path=self.leasefile)
+            if result:
+                self.mac2name = dict()
+                for line in result["data"].splitlines():
+                    hosts = line.split(" ")
+                    self.mac2name[hosts[1].upper()] = hosts[3]
+            else:
+                # Error, handled in the _req_json_rpc
+                return
 
-            return self.mac2name.get(device.upper(), None)
+        return self.mac2name.get(mac.upper(), None)
 
     @_refresh_on_acccess_denied
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the Luci router is up to date.
 
@@ -125,25 +116,24 @@ class UbusDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info("Checking ARP")
+        _LOGGER.info("Checking ARP")
 
-            if not self.hostapd:
-                hostapd = _req_json_rpc(
-                    self.url, self.session_id, 'list', 'hostapd.*', '')
-                self.hostapd.extend(hostapd.keys())
+        if not self.hostapd:
+            hostapd = _req_json_rpc(
+                self.url, self.session_id, 'list', 'hostapd.*', '')
+            self.hostapd.extend(hostapd.keys())
 
-            self.last_results = []
-            results = 0
-            for hostapd in self.hostapd:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', hostapd, 'get_clients')
+        self.last_results = []
+        results = 0
+        for hostapd in self.hostapd:
+            result = _req_json_rpc(
+                self.url, self.session_id, 'call', hostapd, 'get_clients')
 
-                if result:
-                    results = results + 1
-                    self.last_results.extend(result['clients'].keys())
+            if result:
+                results = results + 1
+                self.last_results.extend(result['clients'].keys())
 
-            return bool(results)
+        return bool(results)
 
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):

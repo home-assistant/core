@@ -9,8 +9,6 @@ from urllib.parse import urlsplit
 
 import voluptuous as vol
 
-import homeassistant.loader as loader
-
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -78,8 +76,6 @@ def setup(hass, config):
     if external_port == 0:
         external_port = internal_port
 
-    persistent_notification = loader.get_component('persistent_notification')
-
     try:
         upnp.addportmapping(
             external_port, 'TCP', host, internal_port, 'Home Assistant', '')
@@ -92,8 +88,8 @@ def setup(hass, config):
 
     except Exception as ex:
         _LOGGER.error("UPnP failed to configure port mapping: %s", str(ex))
-        persistent_notification.create(
-            hass, '<b>ERROR: tcp port {} is already mapped in your router.'
+        hass.components.persistent_notification.create(
+            '<b>ERROR: tcp port {} is already mapped in your router.'
             '</b><br />Please disable port_mapping in the <i>upnp</i> '
             'configuration section.<br />'
             'You will need to restart hass after fixing.'
