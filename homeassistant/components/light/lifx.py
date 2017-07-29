@@ -472,13 +472,13 @@ class LIFXLight(Light):
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         kwargs[ATTR_POWER] = True
-        yield from self.async_set_state(**kwargs)
+        self.hass.async_add_job(self.async_set_state(**kwargs))
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         kwargs[ATTR_POWER] = False
-        yield from self.async_set_state(**kwargs)
+        self.hass.async_add_job(self.async_set_state(**kwargs))
 
     @asyncio.coroutine
     def async_set_state(self, **kwargs):
