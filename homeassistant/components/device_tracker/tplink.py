@@ -21,13 +21,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = "version"
+CONF_MULTILOGIN_WAIT = "multiloginwait"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VERSION, default=0):
-        vol.Range(min=0, max=6)
+        vol.Range(min=0, max=6),
+    vol.Optional(CONF_MULTILOGIN_WAIT, default=60):
+        vol.Range(min=0, max=300)
 })
 
 
@@ -450,7 +453,7 @@ class Tplink6DeviceScanner(DeviceScanner):
         self.host = host
         self.username = username
         self.password = password
-        self.multiloginwait = 10
+        self.multiloginwait = config[CONF_MULTILOGIN_WAIT]
 
         self._session = requests.session()
         self._session.headers.update({
