@@ -9,23 +9,24 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import now
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['myusps==1.1.2']
+REQUIREMENTS = ['myusps==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'usps'
 DATA_USPS = 'data_usps'
-SCAN_INTERVAL = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 COOKIE = 'usps_cookies.pickle'
 
-CONF_INTERVAL = 'interval'
-DEFAULT_INTERVAL = 10
+CONF_CAM_INTERVAL = 'interval'
+DEFAULT_CAM_INTERVAL = 10
 
 USPS_TYPE = ['sensor', 'camera']
 
@@ -34,7 +35,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int
+        vol.Optional(CONF_CAM_INTERVAL, default=DEFAULT_CAM_INTERVAL):
+            cv.positive_int
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -45,7 +47,7 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     name = conf.get(CONF_NAME)
-    interval = conf.get(CONF_INTERVAL)
+    cam_interval = conf.get(CONF_CAM_INTERVAL)
 
     import myusps
     try:
@@ -55,7 +57,7 @@ def setup(hass, config):
         _LOGGER.exception('Could not connect to My USPS')
         return False
 
-    hass.data[DATA_USPS] = USPSData(session, name, interval)
+    hass.data[DATA_USPS] = USPSData(session, name, cam_interval)
 
     for component in USPS_TYPE:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -70,11 +72,11 @@ class USPSData(object):
     updates from the server.
     """
 
-    def __init__(self, session, name, interval):
+    def __init__(self, session, name, cam_interval):
         """Initialize the data oject."""
         self._session = session
         self._name = name or DOMAIN
-        self._interval = interval
+        self._cam_interval = cam_interval
         self._packages = []
         self._mail = []
         self._attr = None
@@ -86,9 +88,9 @@ class USPSData(object):
         return self._name
 
     @property
-    def interval(self):
+    def cam_interval(self):
         """Return interval to update mail camera images."""
-        return self._interval
+        return self._cam_interval
 
     @property
     def attribution(self):
@@ -98,13 +100,11 @@ class USPSData(object):
     @property
     def packages(self):
         """Get latest update if throttle allows. Return status."""
-        self.update()
         return self._packages
 
     @property
     def mail(self):
         """Get latest update if throttle allows. Return status."""
-        self.update()
         return self._mail
 
     @property
@@ -112,7 +112,7 @@ class USPSData(object):
         """Return USPS session object."""
         return self._session
 
-    @Throttle(SCAN_INTERVAL)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
         """Fetch the latest info from USPS."""
         import myusps

@@ -54,6 +54,7 @@ class USPSCamera(Camera):
 
     def camera_image(self):
         """Update the camera's image if it has changed."""
+        self._usps.update()
         try:
             self._mail_count = len(self._usps.mail)
         except TypeError:
@@ -79,12 +80,12 @@ class USPSCamera(Camera):
             # Reset Timer
             self._timer = track_point_in_utc_time(
                 self._hass, _interval_update,
-                utcnow() + timedelta(seconds=self._usps.interval))
+                utcnow() + timedelta(seconds=self._usps.cam_interval))
 
         if self._timer is None:
             self._timer = track_point_in_utc_time(
                 self._hass, _interval_update,
-                utcnow() + timedelta(seconds=self._usps.interval))
+                utcnow() + timedelta(seconds=self._usps.cam_interval))
 
         try:
             return self._mail_img[self._mail_index]

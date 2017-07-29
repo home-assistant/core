@@ -52,6 +52,7 @@ class USPSPackageSensor(Entity):
 
     def update(self):
         """Update device state."""
+        self._usps.update()
         status_counts = defaultdict(int)
         for package in self._usps.packages:
             status = slugify(package['primary_status'])
@@ -98,6 +99,7 @@ class USPSMailSensor(Entity):
 
     def update(self):
         """Update device state."""
+        self._usps.update()
         if self._usps.mail is not None:
             self._state = len(self._usps.mail)
         else:
