@@ -15,9 +15,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.2.3']
@@ -32,6 +32,7 @@ ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
+CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
 
@@ -40,9 +41,7 @@ FITBIT_AUTH_START = '/auth/fitbit'
 FITBIT_CONFIG_FILE = 'fitbit.conf'
 FITBIT_DEFAULT_RESOURCES = ['activities/steps']
 
-ICON = 'mdi:walk'
-
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=30)
+SCAN_INTERVAL = datetime.timedelta(minutes=30)
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
@@ -74,6 +73,7 @@ FITBIT_RESOURCES_LIST = {
     'activities/tracker/steps': 'steps',
     'body/bmi': 'BMI',
     'body/fat': '%',
+    'devices/battery': 'level',
     'sleep/awakeningsCount': 'times awaken',
     'sleep/efficiency': '%',
     'sleep/minutesAfterWakeup': 'minutes',
@@ -95,6 +95,7 @@ FITBIT_MEASUREMENTS = {
         'body': 'in',
         'liquids': 'fl. oz.',
         'blood glucose': 'mg/dL',
+        'battery': '',
     },
     'en_GB': {
         'duration': 'milliseconds',
@@ -104,7 +105,8 @@ FITBIT_MEASUREMENTS = {
         'weight': 'stone',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L'
+        'blood glucose': 'mmol/L',
+        'battery': '',
     },
     'metric': {
         'duration': 'milliseconds',
@@ -114,7 +116,8 @@ FITBIT_MEASUREMENTS = {
         'weight': 'kilograms',
         'body': 'centimeters',
         'liquids': 'milliliters',
-        'blood glucose': 'mmol/L'
+        'blood glucose': 'mmol/L',
+        'battery': '',
     }
 }
 
@@ -253,11 +256,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 authd_client.system = 'en_US'
 
         dev = []
+        registered_devs = authd_client.get_devices()
         for resource in config.get(CONF_MONITORED_RESOURCES):
-            dev.append(FitbitSensor(
-                authd_client, config_path, resource,
-                hass.config.units.is_metric))
-        add_devices(dev)
+
+            # monitor battery for all linked FitBit devices
+            if resource == 'devices/battery':
+                for dev_extra in registered_devs:
+                    dev.append(FitbitSensor(
+                        authd_client, config_path, resource,
+                        hass.config.units.is_metric, dev_extra))
+            else:
+                dev.append(FitbitSensor(
+                    authd_client, config_path, resource,
+                    hass.config.units.is_metric))
+        add_devices(dev, True)
 
     else:
         oauth = fitbit.api.FitbitOauth2Client(
@@ -348,11 +360,13 @@ class FitbitAuthCallbackView(HomeAssistantView):
 class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
-    def __init__(self, client, config_path, resource_type, is_metric):
+    def __init__(self, client, config_path, resource_type,
+                 is_metric, extra=None):
         """Initialize the Fitbit sensor."""
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
+        self.extra = extra
         pretty_resource = self.resource_type.replace('activities/', '')
         pretty_resource = pretty_resource.replace('/', ' ')
         pretty_resource = pretty_resource.title()
@@ -360,6 +374,13 @@ class FitbitSensor(Entity):
             pretty_resource = 'BMI'
         elif pretty_resource == 'Heart':
             pretty_resource = 'Resting Heart Rate'
+        elif pretty_resource == 'Devices Battery':
+            if self.extra:
+                pretty_resource = \
+                    '{0} Battery'.format(self.extra.get('deviceVersion'))
+            else:
+                pretty_resource = 'Battery'
+
         self._name = pretty_resource
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
         if unit_type == "":
@@ -374,7 +395,6 @@ class FitbitSensor(Entity):
             unit_type = measurement_system[split_resource[-1]]
         self._unit_of_measurement = unit_type
         self._state = 0
-        self.update()
 
     @property
     def name(self):
@@ -394,14 +414,32 @@ class FitbitSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        if self.resource_type == 'devices/battery':
+            return 'mdi:battery-50'
+        return 'mdi:walk'
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {}
+
+        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+
+        if self.extra:
+            attrs['model'] = self.extra.get('deviceVersion')
+            attrs['type'] = self.extra.get('type')
+
+        return attrs
+
     def update(self):
         """Get the latest data from the Fitbit API and update the states."""
-        container = self.resource_type.replace("/", "-")
-        response = self.client.time_series(self.resource_type, period='7d')
-        self._state = response[container][-1].get('value')
+        if self.resource_type == 'devices/battery' and self.extra:
+            self._state = self.extra.get('battery')
+        else:
+            container = self.resource_type.replace("/", "-")
+            response = self.client.time_series(self.resource_type, period='7d')
+            self._state = response[container][-1].get('value')
+
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \
                     get('value').get('restingHeartRate')

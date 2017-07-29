@@ -47,10 +47,14 @@ def alexa_client(loop, hass, test_client):
                     "uid": "uuid"
                 }
             },
-            "intents": {
+        }
+    }))
+    assert loop.run_until_complete(async_setup_component(
+        hass, 'intent_script', {
+            'intent_script': {
                 "WhereAreWeIntent": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text":
                         """
                             {%- if is_state("device_tracker.paulus", "home")
@@ -69,19 +73,19 @@ def alexa_client(loop, hass, test_client):
                 },
                 "GetZodiacHoroscopeIntent": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text": "You told us your sign is {{ ZodiacSign }}.",
                     }
                 },
                 "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text": "Playing {{ object_byArtist_name }}.",
                     }
                 },
                 "CallServiceIntent": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text": "Service called",
                     },
                     "action": {
@@ -93,8 +97,7 @@ def alexa_client(loop, hass, test_client):
                     }
                 }
             }
-        }
-    }))
+        }))
     return loop.run_until_complete(test_client(hass.http.app))
 
 
