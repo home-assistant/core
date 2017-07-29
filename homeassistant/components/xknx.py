@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Setup xknx component."""
 
-    from xknx import XKNXException
+    from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_XKNX] = XKNXModule(hass, config)
         yield from hass.data[DATA_XKNX].start()

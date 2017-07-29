@@ -49,7 +49,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up binary sensors for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.BinarySensor) and \
+        if isinstance(device, xknx.devices.BinarySensor) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXBinarySensor(hass, device))
     add_devices(entities)
@@ -57,7 +57,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up binary senor for XKNX platform configured within plattform."""
-    binary_sensor = xknx.BinarySensor(
+    binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),

@@ -57,7 +57,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up covers for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Cover) and \
+        if isinstance(device, xknx.devices.Cover) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXCover(hass, device))
     add_devices(entities)
@@ -65,7 +65,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up cover for XKNX platform configured within plattform."""
-    cover = xknx.Cover(
+    cover = xknx.devices.Cover(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),

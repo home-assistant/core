@@ -50,7 +50,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up lights for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Light) and \
+        if isinstance(device, xknx.devices.Light) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXLight(hass, device))
     add_devices(entities)
@@ -58,7 +58,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up light for XKNX platform configured within plattform."""
-    light = xknx.Light(
+    light = xknx.devices.Light(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address_switch=config.get(CONF_ADDRESS),

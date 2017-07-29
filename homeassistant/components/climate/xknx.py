@@ -45,7 +45,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up climates for XKNX platform configured within plattform."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
-        if isinstance(device, xknx.Climate) and \
+        if isinstance(device, xknx.devices.Climate) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXClimate(hass, device))
     add_devices(entities)
@@ -53,7 +53,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up climate for XKNX platform configured within plattform."""
-    climate = xknx.Climate(
+    climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
