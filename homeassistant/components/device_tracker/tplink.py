@@ -48,6 +48,9 @@ def get_scanner(hass, config):
 
     return None
 
+def timems():
+    """Return Unix Timestamp in milliseconds."""
+    return int(time.time()*1000)
 
 class TplinkDeviceScanner(DeviceScanner):
     """This class queries a wireless router running TP-Link firmware."""
@@ -396,7 +399,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         session.post(base_url, login_data, headers=header)
 
         # a timestamp is required to be sent as get parameter
-        timestamp = int(time.time() * 1e3)
+        timestamp = timems()
 
         client_list_url = '{}/data/monitor.client.client.json'.format(
             base_url)
@@ -425,73 +428,6 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             return True
 
         return False
-
-"""
-openwrt ap:
-GET: /data/version.json?_dc=[[timestamp]]&id=10
-setcookie as nonce
-POST: /data/version.json
-{
-    nonce:getcookie(),
-    encoded:user + ":" + upper( md5( upper( md5( pwd ) ) + ":" + nonce) )
-}
-{
-	"success":	true,
-	"status":	4,
-}
-!! STATUS:
-{
-	standby: -1,
-	success: 0,
-	passError: 1,
-	timeout: 2,
-	convFull: 3,
-	otherLogin: 4,
-	changePwd: 5
-}
-if status == 4 {
-    delay 120s
-    // login conflict, delay for some seconds (300)
-    GET data/loginConfirm.json?_dc=[[timestamp]]
-}
-for radioid in range(0+):
-    GET: /data/station.json?_dc=[[timestamp]]&radioID=[[radioid]]
-    if(ret.success): maxradioid = radioid
-    else: break
-
-loop(
-    GET: /data/station.json?_dc=[[timestamp]]&radioID=[[radioid]]
-    if(timeout==true or status == -1):
-        startover
-)
-
-
-
-GET /data/station.json?_dc=[[unix time im ms]]&radioID=[[radio id]]
-return json:'status':'true' exists
-
-timeout:return json:'timeout': 'true'
-
-{
-	"success":	true,
-	"data":	[{
-			"mac":	"00-00-00-00-00-00",
-			"ssid":	"HOME001",
-			"connTime":	"0 days 17:14:20"
-		}]
-}
-
-
-if __name__ == "__main__":
-    _CONFIG = {"username":"admin", "host":"192.168.102.254", "password":"routeadmin11"}
-    x = Tplink6DeviceScanner(_CONFIG)
-    for _ in range(20):
-        print(x.scan_devices())
-        time.sleep(5)
-"""
-def timems():
-    """Return Unix Timestamp in milliseconds."""
-    return int(time.time()*1000)
 
 
 class Tplink6DeviceScanner(DeviceScanner):
@@ -563,6 +499,7 @@ class Tplink6DeviceScanner(DeviceScanner):
             response = self._session.get(self._login_confirm_url.format(timems()))
             self._loggedin = True
             self._confirm_login = False
+            _LOGGER.warn("Login confirmed")
             #print(response.text)
             return
 
@@ -591,7 +528,7 @@ class Tplink6DeviceScanner(DeviceScanner):
         if status == 0:
             self._loggedin = True
             return
-        if status == 2:
+        if status == 1:
             self._loggedin = False
             self._wait_login_until = time.monotonic() + 10
             return
@@ -599,6 +536,7 @@ class Tplink6DeviceScanner(DeviceScanner):
             self._loggedin = False
             self._wait_login_until = time.monotonic() + self.multiloginwait
             self._confirm_login = True
+            _LOGGER.warn("Login needs confirm. Wiat for {} seconds".format(self.multiloginwait))
             return
         self._loggedin = False
         return
