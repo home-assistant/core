@@ -273,31 +273,38 @@ class TadoClimate(ClimateDevice):
             else:
                 self._device_is_active = True
 
+        overlay = False
+        overlay_data = None
+        termination = self._current_operation
+        cooling = False
+        fan_speed = CONST_MODE_OFF
+
+        if 'overlay' in data:
+            overlay_data = data['overlay']
+            overlay = overlay_data is not None
+
+        if overlay:
+            termination = overlay_data['termination']['type']
+
+            if 'setting' in overlay_data:
+                setting_data = overlay_data['setting']
+                setting = setting is not None
+
+            if setting:
+                if 'mode' in setting_data:
+                    cooling = setting_data['mode'] == 'COOL'
+
+                if 'fanSpeed' in setting_data:
+                    fan_speed = setting_data['fanSpeed']
+
         if self._device_is_active:
-            overlay = False
-            overlay_data = None
-            termination = self._current_operation
-            cooling = False
-            fan_speed = CONST_MODE_OFF
-
-            if 'overlay' in data:
-                overlay_data = data['overlay']
-                overlay = overlay_data is not None
-
-            if overlay:
-                termination = overlay_data['termination']['type']
-
-                if 'setting' in overlay_data:
-                    cooling = overlay_data['setting']['mode'] == 'COOL'
-                    fan_speed = overlay_data['setting']['fanSpeed']
-
             # If you set mode manualy to off, there will be an overlay
             # and a termination, but we want to see the mode "OFF"
-
             self._overlay_mode = termination
             self._current_operation = termination
-            self._cooling = cooling
-            self._current_fan = fan_speed
+
+        self._cooling = cooling
+        self._current_fan = fan_speed
 
     def _control_heating(self):
         """Send new target temperature to mytado."""

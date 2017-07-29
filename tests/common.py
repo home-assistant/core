@@ -14,9 +14,7 @@ from aiohttp import web
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from homeassistant.helpers import intent, dispatcher, entity, restore_state
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -194,11 +192,30 @@ mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @ha.callback
+def async_mock_intent(hass, intent_typ):
+    """Set up a fake intent handler."""
+    intents = []
+
+    class MockIntentHandler(intent.IntentHandler):
+        intent_type = intent_typ
+
+        @asyncio.coroutine
+        def async_handle(self, intent):
+            """Handle the intent."""
+            intents.append(intent)
+            return intent.create_response()
+
+    intent.async_register(hass, MockIntentHandler())
+
+    return intents
+
+
+@ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
-    async_dispatcher_send(
+    dispatcher.async_dispatcher_send(
         hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
         payload, qos)
 
@@ -352,7 +369,7 @@ class MockPlatform(object):
             self._setup_platform(hass, config, add_devices, discovery_info)
 
 
-class MockToggleDevice(ToggleEntity):
+class MockToggleDevice(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
     def __init__(self, name, state):
@@ -506,10 +523,11 @@ def init_recorder_component(hass, add_config=None):
 
 def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
-    hass.data[DATA_RESTORE_CACHE] = {
+    key = restore_state.DATA_RESTORE_CACHE
+    hass.data[key] = {
         state.entity_id: state for state in states}
-    _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
-    assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
+    _LOGGER.debug('Restore cache: %s', hass.data[key])
+    assert len(hass.data[key]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)

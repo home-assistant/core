@@ -93,7 +93,6 @@ class TPLinkSmartBulb(Light):
         """True if device is on."""
         return self._state
 
-    @property
     def update(self):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartPlugException
