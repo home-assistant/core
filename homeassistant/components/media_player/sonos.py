@@ -901,8 +901,6 @@ class SonosDevice(MediaPlayerDevice):
                     self._player.play_uri(src['uri'], src['meta'],
                                           src['title'])
 
-    @soco_error
-    @soco_coordinator
     def _replace_queue_with_playlist(self, src):
         """Playlists can't be played directly with the self._player.play_uri
         API as they are actually composed of mulitple URLs. Until soco has
