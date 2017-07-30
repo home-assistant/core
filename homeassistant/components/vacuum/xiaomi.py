@@ -79,6 +79,7 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
+    from mirobo import Vacuum
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -87,7 +88,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     token = config.get(CONF_TOKEN)
 
     # Create handler
-    mirobo = MiroboVacuum(name, host, token)
+    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    vacuum = Vacuum(host, token)
+
+    mirobo = MiroboVacuum(name, vacuum)
     hass.data[PLATFORM][host] = mirobo
 
     async_add_devices([mirobo], update_before_add=True)
@@ -134,13 +138,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MiroboVacuum(VacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, name, host, token):
+    def __init__(self, name, vacuum):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self._name = name
         self._icon = ICON
-        self._host = host
-        self._token = token
-        self._vacuum = None
+        self._vacuum = vacuum
 
         self.vacuum_state = None
         self._is_on = False
@@ -201,17 +203,6 @@ class MiroboVacuum(VacuumDevice):
         return {}
 
     @property
-    def vacuum(self):
-        """Property accessor for vacuum object."""
-        if not self._vacuum:
-            from mirobo import Vacuum
-            _LOGGER.info("Initializing with host %s (token %s...)",
-                         self._host, self._token[:5])
-            self._vacuum = Vacuum(self._host, self._token)
-
-        return self._vacuum
-
-    @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._is_on
@@ -241,7 +232,7 @@ class MiroboVacuum(VacuumDevice):
     def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
         is_on = yield from self._try_command(
-            "Unable to start the vacuum: %s", self.vacuum.start)
+            "Unable to start the vacuum: %s", self._vacuum.start)
         self._is_on = is_on
 
     @asyncio.coroutine
@@ -256,7 +247,7 @@ class MiroboVacuum(VacuumDevice):
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         yield from self._try_command(
-            "Unable to stop: %s", self.vacuum.stop)
+            "Unable to stop: %s", self._vacuum.stop)
 
     @asyncio.coroutine
     def async_set_fan_speed(self, fan_speed, **kwargs):
@@ -273,14 +264,14 @@ class MiroboVacuum(VacuumDevice):
                 return
         yield from self._try_command(
             "Unable to set fan speed: %s",
-            self.vacuum.set_fan_speed, fan_speed)
+            self._vacuum.set_fan_speed, fan_speed)
 
     @asyncio.coroutine
     def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
         if self.vacuum_state and self.is_on:
             yield from self._try_command(
-                "Unable to set start/pause: %s", self.vacuum.pause)
+                "Unable to set start/pause: %s", self._vacuum.pause)
         else:
             yield from self.async_turn_on()
 
@@ -288,7 +279,7 @@ class MiroboVacuum(VacuumDevice):
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
         return_home = yield from self._try_command(
-            "Unable to return home: %s", self.vacuum.home)
+            "Unable to return home: %s", self._vacuum.home)
         if return_home:
             self._is_on = False
 
@@ -296,7 +287,7 @@ class MiroboVacuum(VacuumDevice):
     def async_locate(self, **kwargs):
         """Locate the vacuum cleaner."""
         yield from self._try_command(
-            "Unable to locate the botvac: %s", self.vacuum.find)
+            "Unable to locate the botvac: %s", self._vacuum.find)
 
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
@@ -305,21 +296,21 @@ class MiroboVacuum(VacuumDevice):
                       command, params, kwargs)
         yield from self._try_command(
             "Unable to send command to the vacuum: %s",
-            self.vacuum.raw_command, command, params)
+            self._vacuum.raw_command, command, params)
 
     @asyncio.coroutine
     def async_remote_control_start(self):
         """Start remote control mode."""
         yield from self._try_command(
             "Unable to start remote control the vacuum: %s",
-            self.vacuum.manual_start)
+            self._vacuum.manual_start)
 
     @asyncio.coroutine
     def async_remote_control_stop(self):
         """Stop remote control mode."""
         yield from self._try_command(
             "Unable to stop remote control the vacuum: %s",
-            self.vacuum.manual_stop)
+            self._vacuum.manual_stop)
 
     @asyncio.coroutine
     def async_remote_control_move(self,
@@ -331,7 +322,7 @@ class MiroboVacuum(VacuumDevice):
                       rotation, velocity, duration)
         yield from self._try_command(
             "Unable to move with remote control the vacuum: %s",
-            self.vacuum.manual_control,
+            self._vacuum.manual_control,
             velocity=velocity, rotation=rotation, duration=duration)
 
     @asyncio.coroutine
@@ -344,7 +335,7 @@ class MiroboVacuum(VacuumDevice):
                       rotation, velocity, duration)
         yield from self._try_command(
             "Unable to remote control the vacuum: %s",
-            self.vacuum.manual_control_once,
+            self._vacuum.manual_control_once,
             velocity=velocity, rotation=rotation, duration=duration)
 
     @asyncio.coroutine
@@ -352,7 +343,7 @@ class MiroboVacuum(VacuumDevice):
         """Fetch state from the device."""
         from mirobo import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self.vacuum.status)
+            state = yield from self.hass.async_add_job(self._vacuum.status)
 
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
