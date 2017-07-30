@@ -326,16 +326,17 @@ class VacuumDevice(ToggleEntity):
         """
         return self.hass.async_add_job(partial(self.locate, **kwargs))
 
-    def set_fan_speed(self, **kwargs):
+    def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         raise NotImplementedError()
 
-    def async_set_fan_speed(self, **kwargs):
+    def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.set_fan_speed, **kwargs))
+        return self.hass.async_add_job(
+            partial(self.set_fan_speed, fan_speed, **kwargs))
 
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
@@ -349,13 +350,14 @@ class VacuumDevice(ToggleEntity):
         return self.hass.async_add_job(
             partial(self.start_pause, **kwargs))
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
 
-    def async_send_command(self, **kwargs):
+    def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.send_command, **kwargs))
+        return self.hass.async_add_job(
+            partial(self.send_command, command, params=params, **kwargs))
