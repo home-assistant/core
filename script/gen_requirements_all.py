@@ -70,6 +70,8 @@ TEST_REQUIREMENTS = (
     'restrictedpython',
     'pyunifi',
     'prometheus_client',
+    'feedparser',
+    'haversine',
 )
 
 IGNORE_PACKAGES = (
