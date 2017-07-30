@@ -294,10 +294,8 @@ class MiroboVacuum(VacuumDevice):
             "Unable to locate the botvac: %s", self._vacuum.find)
 
     @asyncio.coroutine
-    def async_send_command(self, command, params, **kwargs):
+    def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
-        _LOGGER.debug('async_send_command %s (%s), %s',
-                      command, params, kwargs)
         yield from self._try_command(
             "Unable to send command to the vacuum: %s",
             self._vacuum.raw_command, command, params)
@@ -322,8 +320,6 @@ class MiroboVacuum(VacuumDevice):
                                   velocity: float=0.3,
                                   duration: int=1500):
         """Move vacuum with remote control mode."""
-        _LOGGER.debug('async_remote_control_move -> %s,%s,%s',
-                      rotation, velocity, duration)
         yield from self._try_command(
             "Unable to move with remote control the vacuum: %s",
             self._vacuum.manual_control,
@@ -335,8 +331,6 @@ class MiroboVacuum(VacuumDevice):
                                        velocity: float=0.2,
                                        duration: int=1500):
         """Move vacuum one step with remote control mode."""
-        _LOGGER.debug('async_remote_control_move_step -> %s,%s,%s',
-                      rotation, velocity, duration)
         yield from self._try_command(
             "Unable to remote control the vacuum: %s",
             self._vacuum.manual_control_once,
