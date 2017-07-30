@@ -102,7 +102,7 @@ def add_devices_from_platform(hass, config, add_devices):
                 counter=counter,
                 action=action,
                 name="{} turn ON script".format(name))
-          binary_sensor.actions.append(automation)
+            binary_sensor.actions.append(automation)
 
     binary_sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
