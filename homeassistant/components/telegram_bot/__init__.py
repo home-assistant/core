@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==6.1.0']
+REQUIREMENTS = ['python-telegram-bot==7.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
