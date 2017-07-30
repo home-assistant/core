@@ -132,10 +132,10 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_state_ids = session.query(
                 States.state_id.label('max_state_id')
             ).filter(
-                (States.created < utc_point_in_time) &
+                (States.last_updated < utc_point_in_time) &
                 (States.entity_id.in_(entity_ids))
             ).order_by(
-                States.created.desc())
+                States.last_updated.desc())
 
             most_recent_state_ids = most_recent_state_ids.limit(1)
 
@@ -148,8 +148,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 States.entity_id.label('max_entity_id'),
                 func.max(States.last_updated).label('max_last_updated')
             ).filter(
-                (States.created >= run.start) &
-                (States.created < utc_point_in_time)
+                (States.last_updated >= run.start) &
+                (States.last_updated < utc_point_in_time)
             )
 
             if entity_ids:
