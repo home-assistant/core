@@ -65,7 +65,7 @@ SERVICE_TO_METHOD = {
     SERVICE_LOCATE: {'method': 'async_locate'},
     SERVICE_STOP: {'method': 'async_stop'},
     SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
-                           'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
+                            'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
     SERVICE_SEND_COMMAND: {'method': 'async_send_command',
                            'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
 }
