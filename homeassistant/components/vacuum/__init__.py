@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_UNKNOWN,
+    ATTR_ENTITY_ID, ATTR_BATTERY_LEVEL, STATE_UNKNOWN,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -185,15 +185,15 @@ class VacuumDevice(ToggleEntity):
         data = {}
 
         if self.status is not None:
-            data['Status'] = self.status
+            data['status'] = self.status
 
         if self.battery_level is not None:
-            data['Battery'] = self.battery_level
-            data['Battery_icon'] = self.battery_icon
+            data[ATTR_BATTERY_LEVEL] = self.battery_level
+            data[ATTR_BATTERY_LEVEL + '_icon'] = self.battery_icon
 
         if self.fanspeed is not None:
-            data['Fanspeed'] = self.fanspeed
-            data['Fanspeed_list'] = self.fanspeed_list
+            data['fanspeed'] = self.fanspeed
+            data['fanspeed_list'] = self.fanspeed_list
 
         return data
 
