@@ -86,7 +86,12 @@ def alexa_client(loop, hass, test_client):
                 "CallServiceIntent": {
                     "speech": {
                         "type": "plain",
-                        "text": "Service called",
+                        "text": "Service called for {{ ZodiacSign }}",
+                    },
+                    "card": {
+                        "type": "simple",
+                        "title": "Card title for {{ ZodiacSign }}",
+                        "content": "Card content: {{ ZodiacSign }}",
                     },
                     "action": {
                         "service": "test.alexa",
@@ -318,6 +323,13 @@ def test_intent_request_calling_service(alexa_client):
     assert call.service == "alexa"
     assert call.data.get("entity_id") == ["switch.test"]
     assert call.data.get("hello") == "virgo"
+
+    data = yield from req.json()
+    assert data['response']['card']['title'] == 'Card title for virgo'
+    assert data['response']['card']['content'] == 'Card content: virgo'
+    assert data['response']['outputSpeech']['type'] == 'PlainText'
+    assert data['response']['outputSpeech']['text'] == \
+        'Service called for virgo'
 
 
 @asyncio.coroutine
