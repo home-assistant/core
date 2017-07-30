@@ -141,7 +141,7 @@ class GeoRssServiceSensor(Entity):
         self.hass = hass
         self._category = category
         self._data = data
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit_of_measurement
@@ -189,7 +189,7 @@ class GeoRssServiceSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         matrix = {}
-        if self._state is not None:
+        if self._state is not STATE_UNKNOWN:
             for incident in self._state:
                 matrix[incident.title] = '{:.0f}km'.format(incident.distance)
         return matrix
@@ -197,8 +197,6 @@ class GeoRssServiceSensor(Entity):
     def update(self):
         """Update this sensor from the GeoRSS service."""
         all_incidents = self._data.incidents
-        _LOGGER.info("All incidents: %s", all_incidents)
-        _LOGGER.info("My category: %s", self._category)
         if self._category is None:
             # Add all incidents regardless of category.
             self._state = all_incidents
@@ -206,7 +204,6 @@ class GeoRssServiceSensor(Entity):
             # Group incidents by category.
             my_incidents = []
             for incident in all_incidents:
-                _LOGGER.info("Category: %s", incident.category)
                 if incident.category == self._category:
                     my_incidents.append(incident)
             self._state = my_incidents
@@ -229,45 +226,48 @@ class GeoRssServiceUpdater:
         """Initialize the update service."""
         self._hass = hass
         self._data = data
-        self._feed = None
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
-        self._state = STATE_UNKNOWN
         self._devices = devices
 
     @asyncio.coroutine
     def async_update(self, *_):
         import feedparser
         # Retrieve data from GeoRSS feed.
-        self._feed = feedparser.parse(self._url)
-        if not self._feed:
+        feed_data = feedparser.parse(self._url)
+        if not feed_data:
             _LOGGER.error("Error fetching feed data from %s", self._url)
         else:
-            incidents = []
-            _LOGGER.info("%s entri(es) available in feed %s",
-                         len(self._feed.entries), self._url)
-            # Filter entries by distance from home coordinates.
-            for entry in self._feed.entries:
-                geometry = None
-                if hasattr(entry, 'where'):
-                    geometry = entry.where
-                elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
-                    coordinates = (float(entry.geo_long), float(entry.geo_lat))
-                    geometry = {'type': 'Point', 'coordinates': coordinates}
-                if geometry:
-                    distance = self.calculate_distance_to_geometry(geometry)
-                if distance <= self._radius_in_km:
-                    incident = self.create_incident(entry, distance, geometry)
-                    incidents.append(incident)
-            #_LOGGER.info("Incidents found nearby: %s", incidents)
+            incidents = self.filter_entries(feed_data)
             self._data.incidents = incidents
+            # Update devices.
             tasks = []
             if self._devices:
                 for device in self._devices:
                     tasks.append(device.async_update_ha_state(True))
             if tasks:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
+
+    def filter_entries(self, feed_data):
+        incidents = []
+        _LOGGER.info("%s entri(es) available in feed %s",
+                     len(feed_data.entries), self._url)
+        # Filter entries by distance from home coordinates.
+        for entry in feed_data.entries:
+            geometry = None
+            if hasattr(entry, 'where'):
+                geometry = entry.where
+            elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
+                coordinates = (float(entry.geo_long), float(entry.geo_lat))
+                geometry = {'type': 'Point', 'coordinates': coordinates}
+            if geometry:
+                distance = self.calculate_distance_to_geometry(geometry)
+            if distance <= self._radius_in_km:
+                incident = self.create_incident(entry, distance, geometry)
+                incidents.append(incident)
+        _LOGGER.info("Incidents found nearby: %s", incidents)
+        return incidents
 
     @staticmethod
     def create_incident(feature, distance, geometry):
@@ -360,9 +360,8 @@ class GeoRssServiceUpdater:
             else:
                 p1 = polygon[i - 1]
                 p2 = polygon[i]
-            if p1[1] == p2[1] and p1[1] == y and x > min(p1[0],
-                                                         p2[0]) and x < max(
-                p1[0], p2[0]):
+            if p1[1] == p2[1] and p1[1] == y and min(p1[0], p2[0]) < x < max(
+                    p1[0], p2[0]):
                 return True
 
         n = len(polygon)
