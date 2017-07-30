@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from homeassistant.components.xknx import DATA_XKNX
@@ -73,6 +72,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up binary sensors for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.BinarySensor) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXBinarySensor(hass, device))
@@ -83,6 +83,7 @@ def add_devices_from_component(hass, add_devices):
 def add_devices_from_platform(hass, config, add_devices):
     """Set up binary senor for XKNX platform configured within plattform."""
     name = config.get(CONF_NAME)
+    import xknx
     binary_sensor = xknx.devices.BinarySensor(
         hass.data[DATA_XKNX].xknx,
         name=name,
@@ -96,7 +97,7 @@ def add_devices_from_platform(hass, config, add_devices):
             counter = automation.get(CONF_COUNTER)
             hook = automation.get(CONF_HOOK)
             action = automation.get(CONF_ACTION)
-            automation = XKNXAutomation(
+            automation = XKNXBinarySensor.XKNXAutomation(
                 hass=hass,
                 hook=hook,
                 counter=counter,
@@ -109,24 +110,27 @@ def add_devices_from_platform(hass, config, add_devices):
     add_devices([XKNXBinarySensor(hass, binary_sensor)])
 
 
-class XKNXAutomation(xknx.devices.ActionBase):
-    """Base Class for handling commands triggered by KNX bus."""
-
-    def __init__(self, hass, hook, action, name, counter=1):
-        """Initialize XKNXAutomation class."""
-        super(XKNXAutomation, self).__init__(
-            hass.data[DATA_XKNX].xknx, hook, counter)
-        self.hass = hass
-        self.script = Script(hass, action, name)
-
-    @asyncio.coroutine
-    def execute(self):
-        """Execute action."""
-        yield from self.script.async_run()
-
-
 class XKNXBinarySensor(BinarySensorDevice):
     """Representation of a XKNX binary sensor."""
+
+    import xknx
+
+    class XKNXAutomation(xknx.devices.ActionBase):
+        """Base Class for handling commands triggered by KNX bus."""
+
+        def __init__(self, hass, hook, action, name, counter=1):
+            """Initialize XKNXAutomation class."""
+            super(XKNXBinarySensor.XKNXAutomation, self).__init__(
+                hass.data[DATA_XKNX].xknx, hook, counter)
+            self.hass = hass
+            self.script = Script(hass, action, name)
+
+        @asyncio.coroutine
+        def execute(self):
+            """Execute action."""
+            yield from self.script.async_run()
+
+
 
     def __init__(self, hass, device):
         """Initialization of XKNXBinarySensor."""

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from homeassistant.components.xknx import DATA_XKNX
@@ -52,6 +51,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up lights for XKNX platform configured via xknx.yaml."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.Light) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXLight(hass, device))
@@ -61,6 +61,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up light for XKNX platform configured within plattform."""
+    import xknx
     light = xknx.devices.Light(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),

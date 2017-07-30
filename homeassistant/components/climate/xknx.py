@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.xknx/
 """
 import asyncio
-import xknx
 import voluptuous as vol
 
 from homeassistant.components.xknx import DATA_XKNX
@@ -47,6 +46,7 @@ def add_devices_from_component(hass, add_devices):
     """Set up climates for XKNX platform configured within plattform."""
     entities = []
     for device in hass.data[DATA_XKNX].xknx.devices:
+        import xknx
         if isinstance(device, xknx.devices.Climate) and \
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXClimate(hass, device))
@@ -56,6 +56,7 @@ def add_devices_from_component(hass, add_devices):
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up climate for XKNX platform configured within plattform."""
+    import xknx
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
