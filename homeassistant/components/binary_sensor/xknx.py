@@ -31,11 +31,16 @@ CONF__ACTION = 'turn_off_action'
 DEFAULT_NAME = 'XKNX Binary Sensor'
 DEPENDENCIES = ['xknx']
 
-AUOTMATION_SCHEMA = vol.Schema({
+AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
     vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
     vol.Required(CONF_ACTION, default=None): cv.SCRIPT_SCHEMA
 })
+
+AUTOMATIONS_SCHEMA = vol.All(
+    cv.ensure_list,
+    [AUTOMATION_SCHEMA]
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
@@ -43,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
-    vol.Optional(CONF_AUTOMATION, default=None): AUOTMATION_SCHEMA,
+    vol.Optional(CONF_AUTOMATION, default=None): AUTOMATIONS_SCHEMA,
 })
 
 
@@ -83,19 +88,19 @@ def add_devices_from_platform(hass, config, add_devices):
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config.get(CONF_SIGNIFICANT_BIT))
 
-    automation = config.get(CONF_AUTOMATION)
-
-    if automation is not None:
-        counter = automation.get(CONF_COUNTER)
-        hook = automation.get(CONF_HOOK)
-        action = automation.get(CONF_ACTION)
-        automation = XKNXAutomation(
-            hass=hass,
-            hook=hook,
-            counter=counter,
-            action=action,
-            name="{} turn ON script".format(name))
-        binary_sensor.actions.append(automation)
+    automations = config.get(CONF_AUTOMATION)
+    if automations is not None:
+        for automation in automations:
+          counter = automation.get(CONF_COUNTER)
+          hook = automation.get(CONF_HOOK)
+          action = automation.get(CONF_ACTION)
+          automation = XKNXAutomation(
+              hass=hass,
+              hook=hook,
+              counter=counter,
+              action=action,
+              name="{} turn ON script".format(name))
+          binary_sensor.actions.append(automation)
 
     binary_sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
