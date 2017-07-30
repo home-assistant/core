@@ -109,7 +109,8 @@ def async_setup(hass, config):
             return
 
         target_vacuums = component.async_extract_from_service(service)
-        params = dict(service.data)
+        params = service.data.copy()
+        params.pop(ATTR_ENTITY_ID, None)
 
         update_tasks = []
         for vacuum in target_vacuums:
