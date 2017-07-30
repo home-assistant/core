@@ -361,7 +361,7 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self._ws_server.close())
 
     @asyncio.coroutine
     def _get_players(self):
@@ -410,6 +410,8 @@ class KodiDevice(MediaPlayerDevice):
                 # Kodi abruptly ends ws connection when exiting. We will try
                 # to reconnect on the next poll.
                 pass
+            # Update HA state after Kodi disconnects
+            self.hass.async_add_job(self.async_update_ha_state())
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
