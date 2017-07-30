@@ -40,7 +40,7 @@ class TestMailbox(object):
         self.hass.start()
 
         url = ("{}/api/mailbox/messages/mailbox.demomailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
         assert req.status_code == 200
@@ -71,12 +71,12 @@ class TestMailbox(object):
         msgsha2 = sha1(msgtxt2.encode('utf-8')).hexdigest()
 
         url = ("{}/api/mailbox/delete/mailbox.demomailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
         req = requests.post(url, data=json.dumps([msgsha1, msgsha2]))
         assert req.status_code == 200
 
         url = ("{}/api/mailbox/messages/mailbox.demomailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
         assert req.status_code == 200
@@ -88,7 +88,7 @@ class TestMailbox(object):
         self.hass.start()
 
         url = ("{}/api/mailbox/messages/mailbox.invalid_mailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
         assert req.status_code == 401
@@ -121,7 +121,7 @@ class TestMailbox(object):
 
         msgsha = "0000000000000000000000000000000000000000"
         url = ("{}/api/mailbox/delete/mailbox.invalid_mailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
         req = requests.post(url, data=msgsha)
         assert req.status_code == 401
 
@@ -131,6 +131,6 @@ class TestMailbox(object):
 
         badjson = '["0000000000000000000000000000000000000000"'
         url = ("{}/api/mailbox/delete/mailbox.demomailbox"
-              ).format(self.hass.config.api.base_url)
+               ).format(self.hass.config.api.base_url)
         req = requests.post(url, data=badjson)
         assert req.status_code == 400
