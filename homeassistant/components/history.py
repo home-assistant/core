@@ -106,7 +106,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
             query = query.filter_by(entity_id=entity_id.lower())
 
         states = execute(
-            query.order_by(States.entity_id, States.last_updated))
+            query.order_by(States.last_updated))
 
     return states_to_json(hass, states, start_time, entity_id)
 
