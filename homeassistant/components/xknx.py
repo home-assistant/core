@@ -1,6 +1,6 @@
 """
 
-Connects to XKNX platform
+Connects to XKNX platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xknx/
@@ -56,8 +56,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup xknx component."""
-
+    """Set up xknx component."""
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_XKNX] = XKNXModule(hass, config)
@@ -78,6 +77,7 @@ class XKNXModule(object):
     """Representation of XKNX Object."""
 
     def __init__(self, hass, config):
+        """Initialization of XKNXModule."""
         self.hass = hass
         self.config = config
         self.initialized = False
