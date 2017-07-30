@@ -37,9 +37,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.positive_int,
 })
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up cover(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -52,6 +53,7 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up covers for XKNX platform configured via xknx.yaml."""
@@ -62,6 +64,7 @@ def add_devices_from_component(hass, add_devices):
             entities.append(XKNXCover(hass, device))
     add_devices(entities)
 
+
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up cover for XKNX platform configured within plattform."""
@@ -70,7 +73,8 @@ def add_devices_from_platform(hass, config, add_devices):
         name=config.get(CONF_NAME),
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
-        group_address_position_feedback=config.get(CONF_POSITION_STATE_ADDRESS),
+        group_address_position_feedback=config.get(
+            CONF_POSITION_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
         travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
@@ -96,7 +100,7 @@ class XKNXCover(CoverDevice):
         @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
-            #pylint: disable=unused-argument
+            # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
@@ -187,7 +191,7 @@ class XKNXCover(CoverDevice):
         print("close_cover_tilt - not implemented")
 
     def set_cover_tilt_position(self, tilt_position, **kwargs):
-        #pylint: disable=unused-argument
+        # pylint: disable=unused-argument
         """Move the cover til to a specific position."""
         print("close_cover_tilt_position - not implemented")
 

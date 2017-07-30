@@ -50,8 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_XKNX_CONFIG): cv.string,
         vol.Exclusive(CONF_XKNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
-        vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'): \
-            TUNNELING_SCHEMA,
+        vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'):
+                      TUNNELING_SCHEMA,
     })
 }, extra=vol.ALLOW_EXTRA)
 
