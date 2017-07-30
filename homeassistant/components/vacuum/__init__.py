@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, SERVICE_TOGGLE,
+    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
     SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -31,7 +31,6 @@ SCAN_INTERVAL = timedelta(seconds=20)
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
 
 ATTR_BATTERY_ICON = 'battery_icon'
-ATTR_COMMAND = 'command'
 ATTR_FAN_SPEED = 'fan_speed'
 ATTR_FAN_SPEED_LIST = 'fan_speed_list'
 ATTR_PARAMS = 'params'
