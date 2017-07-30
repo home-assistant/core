@@ -171,7 +171,7 @@ class AlexaIntentsView(http.HomeAssistantView):
 
         if 'simple' in intent_response.card:
             alexa_response.add_card(
-                'simple', intent_response.card['simple']['title'],
+                CardType.simple, intent_response.card['simple']['title'],
                 intent_response.card['simple']['content'])
 
         return self.json(alexa_response)
@@ -208,8 +208,8 @@ class AlexaResponse(object):
             self.card = card
             return
 
-        card["title"] = title.async_render(self.variables)
-        card["content"] = content.async_render(self.variables)
+        card["title"] = title
+        card["content"] = content
         self.card = card
 
     def add_speech(self, speech_type, text):
@@ -217,9 +217,6 @@ class AlexaResponse(object):
         assert self.speech is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
-
-        if isinstance(text, template.Template):
-            text = text.async_render(self.variables)
 
         self.speech = {
             'type': speech_type.value,
