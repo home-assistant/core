@@ -57,6 +57,7 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    timer_start = time.perf_counter()
     from homeassistant.components.recorder.models import States
 
     entity_ids = (entity_id.lower(), ) if entity_id is not None else None
@@ -73,11 +74,17 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
         if end_time is not None:
             query = query.filter(States.last_updated < end_time)
 
+        query = query.order_by(States.last_updated)
+
         states = (
-            state for state in execute(
-                query.order_by(States.entity_id, States.last_updated))
+            state for state in execute(query)
             if (_is_significant(state) and
                 not state.attributes.get(ATTR_HIDDEN, False)))
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug(
+            'get_significant_states took %fs', elapsed)
 
     return states_to_json(hass, states, start_time, entity_id, filters)
 
