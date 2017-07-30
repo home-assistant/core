@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
 
-REQUIREMENTS = ['tahoma-api==0.0.6']
+#REQUIREMENTS = ['tahoma-api==0.0.6']
 
 DEPENDENCIES = ['tahoma']
 
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma covers."""
     add_devices(
-        TahomaCover(device, TAHOMA_DEVICES['api']) for
+        TahomaCover(device, hass.data['TAHOMA_CONTROLLER']) for
         device in TAHOMA_DEVICES['cover'])
 
 
@@ -52,10 +52,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        from tahoma_api import Action
-        action = Action(self.tahoma_device.url)
-        action.add_command('setPosition', 100 - position)
-        self.controller.apply_actions("", [action])
+        #from tahoma_api import Action
+        #action = Action(self.tahoma_device.url)
+        #action.add_command('setPosition', 100 - position)
+        #self.controller.apply_actions("", [action])
+        self.apply_action('setPosition', 100 - position)
         self.schedule_update_ha_state()
 
     @property
@@ -69,24 +70,27 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        from tahoma_api import Action
-        action = Action(self.tahoma_device.url)
-        action.add_command('open')
-        self.controller.apply_actions('', [action])
+        #from tahoma_api import Action
+        #action = Action(self.tahoma_device.url)
+        #action.add_command('open')
+        #self.controller.apply_actions('', [action])
+        self.apply_action('open')
         self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        from tahoma_api import Action
-        action = Action(self.tahoma_device.url)
-        action.add_command('close')
-        self.controller.apply_actions('', [action])
+        #from tahoma_api import Action
+        #action = Action(self.tahoma_device.url)
+        #action.add_command('close')
+        #self.controller.apply_actions('', [action])
+        self.apply_action('close')
         self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        from tahoma_api import Action
-        action = Action(self.tahoma_device.url)
-        action.add_command('stopIdentify')
-        self.controller.apply_actions('', [action])
+        #from tahoma_api import Action
+        #action = Action(self.tahoma_device.url)
+        #action.add_command('stopIdentify')
+        s#elf.controller.apply_actions('', [action])
+        self.apply_action('stopIdentify')
         self.schedule_update_ha_state()

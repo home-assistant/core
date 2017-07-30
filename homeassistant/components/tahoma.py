@@ -45,7 +45,6 @@ def setup(hass, config):
     try:
         api = TahomaApi(username, password)
         hass.data['TAHOMA_CONTROLLER'] = api
-        TAHOMA_DEVICES['api'] = api
     except HomeAssistantError:
         _LOGGER.exception("Error communicating with Tahoma API")
         return False
@@ -96,14 +95,14 @@ class TahomaDevice(Entity):
         return self._name
 
     @property
-    def should_poll(self):
-        """Get polling requirement from tahoma device."""
-        return True
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
         attr['Tahoma Device Id'] = self.tahoma_device.url
 
         return attr
+
+    def apply_action(self, cmd_name, *args):
+        action = Action(self.tahoma_device.url)
+        action.add_command(cmd_name, args)
+        self.controller.apply_actions('', [action])

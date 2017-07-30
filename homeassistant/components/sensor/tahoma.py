@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.tahoma/
 """
 
 import logging
-
 from datetime import timedelta
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
@@ -22,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma controller devices."""
     add_devices(
-        TahomaSensor(device, TAHOMA_DEVICES['api'])
+        TahomaSensor(device, hass.data['TAHOMA_CONTROLLER'])
         for device in TAHOMA_DEVICES['sensor'])
 
 
