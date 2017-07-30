@@ -12,10 +12,12 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,10 +27,12 @@ from homeassistant.util.icon import icon_for_battery_level
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vacuum'
+DEPENDENCIES = ['group']
 
 SCAN_INTERVAL = timedelta(seconds=20)
 
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
+ENTITY_ID_ALL_VACUUMS = group.ENTITY_ID_FORMAT.format('all_vacuum_cleaners')
 
 ATTR_BATTERY_ICON = 'battery_icon'
 ATTR_FAN_SPEED = 'fan_speed'
@@ -84,6 +88,79 @@ SUPPORT_STATUS = 128
 SUPPORT_SEND_COMMAND = 256
 SUPPORT_LOCATE = 512
 SUPPORT_MAP = 1024
+
+
+@bind_hass
+def is_on(hass, entity_id=None):
+    """Return if the vacuum is on based on the statemachine."""
+    entity_id = entity_id or ENTITY_ID_ALL_VACUUMS
+    return hass.states.is_state(entity_id, STATE_ON)
+
+
+@bind_hass
+def turn_on(hass, entity_id=None):
+    """Turn all or specified vacuum on."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
+@bind_hass
+def turn_off(hass, entity_id=None):
+    """Turn all or specified vacuum off."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@bind_hass
+def toggle(hass, entity_id=None):
+    """Toggle all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+
+
+@bind_hass
+def locate(hass, entity_id=None):
+    """Locate all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_LOCATE, data)
+
+
+@bind_hass
+def return_to_base(hass, entity_id=None):
+    """Tell all or specified vacuum to return to base."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_RETURN_TO_BASE, data)
+
+
+@bind_hass
+def start_pause(hass, entity_id=None):
+    """Tell all or specified vacuum to start or pause the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_START_PAUSE, data)
+
+
+@bind_hass
+def stop(hass, entity_id=None):
+    """Stop all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_STOP, data)
+
+
+@bind_hass
+def set_fan_speed(hass, fan_speed, entity_id=None):
+    """Set fan speed for all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_FAN_SPEED] = fan_speed
+    hass.services.call(DOMAIN, SERVICE_SET_FAN_SPEED, data)
+
+
+@bind_hass
+def send_command(hass, command, params, entity_id=None):
+    """Send command to all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_COMMAND] = command
+    data[ATTR_PARAMS] = params
+    hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
 @asyncio.coroutine
