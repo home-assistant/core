@@ -11,9 +11,7 @@ import homeassistant.components.remote as remote
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    CONF_DEVICE,
-    CONF_NAME)
+    CONF_DEVICE, CONF_NAME)
 
 DOMAIN = 'kira'
 
@@ -40,24 +38,12 @@ class KiraRemote(Entity):
         """Initialize KiraRemote class."""
         _LOGGER.debug("KiraRemote device init started for: %s", name)
         self._name = name
-        self._state = STATE_UNKNOWN
-
         self._kira = kira
 
     @property
     def name(self):
         """Return the Kira device's name."""
         return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Add platform specific attributes."""
-        return {}
-
-    @property
-    def is_on(self):
-        """Return True. Power state doesn't apply to this device."""
-        return True
 
     def update(self):
         """No-op."""
