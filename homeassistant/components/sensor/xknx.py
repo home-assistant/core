@@ -49,7 +49,7 @@ def add_devices_from_component(hass, add_devices):
     for device in hass.data[DATA_XKNX].xknx.devices:
         import xknx
         if isinstance(device, xknx.devices.Sensor) and \
-                      not hasattr(device, "already_added_to_hass"):
+                not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXSensor(hass, device))
     add_devices(entities)
 

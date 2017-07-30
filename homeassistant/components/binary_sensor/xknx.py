@@ -130,8 +130,6 @@ class XKNXBinarySensor(BinarySensorDevice):
             """Execute action."""
             yield from self.script.async_run()
 
-
-
     def __init__(self, hass, device):
         """Initialization of XKNXBinarySensor."""
         self.device = device
