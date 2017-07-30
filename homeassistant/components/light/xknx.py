@@ -80,10 +80,11 @@ class XKNXLight(Light):
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+        @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.schedule_update_ha_state()
+            yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -146,13 +147,15 @@ class XKNXLight(Light):
             flags |= SUPPORT_BRIGHTNESS
         return flags
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
-            self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
+            yield from self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         else:
-            self.device.set_on()
+            yield from self.device.set_on()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self.device.set_off()
+        yield from self.device.set_off()

@@ -73,10 +73,11 @@ class XKNXSwitch(SwitchDevice):
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+        @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
             # pylint: disable=unused-argument
-            self.schedule_update_ha_state()
+            yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -94,10 +95,12 @@ class XKNXSwitch(SwitchDevice):
         """Return true if device is on."""
         return self.device.state
 
-    def turn_on(self):
+    @asyncio.coroutine
+    def async_turn_on(self):
         """Turn the device on."""
-        self.device.set_on()
+        yield from self.device.set_on()
 
-    def turn_off(self):
+    @asyncio.coroutine
+    def async_turn_off(self):
         """Turn the device off."""
-        self.device.set_off()
+        yield from self.device.set_off()

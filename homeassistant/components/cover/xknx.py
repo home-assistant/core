@@ -93,10 +93,11 @@ class XKNXCover(CoverDevice):
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+        @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
             #pylint: disable=unused-argument
-            self.schedule_update_ha_state()
+            yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -119,27 +120,31 @@ class XKNXCover(CoverDevice):
         """Return if the cover is closed."""
         return self.device.is_closed()
 
-    def close_cover(self, **kwargs):
+    @asyncio.coroutine
+    def async_close_cover(self, **kwargs):
         """Close the cover."""
         if not self.device.is_closed():
-            self.device.set_down()
+            yield from self.device.set_down()
             self.start_auto_updater()
 
-    def open_cover(self, **kwargs):
+    @asyncio.coroutine
+    def async_open_cover(self, **kwargs):
         """Open the cover."""
         if not self.device.is_open():
-            self.device.set_up()
+            yield from self.device.set_up()
             self.start_auto_updater()
 
-    def set_cover_position(self, position, **kwargs):
+    @asyncio.coroutine
+    def async_set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
         knx_position = self.to_xknx_position(position)
-        self.device.set_position(knx_position)
+        yield from self.device.set_position(knx_position)
         self.start_auto_updater()
 
-    def stop_cover(self, **kwargs):
+    @asyncio.coroutine
+    def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.device.stop()
+        yield from self.device.stop()
         self.stop_auto_updater()
 
     def start_auto_updater(self):
@@ -161,7 +166,7 @@ class XKNXCover(CoverDevice):
         if self.device.position_reached():
             self.stop_auto_updater()
 
-        self.device.auto_stop_if_necessary()
+        self.hass.add_job(self.device.auto_stop_if_necessary())
 
     @staticmethod
     def from_xknx_position(raw):
