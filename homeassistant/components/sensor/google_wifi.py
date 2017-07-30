@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     conditions = config.get(CONF_MONITORED_CONDITIONS)
 
-    api = GoogleWifiAPI(host)
+    api = GoogleWifiAPI(host, conditions)
     dev = []
     for condition in conditions:
         dev.append(GoogleWifiSensor(hass, api, name, condition))
@@ -142,12 +142,13 @@ class GoogleWifiSensor(Entity):
 class GoogleWifiAPI(object):
     """Get the latest data and update the states."""
 
-    def __init__(self, host):
+    def __init__(self, host, conditions):
         """Initialize the data object."""
         uri = 'http://'
         resource = "{}{}{}".format(uri, host, ENDPOINT)
         self._request = requests.Request('GET', resource).prepare()
         self.raw_data = None
+        self.conditions = conditions
         self.data = {
             ATTR_CURRENT_VERSION: STATE_UNKNOWN,
             ATTR_NEW_VERSION: STATE_UNKNOWN,
@@ -176,7 +177,8 @@ class GoogleWifiAPI(object):
 
     def data_format(self):
         """Format raw data into easily accessible dict."""
-        for attr_key, value in MONITORED_CONDITIONS.items():
+        for attr_key in self.conditions:
+            value = MONITORED_CONDITIONS[attr_key]
             try:
                 primary_key = value[0][0]
                 sensor_key = value[0][1]
@@ -204,7 +206,7 @@ class GoogleWifiAPI(object):
 
                     self.data[attr_key] = sensor_value
             except KeyError:
-                _LOGGER.error(('Router does not support %s field. '
-                               'Please remove %s from monitored_conditions.',
-                               (sensor_key, attr_key)))
+                _LOGGER.error('Router does not support %s field. '
+                              'Please remove %s from monitored_conditions.',
+                              sensor_key, attr_key)
                 self.data[attr_key] = STATE_UNKNOWN

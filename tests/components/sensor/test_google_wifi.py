@@ -101,7 +101,9 @@ class TestGoogleWifiSensor(unittest.TestCase):
         now = datetime(1970, month=1, day=1)
         with patch('homeassistant.util.dt.now', return_value=now):
             mock_req.get(resource, text=data, status_code=200)
-            self.api = google_wifi.GoogleWifiAPI("localhost")
+            conditions = google_wifi.MONITORED_CONDITIONS.keys()
+            self.api = google_wifi.GoogleWifiAPI("localhost",
+                                                 conditions)
         self.name = NAME
         self.sensor_dict = dict()
         for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
