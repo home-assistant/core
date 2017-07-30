@@ -135,7 +135,9 @@ class AlexaIntentsView(http.HomeAssistantView):
                 HTTP_BAD_REQUEST)
 
         if req_type == 'LaunchRequest':
-            intent_name = data.get('session', {}).get('application', {}).get('applicationId')
+            intent_name = data.get('session', {})       \
+                              .get('application', {})   \
+                              .get('applicationId')
         else:
             intent_name = alexa_intent_info['name']
 
