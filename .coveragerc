@@ -146,6 +146,9 @@ omit =
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
+    homeassistant/components/roomba.py
+    homeassistant/components/sensors/roomba.py
+
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
