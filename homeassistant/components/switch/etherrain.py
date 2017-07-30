@@ -58,11 +58,11 @@ class ERValveSwitches(SwitchDevice):
             self._state = True
         else:
             self._state = False
-        _LOGGER.info("update etherrain switch {0} - {1}".format(self._valve_id, self._state))
+        # _LOGGER.info("update etherrain switch {0} - {1}".format(self._valve_id, self._state))
 
     @property
     def is_on(self):
-        _LOGGER.info("is_on: etherrain switch {0} - {1}".format(self._valve_id, self._state))
+        # _LOGGER.info("is_on: etherrain switch {0} - {1}".format(self._valve_id, self._state))
         return self._state
 
     def turn_on(self):
@@ -70,7 +70,7 @@ class ERValveSwitches(SwitchDevice):
         valve["duration"] = 60
         valve["valve"] = self._valve_id
         valve["command"] = er.WATER_ON
-        _LOGGER.info("turn on etherrain switch {0}".format(self._valve_id))
+        # _LOGGER.info("turn on etherrain switch {0}".format(self._valve_id))
        	self._state = True
         er.change_state(valve)
 
@@ -80,5 +80,5 @@ class ERValveSwitches(SwitchDevice):
         valve["valve"] = 0
         valve["command"] = er.WATER_OFF
         self._state = False
-        _LOGGER.info("turn off etherrain switch {0}".format(self._valve_id))
+        # _LOGGER.info("turn off etherrain switch {0}".format(self._valve_id))
         er.change_state(valve)
