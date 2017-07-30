@@ -50,9 +50,11 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_XKNX_CONFIG): cv.string,
         vol.Exclusive(CONF_XKNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
-        vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'): TUNNELING_SCHEMA,
+        vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'): \
+            TUNNELING_SCHEMA,
     })
 }, extra=vol.ALLOW_EXTRA)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -111,11 +113,11 @@ class XKNXModule(object):
         if not config_file:
             return None
         if not config_file.startswith("/"):
-            return  self.hass.config.path(config_file)
+            return self.hass.config.path(config_file)
         return config_file
 
     def connection_config(self):
-        """Resolve and return the connection_config."""
+        """Return the connection_config."""
         if CONF_XKNX_TUNNELING in self.config[DOMAIN]:
             return self.connection_config_tunneling()
         elif CONF_XKNX_ROUTING in self.config[DOMAIN]:
@@ -124,7 +126,7 @@ class XKNXModule(object):
             return self.connection_config_auto()
 
     def connection_config_routing(self):
-        """Resolve and return the connection_config if routing is configured."""
+        """Return the connection_config if routing is configured."""
         from xknx.io import ConnectionConfig, ConnectionType
         local_ip = \
             self.config[DOMAIN][CONF_XKNX_ROUTING].get(CONF_XKNX_LOCAL_IP)
@@ -133,7 +135,7 @@ class XKNXModule(object):
             local_ip=local_ip)
 
     def connection_config_tunneling(self):
-        """Resolve and return the connection_config if tunneling is configured."""
+        """Return the connection_config if tunneling is configured."""
         from xknx.io import ConnectionConfig, ConnectionType, \
             DEFAULT_MCAST_PORT
         gateway_ip = \
@@ -151,7 +153,7 @@ class XKNXModule(object):
             local_ip=local_ip)
 
     def connection_config_auto(self):
-        """Resolve and return the connection_config if auto is configured."""
-        #pylint: disable=no-self-use
+        """Return the connection_config if auto is configured."""
+        # pylint: disable=no-self-use
         from xknx.io import ConnectionConfig
         return ConnectionConfig()
