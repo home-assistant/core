@@ -25,9 +25,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up climate(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -40,6 +41,7 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up climates for XKNX platform configured within plattform."""
@@ -49,6 +51,7 @@ def add_devices_from_component(hass, add_devices):
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXClimate(hass, device))
     add_devices(entities)
+
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
@@ -75,7 +78,6 @@ class XKNXClimate(ClimateDevice):
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
-
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""

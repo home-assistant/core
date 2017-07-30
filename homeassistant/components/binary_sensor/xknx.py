@@ -53,8 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, \
-        discovery_info=None):
+def async_setup_platform(hass, config, add_devices,
+                         discovery_info=None):
     """Set up binary sensor(s) for XKNX platform."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
@@ -67,6 +67,7 @@ def async_setup_platform(hass, config, add_devices, \
 
     return True
 
+
 @asyncio.coroutine
 def add_devices_from_component(hass, add_devices):
     """Set up binary sensors for XKNX platform configured via xknx.yaml."""
@@ -76,6 +77,7 @@ def add_devices_from_component(hass, add_devices):
                 not hasattr(device, "already_added_to_hass"):
             entities.append(XKNXBinarySensor(hass, device))
     add_devices(entities)
+
 
 @asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
@@ -91,15 +93,15 @@ def add_devices_from_platform(hass, config, add_devices):
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
-          counter = automation.get(CONF_COUNTER)
-          hook = automation.get(CONF_HOOK)
-          action = automation.get(CONF_ACTION)
-          automation = XKNXAutomation(
-              hass=hass,
-              hook=hook,
-              counter=counter,
-              action=action,
-              name="{} turn ON script".format(name))
+            counter = automation.get(CONF_COUNTER)
+            hook = automation.get(CONF_HOOK)
+            action = automation.get(CONF_ACTION)
+            automation = XKNXAutomation(
+                hass=hass,
+                hook=hook,
+                counter=counter,
+                action=action,
+                name="{} turn ON script".format(name))
           binary_sensor.actions.append(automation)
 
     binary_sensor.already_added_to_hass = True
