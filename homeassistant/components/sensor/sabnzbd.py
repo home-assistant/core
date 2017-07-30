@@ -60,8 +60,6 @@ def _check_sabnzbd(sab_api, base_url, api_key):
     from pysabnzbd import SabnzbdApiException
     sab_api = sab_api(base_url, api_key)
 
-    _LOGGER.info('inside _check_sabnzbd')
-
     try:
         sab_api.check_available()
     except SabnzbdApiException:
@@ -71,7 +69,7 @@ def _check_sabnzbd(sab_api, base_url, api_key):
 
 
 def setup_sabnzbd(base_url, apikey, name, hass, config, add_devices, sab_api):
-    """Setup polling from SABnzbd and sensors."""
+    """Set up polling from SABnzbd and sensors."""
     sab_api = sab_api(base_url, apikey)
     # Add minimal info to the front end
     monitored = config.get(CONF_MONITORED_VARIABLES, ['current_status'])
@@ -100,14 +98,15 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
 
     def sabnzbd_configuration_callback(data):
         """Handle configuration changes."""
-        if _check_sabnzbd(sab_api, host, data.get('api_key')):
-            setup_sabnzbd(host, data.get('api_key'), name,
+        api_key = data.get('api_key')
+        if _check_sabnzbd(sab_api, host, api_key):
+            setup_sabnzbd(host, api_key, name,
                           hass, config, add_devices, sab_api)
 
             def success():
                 """Set up was successful."""
                 conf = _read_config(hass)
-                conf[host] = {'api_key': data.get('api_key')}
+                conf[host] = {'api_key': api_key}
                 _write_config(hass, conf)
                 req_config = _CONFIGURING.pop(host)
                 hass.async_add_job(configurator.request_done, req_config)
@@ -119,8 +118,6 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
         DEFAULT_NAME,
         sabnzbd_configuration_callback,
         description=('Enter the API Key'),
-        # Add picture?
-        # entity_picture='/static/images/logo_sabnzbd.png',
         submit_caption='Confirm',
         fields=[{
             'id': 'api_key',
