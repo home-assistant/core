@@ -95,7 +95,7 @@ class TestMQTT(unittest.TestCase):
 
         If 'payload_template' is provided and 'payload' is not, then render it.
         """
-        mqtt.publish_template(self.hass, "test/topic", False, "{{ 1+1 }}",True)
+        mqtt.publish_template(self.hass, "test/topic", False, "{{ 1+1 }}", True)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_publish.called)
         self.assertEqual(
@@ -134,22 +134,26 @@ class TestMQTT(unittest.TestCase):
 
         If 'topic_template' is provided and 'topic' is not, then render it.
         """
-        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", True, "0", False)
+        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", \
+                              True, "0", False)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_publish.called)
         self.assertEqual(
-            self.hass.data['mqtt'].async_publish.call_args[0][0], "test/topic/2")
+            self.hass.data['mqtt'].async_publish.call_args[0][0],
+            "test/topic/2")
 
-    def test_service_call_with_template_topic_and_payload_renders_template(self):
+    def test_service_call_with_template_topic_payload_renders_template(self):
         """Test the service call with rendered topic and payload templates.
 
         If 'topic_template' is provided and 'topic' is not, then render it.
         """
-        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", True, "{{ 1+1 }}", True)
+        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", True,
+                              "{{ 1+1 }}", True)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_publish.called)
         self.assertEqual(
-            self.hass.data['mqtt'].async_publish.call_args[0][0], "test/topic/2")
+            self.hass.data['mqtt'].async_publish.call_args[0][0],
+            "test/topic/2")
         self.assertEqual(
             self.hass.data['mqtt'].async_publish.call_args[0][1], "2")
 

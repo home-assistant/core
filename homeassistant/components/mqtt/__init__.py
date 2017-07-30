@@ -203,10 +203,11 @@ def async_publish(hass, topic, payload, qos=None, retain=None):
 
 
 @bind_hass
-def publish_template(hass, topic, topic_is_template, payload, payload_is_template, \
-                     qos=None, retain=None):
+def publish_template(hass, topic, topic_is_template, payload,
+                     payload_is_template, qos=None, retain=None):
     """Publish message to an MQTT topic using a template payload and/or template topic."""
-    data = _build_publish_data(topic if not topic_is_template else None, qos, retain)
+    data = _build_publish_data(topic if not topic_is_template else None,
+                               qos, retain)
     if topic_is_template:
         data[ATTR_TOPIC_TEMPLATE] = topic
     if payload_is_template and payload is not None:
