@@ -47,9 +47,13 @@ FAN_SPEEDS = {
     'Turbo': 77,
     'Max': 90}
 
-ATTR_RC_VELOCITY = 'velocity'
-ATTR_RC_ROTATION = 'rotation'
+ATTR_CLEANED_AREA = 'cleaned_area'
+ATTR_CLEANING_TIME = 'cleaning_time'
+ATTR_DO_NOT_DISTURB = 'do_not_disturb'
+ATTR_ERROR = 'error'
 ATTR_RC_DURATION = 'duration'
+ATTR_RC_ROTATION = 'rotation'
+ATTR_RC_VELOCITY = 'velocity'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -174,7 +178,7 @@ class MiroboVacuum(VacuumDevice):
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            speed = self.vacuum_state.fan_speed
+            speed = self.vacuum_state.fanspeed
             if speed in FAN_SPEEDS.values():
                 return [key for key, value in FAN_SPEEDS.items()
                         if value == speed][0]
@@ -190,14 +194,14 @@ class MiroboVacuum(VacuumDevice):
         """Return the specific state attributes of this vacuum cleaner."""
         if self.vacuum_state is not None:
             attrs = {
-                'Do not disturb':
+                ATTR_DO_NOT_DISTURB:
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                'Cleaning time': str(self.vacuum_state.clean_time),
-                'Cleaned area': self.vacuum_state.clean_area}
+                ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
+                ATTR_CLEANED_AREA: self.vacuum_state.clean_area}
             if self.vacuum_state.got_error:
-                attrs['Error'] = self.vacuum_state.error
+                attrs[ATTR_ERROR] = self.vacuum_state.error
             return attrs
 
         return {}
