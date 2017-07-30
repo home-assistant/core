@@ -82,7 +82,6 @@ class TradfriGroup(Light):
 
     def update(self):
         """Fetch new state data for this group."""
-        _LOGGER.info('Updating tradfri group')  # FIXME: Remove after testing
         from pytradfri import RequestTimeout
         try:
             self._group.update()
