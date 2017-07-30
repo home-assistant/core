@@ -201,13 +201,14 @@ def async_setup(hass, config):
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to a device."""
         raise NotImplementedError()
 
-    def async_send_command(self, **kwargs):
+    def async_send_command(self, command, **kwargs):
         """Send a command to a device.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(self.send_command, **kwargs))
+        return self.hass.async_add_job(ft.partial(
+            self.send_command, command, **kwargs))

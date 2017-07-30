@@ -4,7 +4,7 @@ Demo platform that has two fake remotes.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.remote import RemoteDevice, ATTR_COMMAND
+from homeassistant.components.remote import RemoteDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 
@@ -63,9 +63,8 @@ class DemoRemote(RemoteDevice):
         self._state = False
         self.schedule_update_ha_state()
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to a device."""
-        commands = kwargs[ATTR_COMMAND]
-        for command in commands:
-            self._last_command_sent = command
+        for com in command:
+            self._last_command_sent = com
         self.schedule_update_ha_state()

@@ -48,17 +48,18 @@ class KiraRemote(Entity):
     def update(self):
         """No-op."""
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for command in kwargs.get(remote.ATTR_COMMAND):
-            code_tuple = (command,
+        for singel_command in command:
+            code_tuple = (singel_command,
                           kwargs.get(remote.ATTR_DEVICE))
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)
 
-    def async_send_command(self, **kwargs):
+    def async_send_command(self, command, **kwargs):
         """Send a command to a device.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(self.send_command, **kwargs))
+        return self.hass.async_add_job(ft.partial(
+            self.send_command, command, **kwargs))
