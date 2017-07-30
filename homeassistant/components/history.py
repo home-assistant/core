@@ -200,10 +200,16 @@ def states_to_json(hass, states, start_time, entity_id, filters=None):
     entity_ids = [entity_id] if entity_id is not None else None
 
     # Get the states at the start time
+    timer_start = time.perf_counter()
     for state in get_states(hass, start_time, entity_ids, filters=filters):
         state.last_changed = start_time
         state.last_updated = start_time
         result[state.entity_id].append(state)
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug(
+            'getting %d first datapoints took %fs', len(result), elapsed)
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
