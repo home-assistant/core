@@ -49,8 +49,6 @@ ATTR_MSG = 'message'
 ATTR_MSGID = 'id'
 ATTR_PARSER = 'parse_mode'
 ATTR_PASSWORD = 'password'
-ATTR_PROXY_URL = 'proxy_url'
-ATTR_PROXY_PARAMS = 'proxy_params'
 ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
 ATTR_REPLYMARKUP = 'reply_markup'
 ATTR_SHOW_ALERT = 'show_alert'
@@ -61,6 +59,8 @@ ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
+CONF_PROXY_URL = 'proxy_url'
+CONF_PROXY_PARAMS = 'proxy_params'
 
 DOMAIN = 'telegram_bot'
 
@@ -87,8 +87,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ALLOWED_CHAT_IDS):
         vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-    vol.Optional(ATTR_PROXY_URL): cv.string,
-    vol.Optional(ATTR_PROXY_PARAMS): dict,
+    vol.Optional(CONF_PROXY_URL): cv.string,
+    vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -245,8 +245,8 @@ def async_setup(hass, config):
         p_config.get(CONF_API_KEY),
         p_config.get(CONF_ALLOWED_CHAT_IDS),
         p_config.get(ATTR_PARSER),
-        p_config.get(ATTR_PROXY_URL),
-        p_config.get(ATTR_PROXY_PARAMS)
+        p_config.get(CONF_PROXY_URL),
+        p_config.get(CONF_PROXY_PARAMS)
     )
 
     @asyncio.coroutine
