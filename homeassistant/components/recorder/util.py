@@ -58,10 +58,19 @@ def execute(qry):
 
     for tryno in range(0, RETRIES):
         try:
-            return [
+            timer_start = time.perf_counter()
+            result = [
                 row for row in
                 (row.to_native() for row in qry)
                 if row is not None]
+
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                elapsed = time.perf_counter() - timer_start
+                _LOGGER.debug('converting %d rows to native objects took %fs',
+                              len(result),
+                              elapsed)
+
+            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
