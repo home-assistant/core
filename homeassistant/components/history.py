@@ -97,7 +97,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
             (States.last_changed == States.last_updated) &
-            (States.last_changed > start_time))
+            (States.last_updated > start_time))
 
         if end_time is not None:
             query = query.filter(States.last_updated < end_time)
