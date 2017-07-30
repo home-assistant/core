@@ -15,6 +15,7 @@ from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
@@ -111,7 +112,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update lights."""
         flux.flux_update()
 
-    hass.services.register(DOMAIN, name + '_update', update)
+    service_name = slugify("{} {}".format(name, 'update'))
+    hass.services.register(DOMAIN, service_name, update)
 
 
 class FluxSwitch(SwitchDevice):

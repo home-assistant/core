@@ -110,11 +110,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api.update()
 
     if not api.data:
-        import homeassistant.loader as loader
-        loader.get_component('persistent_notification').create(
-            hass, 'Error: Failed to set up QNAP sensor.<br />'
-                  'Check the logs for additional information. '
-                  'You will need to restart hass after fixing.',
+        hass.components.persistent_notification.create(
+            'Error: Failed to set up QNAP sensor.<br />'
+            'Check the logs for additional information. '
+            'You will need to restart hass after fixing.',
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False

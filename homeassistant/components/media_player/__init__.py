@@ -17,10 +17,10 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.deprecation import deprecated_substitute
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -199,6 +199,7 @@ ATTR_TO_PROPERTY = [
 ]
 
 
+@bind_hass
 def is_on(hass, entity_id=None):
     """
     Return true if specified media player entity_id is on.
@@ -210,36 +211,42 @@ def is_on(hass, entity_id=None):
                for entity_id in entity_ids)
 
 
+@bind_hass
 def turn_on(hass, entity_id=None):
     """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@bind_hass
 def turn_off(hass, entity_id=None):
     """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+@bind_hass
 def toggle(hass, entity_id=None):
     """Toggle specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+@bind_hass
 def volume_up(hass, entity_id=None):
     """Send the media player the command for volume up."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
 
 
+@bind_hass
 def volume_down(hass, entity_id=None):
     """Send the media player the command for volume down."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
+@bind_hass
 def mute_volume(hass, mute, entity_id=None):
     """Send the media player the command for muting the volume."""
     data = {ATTR_MEDIA_VOLUME_MUTED: mute}
@@ -250,6 +257,7 @@ def mute_volume(hass, mute, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
 
 
+@bind_hass
 def set_volume_level(hass, volume, entity_id=None):
     """Send the media player the command for setting the volume."""
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
@@ -260,42 +268,49 @@ def set_volume_level(hass, volume, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
 
 
+@bind_hass
 def media_play_pause(hass, entity_id=None):
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
+@bind_hass
 def media_play(hass, entity_id=None):
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
 
 
+@bind_hass
 def media_pause(hass, entity_id=None):
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
 
+@bind_hass
 def media_stop(hass, entity_id=None):
     """Send the media player the stop command."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
 
 
+@bind_hass
 def media_next_track(hass, entity_id=None):
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
 
 
+@bind_hass
 def media_previous_track(hass, entity_id=None):
     """Send the media player the command for prev track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
+@bind_hass
 def media_seek(hass, position, entity_id=None):
     """Send the media player the command to seek in current playing media."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -303,6 +318,7 @@ def media_seek(hass, position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
 
 
+@bind_hass
 def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
@@ -317,6 +333,7 @@ def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
 
+@bind_hass
 def select_source(hass, source, entity_id=None):
     """Send the media player the command to select input source."""
     data = {ATTR_INPUT_SOURCE: source}
@@ -327,12 +344,14 @@ def select_source(hass, source, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
 
 
+@bind_hass
 def clear_playlist(hass, entity_id=None):
     """Send the media player the command for clear playlist."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
 
+@bind_hass
 def set_shuffle(hass, shuffle, entity_id=None):
     """Send the media player the command to enable/disable shuffle mode."""
     data = {ATTR_MEDIA_SHUFFLE: shuffle}
@@ -569,7 +588,6 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0

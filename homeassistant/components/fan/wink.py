@@ -9,7 +9,8 @@ import logging
 
 from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
                                           SPEED_LOW, SPEED_MEDIUM,
-                                          STATE_UNKNOWN)
+                                          STATE_UNKNOWN, SUPPORT_SET_SPEED,
+                                          SUPPORT_DIRECTION)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
@@ -19,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SPEED_LOWEST = 'lowest'
 SPEED_AUTO = 'auto'
+
+SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -44,11 +47,11 @@ class WinkFanDevice(WinkDevice, FanEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
-        self.wink.set_fan_speed(speed)
+        self.wink.set_state(True, speed)
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
-        self.wink.set_state(True)
+        self.wink.set_state(True, speed)
 
     def turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn off the fan."""
@@ -96,3 +99,8 @@ class WinkFanDevice(WinkDevice, FanEntity):
         if SPEED_HIGH in wink_supported_speeds:
             supported_speeds.append(SPEED_HIGH)
         return supported_speeds
+
+    @property
+    def supported_features(self: ToggleEntity) -> int:
+        """Flag supported features."""
+        return SUPPORTED_FEATURES
