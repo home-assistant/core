@@ -1,5 +1,5 @@
 """
-Support for KNX/IP lights via XKNX
+Support for KNX/IP lights via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.xknx/
@@ -74,6 +74,7 @@ class XKNXLight(Light):
     """Representation of a XKNX light."""
 
     def __init__(self, hass, device):
+        """Initialization of XKNXLight."""
         self.device = device
         self.hass = hass
         self.register_callbacks()

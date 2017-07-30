@@ -1,5 +1,5 @@
 """
-Support for KNX/IP covers via XKNX
+Support for KNX/IP covers via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.xknx/
@@ -170,12 +170,12 @@ class XKNXCover(CoverDevice):
 
     @staticmethod
     def from_xknx_position(raw):
-        """Converts XKNX position [0...255] to hass position [100...0]."""
+        """Convert XKNX position [0...255] to hass position [100...0]."""
         return 100-round((raw/256)*100)
 
     @staticmethod
     def to_xknx_position(value):
-        """Converts hass position [100...0] to XKNX position [0...255]."""
+        """Convert hass position [100...0] to XKNX position [0...255]."""
         return 255-round(value/100*255.4)
 
     def stop_cover_tilt(self, **kwargs):

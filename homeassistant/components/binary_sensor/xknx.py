@@ -1,5 +1,5 @@
 """
-Support for KNX/IP binary sensors via XKNX
+Support for KNX/IP binary sensors via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.xknx/
@@ -72,6 +72,7 @@ class XKNXBinarySensor(BinarySensorDevice):
     """Representation of a XKNX binary sensor."""
 
     def __init__(self, hass, device):
+        """Initialization of XKNXBinarySensor."""
         self.device = device
         self.hass = hass
         self.register_callbacks()

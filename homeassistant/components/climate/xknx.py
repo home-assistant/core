@@ -1,5 +1,5 @@
 """
-Support for KNX/IP climate devices via XKNX
+Support for KNX/IP climate devices via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.xknx/
@@ -67,6 +67,7 @@ class XKNXClimate(ClimateDevice):
     """Representation of a XKNX climate."""
 
     def __init__(self, hass, device):
+        """Initialization of XKNXClimate."""
         self.device = device
         self.hass = hass
         self.register_callbacks()

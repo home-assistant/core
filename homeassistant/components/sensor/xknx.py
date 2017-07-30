@@ -1,5 +1,5 @@
 """
-Support for KNX/IP sensors via XKNX
+Support for KNX/IP sensors via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.xknx/
@@ -68,6 +68,7 @@ class XKNXSensor(Entity):
     """Representation of a XKNX sensor."""
 
     def __init__(self, hass, device):
+        """Initialization of XKNXSensor."""
         self.device = device
         self.hass = hass
         self.register_callbacks()

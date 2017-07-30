@@ -1,5 +1,5 @@
 """
-Support for KNX/IP switches via XKNX
+Support for KNX/IP switches via XKNX.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.xknx/
@@ -67,6 +67,7 @@ class XKNXSwitch(SwitchDevice):
     """Representation of a XKNX switch."""
 
     def __init__(self, hass, device):
+        """Initialization of XKNXSwitch."""
         self.device = device
         self.hass = hass
         self.register_callbacks()
