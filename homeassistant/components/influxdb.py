@@ -6,12 +6,14 @@ https://home-assistant.io/components/influxdb/
 """
 import logging
 
+import re
+
 import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_BLACKLIST,
-    CONF_PASSWORD, CONF_WHITELIST)
+    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -21,57 +23,85 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
+CONF_DEFAULT_MEASUREMENT = 'default_measurement'
+CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
+CONF_BLACKLIST_DOMAINS = "blacklist_domains"
 
 DEFAULT_DATABASE = 'home_assistant'
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8086
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
 TIMEOUT = 5
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_BLACKLIST, default=[]):
-            vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
+        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+        }),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_WHITELIST, default=[]):
-            vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
+RE_DECIMAL = re.compile(r'[^\d.]+')
+
 
 def setup(hass, config):
-    """Setup the InfluxDB component."""
+    """Set up the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
 
     conf = config[DOMAIN]
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    database = conf.get(CONF_DB_NAME)
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    ssl = conf.get(CONF_SSL)
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
-    blacklist = conf.get(CONF_BLACKLIST)
-    whitelist = conf.get(CONF_WHITELIST)
+    kwargs = {
+        'database': conf[CONF_DB_NAME],
+        'verify_ssl': conf[CONF_VERIFY_SSL],
+        'timeout': TIMEOUT
+    }
+
+    if CONF_HOST in conf:
+        kwargs['host'] = conf[CONF_HOST]
+
+    if CONF_PORT in conf:
+        kwargs['port'] = conf[CONF_PORT]
+
+    if CONF_USERNAME in conf:
+        kwargs['username'] = conf[CONF_USERNAME]
+
+    if CONF_PASSWORD in conf:
+        kwargs['password'] = conf[CONF_PASSWORD]
+
+    if CONF_SSL in conf:
+        kwargs['ssl'] = conf[CONF_SSL]
+
+    include = conf.get(CONF_INCLUDE, {})
+    exclude = conf.get(CONF_EXCLUDE, {})
+    whitelist_e = set(include.get(CONF_ENTITIES, []))
+    whitelist_d = set(include.get(CONF_DOMAINS, []))
+    blacklist_e = set(exclude.get(CONF_ENTITIES, []))
+    blacklist_d = set(exclude.get(CONF_DOMAINS, []))
     tags = conf.get(CONF_TAGS)
+    default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
+    override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
 
     try:
-        influx = InfluxDBClient(
-            host=host, port=port, username=username, password=password,
-            database=database, ssl=ssl, verify_ssl=verify_ssl,
-            timeout=TIMEOUT)
-        influx.query("select * from /.*/ LIMIT 1;")
+        influx = InfluxDBClient(**kwargs)
+        influx.query("SHOW SERIES LIMIT 1;", database=conf[CONF_DB_NAME])
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file and that "
@@ -83,20 +113,30 @@ def setup(hass, config):
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist:
+                state.entity_id in blacklist_e or \
+                state.domain in blacklist_d:
             return
 
         try:
-            if len(whitelist) > 0 and state.entity_id not in whitelist:
+            if (whitelist_e and state.entity_id not in whitelist_e) or \
+                    (whitelist_d and state.domain not in whitelist_d):
                 return
 
-            _state = state_helper.state_as_number(state)
+            _state = float(state_helper.state_as_number(state))
+            _state_key = "value"
         except ValueError:
             _state = state.state
+            _state_key = "state"
 
-        measurement = state.attributes.get('unit_of_measurement')
-        if measurement in (None, ''):
-            measurement = state.entity_id
+        if override_measurement:
+            measurement = override_measurement
+        else:
+            measurement = state.attributes.get('unit_of_measurement')
+            if measurement in (None, ''):
+                if default_measurement:
+                    measurement = default_measurement
+                else:
+                    measurement = state.entity_id
 
         json_body = [
             {
@@ -107,21 +147,37 @@ def setup(hass, config):
                 },
                 'time': event.time_fired,
                 'fields': {
-                    'value': _state,
+                    _state_key: _state,
                 }
             }
         ]
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                json_body[0]['fields'][key] = value
+                # If the key is already in fields
+                if key in json_body[0]['fields']:
+                    key = key + "_"
+                # Prevent column data errors in influxDB.
+                # For each value we try to cast it as float
+                # But if we can not do it we store the value
+                # as string add "_str" postfix to the field key
+                try:
+                    json_body[0]['fields'][key] = float(value)
+                except (ValueError, TypeError):
+                    new_key = "{}_str".format(key)
+                    new_value = str(value)
+                    json_body[0]['fields'][new_key] = new_value
+
+                    if RE_DIGIT_TAIL.match(new_value):
+                        json_body[0]['fields'][key] = float(
+                            RE_DECIMAL.sub('', new_value))
 
         json_body[0]['tags'].update(tags)
 
         try:
             influx.write_points(json_body)
         except exceptions.InfluxDBClientError:
-            _LOGGER.exception('Error saving event "%s" to InfluxDB', json_body)
+            _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 

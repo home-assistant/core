@@ -9,7 +9,7 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, DeviceScanner
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
@@ -29,7 +29,7 @@ def get_scanner(hass, config):
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
-class BboxDeviceScanner(object):
+class BboxDeviceScanner(DeviceScanner):
     """This class scans for devices connected to the bbox."""
 
     def __init__(self, config):
@@ -37,7 +37,7 @@ class BboxDeviceScanner(object):
         self.last_results = []  # type: List[Device]
 
         self.success_init = self._update_info()
-        _LOGGER.info("Bbox scanner initialized")
+        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -52,12 +52,11 @@ class BboxDeviceScanner(object):
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Check the bbox for devices.
+        """Check the Bbox for devices.
 
         Returns boolean if scanning successful.
         """
@@ -79,5 +78,5 @@ class BboxDeviceScanner(object):
 
         self.last_results = last_results
 
-        _LOGGER.info("Bbox scan successful")
+        _LOGGER.info("Scan successful")
         return True

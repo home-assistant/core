@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import frontend
 
 from tests.common import get_test_home_assistant
@@ -14,12 +14,10 @@ class TestPanelIframe(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        frontend.PANELS = {}
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-        frontend.PANELS = {}
 
     def test_wrong_config(self):
         """Test setup with wrong configuration."""
@@ -30,7 +28,7 @@ class TestPanelIframe(unittest.TestCase):
                 'url': 'not-a-url'}}]
 
         for conf in to_try:
-            assert not bootstrap.setup_component(
+            assert not setup.setup_component(
                 self.hass, 'panel_iframe', {
                     'panel_iframe': conf
                 })
@@ -39,7 +37,7 @@ class TestPanelIframe(unittest.TestCase):
         'panels/ha-panel-iframe.html': 'md5md5'})
     def test_correct_config(self):
         """Test correct config."""
-        assert bootstrap.setup_component(
+        assert setup.setup_component(
             self.hass, 'panel_iframe', {
                 'panel_iframe': {
                     'router': {
@@ -55,9 +53,7 @@ class TestPanelIframe(unittest.TestCase):
                 },
             })
 
-        # 5 dev tools + map are automatically loaded
-        assert len(frontend.PANELS) == 8
-        assert frontend.PANELS['router'] == {
+        assert self.hass.data[frontend.DATA_PANELS].get('router') == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
@@ -66,7 +62,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'router'
         }
 
-        assert frontend.PANELS['weather'] == {
+        assert self.hass.data[frontend.DATA_PANELS].get('weather') == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',

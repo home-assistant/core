@@ -3,11 +3,12 @@ import os
 import unittest
 from unittest import mock
 import logging
+import re
 import requests
 import requests_mock
 
 from homeassistant import config
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
@@ -15,7 +16,10 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.util import slugify
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture)
+    get_test_home_assistant, assert_setup_component, load_fixture,
+    mock_component)
+
+from ...test_util.aiohttp import mock_aiohttp_client
 
 TEST_HOST = '127.0.0.1'
 _LOGGER = logging.getLogger(__name__)
@@ -26,13 +30,21 @@ class TestDdwrt(unittest.TestCase):
 
     hass = None
 
+    def run(self, result=None):
+        """Mock out http calls to macvendor API for whole test suite."""
+        with mock_aiohttp_client() as aioclient_mock:
+            macvendor_re = re.compile('http://api.macvendors.com/.*')
+            aioclient_mock.get(macvendor_re, text='')
+            super().run(result)
+
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        mock_component(self.hass, 'zone')
 
     def teardown_method(self, _):
         """Stop everything that was started."""
+        self.hass.stop()
         try:
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:
@@ -45,7 +57,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=401)
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -65,7 +77,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=444)
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -75,7 +87,7 @@ class TestDdwrt(unittest.TestCase):
                     }})
 
                 self.assertTrue(
-                    'Invalid response from ddwrt' in
+                    'Invalid response from DD-WRT' in
                     str(mock_error.call_args_list[-1]))
 
     @mock.patch('homeassistant.components.device_tracker._LOGGER.error')
@@ -83,7 +95,7 @@ class TestDdwrt(unittest.TestCase):
                 'ddwrt.DdWrtDeviceScanner.get_ddwrt_data', return_value=None)
     def test_no_response(self, data_mock, error_mock):
         """Create a Ddwrt scanner with no response in init, should fail."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
@@ -100,7 +112,7 @@ class TestDdwrt(unittest.TestCase):
     @mock.patch('homeassistant.components.device_tracker.ddwrt._LOGGER.error')
     def test_get_timeout(self, mock_error, mock_request):
         """Test get Ddwrt data with request time out."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
@@ -128,7 +140,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -136,6 +148,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -156,7 +169,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST, text=None)
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -164,6 +177,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -184,7 +198,7 @@ class TestDdwrt(unittest.TestCase):
                 text=load_fixture('Ddwrt_Status_Lan.txt').
                 replace('dhcp_leases', 'missing'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -192,6 +206,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -214,7 +229,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -234,7 +249,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',

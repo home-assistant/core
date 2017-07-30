@@ -3,10 +3,10 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -16,7 +16,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['rfxtrx']
+        mock_component(self.hass, 'rfxtrx')
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -49,6 +49,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config1(self):
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
@@ -60,7 +61,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config2(self):
-        """Test configuration."""
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
@@ -73,6 +74,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config3(self):
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,

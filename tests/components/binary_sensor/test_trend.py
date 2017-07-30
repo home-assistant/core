@@ -1,5 +1,5 @@
 """The test for the Trend sensor platform."""
-import homeassistant.bootstrap as bootstrap
+from homeassistant import setup
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -19,7 +19,7 @@ class TestTrendBinarySensor:
 
     def test_up(self):
         """Test up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -40,7 +40,7 @@ class TestTrendBinarySensor:
 
     def test_down(self):
         """Test down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -61,7 +61,7 @@ class TestTrendBinarySensor:
 
     def test__invert_up(self):
         """Test up trend with custom message."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -83,7 +83,7 @@ class TestTrendBinarySensor:
 
     def test_invert_down(self):
         """Test down trend with custom message."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -105,7 +105,7 @@ class TestTrendBinarySensor:
 
     def test_attribute_up(self):
         """Test attribute up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -126,7 +126,7 @@ class TestTrendBinarySensor:
 
     def test_attribute_down(self):
         """Test attribute down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -149,7 +149,7 @@ class TestTrendBinarySensor:
 
     def test_non_numeric(self):
         """Test up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -170,7 +170,7 @@ class TestTrendBinarySensor:
 
     def test_missing_attribute(self):
         """Test attribute down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -195,7 +195,7 @@ class TestTrendBinarySensor:
             # pylint: disable=invalid-name
         """Test invalid name."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
@@ -212,7 +212,7 @@ class TestTrendBinarySensor:
             # pylint: disable=invalid-name
         """Test invalid sensor."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
@@ -228,7 +228,7 @@ class TestTrendBinarySensor:
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'trend'
                 }

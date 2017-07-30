@@ -1,16 +1,16 @@
-**Description:**
+## Description:
 
 
 **Related issue (if applicable):** fixes #<home-assistant issue number goes here>
 
 **Pull request in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io) with documentation (if applicable):** home-assistant/home-assistant.github.io#<home-assistant.github.io PR number goes here>
 
-**Example entry for `configuration.yaml` (if applicable):**
+## Example entry for `configuration.yaml` (if applicable):
 ```yaml
 
 ```
 
-**Checklist:**
+## Checklist:
 
 If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io)
@@ -26,5 +26,5 @@ If the code does not interact with devices:
   - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L16
-[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L51
+[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L14
+[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L54

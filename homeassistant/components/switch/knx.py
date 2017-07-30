@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the KNX switch platform."""
+    """Set up the KNX switch platform."""
     add_devices([KNXSwitch(hass, KNXConfig(config))])
 
 
@@ -40,7 +40,7 @@ class KNXSwitch(KNXGroupAddress, SwitchDevice):
         self.group_write(1)
         self._state = [1]
         if not self.should_poll:
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off.
@@ -50,4 +50,4 @@ class KNXSwitch(KNXGroupAddress, SwitchDevice):
         self.group_write(0)
         self._state = [0]
         if not self.should_poll:
-            self.update_ha_state()
+            self.schedule_update_ha_state()

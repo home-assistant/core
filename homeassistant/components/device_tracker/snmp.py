@@ -6,34 +6,30 @@ https://home-assistant.io/components/device_tracker.snmp/
 """
 import binascii
 import logging
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-from homeassistant.util import Throttle
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp==4.3.2']
 
-CONF_COMMUNITY = "community"
-CONF_AUTHKEY = "authkey"
-CONF_PRIVKEY = "privkey"
-CONF_BASEOID = "baseoid"
+REQUIREMENTS = ['pysnmp==4.3.9']
 
-DEFAULT_COMMUNITY = "public"
+CONF_COMMUNITY = 'community'
+CONF_AUTHKEY = 'authkey'
+CONF_PRIVKEY = 'privkey'
+CONF_BASEOID = 'baseoid'
+
+DEFAULT_COMMUNITY = 'public'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-    vol.Inclusive(CONF_AUTHKEY, "keys"): cv.string,
-    vol.Inclusive(CONF_PRIVKEY, "keys"): cv.string,
+    vol.Inclusive(CONF_AUTHKEY, 'keys'): cv.string,
+    vol.Inclusive(CONF_PRIVKEY, 'keys'): cv.string,
     vol.Required(CONF_BASEOID): cv.string
 })
 
@@ -46,7 +42,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class SnmpScanner(object):
+class SnmpScanner(DeviceScanner):
     """Queries any SNMP capable Access Point for connected devices."""
 
     def __init__(self, config):
@@ -67,9 +63,6 @@ class SnmpScanner(object):
                 privProtocol=cfg.usmAesCfb128Protocol
             )
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
-
-        self.lock = threading.Lock()
-
         self.last_results = []
 
         # Test the router is accessible
@@ -89,7 +82,6 @@ class SnmpScanner(object):
         # We have no names
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the device is up to date.
 
@@ -98,13 +90,12 @@ class SnmpScanner(object):
         if not self.success_init:
             return False
 
-        with self.lock:
-            data = self.get_snmp_data()
-            if not data:
-                return False
+        data = self.get_snmp_data()
+        if not data:
+            return False
 
-            self.last_results = data
-            return True
+        self.last_results = data
+        return True
 
     def get_snmp_data(self):
         """Fetch MAC addresses from access point via SNMP."""
@@ -118,14 +109,17 @@ class SnmpScanner(object):
             return
         # pylint: disable=no-member
         if errstatus:
-            _LOGGER.error('SNMP error: %s at %s', errstatus.prettyPrint(),
+            _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
                           errindex and restable[int(errindex) - 1][0] or '?')
             return
 
         for resrow in restable:
             for _, val in resrow:
-                mac = binascii.hexlify(val.asOctets()).decode('utf-8')
-                _LOGGER.debug('Found mac %s', mac)
+                try:
+                    mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                except AttributeError:
+                    continue
+                _LOGGER.debug("Found MAC %s", mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices

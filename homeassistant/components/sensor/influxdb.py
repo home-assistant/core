@@ -16,6 +16,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import Throttle
 
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -41,7 +42,7 @@ REQUIREMENTS = ['influxdb==3.0.0']
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_MEASUREMENT_NAME): cv.string,
-    vol.Required(CONF_WHERE): cv.string,
+    vol.Required(CONF_WHERE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
@@ -65,7 +66,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the InfluxDB component."""
+    """Set up the InfluxDB component."""
     influx_conf = {'host': config[CONF_HOST],
                    'port': config.get(CONF_PORT),
                    'username': config.get(CONF_USERNAME),
@@ -100,22 +101,23 @@ class InfluxSensor(Entity):
         database = query.get(CONF_DB_NAME)
         self._state = None
         self._hass = hass
-        formated_query = "select {}({}) as value from {} where {}"\
-            .format(query.get(CONF_GROUP_FUNCTION),
-                    query.get(CONF_FIELD),
-                    query.get(CONF_MEASUREMENT_NAME),
-                    query.get(CONF_WHERE))
-        influx = InfluxDBClient(host=influx_conf['host'],
-                                port=influx_conf['port'],
-                                username=influx_conf['username'],
-                                password=influx_conf['password'],
-                                database=database,
-                                ssl=influx_conf['ssl'],
-                                verify_ssl=influx_conf['verify_ssl'])
+
+        where_clause = query.get(CONF_WHERE)
+        where_clause.hass = hass
+
+        influx = InfluxDBClient(
+            host=influx_conf['host'], port=influx_conf['port'],
+            username=influx_conf['username'], password=influx_conf['password'],
+            database=database, ssl=influx_conf['ssl'],
+            verify_ssl=influx_conf['verify_ssl'])
         try:
             influx.query("select * from /.*/ LIMIT 1;")
             self.connected = True
-            self.data = InfluxSensorData(influx, formated_query)
+            self.data = InfluxSensorData(influx,
+                                         query.get(CONF_GROUP_FUNCTION),
+                                         query.get(CONF_FIELD),
+                                         query.get(CONF_MEASUREMENT_NAME),
+                                         where_clause)
             self.update()
         except exceptions.InfluxDBClientError as exc:
             _LOGGER.error("Database host is not accessible due to '%s', please"
@@ -135,12 +137,12 @@ class InfluxSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     def update(self):
@@ -159,24 +161,41 @@ class InfluxSensor(Entity):
 class InfluxSensorData(object):
     """Class for handling the data retrieval."""
 
-    def __init__(self, influx, query):
+    def __init__(self, influx, group, field, measurement, where):
         """Initialize the data object."""
         self.influx = influx
-        self.query = query
+        self.group = group
+        self.field = field
+        self.measurement = measurement
+        self.where = where
         self.value = None
+        self.query = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Running query: %s', self.query)
+        _LOGGER.info("Rendering where: %s", self.where)
+        try:
+            where_clause = self.where.render()
+        except TemplateError as ex:
+            _LOGGER.error('Could not render where clause template: %s', ex)
+            return
+
+        self.query = "select {}({}) as value from {} where {}"\
+            .format(self.group,
+                    self.field,
+                    self.measurement,
+                    where_clause)
+
+        _LOGGER.info("Running query: %s", self.query)
 
         points = list(self.influx.query(self.query).get_points())
-        if len(points) == 0:
-            _LOGGER.warning('Query returned no points, sensor state set'
-                            ' to UNKNOWN : %s', self.query)
+        if not points:
+            _LOGGER.warning("Query returned no points, sensor state set "
+                            "to UNKNOWN: %s", self.query)
             self.value = None
         else:
             if len(points) > 1:
-                _LOGGER.warning('Query returned multiple points, only first'
-                                ' one shown : %s', self.query)
+                _LOGGER.warning("Query returned multiple points, only first "
+                                "one shown: %s", self.query)
             self.value = points[0].get('value')

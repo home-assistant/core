@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 """Download the latest Polymer v1 iconset for materialdesignicons.com."""
+
 import gzip
 import os
 import re
@@ -62,6 +62,7 @@ def main():
     fingerprint()
 
     print('Updated to latest version')
+
 
 if __name__ == '__main__':
     main()

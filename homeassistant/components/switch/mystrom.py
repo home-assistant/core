@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.3.6']
+REQUIREMENTS = ['python-mystrom==0.3.8']
 
 DEFAULT_NAME = 'myStrom Switch'
 
@@ -64,8 +64,8 @@ class MyStromSwitch(SwitchDevice):
         return bool(self.data['relay'])
 
     @property
-    def current_power_mwh(self):
-        """Return the current power consumption in mWh."""
+    def current_power_w(self):
+        """Return the current power consumption in W."""
         return round(self.data['power'], 2)
 
     def turn_on(self, **kwargs):

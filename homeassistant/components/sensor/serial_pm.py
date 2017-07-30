@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pmsensor==0.3']
+REQUIREMENTS = ['pmsensor==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

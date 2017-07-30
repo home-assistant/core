@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import requests_mock
 
+from homeassistant.setup import setup_component
 from homeassistant.components.sensor import sleepiq
 
 from tests.components.test_sleepiq import mock_responses
@@ -30,10 +31,21 @@ class TestSleepIQSensorSetup(unittest.TestCase):
             'password': self.password,
         }
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test for successfully setting up the SleepIQ platform."""
         mock_responses(mock)
+
+        assert setup_component(self.hass, 'sleepiq', {
+            'sleepiq': {
+                'username': '',
+                'password': '',
+            }
+        })
 
         sleepiq.setup_platform(self.hass,
                                self.config,

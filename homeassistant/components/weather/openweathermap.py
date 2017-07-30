@@ -9,13 +9,14 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, STATE_UNKNOWN)
+from homeassistant.components.weather import (
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
+                                 CONF_LONGITUDE, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.5.0']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ DEFAULT_NAME = 'OpenWeatherMap'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
 
 CONDITION_CLASSES = {
     'cloudy': [804],
@@ -51,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OpenWeatherMap weather platform."""
+    """Set up the OpenWeatherMap weather platform."""
     import pyowm
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
@@ -67,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = WeatherData(owm, latitude, longitude)
 
     add_devices([OpenWeatherMapWeather(
-        name, data, hass.config.units.temperature_unit)])
+        name, data, hass.config.units.temperature_unit)], True)
 
 
 class OpenWeatherMapWeather(WeatherEntity):
@@ -78,8 +80,8 @@ class OpenWeatherMapWeather(WeatherEntity):
         self._name = name
         self._owm = owm
         self._temperature_unit = temperature_unit
-        self.date = None
-        self.update()
+        self.data = None
+        self.forecast_data = None
 
     @property
     def name(self):
@@ -103,7 +105,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._temperature_unit
+        return TEMP_CELSIUS
 
     @property
     def pressure(self):
@@ -130,10 +132,20 @@ class OpenWeatherMapWeather(WeatherEntity):
         """Return the attribution."""
         return ATTRIBUTION
 
+    @property
+    def forecast(self):
+        """Return the forecast array."""
+        return [{
+            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
+            ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')}
+                for entry in self.forecast_data.get_weathers()]
+
     def update(self):
         """Get the latest data from OWM and updates the states."""
         self._owm.update()
+        self._owm.update_forecast()
         self.data = self._owm.data
+        self.forecast_data = self._owm.forecast_data
 
 
 class WeatherData(object):
@@ -145,6 +157,7 @@ class WeatherData(object):
         self.latitude = latitude
         self.longitude = longitude
         self.data = None
+        self.forecast_data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -155,3 +168,15 @@ class WeatherData(object):
             return
 
         self.data = obs.get_weather()
+
+    @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
+    def update_forecast(self):
+        """Get the lastest forecast from OpenWeatherMap."""
+        fcd = self.owm.three_hours_forecast_at_coords(
+            self.latitude, self.longitude)
+
+        if fcd is None:
+            _LOGGER.warning("Failed to fetch forecast data from OWM")
+            return
+
+        self.forecast_data = fcd.get_forecast()

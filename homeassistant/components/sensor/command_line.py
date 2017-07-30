@@ -4,9 +4,9 @@ Allows to configure custom shell commands to turn a value for a sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
+from datetime import timedelta
 import logging
 import subprocess
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,14 +15,13 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
@@ -34,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Command Sensor."""
+    """Set up the Command Sensor."""
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -96,16 +95,15 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Running command: %s', self.command)
+        _LOGGER.info("Running command: %s", self.command)
 
         try:
-            return_value = subprocess.check_output(self.command, shell=True,
-                                                   timeout=15)
+            return_value = subprocess.check_output(
+                self.command, shell=True, timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', self.command)
+            _LOGGER.error("Command failed: %s", self.command)
         except subprocess.TimeoutExpired:
-            _LOGGER.error('Timeout for command: %s', self.command)
+            _LOGGER.error("Timeout for command: %s", self.command)

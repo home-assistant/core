@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OhmConnect sensor."""
+    """Set up the OhmConnect sensor."""
     name = config.get(CONF_NAME)
     ohmid = config.get(CONF_ID)
 
@@ -52,7 +52,7 @@ class OhmconnectSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -60,8 +60,7 @@ class OhmconnectSensor(Entity):
         """Return the state of the sensor."""
         if self._data.get("active") == "True":
             return "Active"
-        else:
-            return "Inactive"
+        return "Inactive"
 
     @property
     def device_state_attributes(self):

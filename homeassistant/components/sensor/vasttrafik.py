@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['vtjp==0.1.11']
+REQUIREMENTS = ['vtjp==0.1.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +42,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the departure sensor."""
-    from vasttrafik import JournyPlanner
-    planner = JournyPlanner(
-        config.get(CONF_KEY),
-        config.get(CONF_SECRET))
+    """Set up the departure sensor."""
+    import vasttrafik
+    planner = vasttrafik.JournyPlanner(
+        config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
+                vasttrafik,
                 planner,
                 departure.get(CONF_NAME),
                 departure.get(CONF_FROM),
@@ -62,8 +62,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    def __init__(self, planner, name, departure, heading, delay):
+    def __init__(self, vasttrafik, planner, name, departure, heading, delay):
         """Initialize the sensor."""
+        self._vasttrafik = vasttrafik
         self._planner = planner
         self._name = name or departure
         self._departure = planner.location_name(departure)[0]
@@ -102,7 +103,7 @@ class VasttrafikDepartureSensor(Entity):
         """Return the next departure time."""
         if not self._departureboard:
             _LOGGER.warning(
-                'No departures from "%s" heading "%s"',
+                "No departures from %s heading %s",
                 self._departure['name'],
                 self._heading['name'] if self._heading else 'ANY')
             return
@@ -113,7 +114,11 @@ class VasttrafikDepartureSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the departure board."""
-        self._departureboard = self._planner.departureboard(
-            self._departure['id'],
-            direction=self._heading['id'] if self._heading else None,
-            date=datetime.now()+self._delay)
+        try:
+            self._departureboard = self._planner.departureboard(
+                self._departure['id'],
+                direction=self._heading['id'] if self._heading else None,
+                date=datetime.now()+self._delay)
+        except self._vasttrafik.Error:
+            _LOGGER.warning("Unable to read departure board, updating token")
+            self._planner.update_token()

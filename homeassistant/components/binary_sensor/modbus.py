@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -16,9 +16,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_SLAVE = "slave"
+CONF_COIL = 'coil'
+CONF_COILS = 'coils'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
@@ -30,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Modbus binary sensors."""
+    """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
         sensors.append(ModbusCoilSensor(
@@ -51,6 +50,11 @@ class ModbusCoilSensor(BinarySensorDevice):
         self._value = None
 
     @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
     def is_on(self):
         """Return the state of the sensor."""
         return self._value
@@ -58,4 +62,10 @@ class ModbusCoilSensor(BinarySensorDevice):
     def update(self):
         """Update the state of the sensor."""
         result = modbus.HUB.read_coils(self._slave, self._coil, 1)
-        self._value = result.bits[0]
+        try:
+            self._value = result.bits[0]
+        except AttributeError:
+            _LOGGER.error(
+                'No response from modbus slave %s coil %s',
+                self._slave,
+                self._coil)

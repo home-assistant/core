@@ -5,22 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.netgear/
 """
 import logging
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
-from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+REQUIREMENTS = ['pynetgear==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3.3']
 
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
@@ -47,7 +43,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class NetgearDeviceScanner(object):
+class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
     def __init__(self, host, username, password, port):
@@ -55,11 +51,9 @@ class NetgearDeviceScanner(object):
         import pynetgear
 
         self.last_results = []
-        self.lock = threading.Lock()
-
         self._api = pynetgear.Netgear(password, host, username, port)
 
-        _LOGGER.info('Logging in')
+        _LOGGER.info("Logging in")
 
         results = self._api.get_attached_devices()
 
@@ -68,7 +62,7 @@ class NetgearDeviceScanner(object):
         if self.success_init:
             self.last_results = results
         else:
-            _LOGGER.error('Failed to Login')
+            _LOGGER.error("Failed to Login")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -84,7 +78,6 @@ class NetgearDeviceScanner(object):
         except StopIteration:
             return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Retrieve latest information from the Netgear router.
 
@@ -93,12 +86,11 @@ class NetgearDeviceScanner(object):
         if not self.success_init:
             return
 
-        with self.lock:
-            _LOGGER.info('Scanning')
+        _LOGGER.info("Scanning")
 
-            results = self._api.get_attached_devices()
+        results = self._api.get_attached_devices()
 
-            if results is None:
-                _LOGGER.warning('Error scanning devices')
+        if results is None:
+            _LOGGER.warning("Error scanning devices")
 
-            self.last_results = results or []
+        self.last_results = results or []

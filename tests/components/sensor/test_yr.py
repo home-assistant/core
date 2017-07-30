@@ -14,7 +14,8 @@ NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 @asyncio.coroutine
 def test_default_setup(hass, aioclient_mock):
     """Test the default setup."""
-    aioclient_mock.get('http://api.yr.no/weatherapi/locationforecast/1.9/',
+    aioclient_mock.get('https://aa015h6buqvih86i1.api.met.no/'
+                       'weatherapi/locationforecast/1.9/',
                        text=load_fixture('yr.no.json'))
     config = {'platform': 'yr',
               'elevation': 0}
@@ -32,7 +33,8 @@ def test_default_setup(hass, aioclient_mock):
 @asyncio.coroutine
 def test_custom_setup(hass, aioclient_mock):
     """Test a custom setup."""
-    aioclient_mock.get('http://api.yr.no/weatherapi/locationforecast/1.9/',
+    aioclient_mock.get('https://aa015h6buqvih86i1.api.met.no/'
+                       'weatherapi/locationforecast/1.9/',
                        text=load_fixture('yr.no.json'))
 
     config = {'platform': 'yr',

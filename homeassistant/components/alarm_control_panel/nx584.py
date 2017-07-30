@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN, CONF_NAME, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynx584==0.2']
+REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup nx584 platform."""
+    """Set up the nx584 platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -42,15 +42,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         add_devices([NX584Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error('Unable to connect to NX584: %s', str(ex))
+        _LOGGER.error("Unable to connect to NX584: %s", str(ex))
         return False
 
 
 class NX584Alarm(alarm.AlarmControlPanel):
-    """Represents the NX584-based alarm panel."""
+    """Representation of a NX584-based alarm panel."""
 
     def __init__(self, hass, url, name):
-        """Initalize the nx584 alarm panel."""
+        """Init the nx584 alarm panel."""
         from nx584 import client
         self._hass = hass
         self._name = name
@@ -63,18 +63,13 @@ class NX584Alarm(alarm.AlarmControlPanel):
         self._state = STATE_UNKNOWN
 
     @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
     def code_format(self):
-        """The characters if code is defined."""
+        """Return che characters if code is defined."""
         return '[0-9]{4}([0-9]{2})?'
 
     @property
@@ -88,18 +83,19 @@ class NX584Alarm(alarm.AlarmControlPanel):
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
+            _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
             self._state = STATE_UNKNOWN
+            zones = []
         except IndexError:
-            _LOGGER.error('nx584 reports no partitions')
+            _LOGGER.error("nx584 reports no partitions")
             self._state = STATE_UNKNOWN
+            zones = []
 
         bypassed = False
         for zone in zones:
             if zone['bypassed']:
-                _LOGGER.debug('Zone %(zone)s is bypassed, '
-                              'assuming HOME',
+                _LOGGER.debug("Zone %(zone)s is bypassed, assuming HOME",
                               dict(zone=zone['number']))
                 bypassed = True
                 break
@@ -117,12 +113,8 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('home')
+        self._alarm.arm('stay')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._alarm.arm('auto')
-
-    def alarm_trigger(self, code=None):
-        """Alarm trigger command."""
-        raise NotImplementedError()
+        self._alarm.arm('exit')

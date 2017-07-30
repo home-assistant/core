@@ -12,8 +12,10 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
     CONF_LONGITUDE, CONF_ICON)
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.util.async import run_callback_threadsafe
 from homeassistant.util.location import distance
 import homeassistant.helpers.config_validation as cv
 
@@ -46,14 +48,26 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
+@bind_hass
 def active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude."""
+    return run_callback_threadsafe(
+        hass.loop, async_active_zone, hass, latitude, longitude, radius
+    ).result()
+
+
+@bind_hass
+def async_active_zone(hass, latitude, longitude, radius=0):
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     zones = (hass.states.get(entity_id) for entity_id
-             in sorted(hass.states.entity_ids(DOMAIN)))
+             in sorted(hass.states.async_entity_ids(DOMAIN)))
 
     min_dist = None
     closest = None
@@ -80,7 +94,10 @@ def active_zone(hass, latitude, longitude, radius=0):
 
 
 def in_zone(zone, latitude, longitude, radius=0):
-    """Test if given latitude, longitude is in given zone."""
+    """Test if given latitude, longitude is in given zone.
+
+    Async friendly.
+    """
     zone_dist = distance(
         latitude, longitude,
         zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
@@ -90,7 +107,7 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup zone."""
+    """Set up the zone."""
     entities = set()
     tasks = []
     for _, entry in config_per_platform(config, DOMAIN):
@@ -98,8 +115,8 @@ def async_setup(hass, config):
         zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                     entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                     entry.get(CONF_PASSIVE))
-        zone.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name,
-                                                  entities)
+        zone.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, entities)
         tasks.append(zone.async_update_ha_state())
         entities.add(zone.entity_id)
 

@@ -11,30 +11,26 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     MEDIA_TYPE_MUSIC,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.3.0']
+REQUIREMENTS = ['rxv==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | \
-                 SUPPORT_PLAY_MEDIA
-
-# Only supported by some sources
-SUPPORT_PLAYBACK = SUPPORT_PLAY_MEDIA | SUPPORT_PAUSE | SUPPORT_STOP | \
-                   SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
+KNOWN = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -48,8 +44,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yamaha platform."""
+    """Set up the Yamaha platform."""
     import rxv
+    # keep track of configured receivers so that we don't end up
+    # discovering a receiver dynamically that we have static config
+    # for.
+    if hass.data.get(KNOWN, None) is None:
+        hass.data[KNOWN] = set()
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -58,16 +59,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     zone_ignore = config.get(CONF_ZONE_IGNORE)
 
     if discovery_info is not None:
-        name = discovery_info[0]
-        model = discovery_info[1]
-        ctrl_url = discovery_info[2]
-        desc_url = discovery_info[3]
+        name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        ctrl_url = discovery_info.get('control_url')
+        desc_url = discovery_info.get('description_url')
+        if ctrl_url in hass.data[KNOWN]:
+            _LOGGER.info("%s already manually configured", ctrl_url)
+            return
         receivers = rxv.RXV(
             ctrl_url,
             model_name=model,
             friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
+        # when we are dynamically discovered config is empty
+        zone_ignore = []
     elif host is None:
         receivers = []
         for recv in rxv.find():
@@ -78,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for receiver in receivers:
         if receiver.zone not in zone_ignore:
+            hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
                 YamahaDevice(name, receiver, source_ignore, source_names)])
 
@@ -96,6 +103,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
         self._reverse_mapping = None
+        self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
         self.update()
@@ -124,6 +132,7 @@ class YamahaDevice(MediaPlayerDevice):
         current_source = self._receiver.input
         self._current_source = self._source_names.get(
             current_source, current_source)
+        self._playback_support = self._receiver.get_playback_support()
         self._is_playback_supported = self._receiver.is_playback_supported(
             self._current_source)
 
@@ -172,12 +181,20 @@ class YamahaDevice(MediaPlayerDevice):
         return self._source_list
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
-        supported_commands = SUPPORT_YAMAHA
-        if self._is_playback_supported:
-            supported_commands |= SUPPORT_PLAYBACK
-        return supported_commands
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        supported_features = SUPPORT_YAMAHA
+
+        supports = self._playback_support
+        mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
+                   'pause': SUPPORT_PAUSE,
+                   'stop': SUPPORT_STOP,
+                   'skip_f': SUPPORT_NEXT_TRACK,
+                   'skip_r': SUPPORT_PREVIOUS_TRACK}
+        for attr, feature in mapping.items():
+            if getattr(supports, attr, False):
+                supported_features |= feature
+        return supported_features
 
     def turn_off(self):
         """Turn off media player."""
@@ -224,7 +241,7 @@ class YamahaDevice(MediaPlayerDevice):
             function()
         except rxv.exceptions.ResponseException:
             _LOGGER.warning(
-                'Failed to execute %s on %s', function_text, self._name)
+                "Failed to execute %s on %s", function_text, self._name)
 
     def select_source(self, source):
         """Select input source."""
@@ -272,5 +289,5 @@ class YamahaDevice(MediaPlayerDevice):
             # just the one we have.
             if song and station:
                 return '{}: {}'.format(station, song)
-            else:
-                return song or station
+
+            return song or station

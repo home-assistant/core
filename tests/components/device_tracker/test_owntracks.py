@@ -1,17 +1,19 @@
 """The tests for the Owntracks device tracker."""
+import asyncio
 import json
 import os
-import unittest
 from collections import defaultdict
+import unittest
 from unittest.mock import patch
 
 from tests.common import (assert_setup_component, fire_mqtt_message,
                           get_test_home_assistant, mock_mqtt_component)
 
 import homeassistant.components.device_tracker.owntracks as owntracks
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
+from homeassistant.util.async import run_coroutine_threadsafe
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -185,9 +187,9 @@ REGION_LEAVE_ZERO_MESSAGE = {
 BAD_JSON_PREFIX = '--$this is bad json#--'
 BAD_JSON_SUFFIX = '** and it ends here ^^'
 
-SECRET_KEY = 's3cretkey'
+TEST_SECRET_KEY = 's3cretkey'
 ENCRYPTED_LOCATION_MESSAGE = {
-    # Encrypted version of LOCATION_MESSAGE using libsodium and SECRET_KEY
+    # Encrypted version of LOCATION_MESSAGE using libsodium and TEST_SECRET_KEY
     '_type': 'encrypted',
     'data': ('qm1A83I6TVFRmH5343xy+cbex8jBBxDFkHRuJhELVKVRA/DgXcyKtghw'
              '9pOw75Lo4gHcyy2wV5CmkjrpKEBR7Qhye4AR0y7hOvlx6U/a3GuY1+W8'
@@ -377,7 +379,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         message = REGION_ENTER_MESSAGE.copy()
         message['desc'] = "inner 2"
         self.send_message(EVENT_TOPIC, message)
-        self.assert_location_state('inner_2')
+        self.assert_location_state('inner 2')
 
         message = REGION_LEAVE_MESSAGE.copy()
         message['desc'] = "inner 2"
@@ -640,6 +642,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     def test_waypoint_import_no_whitelist(self):
         """Test import of list of waypoints with no whitelist set."""
+        @asyncio.coroutine
         def mock_see(**kwargs):
             """Fake see method for owntracks."""
             return
@@ -649,7 +652,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
             CONF_MAX_GPS_ACCURACY: 200,
             CONF_WAYPOINT_IMPORT: True
         }
-        owntracks.setup_scanner(self.hass, test_config, mock_see)
+        run_coroutine_threadsafe(owntracks.async_setup_scanner(
+            self.hass, test_config, mock_see), self.hass.loop).result()
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
@@ -681,6 +685,18 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assertTrue(wayp == new_wayp)
 
 
+def mock_cipher():
+    """Return a dummy pickle-based cipher."""
+    def mock_decrypt(ciphertext, key):
+        """Decrypt/unpickle."""
+        import pickle
+        (mkey, plaintext) = pickle.loads(ciphertext)
+        if key != mkey:
+            raise ValueError()
+        return plaintext
+    return (len(TEST_SECRET_KEY), mock_decrypt)
+
+
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     """Test the OwnTrack sensor."""
 
@@ -691,16 +707,9 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
-    def mock_cipher():  # pylint: disable=no-method-argument
-        """Return a dummy pickle-based cipher."""
-        def mock_decrypt(ciphertext, key):
-            """Decrypt/unpickle."""
-            import pickle
-            (mkey, plaintext) = pickle.loads(ciphertext)
-            if key != mkey:
-                raise ValueError()
-            return plaintext
-        return (len(SECRET_KEY), mock_decrypt)
+    def teardown_method(self, method):
+        """Tear down resources."""
+        self.hass.stop()
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
@@ -710,7 +719,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'owntracks',
-                    CONF_SECRET: SECRET_KEY,
+                    CONF_SECRET: TEST_SECRET_KEY,
                 }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(2.0)
@@ -724,7 +733,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'owntracks',
                     CONF_SECRET: {
-                        LOCATION_TOPIC: SECRET_KEY,
+                        LOCATION_TOPIC: TEST_SECRET_KEY,
                     }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(2.0)
@@ -795,7 +804,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'owntracks',
-                    CONF_SECRET: SECRET_KEY,
+                    CONF_SECRET: TEST_SECRET_KEY,
                     }})
 
         self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)

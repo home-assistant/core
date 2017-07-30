@@ -4,7 +4,7 @@ import unittest
 from homeassistant.components import proximity
 from homeassistant.components.proximity import DOMAIN
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -394,6 +394,7 @@ class TestProximity(unittest.TestCase):
                         'device_tracker.test2'
                     ],
                     'tolerance': '1',
+                    'zone': 'home'
                 }
             }
         })
@@ -445,7 +446,9 @@ class TestProximity(unittest.TestCase):
                     'devices': [
                         'device_tracker.test1',
                         'device_tracker.test2'
-                    ]
+                    ],
+                    'zone': 'home'
+
                 }
             }
         })
@@ -497,7 +500,8 @@ class TestProximity(unittest.TestCase):
                     'devices': [
                         'device_tracker.test1',
                         'device_tracker.test2'
-                    ]
+                    ],
+                    'zone': 'home'
                 }
             }
         })
@@ -538,7 +542,8 @@ class TestProximity(unittest.TestCase):
                     'devices': [
                         'device_tracker.test1',
                         'device_tracker.test2'
-                    ]
+                    ],
+                    'zone': 'home'
                 }
             }
         })
@@ -601,7 +606,8 @@ class TestProximity(unittest.TestCase):
                     'devices': [
                         'device_tracker.test1'
                     ],
-                    'tolerance': 1000
+                    'tolerance': 1000,
+                    'zone': 'home'
                 }
             }
         })
@@ -654,7 +660,8 @@ class TestProximity(unittest.TestCase):
                     'devices': [
                         'device_tracker.test1',
                         'device_tracker.test2'
-                    ]
+                    ],
+                    'zone': 'home'
                 }
             }
         })

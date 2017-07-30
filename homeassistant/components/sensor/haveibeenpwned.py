@@ -102,15 +102,14 @@ class HaveIBeenPwnedSensor(Entity):
         # data after hass startup once we have the data it will update as
         # normal using update
         if self._email not in self._data.data:
-            track_point_in_time(self._hass,
-                                self.update_nothrottle,
-                                dt_util.now() +
-                                MIN_TIME_BETWEEN_FORCED_UPDATES)
+            track_point_in_time(
+                self._hass, self.update_nothrottle,
+                dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES)
             return
 
         if self._email in self._data.data:
             self._state = len(self._data.data[self._email])
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update data and see if it contains data for our email."""
@@ -153,7 +152,7 @@ class HaveIBeenPwnedData(object):
                                allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
-            _LOGGER.error("failed fetching HaveIBeenPwned Data for '%s'",
+            _LOGGER.error("Failed fetching HaveIBeenPwned Data for %s",
                           self._email)
             return
 
@@ -174,6 +173,6 @@ class HaveIBeenPwnedData(object):
             self.set_next_email()
 
         else:
-            _LOGGER.error("failed fetching HaveIBeenPwned Data for '%s'"
+            _LOGGER.error("Failed fetching HaveIBeenPwned Data for %s"
                           "(HTTP Status_code = %d)", self._email,
                           req.status_code)

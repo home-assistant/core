@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_PLAY)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME, CONF_PORT,
     CONF_TIMEOUT)
@@ -24,7 +25,8 @@ DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+                  SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
@@ -38,17 +40,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Pioneer platform."""
-    pioneer = PioneerDevice(config.get(CONF_NAME),
-                            config.get(CONF_HOST),
-                            config.get(CONF_PORT),
-                            config.get(CONF_TIMEOUT))
+    """Set up the Pioneer platform."""
+    pioneer = PioneerDevice(
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT))
 
     if pioneer.update():
         add_devices([pioneer])
-        return True
-    else:
-        return False
 
 
 class PioneerDevice(MediaPlayerDevice):
@@ -124,9 +122,8 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet,
-                                             "?RGB" + str(i).zfill(2),
-                                             "RGB")
+                result = self.telnet_request(
+                    telnet, "?RGB" + str(i).zfill(2), "RGB")
 
                 if not result:
                     continue
@@ -174,8 +171,8 @@ class PioneerDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_PIONEER
 
     @property

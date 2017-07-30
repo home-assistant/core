@@ -6,10 +6,12 @@ import requests
 from requests.exceptions import Timeout, MissingSchema, RequestException
 import requests_mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
+import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.rest as rest
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.config_validation import template
+
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
@@ -26,10 +28,9 @@ class TestRestSwitchSetup(unittest.TestCase):
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost'
-        }, None))
+        with assert_setup_component(0):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': {'platform': 'rest'}})
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
@@ -40,7 +41,8 @@ class TestRestSwitchSetup(unittest.TestCase):
                 'method': 'GET'
             }, None)
 
-    @patch('requests.get', side_effect=requests.exceptions.ConnectionError())
+    @patch('requests.Session.send',
+           side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
@@ -48,7 +50,7 @@ class TestRestSwitchSetup(unittest.TestCase):
             'resource': 'http://localhost',
         }, None))
 
-    @patch('requests.get', side_effect=Timeout())
+    @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
@@ -200,7 +202,7 @@ class TestRestData(unittest.TestCase):
         self.rest.update()
         self.assertEqual('test data', self.rest.data)
 
-    @patch('requests.get', side_effect=RequestException)
+    @patch('requests.Session', side_effect=RequestException)
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()

@@ -2,7 +2,7 @@
 import unittest
 import statistics
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from tests.common import get_test_home_assistant
 
@@ -22,6 +22,8 @@ class TestStatisticsSensor(unittest.TestCase):
         self.median = round(statistics.median(self.values), 2)
         self.deviation = round(statistics.stdev(self.values), 2)
         self.variance = round(statistics.variance(self.values), 2)
+        self.change = self.values[-1] - self.values[0]
+        self.average_change = self.change / (len(self.values) - 1)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -74,6 +76,9 @@ class TestStatisticsSensor(unittest.TestCase):
         self.assertEqual(self.count, state.attributes.get('count'))
         self.assertEqual(self.total, state.attributes.get('total'))
         self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
+        self.assertEqual(self.change, state.attributes.get('change'))
+        self.assertEqual(self.average_change,
+                         state.attributes.get('average_change'))
 
     def test_sampling_size(self):
         """Test rotation."""

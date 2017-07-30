@@ -31,12 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the IMAP platform."""
-    sensor = ImapSensor(config.get(CONF_NAME, None),
-                        config.get(CONF_USERNAME),
-                        config.get(CONF_PASSWORD),
-                        config.get(CONF_SERVER),
-                        config.get(CONF_PORT))
+    """Set up the IMAP platform."""
+    sensor = ImapSensor(
+        config.get(CONF_NAME, None), config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD), config.get(CONF_SERVER),
+        config.get(CONF_PORT))
 
     if sensor.connection:
         add_devices([sensor])
@@ -85,7 +84,7 @@ class ImapSensor(Entity):
         try:
             self.connection.select()
             self._unread_count = len(self.connection.search(
-                None, 'UnSeen')[1][0].split())
+                None, 'UnSeen UnDeleted')[1][0].split())
         except imaplib.IMAP4.error:
             _LOGGER.info("Connection to %s lost, attempting to reconnect",
                          self._server)

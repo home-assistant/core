@@ -27,16 +27,15 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-variable
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Pushover notification service."""
     from pushover import InitError
 
     try:
-        return PushoverNotificationService(config[CONF_USER_KEY],
-                                           config[CONF_API_KEY])
+        return PushoverNotificationService(
+            config[CONF_USER_KEY], config[CONF_API_KEY])
     except InitError:
-        _LOGGER.error(
-            'Wrong API key supplied. Get it at https://pushover.net')
+        _LOGGER.error("Wrong API key supplied")
         return None
 
 
@@ -74,4 +73,4 @@ class PushoverNotificationService(BaseNotificationService):
             except ValueError as val_err:
                 _LOGGER.error(str(val_err))
             except RequestError:
-                _LOGGER.exception('Could not send pushover notification')
+                _LOGGER.exception("Could not send pushover notification")

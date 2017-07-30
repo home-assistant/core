@@ -4,7 +4,6 @@ Support for Synology NAS Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.synologydsm/
 """
-
 import logging
 from datetime import timedelta
 
@@ -86,7 +85,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Synology NAS Sensor."""
+    """Set up the Synology NAS Sensor."""
     # pylint: disable=too-many-locals
     def run_setup(event):
         """Wait until HASS is fully initialized before creating.
@@ -107,7 +106,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Handle all Volumes
         volumes = config['volumes']
         if volumes is None:
-            volumes = api.storage().volumes
+            volumes = api.storage.volumes
 
         for volume in volumes:
             sensors += [SynoNasStorageSensor(api, variable,
@@ -119,7 +118,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Handle all Disks
         disks = config['disks']
         if disks is None:
-            disks = api.storage().disks
+            disks = api.storage.disks
 
         for disk in disks:
             sensors += [SynoNasStorageSensor(api, variable,
@@ -139,7 +138,7 @@ class SynoApi():
 
     # pylint: disable=too-many-arguments, bare-except
     def __init__(self, host, port, username, password, temp_unit):
-        """Constructor of the API wrapper class."""
+        """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 
@@ -151,15 +150,9 @@ class SynoApi():
         except:
             _LOGGER.error("Error setting up Synology DSM")
 
-    def utilisation(self):
-        """Return utilisation information from API."""
-        if self._api is not None:
-            return self._api.utilisation
-
-    def storage(self):
-        """Return storage information from API."""
-        if self._api is not None:
-            return self._api.storage
+        # Will be updated when `update` gets called.
+        self.utilisation = self._api.utilisation
+        self.storage = self._api.storage
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -184,8 +177,7 @@ class SynoNasSensor(Entity):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
             return "{} ({})".format(self.var_name, self.monitor_device)
-        else:
-            return self.var_name
+        return self.var_name
 
     @property
     def icon(self):
@@ -198,8 +190,7 @@ class SynoNasSensor(Entity):
         if self.var_id in ['volume_disk_temp_avg', 'volume_disk_temp_max',
                            'disk_temp']:
             return self._api.temp_unit
-        else:
-            return self.var_units
+        return self.var_units
 
     def update(self):
         """Get the latest data for the states."""
@@ -219,14 +210,14 @@ class SynoNasUtilSensor(SynoNasSensor):
                           'memory_total_swap', 'memory_total_real']
 
         if self.var_id in network_sensors or self.var_id in memory_sensors:
-            attr = getattr(self._api.utilisation(), self.var_id)(False)
+            attr = getattr(self._api.utilisation, self.var_id)(False)
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
             elif self.var_id in memory_sensors:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
-            return getattr(self._api.utilisation(), self.var_id)
+            return getattr(self._api.utilisation, self.var_id)
 
 
 class SynoNasStorageSensor(SynoNasSensor):
@@ -240,13 +231,13 @@ class SynoNasStorageSensor(SynoNasSensor):
 
         if self.monitor_device is not None:
             if self.var_id in temp_sensors:
-                attr = getattr(self._api.storage(),
+                attr = getattr(self._api.storage,
                                self.var_id)(self.monitor_device)
 
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
-                else:
-                    return round(attr * 1.8 + 32.0, 1)
-            else:
-                return getattr(self._api.storage(),
-                               self.var_id)(self.monitor_device)
+
+                return round(attr * 1.8 + 32.0, 1)
+
+            return getattr(self._api.storage,
+                           self.var_id)(self.monitor_device)
