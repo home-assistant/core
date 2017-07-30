@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['insteonplm==0.7.4']
+REQUIREMENTS = ['insteonplm==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
