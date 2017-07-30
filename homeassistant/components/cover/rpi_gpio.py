@@ -97,13 +97,11 @@ class RPiGPIOCover(CoverDevice):
     def update(self):
         """Update the state of the cover."""
         self._state = rpi_gpio.read_input(self._state_pin)
-        if self._state_invert:
-            self._state = not self._state
 
     @property
     def is_closed(self):
         """Return true if cover is closed."""
-        return self._state
+        return self._state != self._state_invert
 
     def _trigger(self):
         """Trigger the cover."""
