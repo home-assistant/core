@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_BATTERY_LEVEL, STATE_UNKNOWN,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, SERVICE_TOGGLE,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,23 +30,26 @@ SCAN_INTERVAL = timedelta(seconds=20)
 
 GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
 
+ATTR_BATTERY_ICON = 'battery_icon'
 ATTR_COMMAND = 'command'
-ATTR_FANSPEED = 'fanspeed'
+ATTR_FAN_SPEED = 'fan_speed'
+ATTR_FAN_SPEED_LIST = 'fan_speed_list'
 ATTR_PARAMS = 'params'
+ATTR_STATUS = 'status'
 
-SERVICE_START_PAUSE = 'start_pause'
 SERVICE_LOCATE = 'locate'
 SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_SET_FANSPEED = 'set_fanspeed'
+SERVICE_SET_FAN_SPEED = 'set_fan_speed'
+SERVICE_START_PAUSE = 'start_pause'
 SERVICE_STOP = 'stop'
 
 VACUUM_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-VACUUM_SET_FANSPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_FANSPEED): cv.string,
+VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_FAN_SPEED): cv.string,
 })
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
@@ -62,8 +65,8 @@ SERVICE_TO_METHOD = {
     SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
     SERVICE_LOCATE: {'method': 'async_locate'},
     SERVICE_STOP: {'method': 'async_stop'},
-    SERVICE_SET_FANSPEED: {'method': 'async_set_fanspeed',
-                           'schema': VACUUM_SET_FANSPEED_SERVICE_SCHEMA},
+    SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
+                           'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
     SERVICE_SEND_COMMAND: {'method': 'async_send_command',
                            'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
 }
@@ -76,10 +79,10 @@ SUPPORT_TURN_OFF = 2
 SUPPORT_PAUSE = 4
 SUPPORT_STOP = 8
 SUPPORT_RETURN_HOME = 16
-SUPPORT_FANSPEED = 32
+SUPPORT_FAN_SPEED = 32
 SUPPORT_BATTERY = 64
 SUPPORT_STATUS = 128
-SUPPORT_SENDCOMMAND = 256
+SUPPORT_SEND_COMMAND = 256
 SUPPORT_LOCATE = 512
 SUPPORT_MAP = 1024
 
@@ -108,8 +111,6 @@ def async_setup(hass, config):
 
         target_vacuums = component.async_extract_from_service(service)
         params = dict(service.data)
-        _LOGGER.debug('Service call to %s: %s (%s)',
-                      target_vacuums, method, params)
 
         update_tasks = []
         for vacuum in target_vacuums:
@@ -146,11 +147,6 @@ class VacuumDevice(ToggleEntity):
         return 0
 
     @property
-    def state(self):
-        """State of the vacuum cleaner."""
-        return STATE_UNKNOWN
-
-    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         return None
@@ -170,12 +166,12 @@ class VacuumDevice(ToggleEntity):
             battery_level=self.battery_level, charging=charging)
 
     @property
-    def fanspeed(self):
+    def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         return None
 
     @property
-    def fanspeed_list(self) -> list:
+    def fan_speed_list(self) -> list:
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return []
 
@@ -185,15 +181,15 @@ class VacuumDevice(ToggleEntity):
         data = {}
 
         if self.status is not None:
-            data['status'] = self.status
+            data[ATTR_STATUS] = self.status
 
         if self.battery_level is not None:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_LEVEL + '_icon'] = self.battery_icon
+            data[ATTR_BATTERY_ICON] = self.battery_icon
 
-        if self.fanspeed is not None:
-            data['fanspeed'] = self.fanspeed
-            data['fanspeed_list'] = self.fanspeed_list
+        if self.fan_speed is not None:
+            data[ATTR_FAN_SPEED] = self.fan_speed
+            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
 
@@ -252,16 +248,16 @@ class VacuumDevice(ToggleEntity):
         """
         return self.hass.async_add_job(partial(self.locate, **kwargs))
 
-    def set_fanspeed(self, **kwargs):
-        """Set the fanspeed."""
+    def set_fan_speed(self, **kwargs):
+        """Set fan speed."""
         raise NotImplementedError()
 
-    def async_set_fanspeed(self, **kwargs):
-        """Set the fanspeed.
+    def async_set_fan_speed(self, **kwargs):
+        """Set fan speed.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.set_fanspeed, **kwargs))
+        return self.hass.async_add_job(partial(self.set_fan_speed, **kwargs))
 
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""

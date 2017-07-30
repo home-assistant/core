@@ -2,7 +2,7 @@
 Support for the Xiaomi vacuum cleaner robot.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.xiaomi_vacuum/
+https://home-assistant.io/components/vacuum.xiaomi/
 """
 import asyncio
 from functools import partial
@@ -12,14 +12,14 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    VacuumDevice, DOMAIN,
-    DEFAULT_ICON, PLATFORM_SCHEMA, VACUUM_SERVICE_SCHEMA,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STOP, SUPPORT_LOCATE, SUPPORT_STATUS, SUPPORT_BATTERY,
-    SUPPORT_FANSPEED, SUPPORT_SENDCOMMAND)
+    DEFAULT_ICON, DOMAIN, PLATFORM_SCHEMA,
+    SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    VACUUM_SERVICE_SCHEMA, VacuumDevice)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, CONF_NAME, CONF_HOST, CONF_TOKEN)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-mirobo==0.1.2']
@@ -41,7 +41,7 @@ SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
 
-FANSPEEDS = {
+FAN_SPEEDS = {
     'Quiet': 38,
     'Balanced': 60,
     'Turbo': 77,
@@ -53,9 +53,9 @@ ATTR_RC_DURATION = 'duration'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
-        vol.All(vol.Coerce(float), vol.Range(min=-0.29, max=0.29)),
+        vol.All(vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)),
     vol.Optional(ATTR_RC_ROTATION):
-        vol.All(vol.Coerce(int), vol.Range(min=-179, max=179)),
+        vol.All(vol.Coerce(int), vol.Clamp(min=-179, max=179)),
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 
@@ -71,8 +71,8 @@ SERVICE_TO_METHOD = {
 }
 
 SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
-                 SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FANSPEED | \
-                 SUPPORT_SENDCOMMAND | SUPPORT_LOCATE | \
+                 SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
+                 SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
                  SUPPORT_STATUS | SUPPORT_BATTERY
 
 
@@ -87,7 +87,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     token = config.get(CONF_TOKEN)
 
     # Create handler
-    mirobo = MiroboVacuum(hass, name, host, token)
+    mirobo = MiroboVacuum(name, host, token)
     hass.data[PLATFORM][host] = mirobo
 
     async_add_devices([mirobo], update_before_add=True)
@@ -95,8 +95,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @asyncio.coroutine
     def async_service_handler(service):
         """Map services to methods on MiroboVacuum."""
-        _LOGGER.debug('XIAOMI async_service_handler -> %s, %s',
-                      service.service, service.data)
         method = SERVICE_TO_METHOD.get(service.service)
         if not method:
             return
@@ -115,9 +113,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from getattr(vacuum, method['method'])(**params)
 
         for vacuum in target_vacuums:
-            if vacuum.should_poll:
-                update_coro = vacuum.async_update_ha_state(True)
-                update_tasks.append(update_coro)
+            update_coro = vacuum.async_update_ha_state(True)
+            update_tasks.append(update_coro)
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -137,9 +134,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MiroboVacuum(VacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, hass, name, host, token):
+    def __init__(self, name, host, token):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
-        self.hass = hass
         self._name = name
         self._icon = ICON
         self._host = host
@@ -161,11 +157,6 @@ class MiroboVacuum(VacuumDevice):
         return self._icon
 
     @property
-    def state(self) -> str:
-        """Return the state of the vacuum cleaner as a binary state."""
-        return STATE_ON if self.is_on else STATE_OFF
-
-    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
@@ -178,19 +169,19 @@ class MiroboVacuum(VacuumDevice):
             return self.vacuum_state.battery
 
     @property
-    def fanspeed(self):
+    def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            speed = self.vacuum_state.fanspeed
-            if speed in FANSPEEDS.values():
-                return [key for key, value in FANSPEEDS.items()
+            speed = self.vacuum_state.fan_speed
+            if speed in FAN_SPEEDS.values():
+                return [key for key, value in FAN_SPEEDS.items()
                         if value == speed][0]
             return speed
 
     @property
-    def fanspeed_list(self):
+    def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FANSPEEDS.keys())
+        return list(FAN_SPEEDS.keys())
 
     @property
     def device_state_attributes(self):
@@ -268,19 +259,21 @@ class MiroboVacuum(VacuumDevice):
             "Unable to stop: %s", self.vacuum.stop)
 
     @asyncio.coroutine
-    def async_set_fanspeed(self, fanspeed: str, **kwargs):
-        """Set the fanspeed."""
-        if fanspeed.capitalize() in FANSPEEDS:
-            fanspeed = FANSPEEDS[fanspeed.capitalize()]
+    def async_set_fan_speed(self, fan_speed, **kwargs):
+        """Set fan speed."""
+        if fan_speed.capitalize() in FAN_SPEEDS:
+            fan_speed = FAN_SPEEDS[fan_speed.capitalize()]
         else:
             try:
-                fanspeed = int(fanspeed)
+                fan_speed = int(fan_speed)
             except ValueError as exc:
                 _LOGGER.error("Fan speed step not recognized (%s). "
-                              "Valid speeds are: %s", exc, self.fanspeed_list)
+                              "Valid speeds are: %s", exc,
+                              self.fan_speed_list)
                 return
         yield from self._try_command(
-            "Unable to set fanspeed: %s", self.vacuum.set_fan_speed, fanspeed)
+            "Unable to set fan speed: %s",
+            self.vacuum.set_fan_speed, fan_speed)
 
     @asyncio.coroutine
     def async_start_pause(self, **kwargs):

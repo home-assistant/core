@@ -1,5 +1,5 @@
 turn_on:
-  description: Starts a new cleaning task.
+  description: Start a new cleaning task.
 
   fields:
     entity_id:
@@ -39,7 +39,7 @@ start_pause:
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
 return_to_base:
-  description: Tells the vacuum cleaner to return to its dock.
+  description: Tell the vacuum cleaner to return to its dock.
 
   fields:
     entity_id:
@@ -62,15 +62,15 @@ send_command:
       description: Parameters for the command.
       example: '[22,0,6,0]'
 
-set_fanspeed:
-  description: Set the fanspeed of the vacuum cleaner.
+set_fan_speed:
+  description: Set the fan speed of the vacuum cleaner.
 
   fields:
     entity_id:
       description: Name of the botvac entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
-    fanspeed:
+    fan_speed:
       description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium', or by percentage, between 0 and 100.
       example: 'low'
 
