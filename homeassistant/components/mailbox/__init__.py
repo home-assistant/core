@@ -17,10 +17,12 @@ from aiohttp import web
 
 from homeassistant.const import (HTTP_BAD_REQUEST)
 
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_prepare_setup_platform
 
 
 DOMAIN = 'mailbox'
@@ -32,69 +34,114 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
-    component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
-
+    mailboxes = []
     hass.components.frontend.register_built_in_panel(
         'mailbox', 'Mailbox', 'mdi:account-location')
-    hass.http.register_view(MailboxMessageView(component.entities))
-    hass.http.register_view(MailboxMediaView(component.entities))
-    hass.http.register_view(MailboxDeleteView(component.entities))
+    hass.http.register_view(MailboxMessageView(mailboxes))
+    hass.http.register_view(MailboxMediaView(mailboxes))
+    hass.http.register_view(MailboxDeleteView(mailboxes))
 
-    yield from component.async_setup(config)
+    @asyncio.coroutine
+    def async_setup_platform(p_type, p_config=None, discovery_info=None):
+        """Set up a mailbox platform."""
+        if p_config is None:
+            p_config = {}
+        if discovery_info is None:
+            discovery_info = {}
+
+        platform = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, p_type)
+
+        if platform is None:
+            _LOGGER.error("Unknown mailbox platform specified")
+            return
+
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        mailbox = None
+        try:
+            if hasattr(platform, 'async_get_handler'):
+                mailbox = yield from \
+                    platform.async_get_handler(hass, p_config, discovery_info)
+            elif hasattr(platform, 'get_handler'):
+                mailbox = yield from hass.async_add_job(
+                    platform.get_handler, hass, p_config, discovery_info)
+            else:
+                raise HomeAssistantError("Invalid mailbox platform.")
+
+            if mailbox is None:
+                _LOGGER.error(
+                    "Failed to initialize mailbox platform %s", p_type)
+                return
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error setting up platform %s', p_type)
+            return
+
+        mailbox_entity = MailboxEntity(mailbox)
+        mailbox.entity = mailbox_entity
+        mailboxes.append(mailbox)
+        component = EntityComponent(
+            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        yield from component.async_add_entity(mailbox_entity)
+
+    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
+                   in config_per_platform(config, DOMAIN)]
+
+    if setup_tasks:
+        yield from asyncio.wait(setup_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_platform_discovered(platform, info):
+        """Handle for discovered platform."""
+        yield from async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     return True
 
 
-class Mailbox(Entity):
-    """Represent an mailbox device."""
+class MailboxEntity(Entity):
+    """Entity for each mailbox platform."""
 
-    def __init__(self, hass, domain, config):
-        """Init the Mailbox data object."""
-        self._domain = domain
-        self._config = config
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        yield from discovery.async_load_platform(
-            self.hass, "sensor", DOMAIN,
-            {'domain': self._domain, 'mailbox_id': self.entity_id},
-            self._config)
+    def __init__(self, mailbox):
+        """Initialize mailbox entity."""
+        self.mailbox = mailbox
 
     @property
     def state(self):
         """Return the state of the binary sensor."""
-        return str(len(self.get_messages()))
+        return str(len(self.mailbox.get_messages()))
 
     @property
-    def hidden(self) -> bool:
-        """Return whether the component should be hidden."""
-        return True
+    def name(self):
+        """Return the name of the entity."""
+        return self.mailbox.name
 
-    @property
-    def supports_delete(self):
-        """Return whether deletion is supported."""
-        return True
 
-    @property
+class Mailbox(object):
+    """Represent an mailbox device."""
+
+    def __init__(self, hass, name):
+        """Initialize mailbox object."""
+        self.hass = hass
+        self.entity = None
+        self.name = name
+
     def get_media_type(self):
         """Return the supported media type."""
-        return None
+        raise NotImplementedError()
 
-    @classmethod
-    def get_media(cls, msgid):
+    def get_media(self, msgid):
         """Return the media blob for the msgid."""
-        return None
+        raise NotImplementedError()
 
     def get_messages(self):
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    @classmethod
-    def delete(cls, msgids):
+    def delete(self, msgids):
         """Delete the specified messages."""
-        return False
+        raise NotImplementedError()
 
 
 class StreamError(Exception):
@@ -106,9 +153,16 @@ class StreamError(Exception):
 class MailboxView(HomeAssistantView):
     """Base mailbox view."""
 
-    def __init__(self, entities):
+    def __init__(self, mailboxes):
         """Initialize a basic mailbox view."""
-        self.entities = entities
+        self.mailboxes = mailboxes
+
+    def get_mailbox(self, entity_id):
+        """Retrieve the specified mailbox."""
+        for mailbox in self.mailboxes:
+            if mailbox.entity.entity_id == entity_id:
+                return mailbox
+        return None
 
 
 class MailboxMessageView(MailboxView):
@@ -120,10 +174,10 @@ class MailboxMessageView(MailboxView):
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Retrieve messages."""
-        camera = self.entities.get(entity_id)
-        if camera is None:
+        mailbox = self.get_mailbox(entity_id)
+        if mailbox is None:
             return web.Response(status=401)
-        return self.json(camera.get_messages())
+        return self.json(mailbox.get_messages())
 
 
 class MailboxDeleteView(MailboxView):
@@ -135,12 +189,12 @@ class MailboxDeleteView(MailboxView):
     @asyncio.coroutine
     def post(self, request, entity_id):
         """Delete items."""
-        camera = self.entities.get(entity_id)
-        if camera is None:
+        mailbox = self.get_mailbox(entity_id)
+        if mailbox is None:
             return web.Response(status=401)
         try:
             data = yield from request.json()
-            camera.delete(data)
+            mailbox.delete(data)
         except ValueError:
             return self.json_message('Bad item id', HTTP_BAD_REQUEST)
 
@@ -154,8 +208,8 @@ class MailboxMediaView(MailboxView):
     @asyncio.coroutine
     def get(self, request, entity_id, msgid):
         """Retrieve media."""
-        camera = self.entities.get(entity_id)
-        if camera is None:
+        mailbox = self.get_mailbox(entity_id)
+        if mailbox is None:
             return web.Response(status=401)
 
         hass = request.app['hass']
@@ -163,13 +217,13 @@ class MailboxMediaView(MailboxView):
             with async_timeout.timeout(10, loop=hass.loop):
                 try:
                     stream = yield from hass.async_add_job(
-                        partial(camera.get_media, msgid))
+                        partial(mailbox.get_media, msgid))
                 except StreamError as err:
                     error_msg = "Error getting media: %s" % (err)
                     _LOGGER.error(error_msg)
                     return web.Response(status=500)
             if stream:
                 return web.Response(body=stream,
-                                    content_type=camera.get_media_type)
+                                    content_type=mailbox.get_media_type)
 
         return web.Response(status=500)

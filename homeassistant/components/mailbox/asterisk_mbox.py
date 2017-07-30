@@ -11,8 +11,7 @@ from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import DOMAIN
 from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
                                               StreamError)
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['asterisk_mbox']
 _LOGGER = logging.getLogger(__name__)
@@ -22,38 +21,26 @@ SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_get_handler(hass, config, async_add_devices, discovery_info=None):
     """Set up the Asterix VM platform."""
-    async_add_devices([AsteriskMailbox(hass, config)])
+    return AsteriskMailbox(hass, DOMAIN)
 
 
 class AsteriskMailbox(Mailbox):
     """Asterisk VM Sensor."""
 
-    def __init__(self, hass, config):
-        """Initialize the asterisk mailbox."""
-        super().__init__(hass, DOMAIN, config)
-        self._name = None
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return DOMAIN
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        yield from super().async_added_to_hass()
+    def __init__(self, hass, name):
+        """Initialie Asterisk mailbox."""
+        super().__init__(hass, name)
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
-        async_dispatcher_send(self.hass, SIGNAL_MESSAGE_REQUEST)
 
     @callback
     def _update_callback(self, msg):
         """Update the message count in HA, if needed."""
-        self.hass.async_add_job(self.async_update_ha_state(True))
+        if self.entity:
+            self.hass.async_add_job(self.entity.async_update_ha_state(True))
 
-    @property
     def get_media_type(self):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG

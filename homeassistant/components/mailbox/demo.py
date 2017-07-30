@@ -19,17 +19,17 @@ DOMAIN = "DemoMailbox"
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_get_handler(hass, config, discovery_info=None):
     """Set up the Demo mailbox."""
-    async_add_devices([DemoMailbox(hass, config)])
+    return DemoMailbox(hass, DOMAIN)
 
 
 class DemoMailbox(Mailbox):
     """Demo Mailbox."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, name):
         """Initialize Demo mailbox."""
-        super().__init__(hass, DOMAIN, config)
+        super().__init__(hass, name)
         self._messages = {}
         for idx in range(0, 10):
             msgtime = int(dt.as_timestamp(
@@ -44,11 +44,6 @@ class DemoMailbox(Mailbox):
             self._messages[msgsha] = msg
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return "demo_mailbox"
-
-    @property
     def get_media_type(self):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
@@ -59,7 +54,7 @@ class DemoMailbox(Mailbox):
             raise StreamError("Message not found")
 
         audio_path = os.path.join(
-            os.path.dirname(__file__), 'demo.mp3')
+            os.path.dirname(__file__), '..', 'tts', 'demo.mp3')
         with open(audio_path, 'rb') as file:
             return file.read()
 
@@ -75,5 +70,6 @@ class DemoMailbox(Mailbox):
             if sha in self._messages:
                 _LOGGER.info("Deleting: %s", sha)
                 del self._messages[sha]
-        self.hass.async_add_job(self.async_update_ha_state(True))
+        if self.entity:
+            self.hass.async_add_job(self.entity.async_update_ha_state(True))
         return True
