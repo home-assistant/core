@@ -405,6 +405,10 @@ class Incident(object):
         return self._title
 
     @property
+    def guid(self):
+        return self._guid
+
+    @property
     def pub_date(self):
         return self._pub_date
 
