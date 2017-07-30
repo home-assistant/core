@@ -260,7 +260,8 @@ class GeoRssServiceUpdater:
                 geometry = entry.where
             elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
                 coordinates = (float(entry.geo_long), float(entry.geo_lat))
-                geometry = type('obj', (object,), {'type': 'Point', 'coordinates': coordinates})
+                geometry = type('obj', (object,),
+                                {'type': 'Point', 'coordinates': coordinates})
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
             if distance <= self._radius_in_km:
