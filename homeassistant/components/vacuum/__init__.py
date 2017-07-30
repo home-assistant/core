@@ -155,11 +155,12 @@ def set_fan_speed(hass, fan_speed, entity_id=None):
 
 
 @bind_hass
-def send_command(hass, command, params, entity_id=None):
+def send_command(hass, command, params=None, entity_id=None):
     """Send command to all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_COMMAND] = command
-    data[ATTR_PARAMS] = params
+    if params is not None:
+        data[ATTR_PARAMS] = params
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
