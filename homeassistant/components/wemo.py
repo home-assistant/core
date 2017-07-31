@@ -101,7 +101,7 @@ def setup(hass, config):
             return 'CoffeeMaker'
         else:
             return None
-        
+
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     _LOGGER.info("Scanning for WeMo devices.")
