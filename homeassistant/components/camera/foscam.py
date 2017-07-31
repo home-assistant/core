@@ -55,15 +55,14 @@ class FoscamCam(Camera):
 
         from foscam import FoscamCamera
 
-        self._foscam_session = FoscamCamera(ip_address, port, self._username,
-                                            self._password)
+        self._foscam_session = FoscamCamera(ip_address, port, self._username, self._password)
+
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed
-        try:
-            result, response = self._foscam_session.snap_picture_2()
-        except:
+        result, response = self._foscam_session.snap_picture_2()
+        if result == FOSCAM_COMM_ERROR:
             return None
 
         return response
@@ -75,19 +74,21 @@ class FoscamCam(Camera):
 
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
-        try:
-            self._foscam_session.enable_motion_detection()
+        ret, err = self._foscam_session.enable_motion_detection()
+        if ret == FOSCAM_COMM_ERROR:
+            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
             self._motion_status = True
-        except:
+        else:
             self._motion_status = False
 
     def disable_motion_detection(self):
         """Disable motion detection."""
-        try:
-            self._foscam_session.disable_motion_detection()
-            self._motion_status = False
-        except:
+        ret, err = self._foscam_session.disable_motion_detection()
+        if ret == FOSCAM_COMM_ERROR:
+            _LOGGER.debug("Unable to communicate with Foscam Camera: %s", err)
             self._motion_status = True
+        else:
+            self._motion_status = False
 
     @property
     def name(self):
