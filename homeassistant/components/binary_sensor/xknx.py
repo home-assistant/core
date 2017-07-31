@@ -91,13 +91,29 @@ def add_devices_from_platform(hass, config, add_devices):
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config.get(CONF_SIGNIFICANT_BIT))
 
+    class XKNXAutomation(xknx.devices.ActionBase):
+        """Base Class for handling commands triggered by KNX bus."""
+
+        def __init__(self, hass, hook, action, name, counter=1):
+            """Initialize XKNXAutomation class."""
+            super(XKNXAutomation, self).__init__(
+                hass.data[DATA_XKNX].xknx, hook, counter)
+            self.hass = hass
+            self.script = Script(hass, action, name)
+
+        @asyncio.coroutine
+        def execute(self):
+            """Execute action."""
+            yield from self.script.async_run()
+
+
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
             counter = automation.get(CONF_COUNTER)
             hook = automation.get(CONF_HOOK)
             action = automation.get(CONF_ACTION)
-            automation = XKNXBinarySensor.XKNXAutomation(
+            automation = XKNXAutomation(
                 hass=hass,
                 hook=hook,
                 counter=counter,
@@ -112,23 +128,6 @@ def add_devices_from_platform(hass, config, add_devices):
 
 class XKNXBinarySensor(BinarySensorDevice):
     """Representation of a XKNX binary sensor."""
-
-    import xknx
-
-    class XKNXAutomation(xknx.devices.ActionBase):
-        """Base Class for handling commands triggered by KNX bus."""
-
-        def __init__(self, hass, hook, action, name, counter=1):
-            """Initialize XKNXAutomation class."""
-            super(XKNXBinarySensor.XKNXAutomation, self).__init__(
-                hass.data[DATA_XKNX].xknx, hook, counter)
-            self.hass = hass
-            self.script = Script(hass, action, name)
-
-        @asyncio.coroutine
-        def execute(self):
-            """Execute action."""
-            yield from self.script.async_run()
 
     def __init__(self, hass, device):
         """Initialization of XKNXBinarySensor."""
