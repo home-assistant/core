@@ -87,7 +87,7 @@ class RPiGPIOCover(CoverDevice):
         self._relay_invert = relay_invert
         rpi_gpio.setup_output(self._relay_pin)
         rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
-        rpi_gpio.write_output(self._relay_pin, True != self._relay_invert)
+        rpi_gpio.write_output(self._relay_pin, not self._relay_invert)
 
     @property
     def unique_id(self):
@@ -110,9 +110,9 @@ class RPiGPIOCover(CoverDevice):
 
     def _trigger(self):
         """Trigger the cover."""
-        rpi_gpio.write_output(self._relay_pin, False != self._relay_invert)
+        rpi_gpio.write_output(self._relay_pin, self._relay_invert)
         sleep(self._relay_time)
-        rpi_gpio.write_output(self._relay_pin, True != self._relay_invert)
+        rpi_gpio.write_output(self._relay_pin, not self._relay_invert)
 
     def close_cover(self):
         """Close the cover."""
