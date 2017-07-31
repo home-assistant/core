@@ -20,23 +20,27 @@ SUPPORT_BASIC_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
                          SUPPORT_STATUS | SUPPORT_BATTERY
 
 SUPPORT_MOST_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP | \
-                        SUPPORT_RETURN_HOME | SUPPORT_STATUS | \
-                        SUPPORT_BATTERY
+                        SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY
+
 SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                        SUPPORT_STOP | SUPPORT_RETURN_HOME | \
                        SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND | \
                        SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY
 
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
+DEMO_VACUUM_COMPLETE = '0_Ground_floor'
+DEMO_VACUUM_MOST = '1_First_floor'
+DEMO_VACUUM_BASIC = '2_Second_floor'
+DEMO_VACUUM_MINIMAL = '3_Third_floor'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo vacuums."""
     add_devices([
-        DemoVacuum('0_Ground floor', SUPPORT_ALL_SERVICES),
-        DemoVacuum('1_First floor', SUPPORT_MOST_SERVICES),
-        DemoVacuum('2_Second floor', SUPPORT_BASIC_SERVICES),
-        DemoVacuum('3_Third floor', SUPPORT_MINIMAL_SERVICES),
+        DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
+        DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
+        DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
+        DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
     ])
 
 
@@ -53,17 +57,6 @@ class DemoVacuum(VacuumDevice):
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area = 0
         self._battery_level = 100
-        _LOGGER.info("Vacuum '%s' supports: status? %s, battery? %s, "
-                     "fan speed? %s, stop? %s, pause? %s, locate? %s, "
-                     "return home? %s, send command? %s", self._name,
-                     self.supported_features & SUPPORT_STATUS != 0,
-                     self.supported_features & SUPPORT_BATTERY != 0,
-                     self.supported_features & SUPPORT_FAN_SPEED != 0,
-                     self.supported_features & SUPPORT_STOP != 0,
-                     self.supported_features & SUPPORT_PAUSE != 0,
-                     self.supported_features & SUPPORT_LOCATE != 0,
-                     self.supported_features & SUPPORT_RETURN_HOME != 0,
-                     self.supported_features & SUPPORT_SEND_COMMAND != 0)
 
     @property
     def name(self):
