@@ -106,7 +106,6 @@ def add_devices_from_platform(hass, config, add_devices):
             """Execute action."""
             yield from self.script.async_run()
 
-
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
