@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return (byt*100.0)/255.0
+    return int((byt*100.0)/255.0)
 
 
 def brightness_from_percentage(percent):
