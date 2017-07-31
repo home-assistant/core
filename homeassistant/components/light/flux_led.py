@@ -180,7 +180,9 @@ class FluxLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._bulb.isOn() if self.available else False
+        if self.available:
+            return self._bulb.isOn()
+        return False
 
     @property
     def brightness(self):
