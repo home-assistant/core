@@ -1,7 +1,6 @@
 """The tests for the Demo vacuum platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_FAN_SPEED,
@@ -13,6 +12,7 @@ from homeassistant.components.vacuum.demo import (
     DEMO_VACUUM_MOST, FAN_SPEEDS)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON)
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, mock_service
 
 
@@ -136,8 +136,8 @@ class TestVacuumDemo(unittest.TestCase):
 
         params = {"rotate": 150, "speed": 20}
         vacuum.send_command(
-            self.hass, entity_id=ENTITY_VACUUM_BASIC,
-            command='test_command', params=params)
+            self.hass, 'test_command', entity_id=ENTITY_VACUUM_BASIC,
+            params=params)
 
         self.hass.block_till_done()
         self.assertEqual(1, len(send_command_calls))

@@ -12,7 +12,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    DEFAULT_ICON, DOMAIN, PLATFORM_SCHEMA,
+    ATTR_CLEANED_AREA, DEFAULT_ICON, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
@@ -47,7 +47,6 @@ FAN_SPEEDS = {
     'Turbo': 77,
     'Max': 90}
 
-ATTR_CLEANED_AREA = 'cleaned_area'
 ATTR_CLEANING_TIME = 'cleaning_time'
 ATTR_DO_NOT_DISTURB = 'do_not_disturb'
 ATTR_ERROR = 'error'
@@ -64,13 +63,13 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_START_REMOTE_CONTROL: {'method': 'async_start_remote_control'},
-    SERVICE_STOP_REMOTE_CONTROL: {'method': 'async_stop_remote_control'},
+    SERVICE_START_REMOTE_CONTROL: {'method': 'async_remote_control_start'},
+    SERVICE_STOP_REMOTE_CONTROL: {'method': 'async_remote_control_stop'},
     SERVICE_MOVE_REMOTE_CONTROL: {
-        'method': 'async_move_remote_control',
+        'method': 'async_remote_control_move',
         'schema': SERVICE_SCHEMA_REMOTE_CONTROL},
     SERVICE_MOVE_REMOTE_CONTROL_STEP: {
-        'method': 'async_move_remote_control_step',
+        'method': 'async_remote_control_move_step',
         'schema': SERVICE_SCHEMA_REMOTE_CONTROL},
 }
 
@@ -187,7 +186,7 @@ class MiroboVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FAN_SPEEDS.keys())
+        return list(sorted(FAN_SPEEDS.keys(), key=lambda s: FAN_SPEEDS[s]))
 
     @property
     def device_state_attributes(self):
@@ -199,7 +198,7 @@ class MiroboVacuum(VacuumDevice):
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
-                ATTR_CLEANED_AREA: self.vacuum_state.clean_area}
+                ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2)}
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
             return attrs

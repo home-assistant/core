@@ -35,6 +35,7 @@ GROUP_NAME_ALL_VACUUMS = 'all vacuum cleaners'
 ENTITY_ID_ALL_VACUUMS = group.ENTITY_ID_FORMAT.format('all_vacuum_cleaners')
 
 ATTR_BATTERY_ICON = 'battery_icon'
+ATTR_CLEANED_AREA = 'cleaned_area'
 ATTR_FAN_SPEED = 'fan_speed'
 ATTR_FAN_SPEED_LIST = 'fan_speed_list'
 ATTR_PARAMS = 'params'
@@ -57,7 +58,7 @@ VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMS): vol.Any,
+    vol.Optional(ATTR_PARAMS): cv.Dict,
 })
 
 SERVICE_TO_METHOD = {

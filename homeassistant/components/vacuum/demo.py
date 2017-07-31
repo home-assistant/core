@@ -6,11 +6,11 @@ https://home-assistant.io/components/demo/
 """
 import logging
 
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.components.vacuum import (
-    DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_LOCATE,
-    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
+    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    VacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,99 +81,123 @@ class DemoVacuum(VacuumDevice):
     @property
     def status(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS != 0:
-            return self._status
+        if self.supported_features & SUPPORT_STATUS == 0:
+            return
+
+        return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED != 0:
-            return self._fan_speed
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+
+        return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED != 0:
-            return FAN_SPEEDS
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+
+        return FAN_SPEEDS
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY != 0:
-            return max(0, min(100, self._battery_level))
+        if self.supported_features & SUPPORT_BATTERY == 0:
+            return
+
+        return max(0, min(100, self._battery_level))
 
     @property
     def device_state_attributes(self):
         """Return device state attributes."""
-        return {'cleaned_area': round(self._cleaned_area, 2)}
-
-    def turn_on(self, **kwargs):
-        """Turn the vacuum on."""
-        if self.supported_features & SUPPORT_TURN_ON != 0:
-            self._state = True
-            self._cleaned_area += 5.32
-            self._battery_level -= 2
-            self._status = 'Cleaning'
-            self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
-        """Turn the vacuum off."""
-        if self.supported_features & SUPPORT_TURN_OFF != 0:
-            self._state = False
-            self._status = 'Charging'
-            self.schedule_update_ha_state()
-
-    def stop(self, **kwargs):
-        """Turn the vacuum off."""
-        if self.supported_features & SUPPORT_STOP != 0:
-            self._state = False
-            self._status = 'Stopping the current task'
-            self.schedule_update_ha_state()
-
-    def locate(self, **kwargs):
-        """Turn the vacuum off."""
-        if self.supported_features & SUPPORT_LOCATE != 0:
-            self._status = "Hi, I'm over here!"
-            self.schedule_update_ha_state()
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        if self.supported_features & SUPPORT_PAUSE != 0:
-            self._state = not self._state
-            if self._state:
-                self._status = 'Resuming the current task'
-                self._cleaned_area += 1.32
-                self._battery_level -= 1
-            else:
-                self._status = 'Pausing the current task'
-            self.schedule_update_ha_state()
-
-    def set_fan_speed(self, fan_speed, **kwargs):
-        """Tell the vacuum to return to its dock."""
-        if self.supported_features & SUPPORT_FAN_SPEED != 0 \
-                and fan_speed in self.fan_speed_list:
-            self._fan_speed = fan_speed
-            self.schedule_update_ha_state()
-
-    def return_to_base(self, **kwargs):
-        """Tell the vacuum to return to its dock."""
-        if self.supported_features & SUPPORT_RETURN_HOME != 0:
-            self._state = False
-            self._status = 'Returning home...'
-            self._battery_level += 5
-            self.schedule_update_ha_state()
-
-    def send_command(self, command, params=None, **kwargs):
-        """Send a command to the vacuum."""
-        if self.supported_features & SUPPORT_SEND_COMMAND != 0:
-            command = kwargs[ATTR_COMMAND]
-            self._status = "Executing %s(%s)" % (command, params)
-            self._state = True
-            self.schedule_update_ha_state()
+        return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
     @property
     def supported_features(self):
         """Flag supported features."""
         if self._supported_features is not None:
             return self._supported_features
+
         return super().supported_features
+
+    def turn_on(self, **kwargs):
+        """Turn the vacuum on."""
+        if self.supported_features & SUPPORT_TURN_ON == 0:
+            return
+
+        self._state = True
+        self._cleaned_area += 5.32
+        self._battery_level -= 2
+        self._status = 'Cleaning'
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn the vacuum off."""
+        if self.supported_features & SUPPORT_TURN_OFF == 0:
+            return
+
+        self._state = False
+        self._status = 'Charging'
+        self.schedule_update_ha_state()
+
+    def stop(self, **kwargs):
+        """Turn the vacuum off."""
+        if self.supported_features & SUPPORT_STOP == 0:
+            return
+
+        self._state = False
+        self._status = 'Stopping the current task'
+        self.schedule_update_ha_state()
+
+    def locate(self, **kwargs):
+        """Turn the vacuum off."""
+        if self.supported_features & SUPPORT_LOCATE == 0:
+            return
+
+        self._status = "Hi, I'm over here!"
+        self.schedule_update_ha_state()
+
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
+        if self.supported_features & SUPPORT_PAUSE == 0:
+            return
+
+        self._state = not self._state
+        if self._state:
+            self._status = 'Resuming the current task'
+            self._cleaned_area += 1.32
+            self._battery_level -= 1
+        else:
+            self._status = 'Pausing the current task'
+        self.schedule_update_ha_state()
+
+    def set_fan_speed(self, fan_speed, **kwargs):
+        """Tell the vacuum to return to its dock."""
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
+
+        if fan_speed in self.fan_speed_list:
+            self._fan_speed = fan_speed
+            self.schedule_update_ha_state()
+
+    def return_to_base(self, **kwargs):
+        """Tell the vacuum to return to its dock."""
+        if self.supported_features & SUPPORT_RETURN_HOME == 0:
+            return
+
+        self._state = False
+        self._status = 'Returning home...'
+        self._battery_level += 5
+        self.schedule_update_ha_state()
+
+    def send_command(self, command, params=None, **kwargs):
+        """Send a command to the vacuum."""
+        if self.supported_features & SUPPORT_SEND_COMMAND == 0:
+            return
+
+        self._status = "Executing %s(%s)" % (command, params)
+        self._state = True
+        self.schedule_update_ha_state()
