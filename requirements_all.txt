@@ -124,7 +124,7 @@ broadlink==0.5
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
-buienradar==0.7
+buienradar==0.8
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
