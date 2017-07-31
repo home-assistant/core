@@ -83,18 +83,26 @@ def turn_on(hass, activity=None, entity_id=None):
 @bind_hass
 def turn_off(hass, activity=None, entity_id=None):
     """Turn all or specified remote off."""
-    data = {ATTR_ACTIVITY: activity}
+    data = {}
+    if activity:
+        data[ATTR_ACTIVITY] = activity
+
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 @bind_hass
 def toggle(hass, activity=None, entity_id=None):
     """Toggle all or specified remote."""
-    data = {ATTR_ACTIVITY: activity}
+    data = {}
+    if activity:
+        data[ATTR_ACTIVITY] = activity
+
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
