@@ -208,14 +208,14 @@ class BrSensor(Entity):
 
             return result
 
-        result =  {
+        result = {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
         }
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
-            dt = dt_util.as_local(self._measured)
-            result[MEASURED_LABEL] = dt.strftime("%c")
+            local_dt = dt_util.as_local(self._measured)
+            result[MEASURED_LABEL] = local_dt.strftime("%c")
 
         return result
 
