@@ -3,6 +3,44 @@ Generic GeoRSS events service
 Retrieves current events (typically incidents or alerts) in GeoRSS format, and 
 shows information on events filtered by distance to the HA instance's location 
 and grouped by category.
+
+Example configuration:
+
+sensor:
+  - platform: geo_rss_events
+    name: NSW Fire Service
+    url: http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml
+    icon: mdi:fire
+    radius: 25
+    categories:
+      - 'Emergency Warning'
+      - 'Watch and Act'
+      - 'Advice'
+      - 'Not Applicable'
+    unit_of_measurement: 'Incidents'
+
+Sample feeds
+
+Fire
+- NSW Rural Fire Service
+  http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml
+- Qld Rural Fire Service
+  https://www.qfes.qld.gov.au/data/alerts/bushfireAlert.xml
+- ACT Emergency Services Agency
+  http://www.esa.act.gov.au/feeds/currentincidents.xml
+- WA Department of Fire and Emergency Services
+  https://www.emergency.wa.gov.au/data/incident_FCAD.rss
+- Tasmania Fire Service
+  http://www.fire.tas.gov.au/Show?pageId=colBushfireSummariesRss
+
+Earthquake
+- USGS
+  https://earthquake.usgs.gov/earthquakes/feed/v1.0/atom.php
+- BGS
+  http://www.bgs.ac.uk/feeds/worldSeismology.xml
+- Natural Resources Canada
+  http://www.earthquakescanada.nrcan.gc.ca/index-en.php?tpl_region=canada&tpl_output=rss
+
 """
 
 import asyncio
@@ -29,7 +67,7 @@ CONF_RADIUS = 'radius'
 CONF_URL = 'url'
 
 DEFAULT_ICON = 'mdi:alert'
-DEFAULT_NAME = "Event Service"
+DEFAULT_NAME = "Event Information Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
