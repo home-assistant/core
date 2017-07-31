@@ -13,12 +13,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ENTITY_ID_FORMAT)
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
                 'somecomfort==0.4.1']
@@ -62,10 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if region == 'us':
         return _setup_us(username, password, config, add_devices)
 
-    return _setup_round(hass, username, password, config, add_devices)
+    return _setup_round(username, password, config, add_devices)
 
 
-def _setup_round(hass, username, password, config, add_devices):
+def _setup_round(username, password, config, add_devices):
     """Set up the rounding function."""
     from evohomeclient import EvohomeClient
 
@@ -76,7 +75,8 @@ def _setup_round(hass, username, password, config, add_devices):
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
             add_devices(
-                [RoundThermostat(hass, evo_api, zone['id'], i == 0, away_temp)]
+                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
+                True
             )
     except socket.error:
         _LOGGER.error(
@@ -116,9 +116,8 @@ def _setup_us(username, password, config, add_devices):
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    def __init__(self, hass, device, zone_id, master, away_temp):
+    def __init__(self, device, zone_id, master, away_temp):
         """Initialize the thermostat."""
-        self.hass = hass
         self.device = device
         self._current_temperature = None
         self._target_temperature = None
@@ -128,7 +127,6 @@ class RoundThermostat(ClimateDevice):
         self._is_dhw = False
         self._away_temp = away_temp
         self._away = False
-        self.update()
 
     @property
     def name(self):
@@ -212,13 +210,9 @@ class RoundThermostat(ClimateDevice):
             self._name = data['name']
             self._is_dhw = False
 
-        if self.entity_id is None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, self.name, hass=self.hass)
 
         # The underlying library doesn't expose the thermostat's mode
         # but we can pull it out of the big dictionary of information.
-
         device_data = list(
             filter(lambda x: x['name'] == self.name,
                    self.device.full_data['devices']))
@@ -228,7 +222,6 @@ class RoundThermostat(ClimateDevice):
                 device_data[0]['thermostat']
                 ['changeableValues']['mode'])
 
-        self.hass.async_add_job(self.async_update_ha_state())
 
 
 class HoneywellUSThermostat(ClimateDevice):
