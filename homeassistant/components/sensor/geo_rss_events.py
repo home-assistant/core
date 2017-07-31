@@ -1,13 +1,13 @@
 """
-Generic GeoRSS incident service
-Retrieves current incidents or alerts in GeoRSS format, and shows information
-on incidents filtered by distance to the HA instance's location and grouped
-by category.
+Generic GeoRSS events service
+Retrieves current events (typically incidents or alerts) in GeoRSS format, and 
+shows information on events filtered by distance to the HA instance's location 
+and grouped by category.
 
 Example configuration:
 
 sensor:
-  - platform: geo_rss_incidents
+  - platform: geo_rss_events
     name: NSW Fire Service
     url: http://www.rfs.nsw.gov.au/feeds/majorIncidents.xml
     icon: mdi:fire
@@ -67,13 +67,12 @@ CONF_RADIUS = 'radius'
 CONF_URL = 'url'
 
 DEFAULT_ICON = 'mdi:alert'
-DEFAULT_NAME = "Incident Information Service"
+DEFAULT_NAME = "Event Information Service"
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = 'Incidents'
+DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
-DOMAIN = 'geo_rss'
+DOMAIN = 'geo_rss_events'
 ENTITY_ID_FORMAT = 'sensor.' + DOMAIN + '_{}'
-INCIDENTS = 'incidents'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -190,23 +189,23 @@ class GeoRssServiceSensor(Entity):
         """Return the state attributes."""
         matrix = {}
         if self._state is not STATE_UNKNOWN:
-            for incident in self._state:
-                matrix[incident.title] = '{:.0f}km'.format(incident.distance)
+            for event in self._state:
+                matrix[event.title] = '{:.0f}km'.format(event.distance)
         return matrix
 
     def update(self):
         """Update this sensor from the GeoRSS service."""
-        all_incidents = self._data.incidents
+        all_events = self._data.events
         if self._category is None:
-            # Add all incidents regardless of category.
-            self._state = all_incidents
+            # Add all events regardless of category.
+            self._state = all_events
         else:
-            # Group incidents by category.
-            my_incidents = []
-            for incident in all_incidents:
-                if incident.category == self._category:
-                    my_incidents.append(incident)
-            self._state = my_incidents
+            # Group events by category.
+            my_events = []
+            for event in all_events:
+                if event.category == self._category:
+                    my_events.append(event)
+            self._state = my_events
             _LOGGER.info("New state: %s", self._state)
 
 
@@ -215,7 +214,7 @@ class GeoRssServiceData(object):
 
     def __init__(self):
         """Initialize the data object."""
-        self.incidents = None
+        self.events = None
 
 
 class GeoRssServiceUpdater:
@@ -239,8 +238,8 @@ class GeoRssServiceUpdater:
         if not feed_data:
             _LOGGER.error("Error fetching feed data from %s", self._url)
         else:
-            incidents = self.filter_entries(feed_data)
-            self._data.incidents = incidents
+            events = self.filter_entries(feed_data)
+            self._data.events = events
             # Update devices.
             tasks = []
             if self._devices:
@@ -250,7 +249,7 @@ class GeoRssServiceUpdater:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
     def filter_entries(self, feed_data):
-        incidents = []
+        events = []
         _LOGGER.info("%s entri(es) available in feed %s",
                      len(feed_data.entries), self._url)
         # Filter entries by distance from home coordinates.
@@ -265,13 +264,13 @@ class GeoRssServiceUpdater:
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
             if distance <= self._radius_in_km:
-                incident = self.create_incident(entry, distance, geometry)
-                incidents.append(incident)
-        _LOGGER.info("Incidents found nearby: %s", incidents)
-        return incidents
+                event = self.create_event(entry, distance, geometry)
+                events.append(event)
+        _LOGGER.info("Events found nearby: %s", events)
+        return events
 
     @staticmethod
-    def create_incident(feature, distance, geometry):
+    def create_event(feature, distance, geometry):
         category_candidate = None
         if hasattr(feature, 'category'):
             category_candidate = feature.category
@@ -291,13 +290,13 @@ class GeoRssServiceUpdater:
         summary_candidate = None
         if hasattr(feature, 'summary'):
             summary_candidate = feature.summary
-        return Incident(category_candidate,
-                        title_candidate,
-                        id_candidate,
-                        pup_date_candidate,
-                        summary_candidate,
-                        geometry,
-                        distance)
+        return Event(category_candidate,
+                     title_candidate,
+                     id_candidate,
+                     pup_date_candidate,
+                     summary_candidate,
+                     geometry,
+                     distance)
 
     def calculate_distance_to_geometry(self, geometry):
         distance = float("inf")
@@ -383,8 +382,8 @@ class GeoRssServiceUpdater:
         return inside
 
 
-class Incident(object):
-    """Class for storing incidents retrieved."""
+class Event(object):
+    """Class for storing events retrieved."""
 
     def __init__(self, category, title, guid, pub_date, description, geometry,
                  distance):
