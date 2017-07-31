@@ -195,8 +195,8 @@ class TestHoneywell(unittest.TestCase):
             mock.call(force_refresh=True)
         )
         mock_round.assert_has_calls([
-            mock.call(mock_evo.return_value, 'foo', True, 20.0),
-            mock.call(mock_evo.return_value, 'bar', False, 20.0),
+            mock.call(hass, mock_evo.return_value, 'foo', True, 20.0),
+            mock.call(hass, mock_evo.return_value, 'bar', False, 20.0),
         ])
         self.assertEqual(2, add_devices.call_count)
 
@@ -220,8 +220,8 @@ class TestHoneywell(unittest.TestCase):
         add_devices = mock.MagicMock()
         self.assertTrue(honeywell.setup_platform(hass, config, add_devices))
         mock_round.assert_has_calls([
-            mock.call(mock_evo.return_value, 'foo', True, 16),
-            mock.call(mock_evo.return_value, 'bar', False, 16),
+            mock.call(hass, mock_evo.return_value, 'foo', True, 16),
+            mock.call(hass, mock_evo.return_value, 'bar', False, 16),
         ])
 
     @mock.patch('evohomeclient.EvohomeClient')
@@ -272,11 +272,12 @@ class TestHoneywellRound(unittest.TestCase):
             return temps
 
         self.device = mock.MagicMock()
+        hass = mock.MagicMock()
         self.device.temperatures.side_effect = fake_temperatures
-        self.round1 = honeywell.RoundThermostat(self.device, '1',
-                                                True, 16)
-        self.round2 = honeywell.RoundThermostat(self.device, '2',
-                                                False, 17)
+        self.round1 = honeywell.RoundThermostat(hass, self.device,
+                                                '1', True, 16)
+        self.round2 = honeywell.RoundThermostat(hass, self.device,
+                                                '2', False, 17)
 
     def test_attributes(self):
         """Test the attributes."""
