@@ -196,7 +196,7 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
-    homeassistant/components/xknx/*.py
+    homeassistant/components/xknx.py
     homeassistant/components/*/xknx.py
 
     homeassistant/components/xiaomi.py
