@@ -18,7 +18,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    ATTR_ENTITY_ID)
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
@@ -51,7 +52,7 @@ REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-REMOTE_SERVICE_TURN_ON_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_ACTIVITY_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string
 })
 
@@ -80,10 +81,29 @@ def turn_on(hass, activity=None, entity_id=None):
 
 
 @bind_hass
-def turn_off(hass, entity_id=None):
+def turn_off(hass, activity=None, entity_id=None):
     """Turn all or specified remote off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {}
+    if activity:
+        data[ATTR_ACTIVITY] = activity
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@bind_hass
+def toggle(hass, activity=None, entity_id=None):
+    """Toggle all or specified remote."""
+    data = {}
+    if activity:
+        data[ATTR_ACTIVITY] = activity
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 @bind_hass
@@ -124,12 +144,14 @@ def async_setup(hass, config):
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
                 yield from remote.async_turn_on(activity=activity_id)
+            elif service.service == SERVICE_TOGGLE:
+                yield from remote.async_toggle(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
                 yield from remote.async_send_command(
                     device=device, command=command,
                     num_repeats=num_repeats, delay_secs=delay_secs)
             else:
-                yield from remote.async_turn_off()
+                yield from remote.async_turn_off(activity=activity_id)
 
         update_tasks = []
         for remote in target_remotes:
@@ -152,11 +174,15 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
         descriptions.get(SERVICE_TURN_OFF),
-        schema=REMOTE_SERVICE_SCHEMA)
+        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
         descriptions.get(SERVICE_TURN_ON),
-        schema=REMOTE_SERVICE_TURN_ON_SCHEMA)
+        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, async_handle_remote_service,
+        descriptions.get(SERVICE_TOGGLE),
+        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
         descriptions.get(SERVICE_SEND_COMMAND),
