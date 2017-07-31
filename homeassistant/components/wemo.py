@@ -7,7 +7,6 @@ https://home-assistant.io/components/wemo/
 import logging
 
 import voluptuous as vol
-
 import requests
 
 from homeassistant.components.discovery import SERVICE_WEMO
@@ -83,7 +82,7 @@ def setup(hass, config):
                                 config)
 
     def get_model_from_uuid(uuid):
-        """ Tries to determine which device it is based on the uuid. """
+        """Determine Wemo model from UUID"""
         if uuid is None:
             return None
         elif uuid.startswith('uuid:Socket'):
@@ -102,8 +101,7 @@ def setup(hass, config):
             return 'CoffeeMaker'
         else:
             return None
-
-
+        
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     _LOGGER.info("Scanning for WeMo devices.")
@@ -127,7 +125,8 @@ def setup(hass, config):
         xml = requests.get(url, timeout=10)
         uuid = deviceParser.parseString(xml.content).device.UDN
 
-        _LOGGER.debug("Device UUID is %s, this makes it a %s", uuid, get_model_from_uuid(uuid))
+        _LOGGER.debug("Device UUID is %s, this makes it a %s ",
+                      uuid, get_model_from_uuid(uuid))
 
         discovery_info = {
             'model_name': get_model_from_uuid(uuid),
