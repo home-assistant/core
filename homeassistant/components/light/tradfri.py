@@ -86,7 +86,7 @@ class TradfriGroup(Light):
         try:
             self._group.update()
         except RequestTimeout:
-            _LOGGER.error("Tradfri update request timed out")
+            _LOGGER.warning("Tradfri update request timed out")
 
 
 class Tradfri(Light):
@@ -189,7 +189,7 @@ class Tradfri(Light):
         try:
             self._light.update()
         except RequestTimeout:
-            _LOGGER.error("Tradfri update request timed out")
+            _LOGGER.warning("Tradfri update request timed out")
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
