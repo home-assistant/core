@@ -13,7 +13,7 @@ import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
@@ -23,10 +23,11 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.7']
+REQUIREMENTS = ['buienradar==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
+MEASURED_LABEL = 'Measured'
 TIMEFRAME_LABEL = 'Timeframe'
 # Schedule next call after (minutes):
 SCHEDULE_OK = 10
@@ -40,12 +41,12 @@ SENSOR_TYPES = {
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'groundtemperature': ['Ground Temperature', TEMP_CELSIUS,
+    'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
                           'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
     'winddirection': ['Wind direction', None, 'mdi:compass-outline'],
-    'windazimuth': ['Wind direction azimuth', '°', 'mdi:compass-outline'],
+    'windazimuth': ['Wind azimuth', '°', 'mdi:compass-outline'],
     'pressure': ['Pressure', 'hPa', 'mdi:gauge'],
     'visibility': ['Visibility', 'm', None],
     'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
@@ -110,9 +111,11 @@ class BrSensor(Entity):
         from buienradar.buienradar import (PRECIPITATION_FORECAST)
 
         self.client_name = client_name
-        self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
+        e_id = '{}_{}'.format(self.client_name, self.type)
+        self.entity_id = ENTITY_ID_FORMAT.format(e_id)
         self._state = None
+        self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._entity_picture = None
         self._attribution = None
@@ -171,7 +174,7 @@ class BrSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return self._name
 
     @property
     def state(self):
@@ -205,10 +208,16 @@ class BrSensor(Entity):
 
             return result
 
-        return {
+        result = {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
         }
+        if self._measured is not None:
+            # convert datetime (Europe/Amsterdam) into local datetime
+            local_dt = dt_util.as_local(self._measured)
+            result[MEASURED_LABEL] = local_dt.strftime("%c")
+
+        return result
 
     @property
     def unit_of_measurement(self):

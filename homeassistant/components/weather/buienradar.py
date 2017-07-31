@@ -16,7 +16,7 @@ from homeassistant.components.sensor.buienradar import (
     BrData)
 import voluptuous as vol
 
-REQUIREMENTS = ['buienradar==0.7']
+REQUIREMENTS = ['buienradar==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
