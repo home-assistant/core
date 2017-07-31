@@ -102,7 +102,7 @@ class ITachIP2IRRemote(remote.RemoteDevice):
         self.itachip2ir.send(self._name, "ON", 1)
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         self._power = False
         self.itachip2ir.send(self._name, "OFF", 1)
