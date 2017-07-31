@@ -26,7 +26,7 @@ CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
 CONF_INFLUXDB_MEASUREMENT = 'influxdb_measurement'
-CONF_TAGS_ATTRIBUTES = "tags_attributes"
+CONF_TAGS_ATTRIBUTES = 'tags_attributes'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -132,6 +132,8 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
+        # This optional attribute can be set by user in `customize` section.
+        # If set, it takes precedence over other measurement name overrides.
         measurement = state.attributes.get(CONF_INFLUXDB_MEASUREMENT)
         if measurement in (None, ''):
             if override_measurement:
@@ -161,7 +163,7 @@ def setup(hass, config):
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json_body[0]['tags'][key] = value
-            elif not (key in ['unit_of_measurement', CONF_INFLUXDB_MEASUREMENT]):
+            elif key not in ['unit_of_measurement', CONF_INFLUXDB_MEASUREMENT]:
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"
