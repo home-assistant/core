@@ -67,7 +67,7 @@ CONF_RADIUS = 'radius'
 CONF_URL = 'url'
 
 DEFAULT_ICON = 'mdi:alert'
-DEFAULT_NAME = "Event Information Service"
+DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
