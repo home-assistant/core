@@ -68,7 +68,7 @@ class AppleTVRemote(remote.RemoteDevice):
         self._power.set_power_on(True)
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.
