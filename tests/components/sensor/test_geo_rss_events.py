@@ -1,14 +1,14 @@
-"""The test for the geo rss incidents sensor platform."""
+"""The test for the geo rss events sensor platform."""
 import datetime
 import unittest
 
 from tests.common import load_fixture, get_test_home_assistant
-import homeassistant.components.sensor.geo_rss_incidents as geo_rss_incidents
+import homeassistant.components.sensor.geo_rss_events as geo_rss_events
 import pytz
 
 VALID_CONFIG = {
-    'platform': 'geo_rss_incidents',
-    geo_rss_incidents.CONF_URL: 'url'
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: 'url'
 }
 
 
@@ -28,7 +28,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         """Test filtering entries"""
         import feedparser
         updater = self.setup_updater()
-        raw_data = load_fixture('geo_rss_incidents.xml')
+        raw_data = load_fixture('geo_rss_events.xml')
         feed_data = feedparser.parse(raw_data)
         filtered_entries = updater.filter_entries(feed_data)
         assert len(filtered_entries) == 3
@@ -46,7 +46,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         radius_in_km = 500
         url = ''
         devices = []
-        updater = geo_rss_incidents.GeoRssServiceUpdater(self.hass, None,
+        updater = geo_rss_events.GeoRssServiceUpdater(self.hass, None,
                                                          home_latitude,
                                                          home_longitude,
                                                          url, radius_in_km,
