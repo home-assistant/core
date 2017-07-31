@@ -902,10 +902,13 @@ class SonosDevice(MediaPlayerDevice):
                                           src['title'])
 
     def _replace_queue_with_playlist(self, src):
-        """Playlists can't be played directly with the self._player.play_uri
+        """Replace queue with playlist represented by src.
+
+        Playlists can't be played directly with the self._player.play_uri
         API as they are actually composed of mulitple URLs. Until soco has
         suppport for playing a playlist, we'll need to parse the playlist item
-        and replace the current queue in order to play it."""
+        and replace the current queue in order to play it.
+        """
         import soco
         import xml.etree.ElementTree as ET
 
