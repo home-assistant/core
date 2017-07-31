@@ -7,6 +7,7 @@ https://home-assistant.io/components/wemo/
 import logging
 
 import voluptuous as vol
+import requests
 
 from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import discovery
@@ -24,8 +25,10 @@ WEMO_MODEL_DISPATCH = {
     'Insight': 'switch',
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
+    'Motion':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
+    'Switch': 'switch',
     'CoffeeMaker': 'switch'
 }
 
@@ -47,6 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo
+    from pywemo.ouimeaux_device.api.xsd import device as deviceParser
 
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
@@ -76,6 +80,27 @@ def setup(hass, config):
         discovery.load_platform(hass, component, DOMAIN, discovery_info,
                                 config)
 
+    def get_model_from_uuid(uuid):
+        """Determine Wemo model from UUID."""
+        if uuid is None:
+            return None
+        elif uuid.startswith('uuid:Socket'):
+            return 'Switch'
+        elif uuid.startswith('uuid:Lightswitch'):
+            return 'LightSwitch'
+        elif uuid.startswith('uuid:Insight'):
+            return 'Insight'
+        elif uuid.startswith('uuid:Sensor'):
+            return 'Motion'
+        elif uuid.startswith('uuid:Maker'):
+            return 'Maker'
+        elif uuid.startswith('uuid:Bridge'):
+            return 'Bridge'
+        elif uuid.startswith('uuid:CoffeeMaker'):
+            return 'CoffeeMaker'
+        else:
+            return None
+
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     _LOGGER.info("Scanning for WeMo devices.")
@@ -96,8 +121,14 @@ def setup(hass, config):
         if device is None:
             device = pywemo.discovery.device_from_description(url, None)
 
+        xml = requests.get(url, timeout=10)
+        uuid = deviceParser.parseString(xml.content).device.UDN
+
+        _LOGGER.debug("Device UUID is %s, this makes it a %s ",
+                      uuid, get_model_from_uuid(uuid))
+
         discovery_info = {
-            'model_name': device.model_name,
+            'model_name': get_model_from_uuid(uuid),
             'serial': device.serialnumber,
             'mac_address': device.mac,
             'ssdp_description': url,
