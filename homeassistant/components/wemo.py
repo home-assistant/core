@@ -82,7 +82,7 @@ def setup(hass, config):
                                 config)
 
     def get_model_from_uuid(uuid):
-        """Determine Wemo model from UUID"""
+        """Determine Wemo model from UUID."""
         if uuid is None:
             return None
         elif uuid.startswith('uuid:Socket'):
