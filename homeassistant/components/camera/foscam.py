@@ -55,7 +55,8 @@ class FoscamCam(Camera):
 
         from foscam import FoscamCamera
 
-        self._foscam_session = FoscamCamera(ip_address, port, self._username, self._password)
+        self._foscam_session = FoscamCamera(ip_address, port, self._username,
+                                            self._password)
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
