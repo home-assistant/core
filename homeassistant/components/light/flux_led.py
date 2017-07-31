@@ -111,7 +111,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light_ips.append(ipaddr)
 
     if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_devices(lights)
+        add_devices(lights, True)
         return
 
     # Find the bulbs on the LAN
@@ -127,7 +127,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light = FluxLight(device)
         lights.append(light)
 
-    add_devices(lights)
+    add_devices(lights, True)
 
 
 class FluxLight(Light):
@@ -141,8 +141,6 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self._bulb = None
         self._error_reported = False
-
-        self.update()
 
     def _connect(self):
         """Connect to Flux light."""
@@ -187,12 +185,16 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.brightness if self.available else 0
+        if self.available:
+            return self._bulb.brightness
+        return 0
 
     @property
     def rgb_color(self):
         """Return the color property."""
-        return self._bulb.getRgb() if self.available else [0, 0, 0]
+        if self.available:
+            return self._bulb.getRgb()
+        return [0, 0, 0]
 
     @property
     def supported_features(self):
@@ -206,9 +208,6 @@ class FluxLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        if not self.available:
-            return
-
         if not self.is_on:
             self._bulb.turnOn()
 
@@ -233,12 +232,9 @@ class FluxLight(Light):
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 
-        self.update()
-
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-        if self.available:
-            self._bulb.turnOff()
+        self._bulb.turnOff()
 
     def update(self):
         """Synchronize state with bulb."""
