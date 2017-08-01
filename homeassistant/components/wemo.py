@@ -15,8 +15,6 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-from pywemo.ouimeaux_device.api.xsd import device as deviceParser
-
 REQUIREMENTS = ['pywemo==0.4.19']
 
 DOMAIN = 'wemo'
@@ -52,7 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo
-
+    from pywemo.ouimeaux_device.api.xsd import device as deviceParser
+    
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
     SUBSCRIPTION_REGISTRY.start()
