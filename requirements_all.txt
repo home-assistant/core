@@ -584,9 +584,6 @@ pyfoscam==1.2
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.sensor.skybeacon
-pygatt==3.1.1
-
 # homeassistant.components.remote.harmony
 pyharmony==1.0.16
 

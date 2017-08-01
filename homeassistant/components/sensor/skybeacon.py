@@ -16,7 +16,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MAC, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pygatt==3.1.1']
+# REQUIREMENTS = ['pygatt==3.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,9 @@ CONNECT_TIMEOUT = 30
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Skybeacon sensor."""
+    _LOGGER.warning("This platform has been disabled due to having a "
+                    "requirement depending on enum34.")
+    return
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
     _LOGGER.debug("Setting up...")
