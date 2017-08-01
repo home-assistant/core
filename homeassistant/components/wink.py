@@ -201,13 +201,13 @@ def setup(hass, config):
             return False
         pywink.set_bearer_token(token)
 
-    try:
+    if config.get(DOMAIN) is not None:
         client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
         client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
         email = config[DOMAIN].get(CONF_EMAIL)
         password = config[DOMAIN].get(CONF_PASSWORD)
         local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
-    except KeyError:
+    else:
         client_id = None
         client_secret = None
         email = None
