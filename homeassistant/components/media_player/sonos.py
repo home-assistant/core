@@ -695,6 +695,9 @@ class SonosDevice(MediaPlayerDevice):
         if url in ('', 'NOT_IMPLEMENTED', None):
             if fallback_uri in ('', 'NOT_IMPLEMENTED', None):
                 return None
+            if fallback_uri.find('tts_proxy') > 0:
+                # If the content is a tts don't try to fetch an image from it.
+                return None
             return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
                 host=self._player.ip_address,
                 port=1400,
