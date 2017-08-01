@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.xknx/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX
+from homeassistant.components.xknx import DATA_XKNX, _LOGGER
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
@@ -185,20 +185,20 @@ class XKNXCover(CoverDevice):
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
-        print("stop_cover_tilt - not implemented")
+        _LOGGER.warning("stop_cover_tilt - not implemented")
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        print("close_cover_tilt - not implemented")
+        _LOGGER.warning("close_cover_tilt - not implemented")
 
     def set_cover_tilt_position(self, tilt_position, **kwargs):
         # pylint: disable=unused-argument
         """Move the cover til to a specific position."""
-        print("close_cover_tilt_position - not implemented")
+        _LOGGER.warning("close_cover_tilt_position - not implemented")
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        print("open_cover_tilt - not implemented")
+        _LOGGER.warning("open_cover_tilt - not implemented")
 
     @property
     def current_cover_tilt_position(self):
