@@ -19,6 +19,7 @@ REQUIREMENTS = ['pushbullet.py==0.11.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_URL = 'url'
+ATTR_FILE = 'file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -80,14 +81,21 @@ class PushBulletNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
         url = None
+        filepath = None
         if data:
             url = data.get(ATTR_URL, None)
+            filepath = data.get(ATTR_FILE, None)
         refreshed = False
 
         if not targets:
             # Backward compatibility, notify all devices in own account
             if url:
                 self.pushbullet.push_link(title, url, body=message)
+            if self.hass.config.is_allowed_path(filepath):
+                with open(filepath, "rb") as fileh:
+                    filedata = self.pushbullet.upload_file(fileh, filepath)
+                    self.pushbullet.push_file(title=title, body=message,
+                                              **filedata)
             else:
                 self.pushbullet.push_note(title, message)
             _LOGGER.info("Sent notification to self")
@@ -107,6 +115,11 @@ class PushBulletNotificationService(BaseNotificationService):
                 if url:
                     self.pushbullet.push_link(
                         title, url, body=message, email=tname)
+                if self.hass.config.is_allowed_path(filepath):
+                    with open(filepath, "rb") as fileh:
+                        filedata = self.pushbullet.upload_file(fileh, filepath)
+                        self.pushbullet.push_file(title=title, body=message,
+                                                  **filedata)
                 else:
                     self.pushbullet.push_note(title, message, email=tname)
                 _LOGGER.info("Sent notification to email %s", tname)
