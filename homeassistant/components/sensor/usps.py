@@ -76,6 +76,11 @@ class USPSPackageSensor(Entity):
         """Icon to use in the frontend."""
         return 'mdi:package-variant-closed'
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'packages'
+
 
 class USPSMailSensor(Entity):
     """USPS Mail Sensor."""
@@ -120,3 +125,8 @@ class USPSMailSensor(Entity):
     def icon(self):
         """Icon to use in the frontend."""
         return 'mdi:mailbox'
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'pieces'
