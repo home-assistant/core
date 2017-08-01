@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 
-REQUIREMENTS = ['TwitterAPI==2.4.5']
+REQUIREMENTS = ['TwitterAPI==2.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,10 +60,13 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
-        media = data.get(ATTR_MEDIA)
-        if not self.hass.config.is_allowed_path(media):
-            _LOGGER.warning("'%s' is not in a whitelisted area.", media)
-            return
+
+        media = None
+        if data:
+            media = data.get(ATTR_MEDIA)
+            if not self.hass.config.is_allowed_path(media):
+                _LOGGER.warning("'%s' is not a whitelisted directory", media)
+                return
 
         media_id = self.upload_media(media)
 
@@ -94,8 +97,7 @@ class TwitterNotificationService(BaseNotificationService):
             return None
 
         media_id = resp.json()['media_id']
-        media_id = self.upload_media_chunked(file, total_bytes,
-                                             media_id)
+        media_id = self.upload_media_chunked(file, total_bytes, media_id)
 
         resp = self.upload_media_finalize(media_id)
         if 199 > resp.status_code < 300:
@@ -147,8 +149,8 @@ class TwitterNotificationService(BaseNotificationService):
     def log_error_resp(resp):
         """Log error response."""
         obj = json.loads(resp.text)
-        error_message = obj['error']
-        _LOGGER.error("Error %s : %s", resp.status_code, error_message)
+        error_message = obj['errors']
+        _LOGGER.error("Error %s: %s", resp.status_code, error_message)
 
     @staticmethod
     def log_error_resp_append(resp):
@@ -156,5 +158,5 @@ class TwitterNotificationService(BaseNotificationService):
         obj = json.loads(resp.text)
         error_message = obj['errors'][0]['message']
         error_code = obj['errors'][0]['code']
-        _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
+        _LOGGER.error("Error %s: %s (Code %s)", resp.status_code,
                       error_message, error_code)

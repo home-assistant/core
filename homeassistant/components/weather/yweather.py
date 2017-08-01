@@ -11,17 +11,21 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP)
+    WeatherEntity, PLATFORM_SCHEMA,
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
 REQUIREMENTS = ["yahooweather==0.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_CONDITION = 'yahoo_condition'
+
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-CONF_FORECAST = 'forecast'
+ATTR_FORECAST_TEMP_LOW = 'templow'
+
 CONF_WOEID = 'woeid'
 
 DEFAULT_NAME = 'Yweather'
@@ -33,23 +37,22 @@ CONDITION_CLASSES = {
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],
     'lightning': [37],
-    'lightning-rainy': [38, 39],
+    'lightning-rainy': [38, 39, 47],
     'partlycloudy': [44],
     'pouring': [40, 45],
     'rainy': [9, 11, 12],
     'snowy': [8, 13, 14, 15, 16, 41, 42, 43],
-    'snowy-rainy': [5, 6, 7, 10, 46, 47],
-    'sunny': [32],
+    'snowy-rainy': [5, 6, 7, 10, 46],
+    'sunny': [32, 33, 34],
     'windy': [24],
     'windy-variant': [],
     'exceptional': [0, 1, 2, 3, 4, 25, 36],
 }
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=0):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
 })
 
 
@@ -59,7 +62,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
-    forecast = config.get(CONF_FORECAST)
     name = config.get(CONF_NAME)
 
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
@@ -77,22 +79,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.critical("Can't retrieve weather data from Yahoo!")
         return False
 
-    if forecast >= len(yahoo_api.yahoo.Forecast):
-        _LOGGER.error("Yahoo! only support %d days forecast",
-                      len(yahoo_api.yahoo.Forecast))
-        return False
+    # create condition helper
+    if DATA_CONDITION not in hass.data:
+        hass.data[DATA_CONDITION] = [str(x) for x in range(0, 50)]
+        for cond, condlst in CONDITION_CLASSES.items():
+            for condi in condlst:
+                hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name, forecast)], True)
+    add_devices([YahooWeatherWeather(yahoo_api, name)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):
     """Representation of Yahoo! weather data."""
 
-    def __init__(self, weather_data, name, forecast):
+    def __init__(self, weather_data, name):
         """Initialize the sensor."""
         self._name = name
         self._data = weather_data
-        self._forecast = forecast
 
     @property
     def name(self):
@@ -103,9 +106,9 @@ class YahooWeatherWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         try:
-            return [k for k, v in CONDITION_CLASSES.items() if
-                    int(self._data.yahoo.Now['code']) in v][0]
-        except IndexError:
+            return self.hass.data[DATA_CONDITION][int(
+                self._data.yahoo.Now['code'])]
+        except (ValueError, IndexError):
             return STATE_UNKNOWN
 
     @property
@@ -139,6 +142,11 @@ class YahooWeatherWeather(WeatherEntity):
         return self._data.yahoo.Wind['speed']
 
     @property
+    def wind_bearing(self):
+        """Return the wind direction."""
+        return self._data.yahoo.Wind['direction']
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -147,18 +155,16 @@ class YahooWeatherWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         try:
-            forecast_condition = \
-                [k for k, v in CONDITION_CLASSES.items() if
-                 int(self._data.yahoo.Forecast[self._forecast]['code'])
-                 in v][0]
-        except IndexError:
+            return [
+                {
+                    ATTR_FORECAST_TIME: v['date'],
+                    ATTR_FORECAST_TEMP:int(v['high']),
+                    ATTR_FORECAST_TEMP_LOW: int(v['low']),
+                    ATTR_FORECAST_CONDITION:
+                        self.hass.data[DATA_CONDITION][int(v['code'])]
+                } for v in self._data.yahoo.Forecast]
+        except (ValueError, IndexError):
             return STATE_UNKNOWN
-
-        return [{
-            ATTR_FORECAST_CONDITION: forecast_condition,
-            ATTR_FORECAST_TEMP:
-                self._data.yahoo.Forecast[self._forecast]['high'],
-        }]
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""

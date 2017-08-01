@@ -47,10 +47,14 @@ def alexa_client(loop, hass, test_client):
                     "uid": "uuid"
                 }
             },
-            "intents": {
+        }
+    }))
+    assert loop.run_until_complete(async_setup_component(
+        hass, 'intent_script', {
+            'intent_script': {
                 "WhereAreWeIntent": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text":
                         """
                             {%- if is_state("device_tracker.paulus", "home")
@@ -69,20 +73,25 @@ def alexa_client(loop, hass, test_client):
                 },
                 "GetZodiacHoroscopeIntent": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text": "You told us your sign is {{ ZodiacSign }}.",
                     }
                 },
                 "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
                     "speech": {
-                        "type": "plaintext",
+                        "type": "plain",
                         "text": "Playing {{ object_byArtist_name }}.",
                     }
                 },
                 "CallServiceIntent": {
                     "speech": {
-                        "type": "plaintext",
-                        "text": "Service called",
+                        "type": "plain",
+                        "text": "Service called for {{ ZodiacSign }}",
+                    },
+                    "card": {
+                        "type": "simple",
+                        "title": "Card title for {{ ZodiacSign }}",
+                        "content": "Card content: {{ ZodiacSign }}",
                     },
                     "action": {
                         "service": "test.alexa",
@@ -93,8 +102,7 @@ def alexa_client(loop, hass, test_client):
                     }
                 }
             }
-        }
-    }))
+        }))
     return loop.run_until_complete(test_client(hass.http.app))
 
 
@@ -315,6 +323,13 @@ def test_intent_request_calling_service(alexa_client):
     assert call.service == "alexa"
     assert call.data.get("entity_id") == ["switch.test"]
     assert call.data.get("hello") == "virgo"
+
+    data = yield from req.json()
+    assert data['response']['card']['title'] == 'Card title for virgo'
+    assert data['response']['card']['content'] == 'Card content: virgo'
+    assert data['response']['outputSpeech']['type'] == 'PlainText'
+    assert data['response']['outputSpeech']['text'] == \
+        'Service called for virgo'
 
 
 @asyncio.coroutine
