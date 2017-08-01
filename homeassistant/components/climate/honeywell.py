@@ -116,9 +116,9 @@ def _setup_us(username, password, config, add_devices):
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    def __init__(self, device, zone_id, master, away_temp):
+    def __init__(self, client, zone_id, master, away_temp):
         """Initialize the thermostat."""
-        self.device = device
+        self.client = client
         self._current_temperature = None
         self._target_temperature = None
         self._name = 'round connected'
@@ -155,12 +155,12 @@ class RoundThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self.device.set_temperature(self._name, temperature)
+        self.client.set_temperature(self._name, temperature)
 
     @property
     def current_operation(self: ClimateDevice) -> str:
         """Get the current operation of the system."""
-        return getattr(self.device, ATTR_SYSTEM_MODE, None)
+        return getattr(self.client, ATTR_SYSTEM_MODE, None)
 
     @property
     def is_away_mode_on(self):
@@ -169,8 +169,8 @@ class RoundThermostat(ClimateDevice):
 
     def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
-        if hasattr(self.device, ATTR_SYSTEM_MODE):
-            self.device.system_mode = operation_mode
+        if hasattr(self.client, ATTR_SYSTEM_MODE):
+            self.client.system_mode = operation_mode
 
     def turn_away_mode_on(self):
         """Turn away on.
@@ -180,19 +180,19 @@ class RoundThermostat(ClimateDevice):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        self.device.set_temperature(self._name, self._away_temp)
+        self.client.set_temperature(self._name, self._away_temp)
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self._away = False
-        self.device.cancel_temp_override(self._name)
+        self.client.cancel_temp_override(self._name)
 
     def update(self):
         """Get the latest date."""
         try:
             # Only refresh if this is the "master" device,
             # others will pick up the cache
-            for val in self.device.temperatures(force_refresh=self._master):
+            for val in self.client.temperatures(force_refresh=self._master):
                 if val['id'] == self._id:
                     data = val
 
@@ -210,18 +210,16 @@ class RoundThermostat(ClimateDevice):
             self._name = data['name']
             self._is_dhw = False
 
-
         # The underlying library doesn't expose the thermostat's mode
         # but we can pull it out of the big dictionary of information.
         device_data = list(
             filter(lambda x: x['name'] == self.name,
-                   self.device.full_data['devices']))
+                   self.client.full_data['devices']))
 
         if device_data:
-            self.device.system_mode = (
+            self.client.system_mode = (
                 device_data[0]['thermostat']
                 ['changeableValues']['mode'])
-
 
 
 class HoneywellUSThermostat(ClimateDevice):
