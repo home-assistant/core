@@ -1,5 +1,5 @@
 """
-Support for retreiving status info from Google Wifi/OnHub routers.
+Support for retrieving status info from Google Wifi/OnHub routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.google_wifi/
@@ -12,28 +12,27 @@ import requests
 
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.util import Throttle
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
+    CONF_NAME, CONF_HOST, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ENDPOINT = '/api/v1/status'
-
 ATTR_CURRENT_VERSION = 'current_version'
-ATTR_NEW_VERSION = 'new_version'
-ATTR_UPTIME = 'uptime'
 ATTR_LAST_RESTART = 'last_restart'
 ATTR_LOCAL_IP = 'local_ip'
+ATTR_NEW_VERSION = 'new_version'
 ATTR_STATUS = 'status'
+ATTR_UPTIME = 'uptime'
 
-DEFAULT_NAME = 'google_wifi'
 DEFAULT_HOST = 'testwifi.here'
+DEFAULT_NAME = 'google_wifi'
+
+ENDPOINT = '/api/v1/status'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_VERSION: [
@@ -69,10 +68,10 @@ MONITORED_CONDITIONS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -85,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api = GoogleWifiAPI(host, conditions)
     dev = []
     for condition in conditions:
-        dev.append(GoogleWifiSensor(hass, api, name, condition))
+        dev.append(GoogleWifiSensor(api, name, condition))
 
     add_devices(dev, True)
 
@@ -93,9 +92,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GoogleWifiSensor(Entity):
     """Representation of a Google Wifi sensor."""
 
-    def __init__(self, hass, api, name, variable):
-        """Initialize a Pi-Hole sensor."""
-        self._hass = hass
+    def __init__(self, api, name, variable):
+        """Initialize a Google Wifi sensor."""
         self._api = api
         self._name = name
         self._state = STATE_UNKNOWN
@@ -108,7 +106,7 @@ class GoogleWifiSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}_{}".format(self._name, self._var_name)
+        return '{}_{}'.format(self._name, self._var_name)
 
     @property
     def icon(self):
@@ -121,9 +119,9 @@ class GoogleWifiSensor(Entity):
         return self._var_units
 
     @property
-    def availiable(self):
-        """Return availiability of goole wifi api."""
-        return self._api.availiable
+    def available(self):
+        """Return availability of Google Wifi API."""
+        return self._api.available
 
     @property
     def state(self):
@@ -133,7 +131,7 @@ class GoogleWifiSensor(Entity):
     def update(self):
         """Get the latest data from the Google Wifi API."""
         self._api.update()
-        if self.availiable:
+        if self.available:
             self._state = self._api.data[self._var_name]
         else:
             self._state = STATE_UNKNOWN
@@ -157,7 +155,7 @@ class GoogleWifiAPI(object):
             ATTR_LOCAL_IP: STATE_UNKNOWN,
             ATTR_STATUS: STATE_UNKNOWN
         }
-        self.availiable = True
+        self.available = True
         self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -165,14 +163,13 @@ class GoogleWifiAPI(object):
         """Get the latest data from the router."""
         try:
             with requests.Session() as sess:
-                response = sess.send(
-                    self._request, timeout=10)
+                response = sess.send(self._request, timeout=10)
             self.raw_data = response.json()
             self.data_format()
-            self.availiable = True
-        except ValueError:
-            _LOGGER.error('Unable to fetch data from Google Wifi')
-            self.availiable = False
+            self.available = True
+        except (ValueError, requests.exceptions.ConnectionError):
+            _LOGGER.warning("Unable to fetch data from Google Wifi")
+            self.available = False
             self.raw_data = None
 
     def data_format(self):
@@ -191,10 +188,10 @@ class GoogleWifiAPI(object):
                     elif attr_key == ATTR_UPTIME:
                         sensor_value /= 3600 * 24
                     elif attr_key == ATTR_LAST_RESTART:
-                        last_restart = (dt.now() -
-                                        timedelta(seconds=sensor_value))
-                        sensor_value = last_restart.strftime(('%Y-%m-%d '
-                                                              '%H:%M:%S'))
+                        last_restart = (
+                            dt.now() - timedelta(seconds=sensor_value))
+                        sensor_value = last_restart.strftime(
+                            '%Y-%m-%d %H:%M:%S')
                     elif attr_key == ATTR_STATUS:
                         if sensor_value:
                             sensor_value = 'Online'
@@ -206,7 +203,7 @@ class GoogleWifiAPI(object):
 
                     self.data[attr_key] = sensor_value
             except KeyError:
-                _LOGGER.error('Router does not support %s field. '
-                              'Please remove %s from monitored_conditions.',
+                _LOGGER.error("Router does not support %s field. "
+                              "Please remove %s from monitored_conditions",
                               sensor_key, attr_key)
                 self.data[attr_key] = STATE_UNKNOWN
