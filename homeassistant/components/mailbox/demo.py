@@ -70,6 +70,5 @@ class DemoMailbox(Mailbox):
             if sha in self._messages:
                 _LOGGER.info("Deleting: %s", sha)
                 del self._messages[sha]
-        if self.entity:
-            self.hass.async_add_job(self.entity.async_update_ha_state(True))
+        self.update()
         return True

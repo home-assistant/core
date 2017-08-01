@@ -38,9 +38,9 @@ class AsteriskMailbox(Mailbox):
     @callback
     def _update_callback(self, msg):
         """Update the message count in HA, if needed."""
-        if self.entity:
-            self.hass.async_add_job(self.entity.async_update_ha_state(True))
+        self.update()
 
+    @property
     def get_media_type(self):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG

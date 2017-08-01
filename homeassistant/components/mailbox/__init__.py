@@ -17,6 +17,7 @@ from aiohttp import web
 
 from homeassistant.const import (HTTP_BAD_REQUEST)
 
+from homeassistant.core import callback
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
@@ -26,6 +27,7 @@ from homeassistant.setup import async_prepare_setup_platform
 
 
 DOMAIN = 'mailbox'
+EVENT = 'mailbox_updated'
 CONTENT_TYPE_MPEG = 'audio/mpeg'
 SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +39,7 @@ def async_setup(hass, config):
     mailboxes = []
     hass.components.frontend.register_built_in_panel(
         'mailbox', 'Mailbox', 'mdi:account-location')
+    hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))
     hass.http.register_view(MailboxDeleteView(mailboxes))
@@ -77,9 +80,8 @@ def async_setup(hass, config):
             _LOGGER.exception('Error setting up platform %s', p_type)
             return
 
-        mailbox_entity = MailboxEntity(mailbox)
-        mailbox.entity = mailbox_entity
         mailboxes.append(mailbox)
+        mailbox_entity = MailboxEntity(hass, mailbox)
         component = EntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
         yield from component.async_add_entity(mailbox_entity)
@@ -103,9 +105,16 @@ def async_setup(hass, config):
 class MailboxEntity(Entity):
     """Entity for each mailbox platform."""
 
-    def __init__(self, mailbox):
+    def __init__(self, hass, mailbox):
         """Initialize mailbox entity."""
         self.mailbox = mailbox
+        self.hass = hass
+
+        @callback
+        def _mailbox_updated(event):
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        hass.bus.async_listen(EVENT, _mailbox_updated)
 
     @property
     def state(self):
@@ -124,8 +133,11 @@ class Mailbox(object):
     def __init__(self, hass, name):
         """Initialize mailbox object."""
         self.hass = hass
-        self.entity = None
         self.name = name
+
+    def update(self):
+        """Send event notification of updated mailbox."""
+        self.hass.bus.async_fire(EVENT)
 
     def get_media_type(self):
         """Return the supported media type."""
@@ -157,24 +169,39 @@ class MailboxView(HomeAssistantView):
         """Initialize a basic mailbox view."""
         self.mailboxes = mailboxes
 
-    def get_mailbox(self, entity_id):
+    def get_mailbox(self, platform):
         """Retrieve the specified mailbox."""
         for mailbox in self.mailboxes:
-            if mailbox.entity.entity_id == entity_id:
+            if mailbox.name == platform:
                 return mailbox
         return None
+
+
+class MailboxPlatformsView(MailboxView):
+    """View to return the list of mailbox platforms."""
+
+    url = "/api/mailbox/platforms"
+    name = "api:mailbox:platforms"
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Retrieve list of platforms."""
+        platforms = []
+        for mailbox in self.mailboxes:
+            platforms.append(mailbox.name)
+        return self.json(platforms)
 
 
 class MailboxMessageView(MailboxView):
     """View to return the list of messages."""
 
-    url = "/api/mailbox/messages/{entity_id}"
+    url = "/api/mailbox/messages/{platform}"
     name = "api:mailbox:messages"
 
     @asyncio.coroutine
-    def get(self, request, entity_id):
+    def get(self, request, platform):
         """Retrieve messages."""
-        mailbox = self.get_mailbox(entity_id)
+        mailbox = self.get_mailbox(platform)
         if mailbox is None:
             return web.Response(status=401)
         return self.json(mailbox.get_messages())
@@ -183,13 +210,13 @@ class MailboxMessageView(MailboxView):
 class MailboxDeleteView(MailboxView):
     """View to delete selected messages."""
 
-    url = "/api/mailbox/delete/{entity_id}"
+    url = "/api/mailbox/delete/{platform}"
     name = "api:mailbox:delete"
 
     @asyncio.coroutine
-    def post(self, request, entity_id):
+    def post(self, request, platform):
         """Delete items."""
-        mailbox = self.get_mailbox(entity_id)
+        mailbox = self.get_mailbox(platform)
         if mailbox is None:
             return web.Response(status=401)
         try:
@@ -202,13 +229,13 @@ class MailboxDeleteView(MailboxView):
 class MailboxMediaView(MailboxView):
     """View to return a media file."""
 
-    url = r"/api/mailbox/media/{entity_id}/{msgid}"
+    url = r"/api/mailbox/media/{platform}/{msgid}"
     name = "api:asteriskmbox:media"
 
     @asyncio.coroutine
-    def get(self, request, entity_id, msgid):
+    def get(self, request, platform, msgid):
         """Retrieve media."""
-        mailbox = self.get_mailbox(entity_id)
+        mailbox = self.get_mailbox(platform)
         if mailbox is None:
             return web.Response(status=401)
 
