@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return (byt*100.0)/255.0
+    return int((byt*100.0)/255.0)
 
 
 def brightness_from_percentage(percent):
@@ -53,6 +53,8 @@ class TPLinkSmartBulb(Light):
             self._name = name
 
         self._state = None
+        self._color_temp = None
+        self._brightness = None
         _LOGGER.debug("Setting up TP-Link Smart Bulb")
 
     @property
@@ -70,7 +72,6 @@ class TPLinkSmartBulb(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
             self.smartbulb.brightness = brightness_to_percentage(brightness)
-
         self.smartbulb.state = self.smartbulb.BULB_STATE_ON
 
     def turn_off(self):
@@ -80,33 +81,31 @@ class TPLinkSmartBulb(Light):
     @property
     def color_temp(self):
         """Return the color temperature of this light in mireds for HA."""
-        if self.smartbulb.is_color:
-            if (self.smartbulb.color_temp is not None and
-                    self.smartbulb.color_temp != 0):
-                return kelvin_to_mired(self.smartbulb.color_temp)
-            else:
-                return None
-        else:
-            return None
+        return self._color_temp
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return brightness_from_percentage(self.smartbulb.brightness)
+        return self._brightness
 
     @property
     def is_on(self):
         """True if device is on."""
-        return self.smartbulb.state == \
-            self.smartbulb.BULB_STATE_ON
+        return self._state
 
     def update(self):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartPlugException
         try:
-            self._state = self.smartbulb.state == \
-                self.smartbulb.BULB_STATE_ON
-
+            self._state = (
+                self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
+            self._brightness = brightness_from_percentage(
+                self.smartbulb.brightness)
+            if self.smartbulb.is_color:
+                if (self.smartbulb.color_temp is not None and
+                        self.smartbulb.color_temp != 0):
+                    self._color_temp = kelvin_to_mired(
+                        self.smartbulb.color_temp)
         except (SmartPlugException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
 
