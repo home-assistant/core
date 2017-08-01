@@ -969,6 +969,8 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.media_player.bluesound
+xmltodict==0.10.2
+
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
