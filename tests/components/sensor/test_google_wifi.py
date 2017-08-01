@@ -26,6 +26,10 @@ MOCK_DATA_NEXT = ('{"software": {"softwareVersion":"next",'
                   '"wan": {"localIpAddress":"next", "online":false,'
                   '"ipAddress":false}}')
 
+MOCK_DATA_MISSING = ('{"software": {},'
+                     '"system": {},'
+                     '"wan": {}}')
+
 
 class TestGoogleWifiSetup(unittest.TestCase):
     """Tests for setting up the Google Wifi switch platform."""
@@ -47,9 +51,11 @@ class TestGoogleWifiSetup(unittest.TestCase):
         mock_req.get(resource, status_code=200)
         self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {
-                'platform': 'google_wifi'
+                'platform': 'google_wifi',
+                'monitored_conditions': ['uptime']
             }
         }))
+        assert_setup_component(1, 'sensor')
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -95,7 +101,9 @@ class TestGoogleWifiSensor(unittest.TestCase):
         now = datetime(1970, month=1, day=1)
         with patch('homeassistant.util.dt.now', return_value=now):
             mock_req.get(resource, text=data, status_code=200)
-            self.api = google_wifi.GoogleWifiAPI("localhost")
+            conditions = google_wifi.MONITORED_CONDITIONS.keys()
+            self.api = google_wifi.GoogleWifiAPI("localhost",
+                                                 conditions)
         self.name = NAME
         self.sensor_dict = dict()
         for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
@@ -187,6 +195,18 @@ class TestGoogleWifiSensor(unittest.TestCase):
                     self.assertEqual(STATE_UNKNOWN, sensor.state)
                 else:
                     self.assertEqual('next', sensor.state)
+
+    @requests_mock.Mocker()
+    def test_when_api_data_missing(self, mock_req):
+        """Test state logs an error when data is missing."""
+        self.setup_api(MOCK_DATA_MISSING, mock_req)
+        now = datetime(1970, month=1, day=1)
+        with patch('homeassistant.util.dt.now', return_value=now):
+            for name in self.sensor_dict:
+                sensor = self.sensor_dict[name]['sensor']
+                self.fake_delay(2)
+                sensor.update()
+                self.assertEqual(STATE_UNKNOWN, sensor.state)
 
     def test_update_when_unavailiable(self):
         """Test state updates when Google Wifi unavailiable."""

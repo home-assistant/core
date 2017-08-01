@@ -25,12 +25,11 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
-    CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import script, config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
@@ -161,15 +160,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     tcp_port = config.get(CONF_TCP_PORT)
-    encryption = get_deprecated(config, CONF_PROXY_SSL, CONF_SSL)
+    encryption = config.get(CONF_PROXY_SSL)
     websocket = config.get(CONF_ENABLE_WEBSOCKET)
-
-    if host.startswith('http://') or host.startswith('https://'):
-        host = host.lstrip('http://').lstrip('https://')
-        _LOGGER.warning(
-            "Kodi host name should no longer conatin http:// See updated "
-            "definitions here: "
-            "https://home-assistant.io/components/media_player.kodi/")
 
     entity = KodiDevice(
         hass,
@@ -361,7 +353,7 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self._ws_server.close())
 
     @asyncio.coroutine
     def _get_players(self):
@@ -410,6 +402,8 @@ class KodiDevice(MediaPlayerDevice):
                 # Kodi abruptly ends ws connection when exiting. We will try
                 # to reconnect on the next poll.
                 pass
+            # Update HA state after Kodi disconnects
+            self.hass.async_add_job(self.async_update_ha_state())
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
