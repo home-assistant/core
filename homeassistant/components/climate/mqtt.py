@@ -210,7 +210,7 @@ class MqttClimate(ClimateDevice):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            if self._current_operation != 'Off':
+            if self._current_operation != STATE_OFF:
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_TEMPERATURE_COMMAND_TOPIC],
                     self._target_temperature, self._qos, self._retain)
@@ -219,7 +219,7 @@ class MqttClimate(ClimateDevice):
 
     def set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        if self._current_operation != 'Off':
+        if self._current_operation != STATE_OFF:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_SWING_MODE_COMMAND_TOPIC],
                 swing_mode, self._qos, self._retain)
@@ -228,7 +228,7 @@ class MqttClimate(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
-        if self._current_operation != 'Off':
+        if self._current_operation != STATE_OFF:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_FAN_MODE_COMMAND_TOPIC],
                 fan, self._qos, self._retain)
@@ -242,14 +242,16 @@ class MqttClimate(ClimateDevice):
             return
 
         if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
-            if self._current_operation == 'Off' and operation_mode != 'Off':
+            if self._current_operation == STATE_OFF and \
+                        operation_mode != STATE_OFF:
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_POWER_COMMAND_TOPIC],
-                    "On", self._qos, self._retain)
-            elif self._current_operation != 'Off' and operation_mode == 'Off':
+                    STATE_ON, self._qos, self._retain)
+            elif self._current_operation != STATE_OFF and \
+                          operation_mode == STATE_OFF:
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_POWER_COMMAND_TOPIC],
-                    "Off", self._qos, self._retain)
+                    STATE_OFF, self._qos, self._retain)
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_MODE_COMMAND_TOPIC],
