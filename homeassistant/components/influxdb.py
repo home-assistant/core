@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
 from homeassistant.helpers import state as state_helper
+from homeassistant.helpers.entity_values import EntityValues
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['influxdb==3.0.0']
@@ -25,13 +26,19 @@ CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
-CONF_INFLUXDB_MEASUREMENT = 'influxdb_measurement'
 CONF_TAGS_ATTRIBUTES = 'tags_attributes'
+CONF_COMPONENT_CONFIG = 'component_config'
+CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
+CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
 TIMEOUT = 5
+
+COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -58,6 +65,12 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_COMPONENT_CONFIG, default={}):
+            vol.Schema({cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
+            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
+            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -102,6 +115,10 @@ def setup(hass, config):
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
+    component_config = EntityValues(
+        conf[CONF_COMPONENT_CONFIG],
+        conf[CONF_COMPONENT_CONFIG_DOMAIN],
+        conf[CONF_COMPONENT_CONFIG_GLOB])
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -132,9 +149,7 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
-        # This optional attribute can be set by user in `customize` section.
-        # If set, it takes precedence over other measurement name overrides.
-        measurement = state.attributes.get(CONF_INFLUXDB_MEASUREMENT)
+        measurement = component_config.get(state.entity_id).get(CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ''):
             if override_measurement:
                 measurement = override_measurement
@@ -163,7 +178,7 @@ def setup(hass, config):
         for key, value in state.attributes.items():
             if key in tags_attributes:
                 json_body[0]['tags'][key] = value
-            elif key not in ['unit_of_measurement', CONF_INFLUXDB_MEASUREMENT]:
+            elif key != 'unit_of_measurement':
                 # If the key is already in fields
                 if key in json_body[0]['fields']:
                     key = key + "_"
