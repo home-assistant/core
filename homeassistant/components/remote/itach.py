@@ -14,8 +14,7 @@ import homeassistant.components.remote as remote
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
     CONF_DEVICES)
-from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, ATTR_COMMAND)
+from homeassistant.components.remote import PLATFORM_SCHEMA
 
 REQUIREMENTS = ['pyitachip2ir==0.0.6']
 
@@ -108,10 +107,10 @@ class ITachIP2IRRemote(remote.RemoteDevice):
         self.itachip2ir.send(self._name, "OFF", 1)
         self.schedule_update_ha_state()
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for command in kwargs[ATTR_COMMAND]:
-            self.itachip2ir.send(self._name, command, 1)
+        for single_command in command:
+            self.itachip2ir.send(self._name, single_command, 1)
 
     def update(self):
         """Update the device."""
