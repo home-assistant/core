@@ -1,4 +1,4 @@
-"""The tests for the Demo vacuum platform."""
+"""The tests for the Xiaomi vacuum platform."""
 import asyncio
 from datetime import timedelta
 from unittest import mock
@@ -139,7 +139,6 @@ def test_xiaomi_vacuum(hass, caplog, mock_mirobo):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_MOVE_REMOTE_CONTROL,
         {"duration": 1000, "rotation": -40, "velocity": -0.1}, blocking=True)
-    call = mock_mirobo.mock_calls[-2]
     assert 'call.Vacuum().manual_control(' in str(mock_mirobo.mock_calls[-2])
     assert 'duration=1000' in str(mock_mirobo.mock_calls[-2])
     assert 'rotation=-40' in str(mock_mirobo.mock_calls[-2])
@@ -155,7 +154,8 @@ def test_xiaomi_vacuum(hass, caplog, mock_mirobo):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP,
         {"duration": 2000, "rotation": 120, "velocity": 0.1}, blocking=True)
-    assert 'call.Vacuum().manual_control_once(' in str(mock_mirobo.mock_calls[-2])
+    assert ('call.Vacuum().manual_control_once('
+            in str(mock_mirobo.mock_calls[-2]))
     assert 'duration=2000' in str(mock_mirobo.mock_calls[-2])
     assert 'rotation=120' in str(mock_mirobo.mock_calls[-2])
     assert 'velocity=0.1' in str(mock_mirobo.mock_calls[-2])
