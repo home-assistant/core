@@ -25,6 +25,7 @@ class DemoRemote(RemoteDevice):
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
+        self._last_command_sent = None
 
     @property
     def should_poll(self):
@@ -46,6 +47,12 @@ class DemoRemote(RemoteDevice):
         """Return true if remote is on."""
         return self._state
 
+    @property
+    def device_state_attributes(self):
+        """Return device state attributes."""
+        if self._last_command_sent is not None:
+            return {'last_command_sent': self._last_command_sent}
+
     def turn_on(self, **kwargs):
         """Turn the remote on."""
         self._state = True
@@ -54,4 +61,10 @@ class DemoRemote(RemoteDevice):
     def turn_off(self, **kwargs):
         """Turn the remote off."""
         self._state = False
+        self.schedule_update_ha_state()
+
+    def send_command(self, command, **kwargs):
+        """Send a command to a device."""
+        for com in command:
+            self._last_command_sent = com
         self.schedule_update_ha_state()

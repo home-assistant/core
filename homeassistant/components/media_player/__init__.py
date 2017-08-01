@@ -21,7 +21,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.deprecation import deprecated_substitute
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -589,7 +588,6 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
