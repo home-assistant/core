@@ -213,9 +213,8 @@ class RoundThermostat(ClimateDevice):
         # The underlying library doesn't expose the thermostat's mode
         # but we can pull it out of the big dictionary of information.
         device = self.client.named_devices[self.name]
-        self.client.system_mode = (
-            device['thermostat']['changeableValues']['mode']
-        )
+        self.client.system_mode = device[
+            'thermostat']['changeableValues']['mode']
 
 
 class HoneywellUSThermostat(ClimateDevice):
