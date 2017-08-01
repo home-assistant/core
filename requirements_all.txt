@@ -315,9 +315,6 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 # homeassistant.components.binary_sensor.flic
 https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 
-# homeassistant.components.light.osramlightify
-https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5
-
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -366,6 +363,9 @@ libsoundtouch==0.7.2
 
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
+
+# homeassistant.components.light.osramlightify
+lightify==1.0.6
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.8
