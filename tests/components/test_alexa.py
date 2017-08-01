@@ -182,6 +182,7 @@ def test_intent_launch_request_not_configured(alexa_client):
                                         {}).get("text")
     assert text == "This intent is not yet configured within Home Assistant."
 
+
 @asyncio.coroutine
 def test_intent_request_with_slots(alexa_client):
     """Test a request with slots."""
