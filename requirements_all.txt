@@ -577,6 +577,9 @@ pyfido==1.0.1
 # homeassistant.components.climate.flexit
 pyflexit==0.3
 
+# homeassistant.components.camera.foscam
+pyfoscam==1.2
+
 # homeassistant.components.ifttt
 pyfttt==0.3
 
