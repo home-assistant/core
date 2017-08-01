@@ -23,10 +23,11 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.7']
+REQUIREMENTS = ['buienradar==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
+MEASURED_LABEL = 'Measured'
 TIMEFRAME_LABEL = 'Timeframe'
 # Schedule next call after (minutes):
 SCHEDULE_OK = 10
@@ -40,7 +41,7 @@ SENSOR_TYPES = {
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'groundtemperature': ['Ground Temperature', TEMP_CELSIUS,
+    'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
                           'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
@@ -205,10 +206,16 @@ class BrSensor(Entity):
 
             return result
 
-        return {
+        result = {
             ATTR_ATTRIBUTION: self._attribution,
             SENSOR_TYPES['stationname'][0]: self._stationname,
         }
+        if self._measured is not None:
+            # convert datetime (Europe/Amsterdam) into local datetime
+            local_dt = dt_util.as_local(self._measured)
+            result[MEASURED_LABEL] = local_dt.strftime("%c")
+
+        return result
 
     @property
     def unit_of_measurement(self):
