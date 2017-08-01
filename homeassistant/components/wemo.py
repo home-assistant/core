@@ -51,7 +51,7 @@ def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo
     from pywemo.ouimeaux_device.api.xsd import device as deviceParser
-    
+
     global SUBSCRIPTION_REGISTRY
     SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
     SUBSCRIPTION_REGISTRY.start()
