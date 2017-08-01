@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 STATE_OFFLINE = 'offline'
 ATTR_MODEL = 'model'
