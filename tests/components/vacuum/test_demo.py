@@ -187,3 +187,24 @@ class TestVacuumDemo(unittest.TestCase):
                          old_state_complete.attributes[ATTR_FAN_SPEED])
         self.assertEqual(FAN_SPEEDS[0],
                          new_state_complete.attributes[ATTR_FAN_SPEED])
+
+    def test_send_command(self):
+        """Test vacuum service to send a command."""
+        group_vacuums = ','.join([ENTITY_VACUUM_BASIC,
+                                  ENTITY_VACUUM_COMPLETE])
+        old_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
+        old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
+
+        vacuum.send_command(
+            self.hass, 'test_command', params={"p1": 3},
+            entity_id=group_vacuums)
+
+        self.hass.block_till_done()
+        new_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
+        new_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
+
+        self.assertEqual(old_state_basic, new_state_basic)
+        self.assertNotEqual(old_state_complete, new_state_complete)
+        self.assertEqual(STATE_ON, new_state_complete.state)
+        self.assertEqual("Executing test_command({'p1': 3})",
+                         new_state_complete.attributes[ATTR_STATUS])
