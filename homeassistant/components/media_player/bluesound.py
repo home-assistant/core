@@ -62,6 +62,11 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
         return
 
     @callback
+    def _init_player(event=None):
+        """Start polling."""
+        hass.async_add_job(player.async_init())
+
+    @callback
     def _start_polling(event=None):
         """Start polling."""
         player.start_polling()
@@ -92,8 +97,14 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
 
     player = BluesoundPlayer(hass, host, port, name, _add_player_cb)
     hass.data[DATA_BLUESOUND].append(player)
-    hass.async_run_job(player.async_init)
 
+    if hass.is_running:
+        _init_player()
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START,
+            _init_player
+        )
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -105,15 +116,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _add_player(hass, async_add_devices, discovery_info.get('host'),
                     discovery_info.get('port', None))
         return
-    else:
-        hosts = config.get(CONF_HOSTS, None)
-        if hosts:
-            for host in hosts:
-                _add_player(hass,
-                            async_add_devices,
-                            host.get(CONF_HOST),
-                            host.get(CONF_PORT, None),
-                            host.get(CONF_NAME, None))
+
+    hosts = config.get(CONF_HOSTS, None)
+    if hosts:
+        for host in hosts:
+            _add_player(hass,
+                        async_add_devices,
+                        host.get(CONF_HOST),
+                        host.get(CONF_PORT, None),
+                        host.get(CONF_NAME, None))
 
 
 class BluesoundPlayer(MediaPlayerDevice):
@@ -216,17 +227,8 @@ class BluesoundPlayer(MediaPlayerDevice):
 
 # Initiator
     @asyncio.coroutine
-    def async_init(self, what=None):
+    def async_init(self):
         """Initiate the player async."""
-        if what is None:
-            # if it's the first request.
-            # let's make the request in a new thread
-            self._retry_remove = async_track_time_interval(
-                self._hass,
-                self.async_init,
-                timedelta(seconds=1))
-            return
-
         try:
             if self._retry_remove is not None:
                 self._retry_remove()
