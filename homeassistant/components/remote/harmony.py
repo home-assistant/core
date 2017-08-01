@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND,
-    ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
+    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
+    ATTR_DELAY_SECS)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
@@ -207,13 +207,21 @@ class HarmonyRemote(remote.RemoteDevice):
         import pyharmony
         pyharmony.ha_power_off(self._token, self.host, self._port)
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a set of commands to one device."""
         import pyharmony
+        device = kwargs.pop(ATTR_DEVICE, None)
+        if device is None:
+            _LOGGER.error("Missing required argument: device")
+            return
+        num_repeats = kwargs.pop(ATTR_NUM_REPEATS, None)
+        if num_repeats is not None:
+            kwargs[ATTR_NUM_REPEATS] = num_repeats
+        delay_secs = kwargs.pop(ATTR_DELAY_SECS, None)
+        if delay_secs is not None:
+            kwargs[ATTR_DELAY_SECS] = delay_secs
         pyharmony.ha_send_commands(
-            self._token, self.host, self._port, kwargs[ATTR_DEVICE],
-            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
-            float(kwargs[ATTR_DELAY_SECS]))
+            self._token, self.host, self._port, device, command, **kwargs)
 
     def sync(self):
         """Sync the Harmony device with the web service."""
