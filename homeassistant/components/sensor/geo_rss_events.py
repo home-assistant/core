@@ -1,8 +1,12 @@
 """
-Generic GeoRSS events service
+Generic GeoRSS events service.
+
 Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.geo_rss_events/
 """
 
 import asyncio
@@ -51,6 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the GeoRSS component."""
     # Grab location from config
     home_latitude = hass.config.latitude
     home_longitude = hass.config.longitude
@@ -194,8 +199,8 @@ class GeoRssServiceUpdater:
 
     @asyncio.coroutine
     def async_update(self, *_):
+        """Retrieve data from GeoRSS feed and update devices."""
         import feedparser
-        # Retrieve data from GeoRSS feed.
         feed_data = feedparser.parse(self._url)
         if not feed_data:
             _LOGGER.error("Error fetching feed data from %s", self._url)
@@ -211,10 +216,10 @@ class GeoRssServiceUpdater:
                 yield from asyncio.wait(tasks, loop=self._hass.loop)
 
     def filter_entries(self, feed_data):
+        """Filter entries by distance from home coordinates."""
         events = []
         _LOGGER.info("%s entri(es) available in feed %s",
                      len(feed_data.entries), self._url)
-        # Filter entries by distance from home coordinates.
         for entry in feed_data.entries:
             geometry = None
             if hasattr(entry, 'where'):
@@ -233,6 +238,7 @@ class GeoRssServiceUpdater:
 
     @staticmethod
     def create_event(feature, distance, geometry):
+        """Create an event from the RSS feed's entry and geo information."""
         category_candidate = None
         if hasattr(feature, 'category'):
             category_candidate = feature.category
@@ -261,6 +267,7 @@ class GeoRssServiceUpdater:
                      distance)
 
     def calculate_distance_to_geometry(self, geometry):
+        """Calculate the distance between HA and provided geometry."""
         distance = float("inf")
         if geometry.type == 'Point':
             distance = self.calculate_distance_to_point(geometry)
@@ -272,11 +279,13 @@ class GeoRssServiceUpdater:
         return distance
 
     def calculate_distance_to_point(self, point):
+        """Calculate the distance between HA and the provided point."""
         # Swap coordinates to match: (lat, lon).
         coordinates = (point.coordinates[1], point.coordinates[0])
         return self.calculate_distance_to_coordinates(coordinates)
 
     def calculate_distance_to_coordinates(self, coordinates):
+        """Calculate the distance between HA and the provided coordinates."""
         # Expecting coordinates in format: (lat, lon).
         from haversine import haversine
         distance = haversine(coordinates, self._home_coordinates)
@@ -285,12 +294,13 @@ class GeoRssServiceUpdater:
         return distance
 
     def calculate_distance_to_polygon(self, polygon):
+        """Calculate the distance between HA and the provided polygon."""
         distance = float("inf")
         # Calculate distance from polygon by calculating the distance
         # to each point of the polygon but not to each edge of the
         # polygon; should be good enough
-        n = len(polygon)
-        for i in range(n):
+        number_of_points = len(polygon)
+        for i in range(number_of_points):
             polygon_point = polygon[i]
             coordinates = (polygon_point[1], polygon_point[0])
             distance = min(distance,
@@ -316,31 +326,35 @@ class Event(object):
 
     @property
     def category(self):
+        """Return the event's category."""
         return self._category
 
     @property
     def title(self):
+        """Return the event's title."""
         return self._title
 
     @property
     def guid(self):
+        """Return the event's GUID."""
         return self._guid
 
     @property
     def pub_date(self):
+        """Return the event's publication date."""
         return self._pub_date
 
     @property
     def description(self):
+        """Return the event's description."""
         return self._description
 
     @property
     def geometry(self):
+        """Return the event's geometry details."""
         return self._geometry
 
     @property
     def distance(self):
+        """Return the event's distance to HA in km."""
         return self._distance
-
-    def __str__(self, *args, **kwargs):
-        return json.dumps(self, default=lambda obj: vars(obj), indent=1)
