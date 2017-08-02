@@ -134,6 +134,9 @@ class MediaExtractor:
 
         def stream_selector(query):
             """Find stream url that matches query."""
+            if 'formats' not in media_info:
+                return media_info['url']
+
             try:
                 format_selector = ydl.build_format_selector(query)
             except (SyntaxError, ValueError, AttributeError) as ex:
