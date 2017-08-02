@@ -88,8 +88,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             except pychromecast.ChromecastConnectionError:
                 pass
 
-        # do not add groups using pychromecast.Chromecast as it leads to names collision
-        # since pychromecast.Chromecast will get device name instead of group name
+        # do not add groups using pychromecast.Chromecast as it leads to names
+        # collision since pychromecast.Chromecast will get device name instead
+        # of group name
         elif port == DEFAULT_PORT:
             try:
                 # add the device anyway, get_chromecasts couldn't find it
