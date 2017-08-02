@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
 REQUIREMENTS = ['asterisk_mbox==0.4.0']
-DEPENDENCIES = ['http']
 
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'

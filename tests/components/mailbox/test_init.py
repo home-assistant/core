@@ -1,139 +1,116 @@
 """The tests for the mailbox component."""
-import json
+import asyncio
 from hashlib import sha1
-import requests
 
-from homeassistant.setup import setup_component
+import pytest
+
+from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.mailbox as mailbox
-import homeassistant.components.http as http
-
-from tests.common import (
-    get_test_home_assistant, get_test_instance_port, assert_setup_component)
 
 
-class TestMailbox(object):
-    """Test class for mailbox."""
-
-    def setup_method(self):
-        """Initialize platform."""
-        self.hass = get_test_home_assistant()
-
-        setup_component(
-            self.hass, http.DOMAIN,
-            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}})
-
-        config = {
-            mailbox.DOMAIN: {
-                'platform': 'demo'
-            }
+@pytest.fixture
+def mock_http_client(hass, test_client):
+    """Start the Hass HTTP component."""
+    config = {
+        mailbox.DOMAIN: {
+            'platform': 'demo'
         }
+    }
+    hass.loop.run_until_complete(
+        async_setup_component(hass, mailbox.DOMAIN, config))
+    return hass.loop.run_until_complete(test_client(hass.http.app))
 
-        with assert_setup_component(1, mailbox.DOMAIN):
-            setup_component(self.hass, mailbox.DOMAIN, config)
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+@asyncio.coroutine
+def test_get_platforms_from_mailbox(mock_http_client):
+    """Get platforms from mailbox."""
+    url = "/api/mailbox/platforms"
 
-    def test_get_platforms_from_mailbox(self):
-        """Get platforms from mailbox."""
-        self.hass.start()
+    req = yield from mock_http_client.get(url)
+    assert req.status == 200
+    result = yield from req.json()
+    assert len(result) == 1 and "DemoMailbox" in result
 
-        url = ("{}/api/mailbox/platforms"
-               ).format(self.hass.config.api.base_url)
 
-        req = requests.get(url)
-        assert req.status_code == 200
-        result = json.loads(req.content.decode("utf-8"))
-        assert len(result) == 1 and "DemoMailbox" in result
+@asyncio.coroutine
+def test_get_messages_from_mailbox(mock_http_client):
+    """Get messages from mailbox."""
+    url = "/api/mailbox/messages/DemoMailbox"
 
-    def test_get_messages_from_mailbox(self):
-        """Get messages from mailbox."""
-        self.hass.start()
+    req = yield from mock_http_client.get(url)
+    assert req.status == 200
+    result = yield from req.json()
+    assert len(result) == 10
 
-        url = ("{}/api/mailbox/messages/DemoMailbox"
-               ).format(self.hass.config.api.base_url)
 
-        req = requests.get(url)
-        assert req.status_code == 200
-        result = json.loads(req.content.decode("utf-8"))
-        assert len(result) == 10
+@asyncio.coroutine
+def test_get_media_from_mailbox(mock_http_client):
+    """Get audio from mailbox."""
+    mp3sha = "3f67c4ea33b37d1710f772a26dd3fb43bb159d50"
+    msgtxt = "This is recorded message # 1"
+    msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
 
-    def test_get_media_from_mailbox(self):
-        """Get audio from mailbox."""
-        self.hass.start()
+    url = "/api/mailbox/media/DemoMailbox/%s" % (msgsha)
+    req = yield from mock_http_client.get(url)
+    assert req.status == 200
+    data = yield from req.read()
+    assert sha1(data).hexdigest() == mp3sha
 
-        mp3sha = "3f67c4ea33b37d1710f772a26dd3fb43bb159d50"
-        msgtxt = "This is recorded message # 1"
-        msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
 
-        url = ("{}/api/mailbox/media/DemoMailbox/%s"
-               % (msgsha)).format(self.hass.config.api.base_url)
-        req = requests.get(url)
-        assert req.status_code == 200
-        assert sha1(req.content).hexdigest() == mp3sha
+@asyncio.coroutine
+def test_delete_from_mailbox(mock_http_client):
+    """Get audio from mailbox."""
+    msgtxt1 = "This is recorded message # 1"
+    msgtxt2 = "This is recorded message # 2"
+    msgsha1 = sha1(msgtxt1.encode('utf-8')).hexdigest()
+    msgsha2 = sha1(msgtxt2.encode('utf-8')).hexdigest()
 
-    def test_delete_from_mailbox(self):
-        """Get audio from mailbox."""
-        self.hass.start()
+    for msg in [msgsha1, msgsha2]:
+        url = "/api/mailbox/delete/DemoMailbox/%s" % (msg)
+        req = yield from mock_http_client.delete(url)
+        assert req.status == 200
 
-        msgtxt1 = "This is recorded message # 1"
-        msgtxt2 = "This is recorded message # 2"
-        msgsha1 = sha1(msgtxt1.encode('utf-8')).hexdigest()
-        msgsha2 = sha1(msgtxt2.encode('utf-8')).hexdigest()
+    url = "/api/mailbox/messages/DemoMailbox"
+    req = yield from mock_http_client.get(url)
+    assert req.status == 200
+    result = yield from req.json()
+    assert len(result) == 8
 
-        for msg in [msgsha1, msgsha2]:
-            url = ("{}/api/mailbox/delete/DemoMailbox/%s"
-                   % (msg)).format(self.hass.config.api.base_url)
-            req = requests.delete(url)
-        assert req.status_code == 200
 
-        url = ("{}/api/mailbox/messages/DemoMailbox"
-               ).format(self.hass.config.api.base_url)
+@asyncio.coroutine
+def test_get_messages_from_invalid_mailbox(mock_http_client):
+    """Get messages from mailbox."""
+    url = "/api/mailbox/messages/mailbox.invalid_mailbox"
 
-        req = requests.get(url)
-        assert req.status_code == 200
-        result = json.loads(req.content.decode("utf-8"))
-        assert len(result) == 8
+    req = yield from mock_http_client.get(url)
+    assert req.status == 404
 
-    def test_get_messages_from_invalid_mailbox(self):
-        """Get messages from mailbox."""
-        self.hass.start()
 
-        url = ("{}/api/mailbox/messages/mailbox.invalid_mailbox"
-               ).format(self.hass.config.api.base_url)
+@asyncio.coroutine
+def test_get_media_from_invalid_mailbox(mock_http_client):
+    """Get messages from mailbox."""
+    msgsha = "0000000000000000000000000000000000000000"
+    url = "/api/mailbox/media/mailbox.invalid_mailbox/%s" % (msgsha)
 
-        req = requests.get(url)
-        assert req.status_code == 404
+    req = yield from mock_http_client.get(url)
+    assert req.status == 404
 
-    def test_get_media_from_invalid_mailbox(self):
-        """Get messages from mailbox."""
-        self.hass.start()
 
-        msgsha = "0000000000000000000000000000000000000000"
-        url = ("{}/api/mailbox/media/mailbox.invalid_mailbox/%s"
-               % (msgsha)).format(self.hass.config.api.base_url)
+@asyncio.coroutine
+def test_get_media_from_invalid_msgid(mock_http_client):
+    """Get messages from mailbox."""
+    msgsha = "0000000000000000000000000000000000000000"
+    url = "/api/mailbox/media/DemoMailbox/%s" % (msgsha)
 
-        req = requests.get(url)
-        assert req.status_code == 404
+    req = yield from mock_http_client.get(url)
+    assert req.status == 500
 
-    def test_get_media_from_invalid_msgid(self):
-        """Get messages from mailbox."""
-        self.hass.start()
 
-        msgsha = "0000000000000000000000000000000000000000"
-        url = ("{}/api/mailbox/media/DemoMailbox/%s"
-               % (msgsha)).format(self.hass.config.api.base_url)
+@asyncio.coroutine
+def test_delete_from_invalid_mailbox(mock_http_client):
+    """Get audio from mailbox."""
+    msgsha = "0000000000000000000000000000000000000000"
+    url = "/api/mailbox/delete/mailbox.invalid_mailbox/%s" % (msgsha)
 
-        req = requests.get(url)
-        assert req.status_code == 500
-
-    def test_delete_from_invalid_mailbox(self):
-        """Get audio from mailbox."""
-        self.hass.start()
-
-        msgsha = "0000000000000000000000000000000000000000"
-        url = ("{}/api/mailbox/delete/mailbox.invalid_mailbox/%s"
-               % (msgsha)).format(self.hass.config.api.base_url)
-        req = requests.delete(url)
-        assert req.status_code == 404
+    req = yield from mock_http_client.delete(url)
+    assert req.status == 404

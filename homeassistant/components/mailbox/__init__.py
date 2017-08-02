@@ -23,7 +23,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_prepare_setup_platform
 
-
+DEPENDENCIES = ['http']
 DOMAIN = 'mailbox'
 EVENT = 'mailbox_updated'
 CONTENT_TYPE_MPEG = 'audio/mpeg'
