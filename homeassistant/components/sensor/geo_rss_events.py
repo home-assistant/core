@@ -286,62 +286,18 @@ class GeoRssServiceUpdater:
 
     def calculate_distance_to_polygon(self, polygon):
         distance = float("inf")
-        # 1. Check if home coordinates are within polygon
-        if self.point_in_polygon(self._home_coordinates, polygon):
-            distance = 0
-        else:
-            # 2. Calculate distance from polygon by calculating the distance
-            #    to each point of the polygon but not to each edge of the
-            #    polygon; should be good enough
-            n = len(polygon)
-            for i in range(n):
-                polygon_point = polygon[i]
-                coordinates = (polygon_point[1], polygon_point[0])
-                distance = min(distance,
-                               self.calculate_distance_to_coordinates(
-                                   coordinates))
+        # Calculate distance from polygon by calculating the distance
+        # to each point of the polygon but not to each edge of the
+        # polygon; should be good enough
+        n = len(polygon)
+        for i in range(n):
+            polygon_point = polygon[i]
+            coordinates = (polygon_point[1], polygon_point[0])
+            distance = min(distance,
+                           self.calculate_distance_to_coordinates(coordinates))
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
                       polygon, distance)
         return distance
-
-    @staticmethod
-    def point_in_polygon(point, polygon):
-        # Source:
-        # http://geospatialpython.com/2011/08/point-in-polygon-2-on-line.html
-        x = point[0]
-        y = point[1]
-        # Check if point is a vertex.
-        if point in polygon:
-            return True
-
-        # Check if point is on a boundary.
-        for i in range(len(polygon)):
-            if i == 0:
-                p1 = polygon[0]
-                p2 = polygon[1]
-            else:
-                p1 = polygon[i - 1]
-                p2 = polygon[i]
-            if p1[1] == p2[1] and p1[1] == y and min(p1[0], p2[0]) < x < max(
-                    p1[0], p2[0]):
-                return True
-
-        n = len(polygon)
-        inside = False
-
-        p1x, p1y = polygon[0]
-        for i in range(n + 1):
-            p2x, p2y = polygon[i % n]
-            if y > min(p1y, p2y):
-                if y <= max(p1y, p2y):
-                    if x <= max(p1x, p2x):
-                        if p1y != p2y:
-                            xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                        if p1x == p2x or x <= xints:
-                            inside = not inside
-            p1x, p1y = p2x, p2y
-
-        return inside
 
 
 class Event(object):
