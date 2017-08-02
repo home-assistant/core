@@ -531,3 +531,108 @@ class TestInfluxDB(unittest.TestCase):
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_tags_attributes(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'tags_attributes': ['friendly_fake']
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        attrs = {
+            'friendly_fake': 'tag_str',
+            'field_fake': 'field_str',
+        }
+        state = mock.MagicMock(
+            state=1, domain='fake',
+            entity_id='fake.something',
+            object_id='something', attributes=attrs)
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        body = [{
+            'measurement': 'fake.something',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'something',
+                'friendly_fake': 'tag_str'
+            },
+            'time': 12345,
+            'fields': {
+                'value': 1,
+                'field_fake_str': 'field_str'
+            },
+        }]
+        self.handler_method(event)
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_component_override_measurement(self, mock_client):
+        """Test the event listener with a default measurement."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'component_config': {
+                    'sensor.fake_humidity': {
+                        'override_measurement': 'humidity'
+                    }
+                },
+                'component_config_glob': {
+                    'binary_sensor.*motion': {
+                        'override_measurement': 'motion'
+                    }
+                },
+                'component_config_domain': {
+                    'climate': {
+                        'override_measurement': 'hvac'
+                    }
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        test_components = [
+            {'domain': 'sensor', 'id': 'fake_humidity', 'res': 'humidity'},
+            {'domain': 'binary_sensor', 'id': 'fake_motion', 'res': 'motion'},
+            {'domain': 'climate', 'id': 'fake_thermostat', 'res': 'hvac'},
+            {'domain': 'other', 'id': 'just_fake', 'res': 'other.just_fake'},
+        ]
+        for comp in test_components:
+            state = mock.MagicMock(
+                state=1, domain=comp['domain'],
+                entity_id=comp['domain'] + '.' + comp['id'],
+                object_id=comp['id'], attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': comp['res'],
+                'tags': {
+                    'domain': comp['domain'],
+                    'entity_id': comp['id']
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 1
+            )
+            self.assertEqual(
+                mock_client.return_value.write_points.call_args,
+                mock.call(body)
+            )
+            mock_client.return_value.write_points.reset_mock()
