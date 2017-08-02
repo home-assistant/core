@@ -44,11 +44,12 @@ class DemoMailbox(Mailbox):
             self._messages[msgsha] = msg
 
     @property
-    def get_media_type(self):
+    def media_type(self):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
-    def get_media(self, msgid):
+    @asyncio.coroutine
+    def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
         if msgid not in self._messages:
             raise StreamError("Message not found")
@@ -58,17 +59,17 @@ class DemoMailbox(Mailbox):
         with open(audio_path, 'rb') as file:
             return file.read()
 
-    def get_messages(self):
+    @asyncio.coroutine
+    def async_get_messages(self):
         """Return a list of the current messages."""
         return sorted(self._messages.values(),
                       key=lambda item: item['info']['origtime'],
                       reverse=True)
 
-    def delete(self, msgids):
+    def async_delete(self, msgid):
         """Delete the specified messages."""
-        for sha in msgids:
-            if sha in self._messages:
-                _LOGGER.info("Deleting: %s", sha)
-                del self._messages[sha]
-        self.update()
+        if msgid in self._messages:
+            _LOGGER.info("Deleting: %s", msgid)
+            del self._messages[msgid]
+        self.async_update()
         return True

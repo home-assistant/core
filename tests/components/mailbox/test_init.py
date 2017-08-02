@@ -82,9 +82,10 @@ class TestMailbox(object):
         msgsha1 = sha1(msgtxt1.encode('utf-8')).hexdigest()
         msgsha2 = sha1(msgtxt2.encode('utf-8')).hexdigest()
 
-        url = ("{}/api/mailbox/delete/DemoMailbox"
-               ).format(self.hass.config.api.base_url)
-        req = requests.post(url, data=json.dumps([msgsha1, msgsha2]))
+        for msg in [msgsha1, msgsha2]:
+            url = ("{}/api/mailbox/delete/DemoMailbox/%s"
+                   % (msg)).format(self.hass.config.api.base_url)
+            req = requests.delete(url)
         assert req.status_code == 200
 
         url = ("{}/api/mailbox/messages/DemoMailbox"
@@ -103,7 +104,7 @@ class TestMailbox(object):
                ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
-        assert req.status_code == 401
+        assert req.status_code == 404
 
     def test_get_media_from_invalid_mailbox(self):
         """Get messages from mailbox."""
@@ -114,7 +115,7 @@ class TestMailbox(object):
                % (msgsha)).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
-        assert req.status_code == 401
+        assert req.status_code == 404
 
     def test_get_media_from_invalid_msgid(self):
         """Get messages from mailbox."""
@@ -132,17 +133,7 @@ class TestMailbox(object):
         self.hass.start()
 
         msgsha = "0000000000000000000000000000000000000000"
-        url = ("{}/api/mailbox/delete/mailbox.invalid_mailbox"
-               ).format(self.hass.config.api.base_url)
-        req = requests.post(url, data=msgsha)
-        assert req.status_code == 401
-
-    def test_delete_from_malformed_post(self):
-        """Get audio from mailbox."""
-        self.hass.start()
-
-        badjson = '["0000000000000000000000000000000000000000"'
-        url = ("{}/api/mailbox/delete/DemoMailbox"
-               ).format(self.hass.config.api.base_url)
-        req = requests.post(url, data=badjson)
-        assert req.status_code == 400
+        url = ("{}/api/mailbox/delete/mailbox.invalid_mailbox/%s"
+               % (msgsha)).format(self.hass.config.api.base_url)
+        req = requests.delete(url)
+        assert req.status_code == 404

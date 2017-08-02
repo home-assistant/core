@@ -38,14 +38,15 @@ class AsteriskMailbox(Mailbox):
     @callback
     def _update_callback(self, msg):
         """Update the message count in HA, if needed."""
-        self.update()
+        self.async_update()
 
     @property
-    def get_media_type(self):
+    def media_type(self):
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
-    def get_media(self, msgid):
+    @asyncio.coroutine
+    def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
         from asterisk_mbox import ServerError
         client = self.hass.data[DOMAIN].client
@@ -54,14 +55,14 @@ class AsteriskMailbox(Mailbox):
         except ServerError as err:
             raise StreamError(err)
 
-    def get_messages(self):
+    @asyncio.coroutine
+    def async_get_messages(self):
         """Return a list of the current messages."""
         return self.hass.data[DOMAIN].messages
 
-    def delete(self, msgids):
+    def async_delete(self, msgid):
         """Delete the specified messages."""
         client = self.hass.data[DOMAIN].client
-        for sha in msgids:
-            _LOGGER.info("Deleting: %s", sha)
-            client.delete(sha)
+        _LOGGER.info("Deleting: %s", msgid)
+        client.delete(msgid)
         return True

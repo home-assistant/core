@@ -7,15 +7,13 @@ https://home-assistant.io/components/mailbox/
 
 import asyncio
 import logging
-from functools import partial
 from contextlib import suppress
 from datetime import timedelta
 
 import async_timeout
 
 from aiohttp import web
-
-from homeassistant.const import (HTTP_BAD_REQUEST)
+from aiohttp.web_exceptions import HTTPNotFound
 
 from homeassistant.core import callback
 from homeassistant.helpers import config_per_platform, discovery
@@ -109,6 +107,7 @@ class MailboxEntity(Entity):
         """Initialize mailbox entity."""
         self.mailbox = mailbox
         self.hass = hass
+        self.messages = {}
 
         @callback
         def _mailbox_updated(event):
@@ -119,12 +118,17 @@ class MailboxEntity(Entity):
     @property
     def state(self):
         """Return the state of the binary sensor."""
-        return str(len(self.mailbox.get_messages()))
+        return str(len(self.messages))
 
     @property
     def name(self):
         """Return the name of the entity."""
         return self.mailbox.name
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve messages from platform."""
+        self.messages = yield from self.mailbox.async_get_messages()
 
 
 class Mailbox(object):
@@ -135,23 +139,26 @@ class Mailbox(object):
         self.hass = hass
         self.name = name
 
-    def update(self):
+    def async_update(self):
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
 
-    def get_media_type(self):
+    @property
+    def media_type(self):
         """Return the supported media type."""
         raise NotImplementedError()
 
-    def get_media(self, msgid):
+    @asyncio.coroutine
+    def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
         raise NotImplementedError()
 
-    def get_messages(self):
+    @asyncio.coroutine
+    def async_get_messages(self):
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    def delete(self, msgids):
+    def async_delete(self, msgid):
         """Delete the specified messages."""
         raise NotImplementedError()
 
@@ -174,7 +181,7 @@ class MailboxView(HomeAssistantView):
         for mailbox in self.mailboxes:
             if mailbox.name == platform:
                 return mailbox
-        return None
+        raise HTTPNotFound
 
 
 class MailboxPlatformsView(MailboxView):
@@ -202,28 +209,21 @@ class MailboxMessageView(MailboxView):
     def get(self, request, platform):
         """Retrieve messages."""
         mailbox = self.get_mailbox(platform)
-        if mailbox is None:
-            return web.Response(status=401)
-        return self.json(mailbox.get_messages())
+        messages = yield from mailbox.async_get_messages()
+        return self.json(messages)
 
 
 class MailboxDeleteView(MailboxView):
     """View to delete selected messages."""
 
-    url = "/api/mailbox/delete/{platform}"
+    url = "/api/mailbox/delete/{platform}/{msgid}"
     name = "api:mailbox:delete"
 
     @asyncio.coroutine
-    def post(self, request, platform):
+    def delete(self, request, platform, msgid):
         """Delete items."""
         mailbox = self.get_mailbox(platform)
-        if mailbox is None:
-            return web.Response(status=401)
-        try:
-            data = yield from request.json()
-            mailbox.delete(data)
-        except ValueError:
-            return self.json_message('Bad item id', HTTP_BAD_REQUEST)
+        mailbox.async_delete(msgid)
 
 
 class MailboxMediaView(MailboxView):
@@ -236,21 +236,18 @@ class MailboxMediaView(MailboxView):
     def get(self, request, platform, msgid):
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
-        if mailbox is None:
-            return web.Response(status=401)
 
         hass = request.app['hass']
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10, loop=hass.loop):
                 try:
-                    stream = yield from hass.async_add_job(
-                        partial(mailbox.get_media, msgid))
+                    stream = yield from mailbox.async_get_media(msgid)
                 except StreamError as err:
                     error_msg = "Error getting media: %s" % (err)
                     _LOGGER.error(error_msg)
                     return web.Response(status=500)
             if stream:
                 return web.Response(body=stream,
-                                    content_type=mailbox.get_media_type)
+                                    content_type=mailbox.media_type)
 
         return web.Response(status=500)
