@@ -242,13 +242,13 @@ class MqttClimate(ClimateDevice):
             return
 
         if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
-            if self._current_operation == STATE_OFF and \
-                        operation_mode != STATE_OFF:
+            if (self._current_operation == STATE_OFF and
+                    operation_mode != STATE_OFF):
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_POWER_COMMAND_TOPIC],
                     STATE_ON, self._qos, self._retain)
-            elif self._current_operation != STATE_OFF and \
-                          operation_mode == STATE_OFF:
+            elif (self._current_operation != STATE_OFF and
+                  operation_mode == STATE_OFF):
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_POWER_COMMAND_TOPIC],
                     STATE_OFF, self._qos, self._retain)
