@@ -281,7 +281,7 @@ class GeoRssServiceUpdater:
         """Calculate the distance between HA and the provided point."""
         # Swap coordinates to match: (lat, lon).
         coordinates = (point.coordinates[1], point.coordinates[0])
-        return self.calculate_distance_to_coordinates(coordinates)
+        return self.calculate_distance_to_coords(coordinates)
 
     def calculate_distance_to_coords(self, coordinates):
         """Calculate the distance between HA and the provided coordinates."""
@@ -303,7 +303,7 @@ class GeoRssServiceUpdater:
             polygon_point = polygon[i]
             coordinates = (polygon_point[1], polygon_point[0])
             distance = min(distance,
-                           self.calculate_distance_to_coordinates(coordinates))
+                           self.calculate_distance_to_coords(coordinates))
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
                       polygon, distance)
         return distance
