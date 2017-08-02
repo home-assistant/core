@@ -60,7 +60,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts = [host]
 
     elif CONF_HOST in config:
-        hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]
+        host = (config.get(CONF_HOST), DEFAULT_PORT)
+
+        if host in KNOWN_HOSTS:
+            return
+
+        hosts = [host]
 
     else:
         hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
@@ -73,6 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     all_chromecasts = pychromecast.get_chromecasts()
 
     for host in hosts:
+        (_, port) = host
         found = [device for device in all_chromecasts
                  if (device.host, device.port) == host]
         if found:
@@ -81,7 +87,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 KNOWN_HOSTS.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
-        else:
+
+        # do not add groups using pychromecast.Chromecast as it leads to names collision
+        # since pychromecast.Chromecast will get device name instead of group name
+        elif port == DEFAULT_PORT:
             try:
                 # add the device anyway, get_chromecasts couldn't find it
                 casts.append(CastDevice(pychromecast.Chromecast(*host)))
