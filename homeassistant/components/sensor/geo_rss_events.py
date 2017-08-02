@@ -10,7 +10,6 @@ https://home-assistant.io/components/sensor.geo_rss_events/
 """
 
 import asyncio
-import json
 import logging
 from datetime import timedelta
 

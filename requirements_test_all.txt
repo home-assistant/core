@@ -43,7 +43,7 @@ dsmr_parser==0.8
 evohomeclient==0.2.5
 
 # homeassistant.components.feedreader
-# homeassistant.components.sensor.geo_rss_incidents
+# homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
 # homeassistant.components.conversation
@@ -55,7 +55,7 @@ gTTS-token==1.1.1
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.5
 
-# homeassistant.components.sensor.geo_rss_incidents
+# homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
