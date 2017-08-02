@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         hosts.append([
             'DirecTV_' + discovery_info.get('serial', ''),
-            host, DEFAULT_PORT
+            host, DEFAULT_PORT, DEFAULT_DEVICE
         ])
 
     elif CONF_HOST in config:
