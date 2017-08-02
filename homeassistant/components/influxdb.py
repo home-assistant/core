@@ -149,7 +149,8 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
-        measurement = component_config.get(state.entity_id).get(CONF_OVERRIDE_MEASUREMENT)
+        measurement = component_config.get(state.entity_id).get(
+            CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ''):
             if override_measurement:
                 measurement = override_measurement
