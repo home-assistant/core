@@ -132,4 +132,4 @@ class TPLinkSmartBulb(Light):
         supported_features = SUPPORT_TPLINK
         if self.smartbulb.is_color:
             supported_features += SUPPORT_RGB_COLOR
-        return SUPPORT_TPLINK
+        return supported_features
