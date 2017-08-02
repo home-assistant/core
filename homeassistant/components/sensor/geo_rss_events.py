@@ -283,7 +283,7 @@ class GeoRssServiceUpdater:
         coordinates = (point.coordinates[1], point.coordinates[0])
         return self.calculate_distance_to_coordinates(coordinates)
 
-    def calculate_distance_to_coordinates(self, coordinates):
+    def calculate_distance_to_coords(self, coordinates):
         """Calculate the distance between HA and the provided coordinates."""
         # Expecting coordinates in format: (lat, lon).
         from haversine import haversine

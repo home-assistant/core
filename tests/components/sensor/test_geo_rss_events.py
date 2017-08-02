@@ -25,7 +25,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         self.hass.stop()
 
     def test_filter_entries(self):
-        """Test filtering entries"""
+        """Test filtering entries."""
         import feedparser
         updater = self.setup_updater()
         raw_data = load_fixture('geo_rss_events.xml')
@@ -41,6 +41,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert filtered_entries[0].pub_date == comparison_date
 
     def setup_updater(self):
+        """Set up updater component for use in static tests."""
         home_latitude = -33.865
         home_longitude = 151.209444
         radius_in_km = 500
