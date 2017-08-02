@@ -129,7 +129,8 @@ class TestInfluxDB(unittest.TestCase):
                 'multi_periods': '0.120.240.2023873'
             }
             state = mock.MagicMock(
-                state=in_, domain='fake', object_id='entity', attributes=attrs)
+                state=in_, domain='fake', entity_id='fake.entity-id',
+                object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             if isinstance(out, str):
                 body = [{
@@ -198,11 +199,11 @@ class TestInfluxDB(unittest.TestCase):
             else:
                 attrs = {}
             state = mock.MagicMock(
-                state=1, domain='fake', entity_id='entity-id',
+                state=1, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
-                'measurement': 'entity-id',
+                'measurement': 'fake.entity-id',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
@@ -227,8 +228,8 @@ class TestInfluxDB(unittest.TestCase):
         self._setup()
 
         state = mock.MagicMock(
-            state=1, domain='fake', entity_id='entity-id', object_id='entity',
-            attributes={})
+            state=1, domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes={})
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         mock_client.return_value.write_points.side_effect = \
             influx_client.exceptions.InfluxDBClientError('foo')
@@ -240,11 +241,11 @@ class TestInfluxDB(unittest.TestCase):
 
         for state_state in (1, 'unknown', '', 'unavailable'):
             state = mock.MagicMock(
-                state=state_state, domain='fake', entity_id='entity-id',
+                state=state_state, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
-                'measurement': 'entity-id',
+                'measurement': 'fake.entity-id',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
@@ -442,7 +443,8 @@ class TestInfluxDB(unittest.TestCase):
                 'invalid_attribute': ['value1', 'value2']
             }
             state = mock.MagicMock(
-                state=in_, domain='fake', object_id='entity', attributes=attrs)
+                state=in_, domain='fake', entity_id='fake.entity-id',
+                object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             if isinstance(out, str):
                 body = [{
