@@ -50,12 +50,15 @@ SENSOR_TYPES = {
     'dewpointTemperature': ['Dewpoint temperature', '°C'],
 }
 
+CONF_FORECAST = 'forecast'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol']): vol.All(
         cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_ELEVATION): vol.Coerce(int),
+    vol.Optional(CONF_FORECAST): vol.Coerce(int)
 })
 
 
@@ -65,6 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
+    forecast = config.get(CONF_FORECAST, 0)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -79,7 +83,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev.append(YrSensor(sensor_type))
     async_add_devices(dev)
 
-    weather = YrData(hass, coordinates, dev)
+    weather = YrData(hass, coordinates, forecast, dev)
     # Update weather on the hour, spread seconds
     async_track_utc_time_change(
         hass, weather.async_update, minute=randrange(1, 10),
@@ -137,12 +141,13 @@ class YrSensor(Entity):
 class YrData(object):
     """Get the latest data and updates the states."""
 
-    def __init__(self, hass, coordinates, devices):
+    def __init__(self, hass, coordinates, forecast, devices):
         """Initialize the data object."""
         self._url = 'https://aa015h6buqvih86i1.api.met.no/'\
                     'weatherapi/locationforecast/1.9/'
         self._urlparams = coordinates
         self._nextrun = None
+        self._forecast = forecast
         self.devices = devices
         self.data = {}
         self.hass = hass
@@ -187,46 +192,64 @@ class YrData(object):
                 return
 
         now = dt_util.utcnow()
+        forecast_time = now + dt_util.dt.timedelta(hours=self._forecast)
 
-        tasks = []
+        # Find the correct time entry. Since not all time entries contain all
+        # types of data, we cannot just select one. Instead, we order  them by
+        # distance from the desired forecast_time, and for every device iterate
+        # them in order of increasing distance, taking the first time_point
+        # that contains the desired data.
+
+        ordered_entries = []
+
+        for time_entry in self.data['product']['time']:
+            valid_from = dt_util.parse_datetime(time_entry['@from'])
+            valid_to = dt_util.parse_datetime(time_entry['@to'])
+
+            if now >= valid_to:
+                # Has already passed. Never select this.
+                continue
+
+            average_dist = (abs((valid_to - forecast_time).total_seconds()) +
+                            abs((valid_from - forecast_time).total_seconds()))
+
+            ordered_entries.append((average_dist, time_entry))
+
+        ordered_entries.sort(key=lambda item: item[0])
+
         # Update all devices
-        for dev in self.devices:
-            # Find sensor
-            for time_entry in self.data['product']['time']:
-                valid_from = dt_util.parse_datetime(time_entry['@from'])
-                valid_to = dt_util.parse_datetime(time_entry['@to'])
+        tasks = []
+        if len(ordered_entries) > 0:
+            for dev in self.devices:
                 new_state = None
 
-                loc_data = time_entry['location']
+                for (_, selected_time_entry) in ordered_entries:
+                    loc_data = selected_time_entry['location']
 
-                if dev.type not in loc_data or now >= valid_to:
-                    continue
+                    if dev.type not in loc_data:
+                        continue
 
-                if dev.type == 'precipitation' and valid_from < now:
-                    new_state = loc_data[dev.type]['@value']
-                    break
-                elif dev.type == 'symbol' and valid_from < now:
-                    new_state = loc_data[dev.type]['@number']
-                    break
-                elif dev.type in ('temperature', 'pressure', 'humidity',
-                                  'dewpointTemperature'):
-                    new_state = loc_data[dev.type]['@value']
-                    break
-                elif dev.type in ('windSpeed', 'windGust'):
-                    new_state = loc_data[dev.type]['@mps']
-                    break
-                elif dev.type == 'windDirection':
-                    new_state = float(loc_data[dev.type]['@deg'])
-                    break
-                elif dev.type in ('fog', 'cloudiness', 'lowClouds',
-                                  'mediumClouds', 'highClouds'):
-                    new_state = loc_data[dev.type]['@percent']
+                    if dev.type == 'precipitation':
+                        new_state = loc_data[dev.type]['@value']
+                    elif dev.type == 'symbol':
+                        new_state = loc_data[dev.type]['@number']
+                    elif dev.type in ('temperature', 'pressure', 'humidity',
+                                      'dewpointTemperature'):
+                        new_state = loc_data[dev.type]['@value']
+                    elif dev.type in ('windSpeed', 'windGust'):
+                        new_state = loc_data[dev.type]['@mps']
+                    elif dev.type == 'windDirection':
+                        new_state = float(loc_data[dev.type]['@deg'])
+                    elif dev.type in ('fog', 'cloudiness', 'lowClouds',
+                                      'mediumClouds', 'highClouds'):
+                        new_state = loc_data[dev.type]['@percent']
+
                     break
 
-            # pylint: disable=protected-access
-            if new_state != dev._state:
-                dev._state = new_state
-                tasks.append(dev.async_update_ha_state())
+                # pylint: disable=protected-access
+                if new_state != dev._state:
+                    dev._state = new_state
+                    tasks.append(dev.async_update_ha_state())
 
-        if tasks:
+        if len(tasks) > 0:
             yield from asyncio.wait(tasks, loop=self.hass.loop)
