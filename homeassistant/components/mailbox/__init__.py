@@ -107,7 +107,7 @@ class MailboxEntity(Entity):
         """Initialize mailbox entity."""
         self.mailbox = mailbox
         self.hass = hass
-        self.messages = {}
+        self.message_count = 0
 
         @callback
         def _mailbox_updated(event):
@@ -118,7 +118,7 @@ class MailboxEntity(Entity):
     @property
     def state(self):
         """Return the state of the binary sensor."""
-        return str(len(self.messages))
+        return str(self.message_count)
 
     @property
     def name(self):
@@ -128,7 +128,8 @@ class MailboxEntity(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve messages from platform."""
-        self.messages = yield from self.mailbox.async_get_messages()
+        messages = yield from self.mailbox.async_get_messages()
+        self.message_count = len(messages)
 
 
 class Mailbox(object):
