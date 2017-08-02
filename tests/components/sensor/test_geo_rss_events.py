@@ -36,9 +36,9 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert filtered_entries[0].category == "Category 1"
         assert filtered_entries[0].description == "Description 1"
         assert filtered_entries[0].guid == "GUID 1"
-        assert filtered_entries[0].pub_date \
-               == datetime.datetime(2017, 7, 30, 9, 0, 0,
-                                    tzinfo=pytz.utc).timetuple()
+        comparison_date = datetime.datetime(2017, 7, 30, 9, 0, 0,
+                                            tzinfo=pytz.utc).timetuple()
+        assert filtered_entries[0].pub_date == comparison_date
 
     def setup_updater(self):
         home_latitude = -33.865
@@ -47,8 +47,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         url = ''
         devices = []
         updater = geo_rss_events.GeoRssServiceUpdater(self.hass, None,
-                                                         home_latitude,
-                                                         home_longitude,
-                                                         url, radius_in_km,
-                                                         devices)
+                                                      home_latitude,
+                                                      home_longitude,
+                                                      url, radius_in_km,
+                                                      devices)
         return updater
