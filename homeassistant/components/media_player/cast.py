@@ -33,7 +33,7 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
-KNOWN_HOSTS = []
+KNOWN_HOSTS_KEY = 'cast_known_hosts'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -49,12 +49,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
-    hosts = []
+    known_hosts = hass.data.get(KNOWN_HOSTS_KEY)
+    if known_hosts is None:
+        known_hosts = hass.data[KNOWN_HOSTS_KEY] = []
 
     if discovery_info:
         host = (discovery_info.get('host'), discovery_info.get('port'))
 
-        if host in KNOWN_HOSTS:
+        if host in known_hosts:
             return
 
         hosts = [host]
@@ -62,14 +64,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif CONF_HOST in config:
         host = (config.get(CONF_HOST), DEFAULT_PORT)
 
-        if host in KNOWN_HOSTS:
+        if host in known_hosts:
             return
 
         hosts = [host]
 
     else:
         hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
-                 if tuple(dev[:2]) not in KNOWN_HOSTS]
+                 if tuple(dev[:2]) not in known_hosts]
 
     casts = []
 
@@ -84,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if found:
             try:
                 casts.append(CastDevice(found[0]))
-                KNOWN_HOSTS.append(host)
+                known_hosts.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
 
@@ -95,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             try:
                 # add the device anyway, get_chromecasts couldn't find it
                 casts.append(CastDevice(pychromecast.Chromecast(*host)))
-                KNOWN_HOSTS.append(host)
+                known_hosts.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
 
