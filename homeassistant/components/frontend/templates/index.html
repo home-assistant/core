@@ -89,7 +89,9 @@
       }
     </script>
     <script src='{{ core_url }}'></script>
-    <!-- <script src='/static/custom-elements-es5-adapter.js'></script> -->
+    {% if not dev_mode %}
+    <script src='/static/custom-elements-es5-adapter.js'></script>
+    {% endif %}
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
