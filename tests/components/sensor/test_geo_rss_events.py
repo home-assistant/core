@@ -67,6 +67,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         return updater
 
     def setup_data(self):
+        """Set up data object for use by sensors."""
         data = geo_rss_events.GeoRssServiceData()
         return data
 
