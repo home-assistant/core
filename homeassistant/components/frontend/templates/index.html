@@ -89,6 +89,7 @@
       }
     </script>
     <script src='{{ core_url }}'></script>
+    <!-- <script src='/static/custom-elements-es5-adapter.js'></script> -->
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
@@ -103,7 +104,7 @@
         var e = document.createElement('script');
         e.async = true;
         e.onerror = initError;
-        e.src = '/static/webcomponents-lite.min.js';
+        e.src = '/static/webcomponents-lite.js';
         document.head.appendChild(e);
       }
     </script>
