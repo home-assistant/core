@@ -425,7 +425,7 @@ class TestInfluxDB(unittest.TestCase):
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_invalid_type(self, mock_client):
-        """Test the event listener when an attirbute has an invalid type."""
+        """Test the event listener when an attribute has an invalid type."""
         self._setup()
 
         valid = {
@@ -533,7 +533,7 @@ class TestInfluxDB(unittest.TestCase):
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_tags_attributes(self, mock_client):
-        """Test the event listener against a whitelist."""
+        """Test the event listener when some attributes should be tags."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -578,7 +578,7 @@ class TestInfluxDB(unittest.TestCase):
         mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_component_override_measurement(self, mock_client):
-        """Test the event listener with a default measurement."""
+        """Test the event listener with overrided measurements."""
         config = {
             'influxdb': {
                 'host': 'host',
