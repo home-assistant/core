@@ -45,13 +45,32 @@
             <guid>GUID 4</guid>
             <georss:point>52.518611 13.408333</georss:point>
         </item>
-        <!-- Entry withou coordinates -->
+        <!-- Entry without coordinates -->
         <item>
             <title>Title 5</title>
             <description>Description 5</description>
             <category>Category 5</category>
             <pubDate>Sun, 30 Jul 2017 09:20:00 GMT</pubDate>
             <guid>GUID 5</guid>
+        </item>
+        <!-- Entry within vicinity of home coordinates -->
+        <!-- Link instead of GUID; updated instead of pubDate -->
+        <item>
+            <title>Title 6</title>
+            <description>Description 6</description>
+            <category>Category 6</category>
+            <updated>2017-07-30T09:25:00.000Z</updated>
+            <link>Link 6</link>
+            <georss:point>-33.75801 150.70544</georss:point>
+        </item>
+        <!-- Entry with unsupported geometry - Line -->
+        <item>
+            <title>Title 1</title>
+            <description>Description 1</description>
+            <category>Category 1</category>
+            <pubDate>Sun, 30 Jul 2017 09:00:00 UTC</pubDate>
+            <guid>GUID 1</guid>
+            <georss:line>45.256 -110.45 46.46 -109.48 43.84 -109.86</georss:line>
         </item>
     </channel>
 </rss>

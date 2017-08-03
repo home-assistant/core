@@ -53,7 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices,
+                         discovery_info=None):  # pragma: no cover
     """Set up the GeoRSS component."""
     # Grab location from config
     home_latitude = hass.config.latitude
@@ -197,7 +198,7 @@ class GeoRssServiceUpdater:
         self._devices = devices
 
     @asyncio.coroutine
-    def async_update(self, *_):
+    def async_update(self, *_):  # pragma: no cover
         """Retrieve data from GeoRSS feed and update devices."""
         import feedparser
         feed_data = feedparser.parse(self._url)
