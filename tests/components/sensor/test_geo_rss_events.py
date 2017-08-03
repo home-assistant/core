@@ -39,7 +39,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert filtered_entries[0].description == "Description 1"
         assert filtered_entries[0].guid == "GUID 1"
         comparison_date0 = datetime.datetime(2017, 7, 30, 9, 0, 0,
-                                            tzinfo=pytz.utc).timetuple()
+                                             tzinfo=pytz.utc).timetuple()
         assert filtered_entries[0].pub_date == comparison_date0
         assert filtered_entries[0].geometry.type == 'Point'
         assert filtered_entries[0].geometry.coordinates == (151.75, -32.916667)
@@ -48,7 +48,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         # Check entry with link instead of GUID
         assert filtered_entries[3].guid == "Link 6"
         comparison_date3 = datetime.datetime(2017, 7, 30, 9, 25, 0,
-                                            tzinfo=pytz.utc).timetuple()
+                                             tzinfo=pytz.utc).timetuple()
         assert filtered_entries[3].pub_date == comparison_date3
 
     def setup_updater(self):
