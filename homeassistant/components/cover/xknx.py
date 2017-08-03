@@ -8,7 +8,8 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.components.xknx import DATA_XKNX, _LOGGER
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.core import callback
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -155,7 +156,7 @@ class XKNXCover(CoverDevice):
     def start_auto_updater(self):
         """Start the autoupdater to update HASS while cover is moving."""
         if self._unsubscribe_auto_updater is None:
-            self._unsubscribe_auto_updater = track_utc_time_change(
+            self._unsubscribe_auto_updater = async_track_utc_time_change(
                 self.hass, self.auto_updater_hook)
 
     def stop_auto_updater(self):
@@ -164,10 +165,11 @@ class XKNXCover(CoverDevice):
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
 
+    @callback
     def auto_updater_hook(self, now):
         """Callback for autoupdater."""
         # pylint: disable=unused-argument
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
         if self.device.position_reached():
             self.stop_auto_updater()
 
