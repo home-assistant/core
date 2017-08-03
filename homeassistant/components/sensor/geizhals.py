@@ -13,60 +13,54 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.const import (CONF_DOMAIN, CONF_NAME)
 
-import bs4
-import requests
-import re
-
-REQUIREMENTS = ['beautifulsoup4==4.5.3', 'requests==2.14.2']
+REQUIREMENTS = ['beautifulsoup4==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_name = 'name'
-CONF_friendly_name = 'friendly_name'
-CONF_product_id = 'product_id'
-CONF_protocol = 'protocol'
-CONF_domain = 'domain'
-CONF_regex = 'regex'
+CONF_PRODUCT_ID = 'product_id'
+CONF_DESCRIPTION = 'description'
+CONF_REGEX = 'regex'
 
 ICON = 'mdi:coin'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_name): cv.string,
-    vol.Required(CONF_friendly_name, default='Preis'): cv.string,
-    vol.Required(CONF_product_id): cv.positive_int,
-    vol.Optional(CONF_protocol, default='https'): vol.In(['https', 'http']),
-    vol.Optional(CONF_domain, default='geizhals.de'): vol.In(['geizhals.at',
-                                                              'geizhals.eu',
-                                                              'geizhals.de',
-                                                              'skinflint.co.uk',
-                                                              'cenowarka.pl']),
-    vol.Optional(CONF_regex, default='\D\s(\d*)[\,|\.](\d*)'): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_PRODUCT_ID): cv.positive_int,
+    vol.Optional(CONF_DESCRIPTION, default='Price'): cv.string,
+    vol.Optional(CONF_DOMAIN, default='geizhals.de'): vol.In(
+        ['geizhals.at',
+         'geizhals.eu',
+         'geizhals.de',
+         'skinflint.co.uk',
+         'cenowarka.pl']),
+    vol.Optional(CONF_REGEX, default=r'\D\s(\d*)[\,|\.](\d*)'): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Geizwatch Sensor."""
-    name = config.get(CONF_name)
-    friendly_name = config.get(CONF_friendly_name)
-    product_id = config.get(CONF_product_id)
-    protocol = config.get(CONF_protocol)
-    domain = config.get(CONF_domain)
-    regex = config.get(CONF_regex)
+    """Set up the Geizwatch sensor."""
+    name = config.get(CONF_NAME)
+    description = config.get(CONF_DESCRIPTION)
+    product_id = config.get(CONF_PRODUCT_ID)
+    domain = config.get(CONF_DOMAIN)
+    regex = config.get(CONF_REGEX)
 
-    add_devices([Geizwatch(name, friendly_name, product_id, protocol, domain, regex)])
+    add_devices([Geizwatch(name, description, product_id, domain, regex)],
+                True)
 
 
 class Geizwatch(Entity):
     """Implementation of Geizwatch."""
 
-    def __init__(self, name, friendly_name, product_id, protocol, domain, regex):
+    def __init__(self, name, description, product_id, domain,
+                 regex):
         """Initialize the sensor."""
         self._name = name
-        self.friendly_name = friendly_name
-        self.data = GeizParser(product_id, protocol, domain, regex)
-        self.update()
+        self.description = description
+        self.data = GeizParser(product_id, domain, regex)
+        self._state = None
 
     @property
     def name(self):
@@ -87,7 +81,7 @@ class Geizwatch(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {'device_name': self.data.device_name,
-                 'friendly_name': self.friendly_name,
+                 'description': self.description,
                  'unit_of_measurement': self.data.unit_of_measurement,
                  'product_id': self.data.product_id,
                  'price1': self.data.prices[0],
@@ -103,30 +97,37 @@ class Geizwatch(Entity):
 
 
 class GeizParser(object):
-    """Pull data from the geizhals web page."""
+    """Pull data from the geizhals website."""
 
-    def __init__(self, product_id, protocol, domain, regex):
+    def __init__(self, product_id, domain, regex):
         """Initialize the sensor."""
         # parse input arguments
         self.product_id = product_id
-        self.protocol = protocol
         self.domain = domain
         self.regex = regex
 
         # set some empty default values
         self.device_name = ''
-        self.prices = []
+        self.prices = [None, None, None, None]
         self.unit_of_measurement = ''
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the device prices."""
+        import bs4
+        import requests
+        import re
+
         sess = requests.session()
-        r = sess.get('{}://{}/{}'.format(self.protocol, self.domain, self.product_id), allow_redirects=True)
-        soup = bs4.BeautifulSoup(r.text, 'html.parser')
+        request = sess.get('https://{}/{}'.format(self.domain,
+                                                  self.product_id),
+                           allow_redirects=True,
+                           timeout=1)
+        soup = bs4.BeautifulSoup(request.text, 'html.parser')
 
         # parse name
-        self.device_name = soup.find_all('span', attrs={'itemprop': 'name'})[1].string
+        raw = soup.find_all('span', attrs={'itemprop': 'name'})
+        self.device_name = raw[1].string
 
         # parse prices
         prices = []
@@ -139,4 +140,6 @@ class GeizParser(object):
         self.prices = prices[1:]
 
         # parse unit
-        self.unit_of_measurement = re.search(r'€|£|PLN', tmp.string)[0]
+        price_match = soup.find('span', attrs={'class': 'gh_price'})
+        matches = re.search(r'€|£|PLN', price_match.string)
+        self.unit_of_measurement = matches.group()
