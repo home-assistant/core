@@ -12,8 +12,8 @@ from homeassistant.components.light import (
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
-    color_RGB_to_hsv, color_hsv_to_RGB,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
+import colorsys
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -42,6 +42,16 @@ def brightness_to_percentage(byt):
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
     return (percent*255.0)/100.0
+
+
+def rgb_to_hsv(rgb):
+    h, s, v = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
+    return h * 360, s * 100, v * 100
+
+
+def hsv_to_rgb(hsv):
+    r, g, b = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    return r * 255, g * 255, b * 255
 
 
 class TPLinkSmartBulb(Light):
@@ -81,7 +91,7 @@ class TPLinkSmartBulb(Light):
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs.get(ATTR_RGB_COLOR)
             self._rgb = rgb
-            self.smartbulb.hsv = color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
+            self.smartbulb.hsv = rgb_to_hsv(rgb)
 
         self.smartbulb.state = self.smartbulb.BULB_STATE_ON
 
@@ -121,8 +131,7 @@ class TPLinkSmartBulb(Light):
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
-                h, s, v = self.smartbulb.hsv
-                self._rgb = color_hsv_to_RGB(h, s, v)
+                self._rgb = hsv_to_rgb(self.smartbulb.hsv)
         except (SmartPlugException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
 
