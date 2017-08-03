@@ -15,7 +15,7 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 import colorsys
 
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from pyHS100 import SmartBulb
 
@@ -44,12 +44,14 @@ def brightness_from_percentage(percent):
     return (percent*255.0)/100.0
 
 
-def rgb_to_hsv(rgb):
+def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[float, float, float]:
+    """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
     h, s, v = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
     return h * 360, s * 100, v * 100
 
 
-def hsv_to_rgb(hsv):
+def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[float, float, float]:
+    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
     r, g, b = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
     return r * 255, g * 255, b * 255
 
