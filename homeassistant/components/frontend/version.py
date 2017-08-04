@@ -3,15 +3,15 @@
 FINGERPRINTS = {
     "compatibility.js": "1686167ff210e001f063f5c606b2e74b",
     "core.js": "2a7d01e45187c7d4635da05065b5e54e",
-    "frontend.html": "e4dcb1409ba0a62be183a7f0a057b7c0",
+    "frontend.html": "da3a65fd69361319864767a3ce0b4b9d",
     "mdi.html": "e91f61a039ed0a9936e7ee5360da3870",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
-    "panels/ha-panel-automation.html": "88e18b827b67027641f92e5dd099ca8c",
-    "panels/ha-panel-config.html": "1ff806daf588a2836260d9f600bc7caf",
+    "panels/ha-panel-automation.html": "6c3a3345b63f3a36d32f43cff3e10c53",
+    "panels/ha-panel-config.html": "59ca4cda820260616e9de5324edf6d05",
     "panels/ha-panel-dev-event.html": "d409e7ab537d9fe629126d122345279c",
     "panels/ha-panel-dev-info.html": "b0e55eb657fd75f21aba2426ac0cedc0",
     "panels/ha-panel-dev-mqtt.html": "94b222b013a98583842de3e72d5888c6",
-    "panels/ha-panel-dev-service.html": "a260b4ef948bbac503451f139c7f9e98",
+    "panels/ha-panel-dev-service.html": "61b164e0c0964782a539cba7008bb716",
     "panels/ha-panel-dev-state.html": "7948d3dba058f31517d880df8ed0e857",
     "panels/ha-panel-dev-template.html": "f47b6910d8e4880e22cc508ca452f9b6",
     "panels/ha-panel-hassio.html": "b46e7619f3c355f872d5370741d89f6a",
@@ -19,7 +19,7 @@ FINGERPRINTS = {
     "panels/ha-panel-iframe.html": "56930204d6e067a3d600cf030f4b34c8",
     "panels/ha-panel-kiosk.html": "b40aa5cb52dd7675bea744afcf9eebf8",
     "panels/ha-panel-logbook.html": "771afdcf48dc7e308b0282417d2e02d8",
-    "panels/ha-panel-map.html": "bbf9f28f3a9058e360867b79b1309eaa",
+    "panels/ha-panel-map.html": "c2544fff3eedb487d44105cf94b335ec",
     "panels/ha-panel-shopping-list.html": "d8cfd0ecdb3aa6214c0f6908c34c7141",
     "panels/ha-panel-zwave.html": "48a71bd864f1f047ff74322be6430f00"
 }

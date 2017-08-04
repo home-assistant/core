@@ -361,7 +361,8 @@ class IndexView(HomeAssistantView):
             core_url=core_url, ui_url=ui_url,
             compatibility_url=compatibility_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=hass.data[DATA_PANELS])
+            panel_url=panel_url, panels=hass.data[DATA_PANELS],
+            dev_mode=request.app[KEY_DEVELOPMENT])
 
         return web.Response(text=resp, content_type='text/html')
 
