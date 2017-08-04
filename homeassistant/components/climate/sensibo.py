@@ -117,9 +117,8 @@ class SensiboClimate(ClimateDevice):
             # We are working in same units as the a/c unit. Use whole degrees
             # like the API supports.
             return 1
-        else:
-            # Unit conversion is going on. No point to stick to specific steps.
-            return None
+        # Unit conversion is going on. No point to stick to specific steps.
+        return None
 
     @property
     def current_operation(self):

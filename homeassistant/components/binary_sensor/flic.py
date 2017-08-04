@@ -199,11 +199,10 @@ class FlicButton(BinarySensorDevice):
                 "Queued %s dropped for %s. Time in queue was %s",
                 click_type, self.address, time_string)
             return True
-        else:
-            _LOGGER.info(
-                "Queued %s allowed for %s. Time in queue was %s",
-                click_type, self.address, time_string)
-            return False
+        _LOGGER.info(
+            "Queued %s allowed for %s. Time in queue was %s",
+            click_type, self.address, time_string)
+        return False
 
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""

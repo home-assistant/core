@@ -220,9 +220,9 @@ def _parse_timespan(timespan):
     """Parse a time-span into number of seconds."""
     if timespan in ('', 'NOT_IMPLEMENTED', None):
         return None
-    else:
-        return sum(60 ** x[0] * int(x[1]) for x in enumerate(
-            reversed(timespan.split(':'))))
+
+    return sum(60 ** x[0] * int(x[1]) for x in enumerate(
+        reversed(timespan.split(':'))))
 
 
 class _ProcessSonosEventQueue():
@@ -695,6 +695,9 @@ class SonosDevice(MediaPlayerDevice):
         if url in ('', 'NOT_IMPLEMENTED', None):
             if fallback_uri in ('', 'NOT_IMPLEMENTED', None):
                 return None
+            if fallback_uri.find('tts_proxy') > 0:
+                # If the content is a tts don't try to fetch an image from it.
+                return None
             return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
                 host=self._player.ip_address,
                 port=1400,
@@ -765,8 +768,8 @@ class SonosDevice(MediaPlayerDevice):
         """Content ID of current playing media."""
         if self._coordinator:
             return self._coordinator.media_content_id
-        else:
-            return self._media_content_id
+
+        return self._media_content_id
 
     @property
     def media_content_type(self):
@@ -778,16 +781,16 @@ class SonosDevice(MediaPlayerDevice):
         """Duration of current playing media in seconds."""
         if self._coordinator:
             return self._coordinator.media_duration
-        else:
-            return self._media_duration
+
+        return self._media_duration
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
         if self._coordinator:
             return self._coordinator.media_position
-        else:
-            return self._media_position
+
+        return self._media_position
 
     @property
     def media_position_updated_at(self):
@@ -797,40 +800,40 @@ class SonosDevice(MediaPlayerDevice):
         """
         if self._coordinator:
             return self._coordinator.media_position_updated_at
-        else:
-            return self._media_position_updated_at
+
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self._coordinator:
             return self._coordinator.media_image_url
-        else:
-            return self._media_image_url
+
+        return self._media_image_url
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
         if self._coordinator:
             return self._coordinator.media_artist
-        else:
-            return self._media_artist
+
+        return self._media_artist
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
         if self._coordinator:
             return self._coordinator.media_album_name
-        else:
-            return self._media_album_name
+
+        return self._media_album_name
 
     @property
     def media_title(self):
         """Title of current playing media."""
         if self._coordinator:
             return self._coordinator.media_title
-        else:
-            return self._media_title
+
+        return self._media_title
 
     @property
     def supported_features(self):
@@ -893,7 +896,44 @@ class SonosDevice(MediaPlayerDevice):
             if len(fav) == 1:
                 src = fav.pop()
                 self._source_name = src['title']
-                self._player.play_uri(src['uri'], src['meta'], src['title'])
+
+                if 'object.container.playlistContainer' in src['meta']:
+                    self._replace_queue_with_playlist(src)
+                    self._player.play_from_queue(0)
+                else:
+                    self._player.play_uri(src['uri'], src['meta'],
+                                          src['title'])
+
+    def _replace_queue_with_playlist(self, src):
+        """Replace queue with playlist represented by src.
+
+        Playlists can't be played directly with the self._player.play_uri
+        API as they are actually composed of mulitple URLs. Until soco has
+        suppport for playing a playlist, we'll need to parse the playlist item
+        and replace the current queue in order to play it.
+        """
+        import soco
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(src['meta'])
+        namespaces = {'item':
+                      'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+                      'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
+        desc = root.find('item:item', namespaces).find('desc:desc',
+                                                       namespaces).text
+
+        res = [soco.data_structures.DidlResource(uri=src['uri'],
+                                                 protocol_info="DUMMY")]
+        didl = soco.data_structures.DidlItem(title="DUMMY",
+                                             parent_id="DUMMY",
+                                             item_id=src['uri'],
+                                             desc=desc,
+                                             resources=res)
+
+        self._player.stop()
+        self._player.clear_queue()
+        self._player.play_mode = 'NORMAL'
+        self._player.add_to_queue(didl)
 
     @property
     def source_list(self):
@@ -919,8 +959,8 @@ class SonosDevice(MediaPlayerDevice):
         """Name of the current input source."""
         if self._coordinator:
             return self._coordinator.source
-        else:
-            return self._source_name
+
+        return self._source_name
 
     @soco_error
     def turn_off(self):

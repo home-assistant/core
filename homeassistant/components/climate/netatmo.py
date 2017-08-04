@@ -119,14 +119,14 @@ class NetatmoThermostat(ClimateDevice):
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
 
-    def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         mode = "manual"
         self._data.thermostatdata.setthermpoint(
-            mode, temperature, endTimeOffset)
+            mode, temperature, DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature
         self._away = False
 

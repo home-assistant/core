@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player.soundtouch/
 import logging
 
 from os import path
+import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
 
-REQUIREMENTS = ['libsoundtouch==0.6.2']
+REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,8 +201,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Return the state of the device."""
         if self._status.source == 'STANDBY':
             return STATE_OFF
-        else:
-            return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
+
+        return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
     @property
     def is_volume_muted(self):
@@ -280,8 +281,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             return self._status.station_name
         elif self._status.artist is not None:
             return self._status.artist + " - " + self._status.track
-        else:
-            return None
+
+        return None
 
     @property
     def media_duration(self):
@@ -305,15 +306,22 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.info("Starting media with media_id:" + str(media_id))
-        presets = self._device.presets()
-        preset = next([preset for preset in presets if
-                       preset.preset_id == str(media_id)].__iter__(), None)
-        if preset is not None:
-            _LOGGER.info("Playing preset: " + preset.name)
-            self._device.select_preset(preset)
+        _LOGGER.debug("Starting media with media_id: " + str(media_id))
+        if re.match(r'http://', str(media_id)):
+            # URL
+            _LOGGER.debug("Playing URL %s", str(media_id))
+            self._device.play_url(str(media_id))
         else:
-            _LOGGER.warning("Unable to find preset with id " + str(media_id))
+            # Preset
+            presets = self._device.presets()
+            preset = next([preset for preset in presets if
+                           preset.preset_id == str(media_id)].__iter__(), None)
+            if preset is not None:
+                _LOGGER.debug("Playing preset: " + preset.name)
+                self._device.select_preset(preset)
+            else:
+                _LOGGER.warning(
+                    "Unable to find preset with id " + str(media_id))
 
     def create_zone(self, slaves):
         """

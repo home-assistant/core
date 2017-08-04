@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.helpers.deprecation import deprecated_substitute
 
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -66,7 +65,6 @@ class BinarySensorDevice(Entity):
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
-    @deprecated_substitute('sensor_class')
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None

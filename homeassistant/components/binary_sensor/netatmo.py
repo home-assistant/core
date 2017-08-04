@@ -156,8 +156,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
             return WELCOME_SENSOR_TYPES.get(self._sensor_name)
         elif self._cameratype == 'NOC':
             return PRESENCE_SENSOR_TYPES.get(self._sensor_name)
-        else:
-            return TAG_SENSOR_TYPES.get(self._sensor_name)
+        return TAG_SENSOR_TYPES.get(self._sensor_name)
 
     @property
     def is_on(self):
