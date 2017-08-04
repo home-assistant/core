@@ -120,8 +120,11 @@ def get_changed_since(states, utc_point_in_time):
             if state.last_updated >= utc_point_in_time]
 
 
-def get_service(hass, service_domain, state):
-    """Return service that matches the requested state for a domain."""
+def async_get_service(hass, service_domain, state):
+    """Return service that matches the requested state for a domain.
+
+    This method must be run in the event loop.
+    """
     domain_services = hass.services.async_services().get(service_domain)
 
     if not domain_services:
@@ -167,7 +170,7 @@ def async_reproduce_state(hass, states, blocking=False):
         entity_ids = hass.components.group.expand_entity_ids([state.entity_id])
         for entity_id in entity_ids:
             service_domain, _ = split_entity_id(entity_id)
-            service = get_service(hass, service_domain, state)
+            service = async_get_service(hass, service_domain, state)
 
             if not service:
                 _LOGGER.warning(
