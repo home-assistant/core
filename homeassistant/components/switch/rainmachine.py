@@ -43,14 +43,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def aware_throttle(api_type):
     """Create an API type-aware throttler."""
-    if api_type == 'local':  # pylint: disable=no-else-return
+    _decorator = None
+    if api_type == 'local':
 
         @Throttle(MIN_SCAN_TIME_LOCAL, MIN_SCAN_TIME_FORCED)
         def decorator(function):
             """Create a local API throttler."""
             return function
 
-        return decorator
+        _decorator = decorator
     else:
 
         @Throttle(MIN_SCAN_TIME_REMOTE, MIN_SCAN_TIME_FORCED)
@@ -58,7 +59,9 @@ def aware_throttle(api_type):
             """Create a remote API throttler."""
             return function
 
-        return decorator
+        _decorator = decorator
+
+    return _decorator
 
 
 class RainMachineEntity(SwitchDevice):
