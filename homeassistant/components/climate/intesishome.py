@@ -172,7 +172,8 @@ class IntesisAC(ClimateDevice):
                 self._intesishome.set_mode_dry(self._deviceid)
 
             if self._target_temp:
-                self._intesishome.set_temperature(self._deviceid, self._target_temp)
+                self._intesishome.set_temperature(self._deviceid, 
+                                                  self._target_temp)
 
     def set_fan_mode(self, fan):
         """Set fan mode (from quiet, low, medium, high, auto)."""
