@@ -59,6 +59,7 @@ SERVICE_HANDLERS = {
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),
+    'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
 }
