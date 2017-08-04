@@ -153,8 +153,9 @@ class RoombaVacuum(VacuumDevice):
             from roomba import Roomba
             _LOGGER.info("Initializing with host %s (username: %s...)",
                          self._host, self._username)
-            # FIXME Error handling is not currently possible since Roomba()
-            # does not raise any exception on failure
+            # Error handling is not currently possible since Roomba()
+            # does not raise any exception on failure. But it will appear in
+            # the log.
             # https://github.com/NickWaterton/Roomba980-Python/issues/8
             self._vacuum = Roomba(
                 address=self._host,
@@ -170,8 +171,9 @@ class RoombaVacuum(VacuumDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        # FIXME Error handling is not currently possible since Roomba()
-        # does not raise any exception on failure
+        # Error handling is not currently possible since Roomba()
+        # does not raise any exception on failure. But it will appear in the
+        # log.
         # https://github.com/NickWaterton/Roomba980-Python/issues/8
         yield from self.hass.async_add_job(partial(func, *args, **kwargs))
         return True
