@@ -94,7 +94,7 @@ class AirSensor(Entity):
     def __init__(self, name, APIdata):
         """Initialize the sensor."""
         self._name = name
-        self._APIdata = APIdata
+        self._api_data = APIdata
         self._site_data = None
         self._state = None
         self._updated = None
@@ -130,8 +130,8 @@ class AirSensor(Entity):
 
     def update(self):
         """Update the sensor."""
-        self._APIdata.update()
-        self._site_data = self._APIdata.data[self._name]
+        self._api_data.update()
+        self._site_data = self._api_data.data[self._name]
         self._updated = self._site_data[0]['updated']
         sites_status = []
         for site in self._site_data:
