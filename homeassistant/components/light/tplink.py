@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.tplink/
 """
 import logging
+import colorsys
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
@@ -13,7 +14,6 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-import colorsys
 
 from typing import Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -113,6 +113,7 @@ class TPLinkSmartBulb(Light):
 
     @property
     def rgb_color(self):
+        """Return the color in RGB."""
         return self._rgb
 
     @property
