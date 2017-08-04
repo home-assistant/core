@@ -67,7 +67,7 @@ class TestWorkdaySetup(object):
             'binary_sensor': {
                 'platform': 'workday',
                 'country': 'DE',
-                'offset': 1
+                'days_offset': 1
             },
         }
 
@@ -75,7 +75,7 @@ class TestWorkdaySetup(object):
             'binary_sensor': {
                 'platform': 'workday',
                 'country': 'DE',
-                'offset': 2
+                'days_offset': 2
             },
         }
 
@@ -83,7 +83,7 @@ class TestWorkdaySetup(object):
             'binary_sensor': {
                 'platform': 'workday',
                 'country': 'DE',
-                'offset': -1
+                'days_offset': -1
             },
         }
 
