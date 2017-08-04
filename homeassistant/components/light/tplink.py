@@ -47,7 +47,7 @@ def brightness_from_percentage(percent):
 def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[float, float, float]:
     """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
     h, s, v = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
-    return h * 360, s * 100, v * 100
+    return int(h * 360), int(s * 100), int(v * 100)
 
 
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[float, float, float]:
