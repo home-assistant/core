@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from logging import getLogger
 
+import regenmaschine as rm
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -143,15 +144,34 @@ class RainMachineProgram(RainMachineEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        self._client.programs.stop(self.rainmachine_id)
+        try:
+            self._client.programs.stop(self.rainmachine_id)
+        except rm.exceptions.BrokenAPICall:
+            _LOGGER.error('programs.stop currently broken in remote API')
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to turn off program "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
     def turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        self._client.programs.start(self.rainmachine_id)
+        try:
+            self._client.programs.start(self.rainmachine_id)
+        except rm.exceptions.BrokenAPICall:
+            _LOGGER.error('programs.start currently broken in remote API')
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to turn on program "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
     def _update(self) -> None:
         """Update info for the program."""
-        self._entity_json = self._client.programs.get(self.rainmachine_id)
+        try:
+            self._entity_json = self._client.programs.get(self.rainmachine_id)
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to update info for program "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
 
 class RainMachineZone(RainMachineEntity):
@@ -180,22 +200,35 @@ class RainMachineZone(RainMachineEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        self._client.zones.stop(self.rainmachine_id)
+        try:
+            self._client.zones.stop(self.rainmachine_id)
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to turn off zone "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
     def turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        self._client.zones.start(self.rainmachine_id, self._run_time)
+        try:
+            self._client.zones.start(self.rainmachine_id, self._run_time)
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to turn on zone "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
     def _update(self) -> None:
         """Update info for the zone."""
-        self._entity_json = self._client.zones.get(self.rainmachine_id)
+        try:
+            self._entity_json = self._client.zones.get(self.rainmachine_id)
+        except rm.exceptions.HTTPError as exc_info:
+            _LOGGER.error('Unable to update info for zone "%s"',
+                          self.rainmachine_id)
+            _LOGGER.debug(str(exc_info))
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set this component up under its platform."""
-    import regenmaschine as rm
-
     ip_address = config.get(CONF_IP_ADDRESS)
     _LOGGER.debug('IP address: %s', ip_address)
 
