@@ -144,7 +144,6 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Return the attributes of the entity."""
         # return self._attributes
         return {
-            CONF_OFFSET: self._workdays,
             CONF_WORKDAYS: self._workdays,
             CONF_EXCLUDES: self._excludes,
             CONF_OFFSET: self._days_offset
