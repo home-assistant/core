@@ -83,8 +83,8 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
-        from libpurecoollink.dyson import DysonState
-        if isinstance(message, DysonState):
+        from libpurecoollink.dyson_pure_state import DysonPureCoolState
+        if isinstance(message, DysonPureCoolState):
             _LOGGER.debug("Message received for fan device %s : %s", self.name,
                           message)
             self.schedule_update_ha_state()
