@@ -6,10 +6,10 @@ from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import dyson
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
-from libpurecoollink.dyson import DysonState
+from libpurecoollink.dyson_pure_state import DysonPureCoolState
 
 
-class MockDysonState(DysonState):
+class MockDysonState(DysonPureCoolState):
     """Mock Dyson state."""
 
     def __init__(self):
