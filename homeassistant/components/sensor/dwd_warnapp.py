@@ -1,7 +1,7 @@
 """
-Support for getting statistical data from a DWD-Warnapp system.
+Support for getting statistical data from a DWD Weather Warnings.
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dwd_warnapp/
+https://home-assistant.io/components/sensor.dwd_weather_warnings/
 
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
@@ -25,14 +25,8 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = '/DWD/warnungen/warnapp_landkreise/json/warnings.json?jsonp=loadWarnings'
 
-DEFAULT_HOST = 'www.dwd.de'
-
-DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'DWD-Warnapp'
-DEFAULT_SSL = True
-DEFAULT_VERIFY_SSL = True
+DEFAULT_NAME = 'DWD-Wetter-Warnungen'
 
 CONF_REGION_NAME = 'region_name'
 DEFAULT_REGION_NAME = 'Hansestadt Hamburg'
@@ -48,36 +42,30 @@ MONITORED_CONDITIONS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION_NAME, default=DEFAULT_REGION_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the DWD-Warnapp sensor."""
+    """Set up the DWD-Weather-Warnings sensor."""
     name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    use_ssl = config.get(CONF_SSL)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
     region_name = config.get(CONF_REGION_NAME)
 
-    api = DwdWarnappAPI(host, use_ssl, verify_ssl, region_name)
+    api = DwdWeatherWarningsAPI(region_name)
 
-    sensors = [DwdWarnappSensor(hass, api, name, condition)
+    sensors = [DwdWeatherWarningsSensor(hass, api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
     add_devices(sensors, True)
 
 
-class DwdWarnappSensor(Entity):
-    """Representation of a DWD-Warnapp sensor."""
+class DwdWeatherWarningsSensor(Entity):
+    """Representation of a DWD-Weather-Warnings sensor."""
 
     def __init__(self, hass, api, name, variable):
-        """Initialize a DWD-Warnapp sensor."""
+        """Initialize a DWD-Weather-Warnings sensor."""
         self._hass = hass
         self._api = api
         self._name = name
@@ -115,7 +103,7 @@ class DwdWarnappSensor(Entity):
     # pylint: disable=no-member
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the DWD-Warnapp."""
+        """Return the state attributes of the DWD-Weather-Warnings."""
 
         data = {}
         data['region_name'] = self._api.region_name
@@ -125,6 +113,7 @@ class DwdWarnappSensor(Entity):
 
         if self._api.region_state is not None:
             data['region_state'] = self._api.region_state
+            # data['region_map_url'] = 'https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnungen_gemeinde_map_' + str(data['region_state'].lower()) + '.png'
 
         if self._api.data['time'] is not None:
             data['last_update'] = dt_util.as_local(
@@ -166,21 +155,25 @@ class DwdWarnappSensor(Entity):
         return self._api.available
 
     def update(self):
-        """Get the latest data from the DWD-Warnapp API."""
+        """Get the latest data from the DWD-Weather-Warnings API."""
         self._api.update()
 
 
-class DwdWarnappAPI(object):
+class DwdWeatherWarningsAPI(object):
     """Get the latest data and update the states."""
 
-    def __init__(self, host, use_ssl, verify_ssl, region_name):
+    def __init__(self, region_name):
         """Initialize the data object."""
         from homeassistant.components.sensor.rest import RestData
 
-        uri_scheme = 'https://' if use_ssl else 'http://'
-        resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
+        resource = "{}{}{}?{}".format(
+            'https://',
+            'www.dwd.de',
+            '/DWD/warnungen/warnapp_landkreise/json/warnings.json',
+            'jsonp=loadWarnings'
+        )
 
-        self._rest = RestData('GET', resource, None, None, None, verify_ssl)
+        self._rest = RestData('GET', resource, None, None, None, True)
         self.region_name = region_name
         self.region_id = None
         self.region_state = None
@@ -188,9 +181,9 @@ class DwdWarnappAPI(object):
         self.available = True
         self.update()
 
-    #@Throttle(SCAN_INTERVAL)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Get the latest data from the DWD-Warnapp."""
+        """Get the latest data from the DWD-Weather-Warnings."""
         try:
             self._rest.update()
 
@@ -238,5 +231,5 @@ class DwdWarnappAPI(object):
             self.data = data
             self.available = True
         except TypeError:
-            _LOGGER.error("Unable to fetch data from DWD-Warnapp")
+            _LOGGER.error("Unable to fetch data from DWD-Weather-Warnings")
             self.available = False
