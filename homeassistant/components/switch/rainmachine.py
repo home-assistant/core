@@ -1,8 +1,4 @@
-"""
-File: rainmachine.py
-Author: Aaron Bach
-Email: bachya1208@gmail.com
-"""
+"""Implements a RainMachine sprinkler controller for Home Assistant."""
 
 import asyncio
 from datetime import timedelta
@@ -46,15 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def aware_throttle(api_type):
-    """
-    Wrapper for @Throttle() that differentiates between local and remote
-    API calls
-    """
+    """Create an API type-aware throttler."""
     if api_type == 'local':  # pylint: disable=no-else-return
 
         @Throttle(MIN_SCAN_TIME_LOCAL, MIN_SCAN_TIME_FORCED)
         def decorator(function):
-            """ Decorate! """
+            """Create a local API throttler."""
             return function
 
         return decorator
@@ -62,17 +55,17 @@ def aware_throttle(api_type):
 
         @Throttle(MIN_SCAN_TIME_REMOTE, MIN_SCAN_TIME_FORCED)
         def decorator(function):
-            """ Decorate! """
+            """Create a remote API throttler."""
             return function
 
         return decorator
 
 
 class RainMachineEntity(SwitchDevice):
-    """ A class to represent a generic RainMachine entity """
+    """A class to represent a generic RainMachine entity."""
 
     def __init__(self, client, entity_json, **kwargs):
-        """ Initialize! """
+        """Initialize a generic RainMachine entity."""
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._device_name = kwargs.get('device_name')
@@ -85,47 +78,47 @@ class RainMachineEntity(SwitchDevice):
 
     @property
     def device_state_attributes(self) -> dict:
-        """ Returns the state attributes """
+        """Return the state attributes."""
         if self._client:
             return self._attrs
 
     @property
     def is_enabled(self) -> bool:
-        """ Returns whether the entity is enabled """
+        """Return whether the entity is enabled."""
         return self._entity_json.get('active')
 
     @property
     def rainmachine_id(self) -> int:
-        """ Returns the RainMachine ID for this entity """
+        """Return the RainMachine ID for this entity."""
         return self._entity_json.get('uid')
 
     @property
     def should_poll(self) -> bool:
-        """ Returns the polling state """
+        """Return the polling state."""
         return True
 
     @property
     def unique_id(self) -> str:
-        """ Returns a unique, HASS-friendly identifier for this entity """
+        """Return a unique, HASS-friendly identifier for this entity."""
         return '{}.{}.{}'.format(self.__class__, self._device_name,
                                  self.rainmachine_id)
 
     @aware_throttle('local')
     def _local_update(self) -> None:
-        """ Calls an update with scan times appropriate for the local API """
+        """Call an update with scan times appropriate for the local API."""
         self._update()
 
     @aware_throttle('remote')
     def _remote_update(self) -> None:
-        """ Calls an update with scan times appropriate for the remote API """
+        """Call an update with scan times appropriate for the remote API."""
         self._update()
 
     def _update(self) -> None:  # pylint: disable=no-self-use
-        """ Logic for update method, regardless of API type """
+        """Logic for update method, regardless of API type."""
         _LOGGER.warning('Update method not defined for base class')
 
     def update(self) -> None:
-        """ Determines how the entity updates itself """
+        """Determine how the entity updates itself."""
         if self._api_type == 'remote':
             self._remote_update()
         else:
@@ -133,36 +126,36 @@ class RainMachineEntity(SwitchDevice):
 
 
 class RainMachineProgram(RainMachineEntity):
-    """ A RainMachine program """
+    """A RainMachine program."""
 
     @property
     def is_on(self) -> bool:
-        """ Returns whether the program is running """
+        """Return whether the program is running."""
         return bool(self._entity_json.get('status'))
 
     @property
     def name(self) -> str:
-        """ Returns the name of the program """
+        """Return the name of the program."""
         return 'Program: {}'.format(self._entity_json.get('name'))
 
     def turn_off(self, **kwargs) -> None:
-        """ Turns the program off """
+        """Turn the program off."""
         self._client.programs.stop(self.rainmachine_id)
 
     def turn_on(self, **kwargs) -> None:
-        """ Turns the program on """
+        """Turn the program on."""
         self._client.programs.start(self.rainmachine_id)
 
     def _update(self) -> None:
-        """ Updates info for the program """
+        """Update info for the program."""
         self._entity_json = self._client.programs.get(self.rainmachine_id)
 
 
 class RainMachineZone(RainMachineEntity):
-    """ A RainMachine zone """
+    """A RainMachine zone."""
 
     def __init__(self, client, zone_json, **kwargs):
-        """ Initialize! """
+        """Initialize a RainMachine zone."""
         super(RainMachineZone, self).__init__(client, zone_json, **kwargs)
         self._run_time = kwargs.get(CONF_ZONE_RUN_TIME)
         self._attrs.update({
@@ -174,30 +167,30 @@ class RainMachineZone(RainMachineEntity):
 
     @property
     def is_on(self) -> bool:
-        """ Returns whether the zone is running """
+        """Return whether the zone is running."""
         return bool(self._entity_json.get('state'))
 
     @property
     def name(self) -> str:
-        """ Returns the name of the zone """
+        """Return the name of the zone."""
         return 'Zone: {}'.format(self._entity_json.get('name'))
 
     def turn_off(self, **kwargs) -> None:
-        """ Turns the zone off """
+        """Turn the zone off."""
         self._client.zones.stop(self.rainmachine_id)
 
     def turn_on(self, **kwargs) -> None:
-        """ Turns the zone on """
+        """Turn the zone on."""
         self._client.zones.start(self.rainmachine_id, self._run_time)
 
     def _update(self) -> None:
-        """ Updates info for the zone """
+        """Update info for the zone."""
         self._entity_json = self._client.zones.get(self.rainmachine_id)
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """ Sets this component up under its platform """
+    """Set this component up under its platform."""
     import regenmaschine as rm
 
     ip_address = config.get(CONF_IP_ADDRESS)
@@ -244,17 +237,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             entities.append(
                 RainMachineProgram(
                     client, program, device_name=rainmachine_device_name))
-        for zone in client.zones.all().get('zones'):
-            if hide_disabled_entities and zone.get('active') is False:
-                continue
+            for zone in client.zones.all().get('zones'):
+                if hide_disabled_entities and zone.get('active') is False:
+                    continue
 
-            _LOGGER.debug('Adding zone: %s', zone)
-            entities.append(
-                RainMachineZone(
-                    client,
-                    zone,
-                    device_name=rainmachine_device_name,
-                    zone_run_time=zone_run_time))
+                _LOGGER.debug('Adding zone: %s', zone)
+                entities.append(
+                    RainMachineZone(
+                        client,
+                        zone,
+                        device_name=rainmachine_device_name,
+                        zone_run_time=zone_run_time))
 
         async_add_devices(entities)
     except rm.exceptions.HTTPError as exec_info:
