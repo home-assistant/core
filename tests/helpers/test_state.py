@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.components as core_components
-from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
+from homeassistant.const import (
+    SERVICE_SET_COVER_POSITION, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
@@ -234,6 +235,27 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, last_call.service)
         self.assertEqual(['light.test1', 'light.test2'],
                          last_call.data.get('entity_id'))
+
+    def test_reproduce_group_covers(self):
+        """Test reproduce_state of a group with entities of cover domain."""
+        cover_calls = mock_service(
+            self.hass, 'cover', SERVICE_SET_COVER_POSITION)
+
+        self.hass.states.set('group.test', 'closed', {
+            'entity_id': ['cover.test1', 'cover.test2']})
+
+        state.reproduce_state(
+            self.hass, ha.State('group.test', 'None', {'position': 50}))
+
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(cover_calls))
+        last_call = cover_calls[-1]
+        self.assertEqual('cover', last_call.domain)
+        self.assertEqual(SERVICE_SET_COVER_POSITION, last_call.service)
+        self.assertEqual(['cover.test1', 'cover.test2'],
+                         last_call.data.get('entity_id'))
+        self.assertEqual(50, last_call.data.get('position'))
 
     def test_reproduce_group_same_data(self):
         """Test reproduce_state with group with same domain and data."""
