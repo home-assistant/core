@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
     CONF_DEVICES
 
-REQUIREMENTS = ['libpurecoollink==0.2.0']
+REQUIREMENTS = ['libpurecoollink==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
