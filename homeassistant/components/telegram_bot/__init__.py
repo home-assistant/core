@@ -15,11 +15,11 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
-    HTTP_DIGEST_AUTHENTICATION)
+    ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
@@ -35,7 +35,6 @@ ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_CAPTION = 'caption'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_CHAT_INSTANCE = 'chat_instance'
-ATTR_COMMAND = 'command'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
 ATTR_EDITED_MSG = 'edited_message'
