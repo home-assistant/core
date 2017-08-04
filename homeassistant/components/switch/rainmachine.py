@@ -240,17 +240,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             entities.append(
                 RainMachineProgram(
                     client, program, device_name=rainmachine_device_name))
-            for zone in client.zones.all().get('zones'):
-                if hide_disabled_entities and zone.get('active') is False:
-                    continue
 
-                _LOGGER.debug('Adding zone: %s', zone)
-                entities.append(
-                    RainMachineZone(
-                        client,
-                        zone,
-                        device_name=rainmachine_device_name,
-                        zone_run_time=zone_run_time))
+        for zone in client.zones.all().get('zones'):
+            if hide_disabled_entities and zone.get('active') is False:
+                continue
+
+            _LOGGER.debug('Adding zone: %s', zone)
+            entities.append(
+                RainMachineZone(
+                    client,
+                    zone,
+                    device_name=rainmachine_device_name,
+                    zone_run_time=zone_run_time))
 
         async_add_devices(entities)
     except rm.exceptions.HTTPError as exec_info:
