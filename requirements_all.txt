@@ -88,6 +88,7 @@ batinfo==0.4.2
 # beacontools[scan]==1.0.1
 
 # homeassistant.components.device_tracker.linksys_ap
+# homeassistant.components.sensor.geizhals
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.6.0
 
