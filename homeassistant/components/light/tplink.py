@@ -82,6 +82,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
+        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
                 mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
@@ -95,7 +97,7 @@ class TPLinkSmartBulb(Light):
             self._rgb = rgb
             self.smartbulb.hsv = rgb_to_hsv(rgb)
 
-        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+
 
     def turn_off(self):
         """Turn the light off."""
