@@ -21,7 +21,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
+    CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
