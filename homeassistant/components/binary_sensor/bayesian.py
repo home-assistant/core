@@ -101,9 +101,8 @@ class BayesianBinarySensor(BinarySensorDevice):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        # For entity in entities
-        for trigger in self._observations:
-            entity_id = trigger['entity_id']
+        for obs in self._observations:
+            entity_id = obs['entity_id']
             async_track_state_change(hass, entity_id,
                                      async_threshold_sensor_state_listener)
 

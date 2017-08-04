@@ -2,7 +2,6 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from tests.common import get_test_home_assistant
 
@@ -19,7 +18,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.stop()
 
     def test_sensor_numeric_state(self):
-        """Test if source is above threshold."""
+        """Test sensor on numeric state platform observations"""
         config = {
             'binary_sensor': {
                 'platform':
@@ -42,8 +41,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         assert setup_component(self.hass, 'binary_sensor', config)
 
-        self.hass.states.set('sensor.test_monitored', 4,
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.states.set('sensor.test_monitored', 4)
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test_binary')
@@ -83,8 +81,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         assert state.state == 'off'
 
-    def test_sensor_lower(self):
-        """Test if source is below threshold."""
+    def test_sensor_state(self):
+        """Test sensor on state platform observations"""
         config = {
             'binary_sensor': {
                 'name':
