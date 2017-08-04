@@ -87,7 +87,7 @@ class APIData(object):
 
 
 class AirSensor(Entity):
-    """Single authority air sensor"""
+    """Single authority air sensor."""
 
     ICON = 'mdi:cloud-outline'
 
@@ -144,8 +144,7 @@ class AirSensor(Entity):
 
 
 def parse_api_response(response):
-    """Take in the API response.
-       API can return dict or list of data so need to check. """
+    """Take in the API response."""
     data = dict.fromkeys(AUTHORITIES)
     for authority in AUTHORITIES:
         for entry in response['HourlyAirQualityIndex']['LocalAuthority']:
