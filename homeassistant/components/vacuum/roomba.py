@@ -5,17 +5,16 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.roomba/
 """
 import asyncio
+import homeassistant.helpers.config_validation as cv
 import logging
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
-    VacuumDevice,
-    PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PAUSE,
-    SUPPORT_STOP, SUPPORT_RETURN_HOME, SUPPORT_BATTERY, SUPPORT_STATUS,
-    SUPPORT_SEND_COMMAND)
+    VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 
 REQUIREMENTS = ['roombapy==1.3.0']
 
@@ -49,9 +48,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
-SUPPORT_ROOMBA = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
-                 SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_BATTERY | \
-                 SUPPORT_STATUS | SUPPORT_SEND_COMMAND
+SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
+                 SUPPORT_SEND_COMMAND | SUPPORT_STATUS | SUPPORT_STOP | \
+                 SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 
 @asyncio.coroutine
@@ -205,28 +204,28 @@ class RoombaVacuum(VacuumDevice):
         state = self.vacuum.master_state.get('state', {}).get('reported', {})
         _LOGGER.debug("Got new state from the vacuum: %s", state)
         self.vacuum_state = state
-        self._available = state is not None
+        self._available = True
 
         # Get the capabilities of our unit
         capabilities = state.get('cap', {})
-        cap_pos = capabilities.get('pose', None)
-        cap_bin_full = capabilities.get('binFullDetect', None)
+        cap_pos = capabilities.get('pose')
+        cap_bin_full = capabilities.get('binFullDetect')
 
         bin_state = state.get('bin', {})
 
         # Roomba software version
-        software_version = state.get('softwareVer', None)
+        software_version = state.get('softwareVer')
 
         # Error message in plain english
         error_msg = self.vacuum.error_message
 
-        self._battery_level = state.get('batPct', None)
+        self._battery_level = state.get('batPct')
         self._status = self.vacuum.current_state
         self._is_on = self._status in ['Running']
 
         # Set properties that are to appear in the GUI
         self._state_attrs = {
-            ATTR_BIN_PRESENT: bin_state.get('present', None),
+            ATTR_BIN_PRESENT: bin_state.get('present'),
             ATTR_SOFTWARE_VERSION: software_version
         }
 
@@ -235,8 +234,8 @@ class RoombaVacuum(VacuumDevice):
         if self._is_on:
             # Get clean mission status
             mission_state = state.get('cleanMissionStatus', {})
-            cleaning_time = mission_state.get('mssnM', None)
-            cleaned_area = mission_state.get('sqft', None)  # Imperial
+            cleaning_time = mission_state.get('mssnM')
+            cleaned_area = mission_state.get('sqft')  # Imperial
             # Convert to m2 if the unit_system is set to metric
             if cleaned_area and self.hass.config.units.is_metric:
                 cleaned_area = round(cleaned_area * 0.0929)
@@ -252,13 +251,13 @@ class RoombaVacuum(VacuumDevice):
         if cap_pos == 1:
             pos_state = state.get('pose', {})
             position = None
-            pos_x = pos_state.get('point', {}).get('x', None)
-            pos_y = pos_state.get('point', {}).get('y', None)
-            theta = pos_state.get('theta', None)
+            pos_x = pos_state.get('point', {}).get('x')
+            pos_y = pos_state.get('point', {}).get('y')
+            theta = pos_state.get('theta')
             if all(item is not None for item in [pos_x, pos_y, theta]):
                 position = '({}, {}, {})'.format(pos_x, pos_y, theta)
             self._state_attrs[ATTR_POSITION] = position
 
         # Not all Roombas have a bin full sensor
         if cap_bin_full == 1:
-            self._state_attrs[ATTR_BIN_FULL] = bin_state.get('full', None)
+            self._state_attrs[ATTR_BIN_FULL] = bin_state.get('full')
