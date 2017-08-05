@@ -13,22 +13,27 @@ import logging
 import time
 from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
 import requests
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
+                                 CONF_NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'WorldTidesInfo'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_LATITUDE): cv.string,
-    vol.Required(CONF_LONGITUDE): cv.string,
+    vol.Required(CONF_LATITUDE): cv.latitude,
+    vol.Required(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -36,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
     data = WorldTidesInfoData(hass)
-    name = "WorldTidesInfo"
+    name = config.get(CONF_NAME)
 
     global _RESOURCE
     global LAT
@@ -59,6 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([WorldTidesInfoSensor(data, name)])
+    return True
 
 
 class WorldTidesInfoSensor(Entity):
@@ -123,6 +129,7 @@ class WorldTidesInfoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from WorldTidesInfo API."""
+
         STARTTIME = int(time.time())
         _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400' \
                     '&start=%s&lat=%s&lon=%s&key=%s' % (
