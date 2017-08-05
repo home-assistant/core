@@ -13,11 +13,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, STATE_UNKNOWN, CONF_SENSOR_CLASS,
-                                 CONF_DEVICE_CLASS)
+from homeassistant.const import (CONF_NAME, STATE_UNKNOWN, CONF_DEVICE_CLASS)
 from homeassistant.core import callback
 from homeassistant.helpers import condition
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +45,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     observations = config.get(CONF_OBSERVATIONS)
     prior = config.get(CONF_PRIOR)
     probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = CONF_DEVICE_CLASS
 
     async_add_devices([
         BayesianBinarySensor(hass, name, prior, observations,
@@ -76,8 +74,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         self.entity_obs = {obs['entity_id']: obs for obs in self._observations}
 
         self.watchers = {
-            'numeric_state': self.__process_numeric_state,
-            'state': self.__process_state
+            'numeric_state': self._process_numeric_state,
+            'state': self._process_state
         }
 
         @callback
@@ -95,7 +93,7 @@ class BayesianBinarySensor(BinarySensorDevice):
 
             prior = self.prior
             for obs in self.current_obs.values():
-                prior = self.__update_probability(obs, prior)
+                prior = self._update_probability(obs, prior)
 
             self.probability = prior
 
@@ -106,7 +104,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             async_track_state_change(hass, entity_id,
                                      async_threshold_sensor_state_listener)
 
-    def __process_numeric_state(self, entity_observation):
+    def _process_numeric_state(self, entity_observation):
         entity = entity_observation['entity_id']
         if condition.async_numeric_state(self._hass, entity,
                                          entity_observation.get('below'),
@@ -118,7 +116,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         else:
             self.current_obs.pop(entity, None)
 
-    def __process_state(self, entity_observation):
+    def _process_state(self, entity_observation):
         entity = entity_observation['entity_id']
         if condition.state(self._hass, entity,
                            entity_observation.get('to_state')):
@@ -128,7 +126,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         else:
             self.current_obs.pop(entity, None)
 
-    def __update_probability(self, prior, observation):
+    @staticmethod
+    def _update_probability(prior, observation):
         prob_pos = observation
         prob_neg = 1 - prob_pos
 
