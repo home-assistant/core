@@ -15,6 +15,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 
 @pytest.fixture(autouse=True)
 def mock_credstash():
+    """Mock credstash so it doesn't connect to the internet."""
     with patch.object(yaml, 'credstash') as mock_credstash:
         mock_credstash.getSecret.return_value = None
         yield mock_credstash
