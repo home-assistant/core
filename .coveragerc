@@ -172,8 +172,6 @@ omit =
     homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
-  
-    homeassistant/components/vacuum/roomba.py
 
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
@@ -542,6 +540,7 @@ omit =
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
+    homeassistant/components/vacuum/roomba.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py
