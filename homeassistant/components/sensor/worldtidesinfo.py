@@ -122,7 +122,7 @@ class WorldTidesInfoData(object):
 
     def __init__(self, lat, lon, key):
         """Initialize the data object."""
-        self._data.data = None
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, lat, lon, key):
@@ -140,4 +140,3 @@ class WorldTidesInfoData(object):
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None
             raise
-
