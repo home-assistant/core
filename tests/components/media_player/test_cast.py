@@ -68,8 +68,7 @@ class TestCastMediaPlayer(unittest.TestCase):
     @patch('pychromecast.Chromecast')
     def test_fallback_cast(self, mock_chromecast, mock_get_chromecasts,
                            mock_device):
-        """Test falling back to creating Chromecast instance when not
-        discovered."""
+        """Test falling back to creating Chromecast when not discovered."""
         mock_get_chromecasts.return_value = [
             FakeChromeCast('some_host', cast.DEFAULT_PORT)
         ]
@@ -87,8 +86,7 @@ class TestCastMediaPlayer(unittest.TestCase):
     @patch('pychromecast.Chromecast')
     def test_fallback_cast_group(self, mock_chromecast, mock_get_chromecasts,
                                  mock_device):
-        """Test falling back to creating Chromecast instance when not
-        discovered (group)."""
+        """Test not creating Cast Group when not discovered."""
         mock_get_chromecasts.return_value = [
             FakeChromeCast('some_host', cast.DEFAULT_PORT)
         ]
