@@ -95,7 +95,7 @@ class DysonTest(unittest.TestCase):
     def test_on_message(self):
         """Test when message is received."""
         device = _get_vacuum_device_cleaning()
-        component = Dyson360EyeDevice(self.hass, device)
+        component = Dyson360EyeDevice(device)
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
         component.on_message(mock.Mock())
@@ -104,7 +104,7 @@ class DysonTest(unittest.TestCase):
     def test_should_poll(self):
         """Test polling is disable."""
         device = _get_vacuum_device_cleaning()
-        component = Dyson360EyeDevice(self.hass, device)
+        component = Dyson360EyeDevice(device)
         self.assertFalse(component.should_poll)
 
     def test_properties(self):
@@ -112,9 +112,9 @@ class DysonTest(unittest.TestCase):
         device1 = _get_vacuum_device_cleaning()
         device2 = _get_vacuum_device_unknown_state()
         device3 = _get_vacuum_device_charging()
-        component = Dyson360EyeDevice(self.hass, device1)
-        component2 = Dyson360EyeDevice(self.hass, device2)
-        component3 = Dyson360EyeDevice(self.hass, device3)
+        component = Dyson360EyeDevice(device1)
+        component2 = Dyson360EyeDevice(device2)
+        component3 = Dyson360EyeDevice(device3)
         self.assertEqual(component.name, "Device_Vacuum")
         self.assertTrue(component.is_on)
         self.assertEqual(component.icon, "mdi:roomba")
@@ -133,56 +133,56 @@ class DysonTest(unittest.TestCase):
     def test_turn_on(self):
         """Test turn on vacuum."""
         device1 = _get_vacuum_device_charging()
-        component1 = Dyson360EyeDevice(self.hass, device1)
+        component1 = Dyson360EyeDevice(device1)
         component1.turn_on()
         self.assertTrue(device1.start.called)
 
         device2 = _get_vacuum_device_pause()
-        component2 = Dyson360EyeDevice(self.hass, device2)
+        component2 = Dyson360EyeDevice(device2)
         component2.turn_on()
         self.assertTrue(device2.resume.called)
 
     def test_turn_off(self):
         """Test turn off vacuum."""
         device1 = _get_vacuum_device_cleaning()
-        component1 = Dyson360EyeDevice(self.hass, device1)
+        component1 = Dyson360EyeDevice(device1)
         component1.turn_off()
         self.assertTrue(device1.pause.called)
 
     def test_stop(self):
         """Test stop vacuum."""
         device1 = _get_vacuum_device_cleaning()
-        component1 = Dyson360EyeDevice(self.hass, device1)
+        component1 = Dyson360EyeDevice(device1)
         component1.stop()
         self.assertTrue(device1.pause.called)
 
     def test_set_fan_speed(self):
         """Test set fan speed vacuum."""
         device1 = _get_vacuum_device_cleaning()
-        component1 = Dyson360EyeDevice(self.hass, device1)
+        component1 = Dyson360EyeDevice(device1)
         component1.set_fan_speed("Max")
         device1.set_power_mode.assert_called_with(PowerMode.MAX)
 
     def test_start_pause(self):
         """Test start/pause."""
         device1 = _get_vacuum_device_charging()
-        component1 = Dyson360EyeDevice(self.hass, device1)
+        component1 = Dyson360EyeDevice(device1)
         component1.start_pause()
         self.assertTrue(device1.start.called)
 
         device2 = _get_vacuum_device_pause()
-        component2 = Dyson360EyeDevice(self.hass, device2)
+        component2 = Dyson360EyeDevice(device2)
         component2.start_pause()
         self.assertTrue(device2.resume.called)
 
         device3 = _get_vacuum_device_cleaning()
-        component3 = Dyson360EyeDevice(self.hass, device3)
+        component3 = Dyson360EyeDevice(device3)
         component3.start_pause()
         self.assertTrue(device3.pause.called)
 
     def test_return_to_base(self):
         """Test return to base."""
         device = _get_vacuum_device_pause()
-        component = Dyson360EyeDevice(self.hass, device)
+        component = Dyson360EyeDevice(device)
         component.return_to_base()
         self.assertTrue(device.abort.called)

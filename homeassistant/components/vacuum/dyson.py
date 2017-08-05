@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from libpurecoollink.dyson_360_eye import Dyson360Eye
     for device in [d for d in hass.data[DYSON_DEVICES] if
                    isinstance(d, Dyson360Eye)]:
-        dyson_entity = Dyson360EyeDevice(hass, device)
+        dyson_entity = Dyson360EyeDevice(device)
         hass.data[DYSON_360_EYE_DEVICES].append(dyson_entity)
 
     add_devices(hass.data[DYSON_360_EYE_DEVICES])
@@ -53,10 +53,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Dyson360EyeDevice(VacuumDevice):
     """Dyson 360 Eye robot vacuum device."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Dyson 360 Eye robot vacuum device."""
         _LOGGER.info("Creating device %s", device.name)
-        self.hass = hass
         self._device = device
         self._icon = ICON
 
@@ -106,11 +105,8 @@ class Dyson360EyeDevice(VacuumDevice):
             Dyson360EyeMode.FULL_CLEAN_FINISHED: "Finished",
             Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: "Need charging"
         }
-        if self._device.state.state in dyson_labels:
-            return dyson_labels[self._device.state.state]
-
-        # Should never append
-        return self._device.state.state
+        return dyson_labels.get(self._device.state.state,
+                                self._device.state.state)
 
     @property
     def battery_level(self):
