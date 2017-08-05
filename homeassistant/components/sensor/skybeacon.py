@@ -42,6 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.warning("This platform has been disabled due to having a "
                     "requirement depending on enum34.")
     return
+    # pylint: disable=unreachable
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
     _LOGGER.debug("Setting up...")
@@ -139,6 +140,7 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
+        # pylint: disable=import-error
         import pygatt
         from pygatt.backends import Characteristic
         from pygatt.exceptions import (
