@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     start = int(time.time())
     resource = 'https://www.worldtides.info/api?extremes&length=86400' \
-                '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
+               '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
     data = WorldTidesInfoData(lat, lon, key)
 
@@ -122,14 +122,14 @@ class WorldTidesInfoData(object):
 
     def __init__(self, lat, lon, key):
         """Initialize the data object."""
-        self.data = None
+        self._data.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, lat, lon, key):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         resource = 'https://www.worldtides.info/api?extremes&length=86400' \
-                    '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
+                   '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
         try:
             self.data = requests.get(resource, timeout=10).json()
@@ -140,3 +140,4 @@ class WorldTidesInfoData(object):
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None
             raise
+
