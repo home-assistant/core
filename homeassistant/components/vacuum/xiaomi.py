@@ -103,9 +103,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def async_service_handler(service):
         """Map services to methods on MiroboVacuum."""
         method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
@@ -191,19 +188,19 @@ class MiroboVacuum(VacuumDevice):
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
+        attrs = {}
         if self.vacuum_state is not None:
-            attrs = {
+            attrs.update({
                 ATTR_DO_NOT_DISTURB:
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
-                ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2)}
+                ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
-            return attrs
 
-        return {}
+        return attrs
 
     @property
     def is_on(self) -> bool:
@@ -242,15 +239,15 @@ class MiroboVacuum(VacuumDevice):
     def async_turn_off(self, **kwargs):
         """Turn the vacuum off and return to home."""
         yield from self.async_stop()
-        return_home = yield from self.async_return_to_base()
-        if return_home:
-            self._is_on = False
+        yield from self.async_return_to_base()
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        yield from self._try_command(
+        stopped = yield from self._try_command(
             "Unable to stop: %s", self._vacuum.stop)
+        if stopped:
+            self._is_on = False
 
     @asyncio.coroutine
     def async_set_fan_speed(self, fan_speed, **kwargs):
@@ -338,17 +335,16 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import DeviceException
+        from mirobo import VacuumException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
-
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
             self._is_on = state.is_on
             self._available = True
-        except DeviceException as ex:
-            _LOGGER.warning("Got exception while fetching the state: %s", ex)
+        except OSError as exc:
+            _LOGGER.error("Got OSError while fetching the state: %s", exc)
             # self._available = False
-        except OSError as ex:
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+        except VacuumException as exc:
+            _LOGGER.warning("Got exception while fetching the state: %s", exc)
             # self._available = False
