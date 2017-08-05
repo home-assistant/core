@@ -53,11 +53,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = WorldTidesInfoData(lat, lon, key)
 
     try:
-        self.data = requests.get(_resource, timeout=10).json()
+        data = requests.get(_resource, timeout=10).json()
         _LOGGER.debug("Data = %s", self.data)
     except ValueError as err:
         _LOGGER.error("Check WorldTidesInfo %s", err.args)
-        self.data = None
+        data = None
         return False
 
     add_devices([WorldTidesInfoSensor(data, name)])
@@ -118,13 +118,13 @@ class WorldTidesInfoSensor(Entity):
 class WorldTidesInfoData(object):
     """Get data from WorldTidesInfo API."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, lat, lon, key):
         """Initialize the data object."""
         self._hass = hass
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, key, lat, lon):
+    def update(self, lat, lon, key):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         _resource = 'https://www.worldtides.info/api?extremes&length=86400' \
@@ -139,4 +139,3 @@ class WorldTidesInfoData(object):
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None
             raise
-            
