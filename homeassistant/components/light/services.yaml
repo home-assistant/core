@@ -117,6 +117,10 @@ lifx_set_state:
       description: Automatic infrared level (0..255) when light brightness is low
       example: 255
 
+    zones:
+      description: List of zone numbers to affect (8 per LIFX Z, starts at 0)
+      example: '[0,5]'
+
     transition:
       description: Duration in seconds it takes to get to the final state
       example: 10

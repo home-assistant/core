@@ -67,10 +67,9 @@ def setup(hass, config):
     except requests.exceptions.RequestException:
         if insteonhub.http_code == 401:
             _LOGGER.error("Bad user/pass for insteon_local hub")
-            return False
         else:
             _LOGGER.error("Error on insteon_local hub check", exc_info=True)
-            return False
+        return False
 
     hass.data['insteon_local'] = insteonhub
 

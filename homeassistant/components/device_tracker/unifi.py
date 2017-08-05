@@ -8,7 +8,6 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
@@ -48,14 +47,13 @@ def get_scanner(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
 
-    persistent_notification = loader.get_component('persistent_notification')
     try:
         ctrl = Controller(host, username, password, port, version='v4',
                           site_id=site_id, ssl_verify=verify_ssl)
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
-        persistent_notification.create(
-            hass, 'Failed to connect to Unifi. '
+        hass.components.persistent_notification.create(
+            'Failed to connect to Unifi. '
             'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(ex),

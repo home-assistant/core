@@ -60,8 +60,7 @@ class TellstickLight(TellstickDevice, Light):
         if tellcore_data is not None:
             brightness = int(tellcore_data)
             return brightness
-        else:
-            return None
+        return None
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""

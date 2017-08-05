@@ -6,17 +6,19 @@ https://home-assistant.io/components/modbus/
 """
 import logging
 import threading
+import os
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_PORT)
+    CONF_HOST, CONF_METHOD, CONF_PORT, ATTR_STATE)
 
 DOMAIN = 'modbus'
 
-REQUIREMENTS = ['pymodbus==1.3.0rc1']
+REQUIREMENTS = ['pymodbus==1.3.1']
 
 # Type of network
 CONF_BAUDRATE = 'baudrate'
@@ -50,6 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_WRITE_REGISTER = 'write_register'
+SERVICE_WRITE_COIL = 'write_coil'
 
 ATTR_ADDRESS = 'address'
 ATTR_UNIT = 'unit'
@@ -61,6 +64,11 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_VALUE): vol.All(cv.ensure_list, [cv.positive_int])
 })
 
+SERVICE_WRITE_COIL_SCHEMA = vol.Schema({
+    vol.Required(ATTR_UNIT): cv.positive_int,
+    vol.Required(ATTR_ADDRESS): cv.positive_int,
+    vol.Required(ATTR_STATE): cv.boolean
+})
 
 HUB = None
 
@@ -105,9 +113,18 @@ def setup(hass, config):
         HUB.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
+        descriptions = load_yaml_config_file(os.path.join(
+            os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
+
         # Register services for modbus
-        hass.services.register(DOMAIN, SERVICE_WRITE_REGISTER, write_register,
-                               schema=SERVICE_WRITE_REGISTER_SCHEMA)
+        hass.services.register(
+            DOMAIN, SERVICE_WRITE_REGISTER, write_register,
+            descriptions.get(SERVICE_WRITE_REGISTER),
+            schema=SERVICE_WRITE_REGISTER_SCHEMA)
+        hass.services.register(
+            DOMAIN, SERVICE_WRITE_COIL, write_coil,
+            descriptions.get(SERVICE_WRITE_COIL),
+            schema=SERVICE_WRITE_COIL_SCHEMA)
 
     def write_register(service):
         """Write modbus registers."""
@@ -124,6 +141,13 @@ def setup(hass, config):
                 unit,
                 address,
                 int(float(value)))
+
+    def write_coil(service):
+        """Write modbus coil."""
+        unit = service.data.get(ATTR_UNIT)
+        address = service.data.get(ATTR_ADDRESS)
+        state = service.data.get(ATTR_STATE)
+        HUB.write_coil(unit, address, state)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 

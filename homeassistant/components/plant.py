@@ -204,13 +204,13 @@ class Plant(Entity):
                         result.append('{} high'.format(sensor_name))
                         self._icon = params['icon']
 
-        if len(result) == 0:
+        if result:
+            self._state = STATE_PROBLEM
+            self._problems = ','.join(result)
+        else:
             self._state = STATE_OK
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
-        else:
-            self._state = STATE_PROBLEM
-            self._problems = ','.join(result)
         _LOGGER.debug("New data processed")
         self.hass.async_add_job(self.async_update_ha_state())
 

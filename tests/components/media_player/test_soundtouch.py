@@ -584,6 +584,24 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         self.assertEqual(mocked_presets.call_count, 2)
         self.assertEqual(mocked_select_preset.call_count, 1)
 
+    @mock.patch('libsoundtouch.device.SoundTouchDevice.play_url')
+    @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')
+    @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
+    @mock.patch('libsoundtouch.soundtouch_device',
+                side_effect=_mock_soundtouch_device)
+    def test_play_media_url(self, mocked_sountouch_device, mocked_status,
+                            mocked_volume, mocked_play_url):
+        """Test play preset 1."""
+        soundtouch.setup_platform(self.hass,
+                                  default_component(),
+                                  mock.MagicMock())
+        all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
+        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_status.call_count, 1)
+        self.assertEqual(mocked_volume.call_count, 1)
+        all_devices[0].play_media('MUSIC', "http://fqdn/file.mp3")
+        mocked_play_url.assert_called_with("http://fqdn/file.mp3")
+
     @mock.patch('libsoundtouch.device.SoundTouchDevice.create_zone')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')

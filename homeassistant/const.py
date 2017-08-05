@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 49
+MINOR_VERSION = 51
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -56,6 +56,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
@@ -139,7 +140,6 @@ CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
-CONF_SENSOR_CLASS = 'sensor_class'
 CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SLAVE = 'slave'
@@ -179,6 +179,7 @@ EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_THEMES_UPDATED = 'themes_updated'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -187,7 +188,9 @@ STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
+STATE_OPENING = 'opening'
 STATE_CLOSED = 'closed'
+STATE_CLOSING = 'closing'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
@@ -279,6 +282,9 @@ ATTR_WAKEUP = 'wake_up_interval'
 # For devices which support a code attribute
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
+
+# For calling a device specific command
+ATTR_COMMAND = 'command'
 
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'

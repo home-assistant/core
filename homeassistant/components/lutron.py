@@ -41,7 +41,7 @@ def setup(hass, base_config):
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
-        config[CONF_HOST], config[CONF_USERNAME], config[CONF_USERNAME])
+        config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD])
 
     hass.data[LUTRON_CONTROLLER].load_xml_db()
     hass.data[LUTRON_CONTROLLER].connect()

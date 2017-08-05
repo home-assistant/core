@@ -47,7 +47,7 @@ def extract_entities(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
-    if len(extraction) > 0:
+    if extraction:
         return list(set(extraction))
     return MATCH_ALL
 

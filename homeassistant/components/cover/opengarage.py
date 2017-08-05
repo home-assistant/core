@@ -117,8 +117,7 @@ class OpenGarageCover(CoverDevice):
         """Return if the cover is closed."""
         if self._state == STATE_UNKNOWN:
             return None
-        else:
-            return self._state in [STATE_CLOSED, STATE_OPENING]
+        return self._state in [STATE_CLOSED, STATE_OPENING]
 
     def close_cover(self):
         """Close the cover."""

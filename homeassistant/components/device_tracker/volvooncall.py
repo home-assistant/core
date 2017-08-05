@@ -9,8 +9,7 @@ import logging
 from homeassistant.util import slugify
 from homeassistant.helpers.dispatcher import (
     dispatcher_connect, dispatcher_send)
-from homeassistant.components.volvooncall import (
-    DATA_KEY, SIGNAL_VEHICLE_SEEN)
+from homeassistant.components.volvooncall import DATA_KEY, SIGNAL_VEHICLE_SEEN
 
 _LOGGER = logging.getLogger(__name__)
 

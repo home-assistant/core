@@ -71,7 +71,7 @@ class TradfriGroup(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        return self._group.set_state(0)
+        self._group.set_state(0)
 
     def turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
@@ -82,7 +82,11 @@ class TradfriGroup(Light):
 
     def update(self):
         """Fetch new state data for this group."""
-        self._group.update()
+        from pytradfri import RequestTimeout
+        try:
+            self._group.update()
+        except RequestTimeout:
+            _LOGGER.warning("Tradfri update request timed out")
 
 
 class Tradfri(Light):
@@ -153,7 +157,7 @@ class Tradfri(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        return self._light_control.set_state(False)
+        self._light_control.set_state(False)
 
     def turn_on(self, **kwargs):
         """
@@ -181,7 +185,11 @@ class Tradfri(Light):
 
     def update(self):
         """Fetch new state data for this light."""
-        self._light.update()
+        from pytradfri import RequestTimeout
+        try:
+            self._light.update()
+        except RequestTimeout:
+            _LOGGER.warning("Tradfri update request timed out")
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable

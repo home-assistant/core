@@ -345,6 +345,9 @@ INDEX_ALARM_TYPE = 0
 INDEX_ALARM_LEVEL = 1
 INDEX_ALARM_ACCESS_CONTROL = 9
 
+# https://github.com/OpenZWave/open-zwave/blob/de1c0e60edf1d1bee81f1ae54b1f58e66c6fd8ed/cpp/src/command_classes/BarrierOperator.cpp#L69
+INDEX_BARRIER_OPERATOR_LABEL = 1
+
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/DoorLock.cpp#L77
 INDEX_DOOR_LOCK_LOCK = 0
 

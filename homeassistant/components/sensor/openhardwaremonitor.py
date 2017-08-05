@@ -147,13 +147,13 @@ class OpenHardwareMonitorData(object):
         """Recursively loop through child objects, finding the values."""
         result = devices.copy()
 
-        if len(json[OHM_CHILDREN]) > 0:
+        if json[OHM_CHILDREN]:
             for child_index in range(0, len(json[OHM_CHILDREN])):
                 child_path = path.copy()
                 child_path.append(child_index)
 
                 child_names = names.copy()
-                if len(path) > 0:
+                if path:
                     child_names.append(json[OHM_NAME])
 
                 obj = json[OHM_CHILDREN][child_index]

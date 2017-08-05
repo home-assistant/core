@@ -42,8 +42,8 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_RECIPIENT))
     if mailgun_service.connection_is_valid():
         return mailgun_service
-    else:
-        return None
+
+    return None
 
 
 class MailgunNotificationService(BaseNotificationService):

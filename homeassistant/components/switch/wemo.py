@@ -162,8 +162,7 @@ class WemoSwitch(SwitchDevice):
                 return STATE_OFF
             elif standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
-            else:
-                return STATE_UNKNOWN
+            return STATE_UNKNOWN
 
     @property
     def is_on(self):
@@ -186,8 +185,7 @@ class WemoSwitch(SwitchDevice):
         """Return the icon of device based on its type."""
         if self._model_name == 'CoffeeMaker':
             return 'mdi:coffee'
-        else:
-            return super().icon
+        return None
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -195,7 +193,7 @@ class WemoSwitch(SwitchDevice):
         self.wemo.on()
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = WEMO_OFF
         self.wemo.off()

@@ -29,7 +29,7 @@ from homeassistant.components.http.ban import process_wrong_login
 DOMAIN = 'websocket_api'
 
 URL = '/api/websocket'
-DEPENDENCIES = 'http',
+DEPENDENCIES = ('http',)
 
 MAX_PENDING_MSG = 512
 

@@ -310,8 +310,7 @@ class ISYSensorDevice(isy.ISYDevice):
         raw_units = self.raw_unit_of_measurement
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             return self.hass.config.units.temperature_unit
-        else:
-            return raw_units
+        return raw_units
 
 
 class ISYWeatherDevice(isy.ISYDevice):

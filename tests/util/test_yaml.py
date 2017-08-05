@@ -2,6 +2,7 @@
 import io
 import os
 import unittest
+import logging
 from unittest.mock import patch
 
 from homeassistant.exceptions import HomeAssistantError
@@ -58,6 +59,13 @@ class TestYaml(unittest.TestCase):
             doc = yaml.yaml.safe_load(file)
         assert doc['password'] == "secret_password"
         del os.environ["PASSWORD"]
+
+    def test_environment_variable_default(self):
+        """Test config file with default value for environment variable."""
+        conf = "password: !env_var PASSWORD secret_password"
+        with io.StringIO(conf) as file:
+            doc = yaml.yaml.safe_load(file)
+        assert doc['password'] == "secret_password"
 
     def test_invalid_enviroment_variable(self):
         """Test config file with no enviroment variable sat."""
@@ -371,6 +379,16 @@ class TestSecrets(unittest.TestCase):
         yaml.keyring = FakeKeyring({'http_pw_keyring': 'yeah'})
         _yaml = load_yaml(self._yaml_path, yaml_str)
         self.assertEqual({'http': {'api_password': 'yeah'}}, _yaml)
+
+    @patch.object(yaml, 'credstash')
+    def test_secrets_credstash(self, mock_credstash):
+        """Test credstash fallback & get_password."""
+        mock_credstash.getSecret.return_value = 'yeah'
+        yaml_str = 'http:\n  api_password: !secret http_pw_credstash'
+        _yaml = load_yaml(self._yaml_path, yaml_str)
+        log = logging.getLogger()
+        log.error(_yaml['http'])
+        self.assertEqual({'api_password': 'yeah'}, _yaml['http'])
 
     def test_secrets_logger_removed(self):
         """Ensure logger: debug was removed."""

@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
@@ -43,17 +44,20 @@ DEFAULT_OBJECT_ID = 'notification'
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def create(hass, message, title=None, notification_id=None):
     """Generate a notification."""
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
+@bind_hass
 def dismiss(hass, notification_id):
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
 
 
 @callback
+@bind_hass
 def async_create(hass, message, title=None, notification_id=None):
     """Generate a notification."""
     data = {
@@ -68,6 +72,7 @@ def async_create(hass, message, title=None, notification_id=None):
 
 
 @callback
+@bind_hass
 def async_dismiss(hass, notification_id):
     """Remove a notification."""
     data = {ATTR_NOTIFICATION_ID: notification_id}

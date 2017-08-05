@@ -139,17 +139,17 @@ class BOMCurrentSensor(Entity):
         """Return the name of the sensor."""
         if self.stationname is None:
             return 'BOM {}'.format(SENSOR_TYPES[self._condition][0])
-        else:
-            return 'BOM {} {}'.format(
-                self.stationname, SENSOR_TYPES[self._condition][0])
+
+        return 'BOM {} {}'.format(
+            self.stationname, SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
         """Return the state of the sensor."""
         if self.rest.data and self._condition in self.rest.data:
             return self.rest.data[self._condition]
-        else:
-            return STATE_UNKNOWN
+
+        return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):

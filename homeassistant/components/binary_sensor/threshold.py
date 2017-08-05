@@ -13,10 +13,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN, CONF_SENSOR_CLASS,
+    CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN,
     ATTR_ENTITY_ID, CONF_DEVICE_CLASS)
 from homeassistant.core import callback
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_THRESHOLD): vol.Coerce(float),
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -50,7 +48,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     threshold = config.get(CONF_THRESHOLD)
     limit_type = config.get(CONF_TYPE)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     async_add_devices(
         [ThresholdSensor(hass, entity_id, name, threshold, limit_type,

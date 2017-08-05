@@ -312,8 +312,7 @@ def _process_state_match(parameter):
         return MATCH_ALL
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
-    else:
-        return tuple(parameter)
+    return tuple(parameter)
 
 
 def _process_time_match(parameter):
@@ -324,8 +323,7 @@ def _process_time_match(parameter):
         return parameter
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
-    else:
-        return tuple(parameter)
+    return tuple(parameter)
 
 
 def _matcher(subject, pattern):

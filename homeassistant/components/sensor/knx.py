@@ -160,8 +160,12 @@ def convert_float(raw_value):
     Defined in KNX 3.7.2 - 3.10
     """
     from knxip.conversion import knx2_to_float
+    from knxip.core import KNXException
 
-    return knx2_to_float(raw_value)
+    try:
+        return knx2_to_float(raw_value)
+    except KNXException as exception:
+        _LOGGER.error("Can't convert %s to float (%s)", raw_value, exception)
 
 
 def convert_percent(raw_value):
@@ -170,14 +174,11 @@ def convert_percent(raw_value):
     1byte percentage scaled KNX Telegram.
     Defined in KNX 3.7.2 - 3.10.
     """
-    summed_value = 0
+    value = 0
     try:
-        # convert raw value in bytes
-        for val in raw_value:
-            summed_value *= 256
-            summed_value += val
-    except TypeError:
+        value = raw_value[0]
+    except (IndexError, ValueError):
         # pknx returns a non-iterable type for unsuccessful reads
-        pass
+        _LOGGER.error("Can't convert %s to percent value", raw_value)
 
-    return round(summed_value * 100 / 255)
+    return round(value * 100 / 255)
