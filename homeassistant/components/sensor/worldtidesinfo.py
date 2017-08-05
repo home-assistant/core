@@ -29,6 +29,8 @@ DEFAULT_NAME = 'WorldTidesInfo'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
+STATE_UNKNOWN = 'Unknown'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_LATITUDE): cv.latitude,
@@ -63,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([WorldTidesInfoSensor(data, name)])
     return True
 
-# pylint: disable=undefined-variable
+
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
