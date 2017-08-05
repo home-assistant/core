@@ -40,27 +40,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
-    data = WorldTidesInfoData(hass)
     name = config.get(CONF_NAME)
 
-    global _RESOURCE
-    global LAT
-    global LON
-    global KEY
+    lat = config.get(CONF_LATITUDE)
+    lon = config.get(CONF_LONGITUDE)
+    key = config.get(CONF_API_KEY)
 
-    LAT = config.get(CONF_LATITUDE)
-    LON = config.get(CONF_LONGITUDE)
-    KEY = config.get(CONF_API_KEY)
+    start = int(time.time())
+    _resource = 'https://www.worldtides.info/api?extremes&length=86400' \
+                '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
-    STARTTIME = int(time.time())
-    _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400&start' \
-                '=%s&lat=%s&lon=%s&key=%s' % (
-                    STARTTIME, LAT, LON, KEY)
+    data = WorldTidesInfoData(lat, lon, key)
 
     try:
-        data.update()
-    except RunTimeError:
-        _LOGGER.error("Unable to connect fetch WorldTidesInfo data: %s")
+        self.data = requests.get(_resource, timeout=10).json()
+        _LOGGER.debug("Data = %s", self.data)
+    except ValueError as err:
+        _LOGGER.error("Check WorldTidesInfo %s", err.args)
+        self.data = None
         return False
 
     add_devices([WorldTidesInfoSensor(data, name)])
@@ -127,19 +124,19 @@ class WorldTidesInfoData(object):
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self, key, lat, lon):
         """Get the latest data from WorldTidesInfo API."""
-        STARTTIME = int(time.time())
-        _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400' \
-                    '&start=%s&lat=%s&lon=%s&key=%s' % (
-                        STARTTIME, LAT, LON, KEY)
+        start = int(time.time())
+        _resource = 'https://www.worldtides.info/api?extremes&length=86400' \
+                    '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
         try:
-            self.data = requests.get(_RESOURCE, timeout=10).json()
+            self.data = requests.get(_resource, timeout=10).json()
             _LOGGER.debug("Data = %s", self.data)
             _LOGGER.debug("Tide data queried with start time set to: %s",
-                          (STARTTIME))
+                          (start))
         except ValueError as err:
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None
             raise
+            
