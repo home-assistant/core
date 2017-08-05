@@ -6,11 +6,12 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \
     STATE_OFF
 from homeassistant.components.sensor import dyson
 from tests.common import get_test_home_assistant
+from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
 
 def _get_device_without_state():
     """Return a valid device provide by Dyson web services."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureCoolLink)
     device.name = "Device_name"
     device.state = None
     device.environmental_state = None
@@ -75,8 +76,9 @@ class DysonTest(unittest.TestCase):
             assert devices[3].name == "Device_name temperature"
             assert devices[4].name == "Device_name air quality"
 
-        device = _get_device_without_state()
-        self.hass.data[dyson.DYSON_DEVICES] = [device]
+        device_fan = _get_device_without_state()
+        device_non_fan = _get_with_state()
+        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
 
     def test_dyson_filter_life_sensor(self):

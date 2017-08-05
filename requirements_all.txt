@@ -354,7 +354,7 @@ knxip==0.5
 libnacl==1.5.2
 
 # homeassistant.components.dyson
-libpurecoollink==0.4.1
+libpurecoollink==0.4.2
 
 # homeassistant.components.device_tracker.mikrotik
 librouteros==1.0.2

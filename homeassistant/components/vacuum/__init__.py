@@ -168,9 +168,6 @@ def send_command(hass, command, params=None, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the vacuum component."""
-    if not config[DOMAIN]:
-        return False
-
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
 
