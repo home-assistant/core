@@ -32,11 +32,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = config.get(CONF_URL)
     try:
         supervisor_server = xmlrpc.client.ServerProxy(url)
+        processes = supervisor_server.supervisor.getAllProcessInfo()
     except ConnectionRefusedError:
         _LOGGER.error("Could not connect to Supervisord")
         return False
-
-    processes = supervisor_server.supervisor.getAllProcessInfo()
 
     add_devices(
         [SupervisorProcessSensor(info, supervisor_server)
@@ -50,6 +49,7 @@ class SupervisorProcessSensor(Entity):
         """Initialize the sensor."""
         self._info = info
         self._server = server
+        self._available = True
 
     @property
     def name(self):
@@ -62,6 +62,11 @@ class SupervisorProcessSensor(Entity):
         return self._info.get('statename')
 
     @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._available
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -71,5 +76,10 @@ class SupervisorProcessSensor(Entity):
 
     def update(self):
         """Update device state."""
-        self._info = self._server.supervisor.getProcessInfo(
-            self._info.get('name'))
+        try:
+            self._info = self._server.supervisor.getProcessInfo(
+                self._info.get('name'))
+            self._available = True
+        except ConnectionRefusedError:
+            _LOGGER.warning("Supervisord not available")
+            self._available = False
