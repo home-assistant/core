@@ -39,7 +39,6 @@ class ERValveSwitches(SwitchDevice):
     icon = 'mdi:record-rec'
 
     def __init__(self, valve_id, valve_name, on_state, off_state):
-        """Initialize the switch."""
         self._valve_id = valve_id
         self._valve_name = valve_name
         self._duration = 0
