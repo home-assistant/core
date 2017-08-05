@@ -52,32 +52,52 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = 'https://www.worldtides.info/api?extremes&length=86400' \
                '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
-    data = WorldTidesInfoData(lat, lon, key)
-
     try:
         data = requests.get(resource, timeout=10).json()
         _LOGGER.debug("Data = %s", data)
+        _LOGGER.info("Platform setup succeeded")
     except ValueError as err:
+        _LOGGER.error("Failed during platform setup")
         _LOGGER.error("Check WorldTidesInfo %s", err.args)
         data = None
         return False
 
-    add_devices([WorldTidesInfoSensor(data, name)])
+    add_devices([WorldTidesInfoSensor(name, data, lat, lon, key)])
     return True
 
 
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
-    def __init__(self, data, name):
-        """Initialize a WorldTidesInfo sensor."""
-        self.data = data
+    def __init__(self, name, data, lat, lon, key):
+        """Initialize the sensor."""
         self._name = name
+        self._data = data
+        self._lat = lat
+        self._lon = lon
+        self._key = key
+        self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of this device."""
+        attr = {}
+        if "High" in str(self.data['extremes'][0]['type']):
+            attr['high_tide_time_utc'] = self.data['extremes'][0]['date']
+            attr['high_tide_height'] = self.data['extremes'][0]['height']
+            attr['low_tide_time_utc'] = self.data['extremes'][1]['date']
+            attr['low_tide_height'] = self.data['extremes'][1]['height']
+        elif "Low" in str(self.data['extremes'][0]['type']):
+            attr['high_tide_time_utc'] = self.data['extremes'][1]['date']
+            attr['high_tide_height'] = self.data['extremes'][1]['height']
+            attr['low_tide_time_utc'] = self.data['extremes'][0]['date']
+            attr['low_tide_height'] = self.data['extremes'][0]['height']
+        return attr
 
     @property
     def state(self):
@@ -96,40 +116,13 @@ class WorldTidesInfoSensor(Entity):
         else:
             return STATE_UNKNOWN
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of this device."""
-        attr = {}
-        if "High" in str(self.data['extremes'][0]['type']):
-            attr['high_tide_time_utc'] = self.data['extremes'][0]['date']
-            attr['high_tide_height'] = self.data['extremes'][0]['height']
-            attr['low_tide_time_utc'] = self.data['extremes'][1]['date']
-            attr['low_tide_height'] = self.data['extremes'][1]['height']
-        elif "Low" in str(self.data['extremes'][0]['type']):
-            attr['high_tide_time_utc'] = self.data['extremes'][1]['date']
-            attr['high_tide_height'] = self.data['extremes'][1]['height']
-            attr['low_tide_time_utc'] = self.data['extremes'][0]['date']
-            attr['low_tide_height'] = self.data['extremes'][0]['height']
-        return attr
-
-    def update(self):
-        """Update current values."""
-        self.data.update()
-
-
-class WorldTidesInfoData(object):
-    """Get data from WorldTidesInfo API."""
-
-    def __init__(self, lat, lon, key):
-        """Initialize the data object."""
-        self.data = None
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, lat, lon, key):
+    def update(self):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         resource = 'https://www.worldtides.info/api?extremes&length=86400' \
-                   '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
+                   '&key=%s&lat=%s&lon=%s&start=%s' % (self._key, self._lat,
+                                                       self._lon, start)
 
         try:
             self.data = requests.get(resource, timeout=10).json()
