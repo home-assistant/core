@@ -18,7 +18,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.stop()
 
     def test_sensor_numeric_state(self):
-        """Test sensor on numeric state platform observations"""
+        """Test sensor on numeric state platform observations."""
         config = {
             'binary_sensor': {
                 'platform':
@@ -82,7 +82,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert state.state == 'off'
 
     def test_sensor_state(self):
-        """Test sensor on state platform observations"""
+        """Test sensor on state platform observations."""
         config = {
             'binary_sensor': {
                 'name':
