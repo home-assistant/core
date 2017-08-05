@@ -201,6 +201,7 @@ class RoombaVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
+        from functools import partial
         _LOGGER.debug('async_send_command %s (%s), %s',
                       command, params, kwargs)
         func = partial(self.vacuum.send_command, command, params)
