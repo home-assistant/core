@@ -57,6 +57,7 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    timer_start = time.perf_counter()
     from homeassistant.components.recorder.models import States
 
     entity_ids = (entity_id.lower(), ) if entity_id is not None else None
@@ -73,11 +74,17 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
         if end_time is not None:
             query = query.filter(States.last_updated < end_time)
 
+        query = query.order_by(States.last_updated)
+
         states = (
-            state for state in execute(
-                query.order_by(States.entity_id, States.last_updated))
+            state for state in execute(query)
             if (_is_significant(state) and
                 not state.attributes.get(ATTR_HIDDEN, False)))
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug(
+            'get_significant_states took %fs', elapsed)
 
     return states_to_json(hass, states, start_time, entity_id, filters)
 
@@ -90,7 +97,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
             (States.last_changed == States.last_updated) &
-            (States.last_changed > start_time))
+            (States.last_updated > start_time))
 
         if end_time is not None:
             query = query.filter(States.last_updated < end_time)
@@ -99,7 +106,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
             query = query.filter_by(entity_id=entity_id.lower())
 
         states = execute(
-            query.order_by(States.entity_id, States.last_updated))
+            query.order_by(States.last_updated))
 
     return states_to_json(hass, states, start_time, entity_id)
 
@@ -125,14 +132,10 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_state_ids = session.query(
                 States.state_id.label('max_state_id')
             ).filter(
-                (States.created < utc_point_in_time) &
+                (States.last_updated < utc_point_in_time) &
                 (States.entity_id.in_(entity_ids))
             ).order_by(
-                States.created.desc())
-
-            if filters:
-                most_recent_state_ids = filters.apply(most_recent_state_ids,
-                                                      entity_ids)
+                States.last_updated.desc())
 
             most_recent_state_ids = most_recent_state_ids.limit(1)
 
@@ -140,24 +143,43 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             # We have more than one entity to look at (most commonly we want
             # all entities,) so we need to do a search on all states since the
             # last recorder run started.
+
+            most_recent_states_by_date = session.query(
+                States.entity_id.label('max_entity_id'),
+                func.max(States.last_updated).label('max_last_updated')
+            ).filter(
+                (States.last_updated >= run.start) &
+                (States.last_updated < utc_point_in_time)
+            )
+
+            if entity_ids:
+                most_recent_states_by_date.filter(
+                    States.entity_id.in_(entity_ids))
+
+            most_recent_states_by_date = most_recent_states_by_date.group_by(
+                States.entity_id)
+
+            most_recent_states_by_date = most_recent_states_by_date.subquery()
+
             most_recent_state_ids = session.query(
                 func.max(States.state_id).label('max_state_id')
-            ).filter(
-                (States.created >= run.start) &
-                (States.created < utc_point_in_time) &
-                (~States.domain.in_(IGNORE_DOMAINS)))
-
-            if filters:
-                most_recent_state_ids = filters.apply(most_recent_state_ids,
-                                                      entity_ids)
+            ).join(most_recent_states_by_date, and_(
+                States.entity_id == most_recent_states_by_date.c.max_entity_id,
+                States.last_updated == most_recent_states_by_date.c.
+                max_last_updated))
 
             most_recent_state_ids = most_recent_state_ids.group_by(
                 States.entity_id)
 
         most_recent_state_ids = most_recent_state_ids.subquery()
 
-        query = session.query(States).join(most_recent_state_ids, and_(
-            States.state_id == most_recent_state_ids.c.max_state_id))
+        query = session.query(States).join(
+            most_recent_state_ids,
+            States.state_id == most_recent_state_ids.c.max_state_id
+        ).filter((~States.domain.in_(IGNORE_DOMAINS)))
+
+        if filters:
+            query = filters.apply(query, entity_ids)
 
         return [state for state in execute(query)
                 if not state.attributes.get(ATTR_HIDDEN, False)]
@@ -178,10 +200,16 @@ def states_to_json(hass, states, start_time, entity_id, filters=None):
     entity_ids = [entity_id] if entity_id is not None else None
 
     # Get the states at the start time
+    timer_start = time.perf_counter()
     for state in get_states(hass, start_time, entity_ids, filters=filters):
         state.last_changed = start_time
         state.last_updated = start_time
         result[state.entity_id].append(state)
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug(
+            'getting %d first datapoints took %fs', len(result), elapsed)
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
