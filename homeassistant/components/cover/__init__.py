@@ -23,7 +23,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
     SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
+    STATE_CLOSED, STATE_UNKNOWN, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,6 +225,11 @@ class CoverDevice(Entity):
     @property
     def state(self):
         """Return the state of the cover."""
+        if self.is_opening:
+            return STATE_OPENING
+        if self.is_closing:
+            return STATE_CLOSING
+
         closed = self.is_closed
 
         if closed is None:
@@ -261,6 +266,16 @@ class CoverDevice(Entity):
                 SUPPORT_SET_TILT_POSITION)
 
         return supported_features
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        pass
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        pass
 
     @property
     def is_closed(self):

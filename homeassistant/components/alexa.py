@@ -128,19 +128,18 @@ class AlexaIntentsView(http.HomeAssistantView):
         alexa_intent_info = req.get('intent')
         alexa_response = AlexaResponse(hass, alexa_intent_info)
 
-        if req_type == 'LaunchRequest':
-            alexa_response.add_speech(
-                SpeechType.plaintext,
-                "Hello, and welcome to the future. How may I help?")
-            return self.json(alexa_response)
-
-        if req_type != 'IntentRequest':
+        if req_type != 'IntentRequest' and req_type != 'LaunchRequest':
             _LOGGER.warning('Received unsupported request: %s', req_type)
             return self.json_message(
                 'Received unsupported request: {}'.format(req_type),
                 HTTP_BAD_REQUEST)
 
-        intent_name = alexa_intent_info['name']
+        if req_type == 'LaunchRequest':
+            intent_name = data.get('session', {})       \
+                              .get('application', {})   \
+                              .get('applicationId')
+        else:
+            intent_name = alexa_intent_info['name']
 
         try:
             intent_response = yield from intent.async_handle(
@@ -171,7 +170,7 @@ class AlexaIntentsView(http.HomeAssistantView):
 
         if 'simple' in intent_response.card:
             alexa_response.add_card(
-                'simple', intent_response.card['simple']['title'],
+                CardType.simple, intent_response.card['simple']['title'],
                 intent_response.card['simple']['content'])
 
         return self.json(alexa_response)
@@ -208,8 +207,8 @@ class AlexaResponse(object):
             self.card = card
             return
 
-        card["title"] = title.async_render(self.variables)
-        card["content"] = content.async_render(self.variables)
+        card["title"] = title
+        card["content"] = content
         self.card = card
 
     def add_speech(self, speech_type, text):
@@ -217,9 +216,6 @@ class AlexaResponse(object):
         assert self.speech is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
-
-        if isinstance(text, template.Template):
-            text = text.async_render(self.variables)
 
         self.speech = {
             'type': speech_type.value,

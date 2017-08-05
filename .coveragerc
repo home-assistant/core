@@ -322,6 +322,7 @@ omit =
     homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
+    homeassistant/components/media_player/bluesound.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/clementine.py
@@ -351,6 +352,7 @@ omit =
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
+    homeassistant/components/media_player/russound_rio.py
     homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
@@ -437,6 +439,7 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
+    homeassistant/components/sensor/geizhals.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -532,7 +535,6 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/switch/xiaomi_vacuum.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py

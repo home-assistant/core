@@ -80,7 +80,7 @@ class UbusDeviceScanner(DeviceScanner):
         return self.last_results
 
     @_refresh_on_acccess_denied
-    def get_device_name(self, device):
+    def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
         if self.leasefile is None:
             result = _req_json_rpc(
@@ -105,7 +105,7 @@ class UbusDeviceScanner(DeviceScanner):
                 # Error, handled in the _req_json_rpc
                 return
 
-        return self.mac2name.get(device.upper(), None)
+        return self.mac2name.get(mac.upper(), None)
 
     @_refresh_on_acccess_denied
     def _update_info(self):

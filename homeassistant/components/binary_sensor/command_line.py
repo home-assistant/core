@@ -14,9 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
-    CONF_SENSOR_CLASS, CONF_COMMAND, CONF_DEVICE_CLASS)
+    CONF_COMMAND, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
@@ -44,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     command = config.get(CONF_COMMAND)
     payload_off = config.get(CONF_PAYLOAD_OFF)
     payload_on = config.get(CONF_PAYLOAD_ON)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass

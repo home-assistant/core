@@ -86,7 +86,12 @@ def alexa_client(loop, hass, test_client):
                 "CallServiceIntent": {
                     "speech": {
                         "type": "plain",
-                        "text": "Service called",
+                        "text": "Service called for {{ ZodiacSign }}",
+                    },
+                    "card": {
+                        "type": "simple",
+                        "title": "Card title for {{ ZodiacSign }}",
+                        "content": "Card content: {{ ZodiacSign }}",
                     },
                     "action": {
                         "service": "test.alexa",
@@ -94,6 +99,12 @@ def alexa_client(loop, hass, test_client):
                             "hello": "{{ ZodiacSign }}"
                         },
                         "entity_id": "switch.test",
+                    }
+                },
+                APPLICATION_ID: {
+                    "speech": {
+                        "type": "plain",
+                        "text": "LaunchRequest has been received.",
                     }
                 }
             }
@@ -135,8 +146,41 @@ def test_intent_launch_request(alexa_client):
     }
     req = yield from _intent_req(alexa_client, data)
     assert req.status == 200
-    resp = yield from req.json()
-    assert "outputSpeech" in resp["response"]
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "LaunchRequest has been received."
+
+
+@asyncio.coroutine
+def test_intent_launch_request_not_configured(alexa_client):
+    """Test the launch of a request."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": True,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId":
+                    'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000'
+            },
+            "attributes": {},
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "LaunchRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z"
+        }
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "This intent is not yet configured within Home Assistant."
 
 
 @asyncio.coroutine
@@ -318,6 +362,13 @@ def test_intent_request_calling_service(alexa_client):
     assert call.service == "alexa"
     assert call.data.get("entity_id") == ["switch.test"]
     assert call.data.get("hello") == "virgo"
+
+    data = yield from req.json()
+    assert data['response']['card']['title'] == 'Card title for virgo'
+    assert data['response']['card']['content'] == 'Card content: virgo'
+    assert data['response']['outputSpeech']['type'] == 'PlainText'
+    assert data['response']['outputSpeech']['text'] == \
+        'Service called for virgo'
 
 
 @asyncio.coroutine

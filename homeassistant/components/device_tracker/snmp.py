@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pysnmp==4.3.8']
+REQUIREMENTS = ['pysnmp==4.3.9']
 
 CONF_COMMUNITY = 'community'
 CONF_AUTHKEY = 'authkey'

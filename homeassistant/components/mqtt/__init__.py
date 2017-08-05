@@ -58,6 +58,7 @@ CONF_WILL_MESSAGE = 'will_message'
 
 CONF_STATE_TOPIC = 'state_topic'
 CONF_COMMAND_TOPIC = 'command_topic'
+CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 

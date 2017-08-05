@@ -23,7 +23,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lutron Caseta Serena shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade"])
+    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade",
+                                                 "SerenaHoneycombShade"])
     for cover_device in cover_devices:
         dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
