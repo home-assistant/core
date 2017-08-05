@@ -58,10 +58,7 @@ class ERValveSwitches(SwitchDevice):
         """Update valve state."""
         state = er.get_state(self._valve_id)
 
-        if state == 1:
-            self._state = True
-        else:
-            self._state = False
+        self._state = state
         # _LOGGER.info("update etherrain switch {0} - {1}".format(
         # self._valve_id, self._state))
 
