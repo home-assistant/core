@@ -224,7 +224,6 @@ def test_xiaomi_vacuum_specific_services(hass, caplog, mock_mirobo_is_on):
     # Check setting pause
     yield from hass.services.async_call(
         DOMAIN, SERVICE_START_PAUSE, blocking=True)
-    print(mock_mirobo_is_on.mock_calls)
     assert str(mock_mirobo_is_on.mock_calls[-2]) == 'call.Vacuum().pause()'
     assert str(mock_mirobo_is_on.mock_calls[-1]) == 'call.Vacuum().status()'
 
