@@ -156,9 +156,7 @@ class RoombaVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        from functools import partial
-        func = partial(self.vacuum.send_command, 'start')
-        yield from self.hass.async_add_job(func)
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'start')
         self._is_on = True
 
     @asyncio.coroutine
@@ -171,41 +169,38 @@ class RoombaVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        from functools import partial
-        func = partial(self.vacuum.send_command, 'stop')
-        yield from self.hass.async_add_job(func)
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'stop')
+        self._is_on = False
 
     @asyncio.coroutine
     def async_start_pause(self, **kwargs):
         """Pause the cleaning task or resume it."""
-        from functools import partial
-        if self.vacuum_state and self.is_on:
-            func = partial(self.vacuum.send_command, 'pause')
+        if self.vacuum_state and self.is_on:  # vacuum is running
+            yield from self.hass.async_add_job(
+                self.vacuum.send_command, 'pause')
             self._is_on = False
-        elif self._status == 'Stopped':
-            func = partial(self.vacuum.send_command, 'resume')
+        elif self._status == 'Stopped':  # vacuum is stopped
+            yield from self.hass.async_add_job(
+                self.vacuum.send_command, 'resume')
             self._is_on = True
         else:  # vacuum is off
-            func = partial(self.vacuum.send_command, 'start')
+            yield from self.hass.async_add_job(
+                self.vacuum.send_command, 'start')
             self._is_on = True
-        yield from self.hass.async_add_job(func)
 
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        from functools import partial
-        func = partial(self.vacuum.send_command, 'dock')
-        yield from self.hass.async_add_job(func)
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'dock')
         self._is_on = False
 
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
-        from functools import partial
         _LOGGER.debug('async_send_command %s (%s), %s',
                       command, params, kwargs)
-        func = partial(self.vacuum.send_command, command, params)
-        yield from self.hass.async_add_job(func)
+        yield from self.hass.async_add_job(
+            self.vacuum.send_command, command, params)
         return True
 
     @asyncio.coroutine
