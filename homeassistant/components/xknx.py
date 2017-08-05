@@ -23,6 +23,11 @@ CONF_XKNX_CONFIG = "config_file"
 CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_LOCAL_IP = "local_ip"
+CONF_XKNX_FIRE_EVENT = "fire_event"
+
+SERVICE_XKNX_SEND = "send"
+SERVICE_XKNX_ATTR_ADDRESS = "address"
+SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 
 SUPPORTED_DOMAINS = [
     'switch',
@@ -34,7 +39,7 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.1']
+REQUIREMENTS = ['xknx==0.7.2']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -52,8 +57,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Exclusive(CONF_XKNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
         vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'):
             TUNNELING_SCHEMA,
+        vol.Optional(CONF_XKNX_FIRE_EVENT, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SERVICE_XKNX_SEND_SCHEMA = vol.Schema({
+    vol.Required(SERVICE_XKNX_ATTR_ADDRESS): cv.string,
+    vol.Required(SERVICE_XKNX_ATTR_PAYLOAD): vol.Any(
+        cv.positive_int, [cv.positive_int]),
+})
 
 
 @asyncio.coroutine
@@ -72,6 +84,11 @@ def async_setup(hass, config):
         hass.async_add_job(
             discovery.async_load_platform(hass, component, DOMAIN, {}, config))
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_XKNX_SEND,
+        hass.data[DATA_XKNX].service_send_to_knx_bus,
+        schema=SERVICE_XKNX_SEND_SCHEMA)
+
     return True
 
 
@@ -84,6 +101,7 @@ class XKNXModule(object):
         self.config = config
         self.initialized = False
         self.init_xknx()
+        self.register_callbacks()
 
     def init_xknx(self):
         """Initialization of XKNX object."""
@@ -157,3 +175,39 @@ class XKNXModule(object):
         # pylint: disable=no-self-use
         from xknx.io import ConnectionConfig
         return ConnectionConfig()
+
+    def register_callbacks(self):
+        """Register callbacks within XKNX object."""
+        if self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]:
+            self.xknx.telegram_queue.register_telegram_received_cb(
+                self.telegram_received_cb)
+
+    @asyncio.coroutine
+    def telegram_received_cb(self, telegram):
+        """Callback invoked after a KNX telegram was received."""
+        self.hass.bus.fire('knx_event', {
+            'address': telegram.group_address.str(),
+            'data': telegram.payload.value
+        })
+        # False signals XKNX to proceed with processing telegrams.
+        return False
+
+    @asyncio.coroutine
+    def service_send_to_knx_bus(self, call):
+        """Service for sending an arbitray KNX message to the KNX bus."""
+        from xknx.knx import Telegram, Address, DPTBinary, DPTArray
+        attr_payload = call.data.get(SERVICE_XKNX_ATTR_PAYLOAD)
+        attr_address = call.data.get(SERVICE_XKNX_ATTR_ADDRESS)
+
+        def calculate_payload(attr_payload):
+            """Calculate payload depending on type of attribute."""
+            if isinstance(attr_payload, int):
+                return DPTBinary(attr_payload)
+            return DPTArray(attr_payload)
+        payload = calculate_payload(attr_payload)
+        address = Address(attr_address)
+
+        telegram = Telegram()
+        telegram.payload = payload
+        telegram.group_address = address
+        yield from self.xknx.telegrams.put(telegram)
