@@ -123,7 +123,6 @@ class WorldTidesInfoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from WorldTidesInfo API."""
-
         STARTTIME = int(time.time())
         _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400' \
                     '&start=%s&lat=%s&lon=%s&key=%s' % (
