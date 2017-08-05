@@ -4,7 +4,6 @@ Support for Wi-Fi enabled iRobot Roombas.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.roomba/
 """
-from functools import partial
 import asyncio
 import logging
 import voluptuous as vol
@@ -18,9 +17,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     STATE_ON, STATE_OFF, CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 
-REQUIREMENTS = ['https://github.com/pschmitt/Roomba980-Python/archive/'
-                '1.2.1.zip'
-                '#Roomba980-Python==1.2.1']
+REQUIREMENTS = ['roombapy==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +81,7 @@ class RoombaVacuum(VacuumDevice):
     def __init__(self, hass, name, host, username, password, certificate,
                  continuous):
         """Initialize the Roomba handler."""
+        from roomba import Roomba
         self.hass = hass
         self._name = name
         self._icon = ICON
@@ -92,7 +90,6 @@ class RoombaVacuum(VacuumDevice):
         self._password = password
         self._certificate = certificate
         self._continuous = continuous
-        self._vacuum = None
         self._battery_level = None
         self._status = None
         self._state_attrs = {}
@@ -100,6 +97,16 @@ class RoombaVacuum(VacuumDevice):
         self._is_on = False
         self._available = False
         self._metric = hass.config.units.is_metric
+        self.vacuum = Roomba(
+            address=self._host,
+            blid=self._username,
+            password=self._password,
+            cert_name=self._certificate,
+            continuous=self._continuous
+        )
+        _LOGGER.info("Initializing connection with host %s (username: %s)",
+                     self._host, self._username)
+        self.vacuum.connect()
 
     @property
     def supported_features(self):
@@ -146,92 +153,59 @@ class RoombaVacuum(VacuumDevice):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    @property
-    def vacuum(self):
-        """Property accessor for vacuum object."""
-        if not self._vacuum:
-            from roomba import Roomba
-            _LOGGER.info("Initializing with host %s (username: %s...)",
-                         self._host, self._username)
-            # Error handling is not currently possible since Roomba()
-            # does not raise any exception on failure. But it will appear in
-            # the log.
-            # https://github.com/NickWaterton/Roomba980-Python/issues/8
-            self._vacuum = Roomba(
-                address=self._host,
-                blid=self._username,
-                password=self._password,
-                cert_name=self._certificate,
-                continuous=self._continuous
-            )
-            self._vacuum.connect()
-
-        return self._vacuum
-
-    @asyncio.coroutine
-    def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a vacuum command handling error messages."""
-        # Error handling is not currently possible since Roomba()
-        # does not raise any exception on failure. But it will appear in the
-        # log.
-        # https://github.com/NickWaterton/Roomba980-Python/issues/8
-        yield from self.hass.async_add_job(partial(func, *args, **kwargs))
-        return True
-
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        is_on = yield from self._try_command(
-            'Unable to start the vacuum: %s',
-            self.vacuum.send_command, 'start')
-        self._is_on = is_on
+        from functools import partial
+        func = partial(self.vacuum.send_command, 'start')
+        yield from self.hass.async_add_job(func)
+        self._is_on = True
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the vacuum off and return to home."""
         yield from self.async_stop()
-        return_home = yield from self.async_return_to_base()
-        if return_home:
-            self._is_on = False
+        yield from self.async_return_to_base()
+        self._is_on = False
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        yield from self._try_command(
-            "Unable to stop: %s", self.vacuum.send_command, 'stop')
+        from functools import partial
+        func = partial(self.vacuum.send_command, 'stop')
+        yield from self.hass.async_add_job(func)
 
     @asyncio.coroutine
     def async_start_pause(self, **kwargs):
-        """Pause the cleaning task or replay it."""
+        """Pause the cleaning task or resume it."""
+        from functools import partial
         if self.vacuum_state and self.is_on:
-            yield from self._try_command(
-                'Unable to start/pause (pause): %s',
-                self.vacuum.send_command, 'pause')
+            func = partial(self.vacuum.send_command, 'pause')
+            self._is_on = False
         elif self._status == 'Stopped':
-            yield from self._try_command(
-                'Unable to start/pause (resume): %s',
-                self.vacuum.send_command, 'resume')
+            func = partial(self.vacuum.send_command, 'resume')
+            self._is_on = True
         else:  # vacuum is off
-            yield from self._try_command(
-                'Unable to start/pause (start): %s',
-                self.vacuum.send_command, 'start')
+            func = partial(self.vacuum.send_command, 'start')
+            self._is_on = True
+        yield from self.hass.async_add_job(func)
 
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        return_home = yield from self._try_command(
-            'Unable to return home: %s', self.vacuum.send_command, 'dock')
-        if return_home:
-            self._is_on = False
+        from functools import partial
+        func = partial(self.vacuum.send_command, 'dock')
+        yield from self.hass.async_add_job(func)
+        self._is_on = False
 
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
         _LOGGER.debug('async_send_command %s (%s), %s',
                       command, params, kwargs)
-        yield from self._try_command(
-            "Unable to send command to the vacuum: %s",
-            self.vacuum.send_command, command, params)
+        func = partial(self.vacuum.send_command, command, params)
+        yield from self.hass.async_add_job(func)
+        return True
 
     @asyncio.coroutine
     def async_update(self):
