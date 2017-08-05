@@ -148,7 +148,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def parsestatus(self, status):
         """Parse the status."""
-        newstatus = ([v for k, v in self.STATES.items()
+        newstatus = ([v for k, v in STATES.items()
                       if status.upper() == k][0])
         self._status = newstatus
 
