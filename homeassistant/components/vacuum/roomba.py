@@ -57,6 +57,7 @@ SUPPORT_ROOMBA = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
+    from roomba import Roomba
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -68,45 +69,35 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     continuous = config.get(CONF_CONTINUOUS)
 
     # Create handler
-    roomba = RoombaVacuum(
-        hass, name, host, username, password, certificate, continuous)
-    hass.data[PLATFORM][host] = roomba
+    roomba = Roomba(
+        address=host,
+        blid=username,
+        password=password,
+        cert_name=certificate,
+        continuous=continuous
+    )
+    _LOGGER.info('Initializing communication with host %s (username: %s)',
+                 host, username)
+    yield from hass.async_add_job(roomba.connect)
+    roomba_vac = RoombaVacuum(name, roomba)
+    hass.data[PLATFORM][host] = roomba_vac
 
-    async_add_devices([roomba], update_before_add=True)
+    async_add_devices([roomba_vac], update_before_add=True)
 
 
 class RoombaVacuum(VacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, hass, name, host, username, password, certificate,
-                 continuous):
+    def __init__(self, name, roomba):
         """Initialize the Roomba handler."""
-        from roomba import Roomba
-        self.hass = hass
-        self._name = name
-        self._icon = ICON
-        self._host = host
-        self._username = username
-        self._password = password
-        self._certificate = certificate
-        self._continuous = continuous
-        self._battery_level = None
-        self._status = None
-        self._state_attrs = {}
-        self.vacuum_state = None
-        self._is_on = False
         self._available = False
-        self._metric = hass.config.units.is_metric
-        self.vacuum = Roomba(
-            address=self._host,
-            blid=self._username,
-            password=self._password,
-            cert_name=self._certificate,
-            continuous=self._continuous
-        )
-        _LOGGER.info("Initializing connection with host %s (username: %s)",
-                     self._host, self._username)
-        self.vacuum.connect()
+        self._battery_level = None
+        self._is_on = False
+        self._name = name
+        self._state_attrs = {}
+        self._status = None
+        self.vacuum = roomba
+        self.vacuum_state = None
 
     @property
     def supported_features(self):
@@ -146,7 +137,7 @@ class RoombaVacuum(VacuumDevice):
     @property
     def icon(self):
         """Return the icon to use for device."""
-        return self._icon
+        return ICON
 
     @property
     def device_state_attributes(self):
@@ -164,7 +155,6 @@ class RoombaVacuum(VacuumDevice):
         """Turn the vacuum off and return to home."""
         yield from self.async_stop()
         yield from self.async_return_to_base()
-        self._is_on = False
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
@@ -173,20 +163,26 @@ class RoombaVacuum(VacuumDevice):
         self._is_on = False
 
     @asyncio.coroutine
+    def async_resume(self, **kwargs):
+        """Resume the cleaning cycle."""
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'resume')
+        self._is_on = True
+
+    @asyncio.coroutine
+    def async_pause(self, **kwargs):
+        """Pause the cleaning cycle."""
+        yield from self.hass.async_add_job(self.vacuum.send_command, 'pause')
+        self._is_on = False
+
+    @asyncio.coroutine
     def async_start_pause(self, **kwargs):
         """Pause the cleaning task or resume it."""
         if self.vacuum_state and self.is_on:  # vacuum is running
-            yield from self.hass.async_add_job(
-                self.vacuum.send_command, 'pause')
-            self._is_on = False
+            yield from self.async_pause()
         elif self._status == 'Stopped':  # vacuum is stopped
-            yield from self.hass.async_add_job(
-                self.vacuum.send_command, 'resume')
-            self._is_on = True
+            yield from self.async_resume()
         else:  # vacuum is off
-            yield from self.hass.async_add_job(
-                self.vacuum.send_command, 'start')
-            self._is_on = True
+            yield from self.async_turn_on()
 
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
@@ -208,9 +204,11 @@ class RoombaVacuum(VacuumDevice):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:
+            _LOGGER.debug('Roomba %s has no data yet. Skip update.',
+                          self.name)
             return
         state = self.vacuum.master_state.get('state', {}).get('reported', {})
-        _LOGGER.debug("Got new state from the vacuum: %s", state)
+        _LOGGER.debug('Got new state from the vacuum: %s', state)
         self.vacuum_state = state
         self._available = state is not None
 
@@ -245,7 +243,7 @@ class RoombaVacuum(VacuumDevice):
             cleaning_time = mission_state.get('mssnM', None)
             cleaned_area = mission_state.get('sqft', None)  # Imperial
             # Convert to m2 if the unit_system is set to metric
-            if cleaned_area and self._metric:
+            if cleaned_area and self.hass.config.units.is_metric:
                 cleaned_area = round(cleaned_area * 0.0929)
             self._state_attrs[ATTR_CLEANING_TIME] = cleaning_time
             self._state_attrs[ATTR_CLEANED_AREA] = cleaned_area
