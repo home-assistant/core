@@ -184,9 +184,6 @@ def async_setup(hass, config):
     def async_handle_vacuum_service(service):
         """Map services to methods on VacuumDevice."""
         method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
         target_vacuums = component.async_extract_from_service(service)
         params = service.data.copy()
         params.pop(ATTR_ENTITY_ID, None)
@@ -223,17 +220,17 @@ class VacuumDevice(ToggleEntity):
     @property
     def supported_features(self):
         """Flag vacuum cleaner features that are supported."""
-        return 0
+        raise NotImplementedError()
 
     @property
     def status(self):
         """Return the status of the vacuum cleaner."""
-        return None
+        raise NotImplementedError()
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        return None
+        raise NotImplementedError()
 
     @property
     def battery_icon(self):
@@ -247,12 +244,12 @@ class VacuumDevice(ToggleEntity):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        return None
+        raise NotImplementedError()
 
     @property
-    def fan_speed_list(self) -> list:
+    def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return []
+        raise NotImplementedError()
 
     @property
     def state_attributes(self):
