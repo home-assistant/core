@@ -197,7 +197,11 @@ omit =
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi.py
-    homeassistant/components/*/xiaomi.py
+    homeassistant/components/binary_sensor/xiaomi.py
+    homeassistant/components/cover/xiaomi.py
+    homeassistant/components/light/xiaomi.py
+    homeassistant/components/sensor/xiaomi.py
+    homeassistant/components/switch/xiaomi.py
 
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
