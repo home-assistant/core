@@ -53,6 +53,9 @@ omit =
     homeassistant/components/eight_sleep.py
     homeassistant/components/*/eight_sleep.py
 
+    homeassistant/components/etherrain.py
+    homeassistant/components/*/etherrain.py
+
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
