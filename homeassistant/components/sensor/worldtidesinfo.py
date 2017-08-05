@@ -49,13 +49,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     key = config.get(CONF_API_KEY)
 
     start = int(time.time())
-    _resource = 'https://www.worldtides.info/api?extremes&length=86400' \
+    resource = 'https://www.worldtides.info/api?extremes&length=86400' \
                 '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
     data = WorldTidesInfoData(lat, lon, key)
 
     try:
-        data = requests.get(_resource, timeout=10).json()
+        data = requests.get(resource, timeout=10).json()
         _LOGGER.debug("Data = %s", data)
     except ValueError as err:
         _LOGGER.error("Check WorldTidesInfo %s", err.args)
@@ -128,11 +128,11 @@ class WorldTidesInfoData(object):
     def update(self, lat, lon, key):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
-        _resource = 'https://www.worldtides.info/api?extremes&length=86400' \
+        resource = 'https://www.worldtides.info/api?extremes&length=86400' \
                     '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
 
         try:
-            self.data = requests.get(_resource, timeout=10).json()
+            self.data = requests.get(resource, timeout=10).json()
             _LOGGER.debug("Data = %s", self.data)
             _LOGGER.debug("Tide data queried with start time set to: %s",
                           (start))
