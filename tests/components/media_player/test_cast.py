@@ -66,8 +66,10 @@ class TestCastMediaPlayer(unittest.TestCase):
     @patch('homeassistant.components.media_player.cast.CastDevice')
     @patch('pychromecast.get_chromecasts')
     @patch('pychromecast.Chromecast')
-    def test_fallback_cast(self, mock_chromecast, mock_get_chromecasts, mock_device):
-        """Test falling back to creating Chromecast instance when not discovered."""
+    def test_fallback_cast(self, mock_chromecast, mock_get_chromecasts,
+                           mock_device):
+        """Test falling back to creating Chromecast instance when not
+        discovered."""
         mock_get_chromecasts.return_value = [
             FakeChromeCast('some_host', cast.DEFAULT_PORT)
         ]
@@ -83,8 +85,10 @@ class TestCastMediaPlayer(unittest.TestCase):
     @patch('homeassistant.components.media_player.cast.CastDevice')
     @patch('pychromecast.get_chromecasts')
     @patch('pychromecast.Chromecast')
-    def test_fallback_cast_group(self, mock_chromecast, mock_get_chromecasts, mock_device):
-        """Test falling back to creating Chromecast instance when not discovered (group)."""
+    def test_fallback_cast_group(self, mock_chromecast, mock_get_chromecasts,
+                                 mock_device):
+        """Test falling back to creating Chromecast instance when not
+        discovered (group)."""
         mock_get_chromecasts.return_value = [
             FakeChromeCast('some_host', cast.DEFAULT_PORT)
         ]
