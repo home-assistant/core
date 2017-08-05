@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the TCP Sensor."""
-    add_devices([TcpSensor(hass, config)])
+    add_devices([TcpSensor(hass, config)], True)
 
 
 class TcpSensor(Entity):
@@ -71,7 +71,6 @@ class TcpSensor(Entity):
             CONF_BUFFER_SIZE: config.get(CONF_BUFFER_SIZE),
         }
         self._state = None
-        self.update()
 
     @property
     def name(self):
