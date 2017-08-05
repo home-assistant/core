@@ -76,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         cert_name=certificate,
         continuous=continuous
     )
-    _LOGGER.info('Initializing communication with host %s (username: %s)',
+    _LOGGER.info("Initializing communication with host %s (username: %s)",
                  host, username)
     yield from hass.async_add_job(roomba.connect)
     roomba_vac = RoombaVacuum(name, roomba)
@@ -113,11 +113,6 @@ class RoombaVacuum(VacuumDevice):
     def status(self):
         """Return the status of the vacuum cleaner."""
         return self._status
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def is_on(self) -> bool:
@@ -193,7 +188,7 @@ class RoombaVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
-        _LOGGER.debug('async_send_command %s (%s), %s',
+        _LOGGER.debug("async_send_command %s (%s), %s",
                       command, params, kwargs)
         yield from self.hass.async_add_job(
             self.vacuum.send_command, command, params)
@@ -204,11 +199,11 @@ class RoombaVacuum(VacuumDevice):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:
-            _LOGGER.debug('Roomba %s has no data yet. Skip update.',
+            _LOGGER.debug("Roomba %s has no data yet. Skip update.",
                           self.name)
             return
         state = self.vacuum.master_state.get('state', {}).get('reported', {})
-        _LOGGER.debug('Got new state from the vacuum: %s', state)
+        _LOGGER.debug("Got new state from the vacuum: %s", state)
         self.vacuum_state = state
         self._available = state is not None
 
