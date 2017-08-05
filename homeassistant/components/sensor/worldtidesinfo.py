@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         data = requests.get(_resource, timeout=10).json()
-        _LOGGER.debug("Data = %s", self.data)
+        _LOGGER.debug("Data = %s", data)
     except ValueError as err:
         _LOGGER.error("Check WorldTidesInfo %s", err.args)
         data = None
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([WorldTidesInfoSensor(data, name)])
     return True
 
-
+# pylint: disable=undefined-variable
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
@@ -80,14 +80,14 @@ class WorldTidesInfoSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self.data.data:
-            if "High" in str(self.data.data['extremes'][0]['type']):
+        if self.data:
+            if "High" in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime('%I:%M %p', time.localtime(
-                    self.data.data['extremes'][0]['dt']))
+                    self.data['extremes'][0]['dt']))
                 return "High tide at %s" % (tidetime)
-            elif "Low" in str(self.data.data['extremes'][0]['type']):
+            elif "Low" in str(self.data['extremes'][0]['type']):
                 tidetime = time.strftime('%I:%M %p', time.localtime(
-                    self.data.data['extremes'][1]['dt']))
+                    self.data['extremes'][1]['dt']))
                 return "Low tide at %s" % (tidetime)
             else:
                 return STATE_UNKNOWN
@@ -98,16 +98,16 @@ class WorldTidesInfoSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {}
-        if "High" in str(self.data.data['extremes'][0]['type']):
-            attr['high_tide_time_utc'] = self.data.data['extremes'][0]['date']
-            attr['high_tide_height'] = self.data.data['extremes'][0]['height']
-            attr['low_tide_time_utc'] = self.data.data['extremes'][1]['date']
-            attr['low_tide_height'] = self.data.data['extremes'][1]['height']
-        elif "Low" in str(self.data.data['extremes'][0]['type']):
-            attr['high_tide_time_utc'] = self.data.data['extremes'][1]['date']
-            attr['high_tide_height'] = self.data.data['extremes'][1]['height']
-            attr['low_tide_time_utc'] = self.data.data['extremes'][0]['date']
-            attr['low_tide_height'] = self.data.data['extremes'][0]['height']
+        if "High" in str(self.data['extremes'][0]['type']):
+            attr['high_tide_time_utc'] = self.data['extremes'][0]['date']
+            attr['high_tide_height'] = self.data['extremes'][0]['height']
+            attr['low_tide_time_utc'] = self.data['extremes'][1]['date']
+            attr['low_tide_height'] = self.data['extremes'][1]['height']
+        elif "Low" in str(self.data['extremes'][0]['type']):
+            attr['high_tide_time_utc'] = self.data['extremes'][1]['date']
+            attr['high_tide_height'] = self.data['extremes'][1]['height']
+            attr['low_tide_time_utc'] = self.data['extremes'][0]['date']
+            attr['low_tide_height'] = self.data['extremes'][0]['height']
         return attr
 
     def update(self):
@@ -118,9 +118,8 @@ class WorldTidesInfoSensor(Entity):
 class WorldTidesInfoData(object):
     """Get data from WorldTidesInfo API."""
 
-    def __init__(self, hass, lat, lon, key):
+    def __init__(self, lat, lon, key):
         """Initialize the data object."""
-        self._hass = hass
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
