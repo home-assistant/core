@@ -59,7 +59,7 @@ def setup(hass, config):
 # pylint: disable=no-member
 def login():
     """Login to the EtherRain API."""
-    _LOGGER.info("Attempting to login to EtherRain")
+    # _LOGGER.info("Attempting to login to EtherRain")
 
     # ergetcfg.cgi?lu=admin\&lp=deadbeef
     url = '{0}/ergetcfg.cgi?lu={1}&lp={2}'.format(
@@ -98,16 +98,17 @@ def _er_request(data=None):
             ER['server_origin'], valves[1], valves[2], valves[3], valves[4],
             valves[5], valves[6], valves[7], valves[8])
 
-    for _ in range(LOGIN_RETRIES):
-        # _LOGGER.info("url is {0}".format(url))
-        req = requests.get(url)
-        # _LOGGER.info("Returned: {0}".format(req.status_code))
+    # Always log in. The etherrain/8 will only take commands from the last IP
+    # that logged in to it.   So if a different host on the network is also
+    # issuing commands to the ER/8, then our commands will fail.  There is
+    # obviously a bit of a race condition here.  This at least somewhat
+    # mitigates the problem.
+    login()
+    # _LOGGER.info("url is {0}".format(url))
+    req = requests.get(url)
+    # _LOGGER.info("Returned: {0}".format(req.status_code))
 
-        if not req.ok:
-            login()
-        else:
-            break
-    else:
+    if not req.ok:
         _LOGGER.error("Unable to get API response from EtherRain")
 
     return req
