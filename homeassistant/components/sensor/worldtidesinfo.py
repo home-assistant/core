@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     STARTTIME = int(time.time())
     _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400&start' \
                 '=%s&lat=%s&lon=%s&key=%s' % (
-        STARTTIME, LAT, LON, KEY)
+                    STARTTIME, LAT, LON, KEY)
 
     try:
         data.update()
@@ -129,11 +129,10 @@ class WorldTidesInfoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from WorldTidesInfo API."""
-
         STARTTIME = int(time.time())
         _RESOURCE = 'https://www.worldtides.info/api?extremes&length=86400' \
                     '&start=%s&lat=%s&lon=%s&key=%s' % (
-            STARTTIME, LAT, LON, KEY)
+                        STARTTIME, LAT, LON, KEY)
 
         try:
             self.data = requests.get(_RESOURCE, timeout=10).json()
@@ -144,4 +143,3 @@ class WorldTidesInfoData(object):
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None
             raise
-
