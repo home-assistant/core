@@ -7,7 +7,7 @@ FINGERPRINTS = {
     "mdi.html": "e91f61a039ed0a9936e7ee5360da3870",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
     "panels/ha-panel-automation.html": "6c3a3345b63f3a36d32f43cff3e10c53",
-    "panels/ha-panel-config.html": "59ca4cda820260616e9de5324edf6d05",
+    "panels/ha-panel-config.html": "3d7ef351e5154bbc909662a20ce812e2",
     "panels/ha-panel-dev-event.html": "d409e7ab537d9fe629126d122345279c",
     "panels/ha-panel-dev-info.html": "b0e55eb657fd75f21aba2426ac0cedc0",
     "panels/ha-panel-dev-mqtt.html": "94b222b013a98583842de3e72d5888c6",
