@@ -25,7 +25,7 @@ SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
-KNOWN_DEVICES = []
+DATA_DIRECTV = "data_directv"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -37,6 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DirecTV platform."""
+    known_devices = hass.data.get(DATA_DIRECTV)
+    if not known_devices:
+        known_devices = []
     hosts = []
 
     if CONF_HOST in config:
@@ -57,22 +60,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if "locations" in resp:
                 for loc in resp["locations"]:
                     if("locationName" in loc and "clientAddr" in loc
-                       and loc["clientAddr"] not in KNOWN_DEVICES):
+                       and loc["clientAddr"] not in known_devices):
                         hosts.append([str.title(loc["locationName"]), host,
                                       DEFAULT_PORT, loc["clientAddr"]])
 
         except requests.exceptions.RequestException:
             # bail out and just go forward with uPnP data
-            if DEFAULT_DEVICE not in KNOWN_DEVICES:
+            if DEFAULT_DEVICE not in known_devices:
                 hosts.append([name, host, DEFAULT_PORT, DEFAULT_DEVICE])
 
     dtvs = []
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        KNOWN_DEVICES.append(host[-1])
+        known_devices.append(host[-1])
 
     add_devices(dtvs)
+    hass.data[DATA_DIRECTV] = known_devices
 
     return True
 
