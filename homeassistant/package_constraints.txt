@@ -9,3 +9,6 @@ aiohttp==2.2.4
 async_timeout==1.2.1
 chardet==3.0.4
 astral==1.4
+
+# Breaks Python 3.6 and is not needed for our supported Pythons
+enum34==1000000000.0.0
