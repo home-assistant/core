@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.dyson/
 import logging
 import asyncio
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_OFF
 from homeassistant.components.dyson import DYSON_DEVICES
 
 from homeassistant.helpers.entity import Entity
@@ -128,6 +128,8 @@ class DysonHumiditySensor(DysonSensor):
     def state(self):
         """Return Dust value."""
         if self._device.environmental_state:
+            if self._device.environmental_state.humidity == 0:
+                return STATE_OFF
             return self._device.environmental_state.humidity
         return None
 
@@ -151,6 +153,8 @@ class DysonTemperatureSensor(DysonSensor):
         """Return Dust value."""
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
+            if temperature_kelvin == 0:
+                return STATE_OFF
             if self._unit == TEMP_CELSIUS:
                 return float("{0:.1f}".format(temperature_kelvin - 273.15))
             return float("{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
@@ -172,7 +176,7 @@ class DysonAirQualitySensor(DysonSensor):
 
     @property
     def state(self):
-        """Return Air QUality value."""
+        """Return Air Quality value."""
         if self._device.environmental_state:
             return self._device.environmental_state.volatil_organic_compounds
         return None

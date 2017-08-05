@@ -442,6 +442,7 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
+    homeassistant/components/sensor/geizhals.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -537,7 +538,6 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/switch/xiaomi_vacuum.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py

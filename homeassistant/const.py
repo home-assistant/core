@@ -56,6 +56,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
@@ -281,6 +282,9 @@ ATTR_WAKEUP = 'wake_up_interval'
 # For devices which support a code attribute
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
+
+# For calling a device specific command
+ATTR_COMMAND = 'command'
 
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'
