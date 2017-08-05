@@ -1,16 +1,21 @@
 """Test service helpers."""
+import asyncio
 from copy import deepcopy
 import unittest
 from unittest.mock import patch
 
+import voluptuous as vol
+
 # To prevent circular import when running just this file
 import homeassistant.components  # noqa
 from homeassistant import core as ha, loader
-from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON)
 from homeassistant.helpers import service, template
 import homeassistant.helpers.config_validation as cv
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import (
+    get_test_home_assistant, mock_service, async_mock_service)
 
 
 class TestServiceHelpers(unittest.TestCase):
@@ -135,3 +140,97 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['group.test'], service.extract_entity_ids(
             self.hass, call, expand_group=False))
+
+
+@asyncio.coroutine
+def test_get_state_services(hass):
+    """Test async_get_state_services."""
+    domain = 'light'
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids, 'transition': 999, 'brightness': 100})
+    async_mock_service(hass, domain, SERVICE_TURN_ON, schema, 'on')
+    state_attrs = {'transition': 999, 'brightness': 100}
+    state = ha.State('light.test', 'on', state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert SERVICE_TURN_ON in services
+    assert services[SERVICE_TURN_ON]['state'] == 'on'
+    assert services[SERVICE_TURN_ON]['attrs'] == state_attrs
+
+
+@asyncio.coroutine
+def test_get_state_services_no_domain(hass, caplog):
+    """Test async_get_state_services with no services for domain."""
+    domain = 'light'
+    state_attrs = {'transition': 999, 'brightness': 100}
+    state = ha.State('light.test', 'on', state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert services is None
+    assert 'WARNING' in caplog.text
+    assert "No services found for domain {}".format(domain) in caplog.text
+
+
+@asyncio.coroutine
+def test_get_state_services_no_schema(hass):
+    """Test async_get_state_services with no schema for service."""
+    domain = 'light'
+    async_mock_service(hass, domain, SERVICE_TURN_ON, state_to_set='on')
+    state_attrs = {'transition': 999, 'brightness': 100}
+    state = ha.State('light.test', 'on', state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert SERVICE_TURN_ON in services
+    assert services[SERVICE_TURN_ON]['state'] == 'on'
+    assert 'attrs' not in services[SERVICE_TURN_ON]
+
+
+@asyncio.coroutine
+def test_get_state_services_no_required(hass):
+    """Test get_state_services with no state and no required node in schema."""
+    domain = 'test'
+    schema = vol.Schema({'entity_id': cv.entity_ids, 'test_attr': 999})
+    async_mock_service(hass, domain, 'test_service', schema)
+    state_attrs = {'test_attr': 999}
+    state = ha.State('test.test', None, state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert not services
+
+
+@asyncio.coroutine
+def test_get_state_services_not_valid(hass):
+    """Test async_get_state_services with not valid state attributes."""
+    domain = 'light'
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids, 'transition': 999, 'brightness': 100})
+    async_mock_service(hass, domain, SERVICE_TURN_ON, schema, 'on')
+    state_attrs = {'transition': 4444, 'brightness': 555}
+    state = ha.State('light.test', 'on', state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert SERVICE_TURN_ON in services
+    assert services[SERVICE_TURN_ON]['state'] == 'on'
+    assert 'attrs' not in services[SERVICE_TURN_ON]
+
+
+@asyncio.coroutine
+def test_get_state_services_no_attributes(hass):
+    """Test async_get_state_services with no state attributes."""
+    domain = 'light'
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids, 'transition': 999, 'brightness': 100})
+    async_mock_service(hass, domain, SERVICE_TURN_ON, schema, 'on')
+    state_attrs = {}
+    state = ha.State('light.test', 'on', state_attrs)
+
+    services = service.async_get_state_services(hass, domain, state)
+
+    assert SERVICE_TURN_ON in services
+    assert services[SERVICE_TURN_ON]['state'] == 'on'
+    assert 'attrs' not in services[SERVICE_TURN_ON]

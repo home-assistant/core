@@ -749,9 +749,9 @@ class Service(object):
     """Representation of a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_callback', 'is_coroutinefunction']
+                 'is_callback', 'is_coroutinefunction', 'state_to_set']
 
-    def __init__(self, func, description, fields, schema):
+    def __init__(self, func, description, fields, schema, state_to_set=None):
         """Initialize a service."""
         self.func = func
         self.description = description or ''
@@ -759,6 +759,7 @@ class Service(object):
         self.schema = schema
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
+        self.state_to_set = state_to_set
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -809,18 +810,35 @@ class ServiceRegistry(object):
 
     @property
     def services(self):
-        """Return dictionary with per domain a list of available services."""
+        """Return dictionary with per domain a dict of available services."""
         return run_callback_threadsafe(
             self._hass.loop, self.async_services,
         ).result()
 
     @callback
     def async_services(self):
-        """Return dictionary with per domain a list of available services.
+        """Return dictionary with per domain a dict of available services.
 
         This method must be run in the event loop.
         """
         return {domain: {key: value.as_dict() for key, value
+                         in self._services[domain].items()}
+                for domain in self._services}
+
+    @property
+    def full_services(self):
+        """Return dict with per domain a dict with the service instances."""
+        return run_callback_threadsafe(
+            self._hass.loop, self.async_full_services,
+        ).result()
+
+    @callback
+    def async_full_services(self):
+        """Return dict with per domain a dict with the service instances.
+
+        This method must be run in the event loop.
+        """
+        return {domain: {key: value for key, value
                          in self._services[domain].items()}
                 for domain in self._services}
 
@@ -832,7 +850,7 @@ class ServiceRegistry(object):
         return service.lower() in self._services.get(domain.lower(), [])
 
     def register(self, domain, service, service_func, description=None,
-                 schema=None):
+                 schema=None, state_to_set=None):
         """
         Register a service.
 
@@ -840,6 +858,8 @@ class ServiceRegistry(object):
         the service and a key 'fields' to describe the fields.
 
         Schema is called to coerce and validate the service data.
+
+        Use state_to_set to know what state the service sets.
         """
         run_callback_threadsafe(
             self._hass.loop,
@@ -849,7 +869,7 @@ class ServiceRegistry(object):
 
     @callback
     def async_register(self, domain, service, service_func, description=None,
-                       schema=None):
+                       schema=None, state_to_set=None):
         """
         Register a service.
 
@@ -858,13 +878,16 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
 
+        Use state_to_set to know what state the service sets.
+
         This method must be run in the event loop.
         """
         domain = domain.lower()
         service = service.lower()
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}), schema)
+                              description.get('fields', {}), schema,
+                              state_to_set)
 
         if domain in self._services:
             self._services[domain][service] = service_obj

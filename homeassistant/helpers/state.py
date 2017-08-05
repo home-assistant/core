@@ -38,6 +38,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
 from homeassistant.core import State
+from homeassistant.helpers.service import async_get_state_services
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,35 +147,21 @@ def async_reproduce_state(hass, states, blocking=False):
         else:
             service_domain = state.domain
 
-        domain_services = hass.services.async_services().get(service_domain)
+        services = async_get_state_services(hass, service_domain, state)
 
-        if not domain_services:
+        if not services:
             _LOGGER.warning(
-                "reproduce_state: Unable to reproduce state %s (1)", state)
+                "reproduce_state: Unable to reproduce state %s", state)
             continue
 
-        service = None
-        for _service in domain_services.keys():
-            if (_service in SERVICE_ATTRIBUTES and
-                    all(attr in state.attributes
-                        for attr in SERVICE_ATTRIBUTES[_service]) or
-                    _service in SERVICE_TO_STATE and
-                    SERVICE_TO_STATE[_service] == state.state):
-                service = _service
-            if (_service in SERVICE_TO_STATE and
-                    SERVICE_TO_STATE[_service] == state.state):
-                break
-
-        if not service:
-            _LOGGER.warning(
-                "reproduce_state: Unable to reproduce state %s (2)", state)
-            continue
-
-        # We group service calls for entities by service call
-        # json used to create a hashable version of dict with maybe lists in it
-        key = (service_domain, service,
-               json.dumps(dict(state.attributes), sort_keys=True))
-        to_call[key].append(state.entity_id)
+        for service, service_info in services.items():
+            # We group service calls for entities by service call
+            # json used to create a hashable version of dict
+            # with maybe lists in it
+            key = (
+                service_domain, service,
+                json.dumps(service_info.get('attrs', {}), sort_keys=True))
+            to_call[key].append(state.entity_id)
 
     domain_tasks = {}
     for (service_domain, service, service_data), entity_ids in to_call.items():

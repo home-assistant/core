@@ -11,16 +11,17 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
-    SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.const import (
+    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -29,11 +30,16 @@ ATTR_CHANGED_BY = 'changed_by'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SERVICE_TO_METHOD = {
-    SERVICE_ALARM_DISARM: 'alarm_disarm',
-    SERVICE_ALARM_ARM_HOME: 'alarm_arm_home',
-    SERVICE_ALARM_ARM_AWAY: 'alarm_arm_away',
-    SERVICE_ALARM_ARM_NIGHT: 'alarm_arm_night',
-    SERVICE_ALARM_TRIGGER: 'alarm_trigger'
+    SERVICE_ALARM_DISARM: {
+        'method': 'alarm_disarm', 'state': STATE_ALARM_DISARMED},
+    SERVICE_ALARM_ARM_HOME: {
+        'method': 'alarm_arm_home', 'state': STATE_ALARM_ARMED_HOME},
+    SERVICE_ALARM_ARM_AWAY: {
+        'method': 'alarm_arm_away', 'state': STATE_ALARM_ARMED_AWAY},
+    SERVICE_ALARM_ARM_NIGHT: {
+        'method': 'alarm_arm_night', 'state': STATE_ALARM_ARMED_NIGHT},
+    SERVICE_ALARM_TRIGGER: {
+        'method': 'alarm_trigger', 'state': STATE_ALARM_TRIGGERED},
 }
 
 ATTR_TO_PROPERTY = [
@@ -122,7 +128,8 @@ def async_setup(hass, config):
 
         code = service.data.get(ATTR_CODE)
 
-        method = "async_{}".format(SERVICE_TO_METHOD[service.service])
+        method = "async_{}".format(
+            SERVICE_TO_METHOD[service.service]['method'])
 
         for alarm in target_alarms:
             yield from getattr(alarm, method)(code)
@@ -149,7 +156,8 @@ def async_setup(hass, config):
     for service in SERVICE_TO_METHOD:
         hass.services.async_register(
             DOMAIN, service, async_alarm_service_handler,
-            descriptions.get(service), schema=ALARM_SERVICE_SCHEMA)
+            descriptions.get(service), schema=ALARM_SERVICE_SCHEMA,
+            state_to_set=SERVICE_TO_METHOD[service]['state'])
 
     return True
 

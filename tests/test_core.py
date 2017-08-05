@@ -652,6 +652,13 @@ class TestServiceRegistry(unittest.TestCase):
         }
         self.assertEqual(expected, self.services.services)
 
+    def test_full_services(self):
+        """Test full services."""
+        expected = {
+            'test_domain': {'test_service': self.services._services[
+                'test_domain']['test_service']}}
+        self.assertEqual(expected, self.services.full_services)
+
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
         calls = []

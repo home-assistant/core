@@ -1,26 +1,25 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
-import unittest
 from unittest.mock import patch
+
+import pytest
+import voluptuous as vol
 
 import homeassistant.core as ha
 import homeassistant.components as core_components
-from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.const import SERVICE_TURN_ON, SERVICE_TURN_OFF
 from homeassistant.util import dt as dt_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state
 from homeassistant.const import (
-    STATE_OPEN, STATE_CLOSED,
-    STATE_LOCKED, STATE_UNLOCKED,
-    STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME)
+    STATE_OPEN, STATE_CLOSED, STATE_LOCKED, STATE_UNLOCKED, STATE_ON,
+    STATE_OFF, STATE_HOME, STATE_NOT_HOME)
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
-from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
-                                          STATE_BELOW_HORIZON)
-
-from tests.common import get_test_home_assistant, mock_service
+from homeassistant.components.sun import (
+    STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
+from tests.common import async_mock_service
 
 
 @asyncio.coroutine
@@ -49,241 +48,237 @@ def test_async_track_states(hass):
         sorted(states, key=lambda state: state.entity_id)
 
 
-class TestStateHelpers(unittest.TestCase):
-    """Test the Home Assistant event helpers."""
+@asyncio.coroutine
+def test_get_changed_since(hass):
+    """Test get_changed_since."""
+    point1 = dt_util.utcnow()
+    point2 = point1 + timedelta(seconds=5)
+    point3 = point2 + timedelta(seconds=5)
 
-    def setUp(self):     # pylint: disable=invalid-name
-        """Run when tests are started."""
-        self.hass = get_test_home_assistant()
-        run_coroutine_threadsafe(core_components.async_setup(
-            self.hass, {}), self.hass.loop).result()
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point1):
+        hass.states.async_set('light.test', 'on')
+        state1 = hass.states.get('light.test')
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop when tests are finished."""
-        self.hass.stop()
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point2):
+        hass.states.async_set('light.test2', 'on')
+        state2 = hass.states.get('light.test2')
 
-    def test_get_changed_since(self):
-        """Test get_changed_since."""
-        point1 = dt_util.utcnow()
-        point2 = point1 + timedelta(seconds=5)
-        point3 = point2 + timedelta(seconds=5)
+    with patch('homeassistant.core.dt_util.utcnow', return_value=point3):
+        hass.states.async_set('light.test3', 'on')
+        state3 = hass.states.get('light.test3')
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point1):
-            self.hass.states.set('light.test', 'on')
-            state1 = self.hass.states.get('light.test')
+    assert state.get_changed_since(
+        [state1, state2, state3], point2) == [state2, state3]
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point2):
-            self.hass.states.set('light.test2', 'on')
-            state2 = self.hass.states.get('light.test2')
 
-        with patch('homeassistant.core.dt_util.utcnow', return_value=point3):
-            self.hass.states.set('light.test3', 'on')
-            state3 = self.hass.states.get('light.test3')
+@asyncio.coroutine
+def test_reproduce_with_no_entity(hass):
+    """Test reproduce_state with no entity."""
+    calls = async_mock_service(
+        hass, 'light', SERVICE_TURN_ON, state_to_set='on')
 
-        self.assertEqual(
-            [state2, state3],
-            state.get_changed_since([state1, state2, state3], point2))
+    yield from state.async_reproduce_state(hass, ha.State('light.test', 'on'))
+    yield from hass.async_block_till_done()
 
-    def test_reproduce_with_no_entity(self):
-        """Test reproduce_state with no entity."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    assert len(calls) == 0
+    assert hass.states.get('light.test') is None
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
 
-        self.hass.block_till_done()
+@asyncio.coroutine
+def test_reproduce_group(hass):
+    """Test reproduce_state with group."""
+    res = yield from core_components.async_setup(hass, {})
+    assert res
+    light_calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
+    hass.states.async_set(
+        'group.test', 'off', {'entity_id': ['light.test1', 'light.test2']})
 
-        self.assertTrue(len(calls) == 0)
-        self.assertEqual(None, self.hass.states.get('light.test'))
+    yield from state.async_reproduce_state(hass, ha.State('group.test', 'on'))
+    yield from hass.async_block_till_done()
 
-    def test_reproduce_turn_on(self):
-        """Test reproduce_state with SERVICE_TURN_ON."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    assert len(light_calls) == 1
+    last_call = light_calls[-1]
+    assert last_call.domain == 'light'
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get('entity_id') == ['light.test1', 'light.test2']
 
-        self.hass.states.set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
+@asyncio.coroutine
+def test_reproduce_turn_on(hass):
+    """Test reproduce_state with SERVICE_TURN_ON."""
+    calls = async_mock_service(
+        hass, 'light', SERVICE_TURN_ON, state_to_set='on')
+    hass.states.async_set('light.test', 'off')
 
-        self.hass.block_till_done()
+    yield from state.async_reproduce_state(hass, ha.State('light.test', 'on'))
+    yield from hass.async_block_till_done()
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test'], last_call.data.get('entity_id'))
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get('entity_id') == ['light.test']
 
-    def test_reproduce_turn_off(self):
-        """Test reproduce_state with SERVICE_TURN_OFF."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_OFF)
 
-        self.hass.states.set('light.test', 'on')
+@asyncio.coroutine
+def test_reproduce_turn_off(hass):
+    """Test reproduce_state with SERVICE_TURN_OFF."""
+    calls = async_mock_service(
+        hass, 'light', SERVICE_TURN_OFF, state_to_set='off')
+    hass.states.async_set('light.test', 'on')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'off'))
+    yield from state.async_reproduce_state(hass, ha.State('light.test', 'off'))
+    yield from hass.async_block_till_done()
 
-        self.hass.block_till_done()
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert last_call.service == SERVICE_TURN_OFF
+    assert last_call.data.get('entity_id') == ['light.test']
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, last_call.service)
-        self.assertEqual(['light.test'], last_call.data.get('entity_id'))
 
-    def test_reproduce_complex_data(self):
-        """Test reproduce_state with complex service data."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+@asyncio.coroutine
+def test_reproduce_state_attributes(hass):
+    """Test reproduce_state with state attributes."""
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids, 'transition': 999, 'brightness': 100})
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON, schema, 'on')
+    hass.states.async_set('light.test', 'off')
 
-        self.hass.states.set('light.test', 'off')
+    state_attrs = {'transition': 999, 'brightness': 100}
+    yield from state.async_reproduce_state(
+        hass, ha.State('light.test', 'on', state_attrs))
+    yield from hass.async_block_till_done()
 
-        complex_data = ['hello', {'11': '22'}]
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'light'
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get('transition') == 999
+    assert last_call.data.get('brightness') == 100
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on', {
-            'complex': complex_data
-        }))
 
-        self.hass.block_till_done()
+@asyncio.coroutine
+def test_reproduce_media_data(hass):
+    """Test reproduce_state with SERVICE_PLAY_MEDIA."""
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids,
+        vol.Required('media_content_type'): str,
+        vol.Required('media_content_id'): str})
+    calls = async_mock_service(
+        hass, 'media_player', SERVICE_PLAY_MEDIA, schema)
+    hass.states.async_set('media_player.test', 'off')
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(complex_data, last_call.data.get('complex'))
+    media_attributes = {
+        'media_content_type': 'movie', 'media_content_id': 'batman'}
+    yield from state.async_reproduce_state(
+        hass, ha.State('media_player.test', 'None', media_attributes))
+    yield from hass.async_block_till_done()
 
-    def test_reproduce_media_data(self):
-        """Test reproduce_state with SERVICE_PLAY_MEDIA."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_PLAY_MEDIA)
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'media_player'
+    assert last_call.service == SERVICE_PLAY_MEDIA
+    assert last_call.data.get('media_content_type') == 'movie'
+    assert last_call.data.get('media_content_id') == 'batman'
 
-        self.hass.states.set('media_player.test', 'off')
 
-        media_attributes = {'media_content_type': 'movie',
-                            'media_content_id': 'batman'}
+@asyncio.coroutine
+def test_reproduce_media_play(hass):
+    """Test reproduce_state with SERVICE_MEDIA_PLAY."""
+    calls = async_mock_service(
+        hass, 'media_player', SERVICE_MEDIA_PLAY, state_to_set='playing')
+    hass.states.async_set('media_player.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
-                                                  media_attributes))
+    yield from state.async_reproduce_state(
+        hass, ha.State('media_player.test', 'playing'))
+    yield from hass.async_block_till_done()
 
-        self.hass.block_till_done()
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'media_player'
+    assert last_call.service == SERVICE_MEDIA_PLAY
+    assert last_call.data.get('entity_id') == ['media_player.test']
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_PLAY_MEDIA, last_call.service)
-        self.assertEqual('movie', last_call.data.get('media_content_type'))
-        self.assertEqual('batman', last_call.data.get('media_content_id'))
 
-    def test_reproduce_media_play(self):
-        """Test reproduce_state with SERVICE_MEDIA_PLAY."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PLAY)
+@asyncio.coroutine
+def test_reproduce_media_pause(hass):
+    """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
+    calls = async_mock_service(
+        hass, 'media_player', SERVICE_MEDIA_PAUSE, state_to_set='paused')
+    hass.states.async_set('media_player.test', 'playing')
 
-        self.hass.states.set('media_player.test', 'off')
+    yield from state.async_reproduce_state(
+        hass, ha.State('media_player.test', 'paused'))
+    yield from hass.async_block_till_done()
 
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'playing'))
+    assert len(calls) > 0
+    last_call = calls[-1]
+    assert last_call.domain == 'media_player'
+    assert last_call.service == SERVICE_MEDIA_PAUSE
+    assert last_call.data.get('entity_id') == ['media_player.test']
 
-        self.hass.block_till_done()
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_MEDIA_PLAY, last_call.service)
-        self.assertEqual(['media_player.test'],
-                         last_call.data.get('entity_id'))
+@asyncio.coroutine
+def test_reproduce_bad_state(hass):
+    """Test reproduce_state with bad state."""
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
+    hass.states.async_set('light.test', 'off')
 
-    def test_reproduce_media_pause(self):
-        """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
-        calls = mock_service(self.hass, 'media_player', SERVICE_MEDIA_PAUSE)
+    yield from state.async_reproduce_state(hass, ha.State('light.test', 'bad'))
+    yield from hass.async_block_till_done()
 
-        self.hass.states.set('media_player.test', 'playing')
+    assert len(calls) == 0
+    assert hass.states.get('light.test').state == 'off'
 
-        state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'paused'))
 
-        self.hass.block_till_done()
+@asyncio.coroutine
+def test_reproduce_entities_same(hass):
+    """Test reproduce_state with two entities with same domain and data."""
+    schema = vol.Schema({
+        'entity_id': cv.entity_ids, 'transition': int, 'brightness': int})
+    light_calls = async_mock_service(
+        hass, 'light', SERVICE_TURN_ON, schema, 'on')
+    hass.states.async_set('light.test1', 'off')
+    hass.states.async_set('light.test2', 'off')
 
-        self.assertTrue(len(calls) > 0)
-        last_call = calls[-1]
-        self.assertEqual('media_player', last_call.domain)
-        self.assertEqual(SERVICE_MEDIA_PAUSE, last_call.service)
-        self.assertEqual(['media_player.test'],
-                         last_call.data.get('entity_id'))
+    yield from state.async_reproduce_state(hass, [
+        ha.State('light.test1', 'on', {'brightness': 95}),
+        ha.State('light.test2', 'on', {'brightness': 95})])
+    yield from hass.async_block_till_done()
 
-    def test_reproduce_bad_state(self):
-        """Test reproduce_state with bad state."""
-        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+    assert len(light_calls) == 1
+    last_call = light_calls[-1]
+    assert last_call.domain == 'light'
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get('entity_id') == ['light.test1', 'light.test2']
+    assert last_call.data.get('brightness') == 95
 
-        self.hass.states.set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'bad'))
+def test_as_number_states():
+    """Test state_as_number with states."""
+    zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
+                   STATE_BELOW_HORIZON, STATE_NOT_HOME)
+    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                  STATE_HOME)
+    for _state in zero_states:
+        assert state.state_as_number(ha.State('domain.test', _state, {})) == 0
+    for _state in one_states:
+        assert state.state_as_number(ha.State('domain.test', _state, {})) == 1
 
-        self.hass.block_till_done()
 
-        self.assertTrue(len(calls) == 0)
-        self.assertEqual('off', self.hass.states.get('light.test').state)
+def test_as_number_coercion():
+    """Test state_as_number with number."""
+    for _state in ('0', '0.0', 0, 0.0):
+        assert state.state_as_number(
+            ha.State('domain.test', _state, {})) == 0.0
+    for _state in ('1', '1.0', 1, 1.0):
+        assert state.state_as_number(
+            ha.State('domain.test', _state, {})) == 1.0
 
-    def test_reproduce_group(self):
-        """Test reproduce_state with group."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
-        self.hass.states.set('group.test', 'off', {
-            'entity_id': ['light.test1', 'light.test2']})
-
-        state.reproduce_state(self.hass, ha.State('group.test', 'on'))
-
-        self.hass.block_till_done()
-
-        self.assertEqual(1, len(light_calls))
-        last_call = light_calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test1', 'light.test2'],
-                         last_call.data.get('entity_id'))
-
-    def test_reproduce_group_same_data(self):
-        """Test reproduce_state with group with same domain and data."""
-        light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        self.hass.states.set('light.test1', 'off')
-        self.hass.states.set('light.test2', 'off')
-
-        state.reproduce_state(self.hass, [
-            ha.State('light.test1', 'on', {'brightness': 95}),
-            ha.State('light.test2', 'on', {'brightness': 95})])
-
-        self.hass.block_till_done()
-
-        self.assertEqual(1, len(light_calls))
-        last_call = light_calls[-1]
-        self.assertEqual('light', last_call.domain)
-        self.assertEqual(SERVICE_TURN_ON, last_call.service)
-        self.assertEqual(['light.test1', 'light.test2'],
-                         last_call.data.get('entity_id'))
-        self.assertEqual(95, last_call.data.get('brightness'))
-
-    def test_as_number_states(self):
-        """Test state_as_number with states."""
-        zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                       STATE_BELOW_HORIZON, STATE_NOT_HOME)
-        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                      STATE_HOME)
-        for _state in zero_states:
-            self.assertEqual(0, state.state_as_number(
-                ha.State('domain.test', _state, {})))
-        for _state in one_states:
-            self.assertEqual(1, state.state_as_number(
-                ha.State('domain.test', _state, {})))
-
-    def test_as_number_coercion(self):
-        """Test state_as_number with number."""
-        for _state in ('0', '0.0', 0, 0.0):
-            self.assertEqual(
-                0.0, state.state_as_number(
-                    ha.State('domain.test', _state, {})))
-        for _state in ('1', '1.0', 1, 1.0):
-            self.assertEqual(
-                1.0, state.state_as_number(
-                    ha.State('domain.test', _state, {})))
-
-    def test_as_number_invalid_cases(self):
-        """Test state_as_number with invalid cases."""
-        for _state in ('', 'foo', 'foo.bar', None, False, True, object,
-                       object()):
-            self.assertRaises(ValueError,
-                              state.state_as_number,
-                              ha.State('domain.test', _state, {}))
+def test_as_number_invalid_cases():
+    """Test state_as_number with invalid cases."""
+    for _state in ('', 'foo', 'foo.bar', None, False, True, object, object()):
+        with pytest.raises(ValueError):
+            state.state_as_number(ha.State('domain.test', _state, {}))

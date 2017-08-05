@@ -174,7 +174,7 @@ def get_test_instance_port():
 
 
 @ha.callback
-def async_mock_service(hass, domain, service, schema=None):
+def async_mock_service(hass, domain, service, schema=None, state_to_set=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -184,7 +184,8 @@ def async_mock_service(hass, domain, service, schema=None):
         calls.append(call)
 
     hass.services.async_register(
-        domain, service, mock_service_log, schema=schema)
+        domain, service, mock_service_log, schema=schema,
+        state_to_set=state_to_set)
 
     return calls
 

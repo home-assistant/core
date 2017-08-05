@@ -18,7 +18,7 @@ from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
-    RESTART_EXIT_CODE)
+    RESTART_EXIT_CODE, STATE_OFF, STATE_ON)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,9 +149,11 @@ def async_setup(hass, config):
         yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service,
+        state_to_set=STATE_OFF)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service,
+        state_to_set=STATE_ON)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
 

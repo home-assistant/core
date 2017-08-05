@@ -1,13 +1,14 @@
 """Service calling related helpers."""
 import asyncio
 import logging
+from collections import defaultdict
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.core import callback, HomeAssistant  # NOQA
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -109,3 +110,41 @@ def extract_entity_ids(hass, service_call, expand_group=True):
             return [service_ent_id]
 
         return service_ent_id
+
+
+@callback
+def async_get_state_services(hass, domain, state):
+    """Return a dict of services for domain that can be used to set state.
+
+    This function must be run in the event loop.
+    """
+    domain_services = hass.services.async_full_services().get(domain)
+
+    if not domain_services:
+        _LOGGER.warning("No services found for domain %s", domain)
+        return
+
+    services = defaultdict(dict)
+
+    for service_name, service_obj in domain_services.items():
+        if (service_obj.state_to_set is not None and
+                service_obj.state_to_set == state.state):
+            services[service_name]['state'] = state.state
+        if (service_obj.schema is None or
+                # service with no state to set must require attributes
+                # to be able to change state attributes
+                not any(
+                    isinstance(key, vol.Required)
+                    for key in service_obj.schema.schema) and
+                service_name not in services):
+            continue
+        service_obj.schema.extra = vol.REMOVE_EXTRA
+        try:
+            # voluptuous modifies the value before returning it, so make a copy
+            valid_attrs = service_obj.schema(dict(state.attributes))
+        except vol.Invalid:
+            continue
+        if valid_attrs:
+            services[service_name]['attrs'] = valid_attrs
+
+    return services
