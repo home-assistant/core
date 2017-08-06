@@ -72,6 +72,9 @@ apcaccess==0.0.13
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
+# homeassistant.components.asterisk_mbox
+asterisk_mbox==0.4.0
+
 # homeassistant.components.light.avion
 # avion==0.7
 
