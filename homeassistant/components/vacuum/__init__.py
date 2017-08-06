@@ -232,12 +232,12 @@ class VacuumDevice(ToggleEntity):
     @property
     def status(self):
         """Return the status of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def battery_icon(self):
@@ -251,7 +251,7 @@ class VacuumDevice(ToggleEntity):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def fan_speed_list(self):
