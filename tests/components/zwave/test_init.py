@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed, mock_http_component)
+    get_test_home_assistant, async_fire_time_changed)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
