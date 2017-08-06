@@ -29,6 +29,9 @@ omit =
     homeassistant/components/arlo.py
     homeassistant/components/*/arlo.py
 
+    homeassistant/components/asterisk_mbox.py
+    homeassistant/components/*/asterisk_mbox.py
+
     homeassistant/components/axis.py
     homeassistant/components/*/axis.py
 
