@@ -7,7 +7,6 @@ https://home-assistant.io/components/vacuum.dyson/
 import asyncio
 import logging
 
-from homeassistant.util.icon import icon_for_battery_level
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.vacuum import (SUPPORT_BATTERY,
                                              SUPPORT_FAN_SPEED, SUPPORT_PAUSE,
@@ -15,6 +14,7 @@ from homeassistant.components.vacuum import (SUPPORT_BATTERY,
                                              SUPPORT_STATUS, SUPPORT_STOP,
                                              SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
                                              VacuumDevice)
+from homeassistant.util.icon import icon_for_battery_level
 
 ATTR_FULL_CLEAN_TYPE = "full_clean_type"
 ATTR_CLEAN_ID = "clean_id"
