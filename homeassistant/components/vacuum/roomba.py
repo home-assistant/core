@@ -129,8 +129,7 @@ class RoombaVacuum(VacuumDevice):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         if self._capabilities.get(CAP_CARPET_BOOST):
-            return
-        return FAN_SPEEDS
+            return FAN_SPEEDS
 
     @property
     def battery_level(self):
