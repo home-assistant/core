@@ -468,3 +468,4 @@ def remove_deprecated(config):
             get_deprecated(config, replacement_option, deprecated_option)
             # remove old config value replacing new one
             config[replacement_option] = config.pop(deprecated_option)
+
