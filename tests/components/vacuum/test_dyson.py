@@ -2,11 +2,12 @@
 import unittest
 from unittest import mock
 
+from libpurecoollink.dyson_360_eye import Dyson360Eye
+from libpurecoollink.const import Dyson360EyeMode, PowerMode
+
 from homeassistant.components.vacuum import dyson
 from homeassistant.components.vacuum.dyson import Dyson360EyeDevice
 from tests.common import get_test_home_assistant
-from libpurecoollink.dyson_360_eye import Dyson360Eye
-from libpurecoollink.const import Dyson360EyeMode, PowerMode
 
 
 def _get_non_vacuum_device():
@@ -77,7 +78,7 @@ class DysonTest(unittest.TestCase):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
         add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices)
+        dyson.setup_platform(self.hass, {}, add_devices)
         add_devices.assert_called_with([])
 
     def test_setup_component(self):
@@ -90,7 +91,7 @@ class DysonTest(unittest.TestCase):
         device_non_vacuum = _get_non_vacuum_device()
         self.hass.data[dyson.DYSON_DEVICES] = [device_vacuum,
                                                device_non_vacuum]
-        dyson.setup_platform(self.hass, None, _add_device)
+        dyson.setup_platform(self.hass, {}, _add_device)
 
     def test_on_message(self):
         """Test when message is received."""
