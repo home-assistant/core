@@ -45,7 +45,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     observations = config.get(CONF_OBSERVATIONS)
     prior = config.get(CONF_PRIOR)
     probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
-    device_class = CONF_DEVICE_CLASS
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     async_add_devices([
         BayesianBinarySensor(hass, name, prior, observations,
