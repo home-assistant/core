@@ -612,7 +612,7 @@ pykira==0.1.1
 pykwb==0.0.8
 
 # homeassistant.components.sensor.lastfm
-pylast==1.8.0
+pylast==1.9.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
