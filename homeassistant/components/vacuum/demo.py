@@ -7,10 +7,10 @@ https://home-assistant.io/components/demo/
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice)
+    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, VacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,8 @@ SUPPORT_MOST_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP | \
 SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                        SUPPORT_STOP | SUPPORT_RETURN_HOME | \
                        SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND | \
-                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY
+                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY | \
+                       SUPPORT_CLEAN_SPOT
 
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
 DEMO_VACUUM_COMPLETE = '0_Ground_floor'
@@ -68,7 +69,7 @@ class DemoVacuum(VacuumDevice):
     @property
     def icon(self):
         """Return the icon for the vacuum."""
-        return 'mdi:roomba'
+        return DEFAULT_ICON
 
     @property
     def should_poll(self):
@@ -147,6 +148,17 @@ class DemoVacuum(VacuumDevice):
 
         self._state = False
         self._status = 'Stopping the current task'
+        self.schedule_update_ha_state()
+
+    def clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
+            return
+
+        self._state = True
+        self._cleaned_area += 1.32
+        self._battery_level -= 1
+        self._status = "Cleaning spot"
         self.schedule_update_ha_state()
 
     def locate(self, **kwargs):

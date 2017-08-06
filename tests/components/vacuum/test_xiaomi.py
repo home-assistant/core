@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED, ATTR_FAN_SPEED_LIST, DOMAIN,
-    SERVICE_LOCATE, SERVICE_RETURN_TO_BASE, SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED, SERVICE_START_PAUSE, SERVICE_STOP,
-    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+    SERVICE_CLEAN_SPOT, SERVICE_LOCATE, SERVICE_RETURN_TO_BASE,
+    SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED, SERVICE_START_PAUSE,
+    SERVICE_STOP, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.components.vacuum.xiaomi import (
     ATTR_CLEANED_AREA, ATTR_CLEANING_TIME, ATTR_DO_NOT_DISTURB, ATTR_ERROR,
     CONF_HOST, CONF_NAME, CONF_TOKEN, PLATFORM,
@@ -112,7 +112,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 1023
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
     assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_ON
     assert state.attributes.get(ATTR_ERROR) == 'Error message'
     assert (state.attributes.get(ATTR_BATTERY_ICON)
@@ -159,6 +159,11 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
     assert str(mock_mirobo_is_off.mock_calls[-2]) == 'call.Vacuum().find()'
     assert str(mock_mirobo_is_off.mock_calls[-1]) == 'call.Vacuum().status()'
 
+    yield from hass.services.async_call(
+        DOMAIN, SERVICE_CLEAN_SPOT, {}, blocking=True)
+    assert str(mock_mirobo_is_off.mock_calls[-2]) == 'call.Vacuum().spot()'
+    assert str(mock_mirobo_is_off.mock_calls[-1]) == 'call.Vacuum().status()'
+
     # Set speed service:
     yield from hass.services.async_call(
         DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": 60}, blocking=True)
@@ -193,7 +198,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
 
 
 @asyncio.coroutine
-def test_xiaomi_vacuum_specific_services(hass, caplog, mock_mirobo_is_on):
+def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = 'test_vacuum_cleaner_2'
     entity_id = '{}.{}'.format(DOMAIN, entity_name)
@@ -210,7 +215,7 @@ def test_xiaomi_vacuum_specific_services(hass, caplog, mock_mirobo_is_on):
     # Check state attributes
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 1023
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
     assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_OFF
     assert state.attributes.get(ATTR_ERROR) is None
     assert (state.attributes.get(ATTR_BATTERY_ICON)
