@@ -121,21 +121,6 @@ def test_auto_heal_disabled(hass, mock_openzwave):
 
 
 @asyncio.coroutine
-def test_frontend_panel_register(hass, mock_openzwave):
-    """Test network auto-heal disabled."""
-    mock_http_component(hass)
-    hass.config.components |= set(['frontend'])
-    with patch('homeassistant.components.zwave.'
-               'register_built_in_panel') as mock_register:
-        assert (yield from async_setup_component(hass, 'zwave', {
-            'zwave': {
-                'autoheal': False,
-            }}))
-    assert mock_register.called
-    assert len(mock_register.mock_calls) == 1
-
-
-@asyncio.coroutine
 def test_setup_platform(hass, mock_openzwave):
     """Test invalid device config."""
     mock_device = MagicMock()
