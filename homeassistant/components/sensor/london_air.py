@@ -12,6 +12,7 @@ import requests
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -79,7 +80,7 @@ class APIData(object):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from TFL."""
-        response = requests.get(URL)
+        response = requests.get(URL, timeout=10)
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
         else:
@@ -140,7 +141,7 @@ class AirSensor(Entity):
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:
-            self._state = 'no_species_data'
+            self._state = STATE_UNKNOWN
 
 
 def parse_api_response(response):
