@@ -15,8 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, STATE_UNKNOWN, ATTR_DATE,
-    ATTR_TIME)
+    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME)
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = 'http://pvoutput.org/service/r2/getstatus.jsp'
@@ -90,8 +89,7 @@ class PvoutputSensor(Entity):
         """Return the state of the device."""
         if self.pvcoutput is not None:
             return self.pvcoutput.energy_generation
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def device_state_attributes(self):

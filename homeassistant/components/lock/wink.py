@@ -119,10 +119,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkLockDevice(WinkDevice, LockDevice):
     """Representation of a Wink lock."""
 
-    def __init__(self, wink, hass):
-        """Initialize the lock."""
-        super().__init__(wink, hass)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""

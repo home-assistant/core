@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     insteonhub = hass.data['insteon_local']
 
     conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
-    if len(conf_fans):
+    if conf_fans:
         for device_id in conf_fans:
             setup_fan(device_id, conf_fans[device_id], insteonhub, hass,
                       add_devices)

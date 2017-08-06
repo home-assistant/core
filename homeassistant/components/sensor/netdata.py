@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,8 +110,7 @@ class NetdataSensor(Entity):
             netdata_id = SENSOR_TYPES[self.type][3]
             if netdata_id in value:
                 return "{0:.{1}f}".format(value[netdata_id], self._precision)
-            else:
-                return STATE_UNKNOWN
+        return None
 
     @property
     def available(self):

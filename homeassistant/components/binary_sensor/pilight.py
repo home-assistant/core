@@ -28,6 +28,7 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VARIABLE = 'variable'
+CONF_RESET_DELAY_SEC = 'reset_delay_sec'
 
 DEFAULT_NAME = 'Pilight Binary Sensor'
 DEPENDENCIES = ['pilight']
@@ -38,7 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default='on'): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default='off'): cv.string,
-    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean
+    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
+    vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int
 })
 
 
@@ -54,6 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             payload=config.get(CONF_PAYLOAD),
             on_value=config.get(CONF_PAYLOAD_ON),
             off_value=config.get(CONF_PAYLOAD_OFF),
+            rst_dly_sec=config.get(CONF_RESET_DELAY_SEC),
         )])
     else:
         add_devices([PilightBinarySensor(

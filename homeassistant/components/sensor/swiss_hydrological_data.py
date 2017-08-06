@@ -90,8 +90,7 @@ class SwissHydrologicalDataSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not STATE_UNKNOWN:
             return self._unit_of_measurement
-        else:
-            return None
+        return None
 
     @property
     def state(self):

@@ -24,7 +24,7 @@ CONFIG = {
         'devices': {
             'protocol_0_0': {
                 'name': 'test',
-                'aliasses': ['test_alias_0_0'],
+                'aliases': ['test_alias_0_0'],
             },
         },
     },
@@ -47,7 +47,7 @@ def test_default_setup(hass, monkeypatch):
     assert switch_initial.attributes['assumed_state']
 
     # switch should follow state of the hardware device by interpreting
-    # incoming events for its name and aliasses
+    # incoming events for its name and aliases
 
     # mock incoming command event for this device
     event_callback({
@@ -70,7 +70,7 @@ def test_default_setup(hass, monkeypatch):
 
     assert hass.states.get('switch.test').state == 'off'
 
-    # test following aliasses
+    # test following aliases
     # mock incoming command event for this device alias
     event_callback({
         'id': 'test_alias_0_0',
@@ -112,7 +112,7 @@ def test_group_alias(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                     'name': 'test',
-                    'group_aliasses': ['test_group_0_0'],
+                    'group_aliases': ['test_group_0_0'],
                 },
             },
         },
@@ -155,7 +155,7 @@ def test_nogroup_alias(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                     'name': 'test',
-                    'nogroup_aliasses': ['test_nogroup_0_0'],
+                    'nogroup_aliases': ['test_nogroup_0_0'],
                 },
             },
         },

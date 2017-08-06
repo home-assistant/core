@@ -97,8 +97,8 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif state == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_IDLE
+
+        return STATE_IDLE
 
     @property
     def media_title(self):

@@ -32,14 +32,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = sprinkler.object_id() + sprinkler.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(sprinkler, hass)])
+    for switch in pywink.get_binary_switch_groups():
+        _id = switch.object_id() + switch.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkToggleDevice(switch, hass)])
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):
     """Representation of a Wink toggle device."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink device."""
-        super().__init__(wink, hass)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

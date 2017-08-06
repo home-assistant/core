@@ -113,8 +113,7 @@ class NetatmoCamera(Camera):
             return "Presence"
         elif self._cameratype == "NACamera":
             return "Welcome"
-        else:
-            return None
+        return None
 
     @property
     def unique_id(self):

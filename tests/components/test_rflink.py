@@ -99,7 +99,7 @@ def test_send_no_wait(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                         'name': 'test',
-                        'aliasses': ['test_alias_0_0'],
+                        'aliases': ['test_alias_0_0'],
                 },
             },
         },
@@ -192,7 +192,7 @@ def test_error_when_not_connected(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                         'name': 'test',
-                        'aliasses': ['test_alias_0_0'],
+                        'aliases': ['test_alias_0_0'],
                 },
             },
         },

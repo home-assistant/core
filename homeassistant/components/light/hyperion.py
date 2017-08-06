@@ -62,7 +62,7 @@ class Hyperion(Light):
 
     @property
     def name(self):
-        """Return the hostname of the server."""
+        """Return the name of the light."""
         return self._name
 
     @property
@@ -114,7 +114,8 @@ class Hyperion(Light):
         """Get the hostname of the remote."""
         response = self.json_request({'command': 'serverinfo'})
         if response:
-            self._name = response['info']['hostname']
+            if self._name == self._host:
+                self._name = response['info']['hostname']
             return True
         return False
 

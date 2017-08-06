@@ -151,16 +151,14 @@ class Thermostat(ClimateDevice):
         """Return the lower bound temperature we try to reach."""
         if self.current_operation == STATE_AUTO:
             return int(self.thermostat['runtime']['desiredHeat'] / 10)
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.current_operation == STATE_AUTO:
             return int(self.thermostat['runtime']['desiredCool'] / 10)
-        else:
-            return None
+        return None
 
     @property
     def target_temperature(self):
@@ -171,8 +169,7 @@ class Thermostat(ClimateDevice):
             return int(self.thermostat['runtime']['desiredHeat'] / 10)
         elif self.current_operation == STATE_COOL:
             return int(self.thermostat['runtime']['desiredCool'] / 10)
-        else:
-            return None
+        return None
 
     @property
     def desired_fan_mode(self):
@@ -184,8 +181,7 @@ class Thermostat(ClimateDevice):
         """Return the current fan state."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def current_hold_mode(self):
@@ -199,15 +195,13 @@ class Thermostat(ClimateDevice):
                            int(event['startDate'][0:4]) <= 1:
                             # A temporary hold from away climate is a hold
                             return 'away'
-                        else:
-                            # A permanent hold from away climate is away_mode
-                            return None
+                        # A permanent hold from away climate is away_mode
+                        return None
                     elif event['holdClimateRef'] != "":
                         # Any other hold based on climate
                         return event['holdClimateRef']
-                    else:
-                        # Any hold not based on a climate is a temp hold
-                        return TEMPERATURE_HOLD
+                    # Any hold not based on a climate is a temp hold
+                    return TEMPERATURE_HOLD
                 elif event['type'].startswith('auto'):
                     # All auto modes are treated as holds
                     return event['type'][4:].lower()
@@ -222,8 +216,7 @@ class Thermostat(ClimateDevice):
         if self.operation_mode == 'auxHeatOnly' or \
            self.operation_mode == 'heatPump':
             return STATE_HEAT
-        else:
-            return self.operation_mode
+        return self.operation_mode
 
     @property
     def operation_list(self):
@@ -384,8 +377,7 @@ class Thermostat(ClimateDevice):
         # add further conditions if other hold durations should be
         # supported; note that this should not include 'indefinite'
         # as an indefinite away hold is interpreted as away_mode
-        else:
-            return 'nextTransition'
+        return 'nextTransition'
 
     @property
     def climate_list(self):

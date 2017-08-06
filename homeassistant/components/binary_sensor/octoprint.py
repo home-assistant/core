@@ -12,13 +12,12 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
-
+DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
 
 SENSOR_TYPES = {
@@ -37,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
-    octoprint = get_component('octoprint')
+    octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(
         CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for octo_type in monitored_conditions:
         new_sensor = OctoPrintBinarySensor(
-            octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
+            octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
             name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
             SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
@@ -98,6 +97,3 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
-
-        if self._state is None:
-            _LOGGER.warning("Unable to locate value for %s", self.sensor_type)

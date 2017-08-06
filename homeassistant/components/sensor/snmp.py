@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT)
 
-REQUIREMENTS = ['pysnmp==4.3.8']
+REQUIREMENTS = ['pysnmp==4.3.9']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -96,6 +96,7 @@ INFERRED_UNITS = {
     ' Watts': 'W',
     ' Hz': 'Hz',
     ' C': TEMP_CELSIUS,
+    ' Percent Load Capacity': '%',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

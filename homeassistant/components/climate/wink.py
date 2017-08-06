@@ -111,8 +111,8 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             # This will address both possibilities
             if self.wink.current_humidity() < 1:
                 return self.wink.current_humidity() * 100
-            else:
-                return self.wink.current_humidity()
+            return self.wink.current_humidity()
+        return None
 
     @property
     def external_temperature(self):
@@ -175,10 +175,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 return self.wink.current_max_set_point()
             elif self.current_operation == STATE_HEAT:
                 return self.wink.current_min_set_point()
-            else:
-                return None
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
@@ -206,8 +203,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return True
         elif self.wink.current_hvac_mode() == 'aux' and not self.wink.is_on():
             return False
-        else:
-            return None
+        return None
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -270,9 +266,8 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return STATE_ON
         elif self.wink.current_fan_mode() == 'auto':
             return STATE_AUTO
-        else:
-            # No Fan available so disable slider
-            return None
+        # No Fan available so disable slider
+        return None
 
     @property
     def fan_list(self):
@@ -451,8 +446,7 @@ class WinkAC(WinkDevice, ClimateDevice):
             return SPEED_MEDIUM
         elif speed <= 1.0 and speed > 0.8:
             return SPEED_HIGH
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def fan_list(self):

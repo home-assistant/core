@@ -207,11 +207,11 @@ class DSMREntity(Entity):
 
         if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
-        else:
-            if value is not None:
-                return value
-            else:
-                return STATE_UNKNOWN
+
+        if value is not None:
+            return value
+
+        return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):
@@ -227,8 +227,8 @@ class DSMREntity(Entity):
             return 'normal'
         elif value == '0001':
             return 'low'
-        else:
-            return STATE_UNKNOWN
+
+        return STATE_UNKNOWN
 
 
 class DerivativeDSMREntity(DSMREntity):

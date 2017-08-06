@@ -171,7 +171,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                                  for device in devices}
                 device_diff = {name: id for name, id in self._devices.items()
                                if old_devices.get(name, None) is None}
-                if len(device_diff) > 0:
+                if device_diff:
                     _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
@@ -312,5 +312,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Return the media player features that are supported."""
         if self._user is not None and self._user['product'] == 'premium':
             return SUPPORT_SPOTIFY
-        else:
-            return None
+        return None
+
+    @property
+    def media_content_type(self):
+        """Return the media type."""
+        return MEDIA_TYPE_MUSIC

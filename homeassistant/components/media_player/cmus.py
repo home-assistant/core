@@ -94,8 +94,7 @@ class CmusDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif self.status.get('status') == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def media_content_id(self):

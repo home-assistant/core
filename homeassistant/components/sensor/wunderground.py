@@ -254,8 +254,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
             feature="alerts",
             value=lambda wu: len(wu.data['alerts']),
             icon=lambda wu: "mdi:alert-circle-outline"
-            if len(wu.data['alerts']) > 0
-            else "mdi:check-circle-outline",
+            if wu.data['alerts'] else "mdi:check-circle-outline",
             device_state_attributes=self._get_attributes
         )
 

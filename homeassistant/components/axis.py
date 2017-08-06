@@ -21,7 +21,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 
 
 REQUIREMENTS = ['axis==8']
@@ -79,7 +78,7 @@ SERVICE_SCHEMA = vol.Schema({
 
 def request_configuration(hass, name, host, serialnumber):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     def configuration_callback(callback_data):
         """Called when config is submitted."""
@@ -242,12 +241,11 @@ def setup_device(hass, config):
     if enable_metadatastream:
         device.initialize_new_event = event_initialized
         if not device.initiate_metadatastream():
-            notification = get_component('persistent_notification')
-            notification.create(hass,
-                                'Dependency missing for sensors, '
-                                'please check documentation',
-                                title=DOMAIN,
-                                notification_id='axis_notification')
+            hass.components.persistent_notification.create(
+                'Dependency missing for sensors, '
+                'please check documentation',
+                title=DOMAIN,
+                notification_id='axis_notification')
 
     AXIS_DEVICES[device.serial_number] = device
 

@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNLOCKED, STATE_OK, STATE_PROBLEM, STATE_UNKNOWN,
     ATTR_ASSUMED_STATE, SERVICE_RELOAD)
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
@@ -108,6 +109,7 @@ def _get_group_on_off(state):
     return None, None
 
 
+@bind_hass
 def is_on(hass, entity_id):
     """Test if the group state is in its ON-state."""
     state = hass.states.get(entity_id)
@@ -121,23 +123,27 @@ def is_on(hass, entity_id):
     return False
 
 
+@bind_hass
 def reload(hass):
     """Reload the automation from config."""
     hass.add_job(async_reload, hass)
 
 
 @callback
+@bind_hass
 def async_reload(hass):
     """Reload the automation from config."""
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RELOAD))
 
 
+@bind_hass
 def set_visibility(hass, entity_id=None, visible=True):
     """Hide or shows a group."""
     data = {ATTR_ENTITY_ID: entity_id, ATTR_VISIBLE: visible}
     hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
 
 
+@bind_hass
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
               icon=None, view=None, control=None, add=None):
     """Create a new user group."""
@@ -147,6 +153,7 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
 
 
 @callback
+@bind_hass
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
                     icon=None, view=None, control=None, add=None):
     """Create a new user group."""
@@ -166,25 +173,27 @@ def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SET, data))
 
 
+@bind_hass
 def remove(hass, name):
     """Remove a user group."""
     hass.add_job(async_remove, hass, name)
 
 
 @callback
+@bind_hass
 def async_remove(hass, object_id):
     """Remove a user group."""
     data = {ATTR_OBJECT_ID: object_id}
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_REMOVE, data))
 
 
+@bind_hass
 def expand_entity_ids(hass, entity_ids):
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
     """
     found_ids = []
-
     for entity_id in entity_ids:
         if not isinstance(entity_id, str):
             continue
@@ -196,9 +205,13 @@ def expand_entity_ids(hass, entity_ids):
             domain, _ = ha.split_entity_id(entity_id)
 
             if domain == DOMAIN:
+                child_entities = get_entity_ids(hass, entity_id)
+                if entity_id in child_entities:
+                    child_entities = list(child_entities)
+                    child_entities.remove(entity_id)
                 found_ids.extend(
                     ent_id for ent_id
-                    in expand_entity_ids(hass, get_entity_ids(hass, entity_id))
+                    in expand_entity_ids(hass, child_entities)
                     if ent_id not in found_ids)
 
             else:
@@ -212,6 +225,7 @@ def expand_entity_ids(hass, entity_ids):
     return found_ids
 
 
+@bind_hass
 def get_entity_ids(hass, entity_id, domain_filter=None):
     """Get members of this group.
 
@@ -223,7 +237,6 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
         return []
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
-
     if not domain_filter:
         return entity_ids
 
@@ -325,7 +338,7 @@ def async_setup(hass, config):
         # remove group
         if service.service == SERVICE_REMOVE:
             if object_id not in service_groups:
-                _LOGGER.warning("Group '%s' not exists!", object_id)
+                _LOGGER.warning("Group '%s' doesn't exist!", object_id)
                 return
 
             del_group = service_groups.pop(object_id)

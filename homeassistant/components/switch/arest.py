@@ -102,7 +102,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         request = requests.get(
             '{}/{}'.format(self._resource, self._func), timeout=10)
 
-        if request.status_code is not 200:
+        if request.status_code != 200:
             _LOGGER.error("Can't find function")
             return
 
@@ -159,7 +159,7 @@ class ArestSwitchPin(ArestSwitchBase):
 
         request = requests.get(
             '{}/mode/{}/o'.format(self._resource, self._pin), timeout=10)
-        if request.status_code is not 200:
+        if request.status_code != 200:
             _LOGGER.error("Can't set mode")
             self._available = False
 

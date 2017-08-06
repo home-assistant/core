@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['discord.py==0.16.0']
+REQUIREMENTS = ['discord.py==0.16.8']
 
 CONF_TOKEN = 'token'
 

@@ -361,8 +361,7 @@ class MqttCover(CoverDevice):
         position_percentage = float(offset_position) / tilt_range * 100.0
         if self._tilt_invert:
             return 100 - position_percentage
-        else:
-            return position_percentage
+        return position_percentage
 
     def find_in_range_from_percent(self, percentage):
         """

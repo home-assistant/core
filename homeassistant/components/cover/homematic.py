@@ -20,8 +20,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     devices = []
-    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMCover(hass, config)
+    for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMCover(hass, conf)
         new_device.link_homematic()
         devices.append(new_device)
 
@@ -52,10 +52,7 @@ class HMCover(HMDevice, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return self.current_cover_position == 0
 
     def open_cover(self, **kwargs):
         """Open the cover."""
