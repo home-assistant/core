@@ -52,6 +52,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DoorBirdBinarySensor(BinarySensorDevice):
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor on a DoorBird device."""
+        if sensor_type not in SENSOR_TYPES:
+            msg = sensor_type + " is not a valid DoorBird binary sensor"
+            raise NotImplementedError(msg)
+
         self._device = device
         self._sensor_type = sensor_type
         self._state = STATE_UNKNOWN
