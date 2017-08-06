@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylast==1.8.0']
+REQUIREMENTS = ['pylast==1.9.0']
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'
@@ -25,8 +25,7 @@ ICON = 'mdi:lastfm'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_USERS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -38,8 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(
         [LastfmSensor(
-            username, network) for username in config.get(CONF_USERS)]
-    )
+            username, network) for username in config.get(CONF_USERS)], True)
 
 
 class LastfmSensor(Entity):
@@ -55,7 +53,6 @@ class LastfmSensor(Entity):
         self._lastplayed = None
         self._topplayed = None
         self._cover = None
-        self.update()
 
     @property
     def name(self):
