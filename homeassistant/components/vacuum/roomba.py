@@ -234,6 +234,7 @@ class RoombaVacuum(VacuumDevice):
             self._fan_speed = FAN_SPEED_PERFORMANCE
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
+            return
         # The set_preference method does only accept string values
         yield from self.hass.async_add_job(
             self.vacuum.set_preference, 'carpetBoost', str(carpet_boost))
