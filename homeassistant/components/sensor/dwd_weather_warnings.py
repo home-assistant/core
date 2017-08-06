@@ -114,7 +114,6 @@ class DwdWeatherWarningsSensor(Entity):
 
         if self._api.region_state is not None:
             data['region_state'] = self._api.region_state
-            # data['region_map_url'] = 'https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnungen_gemeinde_map_' + str(data['region_state'].lower()) + '.png'
 
         if self._api.data['time'] is not None:
             data['last_update'] = dt_util.as_local(
@@ -195,7 +194,10 @@ class DwdWeatherWarningsAPI(object):
 
             data['time'] = json_obj['time']
 
-            for mykey, myvalue in {'current': 'warnings', 'advance': 'vorabInformation'}.items():
+            for mykey, myvalue in {
+                'current': 'warnings',
+                'advance': 'vorabInformation'
+            }.items():
 
                 _LOGGER.debug("Found {} {} global DWD warnings".format(
                     len(json_obj[myvalue]), mykey))
@@ -209,7 +211,8 @@ class DwdWeatherWarningsAPI(object):
                         my_warnings = json_obj[myvalue][self.region_id]
 
                 else:
-                    # loop through all items to find warnings, region_id and region_state for region_name
+                    # loop through all items to find warnings, region_id
+                    # and region_state for region_name
                     for key in json_obj[myvalue]:
                         if json_obj[myvalue][key][0]['regionName'] != self.region_name:
                             continue
