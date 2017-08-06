@@ -9,9 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
+    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -29,6 +29,10 @@ ATTR_ERROR = 'error'
 ATTR_POSITION = 'position'
 ATTR_SOFTWARE_VERSION = 'software_version'
 
+CAP_BIN_FULL = 'bin_full'
+CAP_POSITION = 'position'
+CAP_CARPET_BOOST = 'carpet_boost'
+
 CONF_CERT = 'certificate'
 CONF_CONTINUOUS = 'continuous'
 
@@ -39,6 +43,10 @@ DEFAULT_NAME = 'Roomba'
 ICON = 'mdi:roomba'
 PLATFORM = 'roomba'
 
+FAN_SPEED_AUTOMATIC = 'Automatic'
+FAN_SPEED_ECO = 'Eco'
+FAN_SPEED_PERFORMANCE = 'Performance'
+FAN_SPEEDS = [FAN_SPEED_AUTOMATIC, FAN_SPEED_ECO, FAN_SPEED_PERFORMANCE]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -49,9 +57,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
+# Commonly supported features
 SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_SEND_COMMAND | SUPPORT_STATUS | SUPPORT_STOP | \
                  SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+
+# Only Roombas with CarpetBost can set their fanspeed
+SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 
 @asyncio.coroutine
@@ -92,6 +104,8 @@ class RoombaVacuum(VacuumDevice):
         """Initialize the Roomba handler."""
         self._available = False
         self._battery_level = None
+        self._capabilities = {}
+        self._fan_speed = None
         self._is_on = False
         self._name = name
         self._state_attrs = {}
@@ -102,7 +116,20 @@ class RoombaVacuum(VacuumDevice):
     @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
+        if self._capabilities.get(CAP_CARPET_BOOST):
+            return SUPPORT_ROOMBA_CARPET_BOOST
         return SUPPORT_ROOMBA
+
+    @property
+    def fan_speed(self):
+        """Return the fan speed of the vacuum cleaner."""
+        return self._fan_speed
+
+    @property
+    def fan_speed_list(self):
+        """Get the list of available fan speed steps of the vacuum cleaner."""
+        if self._capabilities.get(CAP_CARPET_BOOST):
+            return FAN_SPEEDS
 
     @property
     def battery_level(self):
@@ -186,6 +213,35 @@ class RoombaVacuum(VacuumDevice):
         self._is_on = False
 
     @asyncio.coroutine
+    def async_set_fan_speed(self, fan_speed, **kwargs):
+        """Set fan speed."""
+        if fan_speed.capitalize() in FAN_SPEEDS:
+            fan_speed = fan_speed.capitalize()
+        _LOGGER.debug("Set fan speed to: %s", fan_speed)
+        high_perf = None
+        carpet_boost = None
+        if fan_speed == FAN_SPEED_AUTOMATIC:
+            high_perf = False
+            carpet_boost = True
+            self._fan_speed = FAN_SPEED_AUTOMATIC
+        elif fan_speed == FAN_SPEED_ECO:
+            high_perf = False
+            carpet_boost = False
+            self._fan_speed = FAN_SPEED_ECO
+        elif fan_speed == FAN_SPEED_PERFORMANCE:
+            high_perf = True
+            carpet_boost = False
+            self._fan_speed = FAN_SPEED_PERFORMANCE
+        else:
+            _LOGGER.error("No such fan speed available: %s", fan_speed)
+            return
+        # The set_preference method does only accept string values
+        yield from self.hass.async_add_job(
+            self.vacuum.set_preference, 'carpetBoost', str(carpet_boost))
+        yield from self.hass.async_add_job(
+            self.vacuum.set_preference, 'vacHigh', str(high_perf))
+
+    @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s",
@@ -209,8 +265,15 @@ class RoombaVacuum(VacuumDevice):
 
         # Get the capabilities of our unit
         capabilities = state.get('cap', {})
-        cap_pos = capabilities.get('pose')
         cap_bin_full = capabilities.get('binFullDetect')
+        cap_carpet_boost = capabilities.get('carpetBoost')
+        cap_pos = capabilities.get('pose')
+        # Store capabilities
+        self._capabilities = {
+            CAP_BIN_FULL:  cap_bin_full == 1,
+            CAP_CARPET_BOOST: cap_carpet_boost == 1,
+            CAP_POSITION: cap_pos == 1,
+        }
 
         bin_state = state.get('bin', {})
 
@@ -249,7 +312,7 @@ class RoombaVacuum(VacuumDevice):
 
         # Not all Roombas expose positon data
         # https://github.com/koalazak/dorita980/issues/48
-        if cap_pos == 1:
+        if self._capabilities[CAP_POSITION]:
             pos_state = state.get('pose', {})
             position = None
             pos_x = pos_state.get('point', {}).get('x')
@@ -260,5 +323,22 @@ class RoombaVacuum(VacuumDevice):
             self._state_attrs[ATTR_POSITION] = position
 
         # Not all Roombas have a bin full sensor
-        if cap_bin_full == 1:
+        if self._capabilities[CAP_BIN_FULL]:
             self._state_attrs[ATTR_BIN_FULL] = bin_state.get('full')
+
+        # Fan speed mode (Performance, Automatic or Eco)
+        # Not all Roombas expose carpet boost
+        if self._capabilities[CAP_CARPET_BOOST]:
+            fan_speed = None
+            carpet_boost = state.get('carpetBoost')
+            high_perf = state.get('vacHigh')
+
+            if carpet_boost is not None and high_perf is not None:
+                if carpet_boost:
+                    fan_speed = FAN_SPEED_AUTOMATIC
+                elif high_perf:
+                    fan_speed = FAN_SPEED_PERFORMANCE
+                else:  # carpet_boost and high_perf are False
+                    fan_speed = FAN_SPEED_ECO
+
+            self._fan_speed = fan_speed
