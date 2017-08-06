@@ -41,6 +41,7 @@ ATTR_FAN_SPEED_LIST = 'fan_speed_list'
 ATTR_PARAMS = 'params'
 ATTR_STATUS = 'status'
 
+SERVICE_CLEAN_SPOT = 'clean_spot'
 SERVICE_LOCATE = 'locate'
 SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
@@ -67,6 +68,7 @@ SERVICE_TO_METHOD = {
     SERVICE_TOGGLE: {'method': 'async_toggle'},
     SERVICE_START_PAUSE: {'method': 'async_start_pause'},
     SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
+    SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
     SERVICE_LOCATE: {'method': 'async_locate'},
     SERVICE_STOP: {'method': 'async_stop'},
     SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
@@ -76,7 +78,7 @@ SERVICE_TO_METHOD = {
 }
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
-DEFAULT_ICON = 'mdi:google-circles-group'
+DEFAULT_ICON = 'mdi:roomba'
 
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2
@@ -88,7 +90,8 @@ SUPPORT_BATTERY = 64
 SUPPORT_STATUS = 128
 SUPPORT_SEND_COMMAND = 256
 SUPPORT_LOCATE = 512
-SUPPORT_MAP = 1024
+SUPPORT_CLEAN_SPOT = 1024
+SUPPORT_MAP = 2048
 
 
 @bind_hass
@@ -124,6 +127,13 @@ def locate(hass, entity_id=None):
     """Locate all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_LOCATE, data)
+
+
+@bind_hass
+def clean_spot(hass, entity_id=None):
+    """Tell all or specified vacuum to perform a spot clean-up."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_CLEAN_SPOT, data)
 
 
 @bind_hass
@@ -222,12 +232,12 @@ class VacuumDevice(ToggleEntity):
     @property
     def status(self):
         """Return the status of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def battery_icon(self):
@@ -241,7 +251,7 @@ class VacuumDevice(ToggleEntity):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        raise NotImplementedError()
+        return None
 
     @property
     def fan_speed_list(self):
@@ -309,6 +319,17 @@ class VacuumDevice(ToggleEntity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(partial(self.stop, **kwargs))
+
+    def clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        raise NotImplementedError()
+
+    def async_clean_spot(self, **kwargs):
+        """Perform a spot clean-up.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(partial(self.clean_spot, **kwargs))
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
