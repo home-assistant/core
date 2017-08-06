@@ -36,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -45,6 +45,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fedex platform."""
     import fedexdeliverymanager
+
+    name = config.get(CONF_NAME)
+    update_interval = config.get(CONF_UPDATE_INTERVAL)
+
     try:
         cookie = hass.config.path(COOKIE)
         session = fedexdeliverymanager.get_session(
@@ -54,8 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Could not connect to Fedex Delivery Manager")
         return False
 
-    add_devices([FedexSensor(
-        session, config.get(CONF_NAME), config.get(CONF_UPDATE_INTERVAL))])
+    add_devices([FedexSensor(session, name, update_interval)], True)
 
 
 class FedexSensor(Entity):
@@ -68,7 +71,6 @@ class FedexSensor(Entity):
         self._attributes = None
         self._state = None
         self.update = Throttle(interval)(self._update)
-        self.update()
 
     @property
     def name(self):
