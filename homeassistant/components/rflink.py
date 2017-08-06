@@ -393,6 +393,7 @@ class RflinkCommand(RflinkDevice):
             self._repetition_task = self.hass.async_add_job(
                 self._async_send_command(cmd, repetitions - 1))
 
+
 class SwitchableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
@@ -413,6 +414,7 @@ class SwitchableRflinkDevice(RflinkCommand):
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
+
 
 class CoverableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
@@ -438,15 +440,15 @@ class CoverableRflinkDevice(RflinkCommand):
         return None
 
     def async_close_cover(self, **kwargs):
-        """Turn the device on."""
+        """Turn the device close."""
         return self._async_handle_command("close_cover")
 
     def async_open_cover(self, **kwargs):
-        """Turn the device off."""
+        """Turn the device open."""
         return self._async_handle_command("open_cover")
 
     def async_stop_cover(self, **kwargs):
-        """Turn the device off."""
+        """Turn the device stop."""
         return self._async_handle_command("stop_cover")
 
 DEPRECATED_CONFIG_OPTIONS = [
@@ -468,4 +470,3 @@ def remove_deprecated(config):
             get_deprecated(config, replacement_option, deprecated_option)
             # remove old config value replacing new one
             config[replacement_option] = config.pop(deprecated_option)
-

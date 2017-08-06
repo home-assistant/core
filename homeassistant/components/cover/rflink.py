@@ -41,8 +41,6 @@ CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
-
-
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
@@ -84,15 +82,6 @@ def devices_from_config(domain_config, hass=None):
                 EVENT_KEY_COMMAND][_id].append(device)
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
-        # group_aliasses only respond to group commands
-        #for _id in config[CONF_GROUP_ALIASSES]:
-        #    hass.data[DATA_ENTITY_GROUP_LOOKUP][
-        #        EVENT_KEY_COMMAND][_id].append(device)
-        # nogroup_aliasses only respond to normal commands
-        #for _id in config[CONF_NOGROUP_ALIASSES]:
-        #    hass.data[DATA_ENTITY_LOOKUP][
-        #        EVENT_KEY_COMMAND][_id].append(device)
-
     return devices
 
 
