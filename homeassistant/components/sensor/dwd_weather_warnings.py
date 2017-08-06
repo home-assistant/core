@@ -214,16 +214,19 @@ class DwdWeatherWarningsAPI(object):
                     # loop through all items to find warnings, region_id
                     # and region_state for region_name
                     for key in json_obj[myvalue]:
-                        if json_obj[myvalue][key][0]['regionName'] != self.region_name:
+                        my_region = json_obj[myvalue][key][0]['regionName']
+                        if my_region != self.region_name:
                             continue
                         my_warnings = json_obj[myvalue][key]
+                        my_state = json_obj[myvalue][key][0]['stateShort']
                         self.region_id = key
-                        self.region_state = json_obj[myvalue][key][0]['stateShort']
+                        self.region_state = my_state
                         break
 
                 # Get max warning level
                 for event in my_warnings:
-                    if(event['level'] >= data['{}_warning_level'.format(mykey)]):
+                    if(event['level'] >=
+                            data['{}_warning_level'.format(mykey)]):
                         data['{}_warning_level'.format(mykey)] = event['level']
 
                 data['{}_warning_count'.format(mykey)] = len(my_warnings)
