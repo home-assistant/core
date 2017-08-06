@@ -147,4 +147,4 @@ def async_get_state_services(hass, domain, state):
         if valid_attrs:
             services[service_name]['attrs'] = valid_attrs
 
-    return services
+    return dict(services)
