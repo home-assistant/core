@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 try:
+    # pylint: disable=unused-import
     from asyncio import ensure_future
 except ImportError:
     # Python 3.4.3 and ealier has this as async
