@@ -77,7 +77,8 @@ def test_trigger_sensor_value_changed(hass, mock_openzwave):
     node = MockNode(
         manufacturer_id='013c', product_type='0002', product_id='0002')
     value = MockValue(data=False, node=node)
-    values = MockEntityValues(primary=value)
+    value_off_delay = MockValue(data=15, node=node)
+    values = MockEntityValues(primary=value, off_delay=value_off_delay)
     device = zwave.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
