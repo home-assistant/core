@@ -12,11 +12,10 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, DEFAULT_ICON, DOMAIN, PLATFORM_SCHEMA,
-    SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VACUUM_SERVICE_SCHEMA, VacuumDevice)
+    ATTR_CLEANED_AREA, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
+    SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
@@ -27,7 +26,7 @@ REQUIREMENTS = ['python-mirobo==0.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = DEFAULT_ICON
+ICON = 'mdi:google-circles-group'
 PLATFORM = 'xiaomi'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -76,7 +75,7 @@ SERVICE_TO_METHOD = {
 SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
                  SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
-                 SUPPORT_STATUS | SUPPORT_BATTERY
+                 SUPPORT_STATUS | SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
 
 
 @asyncio.coroutine
@@ -282,6 +281,13 @@ class MiroboVacuum(VacuumDevice):
             "Unable to return home: %s", self._vacuum.home)
         if return_home:
             self._is_on = False
+
+    @asyncio.coroutine
+    def async_clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        yield from self._try_command(
+            "Unable to start the vacuum for a spot clean-up: %s",
+            self._vacuum.spot)
 
     @asyncio.coroutine
     def async_locate(self, **kwargs):
