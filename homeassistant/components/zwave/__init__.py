@@ -27,9 +27,7 @@ import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
-from homeassistant.components.frontend import register_built_in_panel
 
-from . import api
 from . import const
 from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
@@ -68,9 +66,6 @@ DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
-
-OZW_LOG_FILENAME = 'OZW_Log.txt'
-URL_API_OZW_LOG = '/api/zwave/ozwlog'
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -663,15 +658,6 @@ def setup(hass, config):
         track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
-
-    if 'frontend' in hass.config.components:
-        register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
-        hass.http.register_view(api.ZWaveNodeValueView)
-        hass.http.register_view(api.ZWaveNodeGroupView)
-        hass.http.register_view(api.ZWaveNodeConfigView)
-        hass.http.register_view(api.ZWaveUserCodeView)
-        hass.http.register_static_path(
-            URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
 
     return True
 
