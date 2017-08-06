@@ -46,6 +46,14 @@ return_to_base:
       description: Name of the botvac entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
+clean_spot:
+  description: Tell the vacuum cleaner to do a spot clean-up.
+
+  fields:
+    entity_id:
+      description: Name of the botvac entity.
+      example: 'vacuum.xiaomi_vacuum_cleaner'
+
 send_command:
   description: Send a raw command to the vacuum cleaner.
 
