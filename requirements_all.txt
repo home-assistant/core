@@ -828,6 +828,9 @@ rflink==0.0.34
 # homeassistant.components.ring
 ring_doorbell==0.1.4
 
+# homeassistant.components.vacuum.roomba
+roombapy==1.3.0
+
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
 
