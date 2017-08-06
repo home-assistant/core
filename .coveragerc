@@ -305,6 +305,7 @@ omit =
     homeassistant/components/light/blinkt.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/decora.py
+    homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
