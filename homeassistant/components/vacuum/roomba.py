@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.roomba/
 """
 import asyncio
-import homeassistant.helpers.config_validation as cv
 import logging
 import voluptuous as vol
 
@@ -15,6 +14,8 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
+
 
 REQUIREMENTS = ['roombapy==1.3.0']
 
