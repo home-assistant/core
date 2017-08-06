@@ -1,6 +1,4 @@
-"""
-Support for powering relays in a DoorBird video doorbell.
-"""
+"""Support for powering relays in a DoorBird video doorbell."""
 import datetime
 import logging
 import voluptuous as vol
@@ -40,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the DoorBird switch platform."""
     device = hass.data.get(DOMAIN)
 
     switches = []
@@ -55,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DoorBirdSwitch(SwitchDevice):
+    """A relay in a DoorBird device."""
     def __init__(self, device, switch):
         """Initialize a relay in a DoorBird device."""
         if switch not in SWITCHES:
@@ -97,6 +97,7 @@ class DoorBirdSwitch(SwitchDevice):
         return False
 
     def update(self):
+        """Wait for the correct amount of assumed time to pass."""
         if self._state and self._assume_off <= datetime.datetime.now():
             self._state = False
             self._assume_off = datetime.datetime.min

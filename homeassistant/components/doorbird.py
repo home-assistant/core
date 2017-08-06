@@ -1,6 +1,4 @@
-"""
-Support for a DoorBird video doorbell.
-"""
+"""Support for a DoorBird video doorbell."""
 
 import logging
 import voluptuous as vol
@@ -34,16 +32,14 @@ def setup(hass, config):
     status = device.ready()
 
     if status[0]:
-        _LOGGER.info("Connected to DoorBird at {} as {}"
-                     .format(ip, username))
+        _LOGGER.info("Connected to DoorBird at %s as %s", ip, username)
         hass.data[DOMAIN] = device
-        _LOGGER.debug("DBDBG set device")
         return True
     elif status[1] == 401:
-        _LOGGER.error("Authorization rejected by DoorBird at {} for {}"
-                      .format(ip, username))
+        _LOGGER.error("Authorization rejected by DoorBird at %s for %s",
+                      ip, username)
         return False
     else:
-        _LOGGER.error("Could not connect to DoorBird at {} as {}: DBP error {}"
-                      .format(ip, username, status[1]))
+        _LOGGER.error("Could not connect to DoorBird at %s as %s: Error %s",
+                      ip, username, str(status[1]))
         return False

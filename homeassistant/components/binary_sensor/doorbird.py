@@ -1,6 +1,4 @@
-"""
-Support for reading binary states from a DoorBird video doorbell.
-"""
+"""Support for reading binary states from a DoorBird video doorbell."""
 from datetime import timedelta
 import logging
 import voluptuous as vol
@@ -35,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the DoorBird binary sensor component."""
     device = hass.data.get(DOMAIN)
 
     sensors = []
@@ -50,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DoorBirdBinarySensor(BinarySensorDevice):
+    """A binary sensor of a DoorBird device."""
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor on a DoorBird device."""
         if sensor_type not in SENSOR_TYPES:
@@ -79,5 +79,5 @@ class DoorBirdBinarySensor(BinarySensorDevice):
 
     @Throttle(_MIN_UPDATE_INTERVAL)
     def update(self):
-        """Pulls the latest value from the device."""
+        """Pull the latest value from the device."""
         self._state = self._device.doorbell_state()

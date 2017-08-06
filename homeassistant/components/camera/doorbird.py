@@ -1,13 +1,12 @@
-"""
-Support for viewing the camera feed from a DoorBird video doorbell.
-"""
+"""Support for viewing the camera feed from a DoorBird video doorbell."""
 
-import aiohttp
 import asyncio
-import async_timeout
 import datetime
 import logging
 import voluptuous as vol
+
+import aiohttp
+import async_timeout
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.doorbird import DOMAIN
@@ -33,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the DoorBird camera platform."""
     device = hass.data.get(DOMAIN)
 
     _LOGGER.debug("Adding DoorBird camera " + _CAMERA_LIVE)
@@ -51,6 +51,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class DoorBirdCamera(Camera):
+    """The camera on a DoorBird device."""
+
     def __init__(self, hass, url, name, interval=None):
         """Initialize the camera on a DoorBird device."""
         self._hass = hass
@@ -74,7 +76,6 @@ class DoorBirdCamera(Camera):
     @asyncio.coroutine
     def async_camera_image(self):
         """:returns: A still image from the camera."""
-
         now = datetime.datetime.now()
 
         if self._last_image and now - self._last_update < self._interval:
@@ -95,3 +96,11 @@ class DoorBirdCamera(Camera):
         except aiohttp.ClientError as error:
             _LOGGER.error("Error getting camera image: %s", error)
             return self._last_image
+
+    def enable_motion_detection(self):
+        """Network callbacks are not supported by HA yet."""
+        pass
+
+    def disable_motion_detection(self):
+        """Network callbacks are not supported by HA yet."""
+        pass
