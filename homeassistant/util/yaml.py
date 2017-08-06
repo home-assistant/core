@@ -186,8 +186,8 @@ def _ordered_dict(loader: SafeLineLoader,
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
             _LOGGER.warning(
-                'YAML file {} contains duplicate key "{}". '
-                'Check lines {} and {}.'.format(fname, key, seen[key], line))
+                'YAML file % contains duplicate key "%". '
+                'Check lines % and %.', fname, key, seen[key], line)
         seen[key] = line
 
     return _add_reference(OrderedDict(nodes), loader, node)
