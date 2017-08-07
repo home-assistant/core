@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import lnetatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
-        if data.get_camera_names() == []:
+        if not data.get_camera_names():
             return None
     except lnetatmo.NoDevice:
         return None
@@ -138,6 +138,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._unique_id = "Netatmo_binary_sensor {0} - {1}".format(
             self._name, camera_id)
         self._cameratype = camera_type
+        self._state = None
 
     @property
     def name(self):

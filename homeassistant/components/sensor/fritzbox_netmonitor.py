@@ -75,6 +75,10 @@ class FritzboxMonitorSensor(Entity):
         self._name = 'fritz_netmonitor'
         self._fstatus = fstatus
         self._state = STATE_UNAVAILABLE
+        self._is_linked = self._is_connected = self._wan_access_type = None
+        self._external_ip = self._uptime = None
+        self._bytes_sent = self._bytes_received = None
+        self._max_byte_rate_up = self._max_byte_rate_down = None
 
     @property
     def name(self):

@@ -149,6 +149,7 @@ class APCUPSdSensor(Entity):
         self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._inferred_unit = None
+        self._state = None
 
     @property
     def name(self):

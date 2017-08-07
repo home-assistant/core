@@ -78,6 +78,7 @@ class SwissHydrologicalDataSensor(Entity):
         self.data = data
         self._name = name
         self._unit_of_measurement = TEMP_CELSIUS
+        self._state = None
 
     @property
     def name(self):

@@ -84,8 +84,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone not in zone_ignore:
             hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)],
-                True)
+                YamahaDevice(name, receiver, source_ignore, source_names)
+            ], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
