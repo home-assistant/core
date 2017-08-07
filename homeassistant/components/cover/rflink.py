@@ -85,6 +85,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class RflinkCover(CoverableRflinkDevice, CoverDevice):
-    """Representation of a Rflink Somfy RTS cover"""
+    """Representation of a Rflink Somfy RTS cover."""
 
     pass
