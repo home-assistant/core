@@ -7,9 +7,10 @@ from logging import getLogger
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS,
-                                 CONF_EMAIL, CONF_IP_ADDRESS, CONF_PASSWORD)
+                                 CONF_EMAIL, CONF_IP_ADDRESS, CONF_PASSWORD,
+                                 CONF_PLATFORM, CONF_SCAN_INTERVAL)
 from homeassistant.util import Throttle
 
 _LOGGER = getLogger(__name__)
@@ -27,18 +28,92 @@ MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
 MIN_SCAN_TIME_REMOTE = timedelta(seconds=5)
 MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_IP_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_EMAIL):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-    cv.positive_int,
-    vol.Optional(CONF_HIDE_DISABLED_ENTITIES, default=True):
-    cv.boolean
-})
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL), {
+            vol.Required(CONF_PLATFORM):
+            cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL):
+            cv.time_period,
+            vol.Exclusive(CONF_IP_ADDRESS, 'auth_type'):
+            cv.string,
+            vol.Exclusive(CONF_EMAIL, 'auth_type'):
+            vol.Email(),
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
+            cv.positive_int,
+            vol.Optional(CONF_HIDE_DISABLED_ENTITIES, default=True):
+            cv.boolean
+        }),
+    extra=vol.ALLOW_EXTRA)
+
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set this component up under its platform."""
+    import regenmaschine as rm
+
+    ip_address = config.get(CONF_IP_ADDRESS)
+    _LOGGER.debug('IP address: %s', ip_address)
+
+    email_address = config.get(CONF_EMAIL)
+    _LOGGER.debug('Email address: %s', email_address)
+
+    password = config.get(CONF_PASSWORD)
+    _LOGGER.debug('Password: %s', password)
+
+    hide_disabled_entities = config.get(CONF_HIDE_DISABLED_ENTITIES)
+    _LOGGER.debug('Show disabled entities: %s', hide_disabled_entities)
+
+    zone_run_time = config.get(CONF_ZONE_RUN_TIME)
+    _LOGGER.debug('Zone run time: %s', zone_run_time)
+
+    try:
+        if ip_address:
+            _LOGGER.debug('Configuring local API...')
+            auth = rm.Authenticator.create_local(ip_address, password)
+        elif email_address:
+            _LOGGER.debug('Configuring remote API...')
+            auth = rm.Authenticator.create_remote(email_address, password)
+
+        _LOGGER.debug('Instantiating RainMachine client...')
+        client = rm.Client(auth)
+
+        rainmachine_device_name = client.provision.device_name().get('name')
+
+        entities = []
+        for program in client.programs.all().get('programs'):
+            if hide_disabled_entities and program.get('active') is False:
+                continue
+
+            _LOGGER.debug('Adding program: %s', program)
+            entities.append(
+                RainMachineProgram(
+                    client, program, device_name=rainmachine_device_name))
+
+        for zone in client.zones.all().get('zones'):
+            if hide_disabled_entities and zone.get('active') is False:
+                continue
+
+            _LOGGER.debug('Adding zone: %s', zone)
+            entities.append(
+                RainMachineZone(
+                    client,
+                    zone,
+                    zone_run_time,
+                    device_name=rainmachine_device_name,
+                    ))
+
+        async_add_devices(entities)
+    except rm.exceptions.HTTPError as exc_info:
+        _LOGGER.error('An HTTP error occurred while talking with RainMachine')
+        _LOGGER.debug(exc_info)
+        return False
+    except UnboundLocalError as exc_info:
+        _LOGGER.error('Could not authenticate against RainMachine')
+        _LOGGER.debug(exc_info)
+        return False
 
 
 def aware_throttle(api_type):
@@ -96,11 +171,6 @@ class RainMachineEntity(SwitchDevice):
         return self._entity_json.get('uid')
 
     @property
-    def should_poll(self) -> bool:
-        """Return the polling state."""
-        return True
-
-    @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{}.{}.{}'.format(self.__class__, self._device_name,
@@ -118,7 +188,7 @@ class RainMachineEntity(SwitchDevice):
 
     def _update(self) -> None:  # pylint: disable=no-self-use
         """Logic for update method, regardless of API type."""
-        _LOGGER.warning('Update method not defined for base class')
+        raise NotImplementedError()
 
     def update(self) -> None:
         """Determine how the entity updates itself."""
@@ -152,7 +222,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"',
                           self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
+            _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the program on."""
@@ -165,7 +235,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"',
                           self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
+            _LOGGER.debug(exc_info)
 
     def _update(self) -> None:
         """Update info for the program."""
@@ -176,16 +246,16 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
                           self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
+            _LOGGER.debug(exc_info)
 
 
 class RainMachineZone(RainMachineEntity):
     """A RainMachine zone."""
 
-    def __init__(self, client, zone_json, **kwargs):
+    def __init__(self, client, zone_json, zone_run_time, **kwargs):
         """Initialize a RainMachine zone."""
-        super(RainMachineZone, self).__init__(client, zone_json, **kwargs)
-        self._run_time = kwargs.get(CONF_ZONE_RUN_TIME)
+        super().__init__(client, zone_json, **kwargs)
+        self._run_time = kwargs.get(zone_run_time)
         self._attrs.update({
             ATTR_CYCLES:
             self._entity_json.get('noOfCycles'),
@@ -210,9 +280,8 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._client.zones.stop(self.rainmachine_id)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn off zone "%s"',
-                          self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
+            _LOGGER.error('Unable to turn off zone "%s"', self.rainmachine_id)
+            _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
@@ -221,9 +290,8 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._client.zones.start(self.rainmachine_id, self._run_time)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn on zone "%s"',
-                          self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
+            _LOGGER.error('Unable to turn on zone "%s"', self.rainmachine_id)
+            _LOGGER.debug(exc_info)
 
     def _update(self) -> None:
         """Update info for the zone."""
@@ -234,75 +302,4 @@ class RainMachineZone(RainMachineEntity):
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
                           self.rainmachine_id)
-            _LOGGER.debug(str(exc_info))
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set this component up under its platform."""
-    import regenmaschine as rm
-
-    ip_address = config.get(CONF_IP_ADDRESS)
-    _LOGGER.debug('IP address: %s', ip_address)
-
-    email_address = config.get(CONF_EMAIL)
-    _LOGGER.debug('Email address: %s', email_address)
-
-    password = config.get(CONF_PASSWORD)
-    _LOGGER.debug('Password: %s', password)
-
-    hide_disabled_entities = config.get(CONF_HIDE_DISABLED_ENTITIES)
-    _LOGGER.debug('Show disabled entities: %s', hide_disabled_entities)
-
-    zone_run_time = config.get(CONF_ZONE_RUN_TIME)
-    _LOGGER.debug('Zone run time: %s', zone_run_time)
-
-    try:
-        if ip_address:
-            _LOGGER.debug('Configuring local API...')
-            auth = rm.Authenticator.create_local(ip_address, password)
-        elif email_address:
-            _LOGGER.debug('Configuring remote API...')
-            auth = rm.Authenticator.create_remote(email_address, password)
-        else:
-            _LOGGER.error('Neither IP address nor email address given')
-            return False
-    except rm.exceptions.HTTPError as exec_info:
-        _LOGGER.error('HTTP error during authentication: %s', str(exec_info))
-        return False
-
-    try:
-        _LOGGER.debug('Instantiating RainMachine client...')
-        client = rm.Client(auth)
-
-        rainmachine_device_name = client.provision.device_name().get('name')
-
-        entities = []
-        for program in client.programs.all().get('programs'):
-            if hide_disabled_entities and program.get('active') is False:
-                continue
-
-            _LOGGER.debug('Adding program: %s', program)
-            entities.append(
-                RainMachineProgram(
-                    client, program, device_name=rainmachine_device_name))
-
-        for zone in client.zones.all().get('zones'):
-            if hide_disabled_entities and zone.get('active') is False:
-                continue
-
-            _LOGGER.debug('Adding zone: %s', zone)
-            entities.append(
-                RainMachineZone(
-                    client,
-                    zone,
-                    device_name=rainmachine_device_name,
-                    zone_run_time=zone_run_time))
-
-        async_add_devices(entities)
-    except rm.exceptions.HTTPError as exec_info:
-        _LOGGER.error('Request failed: %s', str(exec_info))
-        return False
-    except Exception as exec_info:  # pylint: disable=broad-except
-        _LOGGER.error('Unknown error: %s', str(exec_info))
-        return False
+            _LOGGER.debug(exc_info)
