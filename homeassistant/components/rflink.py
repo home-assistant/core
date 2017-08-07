@@ -10,15 +10,16 @@ import functools as ft
 import logging
 
 import async_timeout
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
+from homeassistant.helpers.deprecation import get_deprecated
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -88,7 +89,8 @@ def identify_event_type(event):
         return EVENT_KEY_COMMAND
     elif EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
-    return 'unknown'
+    else:
+        return 'unknown'
 
 
 @asyncio.coroutine
@@ -336,6 +338,17 @@ class RflinkCommand(RflinkDevice):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
+        # Cover options for RFlink
+        elif command == 'close_cover':
+            cmd = 'DOWN'
+
+        elif command == 'open_cover':
+            cmd = 'UP'
+
+        elif command == 'stop_cover':
+            cmd = 'STOP'
+            self._state = True
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
@@ -402,6 +415,10 @@ class SwitchableRflinkDevice(RflinkCommand):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
 
+
+class CoverableRflinkDevice(RflinkCommand):
+
+    pass
 
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
