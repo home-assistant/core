@@ -1,8 +1,8 @@
 """
-Support for Rflink switches.
+Support for Rflink Somfy RTS Cover/Sunshades devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rflink/
+https://home-assistant.io/components/cover.rflink/
 """
 import asyncio
 import logging
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def devices_from_config(domain_config, hass=None):
-    """Parse configuration and add Rflink switch devices."""
+    """Parse configuration and add Rflink Somfty RTS cover/sunshades devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
@@ -83,11 +83,11 @@ def devices_from_config(domain_config, hass=None):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Rflink platform."""
+    """Set up the Rflink Somfy RTS cover platform."""
     async_add_devices(devices_from_config(config, hass))
 
 
 class RflinkCover(CoverableRflinkDevice, CoverDevice):
-    """Representation of a Rflink cover."""
+    """Representation of a Rflink Somfy RTS cover/sunshade."""
 
     pass
