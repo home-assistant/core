@@ -114,13 +114,13 @@ class XKNXClimate(ClimateDevice):
         """Return the temperature we try to reach."""
         return self.device.setpoint
 
-    def set_temperature(self, **kwargs):
+    @asyncio.coroutine
+    def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-
-        self.device.set_setpoint(temperature)
+        yield from self.device.set_setpoint(temperature)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
