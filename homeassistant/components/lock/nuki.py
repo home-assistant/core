@@ -79,10 +79,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
-        NUKI_DATA, SERVICE_LOCK_N_GO, service_handler,
+        DOMAIN, SERVICE_LOCK_N_GO, service_handler,
         descriptions.get(SERVICE_LOCK_N_GO), schema=LOCK_N_GO_SERVICE_SCHEMA)
     hass.services.register(
-        NUKI_DATA, SERVICE_UNLATCH, service_handler,
+        DOMAIN, SERVICE_UNLATCH, service_handler,
         descriptions.get(SERVICE_UNLATCH), schema=UNLATCH_SERVICE_SCHEMA)
 
 
