@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
-    add_devices([MpcHcDevice(name, url)])
+    add_devices([MpcHcDevice(name, url)], True)
 
 
 class MpcHcDevice(MediaPlayerDevice):
@@ -51,8 +51,6 @@ class MpcHcDevice(MediaPlayerDevice):
         """Initialize the MPC-HC device."""
         self._name = name
         self._url = url
-
-        self.update()
 
     def update(self):
         """Get the latest details."""
