@@ -266,7 +266,6 @@ omit =
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
     homeassistant/components/climate/knx.py
-    homeassistant/components/climate/mqtt.py
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
