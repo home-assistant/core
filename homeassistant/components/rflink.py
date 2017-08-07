@@ -451,6 +451,7 @@ class CoverableRflinkDevice(RflinkCommand):
         """Turn the device stop."""
         return self._async_handle_command("stop_cover")
 
+
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
     CONF_GROUP_ALIASSES,
