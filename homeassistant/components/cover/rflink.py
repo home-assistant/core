@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def devices_from_config(domain_config, hass=None):
-    """Parse configuration and add Rflink Somfty RTS cover/sunshades devices."""
+    """Parse configuration and add Rflink Somfty RTS cover devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
