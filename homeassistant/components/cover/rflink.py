@@ -7,14 +7,14 @@ https://home-assistant.io/components/cover.rflink/
 import asyncio
 import logging
 
+import voluptuous as vol
 
 from homeassistant.components.rflink import (
     DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND, CoverableRflinkDevice,
-    cv, vol)
+    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND, CoverableRflinkDevice)
 from homeassistant.components.cover import (
     CoverDevice)
-
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 DEPENDENCIES = ['rflink']
 
@@ -22,12 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONF_ALIASES = 'aliases'
-CONF_ALIASSES = 'aliases'
 CONF_GROUP_ALIASES = 'group_aliases'
-CONF_GROUP_ALIASSES = 'group_aliases'
 CONF_GROUP = 'group'
 CONF_NOGROUP_ALIASES = 'nogroup_aliases'
-CONF_NOGROUP_ALIASSES = 'nogroup_aliases'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
@@ -44,11 +41,11 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_ALIASSES, default=[]):
+            vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_GROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASSES, default=[]):
+            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
@@ -66,14 +63,14 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkCover(device_id, hass, **device_config)
         devices.append(device)
 
-        # Register entity (and aliasses) to listen to incoming rflink events
-        # Device id and normal aliasses respond to normal and group command
+        # Register entity (and aliases) to listen to incoming rflink events
+        # Device id and normal aliases respond to normal and group command
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
         if config[CONF_GROUP]:
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
                 EVENT_KEY_COMMAND][device_id].append(device)
-        for _id in config[CONF_ALIASSES]:
+        for _id in config[CONF_ALIASES]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
             hass.data[DATA_ENTITY_GROUP_LOOKUP][
