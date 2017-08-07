@@ -255,7 +255,7 @@ class RainMachineZone(RainMachineEntity):
     def __init__(self, client, zone_json, zone_run_time, **kwargs):
         """Initialize a RainMachine zone."""
         super().__init__(client, zone_json, **kwargs)
-        self._run_time = kwargs.get(zone_run_time)
+        self._run_time = zone_run_time
         self._attrs.update({
             ATTR_CYCLES:
             self._entity_json.get('noOfCycles'),
