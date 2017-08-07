@@ -20,6 +20,25 @@ get_usercode:
       description: Code slot to retrive a code from
       example: 1
 
+nuki_lock_n_go:
+  description: "Lock 'n' Go"
+
+  fields:
+    entity_id:
+      description: Entity id of the Nuki lock
+      example: 'lock.front_door'
+    unlatch:
+      description: Whether to unlatch the lock
+      example: false
+
+nuki_unlatch:
+  description: "Unlatch"
+
+  fields:
+    entity_id:
+      description: Entity id of the Nuki lock
+      example: 'lock.front_door'
+
 lock:
   description: Lock all or specified locks
 
