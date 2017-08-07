@@ -35,9 +35,9 @@ PLATFORM_SCHEMA = vol.Schema(
             cv.string,
             vol.Optional(CONF_SCAN_INTERVAL):
             cv.time_period,
-            vol.Exclusive(CONF_IP_ADDRESS, 'auth_type'):
+            vol.Exclusive(CONF_IP_ADDRESS, 'auth'):
             cv.string,
-            vol.Exclusive(CONF_EMAIL, 'auth_type'):
+            vol.Exclusive(CONF_EMAIL, 'auth'):
             vol.Email(),
             vol.Required(CONF_PASSWORD):
             cv.string,
@@ -102,8 +102,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     client,
                     zone,
                     zone_run_time,
-                    device_name=rainmachine_device_name,
-                    ))
+                    device_name=rainmachine_device_name, ))
 
         async_add_devices(entities)
     except rm.exceptions.HTTPError as exc_info:
