@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
-from homeassistant.core import State
+from homeassistant.core import State, split_entity_id
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,6 +120,32 @@ def get_changed_since(states, utc_point_in_time):
             if state.last_updated >= utc_point_in_time]
 
 
+def async_get_service(hass, service_domain, state):
+    """Return service that matches the requested state for a domain.
+
+    This method must be run in the event loop.
+    """
+    domain_services = hass.services.async_services().get(service_domain)
+
+    if not domain_services:
+        _LOGGER.warning(
+            "get_service: No services for domain %s", service_domain)
+        return
+
+    service = None
+    for _service in domain_services:
+        if (_service in SERVICE_ATTRIBUTES and
+                all(attr in state.attributes
+                    for attr in SERVICE_ATTRIBUTES[_service]) or
+                _service in SERVICE_TO_STATE and
+                SERVICE_TO_STATE[_service] == state.state):
+            service = _service
+        if (_service in SERVICE_TO_STATE and
+                SERVICE_TO_STATE[_service] == state.state):
+            break
+    return service
+
+
 def reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     return run_coroutine_threadsafe(
@@ -141,40 +167,22 @@ def async_reproduce_state(hass, states, blocking=False):
                             state.entity_id)
             continue
 
-        if state.domain == GROUP_DOMAIN:
-            service_domain = HASS_DOMAIN
-        else:
-            service_domain = state.domain
+        entity_ids = hass.components.group.expand_entity_ids([state.entity_id])
+        for entity_id in entity_ids:
+            service_domain, _ = split_entity_id(entity_id)
+            service = async_get_service(hass, service_domain, state)
 
-        domain_services = hass.services.async_services().get(service_domain)
+            if not service:
+                _LOGGER.warning(
+                    "reproduce_state: Unable to reproduce state %s", state)
+                continue
 
-        if not domain_services:
-            _LOGGER.warning(
-                "reproduce_state: Unable to reproduce state %s (1)", state)
-            continue
-
-        service = None
-        for _service in domain_services.keys():
-            if (_service in SERVICE_ATTRIBUTES and
-                    all(attr in state.attributes
-                        for attr in SERVICE_ATTRIBUTES[_service]) or
-                    _service in SERVICE_TO_STATE and
-                    SERVICE_TO_STATE[_service] == state.state):
-                service = _service
-            if (_service in SERVICE_TO_STATE and
-                    SERVICE_TO_STATE[_service] == state.state):
-                break
-
-        if not service:
-            _LOGGER.warning(
-                "reproduce_state: Unable to reproduce state %s (2)", state)
-            continue
-
-        # We group service calls for entities by service call
-        # json used to create a hashable version of dict with maybe lists in it
-        key = (service_domain, service,
-               json.dumps(dict(state.attributes), sort_keys=True))
-        to_call[key].append(state.entity_id)
+            # We group service calls for entities by service call
+            # json used to create a hashable version of dict
+            # with maybe lists in it
+            key = (service_domain, service,
+                   json.dumps(dict(state.attributes), sort_keys=True))
+            to_call[key].append(entity_id)
 
     domain_tasks = {}
     for (service_domain, service, service_data), entity_ids in to_call.items():
