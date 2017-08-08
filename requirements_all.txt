@@ -825,6 +825,9 @@ radiotherm==1.3
 # homeassistant.components.raspihats
 # raspihats==2.2.1
 
+# homeassistant.components.switch.rainmachine
+regenmaschine==0.3.2
+
 # homeassistant.components.python_script
 restrictedpython==4.0a3
 
