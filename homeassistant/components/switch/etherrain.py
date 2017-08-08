@@ -25,19 +25,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Etherrain irrigation platform."""
     valve_id = config.get("valve_id")
     valve_name = config.get("name")
-    _LOGGER.info("Setting up etherrain switch {0}".format(valve_id))
+    duration = config.get("duration")
 
-    add_devices([ERValveSwitches(valve_id, valve_name)])
+    add_devices([ERValveSwitches(valve_id, valve_name, duration)])
 
 
 class ERValveSwitches(SwitchDevice):
     """Representation of an Etherrain valve."""
 
-    def __init__(self, valve_id, valve_name):
+    def __init__(self, valve_id, valve_name, duration):
         """Initialize ERValveSwitches."""
         self._valve_id = valve_id
         self._valve_name = valve_name
-        self._duration = 0
+        if duration is not None:
+            self._duration = duration
+        else:
+            self._duration = 60
         self._on_state = 1
         self._off_state = 0
         self._state = None
@@ -65,7 +68,7 @@ class ERValveSwitches(SwitchDevice):
     def turn_on(self):
         """Turn a valve on."""
         valve = {}
-        valve["duration"] = 60
+        valve["duration"] = self._duration
         valve["valve"] = self._valve_id
         valve["command"] = er.WATER_ON
         # _LOGGER.info("turn on etherrain switch {0}".format(self._valve_id))
@@ -74,6 +77,8 @@ class ERValveSwitches(SwitchDevice):
 
     def turn_off(self):
         """Turn a valve off."""
+        # We should first check the state and if it's "BZ" and the valve_id matches,
+        # then turn it off.  For now, just turn it off regardless.
         valve = {}
         valve["duration"] = 0
         valve["valve"] = 0

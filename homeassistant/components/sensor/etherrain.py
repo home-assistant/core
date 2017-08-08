@@ -45,9 +45,7 @@ class ERValveSensors(Entity):
 
     def update(self):
         """Update valve state."""
-        state = er.get_state(self._valve_id)
-
-        self._state = state
+        self._state = er.get_state(self._valve_id)
         # _LOGGER.info("update etherrain switch {0} - {1}".format(
         # self._valve_id, self._state))
 
