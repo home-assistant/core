@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats)
+    add_devices(tstats, True)
 
 
 class RadioThermostat(ClimateDevice):
@@ -89,7 +89,6 @@ class RadioThermostat(ClimateDevice):
         self._away = False
         self._away_temps = away_temps
         self._prev_temp = None
-        self.update()
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property

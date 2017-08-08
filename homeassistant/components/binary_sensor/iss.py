@@ -64,7 +64,6 @@ class IssBinarySensor(BinarySensorDevice):
         self._state = None
         self._name = name
         self._show_on_map = show
-        self.update()
 
     @property
     def name(self):

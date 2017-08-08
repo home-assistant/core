@@ -21,18 +21,18 @@ CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ACCOUNTS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-})
-
 STATE_ONLINE = 'Online'
 STATE_BUSY = 'Busy'
 STATE_AWAY = 'Away'
 STATE_SNOOZE = 'Snooze'
 STATE_TRADE = 'Trade'
 STATE_PLAY = 'Play'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_ACCOUNTS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
 
 
 # pylint: disable=unused-argument
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     steamod.api.key.set(config.get(CONF_API_KEY))
     add_devices(
         [SteamSensor(account,
-                     steamod) for account in config.get(CONF_ACCOUNTS)])
+                     steamod) for account in config.get(CONF_ACCOUNTS)], True)
 
 
 class SteamSensor(Entity):
@@ -52,7 +52,8 @@ class SteamSensor(Entity):
         """Initialize the sensor."""
         self._steamod = steamod
         self._account = account
-        self.update()
+        self._profile = None
+        self._game = self._state = self._name = self._avatar = None
 
     @property
     def name(self):
@@ -90,10 +91,7 @@ class SteamSensor(Entity):
             self._avatar = self._profile.avatar_medium
         except self._steamod.api.HTTPTimeoutError as error:
             _LOGGER.warning(error)
-            self._game = 'Unknown'
-            self._state = 'Unknown'
-            self._name = 'Unknown'
-            self._avatar = None
+            self._game = self._state = self._name = self._avatar = None
 
     @property
     def device_state_attributes(self):
