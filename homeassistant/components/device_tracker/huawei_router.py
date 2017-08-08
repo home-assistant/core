@@ -9,8 +9,10 @@ import logging
 import re
 from collections import namedtuple
 from datetime import timedelta
+
 import requests
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
