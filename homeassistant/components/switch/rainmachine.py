@@ -30,7 +30,8 @@ MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
-        cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL), {
+        cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
+        {
             vol.Required(CONF_PLATFORM):
             cv.string,
             vol.Optional(CONF_SCAN_INTERVAL):
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = vol.Schema(
             vol.Exclusive(CONF_IP_ADDRESS, 'auth'):
             cv.string,
             vol.Exclusive(CONF_EMAIL, 'auth'):
-            vol.Email(),
+            vol.Email(),  # pylint: disable=no-value-for-parameter
             vol.Required(CONF_PASSWORD):
             cv.string,
             vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
