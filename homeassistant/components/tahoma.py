@@ -105,5 +105,5 @@ class TahomaDevice(Entity):
     def apply_action(self, cmd_name, *args):
         from tahoma_api import Action
         action = Action(self.tahoma_device.url)
-        action.add_command(cmd_name, args)
+        action.add_command(cmd_name, *args)
         self.controller.apply_actions('', [action])
