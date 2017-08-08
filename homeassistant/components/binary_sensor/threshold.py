@@ -84,7 +84,12 @@ class ThresholdSensor(BinarySensorDevice):
             except ValueError:
                 _LOGGER.error("State is not numerical")
 
-            hass.async_add_job(self.async_update_ha_state, True)
+            if self.is_upper:
+                self._deviation = bool(self.sensor_value > self._threshold)
+            else:
+                self._deviation = bool(self.sensor_value < self._threshold)
+
+            hass.async_add_job(self.async_update_ha_state)
 
         async_track_state_change(
             hass, entity_id, async_threshold_sensor_state_listener)
@@ -118,11 +123,3 @@ class ThresholdSensor(BinarySensorDevice):
             ATTR_THRESHOLD: self._threshold,
             ATTR_TYPE: CONF_UPPER if self.is_upper else CONF_LOWER,
         }
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Get the latest data and updates the states."""
-        if self.is_upper:
-            self._deviation = bool(self.sensor_value > self._threshold)
-        else:
-            self._deviation = bool(self.sensor_value < self._threshold)
