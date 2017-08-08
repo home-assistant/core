@@ -8,10 +8,12 @@ import os
 import time
 import logging
 from glob import glob
+
 import voluptuous as vol
-from homeassistant.helpers.entity import Entity
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,21 +63,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     names = sensor_ids
 
     for key in config.keys():
-        if key == "names":
-            # only one name given
+        if key == 'names':
+            # Only one name given
             if isinstance(config['names'], str):
                 names = [config['names']]
-            # map names and sensors in given order
+            # Map names and sensors in given order
             elif isinstance(config['names'], list):
                 names = config['names']
-            # map names to ids.
+            # Map names to ids.
             elif isinstance(config['names'], dict):
                 names = []
                 for sensor_id in sensor_ids:
                     names.append(config['names'].get(sensor_id, sensor_id))
     for device_file, name in zip(device_files, names):
         devs.append(OneWire(name, device_file))
-    add_devices(devs)
+    add_devices(devs, True)
 
 
 class OneWire(Entity):
@@ -85,8 +87,7 @@ class OneWire(Entity):
         """Initialize the sensor."""
         self._name = name
         self._device_file = device_file
-        self._state = STATE_UNKNOWN
-        self.update()
+        self._state = None
 
     def _read_temp_raw(self):
         """Read the temperature as it is returned by the sensor."""
