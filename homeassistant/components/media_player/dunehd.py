@@ -35,13 +35,13 @@ DUNEHD_PLAYER_SUPPORT = \
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DuneHD media player platform."""
-    sources = config.get(CONF_SOURCES, {})
-
     from pdunehd import DuneHDPlayer
-    add_devices([DuneHDPlayerEntity(
-        DuneHDPlayer(config[CONF_HOST]),
-        config[CONF_NAME],
-        sources)])
+
+    sources = config.get(CONF_SOURCES, {})
+    host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME)
+
+    add_devices([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerDevice):
@@ -54,7 +54,6 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self._sources = sources
         self._media_title = None
         self._state = None
-        self.update()
 
     def update(self):
         """Update internal status of the entity."""
