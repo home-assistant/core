@@ -35,8 +35,8 @@ class DemoMailbox(Mailbox):
         for idx in range(0, 10):
             msgtime = int(dt.as_timestamp(
                 dt.utcnow()) - 3600 * 24 * (10 - idx))
-            msgtxt = ("Message %d. %s" %
-                      (idx + 1, txt * (1 + idx * (idx % 2))))
+            msgtxt = "Message {}. {}".format(
+                idx + 1, txt * (1 + idx * (idx % 2)))
             msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
             msg = {"info": {"origtime": msgtime,
                             "callerid": "John Doe <212-555-1212>",
