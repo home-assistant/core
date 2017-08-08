@@ -24,13 +24,13 @@ from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor.rest import RestData
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'DWD-Wetter-Warnungen'
+DEFAULT_NAME = 'DWD-Weather-Warnings'
 
 CONF_REGION_NAME = 'region_name'
-DEFAULT_REGION_NAME = 'Hansestadt Hamburg'
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -42,7 +42,7 @@ MONITORED_CONDITIONS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION_NAME, default=DEFAULT_REGION_NAME): cv.string,
+    vol.Optional(CONF_REGION_NAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     api = DwdWeatherWarningsAPI(region_name)
 
-    sensors = [DwdWeatherWarningsSensor(hass, api, name, condition)
+    sensors = [DwdWeatherWarningsSensor(api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
     add_devices(sensors, True)
@@ -65,9 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DwdWeatherWarningsSensor(Entity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
-    def __init__(self, hass, api, name, variable):
+    def __init__(self, api, name, variable):
         """Initialize a DWD-Weather-Warnings sensor."""
-        self._hass = hass
         self._api = api
         self._name = name
         self._var_id = variable
@@ -164,7 +163,6 @@ class DwdWeatherWarningsAPI(object):
 
     def __init__(self, region_name):
         """Initialize the data object."""
-        from homeassistant.components.sensor.rest import RestData
 
         resource = "{}{}{}?{}".format(
             'https://',
