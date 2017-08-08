@@ -31,17 +31,24 @@ class DemoMailbox(Mailbox):
         """Initialize Demo mailbox."""
         super().__init__(hass, name)
         self._messages = {}
-        for idx in range(0, 10):
-            msgtime = int(dt.as_timestamp(
-                dt.utcnow()) - 3600 * 24 * (10 - idx))
-            msgtxt = "This is recorded message # %d" % (idx)
-            msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
-            msg = {"info": {"origtime": msgtime,
-                            "callerid": "John Doe <212-555-1212>",
-                            "duration": "10"},
-                   "text": msgtxt,
-                   "sha":  msgsha}
-            self._messages[msgsha] = msg
+        txt_path = os.path.join(
+            os.path.dirname(__file__), 'demo.txt')
+        with open(txt_path, 'r') as fil:
+            words = fil.read().split()
+            offset = [0, 114, 124, 207, 231, 235, 245, 291, 301, 325, 331]
+            for idx in range(0, 10):
+                msgtime = int(dt.as_timestamp(
+                    dt.utcnow()) - 3600 * 24 * (10 - idx))
+                msgtxt = ("Message %d. %s" %
+                          (idx+1,
+                           ' '.join(words[offset[9-idx]:offset[10-idx]])))
+                msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
+                msg = {"info": {"origtime": msgtime,
+                                "callerid": "John Doe <212-555-1212>",
+                                "duration": "10"},
+                       "text": msgtxt,
+                       "sha":  msgsha}
+                self._messages[msgsha] = msg
 
     @property
     def media_type(self):
