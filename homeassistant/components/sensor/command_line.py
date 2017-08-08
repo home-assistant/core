@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         value_template.hass = hass
     data = CommandSensorData(command)
 
-    add_devices([CommandSensor(hass, data, name, unit, value_template)])
+    add_devices([CommandSensor(hass, data, name, unit, value_template)], True)
 
 
 class CommandSensor(Entity):
@@ -56,7 +56,6 @@ class CommandSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):
