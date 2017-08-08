@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (slugify)
 
-REQUIREMENTS = ['tahoma-api==0.0.8']
+REQUIREMENTS = ['tahoma-api==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +103,7 @@ class TahomaDevice(Entity):
         return attr
 
     def apply_action(self, cmd_name, *args):
+        from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, args)
         self.controller.apply_actions('', [action])
