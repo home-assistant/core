@@ -1,13 +1,8 @@
 """
-Support for retrieving tide levels from worldtides.info.
+This component provides HA sensor support for the worldtides.info API.
 
-configuration.yaml
-
-sensor:
-  - platform: worldtidesinfo
-    api_key: "YOUR API KEY"
-    latitude: "LATITUDE OF BEACH"
-    longitude: "LONGITUDE OF BEACH"
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.worldtidesinfo/
 """
 import logging
 import time
@@ -19,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_NAME)
+                                 CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -29,12 +24,10 @@ DEFAULT_NAME = 'WorldTidesInfo'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
-STATE_UNKNOWN = 'Unknown'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_LATITUDE): cv.latitude,
-    vol.Required(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -44,35 +37,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
     name = config.get(CONF_NAME)
 
-    lat = config.get(CONF_LATITUDE)
-    lon = config.get(CONF_LONGITUDE)
+    lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     key = config.get(CONF_API_KEY)
 
-    start = int(time.time())
-    resource = 'https://www.worldtides.info/api?extremes&length=86400' \
-               '&key=%s&lat=%s&lon=%s&start=%s' % (key, lat, lon, start)
+    if None in (lat, lon):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
 
-    try:
-        data = requests.get(resource, timeout=10).json()
-        _LOGGER.debug("Data = %s", data)
-        _LOGGER.info("Platform setup succeeded")
-    except ValueError as err:
-        _LOGGER.error("Failed during platform setup")
-        _LOGGER.error("Check WorldTidesInfo %s", err.args)
-        data = None
-        return False
-
-    add_devices([WorldTidesInfoSensor(name, data, lat, lon, key)])
-    return True
+    add_devices([WorldTidesInfoSensor(name, lat, lon, key)])
 
 
 class WorldTidesInfoSensor(Entity):
     """Representation of a WorldTidesInfo sensor."""
 
-    def __init__(self, name, data, lat, lon, key):
+    def __init__(self, name, lat, lon, key):
         """Initialize the sensor."""
         self._name = name
-        self._data = data
         self._lat = lat
         self._lon = lon
         self._key = key
@@ -127,8 +107,8 @@ class WorldTidesInfoSensor(Entity):
         try:
             self.data = requests.get(resource, timeout=10).json()
             _LOGGER.debug("Data = %s", self.data)
-            _LOGGER.debug("Tide data queried with start time set to: %s",
-                          (start))
+            _LOGGER.info("Tide data queried with start time set to: %s",
+                         (start))
         except ValueError as err:
             _LOGGER.error("Check WorldTidesInfo %s", err.args)
             self.data = None

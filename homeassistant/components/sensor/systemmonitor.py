@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             resource['arg'] = ''
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource['arg']))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class SystemMonitorSensor(Entity):
@@ -88,7 +88,6 @@ class SystemMonitorSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([RestBinarySensor(
-        hass, rest, name, device_class, value_template)])
+        hass, rest, name, device_class, value_template)], True)
 
 
 class RestBinarySensor(BinarySensorDevice):
@@ -87,7 +87,6 @@ class RestBinarySensor(BinarySensorDevice):
         self._state = False
         self._previous_data = None
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):
