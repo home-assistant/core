@@ -68,17 +68,17 @@ class DoorBirdSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """:returns: The name of the switch."""
+        """Get the name of the switch."""
         return SWITCHES[self._switch]["name"]
 
     @property
     def icon(self):
-        """:returns: An icon to display."""
+        """Get an icon to display."""
         return "mdi:" + SWITCHES[self._switch]["icon"][self._state]
 
     @property
     def is_on(self):
-        """:returns: The assumed state of the relay."""
+        """Get the assumed state of the relay."""
         return self._state
 
     def turn_on(self, **kwargs):
