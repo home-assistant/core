@@ -27,7 +27,6 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.frontend import register_built_in_panel
 
 DOMAIN = 'automation'
 DEPENDENCIES = ['group']
@@ -231,10 +230,6 @@ def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
             descriptions.get(service), schema=SERVICE_SCHEMA)
-
-    if 'frontend' in hass.config.components:
-        register_built_in_panel(hass, 'automation', 'Automations',
-                                'mdi:playlist-play')
 
     return True
 

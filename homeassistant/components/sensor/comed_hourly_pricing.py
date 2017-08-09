@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             variable[CONF_SENSOR_TYPE], variable[CONF_OFFSET],
             variable.get(CONF_NAME)))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class ComedHourlyPricingSensor(Entity):

@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class IOSSensor(Entity):
@@ -41,7 +41,6 @@ class IOSSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

@@ -8,11 +8,13 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
+import os
 
 import async_timeout
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -35,6 +37,7 @@ CONF_GROUP = 'group'
 CONF_NOGROUP_ALIASES = 'nogroup_aliases'
 CONF_NOGROUP_ALIASSES = 'nogroup_aliasses'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
+CONF_DEVICE_ID = 'device_id'
 CONF_DEVICES = 'devices'
 CONF_AUTOMATIC_ADD = 'automatic_add'
 CONF_FIRE_EVENT = 'fire_event'
@@ -60,6 +63,8 @@ RFLINK_GROUP_COMMANDS = ['allon', 'alloff']
 
 DOMAIN = 'rflink'
 
+SERVICE_SEND_COMMAND = 'send_command'
+
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS,
@@ -77,6 +82,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+SEND_COMMAND_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_ID): cv.string,
+    vol.Required(CONF_COMMAND): cv.string,
+})
 
 
 def identify_event_type(event):
@@ -110,6 +120,24 @@ def async_setup(hass, config):
 
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
+
+    @asyncio.coroutine
+    def async_send_command(call):
+        """Send Rflink command."""
+        _LOGGER.debug('Rflink command for %s', str(call.data))
+        if not (yield from RflinkCommand.send_command(
+                call.data.get(CONF_DEVICE_ID),
+                call.data.get(CONF_COMMAND))):
+            _LOGGER.error('Failed Rflink command for %s', str(call.data))
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
+        descriptions[DOMAIN][SERVICE_SEND_COMMAND], SEND_COMMAND_SCHEMA)
 
     @callback
     def event_callback(event):
@@ -311,6 +339,12 @@ class RflinkCommand(RflinkDevice):
     def is_connected(cls):
         """Return connection status."""
         return bool(cls._protocol)
+
+    @classmethod
+    @asyncio.coroutine
+    def send_command(cls, device_id, action):
+        """Send device command to Rflink and wait for acknowledgement."""
+        return (yield from cls._protocol.send_command_ack(device_id, action))
 
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
