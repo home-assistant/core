@@ -77,8 +77,8 @@ class ERValveSwitches(SwitchDevice):
 
     def turn_off(self):
         """Turn a valve off."""
-        # We should first check the state and if it's "BZ" and the valve_id matches,
-        # then turn it off.  For now, just turn it off regardless.
+        # We should first check the state and if it's "BZ" and the valve_id
+        # matches, then turn it off.  For now, just turn it off regardless.
         valve = {}
         valve["duration"] = 0
         valve["valve"] = 0
