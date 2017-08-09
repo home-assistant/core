@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device_id in all_devices:
         dev = all_devices[device_id]
         _type = dev['type']
-        # generically identify all shades where type contains shade
+        # Generically identify all shades where type contains 'shade'
         if 'shade' in _type.lower():
             cover_dev = LutronCasetaCover(dev, bridge)
             devs.append(cover_dev)
