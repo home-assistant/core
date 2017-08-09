@@ -36,10 +36,9 @@ def setup(hass, config):
         hass.data[DOMAIN] = device
         return True
     elif status[1] == 401:
-        _LOGGER.error("Authorization rejected by DoorBird at %s for %s",
-                      ip, username)
+        _LOGGER.error("Authorization rejected by DoorBird at %s", ip)
         return False
     else:
-        _LOGGER.error("Could not connect to DoorBird at %s as %s: Error %s",
-                      ip, username, str(status[1]))
+        _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
+                      ip, str(status[1]))
         return False
