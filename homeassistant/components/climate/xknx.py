@@ -14,14 +14,24 @@ import homeassistant.helpers.config_validation as cv
 
 CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
+CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
+CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
+CONF_OPERATION_MODE_PROTECTION_ADDRESS = 'operation_mode_protection_address'
+CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
+CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 
 DEFAULT_NAME = 'XKNX Climate'
 DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SETPOINT_ADDRESS): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_PROTECTION_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
 })
 
 
@@ -60,8 +70,20 @@ def add_devices_from_platform(hass, config, add_devices):
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
-        group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
-        group_address_setpoint=config.get(CONF_SETPOINT_ADDRESS))
+        group_address_temperature= \
+            config.get(CONF_TEMPERATURE_ADDRESS),
+        group_address_target_temperature= \
+            config.get(CONF_TARGET_TEMPERATURE_ADDRESS),
+        group_address_setpoint= \
+            config.get(CONF_SETPOINT_ADDRESS),
+        group_address_operation_mode= \
+            config.get(CONF_OPERATION_MODE_ADDRESS),
+        group_address_operation_mode_protection= \
+            config.get(CONF_OPERATION_MODE_PROTECTION_ADDRESS),
+        group_address_operation_mode_night= \
+            config.get(CONF_OPERATION_MODE_NIGHT_ADDRESS),
+        group_address_operation_mode_comfort= \
+            config.get(CONF_OPERATION_MODE_COMFORT_ADDRESS))
     climate.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(climate)
     add_devices([XKNXClimate(hass, climate)])
@@ -112,7 +134,10 @@ class XKNXClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.device.setpoint
+        if self.device.supports_target_temperature:
+            return self.device.target_temperature
+        else:
+            return None
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -120,8 +145,27 @@ class XKNXClimate(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        yield from self.device.set_setpoint(temperature)
+        if self.device.supports_target_temperature:
+            yield from self.device.set_target_temperature(temperature)
 
-    def set_operation_mode(self, operation_mode):
+    @property
+    def current_operation(self):
+        """Return current operation ie. heat, cool, idle."""
+        if self.device.supports_operation_mode:
+            return self.device.operation_mode.value
+        else:
+            return None
+
+    @property
+    def operation_list(self):
+        """Return the list of available operation modes."""
+        return [operation_mode.value for
+                operation_mode in
+                self.device.get_supported_operation_modes()]
+
+    def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        raise NotImplementedError()
+        if self.device.supports_operation_mode:
+            from xknx.devices import ClimateOperationMode
+            xknx_operation_mode = ClimateOperationMode(operation_mode)
+            yield from self.device.set_operation_mode(xknx_operation_mode)
