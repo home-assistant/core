@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.doorbird import DOMAIN
-from homeassistant.const import  STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['doorbird']
