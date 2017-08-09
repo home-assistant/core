@@ -26,7 +26,7 @@ _TIMEOUT = 10  # seconds
 CONF_SHOW_LAST_VISITOR = 'last_visitor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SHOW_LAST_VISITOR, default=False): cv.boolean
+    vol.Optional(CONF_SHOW_LAST_VISITOR, default=False): cv.boolean
 })
 
 
@@ -65,17 +65,17 @@ class DoorBirdCamera(Camera):
 
     @property
     def name(self):
-        """:returns: The name of the camera."""
+        """Get the name of the camera."""
         return self._name
 
     def camera_image(self):
-        """:returns: The bytes of a camera image."""
+        """Get the bytes of a camera image."""
         return run_coroutine_threadsafe(
             self.async_camera_image(), self._hass.loop).result()
 
     @asyncio.coroutine
     def async_camera_image(self):
-        """:returns: A still image from the camera."""
+        """Pull a still image from the camera."""
         now = datetime.datetime.now()
 
         if self._last_image and now - self._last_update < self._interval:
