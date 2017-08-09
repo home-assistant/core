@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
-CONF_VALUE_TYPE = 'value_type'
+CONF_TYPE = 'type'
 
 DEFAULT_NAME = 'XKNX Sensor'
 DEPENDENCIES = ['xknx']
@@ -22,7 +22,7 @@ DEPENDENCIES = ['xknx']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TYPE): cv.string,
+    vol.Optional(CONF_TYPE): cv.string,
 })
 
 
@@ -62,7 +62,7 @@ def add_devices_from_platform(hass, config, add_devices):
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),
-        value_type=config.get(CONF_VALUE_TYPE))
+        value_type=config.get(CONF_TYPE))
     sensor.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(sensor)
     add_devices([XKNXSensor(hass, sensor)])
