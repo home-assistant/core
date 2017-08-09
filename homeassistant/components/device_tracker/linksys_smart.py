@@ -1,7 +1,5 @@
 """Support for Linksys Smart Wifi routers."""
 import logging
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -10,9 +8,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-from homeassistant.util import Throttle
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +32,6 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
-
-        self.lock = threading.Lock()
         self.last_results = {}
 
         # Check if the access point is accessible
@@ -55,48 +49,46 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         """Return the name (if known) of the device."""
         return self.last_results.get(mac)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Check for connected devices."""
-        with self.lock:
-            _LOGGER.info("Checking Linksys Smart Wifi")
+        _LOGGER.info("Checking Linksys Smart Wifi")
 
-            self.last_results = {}
-            response = self._make_request()
-            if response.status_code != 200:
-                _LOGGER.error(
-                    "Got HTTP status code %d when getting device list",
-                    response.status_code)
-                return False
-            try:
-                data = response.json()
-                result = data["responses"][0]
-                devices = result["output"]["devices"]
-                for device in devices:
-                    macs = device["knownMACAddresses"]
-                    if not macs:
-                        _LOGGER.warning(
-                            "Skipping device without known MAC address")
-                        continue
-                    mac = macs[-1]
-                    connections = device["connections"]
-                    if not connections:
-                        _LOGGER.debug("Device %s is not connected", mac)
-                        continue
+        self.last_results = {}
+        response = self._make_request()
+        if response.status_code != 200:
+            _LOGGER.error(
+                "Got HTTP status code %d when getting device list",
+                response.status_code)
+            return False
+        try:
+            data = response.json()
+            result = data["responses"][0]
+            devices = result["output"]["devices"]
+            for device in devices:
+                macs = device["knownMACAddresses"]
+                if not macs:
+                    _LOGGER.warning(
+                        "Skipping device without known MAC address")
+                    continue
+                mac = macs[-1]
+                connections = device["connections"]
+                if not connections:
+                    _LOGGER.debug("Device %s is not connected", mac)
+                    continue
 
-                    name = None
-                    for prop in device["properties"]:
-                        if prop["name"] == "userDeviceName":
-                            name = prop["value"]
-                    if not name:
-                        name = device.get("friendlyName", device["deviceID"])
+                name = None
+                for prop in device["properties"]:
+                    if prop["name"] == "userDeviceName":
+                        name = prop["value"]
+                if not name:
+                    name = device.get("friendlyName", device["deviceID"])
 
-                    _LOGGER.debug("Device %s is connected", mac)
-                    self.last_results[mac] = name
-            except (KeyError, IndexError):
-                _LOGGER.exception("Router returned unexpected response")
-                return False
-            return True
+                _LOGGER.debug("Device %s is connected", mac)
+                self.last_results[mac] = name
+        except (KeyError, IndexError):
+            _LOGGER.exception("Router returned unexpected response")
+            return False
+        return True
 
     def _make_request(self):
         # Weirdly enough, this doesn't seem to require authentication

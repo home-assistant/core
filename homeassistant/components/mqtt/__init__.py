@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
@@ -57,6 +58,7 @@ CONF_WILL_MESSAGE = 'will_message'
 
 CONF_STATE_TOPIC = 'state_topic'
 CONF_COMMAND_TOPIC = 'command_topic'
+CONF_AVAILABILITY_TOPIC = 'availability_topic'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
 
@@ -180,12 +182,14 @@ def _build_publish_data(topic, qos, retain):
     return data
 
 
+@bind_hass
 def publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
 @callback
+@bind_hass
 def async_publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
@@ -193,6 +197,7 @@ def async_publish(hass, topic, payload, qos=None, retain=None):
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
+@bind_hass
 def publish_template(hass, topic, payload_template, qos=None, retain=None):
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
@@ -201,6 +206,7 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
+@bind_hass
 def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                     encoding='utf-8'):
     """Subscribe to an MQTT topic."""
@@ -232,6 +238,7 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
     return async_remove
 
 
+@bind_hass
 def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
               encoding='utf-8'):
     """Subscribe to an MQTT topic."""

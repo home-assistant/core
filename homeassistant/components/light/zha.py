@@ -9,10 +9,13 @@ import logging
 
 from homeassistant.components import light, zha
 from homeassistant.util.color import color_RGB_to_xy
+from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
+
+DEFAULT_DURATION = 0.5
 
 
 @asyncio.coroutine
@@ -48,6 +51,7 @@ class Light(zha.Entity, light.Light):
         import bellows.zigbee.zcl.clusters as zcl_clusters
         if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
+            self._supported_features |= light.SUPPORT_TRANSITION
             self._brightness = 0
         if zcl_clusters.lighting.Color.cluster_id in self._in_clusters:
             # Not sure all color lights necessarily support this directly
@@ -62,14 +66,15 @@ class Light(zha.Entity, light.Light):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == 'unknown':
+        if self._state == STATE_UNKNOWN:
             return False
         return bool(self._state)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        duration = 5  # tenths of s
+        duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
+        duration = duration * 10  # tenths of s
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             yield from self._endpoint.light_color.move_to_color_temp(
@@ -91,7 +96,8 @@ class Light(zha.Entity, light.Light):
             )
 
         if self._brightness is not None:
-            brightness = kwargs.get('brightness', self._brightness or 255)
+            brightness = kwargs.get(
+                light.ATTR_BRIGHTNESS, self._brightness or 255)
             self._brightness = brightness
             # Move to level with on/off:
             yield from self._endpoint.level.move_to_level_with_on_off(

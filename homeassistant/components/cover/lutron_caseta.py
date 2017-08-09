@@ -8,10 +8,9 @@ import logging
 
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION)
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +22,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lutron Caseta Serena shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade"])
+    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade",
+                                                 "SerenaHoneycombShade"])
     for cover_device in cover_devices:
         dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
@@ -37,12 +37,17 @@ class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         return self._state["current_state"] < 1
+
+    @property
+    def current_cover_position(self):
+        """Return the current position of cover."""
+        return self._state["current_state"]
 
     def close_cover(self):
         """Close the cover."""

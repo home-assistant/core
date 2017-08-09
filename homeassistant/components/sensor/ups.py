@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([UPSSensor(session, config.get(CONF_NAME),
-                           config.get(CONF_UPDATE_INTERVAL))])
+                           config.get(CONF_UPDATE_INTERVAL))], True)
 
 
 class UPSSensor(Entity):
@@ -65,7 +65,6 @@ class UPSSensor(Entity):
         self._attributes = None
         self._state = None
         self.update = Throttle(interval)(self._update)
-        self.update()
 
     @property
     def name(self):

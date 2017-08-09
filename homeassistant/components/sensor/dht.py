@@ -20,7 +20,7 @@ from homeassistant.util.temperature import celsius_to_fahrenheit
 # Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['https://github.com/adafruit/Adafruit_Python_DHT/archive/'
                 'da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip'
-                '#Adafruit_DHT==1.3.0']
+                '#Adafruit_DHT==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class DHTSensor(Entity):
@@ -104,7 +104,6 @@ class DHTSensor(Entity):
         self.humidity_offset = humidity_offset
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

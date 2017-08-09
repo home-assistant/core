@@ -260,8 +260,8 @@ class TestConfig(unittest.TestCase):
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
-        """Test removal of library on upgrade from before 0.49."""
-        ha_version = '0.48.0'
+        """Test removal of library on upgrade from before 0.50."""
+        ha_version = '0.49.0'
         mock_os.path.isdir = mock.Mock(return_value=True)
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):

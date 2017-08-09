@@ -17,6 +17,7 @@ from homeassistant.const import (CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE,
                                  TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -198,6 +199,8 @@ class Metrics:
             metric = self._metric(*metric)
             try:
                 value = state_helper.state_as_number(state)
+                if unit == TEMP_FAHRENHEIT:
+                    value = fahrenheit_to_celsius(value)
                 metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass
@@ -212,6 +215,9 @@ class Metrics:
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+    def _handle_zwave(self, state):
+        self._battery(state)
 
 
 class PrometheusView(HomeAssistantView):

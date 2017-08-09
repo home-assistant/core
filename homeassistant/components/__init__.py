@@ -15,7 +15,6 @@ import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
@@ -33,25 +32,27 @@ def is_on(hass, entity_id=None):
     If there is no entity id given we will check all.
     """
     if entity_id:
-        group = get_component('group')
-
-        entity_ids = group.expand_entity_ids(hass, [entity_id])
+        entity_ids = hass.components.group.expand_entity_ids([entity_id])
     else:
         entity_ids = hass.states.entity_ids()
 
     for ent_id in entity_ids:
         domain = ha.split_entity_id(ent_id)[0]
 
-        module = get_component(domain)
-
         try:
-            if module.is_on(hass, ent_id):
-                return True
+            component = getattr(hass.components, domain)
 
-        except AttributeError:
-            # module is None or method is_on does not exist
-            _LOGGER.exception("Failed to call %s.is_on for %s",
-                              module, ent_id)
+        except ImportError:
+            _LOGGER.error('Failed to call %s.is_on: component not found',
+                          domain)
+            continue
+
+        if not hasattr(component, 'is_on'):
+            _LOGGER.warning("Component %s has no is_on method.", domain)
+            continue
+
+        if component.is_on(ent_id):
+            return True
 
     return False
 
@@ -161,10 +162,9 @@ def async_setup(hass, config):
             return
 
         if errors:
-            notif = get_component('persistent_notification')
             _LOGGER.error(errors)
-            notif.async_create(
-                hass, "Config error. See dev-info panel for details.",
+            hass.components.persistent_notification.async_create(
+                "Config error. See dev-info panel for details.",
                 "Config validating", "{0}.check_config".format(ha.DOMAIN))
             return
 

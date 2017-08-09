@@ -40,7 +40,7 @@ def from_config_dict(config: Dict[str, Any],
                      skip_pip: bool=False,
                      log_rotate_days: Any=None) \
                      -> Optional[core.HomeAssistant]:
-    """Try to configure Home Assistant from a config dict.
+    """Try to configure Home Assistant from a configuration dictionary.
 
     Dynamically loads required components and its dependencies.
     """
@@ -71,7 +71,7 @@ def async_from_config_dict(config: Dict[str, Any],
                            skip_pip: bool=False,
                            log_rotate_days: Any=None) \
                            -> Optional[core.HomeAssistant]:
-    """Try to configure Home Assistant from a config dict.
+    """Try to configure Home Assistant from a configuration dictionary.
 
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
@@ -92,8 +92,8 @@ def async_from_config_dict(config: Dict[str, Any],
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
-        _LOGGER.warning('Skipping pip installation of required modules. '
-                        'This may cause issues.')
+        _LOGGER.warning("Skipping pip installation of required modules. "
+                        "This may cause issues")
 
     if not loader.PREPARED:
         yield from hass.async_add_job(loader.prepare, hass)
@@ -118,13 +118,13 @@ def async_from_config_dict(config: Dict[str, Any],
     # pylint: disable=not-an-iterable
     res = yield from core_components.async_setup(hass, config)
     if not res:
-        _LOGGER.error('Home Assistant core failed to initialize. '
-                      'Further initialization aborted.')
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "further initialization aborted")
         return hass
 
     yield from persistent_notification.async_setup(hass, config)
 
-    _LOGGER.info('Home Assistant core initialized')
+    _LOGGER.info("Home Assistant core initialized")
 
     # stage 1
     for component in components:
@@ -143,7 +143,7 @@ def async_from_config_dict(config: Dict[str, Any],
     yield from hass.async_block_till_done()
 
     stop = time()
-    _LOGGER.info('Home Assistant initialized in %.2fs', stop-start)
+    _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
     async_register_signal_handling(hass)
     return hass
@@ -193,7 +193,7 @@ def async_from_config_file(config_path: str,
         config_dict = yield from hass.async_add_job(
             conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
-        _LOGGER.error('Error loading %s: %s', config_path, err)
+        _LOGGER.error("Error loading %s: %s", config_path, err)
         return None
     finally:
         clear_secret_cache()

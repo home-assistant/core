@@ -58,8 +58,12 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
 
         self._faces = {}
         for face_name, face_file in faces.items():
-            image = face_recognition.load_image_file(face_file)
-            self._faces[face_name] = face_recognition.face_encodings(image)[0]
+            try:
+                image = face_recognition.load_image_file(face_file)
+                self._faces[face_name] = \
+                    face_recognition.face_encodings(image)[0]
+            except IndexError as err:
+                _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
 
     @property
     def camera_entity(self):

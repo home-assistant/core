@@ -247,10 +247,8 @@ def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
         try:
-            if (device.is_pt2262 and
-                    device.masked_id == get_pt2262_deviceid(
-                        device_id,
-                        device.data_bits)):
+            if device.masked_id == get_pt2262_deviceid(device_id,
+                                                       device.data_bits):
                 _LOGGER.info("rfxtrx: found matching device %s for %s",
                              device_id,
                              get_pt2262_deviceid(device_id, device.data_bits))
@@ -413,11 +411,6 @@ class RfxtrxDevice(Entity):
     def should_fire_event(self):
         """Return is the device must fire event."""
         return self._should_fire_event
-
-    @property
-    def is_pt2262(self):
-        """Return true if the device is PT2262-based."""
-        return False
 
     @property
     def is_on(self):

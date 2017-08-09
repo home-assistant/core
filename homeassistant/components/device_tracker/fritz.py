@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.fritz/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -13,11 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['fritzconnection==0.6.3']
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +84,6 @@ class FritzBoxScanner(DeviceScanner):
             return None
         return ret
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
         if not self.success_init:

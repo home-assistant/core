@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PORT))
 
     if sensor.connection:
-        add_devices([sensor])
+        add_devices([sensor], True)
     else:
         return False
 
@@ -55,7 +55,6 @@ class ImapSensor(Entity):
         self._port = port
         self._unread_count = 0
         self.connection = self._login()
-        self.update()
 
     def _login(self):
         """Login and return an IMAP connection."""

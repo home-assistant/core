@@ -17,7 +17,6 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 from homeassistant.setup import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
@@ -106,32 +105,31 @@ def do_authentication(hass, config):
         'Home-Assistant.io',
     )
 
-    persistent_notification = loader.get_component('persistent_notification')
     try:
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
-        persistent_notification.create(
-            hass, 'Error: {}<br />You will need to restart hass after fixing.'
-                  ''.format(err),
+        hass.components.persistent_notification.create(
+            'Error: {}<br />You will need to restart hass after fixing.'
+            ''.format(err),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
 
-    persistent_notification.create(
-        hass, 'In order to authorize Home-Assistant to view your calendars '
-              'you must visit: <a href="{}" target="_blank">{}</a> and enter '
-              'code: {}'.format(dev_flow.verification_url,
-                                dev_flow.verification_url,
-                                dev_flow.user_code),
+    hass.components.persistent_notification.create(
+        'In order to authorize Home-Assistant to view your calendars '
+        'you must visit: <a href="{}" target="_blank">{}</a> and enter '
+        'code: {}'.format(dev_flow.verification_url,
+                          dev_flow.verification_url,
+                          dev_flow.user_code),
         title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
     )
 
     def step2_exchange(now):
         """Keep trying to validate the user_code until it expires."""
         if now >= dt.as_local(dev_flow.user_code_expiry):
-            persistent_notification.create(
-                hass, 'Authenication code expired, please restart '
-                      'Home-Assistant and try again',
+            hass.components.persistent_notification.create(
+                'Authenication code expired, please restart '
+                'Home-Assistant and try again',
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
             listener()
@@ -146,9 +144,9 @@ def do_authentication(hass, config):
         storage.put(credentials)
         do_setup(hass, config)
         listener()
-        persistent_notification.create(
-            hass, 'We are all setup now. Check {} for calendars that have '
-                  'been found'.format(YAML_DEVICES),
+        hass.components.persistent_notification.create(
+            'We are all setup now. Check {} for calendars that have '
+            'been found'.format(YAML_DEVICES),
             title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
 
     listener = track_time_change(hass, step2_exchange,

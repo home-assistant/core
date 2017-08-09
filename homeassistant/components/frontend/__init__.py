@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
@@ -75,6 +76,7 @@ SERVICE_SET_THEME_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def register_built_in_panel(hass, component_name, sidebar_title=None,
                             sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
@@ -96,6 +98,7 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
                    sidebar_icon, url_path, url, config)
 
 
+@bind_hass
 def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
                    sidebar_icon=None, url_path=None, url=None, config=None):
     """Register a panel for the frontend.
@@ -208,7 +211,7 @@ def setup(hass, config):
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                  'dev-template', 'kiosk'):
+                  'dev-template', 'dev-mqtt', 'kiosk'):
         register_built_in_panel(hass, panel)
 
     themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
@@ -358,7 +361,8 @@ class IndexView(HomeAssistantView):
             core_url=core_url, ui_url=ui_url,
             compatibility_url=compatibility_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=hass.data[DATA_PANELS])
+            panel_url=panel_url, panels=hass.data[DATA_PANELS],
+            dev_mode=request.app[KEY_DEVELOPMENT])
 
         return web.Response(text=resp, content_type='text/html')
 

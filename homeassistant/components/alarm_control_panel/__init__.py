@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -44,6 +45,7 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def alarm_disarm(hass, code=None, entity_id=None):
     """Send the alarm the command for disarm."""
     data = {}
@@ -55,6 +57,7 @@ def alarm_disarm(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_DISARM, data)
 
 
+@bind_hass
 def alarm_arm_home(hass, code=None, entity_id=None):
     """Send the alarm the command for arm home."""
     data = {}
@@ -66,6 +69,7 @@ def alarm_arm_home(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, data)
 
 
+@bind_hass
 def alarm_arm_away(hass, code=None, entity_id=None):
     """Send the alarm the command for arm away."""
     data = {}
@@ -77,6 +81,7 @@ def alarm_arm_away(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
 
+@bind_hass
 def alarm_trigger(hass, code=None, entity_id=None):
     """Send the alarm the command for trigger."""
     data = {}

@@ -14,7 +14,7 @@ from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['bellows==0.3.2']
+REQUIREMENTS = ['bellows==0.3.4']
 
 DOMAIN = 'zha'
 

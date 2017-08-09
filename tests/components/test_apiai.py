@@ -57,14 +57,15 @@ def setUpModule():
 
     hass.services.register("test", "apiai", mock_service)
 
-    setup.setup_component(hass, apiai.DOMAIN, {
-        # Key is here to verify we allow other keys in config too
-        "homeassistant": {},
-        "apiai": {
-            "intents": {
-                "WhereAreWeIntent": {
-                    "speech":
-                    """
+    assert setup.setup_component(hass, apiai.DOMAIN, {
+        "apiai": {},
+    })
+    assert setup.setup_component(hass, "intent_script", {
+        "intent_script": {
+            "WhereAreWeIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text": """
                         {%- if is_state("device_tracker.paulus", "home")
                                and is_state("device_tracker.anne_therese",
                                             "home") -%}
@@ -77,19 +78,25 @@ def setUpModule():
                             }}
                         {% endif %}
                     """,
+                }
+            },
+            "GetZodiacHoroscopeIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text": "You told us your sign is {{ ZodiacSign }}.",
+                }
+            },
+            "CallServiceIntent": {
+                "speech": {
+                    "type": "plain",
+                    "text": "Service called",
                 },
-                "GetZodiacHoroscopeIntent": {
-                    "speech": "You told us your sign is {{ ZodiacSign }}.",
-                },
-                "CallServiceIntent": {
-                    "speech": "Service called",
-                    "action": {
-                        "service": "test.apiai",
-                        "data_template": {
-                            "hello": "{{ ZodiacSign }}"
-                        },
-                        "entity_id": "switch.test",
-                    }
+                "action": {
+                    "service": "test.apiai",
+                    "data_template": {
+                        "hello": "{{ ZodiacSign }}"
+                    },
+                    "entity_id": "switch.test",
                 }
             }
         }
@@ -509,5 +516,4 @@ class TestApiai(unittest.TestCase):
         self.assertEqual(200, req.status_code)
         text = req.json().get("speech")
         self.assertEqual(
-            "Intent 'unknown' is not yet configured within Home Assistant.",
-            text)
+            "This intent is not yet configured within Home Assistant.", text)

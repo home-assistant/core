@@ -9,7 +9,6 @@ import logging
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
 
-import homeassistant.loader as loader
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
@@ -40,7 +39,6 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
 
-    persistent_notification = loader.get_component('persistent_notification')
     try:
         from pyarlo import PyArlo
 
@@ -50,8 +48,8 @@ def setup(hass, config):
         hass.data[DATA_ARLO] = arlo
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgar Arlo: %s", str(ex))
-        persistent_notification.create(
-            hass, 'Error: {}<br />'
+        hass.components.persistent_notification.create(
+            'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(ex),
             title=NOTIFICATION_TITLE,

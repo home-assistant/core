@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
@@ -51,6 +52,7 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
     info = {

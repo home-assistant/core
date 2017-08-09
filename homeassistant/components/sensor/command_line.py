@@ -4,13 +4,15 @@ Allows to configure custom shell commands to turn a value for a sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
-from datetime import timedelta
 import logging
 import subprocess
 import shlex
 
+from datetime import timedelta
+
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
@@ -18,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         value_template.hass = hass
     data = CommandSensorData(hass, command)
 
-    add_devices([CommandSensor(hass, data, name, unit, value_template)])
+    add_devices([CommandSensor(hass, data, name, unit, value_template)], True)
 
 
 class CommandSensor(Entity):
@@ -56,10 +57,9 @@ class CommandSensor(Entity):
         self._hass = hass
         self.data = data
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):

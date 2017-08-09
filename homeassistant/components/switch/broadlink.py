@@ -13,7 +13,6 @@ import socket
 
 import voluptuous as vol
 
-import homeassistant.loader as loader
 from homeassistant.util.dt import utcnow
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -67,8 +66,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MAC).encode().replace(b':', b''))
     switch_type = config.get(CONF_TYPE)
 
-    persistent_notification = loader.get_component('persistent_notification')
-
     @asyncio.coroutine
     def _learn_command(call):
         try:
@@ -91,13 +88,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 log_msg = "Recieved packet is: {}".\
                           format(b64encode(packet).decode('utf8'))
                 _LOGGER.info(log_msg)
-                persistent_notification.async_create(
-                    hass, log_msg, title='Broadlink switch')
+                hass.components.persistent_notification.async_create(
+                    log_msg, title='Broadlink switch')
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
         _LOGGER.error("Did not received any signal")
-        persistent_notification.async_create(
-            hass, "Did not received any signal", title='Broadlink switch')
+        hass.components.persistent_notification.async_create(
+            "Did not received any signal", title='Broadlink switch')
 
     @asyncio.coroutine
     def _send_packet(call):

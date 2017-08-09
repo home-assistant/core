@@ -12,7 +12,6 @@ from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 
 REQUIREMENTS = ['pymyq==0.0.8']
 
@@ -37,7 +36,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     brand = config.get(CONF_TYPE)
-    persistent_notification = loader.get_component('persistent_notification')
     myq = pymyq(username, password, brand)
 
     try:
@@ -52,8 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
-        persistent_notification.create(
-            hass, 'Error: {}<br />'
+        hass.components.persistent_notification.create(
+            'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(ex),
             title=NOTIFICATION_TITLE,
