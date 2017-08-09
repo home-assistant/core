@@ -19,14 +19,17 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Lutron Caseta Serena shades as a cover device."""
+    """Set up the Lutron Caseta shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade",
-                                                 "SerenaHoneycombShade"])
-    for cover_device in cover_devices:
-        dev = LutronCasetaCover(cover_device, bridge)
-        devs.append(dev)
+    all_devices = bridge.get_devices()
+    for device_id in all_devices:
+        dev = all_devices[device_id]
+        _type = dev['type']
+        # generically identify all shades where type contains shade
+        if 'shade' in _type.lower():
+            cover_dev = LutronCasetaCover(dev, bridge)
+            devs.append(cover_dev)
 
     add_devices(devs, True)
 
