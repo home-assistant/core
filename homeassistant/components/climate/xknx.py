@@ -70,20 +70,20 @@ def add_devices_from_platform(hass, config, add_devices):
     climate = xknx.devices.Climate(
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
-        group_address_temperature= \
-            config.get(CONF_TEMPERATURE_ADDRESS),
-        group_address_target_temperature= \
-            config.get(CONF_TARGET_TEMPERATURE_ADDRESS),
-        group_address_setpoint= \
-            config.get(CONF_SETPOINT_ADDRESS),
-        group_address_operation_mode= \
-            config.get(CONF_OPERATION_MODE_ADDRESS),
-        group_address_operation_mode_protection= \
-            config.get(CONF_OPERATION_MODE_PROTECTION_ADDRESS),
-        group_address_operation_mode_night= \
-            config.get(CONF_OPERATION_MODE_NIGHT_ADDRESS),
-        group_address_operation_mode_comfort= \
-            config.get(CONF_OPERATION_MODE_COMFORT_ADDRESS))
+        group_address_temperature=config.get(
+            CONF_TEMPERATURE_ADDRESS),
+        group_address_target_temperature=config.get(
+            CONF_TARGET_TEMPERATURE_ADDRESS),
+        group_address_setpoint=config.get(
+            CONF_SETPOINT_ADDRESS),
+        group_address_operation_mode=config.get(
+            CONF_OPERATION_MODE_ADDRESS),
+        group_address_operation_mode_protection=config.get(
+            CONF_OPERATION_MODE_PROTECTION_ADDRESS),
+        group_address_operation_mode_night=config.get(
+            CONF_OPERATION_MODE_NIGHT_ADDRESS),
+        group_address_operation_mode_comfort=config.get(
+            CONF_OPERATION_MODE_COMFORT_ADDRESS))
     climate.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(climate)
     add_devices([XKNXClimate(hass, climate)])
