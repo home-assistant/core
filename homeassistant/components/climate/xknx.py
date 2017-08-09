@@ -25,9 +25,9 @@ DEPENDENCIES = ['xknx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SETPOINT_ADDRESS): cv.string,
+    vol.Required(CONF_SETPOINT_ADDRESS): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_PROTECTION_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
