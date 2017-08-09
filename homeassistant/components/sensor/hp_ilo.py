@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             unit_of_measurement=monitored_variable[CONF_UNIT_OF_MEASUREMENT])
         devices.append(new_device)
 
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class HpIloSensor(Entity):
@@ -110,8 +110,6 @@ class HpIloSensor(Entity):
 
         self._state = None
         self._state_attributes = None
-
-        self.update()
 
         _LOGGER.debug("Created HP ILO sensor %r", self)
 

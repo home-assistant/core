@@ -7,10 +7,10 @@ https://home-assistant.io/components/demo/
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice)
+    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, VacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +25,15 @@ SUPPORT_MOST_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP | \
 SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                        SUPPORT_STOP | SUPPORT_RETURN_HOME | \
                        SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND | \
-                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY
+                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY | \
+                       SUPPORT_CLEAN_SPOT
 
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
 DEMO_VACUUM_COMPLETE = '0_Ground_floor'
 DEMO_VACUUM_MOST = '1_First_floor'
 DEMO_VACUUM_BASIC = '2_Second_floor'
 DEMO_VACUUM_MINIMAL = '3_Third_floor'
+DEMO_VACUUM_NONE = '4_Fourth_floor'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -41,6 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
         DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
         DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
+        DemoVacuum(DEMO_VACUUM_NONE, 0),
     ])
 
 
@@ -48,7 +51,7 @@ class DemoVacuum(VacuumDevice):
     """Representation of a demo vacuum."""
 
     # pylint: disable=no-self-use
-    def __init__(self, name, supported_features=None):
+    def __init__(self, name, supported_features):
         """Initialize the vacuum."""
         self._name = name
         self._supported_features = supported_features
@@ -97,9 +100,7 @@ class DemoVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
+        assert self.supported_features & SUPPORT_FAN_SPEED != 0
         return FAN_SPEEDS
 
     @property
@@ -118,10 +119,7 @@ class DemoVacuum(VacuumDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._supported_features is not None:
-            return self._supported_features
-
-        return super().supported_features
+        return self._supported_features
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on."""
@@ -150,6 +148,17 @@ class DemoVacuum(VacuumDevice):
 
         self._state = False
         self._status = 'Stopping the current task'
+        self.schedule_update_ha_state()
+
+    def clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
+            return
+
+        self._state = True
+        self._cleaned_area += 1.32
+        self._battery_level -= 1
+        self._status = "Cleaning spot"
         self.schedule_update_ha_state()
 
     def locate(self, **kwargs):

@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
-    add_devices(hosts)
+    add_devices(hosts, True)
 
 
 class OnkyoDevice(MediaPlayerDevice):
@@ -79,7 +79,6 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_list = list(sources.values())
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
-        self.update()
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""

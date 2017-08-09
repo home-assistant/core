@@ -1,4 +1,4 @@
-"""The tests for the sonarr platform."""
+"""The tests for the Sonarr platform."""
 import unittest
 import time
 from datetime import datetime
@@ -561,7 +561,7 @@ class TestSonarrSetup(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_devices(self, devices, update):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)

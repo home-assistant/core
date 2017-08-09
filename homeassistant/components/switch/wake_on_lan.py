@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     off_action = config.get(CONF_OFF_ACTION)
 
     add_devices([WOLSwitch(hass, name, host, mac_address,
-                           off_action, broadcast_address)])
+                           off_action, broadcast_address)], True)
 
 
 class WOLSwitch(SwitchDevice):
@@ -62,7 +62,6 @@ class WOLSwitch(SwitchDevice):
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
         self._wol = wol
-        self.update()
 
     @property
     def should_poll(self):

@@ -29,6 +29,9 @@ omit =
     homeassistant/components/arlo.py
     homeassistant/components/*/arlo.py
 
+    homeassistant/components/asterisk_mbox.py
+    homeassistant/components/*/asterisk_mbox.py
+
     homeassistant/components/axis.py
     homeassistant/components/*/axis.py
 
@@ -172,7 +175,7 @@ omit =
     homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
-  
+
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
 
@@ -197,7 +200,11 @@ omit =
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi.py
-    homeassistant/components/*/xiaomi.py
+    homeassistant/components/binary_sensor/xiaomi.py
+    homeassistant/components/cover/xiaomi.py
+    homeassistant/components/light/xiaomi.py
+    homeassistant/components/sensor/xiaomi.py
+    homeassistant/components/switch/xiaomi.py
 
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
@@ -214,6 +221,7 @@ omit =
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
+    homeassistant/components/alarm_control_panel/egardia.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
@@ -297,6 +305,7 @@ omit =
     homeassistant/components/light/blinkt.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/decora.py
+    homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
@@ -530,6 +539,7 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
     homeassistant/components/switch/pulseaudio_loopback.py
+    homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/tplink.py
@@ -540,6 +550,7 @@ omit =
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
+    homeassistant/components/vacuum/roomba.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py

@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2017.7.23']
+REQUIREMENTS = ['youtube_dl==2017.8.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,24 +125,13 @@ class MediaExtractor:
         else:
             selected_media = all_media
 
-        try:
-            media_info = ydl.process_ie_result(selected_media,
-                                               download=False)
-        except (ExtractorError, DownloadError):
-            # This exception will be logged by youtube-dl itself
-            raise MEDownloadException()
-
         def stream_selector(query):
             """Find stream url that matches query."""
             try:
-                format_selector = ydl.build_format_selector(query)
-            except (SyntaxError, ValueError, AttributeError) as ex:
-                _LOGGER.error(ex)
-                raise MEQueryException()
-
-            try:
-                requested_stream = next(format_selector(media_info))
-            except (KeyError, StopIteration):
+                ydl.params['format'] = query
+                requested_stream = ydl.process_ie_result(selected_media,
+                                                         download=False)
+            except (ExtractorError, DownloadError):
                 _LOGGER.error("Could not extract stream for the query: %s",
                               query)
                 raise MEQueryException()
