@@ -872,7 +872,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.3
+simplisafe-python==1.0.4
 
 # homeassistant.components.notify.slack
 slacker==0.9.50
