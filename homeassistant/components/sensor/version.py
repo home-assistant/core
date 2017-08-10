@@ -28,7 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Version sensor platform."""
     name = config.get(CONF_NAME)
 
-    async_add_devices([VersionSensor(name)], True)
+    async_add_devices([VersionSensor(name)])
 
 
 class VersionSensor(Entity):
@@ -37,7 +37,7 @@ class VersionSensor(Entity):
     def __init__(self, name):
         """Initialize the Version sensor."""
         self._name = name
-        self._state = None
+        self._state = __version__
 
     @property
     def name(self):
@@ -45,11 +45,11 @@ class VersionSensor(Entity):
         return self._name
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Get the latest data and updates the state."""
-        self._state = __version__
