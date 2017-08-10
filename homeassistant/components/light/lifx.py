@@ -406,6 +406,7 @@ class LIFXLight(Light):
         self.effects_conductor = effects_conductor
         self.registered = True
         self.postponed_update = None
+        self.lock = asyncio.Lock()
 
     @property
     def available(self):
@@ -452,81 +453,96 @@ class LIFXLight(Light):
         return None
 
     @asyncio.coroutine
-    def update_after_transition(self, now):
-        """Request new status after completion of the last transition."""
+    def update_hass(self, now=None):
+        """Request new status and push it to hass."""
         self.postponed_update = None
         yield from self.async_update()
         yield from self.async_update_ha_state()
 
-    def update_later(self, when):
-        """Schedule an update requests when a transition is over."""
+    @asyncio.coroutine
+    def update_during_transition(self, when):
+        """Update state at the start and end of a transition."""
         if self.postponed_update:
             self.postponed_update()
-            self.postponed_update = None
+
+        # Transition has started
+        yield from self.update_hass()
+
+        # Transition has ended
         if when > 0:
             self.postponed_update = async_track_point_in_utc_time(
-                self.hass, self.update_after_transition,
+                self.hass, self.update_hass,
                 util.dt.utcnow() + timedelta(milliseconds=when))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         kwargs[ATTR_POWER] = True
-        yield from self.async_set_state(**kwargs)
+        self.hass.async_add_job(self.async_set_state(**kwargs))
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         kwargs[ATTR_POWER] = False
-        yield from self.async_set_state(**kwargs)
+        self.hass.async_add_job(self.async_set_state(**kwargs))
 
     @asyncio.coroutine
     def async_set_state(self, **kwargs):
         """Set a color on the light and turn it on/off."""
-        yield from self.effects_conductor.stop([self.device])
+        with (yield from self.lock):
+            bulb = self.device
 
-        if ATTR_EFFECT in kwargs:
-            yield from self.default_effect(**kwargs)
-            return
+            yield from self.effects_conductor.stop([bulb])
 
-        if ATTR_INFRARED in kwargs:
-            self.device.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
+            if ATTR_EFFECT in kwargs:
+                yield from self.default_effect(**kwargs)
+                return
 
-        if ATTR_TRANSITION in kwargs:
-            fade = int(kwargs[ATTR_TRANSITION] * 1000)
-        else:
-            fade = 0
+            if ATTR_INFRARED in kwargs:
+                bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
-        # These are both False if ATTR_POWER is not set
-        power_on = kwargs.get(ATTR_POWER, False)
-        power_off = not kwargs.get(ATTR_POWER, True)
+            if ATTR_TRANSITION in kwargs:
+                fade = int(kwargs[ATTR_TRANSITION] * 1000)
+            else:
+                fade = 0
 
-        hsbk = find_hsbk(**kwargs)
+            # These are both False if ATTR_POWER is not set
+            power_on = kwargs.get(ATTR_POWER, False)
+            power_off = not kwargs.get(ATTR_POWER, True)
 
-        # Send messages, waiting for ACK each time
-        ack = AwaitAioLIFX().wait
-        bulb = self.device
+            hsbk = find_hsbk(**kwargs)
 
-        if not self.is_on:
-            if power_off:
-                yield from ack(partial(bulb.set_power, False))
-            if hsbk:
-                yield from self.send_color(ack, hsbk, kwargs, duration=0)
-            if power_on:
-                yield from ack(partial(bulb.set_power, True, duration=fade))
-        else:
-            if power_on:
-                yield from ack(partial(bulb.set_power, True))
-            if hsbk:
-                yield from self.send_color(ack, hsbk, kwargs, duration=fade)
-            if power_off:
-                yield from ack(partial(bulb.set_power, False, duration=fade))
+            # Send messages, waiting for ACK each time
+            ack = AwaitAioLIFX().wait
 
-        # Schedule an update when the transition is complete
-        self.update_later(fade)
+            if not self.is_on:
+                if power_off:
+                    yield from self.set_power(ack, False)
+                if hsbk:
+                    yield from self.set_color(ack, hsbk, kwargs)
+                if power_on:
+                    yield from self.set_power(ack, True, duration=fade)
+            else:
+                if power_on:
+                    yield from self.set_power(ack, True)
+                if hsbk:
+                    yield from self.set_color(ack, hsbk, kwargs, duration=fade)
+                if power_off:
+                    yield from self.set_power(ack, False, duration=fade)
+
+            # Avoid state ping-pong by holding off updates as the state settles
+            yield from asyncio.sleep(0.3)
+
+        # Update when the transition starts and ends
+        yield from self.update_during_transition(fade)
 
     @asyncio.coroutine
-    def send_color(self, ack, hsbk, kwargs, duration):
+    def set_power(self, ack, pwr, duration=0):
+        """Send a power change to the device."""
+        yield from ack(partial(self.device.set_power, pwr, duration=duration))
+
+    @asyncio.coroutine
+    def set_color(self, ack, hsbk, kwargs, duration=0):
         """Send a color change to the device."""
         hsbk = merge_hsbk(self.device.color, hsbk)
         yield from ack(partial(self.device.set_color, hsbk, duration=duration))
@@ -544,9 +560,7 @@ class LIFXLight(Light):
     def async_update(self):
         """Update bulb status."""
         _LOGGER.debug("%s async_update", self.who)
-        if self.available:
-            # Avoid state ping-pong by holding off updates as the state settles
-            yield from asyncio.sleep(0.3)
+        if self.available and not self.lock.locked():
             yield from AwaitAioLIFX().wait(self.device.get_color)
 
 
@@ -619,16 +633,18 @@ class LIFXStrip(LIFXColor):
     """Representation of a LIFX light strip with multiple zones."""
 
     @asyncio.coroutine
-    def send_color(self, ack, hsbk, kwargs, duration):
+    def set_color(self, ack, hsbk, kwargs, duration=0):
         """Send a color change to the device."""
         bulb = self.device
         num_zones = len(bulb.color_zones)
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
-            yield from ack(partial(bulb.set_power, True))
-            yield from self.async_update()
-            yield from ack(partial(bulb.set_power, False))
+            yield from self.set_power(ack, True)
+            yield from asyncio.sleep(0.3)
+            yield from self.update_color_zones()
+            yield from self.set_power(ack, False)
+            yield from asyncio.sleep(0.3)
 
         zones = kwargs.get(ATTR_ZONES, None)
         if zones is None:
@@ -651,12 +667,16 @@ class LIFXStrip(LIFXColor):
     @asyncio.coroutine
     def async_update(self):
         """Update strip status."""
-        if self.available:
+        if self.available and not self.lock.locked():
             yield from super().async_update()
+            yield from self.update_color_zones()
 
-            ack = AwaitAioLIFX().wait
-            bulb = self.device
+    @asyncio.coroutine
+    def update_color_zones(self):
+        """Get updated color information for each zone."""
+        ack = AwaitAioLIFX().wait
+        bulb = self.device
 
-            # Each get_color_zones returns the next 8 zones
-            for zone in range(0, len(bulb.color_zones), 8):
-                yield from ack(partial(bulb.get_color_zones, start_index=zone))
+        # Each get_color_zones returns the next 8 zones
+        for zone in range(0, len(bulb.color_zones), 8):
+            yield from ack(partial(bulb.get_color_zones, start_index=zone))
