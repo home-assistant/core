@@ -340,14 +340,13 @@ class LIFXManager(object):
             if lifxwhite(device):
                 entity = LIFXWhite(device, self.effects_conductor)
             elif lifxmultizone(device):
-                yield from ack(partial(device.get_color_zones, start_index=0))
                 entity = LIFXStrip(device, self.effects_conductor)
             else:
                 entity = LIFXColor(device, self.effects_conductor)
 
             _LOGGER.debug("%s register READY", entity.who)
             self.entities[device.mac_addr] = entity
-            self.async_add_devices([entity])
+            self.async_add_devices([entity], True)
 
     @callback
     def unregister(self, device):
@@ -674,9 +673,14 @@ class LIFXStrip(LIFXColor):
     @asyncio.coroutine
     def update_color_zones(self):
         """Get updated color information for each zone."""
-        ack = AwaitAioLIFX().wait
-        bulb = self.device
-
-        # Each get_color_zones returns the next 8 zones
-        for zone in range(0, len(bulb.color_zones), 8):
-            yield from ack(partial(bulb.get_color_zones, start_index=zone))
+        zone = 0
+        top = 1
+        while self.available and zone < top:
+            # Each get_color_zones can update 8 zones at once
+            resp = yield from AwaitAioLIFX().wait(partial(
+                self.device.get_color_zones,
+                start_index=zone,
+                end_index=zone+7))
+            if resp:
+                zone += 8
+                top = resp.count
