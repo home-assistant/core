@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +155,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         self._id = player_id
         self._status = {}
         self._name = name
+        self._last_update = None
         _LOGGER.debug("Creating SqueezeBox object: %s, %s", name, player_id)
 
     @property
@@ -199,7 +201,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         if response is False:
             return
 
-        self._status = response.copy()
+        self._status = {}
 
         try:
             self._status.update(response["playlist_loop"][0])
@@ -209,6 +211,9 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             self._status.update(response["remoteMeta"])
         except KeyError:
             pass
+
+        self._status.update(response)
+        self._last_update = utcnow()
 
     @property
     def volume_level(self):
@@ -238,6 +243,17 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Duration of current playing media in seconds."""
         if 'duration' in self._status:
             return int(float(self._status['duration']))
+
+    @property
+    def media_position(self):
+        """Duration of current playing media in seconds."""
+        if 'time' in self._status:
+            return int(float(self._status['time']))
+
+    @property
+    def media_position_updated_at(self):
+        """Last time status was updated."""
+        return self._last_update
 
     @property
     def media_image_url(self):
