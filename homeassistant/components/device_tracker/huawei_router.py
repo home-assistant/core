@@ -8,7 +8,6 @@ import base64
 import logging
 import re
 from collections import namedtuple
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -17,9 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +74,6 @@ class HuaweiDeviceScanner(DeviceScanner):
                 return client.name
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the router is up to date.
 
