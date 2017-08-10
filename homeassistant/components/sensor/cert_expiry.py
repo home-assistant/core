@@ -12,9 +12,9 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
+                                 EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,11 +35,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up certificate expiry sensor."""
-    server_name = config.get(CONF_HOST)
-    server_port = config.get(CONF_PORT)
-    sensor_name = config.get(CONF_NAME)
+    def run_setup(event):
+        """Wait until Home Assistant is fully initialized before creating.
 
-    add_devices([SSLCertificate(sensor_name, server_name, server_port)], True)
+        Delay the setup until Home Assistant is fully initialized.
+        """
+        server_name = config.get(CONF_HOST)
+        server_port = config.get(CONF_PORT)
+        sensor_name = config.get(CONF_NAME)
+
+        add_devices([SSLCertificate(sensor_name, server_name, server_port)],
+                    True)
+
+    # Wait until start event is sent to load this component.
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
 class SSLCertificate(Entity):
@@ -72,7 +81,6 @@ class SSLCertificate(Entity):
         """Icon to use in the frontend, if any."""
         return 'mdi:certificate'
 
-    @Throttle(timedelta(seconds=120))
     def update(self):
         """Fetch the certificate information."""
         try:
