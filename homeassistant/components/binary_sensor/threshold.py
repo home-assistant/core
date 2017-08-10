@@ -83,14 +83,13 @@ class ThresholdSensor(BinarySensorDevice):
         self._deviation = False  # The state ignoring delays
         self._state = False  # The actual state of the sensor
         self.sensor_value = 0
+        self._async_remove_delay_listener = None
 
         @callback
         # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
             """Handle sensor state changes."""
-            async_remove_delay_cancel = None
-            async_remove_delay_listener = None
 
             if new_state.state == STATE_UNKNOWN:
                 return
@@ -100,11 +99,18 @@ class ThresholdSensor(BinarySensorDevice):
                 self._state = new_state
                 self._hass.async_add_job(self.async_update_ha_state)
 
+            def clear_listener():
+                """Clear active timer listener."""
+                if self._async_remove_delay_listener is not None:
+                    self._async_remove_delay_listener()
+                    self._async_remove_delay_listener = None
+
             try:
                 self.sensor_value = float(new_state.state)
             except ValueError:
                 _LOGGER.error("State is not numerical")
 
+            old_deviation = self._deviation
             if self.is_upper:
                 self._deviation = bool(self.sensor_value > self._threshold)
             else:
@@ -115,45 +121,29 @@ class ThresholdSensor(BinarySensorDevice):
                 change_state(self._deviation)
                 return
 
-            def clear_listener():
-                """Clear active state and timer listeners."""
-                nonlocal async_remove_delay_cancel, async_remove_delay_listener
-                if async_remove_delay_listener is not None:
-                    async_remove_delay_listener()
-                    async_remove_delay_listener = None
-                if async_remove_delay_cancel is not None:
-                    async_remove_delay_cancel()
-                    async_remove_delay_cancel = None
+            # We only need to reset and set up new timers if the deviation
+            # changed
+            if(old_deviation != self._deviation):
+                @callback
+                def threshold_delay_listener(now):
+                    """Fire on state changes after a delay and calls action."""
+                    self._async_remove_delay_listener = None
+                    clear_listener()
+                    change_state(self._deviation)
 
-            @callback
-            def threshold_delay_listener(now):
-                """Fire on state changes after a delay and calls action."""
-                nonlocal async_remove_delay_listener
-                async_remove_delay_listener = None
-                clear_listener()
-                change_state(self._deviation)
-
-            @callback
-            def threshold_delay_cancel_listener(
-                    entity, inner_old_state, inner_new_state):
-                """Fire on changes and cancel for listener if changed."""
-                if inner_new_state.state == new_state.state:
-                    return
+                # cleanup previous listener
                 clear_listener()
 
-            # cleanup previous listener
-            clear_listener()
+                if self._deviation:
+                    time_delta = self._on_delay
+                else:
+                    time_delta = self._off_delay
 
-            if self._deviation:
-                time_delta = self._on_delay
-            else:
-                time_delta = self._off_delay
-
-            async_remove_delay_listener = async_track_point_in_utc_time(
-                hass, threshold_delay_listener, dt_util.utcnow() + time_delta)
-
-            async_remove_delay_cancel = async_track_state_change(
-                hass, entity, threshold_delay_cancel_listener)
+                self._async_remove_delay_listener = \
+                    async_track_point_in_utc_time(
+                        hass,
+                        threshold_delay_listener,
+                        dt_util.utcnow() + time_delta)
 
             # Always trigger a state update event so that the attributes get
             # updated

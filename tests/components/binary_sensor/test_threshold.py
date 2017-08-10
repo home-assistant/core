@@ -307,7 +307,17 @@ class TestThresholdSensor(unittest.TestCase):
             self.hass.states.set('sensor.test_monitored', 14)
             self.hass.block_till_done()
 
-            now += timedelta(seconds=11)
+            now += timedelta(seconds=5)
+            mock_utcnow.return_value = now
+            fire_time_changed(self.hass, now)
+            self.hass.block_till_done()
+
+            # Change state to something else, still below the threshold,
+            # to ensure that the on_delay timer does not get reset
+            self.hass.states.set('sensor.test_monitored', 13)
+            self.hass.block_till_done()
+
+            now += timedelta(seconds=6)
             mock_utcnow.return_value = now
             fire_time_changed(self.hass, now)
             self.hass.block_till_done()
