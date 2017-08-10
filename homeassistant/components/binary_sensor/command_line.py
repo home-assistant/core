@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    data = CommandSensorData(hass, command)
 
     add_devices([CommandBinarySensor(
         hass, data, name, device_class, payload_on, payload_off,
