@@ -110,11 +110,11 @@ class CommandSensorData(object):
             prog = command
             args = None
             args_compiled = None
-            cache[command] = prog, args, args_compiled
+            cache[command] = (prog, args, args_compiled)
         else:
             prog, args = command.split(' ', 1)
             args_compiled = template.Template(args, self.hass)
-            cache[command] = prog, args, args_compiled
+            cache[command] = (prog, args, args_compiled)
 
         if args_compiled:
             try:
