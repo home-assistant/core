@@ -123,7 +123,7 @@ class ThresholdSensor(BinarySensorDevice):
 
             # We only need to reset and set up new timers if the deviation
             # changed
-            if(old_deviation != self._deviation):
+            if old_deviation != self._deviation:
                 @callback
                 def threshold_delay_listener(now):
                     """Fire on state changes after a delay and calls action."""
