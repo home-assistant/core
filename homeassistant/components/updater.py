@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
 }}, extra=vol.ALLOW_EXTRA)
 
 RESPONSE_SCHEMA = vol.Schema({
-    vol.Required('version'): str,
+    vol.Required('version'): cv.string,
     vol.Required('release-notes'): cv.url,
 })
 
