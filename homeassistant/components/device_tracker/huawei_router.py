@@ -38,7 +38,7 @@ def get_scanner(hass, config):
     return scanner
 
 
-Device = namedtuple('Device', ['name', 'mac', 'ip', 'state'])
+Device = namedtuple('Device', ['name', 'ip', 'mac', 'state'])
 
 
 class HuaweiDeviceScanner(DeviceScanner):
@@ -143,5 +143,8 @@ class HuaweiDeviceScanner(DeviceScanner):
                 self.host),
             cookies=cookie.cookies)
 
-        return str(devices.content, devices.apparent_encoding,
-                   errors='replace')
+        # we need to decode() using the request encoding, then encode() and
+        # decode('unicode_escape') to replace \\xXX with \xXX
+        # (i.e. \\x2d -> \x2d)
+        return devices.content.decode(devices.apparent_encoding).encode().\
+            decode('unicode_escape')
