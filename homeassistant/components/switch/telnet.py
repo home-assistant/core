@@ -92,9 +92,10 @@ class TelnetSwitch(SwitchDevice):
             telnet.write(command.encode('ASCII') + b'\r')
             response = telnet.read_until(b'\r', timeout=0.2)
             return response.decode('ASCII').strip()
-        except Exception as e:
+        except IOError as error:
             _LOGGER.error(
-                'Command "%s" failed with exception: %s', command, repr(e))
+                'Command "%s" failed with exception: %s',
+                command, repr(error))
             return None
 
     @property
