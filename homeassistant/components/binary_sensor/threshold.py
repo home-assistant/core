@@ -10,13 +10,15 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN,
     ATTR_ENTITY_ID, CONF_DEVICE_CLASS)
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_point_in_utc_time)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +29,8 @@ ATTR_TYPE = 'type'
 CONF_LOWER = 'lower'
 CONF_THRESHOLD = 'threshold'
 CONF_UPPER = 'upper'
+CONF_ON_DELAY = 'on_delay'
+CONF_OFF_DELAY = 'off_delay'
 
 DEFAULT_NAME = 'Threshold'
 
@@ -38,6 +42,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_ON_DELAY): vol.All(
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_OFF_DELAY): vol.All(
+        cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -49,10 +57,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     threshold = config.get(CONF_THRESHOLD)
     limit_type = config.get(CONF_TYPE)
     device_class = config.get(CONF_DEVICE_CLASS)
+    on_delay = config.get(CONF_ON_DELAY)
+    off_delay = config.get(CONF_OFF_DELAY)
 
     async_add_devices(
         [ThresholdSensor(hass, entity_id, name, threshold, limit_type,
-                         device_class)], True)
+                         device_class, on_delay, off_delay)], True)
     return True
 
 
@@ -60,7 +70,7 @@ class ThresholdSensor(BinarySensorDevice):
     """Representation of a Threshold sensor."""
 
     def __init__(self, hass, entity_id, name, threshold, limit_type,
-                 device_class):
+                 device_class, on_delay, off_delay):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -68,7 +78,10 @@ class ThresholdSensor(BinarySensorDevice):
         self._name = name
         self._threshold = threshold
         self._device_class = device_class
-        self._deviation = False
+        self._on_delay = on_delay
+        self._off_delay = off_delay
+        self._deviation = False  # The state ignoring delays
+        self._state = False  # The actual state of the sensor
         self.sensor_value = 0
 
         @callback
@@ -76,8 +89,16 @@ class ThresholdSensor(BinarySensorDevice):
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
             """Handle sensor state changes."""
+            async_remove_delay_cancel = None
+            async_remove_delay_listener = None
+
             if new_state.state == STATE_UNKNOWN:
                 return
+
+            def change_state(new_state):
+                """Change the threshold sensor's state."""
+                self._state = new_state
+                self._hass.async_add_job(self.async_update_ha_state)
 
             try:
                 self.sensor_value = float(new_state.state)
@@ -89,7 +110,54 @@ class ThresholdSensor(BinarySensorDevice):
             else:
                 self._deviation = bool(self.sensor_value < self._threshold)
 
-            hass.async_add_job(self.async_update_ha_state)
+            if ((self._deviation and self._on_delay is None) or
+                    (not self._deviation and self._off_delay is None)):
+                change_state(self._deviation)
+                return
+
+            def clear_listener():
+                """Clear active state and timer listeners."""
+                nonlocal async_remove_delay_cancel, async_remove_delay_listener
+                if async_remove_delay_listener is not None:
+                    async_remove_delay_listener()
+                    async_remove_delay_listener = None
+                if async_remove_delay_cancel is not None:
+                    async_remove_delay_cancel()
+                    async_remove_delay_cancel = None
+
+            @callback
+            def threshold_delay_listener(now):
+                """Fire on state changes after a delay and calls action."""
+                nonlocal async_remove_delay_listener
+                async_remove_delay_listener = None
+                clear_listener()
+                change_state(self._deviation)
+
+            @callback
+            def threshold_delay_cancel_listener(
+                    entity, inner_old_state, inner_new_state):
+                """Fire on changes and cancel for listener if changed."""
+                if inner_new_state.state == new_state.state:
+                    return
+                clear_listener()
+
+            # cleanup previous listener
+            clear_listener()
+
+            if self._deviation:
+                time_delta = self._on_delay
+            else:
+                time_delta = self._off_delay
+
+            async_remove_delay_listener = async_track_point_in_utc_time(
+                hass, threshold_delay_listener, dt_util.utcnow() + time_delta)
+
+            async_remove_delay_cancel = async_track_state_change(
+                hass, entity, threshold_delay_cancel_listener)
+
+            # Always trigger a state update event so that the attributes get
+            # updated
+            self._hass.async_add_job(self.async_update_ha_state)
 
         async_track_state_change(
             hass, entity_id, async_threshold_sensor_state_listener)
@@ -102,7 +170,7 @@ class ThresholdSensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._deviation
+        return self._state
 
     @property
     def should_poll(self):
