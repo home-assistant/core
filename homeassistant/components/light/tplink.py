@@ -59,9 +59,9 @@ def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb, name):
+    def __init__(self, smartbulb: SmartBulb, name):
         """Initialize the bulb."""
-        self.smartbulb = smartbulb  # type: SmartBulb
+        self.smartbulb = smartbulb
 
         # Use the name set on the device if not set
         if name is None:
