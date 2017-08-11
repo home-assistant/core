@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.rest/
 Example configuration:
 sensor:
     - fronius_symo
-	  resource: 192.168.1.27 # The local IP of your Fronius Symo
-	  name: "Fronius Symo Solar Adapter"
+      resource: 192.168.1.27 # The local IP of your Fronius Symo
+      name: "Fronius Symo Solar Adapter"
 """
 import logging
 
@@ -47,11 +47,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         fronius_solar_json_path = "/" + fronius_solar_json_path
     resource = resource + fronius_solar_json_path
     
-	method = DEFAULT_METHOD
+    method = DEFAULT_METHOD
     auth = None
-	headers = None
-	payload = None
-	verify_ssl = DEFAULT_VERIFY_SSL
+    headers = None
+    payload = None
+    verify_ssl = DEFAULT_VERIFY_SSL
     rest = JSONRestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
@@ -108,22 +108,42 @@ class JSONRestSensor(Entity):
                 {
                     'id':       'current_production',
                     'value':    json_dict['Body']['Data']['PAC']['Values']['1'],
-                    'attributes': {'friendly_name':'Current solar production', 'unit_of_measurement': json_dict['Body']['Data']['PAC']['Unit'], 'icon':'mdi:weather-sunny'}
+                    'attributes': 
+                        {
+                            'friendly_name':'Current solar production',
+                            'unit_of_measurement': json_dict['Body']['Data']['PAC']['Unit'],
+                            'icon':'mdi:weather-sunny'
+                        }
                 },
                 {
                     'id':       'day_production',
                     'value':    json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
-                    'attributes': {'friendly_name':'Solar production of the day', 'unit_of_measurement': json_dict['Body']['Data']['DAY_ENERGY']['Unit'], 'icon':'mdi:weather-sunny'}
+                    'attributes': 
+                        {
+                            'friendly_name':'Solar production of the day',
+                            'unit_of_measurement': json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
+                            'icon':'mdi:weather-sunny'
+                        }
                 },
                 {
                     'id':       'year_production',
                     'value':    json_dict['Body']['Data']['YEAR_ENERGY']['Values']['1'] / 1000,
-                    'attributes': {'friendly_name':'Solar production of the year', 'unit_of_measurement': 'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'], 'icon':'mdi:weather-sunny'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Solar production of the year',
+                        'unit_of_measurement': 'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'],
+                        'icon':'mdi:weather-sunny'
+                    }
                 },
                 {
                     'id':       'total_production',
                     'value':    json_dict['Body']['Data']['TOTAL_ENERGY']['Values']['1'] / 1000000,
-                    'attributes': {'friendly_name':'Total solar production ', 'unit_of_measurement': 'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'], 'icon':'mdi:weather-sunny'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Total solar production ',
+                        'unit_of_measurement': 'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'],
+                        'icon':'mdi:weather-sunny'
+                    }
                 }
             ]
 
@@ -132,26 +152,32 @@ class JSONRestSensor(Entity):
 
             # Iterate over all sensors
             for sensor in trans_values:
-                
                 entity_id = 'sensor.fronius_symo_solar_'+sensor['id']
-                
+
                 # do the adding
                 self._hass.states.set(entity_id, sensor['value'], sensor['attributes'])
                 sensor_list.append(entity_id)
-            
+
             # create the group that sums up all sensors
-            self._hass.states.set('group.fronius_symo_solar', 'Running', {'entity_id': sensor_list, 'friendly_name': self._name, 'icon':'mdi:weather-sunny'})
-            
+            self._hass.states.set(
+                'group.fronius_symo_solar',
+                'Running',
+                {
+                    'entity_id': sensor_list,
+                    'friendly_name': self._name,
+                    'icon':'mdi:weather-sunny'
+                }
+            )
+
             # take over the complete json value
             self._attributes = json_dict
             # and recommend yourself as hidden
             self._attributes['hidden'] = 'true'
-            
-            
+
         except json.JSONDecodeError:
             self._attributes = []
             pass
-        
+
     @property
     def state_attributes(self):
         """Return the attributes of the entity.
@@ -160,6 +186,7 @@ class JSONRestSensor(Entity):
         """
 
         return self._attributes
+
 
 class JSONRestData(object):
     """Class for handling the data retrieval."""
