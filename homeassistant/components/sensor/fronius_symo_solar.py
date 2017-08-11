@@ -1,5 +1,5 @@
 """
-Support for Fronius Symo Inverters with solar panels
+Support for Fronius Symo Inverters with solar panels.
 
 This component is based on the REST component
 https://home-assistant.io/components/sensor.rest/
@@ -19,8 +19,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE,
-    STATE_UNKNOWN )
+    CONF_NAME, CONF_RESOURCE, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -88,7 +87,7 @@ class JSONRestSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
-    
+
     def update(self):
         """Get the latest data from REST API and update the state."""
         self.rest.update()
@@ -98,8 +97,8 @@ class JSONRestSensor(Entity):
             value = STATE_UNKNOWN
 
         self._state = value
-    
-        # Parse the return text as JSON and save the json as an attribute. 
+
+        # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
             # Create a single sensor for every transmitted value
@@ -192,7 +191,6 @@ class JSONRestSensor(Entity):
 
            Provide the parsed JSON data (if any).
         """
-
         return self._attributes
 
 
