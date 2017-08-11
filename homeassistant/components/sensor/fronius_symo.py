@@ -16,7 +16,6 @@ import logging
 import voluptuous as vol
 import json
 import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -206,8 +205,8 @@ class FroniusSensor(Entity):
             for sensor in trans_values:
                 value = sensor['value']
                 # handle null values
-				"""
-				self consumption is null when generated power is null,
+                """
+                self consumption is null when generated power is null,
                 so it should actually be equal to current grid / at 100%
                 """
                 if value == 'null' or value is None:
@@ -218,7 +217,7 @@ class FroniusSensor(Entity):
                         # relative self consumption at 100
                         value = 100
                     else:
-                        #every other value is 0 when null
+                        # every other value is 0 when null
                         value = 0
 
                 entity_id = 'sensor.fronius_symo_'+sensor['id']
@@ -228,7 +227,15 @@ class FroniusSensor(Entity):
                 sensor_list.append(entity_id)
 
             # create the group that sums up all sensors
-            self._hass.states.set('group.fronius_symo', 'Running', {'entity_id': sensor_list, 'friendly_name': self._name, 'icon': 'mdi:power-plug'})
+            self._hass.states.set(
+                'group.fronius_symo',
+                'Running',
+                {
+                    'entity_id': sensor_list,
+                    'friendly_name': self._name,
+                    'icon': 'mdi:power-plug'
+                }
+            )
 
             # take over the complete json value
             self._attributes = json_dict
