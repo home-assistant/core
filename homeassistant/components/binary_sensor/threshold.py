@@ -90,7 +90,6 @@ class ThresholdSensor(BinarySensorDevice):
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
             """Handle sensor state changes."""
-
             if new_state.state == STATE_UNKNOWN:
                 return
 
