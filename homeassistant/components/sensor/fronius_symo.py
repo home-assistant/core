@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.rest/
 Example configuration:
 sensor:
     - fronius_symo
-	  resource: 192.168.1.27 # The local IP of your Fronius Symo
-	  name: "Fronius Grid"
+      resource: 192.168.1.27 # The local IP of your Fronius Symo
+      name: "Fronius Grid"
 
 """
 import logging
@@ -100,47 +100,87 @@ class FroniusSensor(Entity):
             json_dict = json.loads(value)
             # Create a single sensor for every transmitted value
             
-			# the list of transmitted values
+            # the list of transmitted values
             trans_values = [
                 {
                     'id':       'current_generated_power',
                     'value':    json_dict['Body']['Data']['Power_P_Generate']['value'],
-                    'attributes': {'friendly_name':'Currently generated power', 'unit_of_measurement': json_dict['Body']['Data']['Power_P_Generate']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Currently generated power',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_P_Generate']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_load',
                     'value':    json_dict['Body']['Data']['Power_P_Load']['value'],
-                    'attributes': {'friendly_name':'Current load', 'unit_of_measurement': json_dict['Body']['Data']['Power_P_Load']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current load',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_P_Load']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_grid_consumption',
                     'value':    json_dict['Body']['Data']['Power_P_Grid']['value'],
-                    'attributes': {'friendly_name':'Current grid consumption', 'unit_of_measurement': json_dict['Body']['Data']['Power_P_Grid']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current grid consumption',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_P_Grid']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_akku_sum',
                     'value':    json_dict['Body']['Data']['Power_Akku_Sum']['value'],
-                    'attributes': {'friendly_name':'Current battery use', 'unit_of_measurement': json_dict['Body']['Data']['Power_Akku_Sum']['unit'], 'icon':'mdi:battery'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current battery use',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_Akku_Sum']['unit'],
+                        'icon':'mdi:battery'
+                    }
                 },
                 {
                     'id':       'current_pv_sum',
                     'value':    json_dict['Body']['Data']['Power_PV_Sum']['value'],
-                    'attributes': {'friendly_name':'Current PV use', 'unit_of_measurement': json_dict['Body']['Data']['Power_PV_Sum']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current PV use',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_PV_Sum']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_self_consumption',
                     'value':    json_dict['Body']['Data']['Power_P_SelfConsumption']['value'],
-                    'attributes': {'friendly_name':'Current self consumption', 'unit_of_measurement': json_dict['Body']['Data']['Power_P_SelfConsumption']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current self consumption',
+                        'unit_of_measurement': json_dict['Body']['Data']['Power_P_SelfConsumption']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_relative_self_consumption',
                     'value':    json_dict['Body']['Data']['Relative_Current_SelfConsumption']['value'],
-                    'attributes': {'friendly_name':'Current relative self consumption', 'unit_of_measurement': json_dict['Body']['Data']['Relative_Current_SelfConsumption']['unit'], 'icon':'mdi:power-plug'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current relative self consumption',
+                        'unit_of_measurement': json_dict['Body']['Data']['Relative_Current_SelfConsumption']['unit'],
+                        'icon':'mdi:power-plug'
+                    }
                 },
                 {
                     'id':       'current_autonomy',
                     'value':    json_dict['Body']['Data']['Relative_Current_Autonomy']['value'],
-                    'attributes': {'friendly_name':'Current autonomy', 'unit_of_measurement': json_dict['Body']['Data']['Relative_Current_Autonomy']['unit'], 'icon':'mdi:weather-sunny'}
+                    'attributes': 
+                    {
+                        'friendly_name':'Current autonomy',
+                        'unit_of_measurement': json_dict['Body']['Data']['Relative_Current_Autonomy']['unit'],
+                        'icon':'mdi:weather-sunny'
+                    }
                 },
             ]
 
@@ -163,26 +203,25 @@ class FroniusSensor(Entity):
                     else:
                         #every other value is 0 when null
                         value = 0
-                
+
                 entity_id = 'sensor.fronius_symo_'+sensor['id']
-                
+
                 # do the adding
                 self._hass.states.set(entity_id, value, sensor['attributes'])
                 sensor_list.append(entity_id)
-            
+
             # create the group that sums up all sensors
             self._hass.states.set('group.fronius_symo', 'Running', {'entity_id': sensor_list, 'friendly_name': self._name, 'icon':'mdi:power-plug'})
-            
+
             # take over the complete json value
             self._attributes = json_dict
             # and recommend yourself as hidden
             self._attributes['hidden'] = 'true'
-            
-            
+
         except json.JSONDecodeError:
             self._attributes = []
             pass
-        
+
     @property
     def state_attributes(self):
         """Return the attributes of the entity.
@@ -191,6 +230,7 @@ class FroniusSensor(Entity):
         """
 
         return self._attributes
+
 
 class JSONRestData(object):
     """Class for handling the data retrieval."""
