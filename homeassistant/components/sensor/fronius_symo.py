@@ -1,5 +1,5 @@
 """
-Support for Fronius Symo Inverters
+Support for Fronius Symo Inverters.
 
 This component is based on the REST component
 https://home-assistant.io/components/sensor.rest/
@@ -20,7 +20,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,CONF_RESOURCE)
+    CONF_NAME, CONF_RESOURCE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -40,13 +40,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Set up the Fronius Symo sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
-    
+
     # add fronius solar json path to resource
     fronius_grid_json_path = "components/5/0/?print=names"
-    if(resource[-1] != '/'):
+    if resource[-1] != '/':
         fronius_grid_json_path = "/" + fronius_grid_json_path
     resource = resource + fronius_grid_json_path
-    
+
     method = DEFAULT_METHOD
     payload = None
     verify_ssl = DEFAULT_VERIFY_SSL
@@ -84,7 +84,7 @@ class FroniusSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
-    
+
     def update(self):
         """Get the latest data from Fronius Symo and update the state."""
         self.rest.update()
@@ -95,7 +95,7 @@ class FroniusSensor(Entity):
 
         self._state = value
     
-        # Parse the return text as JSON and save the json as an attribute. 
+        # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
             # Create a single sensor for every transmitted value
@@ -206,9 +206,11 @@ class FroniusSensor(Entity):
             for sensor in trans_values:
                 value = sensor['value']
                 # handle null values
+				"""
+				self consumption is null when generated power is null,
+                so it should actually be equal to current grid / at 100%
+                """
                 if value == 'null' or value is None:
-                    """self consumption is null when generated power is null
-                    so it should actually be equal to current grid / at 100%"""
                     if sensor['id'] == 'current_self_consumption':
                         # absolute self consumption = grid(2)"""
                         value = trans_values[2]['value']
@@ -241,9 +243,8 @@ class FroniusSensor(Entity):
     def state_attributes(self):
         """Return the attributes of the entity.
 
-           Provide the parsed JSON data (if any).
+        Provide the parsed JSON data (if any).
         """
-
         return self._attributes
 
 
