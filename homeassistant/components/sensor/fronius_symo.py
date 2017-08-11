@@ -127,7 +127,8 @@ class FroniusSensor(Entity):
                 },
                 {
                     'id': 'current_grid_consumption',
-                    'value': json_dict['Body']['Data']['Power_P_Grid']['value'],
+                    'value': 
+                        json_dict['Body']['Data']['Power_P_Grid']['value'],
                     'attributes':
                     {
                         'friendly_name': 'Current grid consumption',
@@ -242,9 +243,8 @@ class FroniusSensor(Entity):
             # and recommend yourself as hidden
             self._attributes['hidden'] = 'true'
 
-        except json.JSONDecodeError:
+        except ValueError:
             self._attributes = []
-            pass
 
     @property
     def state_attributes(self):
