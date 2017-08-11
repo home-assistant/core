@@ -12,14 +12,14 @@ sensor:
 
 """
 import logging
-
-import voluptuous as vol
 import json
 import requests
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE)
+    CONF_NAME, CONF_RESOURCE, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
