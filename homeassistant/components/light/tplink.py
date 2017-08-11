@@ -44,16 +44,16 @@ def brightness_from_percentage(percent):
     return (percent*255.0)/100.0
 
 
-def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[float, float, float]:
+def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
     h, s, v = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
     return int(h * 360), int(s * 100), int(v * 100)
 
 
-def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[float, float, float]:
+def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
     r, g, b = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
-    return r * 255, g * 255, b * 255
+    return int(r * 255), int(g * 255), int(b * 255)
 
 
 class TPLinkSmartBulb(Light):
