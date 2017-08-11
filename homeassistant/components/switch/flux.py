@@ -177,7 +177,7 @@ class FluxSwitch(SwitchDevice):
         stop_time = now.replace(
             hour=self._stop_time.hour, minute=self._stop_time.minute,
             second=0)
-        if stop_time < start_time:
+        if stop_time < start_time and stop_time < now:
             # stop time is in the next day
             stop_time += datetime.timedelta(days=1)
 
