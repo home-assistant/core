@@ -57,10 +57,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch Fronius data")
         return False
 
-    add_devices([JSONRestSensor(hass, rest, name)])
+    add_devices([FroniusSymoSolar(hass, rest, name)])
 
 
-class JSONRestSensor(Entity):
+class FroniusSymoSolar(Entity):
     """Implementation of the Fronius Symo sensor."""
 
     def __init__(self, hass, rest, name):
@@ -76,11 +76,6 @@ class JSONRestSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     @property
     def state(self):
@@ -184,9 +179,8 @@ class JSONRestSensor(Entity):
             # and recommend yourself as hidden
             self._attributes['hidden'] = 'true'
 
-        except json.JSONDecodeError:
+        except ValueError:
             self._attributes = []
-            pass
 
     @property
     def state_attributes(self):
