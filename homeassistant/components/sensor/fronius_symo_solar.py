@@ -15,7 +15,6 @@ import logging
 import voluptuous as vol
 import json
 import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -39,13 +38,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fronius Symo sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
-    
+
     # add fronius solar json path to resource
     fronius_solar_json_path = "solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
     if(resource[-1] != '/'):
         fronius_solar_json_path = "/" + fronius_solar_json_path
     resource = resource + fronius_solar_json_path
-    
+
     method = DEFAULT_METHOD
     auth = None
     headers = None
@@ -118,7 +117,7 @@ class JSONRestSensor(Entity):
                 },
                 {
                     'id': 'day_production',
-                    'value':    
+                    'value':
                         json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
                     'attributes':
                         {
@@ -162,7 +161,11 @@ class JSONRestSensor(Entity):
                 entity_id = 'sensor.fronius_symo_solar_'+sensor['id']
 
                 # do the adding
-                self._hass.states.set(entity_id, sensor['value'], sensor['attributes'])
+                self._hass.states.set(
+                    entity_id,
+                    sensor['value'],
+                    sensor['attributes']
+                )
                 sensor_list.append(entity_id)
 
             # create the group that sums up all sensors
