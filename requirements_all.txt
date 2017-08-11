@@ -775,7 +775,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.4.2
+python-wink==1.5.1
 
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
