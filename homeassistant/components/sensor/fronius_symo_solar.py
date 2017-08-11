@@ -106,43 +106,51 @@ class JSONRestSensor(Entity):
             # list of transmitted values
             trans_values = [
                 {
-                    'id':       'current_production',
-                    'value':    json_dict['Body']['Data']['PAC']['Values']['1'],
-                    'attributes': 
+                    'id': 'current_production',
+                    'value':
+                        json_dict['Body']['Data']['PAC']['Values']['1'],
+                    'attributes':
                         {
-                            'friendly_name':'Current solar production',
-                            'unit_of_measurement': json_dict['Body']['Data']['PAC']['Unit'],
-                            'icon':'mdi:weather-sunny'
+                            'friendly_name': 'Current solar production',
+                            'unit_of_measurement':
+                                json_dict['Body']['Data']['PAC']['Unit'],
+                            'icon': 'mdi:weather-sunny'
                         }
                 },
                 {
-                    'id':       'day_production',
-                    'value':    json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
-                    'attributes': 
+                    'id': 'day_production',
+                    'value':    
+                        json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
+                    'attributes':
                         {
-                            'friendly_name':'Solar production of the day',
-                            'unit_of_measurement': json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
-                            'icon':'mdi:weather-sunny'
+                            'friendly_name': 'Solar production of the day',
+                            'unit_of_measurement':
+                                json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
+                            'icon': 'mdi:weather-sunny'
                         }
                 },
                 {
-                    'id':       'year_production',
-                    'value':    json_dict['Body']['Data']['YEAR_ENERGY']['Values']['1'] / 1000,
-                    'attributes': 
+                    'id': 'year_production',
+                    'value':
+                        json_dict['Body']['Data']['YEAR_ENERGY']['Values']['1'] / 1000,
+                    'attributes':
                     {
-                        'friendly_name':'Solar production of the year',
-                        'unit_of_measurement': 'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'],
-                        'icon':'mdi:weather-sunny'
+                        'friendly_name': 'Solar production of the year',
+                        'unit_of_measurement':
+                            'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'],
+                        'icon': 'mdi:weather-sunny'
                     }
                 },
                 {
-                    'id':       'total_production',
-                    'value':    json_dict['Body']['Data']['TOTAL_ENERGY']['Values']['1'] / 1000000,
-                    'attributes': 
+                    'id': 'total_production',
+                    'value':
+                        json_dict['Body']['Data']['TOTAL_ENERGY']['Values']['1'] / 1000000,
+                    'attributes':
                     {
-                        'friendly_name':'Total solar production ',
-                        'unit_of_measurement': 'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'],
-                        'icon':'mdi:weather-sunny'
+                        'friendly_name': 'Total solar production ',
+                        'unit_of_measurement':
+                            'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'],
+                        'icon': 'mdi:weather-sunny'
                     }
                 }
             ]
@@ -165,7 +173,7 @@ class JSONRestSensor(Entity):
                 {
                     'entity_id': sensor_list,
                     'friendly_name': self._name,
-                    'icon':'mdi:weather-sunny'
+                    'icon': 'mdi:weather-sunny'
                 }
             )
 
