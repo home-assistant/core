@@ -69,6 +69,7 @@ SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
+    # pylint: disable=import-error
     from roomba import Roomba
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
