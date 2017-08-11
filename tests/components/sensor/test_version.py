@@ -48,4 +48,3 @@ class TestVersionSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual(state.state, '10.0')
-
