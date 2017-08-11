@@ -6,10 +6,9 @@ The idea was taken from https://github.com/KpaBap/hue-flux/
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.flux/
 """
-from datetime import time
+import datetime
 import logging
 
-import datetime
 import voluptuous as vol
 
 from homeassistant.components.light import is_on, turn_on
@@ -48,7 +47,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
     vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=time(22, 0)): cv.time,
+    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_SUNSET_CT, default=3000):
