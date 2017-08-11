@@ -11,10 +11,10 @@ sensor:
       name: "Fronius Symo Solar Adapter"
 """
 import logging
-
-import voluptuous as vol
 import json
 import requests
+
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
