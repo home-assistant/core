@@ -64,6 +64,7 @@ def test_config_google_home_entity_id_to_number_altered():
         entity_id = conf.number_to_entity_id('21')
         assert entity_id == 'light.test2'
 
+
 def test_config_google_home_entity_id_to_number_empty():
     """Test config adheres to the type."""
     conf = Config(Mock(), {
