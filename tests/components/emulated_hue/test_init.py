@@ -33,6 +33,7 @@ def test_config_google_home_entity_id_to_number():
         assert handle.write.call_count == 1
 
         entity_id = conf.number_to_entity_id('1')
+        assert entity_id == 'light.test2'
 
 
 def test_config_google_home_entity_id_to_number_altered():
