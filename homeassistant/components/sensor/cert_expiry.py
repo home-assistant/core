@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([SSLCertificate(sensor_name, server_name, server_port)],
                     True)
 
-    # Wait until start event is sent to load this component.
+    # To allow checking of the HA certificate we must first be running.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
