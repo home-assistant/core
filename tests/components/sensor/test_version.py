@@ -1,12 +1,13 @@
 """The test for the version sensor platform."""
+import asyncio
 import unittest
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
 MOCK_VERSION = '10.0'
-MOCK_DEV_VERSION = '10.0.dev0'
 
 
 class TestVersionSensor(unittest.TestCase):
@@ -25,33 +26,26 @@ class TestVersionSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'version',
-                'name': 'test',
             }
         }
 
         assert setup_component(self.hass, 'sensor', config)
 
-        self.hass.states.set('sensor.test', MOCK_VERSION)
-        self.hass.block_till_done()
+    @asyncio.coroutine
+    def test_version(self):
+        """Test the Version sensor."""
+        config = {
+            'sensor': {
+                'platform': 'version',
+                'name': 'test',
+            }
+        }
+
+        with patch('homeassistant.const.__version__', MOCK_VERSION):
+            assert setup_component(self.hass, 'sensor', config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual(state.state, '10.0')
 
-    def test_version_sensor_dev(self):
-        """Test the Version sensor."""
-        config = {
-            'sensor': {
-                'platform': 'version',
-                'name': 'test_dev',
-            }
-        }
-
-        assert setup_component(self.hass, 'sensor', config)
-
-        self.hass.states.set('sensor.test_dev', MOCK_DEV_VERSION)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('sensor.test_dev')
-
-        self.assertEqual(state.state, '10.0.dev0')
