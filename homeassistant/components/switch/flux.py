@@ -8,6 +8,8 @@ https://home-assistant.io/components/switch.flux/
 """
 from datetime import time
 import logging
+
+import datetime
 import voluptuous as vol
 
 from homeassistant.components.light import is_on, turn_on
@@ -176,6 +178,9 @@ class FluxSwitch(SwitchDevice):
         stop_time = now.replace(
             hour=self._stop_time.hour, minute=self._stop_time.minute,
             second=0)
+        if stop_time < start_time:
+            # stop time is in the next day
+            stop_time += datetime.timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -192,7 +197,7 @@ class FluxSwitch(SwitchDevice):
         else:
             # Nightime
             time_state = 'night'
-            if now < stop_time and now > start_time:
+            if stop_time > now > start_time:
                 now_time = now
             else:
                 now_time = stop_time
