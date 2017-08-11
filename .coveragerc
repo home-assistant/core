@@ -449,6 +449,8 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
+    homeassistant/components/sensor/fronius_symo.py
+    homeassistant/components/sensor/fronius_symo_solar.py
     homeassistant/components/sensor/geizhals.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
