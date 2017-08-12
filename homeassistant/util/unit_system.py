@@ -100,6 +100,10 @@ class UnitSystem(object):
                                         from_unit, self.temperature_unit)
 
     def length(self: object, length: float, from_unit: str) -> float:
+        return self.length(object, length, from_unit)
+
+    def length(self: object, length: float, from_unit: str,
+               display_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
@@ -117,6 +121,7 @@ class UnitSystem(object):
             elif from_unit == LENGTH_METERS:
                 to_unit = LENGTH_INCHES
 
+        display_unit = to_unit
         _LOGGER.warn("after re-range converting to " + str(to_unit) + " from " + str(from_unit))
 
         conv  = distance_util.convert(length, from_unit, to_unit) # type: float
