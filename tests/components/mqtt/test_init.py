@@ -91,17 +91,17 @@ class TestMQTT(unittest.TestCase):
         self.assertTrue(not self.hass.data['mqtt'].async_publish.called)
 
     def test_service_call_with_template_payload_renders_template(self):
-        """Test the service call with rendered template.
+        """Test the service call with rendered payload template.
 
         If 'payload_template' is provided and 'payload' is not, then render it.
         """
-        mqtt.publish_template(self.hass, "test/topic", "{{ 1+1 }}")
+        mqtt.publish_template(self.hass, "test/topic", False, "{{ 1+1 }}", True)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_publish.called)
         self.assertEqual(
             self.hass.data['mqtt'].async_publish.call_args[0][1], "2")
 
-    def test_service_call_with_payload_doesnt_render_template(self):
+    def test_service_call_with_payload_doesnt_render_payload_template(self):
         """Test the service call with unrendered template.
 
         If both 'payload' and 'payload_template' are provided then fail.
@@ -114,6 +114,48 @@ class TestMQTT(unittest.TestCase):
             mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
         }, blocking=True)
         self.assertFalse(self.hass.data['mqtt'].async_publish.called)
+
+    def test_service_call_with_payload_doesnt_render_topic_template(self):
+        """Test the service call with unrendered topic template.
+
+        If both 'payload' and 'payload_template' are provided then fail.
+        """
+        topic = "not a template"
+        topic_template = "a template"
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: topic,
+            mqtt.ATTR_TOPIC_TEMPLATE: topic_template,
+            mqtt.ATTR_PAYLOAD: "payload",
+        }, blocking=True)
+        self.assertFalse(self.hass.data['mqtt'].async_publish.called)
+
+    def test_service_call_with_template_topic_renders_template(self):
+        """Test the service call with rendered topic template.
+
+        If 'topic_template' is provided and 'topic' is not, then render it.
+        """
+        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", \
+                              True, "0", False)
+        self.hass.block_till_done()
+        self.assertTrue(self.hass.data['mqtt'].async_publish.called)
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][0],
+            "test/topic/2")
+
+    def test_service_call_with_template_topic_payload_renders_template(self):
+        """Test the service call with rendered topic and payload templates.
+
+        If 'topic_template' is provided and 'topic' is not, then render it.
+        """
+        mqtt.publish_template(self.hass, "test/topic/{{ 1+1 }}", True,
+                              "{{ 1+1 }}", True)
+        self.hass.block_till_done()
+        self.assertTrue(self.hass.data['mqtt'].async_publish.called)
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][0],
+            "test/topic/2")
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][1], "2")
 
     def test_service_call_with_ascii_qos_retain_flags(self):
         """Test the service call with args that can be misinterpreted.

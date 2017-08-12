@@ -27,7 +27,7 @@ from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
-    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD, CONF_TOPIC)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.3.0']
@@ -75,6 +75,7 @@ DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
 DEFAULT_TLS_PROTOCOL = 'auto'
 
 ATTR_TOPIC = 'topic'
+ATTR_TOPIC_TEMPLATE = 'topic_template'
 ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = CONF_QOS
@@ -164,7 +165,8 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 # Service call validation schema
 MQTT_PUBLISH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TOPIC): valid_publish_topic,
+    vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
+    vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
     vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
     vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
@@ -174,7 +176,10 @@ MQTT_PUBLISH_SCHEMA = vol.Schema({
 
 def _build_publish_data(topic, qos, retain):
     """Build the arguments for the publish service without the payload."""
-    data = {ATTR_TOPIC: topic}
+    if topic is not None:
+        data = {ATTR_TOPIC: topic}
+    else:
+        data = {}
     if qos is not None:
         data[ATTR_QOS] = qos
     if retain is not None:
@@ -198,12 +203,18 @@ def async_publish(hass, topic, payload, qos=None, retain=None):
 
 
 @bind_hass
-def publish_template(hass, topic, payload_template, qos=None, retain=None):
-    """Publish message to an MQTT topic using a template payload."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
+def publish_template(hass, topic, topic_is_template, payload,
+                     payload_is_template, qos=None, retain=None):
+    """Publish message to an MQTT topic using a template payload and/or template topic."""
+    data = _build_publish_data(topic if not topic_is_template else None,
+                               qos, retain)
+    if topic_is_template:
+        data[ATTR_TOPIC_TEMPLATE] = topic
+    if payload_is_template and payload is not None:
+        data[ATTR_PAYLOAD_TEMPLATE] = payload
+    elif payload is not None:
+        data[ATTR_PAYLOAD] = payload
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
-
 
 @asyncio.coroutine
 @bind_hass
@@ -391,11 +402,22 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_publish_service(call):
         """Handle MQTT publish service calls."""
-        msg_topic = call.data[ATTR_TOPIC]
+        msg_topic = call.data.get(ATTR_TOPIC)
+        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
+        if msg_topic_template is not None:
+            try:
+                msg_topic = \
+                    template.Template(msg_topic_template, hass).async_render()
+            except template.jinja2.TemplateError as exc:
+                _LOGGER.error(
+                    "Unable to publish to '%s': rendering topic template of "
+                    "'%s' failed because %s",
+                    msg_topic, msg_topic_template, exc)
+                return
         if payload_template is not None:
             try:
                 payload = \
@@ -406,6 +428,11 @@ def async_setup(hass, config):
                     "'%s' failed because %s",
                     msg_topic, payload_template, exc)
                 return
+
+        if not msg_topic:
+            _LOGGER.error(
+                "Unable to publish to MQTT service: No topic specified")
+            return
 
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
