@@ -74,7 +74,7 @@ class WemoSwitch(SwitchDevice):
     @property
     def should_poll(self):
         """No polling needed with subscriptions."""
-        if self._model_name == 'Insight':
+        if self._model_name in ['Insight', 'DLI emulated Belkin Socket']:
             return True
         return False
 

@@ -26,7 +26,8 @@ WEMO_MODEL_DISPATCH = {
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
+    'CoffeeMaker': 'switch',
+    'DLI emulated Belkin Socket': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -86,15 +87,22 @@ def setup(hass, config):
                    for address in config.get(DOMAIN, {}).get(CONF_STATIC, []))
 
     for address, device in devices:
-        port = pywemo.ouimeaux_device.probe_wemo(address)
-        if not port:
-            _LOGGER.warning('Unable to probe wemo at %s', address)
-            continue
-        _LOGGER.info('Adding wemo at %s:%i', address, port)
-
-        url = 'http://%s:%i/setup.xml' % (address, port)
+        # statically configured wemos need to be probed to get information
+        # about the device
         if device is None:
+            port = pywemo.ouimeaux_device.probe_wemo(address)
+            if not port:
+                _LOGGER.warning('Unable to probe wemo at %s', address)
+                continue
+            _LOGGER.info('Adding wemo at %s:%i', address, port)
+
+            url = 'http://%s:%i/setup.xml' % (address, port)
+
             device = pywemo.discovery.device_from_description(url, None)
+        else:
+            _LOGGER.info('Adding wemo at %s', device.basicevent.hostname)
+
+            url = 'http://%s/setup.xml' % (device.basicevent.hostname)
 
         discovery_info = {
             'model_name': device.model_name,
