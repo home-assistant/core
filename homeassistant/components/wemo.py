@@ -26,7 +26,8 @@ WEMO_MODEL_DISPATCH = {
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
+    'CoffeeMaker': 'switch',
+    'DLI emulated Belkin Socket': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -86,7 +87,12 @@ def setup(hass, config):
                    for address in config.get(DOMAIN, {}).get(CONF_STATIC, []))
 
     for address, device in devices:
-        port = pywemo.ouimeaux_device.probe_wemo(address)
+        # static configured devices do not have device defined
+        # they can only have one device per IP
+        if device is None:
+            port = pywemo.ouimeaux_device.probe_wemo(address)
+        else:
+            port = pywemo.ouimeaux_device.probe_wemo(address, device.name)
         if not port:
             _LOGGER.warning('Unable to probe wemo at %s', address)
             continue
