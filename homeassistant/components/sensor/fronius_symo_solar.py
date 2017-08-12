@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # add fronius solar json path to resource
     fronius_solar_json_path = "solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
-    if(resource[-1] != '/'):
+    if resource[-1] != '/':
         fronius_solar_json_path = "/" + fronius_solar_json_path
     resource = resource + fronius_solar_json_path
 
@@ -102,8 +102,7 @@ class FroniusSymoSolar(Entity):
                     'id': 'current_production',
                     'value':
                         json_dict['Body']['Data']['PAC']['Values']['1'],
-                    'attributes':
-                        {
+                    'attributes':{
                             'friendly_name': 'Current solar production',
                             'unit_of_measurement':
                                 json_dict['Body']['Data']['PAC']['Unit'],
@@ -114,8 +113,7 @@ class FroniusSymoSolar(Entity):
                     'id': 'day_production',
                     'value':
                         json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
-                    'attributes':
-                        {
+                    'attributes':{
                             'friendly_name': 'Solar production of the day',
                             'unit_of_measurement':
                                 json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
@@ -126,8 +124,7 @@ class FroniusSymoSolar(Entity):
                     'id': 'year_production',
                     'value':
                         json_dict['Body']['Data']['YEAR_ENERGY']['Values']['1'] / 1000,
-                    'attributes':
-                    {
+                    'attributes':{
                         'friendly_name': 'Solar production of the year',
                         'unit_of_measurement':
                             'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'],
@@ -138,8 +135,7 @@ class FroniusSymoSolar(Entity):
                     'id': 'total_production',
                     'value':
                         json_dict['Body']['Data']['TOTAL_ENERGY']['Values']['1'] / 1000000,
-                    'attributes':
-                    {
+                    'attributes':{
                         'friendly_name': 'Total solar production ',
                         'unit_of_measurement':
                             'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'],

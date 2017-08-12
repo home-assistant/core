@@ -93,20 +93,19 @@ class FroniusSensor(Entity):
             value = STATE_UNKNOWN
 
         self._state = value
-    
+
         # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
-            # Create a single sensor for every transmitted value
-            
+            # Create a single sensor for every transmitted value.
+
             # the list of transmitted values
             trans_values = [
                 {
                     'id': 'current_generated_power',
                     'value':
                         json_dict['Body']['Data']['Power_P_Generate']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Currently generated power',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_P_Generate']['unit'],
@@ -117,8 +116,7 @@ class FroniusSensor(Entity):
                     'id': 'current_load',
                     'value':
                         json_dict['Body']['Data']['Power_P_Load']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current load',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_P_Load']['unit'],
@@ -127,10 +125,9 @@ class FroniusSensor(Entity):
                 },
                 {
                     'id': 'current_grid_consumption',
-                    'value': 
+                    'value':
                         json_dict['Body']['Data']['Power_P_Grid']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current grid consumption',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_P_Grid']['unit'],
@@ -141,8 +138,7 @@ class FroniusSensor(Entity):
                     'id': 'current_akku_sum',
                     'value':
                         json_dict['Body']['Data']['Power_Akku_Sum']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current battery use',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_Akku_Sum']['unit'],
@@ -153,8 +149,7 @@ class FroniusSensor(Entity):
                     'id': 'current_pv_sum',
                     'value':
                         json_dict['Body']['Data']['Power_PV_Sum']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current photovoltaic use',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_PV_Sum']['unit'],
@@ -165,8 +160,7 @@ class FroniusSensor(Entity):
                     'id': 'current_self_consumption',
                     'value':
                         json_dict['Body']['Data']['Power_P_SelfConsumption']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current self consumption',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_P_SelfConsumption']['unit'],
@@ -177,8 +171,7 @@ class FroniusSensor(Entity):
                     'id': 'current_relative_self_consumption',
                     'value':
                         json_dict['Body']['Data']['Relative_Current_SelfConsumption']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current relative self consumption',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Relative_Current_SelfConsumption']['unit'],
@@ -189,14 +182,13 @@ class FroniusSensor(Entity):
                     'id': 'current_autonomy',
                     'value':
                         json_dict['Body']['Data']['Relative_Current_Autonomy']['value'],
-                    'attributes':
-                    {
+                    'attributes': {
                         'friendly_name': 'Current autonomy',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Relative_Current_Autonomy']['unit'],
                         'icon': 'mdi:leaf'
                     }
-                },
+                }
             ]
 
             # Collect them in a list to create a group containing them later
