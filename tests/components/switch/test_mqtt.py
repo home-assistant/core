@@ -157,7 +157,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
 
     def test_custom_availability_payload(self):
-        """Test the availability payload"""
+        """Test the availability payload."""
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',
