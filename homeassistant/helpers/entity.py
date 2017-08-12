@@ -306,9 +306,10 @@ class Entity(object):
                 converted = units.length(float(state), unit_of_measure,
                                          display_unit)
                 length = converted["value"]
-                state = str(round(length) if prec == 0 else round(length, prec))
+                state = str(round(length) 
+                if prec == 0 else state = round(length, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
-            
+
         except ValueError:
             # Could not convert state to float
             pass
