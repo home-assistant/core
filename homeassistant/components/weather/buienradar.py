@@ -9,7 +9,7 @@ import asyncio
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import \
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, STATE_UNKNOWN
+    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
@@ -20,7 +20,7 @@ REQUIREMENTS = ['buienradar==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_CONDITION = 'br_condition'
+DATA_CONDITION = 'buienradar_condition'
 
 DEFAULT_TIMEFRAME = 60
 
@@ -112,13 +112,12 @@ class BrWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         from buienradar.buienradar import (CONDCODE)
-        try:
-            if self._data and self._data.condition:
-                return self.hass.data[DATA_CONDITION][
-                    self._data.condition[CONDCODE]]
-            return STATE_UNKNOWN
-        except (ValueError, IndexError):
-            return STATE_UNKNOWN
+        if self._data and self._data.condition:
+            ccode = self._data.condition.get(CONDCODE)
+            if ccode:
+                conditions = self.hass.data.get(DATA_CONDITION)
+                if conditions:
+                    return conditions.get(ccode)
 
     @property
     def entity_picture(self):
