@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 51
+MINOR_VERSION = 52
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -109,6 +109,7 @@ CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
 CONF_ID = 'id'
+CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MAC = 'mac'

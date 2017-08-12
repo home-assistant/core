@@ -37,13 +37,15 @@ LAMP_HOURS = 'Lamp Hours'
 MODEL = 'Model'
 
 # Commands known to the projector
-CMD_DICT = {LAMP: '* 0 Lamp ?\r',
-            LAMP_HOURS: '* 0 Lamp\r',
-            INPUT_SOURCE: '* 0 Src ?\r',
-            ECO_MODE: '* 0 IR 052\r',
-            MODEL: '* 0 IR 035\r',
-            STATE_ON: '* 0 IR 001\r',
-            STATE_OFF: '* 0 IR 002\r'}
+CMD_DICT = {
+    LAMP: '* 0 Lamp ?\r',
+    LAMP_HOURS: '* 0 Lamp\r',
+    INPUT_SOURCE: '* 0 Src ?\r',
+    ECO_MODE: '* 0 IR 052\r',
+    MODEL: '* 0 IR 035\r',
+    STATE_ON: '* 0 IR 001\r',
+    STATE_OFF: '* 0 IR 002\r',
+}
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -62,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
     write_timeout = config.get(CONF_WRITE_TIMEOUT)
 
-    add_devices([AcerSwitch(serial_port, name, timeout, write_timeout)])
+    add_devices([AcerSwitch(serial_port, name, timeout, write_timeout)], True)
 
 
 class AcerSwitch(SwitchDevice):
@@ -83,7 +85,6 @@ class AcerSwitch(SwitchDevice):
             INPUT_SOURCE: STATE_UNKNOWN,
             ECO_MODE: STATE_UNKNOWN,
         }
-        self.update()
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""

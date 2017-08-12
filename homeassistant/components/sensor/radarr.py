@@ -13,8 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS,
-    CONF_SSL)
+    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS, CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -55,15 +54,15 @@ ENDPOINTS = {
 BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
     vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES)
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['movies']):
+        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
+    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
 })
 
 
@@ -71,13 +70,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Radarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
     add_devices(
-        [RadarrSensor(hass, config, sensor) for sensor in conditions]
-    )
-    return True
+        [RadarrSensor(hass, config, sensor) for sensor in conditions], True)
 
 
 class RadarrSensor(Entity):
-    """Implemention of the Radarr sensor."""
+    """Implementation of the Radarr sensor."""
 
     def __init__(self, hass, conf, sensor_type):
         """Create Radarr entity."""
@@ -92,8 +89,7 @@ class RadarrSensor(Entity):
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
         self.ssl = 's' if conf.get(CONF_SSL) else ''
-
-        # Object data
+        self._state = None
         self.data = []
         self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
@@ -103,54 +99,7 @@ class RadarrSensor(Entity):
         else:
             self._unit = SENSOR_TYPES[self.type][1]
         self._icon = SENSOR_TYPES[self.type][2]
-
-        # Update sensor
         self._available = False
-        self.update()
-
-    def update(self):
-        """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
-        try:
-            res = requests.get(
-                ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port,
-                    self.urlbase, start, end),
-                headers={'X-Api-Key': self.apikey},
-                timeout=5)
-        except OSError:
-            _LOGGER.error('Host %s is not available', self.host)
-            self._available = False
-            self._state = None
-            return
-
-        if res.status_code == 200:
-            if self.type in ['upcoming', 'movies', 'commands']:
-                self.data = res.json()
-                self._state = len(self.data)
-            elif self.type == 'diskspace':
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(
-                            lambda x: x['path'] in self.included,
-                            res.json()
-                        )
-                    )
-                self._state = '{:.2f}'.format(
-                    to_unit(
-                        sum([data['freeSpace'] for data in self.data]),
-                        self._unit
-                    )
-                )
-            elif self.type == 'status':
-                self.data = res.json()
-                self._state = self.data['version']
-            self._available = True
 
     @property
     def name(self):
@@ -204,6 +153,48 @@ class RadarrSensor(Entity):
     def icon(self):
         """Return the icon of the sensor."""
         return self._icon
+
+    def update(self):
+        """Update the data for the sensor."""
+        start = get_date(self._tz)
+        end = get_date(self._tz, self.days)
+        try:
+            res = requests.get(
+                ENDPOINTS[self.type].format(
+                    self.ssl, self.host, self.port, self.urlbase, start, end),
+                headers={'X-Api-Key': self.apikey}, timeout=5)
+        except OSError:
+            _LOGGER.error("Host %s is not available", self.host)
+            self._available = False
+            self._state = None
+            return
+
+        if res.status_code == 200:
+            if self.type in ['upcoming', 'movies', 'commands']:
+                self.data = res.json()
+                self._state = len(self.data)
+            elif self.type == 'diskspace':
+                # If included paths are not provided, use all data
+                if self.included == []:
+                    self.data = res.json()
+                else:
+                    # Filter to only show lists that are included
+                    self.data = list(
+                        filter(
+                            lambda x: x['path'] in self.included,
+                            res.json()
+                        )
+                    )
+                self._state = '{:.2f}'.format(
+                    to_unit(
+                        sum([data['freeSpace'] for data in self.data]),
+                        self._unit
+                    )
+                )
+            elif self.type == 'status':
+                self.data = res.json()
+                self._state = self.data['version']
+            self._available = True
 
 
 def get_date(zone, offset=0):

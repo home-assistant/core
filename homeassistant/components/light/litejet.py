@@ -10,11 +10,11 @@ import homeassistant.components.litejet as litejet
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['litejet']
 
 ATTR_NUMBER = 'number'
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = litejet_.get_load_name(i)
         if not litejet.is_ignored(hass, name):
             devices.append(LiteJetLight(hass, litejet_, i, name))
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class LiteJetLight(Light):
@@ -42,8 +42,6 @@ class LiteJetLight(Light):
 
         lj.on_load_activated(i, self._on_load_changed)
         lj.on_load_deactivated(i, self._on_load_changed)
-
-        self.update()
 
     def _on_load_changed(self):
         """Handle state changes."""

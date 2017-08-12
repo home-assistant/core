@@ -384,7 +384,6 @@ class HueLight(Light):
                 hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
                 command['hue'] = hue
                 command['sat'] = sat
-                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
@@ -399,13 +398,12 @@ class HueLight(Light):
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
                 command['bri'] = xyb[2]
+        elif ATTR_COLOR_TEMP in kwargs:
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            temp = kwargs[ATTR_COLOR_TEMP]
-            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 
@@ -425,9 +423,9 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.bridge_type == 'hue':
-            if self.info.get('manufacturername') != "OSRAM":
-                command['effect'] = 'none'
+        elif (self.bridge_type == 'hue' and
+              self.info.get('manufacturername') == 'Philips'):
+            command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
 

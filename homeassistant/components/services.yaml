@@ -533,3 +533,16 @@ knx:
       data:
         description: KNX data to send
         example: 1
+
+rflink:
+  send_command:
+    description: Send device command through RFLink
+
+    fields:
+      device_id:
+        description: RFLink device ID
+        example: 'newkaku_0000c6c2_1'
+
+      command:
+        description: The command to be sent
+        example: 'on'

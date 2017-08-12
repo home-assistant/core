@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class DHTSensor(Entity):
@@ -104,7 +104,6 @@ class DHTSensor(Entity):
         self.humidity_offset = humidity_offset
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
