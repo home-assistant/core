@@ -97,7 +97,7 @@ class FroniusSensor(Entity):
         # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
-			data = json_dict['Body']['Data']
+            data = json_dict['Body']['Data']
             # Create a single sensor for every transmitted value.
 
             # the list of transmitted values
@@ -111,7 +111,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_P_Generate']['unit'],
                         'icon': 'mdi:power-plug'
-						}
+                        }
                 },
                 {
                     'id': 'current_load',
@@ -122,7 +122,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_P_Load']['unit'],
                         'icon': 'mdi:power-plug'
-						}
+                        }
                 },
                 {
                     'id': 'current_grid_consumption',
@@ -133,7 +133,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_P_Grid']['unit'],
                         'icon': 'mdi:power-plug'
-						}
+                        }
                 },
                 {
                     'id': 'current_akku_sum',
@@ -144,7 +144,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_Akku_Sum']['unit'],
                         'icon': 'mdi:battery'
-						}
+                        }
                 },
                 {
                     'id': 'current_pv_sum',
@@ -155,7 +155,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_PV_Sum']['unit'],
                         'icon': 'mdi:weather-sunny'
-						}
+                        }
                 },
                 {
                     'id': 'current_self_consumption',
@@ -166,7 +166,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Power_P_SelfConsumption']['unit'],
                         'icon': 'mdi:power-plug'
-						}
+                        }
                 },
                 {
                     'id': 'current_relative_self_consumption',
@@ -177,7 +177,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Relative_Current_SelfConsumption']['unit'],
                         'icon': 'mdi:power-plug'
-						}
+                        }
                 },
                 {
                     'id': 'current_autonomy',
@@ -188,7 +188,7 @@ class FroniusSensor(Entity):
                         'unit_of_measurement':
                             data['Relative_Current_Autonomy']['unit'],
                         'icon': 'mdi:leaf'
-						}
+                        }
                 }
             ]
 

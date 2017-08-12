@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # add fronius solar json path to resource
     fronius_solar_json_path = \
-		"solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
+        "solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
     if resource[-1] != '/':
         fronius_solar_json_path = "/" + fronius_solar_json_path
     resource = resource + fronius_solar_json_path
@@ -96,7 +96,7 @@ class FroniusSymoSolar(Entity):
         # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
-			data = json_dict['Body']['Data']
+            data = json_dict['Body']['Data']
             # Create a single sensor for every transmitted value
             # list of transmitted values
             trans_values = [
@@ -109,7 +109,7 @@ class FroniusSymoSolar(Entity):
                         'unit_of_measurement':
                             data['PAC']['Unit'],
                         'icon': 'mdi:weather-sunny'
-						}
+                        }
                 },
                 {
                     'id': 'day_production',
@@ -129,21 +129,21 @@ class FroniusSymoSolar(Entity):
                     'attributes': {
                         'friendly_name': 'Solar production of the year',
                         'unit_of_measurement':
-                            'k'	+ data['YEAR_ENERGY']['Unit'],
+                            'k' + data['YEAR_ENERGY']['Unit'],
                         'icon': 'mdi:weather-sunny'
-						}
+                        }
                 },
-				{
-					'id': 'total_production',
-					'value':
-						data['TOTAL_ENERGY']['Values']['1'] / 1000000,
-					'attributes': {
-						'friendly_name': 'Total solar production ',
-						'unit_of_measurement':
-							'M' + data['TOTAL_ENERGY']['Unit'],
-						'icon': 'mdi:weather-sunny'
-						}
-				}
+                {
+                    'id': 'total_production',
+                    'value':
+                        data['TOTAL_ENERGY']['Values']['1'] / 1000000,
+                    'attributes': {
+                        'friendly_name': 'Total solar production ',
+                        'unit_of_measurement':
+                            'M' + data['TOTAL_ENERGY']['Unit'],
+                        'icon': 'mdi:weather-sunny'
+                        }
+                }
             ]
 
             # collect them in a list to create a group containing them later
