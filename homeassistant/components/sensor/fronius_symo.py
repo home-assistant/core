@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up the Fronius Symo sensor."""
+    """Set up the Fronius Symo sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
 
@@ -206,9 +206,8 @@ class FroniusSensor(Entity):
             for sensor in trans_values:
                 value = sensor['value']
                 # handle null values
-                """ Self consumption is null when generated power is null,
-                so it should actually be equal to current grid / at 100%
-                """
+                # Self consumption is null when generated power is null,
+                # so it should actually be equal to current grid / at 100%
                 if value == 'null' or value is None:
                     if sensor['id'] == 'current_self_consumption':
                         # absolute self consumption = grid(2)"""
@@ -250,6 +249,7 @@ class FroniusSensor(Entity):
         """Return the attributes of the entity.
 
         Provide the parsed JSON data (if any).
+
         """
         return self._attributes
 
