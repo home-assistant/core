@@ -186,7 +186,8 @@ class FroniusSymoSolar(Entity):
     def state_attributes(self):
         """Return the attributes of the entity.
 
-           Provide the parsed JSON data (if any).
+        Provide the parsed JSON data (if any).
+
         """
         return self._attributes
 
