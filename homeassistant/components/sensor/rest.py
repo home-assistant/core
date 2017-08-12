@@ -25,12 +25,14 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 
+METHODS = ['POST', 'GET']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
@@ -70,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch REST data")
         return False
 
-    add_devices([RestSensor(hass, rest, name, unit, value_template)])
+    add_devices([RestSensor(hass, rest, name, unit, value_template)], True)
 
 
 class RestSensor(Entity):
@@ -84,7 +86,6 @@ class RestSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):
