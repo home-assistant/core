@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['simplisafe-python==1.0.3']
+REQUIREMENTS = ['simplisafe-python==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
