@@ -152,7 +152,7 @@ class StatisticsSensor(Entity):
                 self.stdev = round(statistics.stdev(self.states), 2)
                 self.variance = round(statistics.variance(self.states), 2)
             except statistics.StatisticsError as err:
-                _LOGGER.warning(err)
+                _LOGGER.error(err)
                 self.mean = self.median = STATE_UNKNOWN
                 self.stdev = self.variance = STATE_UNKNOWN
             if self.states:

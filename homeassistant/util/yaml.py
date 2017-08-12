@@ -185,12 +185,9 @@ def _ordered_dict(loader: SafeLineLoader,
 
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
-            first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
-            second_mark = yaml.Mark(fname, 0, line, -1, None, None)
-            raise yaml.MarkedYAMLError(
-                context="duplicate key: \"{}\"".format(key),
-                context_mark=first_mark, problem_mark=second_mark,
-            )
+            _LOGGER.error(
+                'YAML file %s contains duplicate key "%s". '
+                'Check lines %d and %d.', fname, key, seen[key], line)
         seen[key] = line
 
     return _add_reference(OrderedDict(nodes), loader, node)

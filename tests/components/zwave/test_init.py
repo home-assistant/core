@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed, mock_http_component)
+    get_test_home_assistant, async_fire_time_changed)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
@@ -118,21 +118,6 @@ def test_auto_heal_disabled(hass, mock_openzwave):
     async_fire_time_changed(hass, time)
     yield from hass.async_block_till_done()
     assert not network.heal.called
-
-
-@asyncio.coroutine
-def test_frontend_panel_register(hass, mock_openzwave):
-    """Test network auto-heal disabled."""
-    mock_http_component(hass)
-    hass.config.components |= set(['frontend'])
-    with patch('homeassistant.components.zwave.'
-               'register_built_in_panel') as mock_register:
-        assert (yield from async_setup_component(hass, 'zwave', {
-            'zwave': {
-                'autoheal': False,
-            }}))
-    assert mock_register.called
-    assert len(mock_register.mock_calls) == 1
 
 
 @asyncio.coroutine

@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 50
-PATCH_VERSION = '2'
+MINOR_VERSION = 51
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -56,6 +56,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
@@ -108,6 +109,7 @@ CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
 CONF_ID = 'id'
+CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MAC = 'mac'
@@ -139,7 +141,6 @@ CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
-CONF_SENSOR_CLASS = 'sensor_class'
 CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SLAVE = 'slave'
@@ -282,6 +283,9 @@ ATTR_WAKEUP = 'wake_up_interval'
 # For devices which support a code attribute
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
+
+# For calling a device specific command
+ATTR_COMMAND = 'command'
 
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'

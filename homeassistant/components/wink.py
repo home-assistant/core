@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.4.2', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.5.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,11 +201,19 @@ def setup(hass, config):
             return False
         pywink.set_bearer_token(token)
 
-    client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
-    client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
-    email = config[DOMAIN].get(CONF_EMAIL)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
+    if config.get(DOMAIN) is not None:
+        client_id = config[DOMAIN].get(ATTR_CLIENT_ID)
+        client_secret = config[DOMAIN].get(ATTR_CLIENT_SECRET)
+        email = config[DOMAIN].get(CONF_EMAIL)
+        password = config[DOMAIN].get(CONF_PASSWORD)
+        local_control = config[DOMAIN].get(CONF_LOCAL_CONTROL)
+    else:
+        client_id = None
+        client_secret = None
+        email = None
+        password = None
+        local_control = None
+        hass.data[DOMAIN]['configurator'] = True
     if None not in [client_id, client_secret]:
         _LOGGER.info("Using legacy oauth authentication")
         if not local_control:
