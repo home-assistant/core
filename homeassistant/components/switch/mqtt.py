@@ -16,13 +16,16 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE)
+    CONF_PAYLOAD_ON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
+
+CONF_PAYLOAD_AVAILABLE = 'payload_available'
+CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 
 DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
