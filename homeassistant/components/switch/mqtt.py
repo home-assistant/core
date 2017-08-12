@@ -36,8 +36,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
-    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
+    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
 })
 
 
@@ -86,7 +88,7 @@ class MqttSwitch(SwitchDevice):
         self._payload_off = payload_off
         self._optimistic = optimistic
         self._template = value_template
-        self._payload_available= payload_available
+        self._payload_available = payload_available
         self._payload_not_available = payload_not_available
 
     @asyncio.coroutine
