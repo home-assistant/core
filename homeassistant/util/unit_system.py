@@ -104,7 +104,7 @@ class UnitSystem(object):
         return converted["value"]
 
     def length_with_display_obj(self: object, length: float, from_unit: str,
-               display_unit: str) -> dict:
+                                display_unit: str) -> dict:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
@@ -115,13 +115,14 @@ class UnitSystem(object):
                 to_unit = LENGTH_CENTIMETERS
             elif from_unit == LENGTH_YARD:
                 to_unit = LENGTH_METERS
-        else: 
+        else:
             if from_unit == LENGTH_CENTIMETERS:
                 to_unit = LENGTH_INCHES
             elif from_unit == LENGTH_METERS:
                 to_unit = LENGTH_INCHES
 
-        conv = distance_util.convert(length, from_unit, to_unit) # type: float
+        conv = distance_util.convert(
+            length, from_unit, to_unit)  # type: float
 
         conversion_result = {}
         conversion_result["value"] = conv
