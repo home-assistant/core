@@ -105,6 +105,7 @@ class UnitSystem(object):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
         to_unit = self.length_unit
+        # _LOGGER.warn("before re-range converting to " + str(to_unit) + " from " + str(from_unit))
         if self == METRIC_SYSTEM:
             if from_unit in (LENGTH_FEET, LENGTH_INCHES):
                 to_unit = LENGTH_CENTIMETERS
@@ -114,10 +115,15 @@ class UnitSystem(object):
             if from_unit == LENGTH_CENTIMETERS:
                 to_unit = LENGTH_INCHES
             elif from_unit == LENGTH_METERS:
-                to_unit = LENGTH_YARD
+                to_unit = LENGTH_INCHES
 
-        return distance_util.convert(length, from_unit,
-                                     self.length_unit)  # type: float
+        _LOGGER.warn("after re-range converting to " + str(to_unit) + " from " + str(from_unit))
+
+        conv  = distance_util.convert(length, from_unit, to_unit) # type: float
+
+        _LOGGER.warn("converted distance is " + str(conv))
+
+        return conv
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""

@@ -9,6 +9,7 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    LENGTH_INCHES,
     LENGTH,
 )
 
@@ -18,12 +19,14 @@ VALID_UNITS = [
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_METERS,
 ]
 
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
+    _LOGGER.warn("converting from " + unit_1 + " to " + unit_2)
     if unit_1 not in VALID_UNITS:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
@@ -52,6 +55,8 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
         result = __meters_to_miles(meters)
     elif unit_2 == LENGTH_FEET:
         result = __meters_to_feet(meters)
+    elif unit_2 == LENGTH_INCHES:
+        result = __meters_to_feet(meters) * 12
     elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
 
