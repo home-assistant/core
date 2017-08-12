@@ -124,7 +124,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_on': 1,
                 'payload_off': 0,
                 'payload_available': 1,
-                'payload_unavailable': 0
+                'payload_not_available': 0
             }
         })
 
