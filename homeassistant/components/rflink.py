@@ -370,6 +370,10 @@ class RflinkCommand(RflinkDevice):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
+        elif command == 'stop_roll':
+            cmd = 'stop'
+            self._state = True
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
@@ -436,6 +440,40 @@ class SwitchableRflinkDevice(RflinkCommand):
         """Turn the device off."""
         return self._async_handle_command("turn_off")
 
+class CoverableRflinkDevice(RflinkCommand):
+    """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
+
+    @property
+    def should_poll(self):
+        """No polling available in RFXtrx cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+		
+    def async_close_cover(self, **kwargs):
+        """Turn the device on."""
+        return self._async_handle_command("turn_on")
+
+    def async_open_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("turn_off")
+		
+    def async_stop_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("stop_roll")
 
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
