@@ -3,7 +3,7 @@
 import unittest
 import homeassistant.util.distance as distance_util
 from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_FEET,
-                                 LENGTH_MILES)
+                                 LENGTH_MILES, LENGTH_INCHES)
 
 INVALID_SYMBOL = 'bob'
 VALID_SYMBOL = LENGTH_KILOMETERS
@@ -24,6 +24,8 @@ class TestDistanceUtil(unittest.TestCase):
                          distance_util.convert(10, LENGTH_MILES, LENGTH_MILES))
         self.assertEqual(9,
                          distance_util.convert(9, LENGTH_FEET, LENGTH_FEET))
+        self.assertEqual(9,
+                         distance_util.convert(9, LENGTH_INCHES, LENGTH_INCHES))
 
     def test_convert_invalid_unit(self):
         """Test exception is thrown for invalid units."""
@@ -73,6 +75,9 @@ class TestDistanceUtil(unittest.TestCase):
             distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_FEET),
             16404.2)
         self.assertEqual(
+            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_INCHES),
+            16404.2 * 12)
+        self.assertEqual(
             distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_METERS),
             5000)
         self.assertEqual(
@@ -84,6 +89,8 @@ class TestDistanceUtil(unittest.TestCase):
         m = 5000
         self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_FEET),
                          16404.2)
+        self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_INCHES),
+                         16404.2 * 12)
         self.assertEqual(
             distance_util.convert(m, LENGTH_METERS, LENGTH_KILOMETERS),
             5)
