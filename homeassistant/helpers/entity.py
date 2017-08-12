@@ -299,7 +299,7 @@ class Entity(object):
 
         try:
             if (unit_of_measure in LENGTH_UNITS and
-                unit_of_measure != units.length_unit):
+                    unit_of_measure != units.length_unit):
                 # Convert length if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 display_unit = ''
