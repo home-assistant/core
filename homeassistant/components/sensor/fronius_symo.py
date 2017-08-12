@@ -155,10 +155,10 @@ class FroniusSensor(Entity):
                         json_dict['Body']['Data']['Power_PV_Sum']['value'],
                     'attributes':
                     {
-                        'friendly_name': 'Current PV use',
+                        'friendly_name': 'Current photovoltaic use',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Power_PV_Sum']['unit'],
-                        'icon': 'mdi:power-plug'
+                        'icon': 'mdi:weather-sunny'
                     }
                 },
                 {
@@ -194,7 +194,7 @@ class FroniusSensor(Entity):
                         'friendly_name': 'Current autonomy',
                         'unit_of_measurement':
                             json_dict['Body']['Data']['Relative_Current_Autonomy']['unit'],
-                        'icon': 'mdi:weather-sunny'
+                        'icon': 'mdi:leaf'
                     }
                 },
             ]
@@ -206,8 +206,7 @@ class FroniusSensor(Entity):
             for sensor in trans_values:
                 value = sensor['value']
                 # handle null values
-                """
-                self consumption is null when generated power is null,
+                """ Self consumption is null when generated power is null,
                 so it should actually be equal to current grid / at 100%
                 """
                 if value == 'null' or value is None:
