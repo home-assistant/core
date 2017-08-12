@@ -194,7 +194,7 @@ class Config(object):
                 return number
 
         number = '1'
-        if self.numbers.items():
+        if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
         self._save_numbers_json()
