@@ -303,9 +303,11 @@ class Entity(object):
                 # Convert length if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 display_unit = ''
-                length = units.length(float(state), unit_of_measure, display_unit)
+                converted = units.length(float(state), unit_of_measure,
+                                         display_unit)
+                length = converted["value"]
                 state = str(round(length) if prec == 0 else round(length, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = display_unit
+                attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
             
         except ValueError:
             # Could not convert state to float
