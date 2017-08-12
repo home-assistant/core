@@ -104,6 +104,18 @@ class UnitSystem(object):
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
+        to_unit = self.length_unit
+        if self == METRIC_SYSTEM:
+            if from_unit in (LENGTH_FEET, LENGTH_INCHES):
+                to_unit = LENGTH_CENTIMETERS
+            elif from_unit == LENGTH_YARD:
+                to_unit = LENGTH_METERS
+        else: 
+            if from_unit LENGTH_CENTIMETERS:
+                to_unit = LENGTH_INCHES
+            elif from_unit == LENGTH_METERS:
+                to_unit = LENGTH_YARD
+
         return distance_util.convert(length, from_unit,
                                      self.length_unit)  # type: float
 
