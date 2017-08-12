@@ -103,10 +103,10 @@ class FroniusSymoSolar(Entity):
                     'value':
                         json_dict['Body']['Data']['PAC']['Values']['1'],
                     'attributes': {
-                            'friendly_name': 'Current solar production',
-                            'unit_of_measurement':
-                                json_dict['Body']['Data']['PAC']['Unit'],
-                            'icon': 'mdi:weather-sunny'
+                        'friendly_name': 'Current solar production',
+                        'unit_of_measurement':
+                            json_dict['Body']['Data']['PAC']['Unit'],
+                        'icon': 'mdi:weather-sunny'
                         }
                 },
                 {
@@ -114,10 +114,10 @@ class FroniusSymoSolar(Entity):
                     'value':
                         json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
                     'attributes': {
-                            'friendly_name': 'Solar production of the day',
-                            'unit_of_measurement':
-                                json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
-                            'icon': 'mdi:weather-sunny'
+                        'friendly_name': 'Solar production of the day',
+                        'unit_of_measurement':
+                            json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
+                        'icon': 'mdi:weather-sunny'
                         }
                 },
                 {
