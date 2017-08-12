@@ -172,14 +172,21 @@ class FluxSwitch(SwitchDevice):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
+
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
         stop_time = now.replace(
             hour=self._stop_time.hour, minute=self._stop_time.minute,
             second=0)
-        if stop_time < start_time and stop_time < now:
-            # stop time is in the next day
-            stop_time += datetime.timedelta(days=1)
+
+        if stop_time <= start_time:
+            # stop_time does not happen in the same day as start_time
+            if start_time < now:
+                # stop time is tomorrow
+                stop_time += datetime.timedelta(days=1)
+        elif now < start_time:
+            # stop_time was yesterday since the new start_time is not reached
+            stop_time -= datetime.timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -196,15 +203,23 @@ class FluxSwitch(SwitchDevice):
         else:
             # Nightime
             time_state = 'night'
-            if stop_time > now > start_time:
-                now_time = now
+
+            if now < stop_time:
+                if stop_time < start_time and stop_time.day == sunset.day:
+                    # we need to use yesterday's sunset time
+                    sunset_time = sunset - datetime.timedelta(days=1)
+                else:
+                    sunset_time = sunset
+
+                night_length = int(stop_time.timestamp() -
+                                   sunset_time.timestamp())
+                seconds_from_sunset = int(now.timestamp() -
+                                          sunset_time.timestamp())
+                percentage_complete = seconds_from_sunset / night_length
             else:
-                now_time = stop_time
+                percentage_complete = 1
+
             temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
-            night_length = int(stop_time.timestamp() - sunset.timestamp())
-            seconds_from_sunset = int(now_time.timestamp() -
-                                      sunset.timestamp())
-            percentage_complete = seconds_from_sunset / night_length
             temp_offset = temp_range * percentage_complete
             if self._sunset_colortemp > self._stop_colortemp:
                 temp = self._sunset_colortemp - temp_offset
