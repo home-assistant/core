@@ -338,7 +338,7 @@ def async_setup(hass, config):
         # remove group
         if service.service == SERVICE_REMOVE:
             if object_id not in service_groups:
-                _LOGGER.warning("Group '%s' not exists!", object_id)
+                _LOGGER.warning("Group '%s' doesn't exist!", object_id)
                 return
 
             del_group = service_groups.pop(object_id)

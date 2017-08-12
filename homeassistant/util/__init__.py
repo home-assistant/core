@@ -99,7 +99,10 @@ def get_local_ip():
 
         return sock.getsockname()[0]
     except socket.error:
-        return socket.gethostbyname(socket.gethostname())
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except socket.gaierror:
+            return '127.0.0.1'
     finally:
         sock.close()
 

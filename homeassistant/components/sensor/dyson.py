@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.dyson/
 import logging
 import asyncio
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_OFF
 from homeassistant.components.dyson import DYSON_DEVICES
 
 from homeassistant.helpers.entity import Entity
@@ -29,7 +29,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
-    for device in hass.data[DYSON_DEVICES]:
+    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    for device in [d for d in hass.data[DYSON_DEVICES] if
+                   isinstance(d, DysonPureCoolLink)]:
         devices.append(DysonFilterLifeSensor(hass, device))
         devices.append(DysonDustSensor(hass, device))
         devices.append(DysonHumiditySensor(hass, device))
@@ -128,6 +130,8 @@ class DysonHumiditySensor(DysonSensor):
     def state(self):
         """Return Dust value."""
         if self._device.environmental_state:
+            if self._device.environmental_state.humidity == 0:
+                return STATE_OFF
             return self._device.environmental_state.humidity
         return None
 
@@ -151,6 +155,8 @@ class DysonTemperatureSensor(DysonSensor):
         """Return Dust value."""
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
+            if temperature_kelvin == 0:
+                return STATE_OFF
             if self._unit == TEMP_CELSIUS:
                 return float("{0:.1f}".format(temperature_kelvin - 273.15))
             return float("{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
@@ -172,7 +178,7 @@ class DysonAirQualitySensor(DysonSensor):
 
     @property
     def state(self):
-        """Return Air QUality value."""
+        """Return Air Quality value."""
         if self._device.environmental_state:
             return self._device.environmental_state.volatil_organic_compounds
         return None

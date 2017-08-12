@@ -5,11 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zamg/
 """
 import csv
-from datetime import datetime, timedelta
 import gzip
 import json
 import logging
 import os
+from datetime import datetime, timedelta
 
 import pytz
 import requests
@@ -26,6 +26,8 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_STATION = 'station'
 ATTR_UPDATED = 'updated'
 ATTRIBUTION = 'Data provided by ZAMG'
@@ -35,7 +37,7 @@ CONF_STATION_ID = 'station_id'
 DEFAULT_NAME = 'zamg'
 
 # Data source updates once per hour, so we do nothing if it's been less time
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
     ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
@@ -58,34 +60,38 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=['temperature']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZAMG sensor platform."""
-    logger = logging.getLogger(__name__)
+    name = config.get(CONF_NAME)
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
     station_id = config.get(CONF_STATION_ID) or closest_station(
-        config.get(CONF_LATITUDE),
-        config.get(CONF_LONGITUDE),
-        hass.config.config_dir)
+        latitude, longitude, hass.config.config_dir)
     if station_id not in zamg_stations(hass.config.config_dir):
-        logger.error("Configured ZAMG %s (%s) is not a known station",
-                     CONF_STATION_ID, station_id)
+        _LOGGER.error("Configured ZAMG %s (%s) is not a known station",
+                      CONF_STATION_ID, station_id)
         return False
 
-    probe = ZamgData(station_id=station_id, logger=logger)
+    probe = ZamgData(station_id=station_id)
     try:
         probe.update()
-    except ValueError as err:
-        logger.error("Received error from ZAMG: %s", err)
+    except (ValueError, TypeError) as err:
+        _LOGGER.error("Received error from ZAMG: %s", err)
         return False
 
-    add_devices([ZamgSensor(probe, variable, config.get(CONF_NAME))
+    add_devices([ZamgSensor(probe, variable, name)
                  for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
@@ -97,11 +103,6 @@ class ZamgSensor(Entity):
         self.probe = probe
         self.client_name = name
         self.variable = variable
-        self.update()
-
-    def update(self):
-        """Delegate update to probe."""
-        self.probe.update()
 
     @property
     def name(self):
@@ -127,6 +128,10 @@ class ZamgSensor(Entity):
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
 
+    def update(self):
+        """Delegate update to probe."""
+        self.probe.update()
+
 
 class ZamgData(object):
     """The class for handling the data retrieval."""
@@ -136,9 +141,8 @@ class ZamgData(object):
         'User-Agent': '{} {}'.format('home-assistant.zamg/', __version__),
     }
 
-    def __init__(self, logger, station_id):
+    def __init__(self, station_id):
         """Initialize the probe."""
-        self._logger = logger
         self._station_id = station_id
         self.data = {}
 
@@ -160,8 +164,8 @@ class ZamgData(object):
             response.encoding = 'UTF8'
             return csv.DictReader(response.text.splitlines(),
                                   delimiter=';', quotechar='"')
-        except Exception:  # pylint:disable=broad-except
-            logging.getLogger(__name__).exception("While fetching data")
+        except requests.exceptions.HTTPError:
+            _LOGGER.error("While fetching data")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -182,8 +186,8 @@ class ZamgData(object):
                     if col_heading in api_fields and v}
                 break
         else:
-            raise ValueError('No weather data for station {}'
-                             .format(self._station_id))
+            raise ValueError(
+                "No weather data for station {}".format(self._station_id))
 
     def get_data(self, variable):
         """Get the data."""
@@ -204,8 +208,8 @@ def _get_zamg_stations():
                     float(row[coord].replace(',', '.'))
                     for coord in ['breite_dezi', 'länge_dezi'])
             except KeyError:
-                logging.getLogger(__name__).exception(
-                    'ZAMG schema changed again, cannot autodetect station.')
+                _LOGGER.error(
+                    "ZAMG schema changed again, cannot autodetect station")
     return stations
 
 
@@ -232,7 +236,7 @@ def closest_station(lat, lon, cache_dir):
     stations = zamg_stations(cache_dir)
 
     def comparable_dist(zamg_id):
-        """Calculater psudeo-distance from lat/lon."""
+        """Calculate the psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[zamg_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

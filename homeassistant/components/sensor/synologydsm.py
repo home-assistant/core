@@ -7,15 +7,15 @@ https://home-assistant.io/components/sensor.synologydsm/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, EVENT_HOMEASSISTANT_START)
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS,
+    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-synology==0.1.0']
 
@@ -84,73 +84,71 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Synology NAS Sensor."""
-    # pylint: disable=too-many-locals
     def run_setup(event):
-        """Wait until HASS is fully initialized before creating.
+        """Wait until Home Assistant is fully initialized before creating.
 
         Delay the setup until Home Assistant is fully initialized.
         This allows any entities to be created already
         """
-        # Setup API
-        api = SynoApi(config.get(CONF_HOST), config.get(CONF_PORT),
-                      config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
-                      hass.config.units.temperature_unit)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        username = config.get(CONF_USERNAME)
+        password = config.get(CONF_PASSWORD)
+        unit = hass.config.units.temperature_unit
+        monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
-        sensors = [SynoNasUtilSensor(api, variable,
-                                     _UTILISATION_MON_COND[variable])
-                   for variable in config[CONF_MONITORED_CONDITIONS]
+        api = SynoApi(host, port, username, password, unit)
+
+        sensors = [SynoNasUtilSensor(
+            api, variable, _UTILISATION_MON_COND[variable])
+                   for variable in monitored_conditions
                    if variable in _UTILISATION_MON_COND]
 
-        # Handle all Volumes
+        # Handle all volumes
         volumes = config['volumes']
         if volumes is None:
             volumes = api.storage.volumes
 
         for volume in volumes:
-            sensors += [SynoNasStorageSensor(api, variable,
-                                             _STORAGE_VOL_MON_COND[variable],
-                                             volume)
-                        for variable in config[CONF_MONITORED_CONDITIONS]
+            sensors += [SynoNasStorageSensor(
+                api, variable, _STORAGE_VOL_MON_COND[variable], volume)
+                        for variable in monitored_conditions
                         if variable in _STORAGE_VOL_MON_COND]
 
-        # Handle all Disks
+        # Handle all disks
         disks = config['disks']
         if disks is None:
             disks = api.storage.disks
 
         for disk in disks:
-            sensors += [SynoNasStorageSensor(api, variable,
-                                             _STORAGE_DSK_MON_COND[variable],
-                                             disk)
-                        for variable in config[CONF_MONITORED_CONDITIONS]
+            sensors += [SynoNasStorageSensor(
+                api, variable, _STORAGE_DSK_MON_COND[variable], disk)
+                        for variable in monitored_conditions
                         if variable in _STORAGE_DSK_MON_COND]
 
-        add_devices_callback(sensors)
+        add_devices(sensors, True)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-class SynoApi():
-    """Class to interface with API."""
+class SynoApi(object):
+    """Class to interface with Synology DSM API."""
 
-    # pylint: disable=too-many-arguments, bare-except
+    # pylint: disable=bare-except
     def __init__(self, host, port, username, password, temp_unit):
         """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 
         try:
-            self._api = SynologyDSM(host,
-                                    port,
-                                    username,
-                                    password)
+            self._api = SynologyDSM(host, port, username, password)
         except:
             _LOGGER.error("Error setting up Synology DSM")
 
-        # Will be updated when `update` gets called.
+        # Will be updated when update() gets called.
         self.utilisation = self._api.utilisation
         self.storage = self._api.storage
 
@@ -161,14 +159,14 @@ class SynoApi():
 
 
 class SynoNasSensor(Entity):
-    """Representation of a Synology Nas Sensor."""
+    """Representation of a Synology NAS Sensor."""
 
-    def __init__(self, api, variable, variableInfo, monitor_device=None):
+    def __init__(self, api, variable, variable_info, monitor_device=None):
         """Initialize the sensor."""
         self.var_id = variable
-        self.var_name = variableInfo[0]
-        self.var_units = variableInfo[1]
-        self.var_icon = variableInfo[2]
+        self.var_name = variable_info[0]
+        self.var_units = variable_info[1]
+        self.var_icon = variable_info[2]
         self.monitor_device = monitor_device
         self._api = api
 
@@ -231,13 +229,12 @@ class SynoNasStorageSensor(SynoNasSensor):
 
         if self.monitor_device is not None:
             if self.var_id in temp_sensors:
-                attr = getattr(self._api.storage,
-                               self.var_id)(self.monitor_device)
+                attr = getattr(
+                    self._api.storage, self.var_id)(self.monitor_device)
 
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
 
                 return round(attr * 1.8 + 32.0, 1)
 
-            return getattr(self._api.storage,
-                           self.var_id)(self.monitor_device)
+            return getattr(self._api.storage, self.var_id)(self.monitor_device)
