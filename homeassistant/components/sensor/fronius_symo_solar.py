@@ -40,7 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
 
     # add fronius solar json path to resource
-    fronius_solar_json_path = "solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
+    fronius_solar_json_path = \
+		"solar_api/v1/GetInverterRealtimeData.fcgi?Scope=System"
     if resource[-1] != '/':
         fronius_solar_json_path = "/" + fronius_solar_json_path
     resource = resource + fronius_solar_json_path
@@ -95,53 +96,54 @@ class FroniusSymoSolar(Entity):
         # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
+			data = json_dict['Body']['Data']
             # Create a single sensor for every transmitted value
             # list of transmitted values
             trans_values = [
                 {
                     'id': 'current_production',
                     'value':
-                        json_dict['Body']['Data']['PAC']['Values']['1'],
+                        data['PAC']['Values']['1'],
                     'attributes': {
                         'friendly_name': 'Current solar production',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['PAC']['Unit'],
+                            data['PAC']['Unit'],
                         'icon': 'mdi:weather-sunny'
-                        }
+						}
                 },
                 {
                     'id': 'day_production',
                     'value':
-                        json_dict['Body']['Data']['DAY_ENERGY']['Values']['1'],
+                        data['DAY_ENERGY']['Values']['1'],
                     'attributes': {
                         'friendly_name': 'Solar production of the day',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['DAY_ENERGY']['Unit'],
+                            data['DAY_ENERGY']['Unit'],
                         'icon': 'mdi:weather-sunny'
                         }
                 },
                 {
                     'id': 'year_production',
                     'value':
-                        json_dict['Body']['Data']['YEAR_ENERGY']['Values']['1'] / 1000,
+                        data['YEAR_ENERGY']['Values']['1'] / 1000,
                     'attributes': {
                         'friendly_name': 'Solar production of the year',
                         'unit_of_measurement':
-                            'k' + json_dict['Body']['Data']['YEAR_ENERGY']['Unit'],
+                            'k'	+ data['YEAR_ENERGY']['Unit'],
                         'icon': 'mdi:weather-sunny'
-                    }
+						}
                 },
-                {
-                    'id': 'total_production',
-                    'value':
-                        json_dict['Body']['Data']['TOTAL_ENERGY']['Values']['1'] / 1000000,
-                    'attributes': {
-                        'friendly_name': 'Total solar production ',
-                        'unit_of_measurement':
-                            'M' + json_dict['Body']['Data']['TOTAL_ENERGY']['Unit'],
-                        'icon': 'mdi:weather-sunny'
-                    }
-                }
+				{
+					'id': 'total_production',
+					'value':
+						data['TOTAL_ENERGY']['Values']['1'] / 1000000,
+					'attributes': {
+						'friendly_name': 'Total solar production ',
+						'unit_of_measurement':
+							'M' + data['TOTAL_ENERGY']['Unit'],
+						'icon': 'mdi:weather-sunny'
+						}
+				}
             ]
 
             # collect them in a list to create a group containing them later

@@ -97,6 +97,7 @@ class FroniusSensor(Entity):
         # Parse the return text as JSON and save the json as an attribute.
         try:
             json_dict = json.loads(value)
+			data = json_dict['Body']['Data']
             # Create a single sensor for every transmitted value.
 
             # the list of transmitted values
@@ -104,90 +105,90 @@ class FroniusSensor(Entity):
                 {
                     'id': 'current_generated_power',
                     'value':
-                        json_dict['Body']['Data']['Power_P_Generate']['value'],
+                        data['Power_P_Generate']['value'],
                     'attributes': {
                         'friendly_name': 'Currently generated power',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_P_Generate']['unit'],
+                            data['Power_P_Generate']['unit'],
                         'icon': 'mdi:power-plug'
-                    }
+						}
                 },
                 {
                     'id': 'current_load',
                     'value':
-                        json_dict['Body']['Data']['Power_P_Load']['value'],
+                        data['Power_P_Load']['value'],
                     'attributes': {
                         'friendly_name': 'Current load',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_P_Load']['unit'],
+                            data['Power_P_Load']['unit'],
                         'icon': 'mdi:power-plug'
-                    }
+						}
                 },
                 {
                     'id': 'current_grid_consumption',
                     'value':
-                        json_dict['Body']['Data']['Power_P_Grid']['value'],
+                        data['Power_P_Grid']['value'],
                     'attributes': {
                         'friendly_name': 'Current grid consumption',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_P_Grid']['unit'],
+                            data['Power_P_Grid']['unit'],
                         'icon': 'mdi:power-plug'
-                    }
+						}
                 },
                 {
                     'id': 'current_akku_sum',
                     'value':
-                        json_dict['Body']['Data']['Power_Akku_Sum']['value'],
+                        data['Power_Akku_Sum']['value'],
                     'attributes': {
                         'friendly_name': 'Current battery use',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_Akku_Sum']['unit'],
+                            data['Power_Akku_Sum']['unit'],
                         'icon': 'mdi:battery'
-                    }
+						}
                 },
                 {
                     'id': 'current_pv_sum',
                     'value':
-                        json_dict['Body']['Data']['Power_PV_Sum']['value'],
+                        data['Power_PV_Sum']['value'],
                     'attributes': {
                         'friendly_name': 'Current photovoltaic use',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_PV_Sum']['unit'],
+                            data['Power_PV_Sum']['unit'],
                         'icon': 'mdi:weather-sunny'
-                    }
+						}
                 },
                 {
                     'id': 'current_self_consumption',
                     'value':
-                        json_dict['Body']['Data']['Power_P_SelfConsumption']['value'],
+                        data['Power_P_SelfConsumption']['value'],
                     'attributes': {
                         'friendly_name': 'Current self consumption',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Power_P_SelfConsumption']['unit'],
+                            data['Power_P_SelfConsumption']['unit'],
                         'icon': 'mdi:power-plug'
-                    }
+						}
                 },
                 {
                     'id': 'current_relative_self_consumption',
                     'value':
-                        json_dict['Body']['Data']['Relative_Current_SelfConsumption']['value'],
+                        data['Relative_Current_SelfConsumption']['value'],
                     'attributes': {
                         'friendly_name': 'Current relative self consumption',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Relative_Current_SelfConsumption']['unit'],
+                            data['Relative_Current_SelfConsumption']['unit'],
                         'icon': 'mdi:power-plug'
-                    }
+						}
                 },
                 {
                     'id': 'current_autonomy',
                     'value':
-                        json_dict['Body']['Data']['Relative_Current_Autonomy']['value'],
+                        data['Relative_Current_Autonomy']['value'],
                     'attributes': {
                         'friendly_name': 'Current autonomy',
                         'unit_of_measurement':
-                            json_dict['Body']['Data']['Relative_Current_Autonomy']['unit'],
+                            data['Relative_Current_Autonomy']['unit'],
                         'icon': 'mdi:leaf'
-                    }
+						}
                 }
             ]
 
