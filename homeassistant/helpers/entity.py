@@ -310,6 +310,7 @@ class Entity(object):
                 if prec == 0 else state = round(length, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
 
+
         except ValueError:
             # Could not convert state to float
             pass
