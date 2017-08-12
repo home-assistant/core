@@ -283,18 +283,24 @@ class Entity(object):
         if not attr.get(ATTR_HIDDEN, True):
             attr.pop(ATTR_HIDDEN)
 
-        # Convert temperature if we detect one
+        unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+        units = self.hass.config.units
         try:
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
             if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                     unit_of_measure != units.temperature_unit):
+                # Convert temperature if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-            elif (unit_of_measure in LENGTH_UNITS and
+        except ValueError:
+            # Could not convert state to float
+            pass
+            
+        try:
+            if (unit_of_measure in LENGTH_UNITS and
                 unit_of_measure != units.length_unit):
+                # Convert length if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 length = units.length(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
