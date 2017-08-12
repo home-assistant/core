@@ -296,14 +296,14 @@ class Entity(object):
         except ValueError:
             # Could not convert state to float
             pass
-            
+
         try:
             if (unit_of_measure in LENGTH_UNITS and
                 unit_of_measure != units.length_unit):
                 # Convert length if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 length = units.length(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
+                state = str(round(length) if prec == 0 else round(length, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.length_unit
             
         except ValueError:
