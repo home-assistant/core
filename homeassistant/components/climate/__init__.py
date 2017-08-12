@@ -86,13 +86,17 @@ SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
-SET_TEMPERATURE_SCHEMA = vol.Schema({
-    vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
-    vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
-    vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_OPERATION_MODE): cv.string,
-})
+SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
+    cv.has_at_least_one_key(
+        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
+    {
+        vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
+        vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
+        vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_OPERATION_MODE): cv.string,
+    }
+))
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,

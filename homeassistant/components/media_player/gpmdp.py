@@ -120,7 +120,7 @@ def setup_gpmdp(hass, config, code, add_devices):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_devices([GPMDP(name, url, code)])
+    add_devices([GPMDP(name, url, code)], True)
 
 
 def _load_config(filename):
@@ -153,7 +153,7 @@ def _save_config(filename, config):
     return True
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GPMDP platform."""
     codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
     if codeconfig:
@@ -164,7 +164,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         code = None
     else:
         code = None
-    setup_gpmdp(hass, config, code, add_devices_callback)
+    setup_gpmdp(hass, config, code, add_devices)
 
 
 class GPMDP(MediaPlayerDevice):
@@ -186,7 +186,6 @@ class GPMDP(MediaPlayerDevice):
         self._duration = None
         self._volume = None
         self._request_id = 0
-        self.update()
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""

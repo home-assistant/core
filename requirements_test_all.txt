@@ -4,7 +4,7 @@
 # new version
 flake8==3.3
 pylint==1.6.5
-mypy==0.520
+mypy==0.521
 pydocstyle==1.1.1
 coveralls>=1.1
 pytest>=2.9.2
@@ -62,7 +62,7 @@ holidays==0.8.1
 influxdb==3.0.0
 
 # homeassistant.components.dyson
-libpurecoollink==0.2.0
+libpurecoollink==0.4.2
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
@@ -130,7 +130,7 @@ somecomfort==0.4.1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.12
+sqlalchemy==1.1.13
 
 # homeassistant.components.statsd
 statsd==3.2.1

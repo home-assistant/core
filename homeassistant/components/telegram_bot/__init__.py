@@ -15,16 +15,16 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
-    HTTP_DIGEST_AUTHENTICATION)
+    ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==6.1.0']
+REQUIREMENTS = ['python-telegram-bot==7.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_CAPTION = 'caption'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_CHAT_INSTANCE = 'chat_instance'
-ATTR_COMMAND = 'command'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
 ATTR_EDITED_MSG = 'edited_message'
@@ -59,6 +58,8 @@ ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
+CONF_PROXY_URL = 'proxy_url'
+CONF_PROXY_PARAMS = 'proxy_params'
 
 DOMAIN = 'telegram_bot'
 
@@ -85,6 +86,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ALLOWED_CHAT_IDS):
         vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+    vol.Optional(CONF_PROXY_URL): cv.string,
+    vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -240,7 +243,9 @@ def async_setup(hass, config):
         hass,
         p_config.get(CONF_API_KEY),
         p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER)
+        p_config.get(ATTR_PARSER),
+        p_config.get(CONF_PROXY_URL),
+        p_config.get(CONF_PROXY_PARAMS)
     )
 
     @asyncio.coroutine
@@ -303,10 +308,12 @@ def async_setup(hass, config):
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser):
+    def __init__(self, hass, api_key, allowed_chat_ids, parser,
+                 proxy_url=None, proxy_params=None):
         """Initialize the service."""
         from telegram import Bot
         from telegram.parsemode import ParseMode
+        from telegram.utils.request import Request
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -314,7 +321,11 @@ class TelegramNotificationService:
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        self.bot = Bot(token=api_key)
+        request = None
+        if proxy_url is not None:
+            request = Request(proxy_url=proxy_url,
+                              urllib3_proxy_kwargs=proxy_params)
+        self.bot = Bot(token=api_key, request=request)
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):

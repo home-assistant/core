@@ -11,6 +11,14 @@ turn_on:
       description: Activity ID or Activity Name to start
       example: 'BedroomTV'
 
+toggle:
+  description: Toggles a device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle
+      example: 'remote.family_room'
+
 turn_off:
   description: Sends the Power Off Command
 
