@@ -148,7 +148,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 self._state_ts + self._pending_time)
 
     def alarm_arm_night(self, code=None):
-        """Send arm away command."""
+        """Send arm night command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
             return
 
