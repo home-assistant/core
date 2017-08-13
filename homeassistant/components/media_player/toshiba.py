@@ -25,8 +25,8 @@ DEFAULT_NAME = 'Toshiba Cast TV'
 DEFAULT_PORT = 4430
 
 SUPPORT_TOSHIBATV = SUPPORT_VOLUME_STEP | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+                    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -46,19 +46,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug('%s', discovery_info)
         host = discovery_info.get('host')
         port = discovery_info.get('port')
-        add_devices([ToshibaCastTVDevice(name, host,port)])
+        add_devices([ToshibaCastTVDevice(name, host, port)])
         return True
 
     host = config.get(CONF_HOST)
 
-    add_devices([ToshibaCastTVDevice(name, host,port)])
+    add_devices([ToshibaCastTVDevice(name, host, port)])
     return True
 
 
 class ToshibaCastTVDevice(MediaPlayerDevice):
     """Representation of a Toshiba cast TV."""
 
-    def __init__(self, name, host,port):
+    def __init__(self, name, host, port):
         """Initialize the Toshiba device."""
         self._name = name
         self._muted = False
@@ -69,18 +69,19 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         self._volume = 0
         # Should add the current input
         self._current_source = None
-        self._source_list = ['ANT_CABLE','CAST','HDMI_1','HDMI_2','HDMI_3','USB','AV']
+        self._source_list = ['ANT_CABLE', 'CAST', 'HDMI_1', 'HDMI_2', 'HDMI_3', 'USB', 'AV']
 
     def update(self):
         """Retrieve the latest data."""
         try:
             data = requests.get('https://%s:%s/v2/remote/status/power' % (self._host, self._port), verify=False).json()
             if data['power'] == 'on':
-                 self._state = STATE_ON
+                self._state = STATE_ON
             else:
                 self._state = STATE_OFF
 
-            data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port), verify=False).json()
+            data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
+                                verify=False).json()
             self._current_source = data['external_input']
 
             data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), verify=False).json()
@@ -92,7 +93,7 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         try:
-            payload = { 'key' : key }
+            payload = {'key': key}
 
             requests.post('https://%s:%s/v2/remote/remote' % (self._host, self._port), data=payload, verify=False)
             self._state = STATE_ON
@@ -141,7 +142,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source of the device"""
-        data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port), verify=False).json()
+        data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
+                            verify=False).json()
         self._current_source = data['external_input']
         return self._current_source
 
@@ -157,13 +159,13 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the media player."""
-        payload = { 'power' : 'on' }
+        payload = {'power': 'on'}
         requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port), data=payload, verify=False)
         self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
-        payload = { 'power' : 'off' }
+        payload = {'power': 'off'}
         requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port), data=payload, verify=False)
         self._state = STATE_OFF
 
@@ -191,11 +193,12 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set the volume level."""
         self._volume = volume
-        payload = { 'volume' : volume }
+        payload = {'volume': volume}
         requests.post('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), data=payload, verify=False)
 
     def select_source(self, source):
         """Select input source."""
-        payload = { 'external_input' : source }
+        payload = {'external_input': source}
         self._current_source = source
-        requests.post('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port), data=payload, verify=False)
+        requests.post('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port), data=payload,
+                      verify=False)
