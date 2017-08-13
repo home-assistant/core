@@ -19,7 +19,6 @@ REQUIREMENTS = ['dlipower==0.7.165']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 CONF_CYCLETIME = 'cycletime'
 
 DEFAULT_NAME = 'DINRelay'
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )
 
     if not power_switch.verify():
-        _LOGGER.error('Could not connect to DIN III Relay')
+        _LOGGER.error("Could not connect to DIN III Relay")
         return False
 
     devices = []
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in power_switch
     )
 
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class DINRelay(SwitchDevice):
@@ -81,7 +80,8 @@ class DINRelay(SwitchDevice):
         self._parent_device = parent_device
         self.controllername = name
         self.outletnumber = outletnumber
-        self.update()
+        self._outletname = ''
+        self._is_on = False
 
     @property
     def name(self):
@@ -112,7 +112,7 @@ class DINRelay(SwitchDevice):
         self._is_on = (
             self._parent_device.statuslocal[self.outletnumber - 1][2] == 'ON'
         )
-        self._outletname = "{}_{}".format(
+        self._outletname = '{}_{}'.format(
             self.controllername,
             self._parent_device.statuslocal[self.outletnumber - 1][1]
         )
@@ -124,7 +124,7 @@ class DINRelayDevice(object):
     def __init__(self, device):
         """Initialize the DINRelay device."""
         self._device = device
-        self.update()
+        self.statuslocal = None
 
     def turn_on(self, **kwargs):
         """Instruct the relay to turn on."""

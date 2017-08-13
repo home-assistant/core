@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
+
 import requests_mock
 
 from homeassistant import core as ha
@@ -32,7 +33,7 @@ MOCK_DATA_MISSING = ('{"software": {},'
 
 
 class TestGoogleWifiSetup(unittest.TestCase):
-    """Tests for setting up the Google Wifi switch platform."""
+    """Tests for setting up the Google Wifi sensor platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -45,9 +46,8 @@ class TestGoogleWifiSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
-        resource = '{}{}{}'.format('http://',
-                                   google_wifi.DEFAULT_HOST,
-                                   google_wifi.ENDPOINT)
+        resource = '{}{}{}'.format(
+            'http://', google_wifi.DEFAULT_HOST, google_wifi.ENDPOINT)
         mock_req.get(resource, status_code=200)
         self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {
@@ -60,9 +60,8 @@ class TestGoogleWifiSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with full configuration."""
-        resource = '{}{}{}'.format('http://',
-                                   'localhost',
-                                   google_wifi.ENDPOINT)
+        resource = '{}{}{}'.format(
+            'http://', 'localhost', google_wifi.ENDPOINT)
         mock_req.get(resource, status_code=200)
         self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {
@@ -95,34 +94,33 @@ class TestGoogleWifiSensor(unittest.TestCase):
 
     def setup_api(self, data, mock_req):
         """Setup API with fake data."""
-        resource = '{}{}{}'.format('http://',
-                                   'localhost',
-                                   google_wifi.ENDPOINT)
+        resource = '{}{}{}'.format(
+            'http://', 'localhost', google_wifi.ENDPOINT)
         now = datetime(1970, month=1, day=1)
         with patch('homeassistant.util.dt.now', return_value=now):
             mock_req.get(resource, text=data, status_code=200)
             conditions = google_wifi.MONITORED_CONDITIONS.keys()
-            self.api = google_wifi.GoogleWifiAPI("localhost",
-                                                 conditions)
+            self.api = google_wifi.GoogleWifiAPI("localhost", conditions)
         self.name = NAME
         self.sensor_dict = dict()
         for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
-            sensor = google_wifi.GoogleWifiSensor(self.hass, self.api,
-                                                  self.name, condition)
+            sensor = google_wifi.GoogleWifiSensor(
+                self.api, self.name, condition)
             name = '{}_{}'.format(self.name, condition)
             units = cond_list[1]
             icon = cond_list[2]
-            self.sensor_dict[condition] = {'sensor': sensor,
-                                           'name': name,
-                                           'units': units,
-                                           'icon': icon}
+            self.sensor_dict[condition] = {
+                'sensor': sensor,
+                'name': name,
+                'units': units,
+                'icon': icon
+            }
 
     def fake_delay(self, ha_delay):
         """Fake delay to prevent update throttle."""
         hass_now = dt_util.utcnow()
         shifted_time = hass_now + timedelta(seconds=ha_delay)
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
 
     def test_name(self):
         """Test the name."""
@@ -135,8 +133,8 @@ class TestGoogleWifiSensor(unittest.TestCase):
         """Test the unit of measurement."""
         for name in self.sensor_dict:
             sensor = self.sensor_dict[name]['sensor']
-            self.assertEqual(self.sensor_dict[name]['units'],
-                             sensor.unit_of_measurement)
+            self.assertEqual(
+                self.sensor_dict[name]['units'], sensor.unit_of_measurement)
 
     def test_icon(self):
         """Test the icon."""
@@ -208,8 +206,8 @@ class TestGoogleWifiSensor(unittest.TestCase):
                 sensor.update()
                 self.assertEqual(STATE_UNKNOWN, sensor.state)
 
-    def test_update_when_unavailiable(self):
-        """Test state updates when Google Wifi unavailiable."""
+    def test_update_when_unavailable(self):
+        """Test state updates when Google Wifi unavailable."""
         self.api.update = Mock('google_wifi.GoogleWifiAPI.update',
                                side_effect=self.update_side_effect())
         for name in self.sensor_dict:
@@ -220,4 +218,4 @@ class TestGoogleWifiSensor(unittest.TestCase):
     def update_side_effect(self):
         """Mock representation of update function."""
         self.api.data = None
-        self.api.availiable = False
+        self.api.available = False

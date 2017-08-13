@@ -128,19 +128,18 @@ class AlexaIntentsView(http.HomeAssistantView):
         alexa_intent_info = req.get('intent')
         alexa_response = AlexaResponse(hass, alexa_intent_info)
 
-        if req_type == 'LaunchRequest':
-            alexa_response.add_speech(
-                SpeechType.plaintext,
-                "Hello, and welcome to the future. How may I help?")
-            return self.json(alexa_response)
-
-        if req_type != 'IntentRequest':
+        if req_type != 'IntentRequest' and req_type != 'LaunchRequest':
             _LOGGER.warning('Received unsupported request: %s', req_type)
             return self.json_message(
                 'Received unsupported request: {}'.format(req_type),
                 HTTP_BAD_REQUEST)
 
-        intent_name = alexa_intent_info['name']
+        if req_type == 'LaunchRequest':
+            intent_name = data.get('session', {})       \
+                              .get('application', {})   \
+                              .get('applicationId')
+        else:
+            intent_name = alexa_intent_info['name']
 
         try:
             intent_response = yield from intent.async_handle(
