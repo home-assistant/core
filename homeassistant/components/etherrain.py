@@ -91,7 +91,7 @@ def _er_request(data=None):
         # _LOGGER.info("Water off".format(valve,duration))
         url = '{0}/result.cgi?xr'.format(ER['server_origin'])
     if cmd == WATER_ON:
-        _LOGGER.info("Set {0} to {1} minutes".format(valve, duration))
+        # _LOGGER.info("Set {0} to {1} minutes".format(valve, duration))
         valves = ["0", "0", "0", "0", "0", "0", "0", "0", "0"]
         valves[valve] = duration
         url = '{0}/result.cgi?xi=0:{1}:{2}:{3}:{4}:{5}:{6}:{7}:{8}'.format(
@@ -168,5 +168,5 @@ def get_state(valve):
 # pylint: disable=no-member
 def change_state(valve_data):
     """Change the state of a valve."""
-    _LOGGER.info("Change State: {0}".format(valve_data))
+    # _LOGGER.info("Change State: {0}".format(valve_data))
     return _er_request(data=valve_data)
