@@ -54,7 +54,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_template(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData('echo 10')
+        data = command_line.CommandSensorData(self.hass, 'echo 10')
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1.0', '0',
@@ -64,7 +64,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_sensor_off(self):
         """Test setting the state with a template."""
-        data = command_line.CommandSensorData('echo 0')
+        data = command_line.CommandSensorData(self.hass, 'echo 0')
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1', '0', None)
