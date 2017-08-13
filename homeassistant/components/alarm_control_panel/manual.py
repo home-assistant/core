@@ -12,9 +12,10 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_PLATFORM, CONF_NAME,
-    CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
+    CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
+    CONF_DISARM_AFTER_TRIGGER)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 
@@ -87,7 +88,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         if self._state in (STATE_ALARM_ARMED_HOME,
-                           STATE_ALARM_ARMED_AWAY) and \
+                           STATE_ALARM_ARMED_AWAY,
+                           STATE_ALARM_ARMED_NIGHT) and \
            self._pending_time and self._state_ts + self._pending_time > \
            dt_util.utcnow():
             return STATE_ALARM_PENDING
@@ -137,6 +139,20 @@ class ManualAlarm(alarm.AlarmControlPanel):
             return
 
         self._state = STATE_ALARM_ARMED_AWAY
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._pending_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
+            return
+
+        self._state = STATE_ALARM_ARMED_NIGHT
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
