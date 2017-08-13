@@ -130,15 +130,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the SABnzbd platform."""
     from pysabnzbd import SabnzbdApi
 
-    host = config.get(CONF_HOST) or discovery_info.get(CONF_HOST)
-    port = config.get(CONF_PORT) or discovery_info.get(CONF_PORT)
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    use_ssl = DEFAULT_SSL
-
-    if config.get(CONF_SSL):
-        use_ssl = True
-    elif discovery_info.get('properties', {}).get('https', '0') == '1':
-        use_ssl = True
+    if discovery_info is not None:
+        host = discovery_info.get(CONF_HOST)
+        port = discovery_info.get(CONF_PORT)
+        name = DEFAULT_NAME
+        use_ssl = discovery_info.get('properties', {}).get('https', '0') == '1'
+    else:
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        name = config.get(CONF_NAME, DEFAULT_NAME)
+        use_ssl = config.get(CONF_SSL)
 
     uri_scheme = 'https://' if use_ssl else 'http://'
     base_url = "{}{}:{}/".format(uri_scheme, host, port)
