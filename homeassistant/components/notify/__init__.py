@@ -103,6 +103,10 @@ def async_setup(hass, config):
                 raise HomeAssistantError("Invalid notify platform.")
 
             if notify_service is None:
+                if discovery_info is None:
+                    _LOGGER.error(
+                        "Failed to initialize notification service %s",
+                        p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
