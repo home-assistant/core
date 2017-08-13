@@ -71,7 +71,7 @@ class UPNPResponderThread(threading.Thread):
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
-       resp_template = """HTTP/1.1 200 OK
+        resp_template = """HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
 LOCATION: http://{0}:{1}/description.xml
