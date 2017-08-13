@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.toshiba/
 """
 import logging
 import requests
-import json
 
 import voluptuous as vol
 
@@ -74,7 +73,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data."""
         try:
-            data = requests.get('https://%s:%s/v2/remote/status/power' % (self._host, self._port), verify=False).json()
+            data = requests.get('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+                                verify=False).json()
             if data['power'] == 'on':
                 self._state = STATE_ON
             else:
@@ -84,7 +84,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
                                 verify=False).json()
             self._current_source = data['external_input']
 
-            data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), verify=False).json()
+            data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
+                                verify=False).json()
             self._volume = data['volume']
 
         except OSError:
@@ -95,7 +96,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         try:
             payload = {'key': key}
 
-            requests.post('https://%s:%s/v2/remote/remote' % (self._host, self._port), data=payload, verify=False)
+            requests.post('https://%s:%s/v2/remote/remote' % (self._host, self._port),
+                          data=payload, verify=False)
             self._state = STATE_ON
         except OSError:
             self._state = STATE_OFF
@@ -125,7 +127,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), verify=False).json()
+        data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
+                            verify=False).json()
         self._volume = data['volume']
         return self._volume
 
@@ -160,13 +163,15 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on the media player."""
         payload = {'power': 'on'}
-        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port), data=payload, verify=False)
+        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+                      data=payload, verify=False)
         self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         payload = {'power': 'off'}
-        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port), data=payload, verify=False)
+        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+                      data=payload, verify=False)
         self._state = STATE_OFF
 
     def volume_up(self):
@@ -194,11 +199,12 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         """Set the volume level."""
         self._volume = volume
         payload = {'volume': volume}
-        requests.post('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), data=payload, verify=False)
+        requests.post('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
+                      data=payload, verify=False)
 
     def select_source(self, source):
         """Select input source."""
         payload = {'external_input': source}
         self._current_source = source
-        requests.post('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port), data=payload,
-                      verify=False)
+        requests.post('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
+                      data=payload, verify=False)
