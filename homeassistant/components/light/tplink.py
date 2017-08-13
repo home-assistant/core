@@ -94,7 +94,6 @@ class TPLinkSmartBulb(Light):
             self.smartbulb.brightness = brightness_to_percentage(brightness)
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs.get(ATTR_RGB_COLOR)
-            self._rgb = rgb
             self.smartbulb.hsv = rgb_to_hsv(rgb)
 
 
