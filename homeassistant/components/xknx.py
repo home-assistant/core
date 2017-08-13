@@ -187,7 +187,8 @@ class XKNXModule(object):
         if CONF_XKNX_FIRE_EVENT in self.config[DOMAIN] and \
                 self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]:
             from xknx.knx import AddressFilter
-            address_filters = list(map(lambda af: AddressFilter(af),
+            address_filters = list(map(
+                AddressFilter,
                 self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER]))
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
