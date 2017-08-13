@@ -191,7 +191,7 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set the volume level."""
         self._volume = volume
-        payload = { 'volume' : _volume }
+        payload = { 'volume' : volume }
         requests.post('https://%s:%s/v2/remote/status/volume' % (self._host, self._port), data=payload, verify=False)
 
     def select_source(self, source):
