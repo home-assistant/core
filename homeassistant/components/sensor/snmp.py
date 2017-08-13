@@ -85,14 +85,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Please check the details in the configuration file")
         return False
     else:
-        data = SnmpData(host, port, community, baseoid, version, accept_errors, default_value)
+        data = SnmpData(
+            host, port, community, baseoid,version, accept_errors,
+            default_value)
         add_devices([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):
     """Representation of a SNMP sensor."""
 
-    def __init__(self, data, name, unit_of_measurement, value_template):
+    def __init__(self, data, name, unit_of_measurement,
+                 value_template):
         """Initialize the sensor."""
         self.data = data
         self._name = name
@@ -132,7 +135,8 @@ class SnmpSensor(Entity):
 class SnmpData(object):
     """Get the latest data and update the states."""
 
-    def __init__(self, host, port, community, baseoid, version, accept_errors, default_value):
+    def __init__(self, host, port, community, baseoid, version, accept_errors,
+                 default_value):
         """Initialize the data object."""
         self._host = host
         self._port = port
