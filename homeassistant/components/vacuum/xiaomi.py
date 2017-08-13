@@ -335,7 +335,7 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
-        from mirobo import VacuumException
+        from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
@@ -345,6 +345,6 @@ class MiroboVacuum(VacuumDevice):
         except OSError as exc:
             _LOGGER.error("Got OSError while fetching the state: %s", exc)
             # self._available = False
-        except VacuumException as exc:
+        except DeviceException as exc:
             _LOGGER.warning("Got exception while fetching the state: %s", exc)
             # self._available = False
