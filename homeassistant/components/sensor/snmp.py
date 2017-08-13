@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     else:
         data = SnmpData(
-            host, port, community, baseoid,version, accept_errors,
+            host, port, community, baseoid, version, accept_errors,
             default_value)
         add_devices([SnmpSensor(data, name, unit, value_template)], True)
 
@@ -170,4 +170,3 @@ class SnmpData(object):
         else:
             for resrow in restable:
                 self.value = str(resrow[-1])
-
