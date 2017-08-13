@@ -36,11 +36,12 @@ SUPPORTED_DOMAINS = [
     'cover',
     'light',
     'sensor',
-    'binary_sensor']
+    'binary_sensor',
+    'notify']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.7']
+REQUIREMENTS = ['xknx==0.7.8']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
