@@ -34,11 +34,11 @@ CONF_URL = 'url'
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
+DEFAULT_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
 DOMAIN = 'geo_rss_events'
 ENTITY_ID_FORMAT = 'sensor.' + DOMAIN + '_{}'
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
@@ -64,8 +64,8 @@ def async_setup_platform(hass, config, async_add_devices,
     name = config.get(CONF_NAME)
     icon = config.get(CONF_ICON)
     categories = config.get(CONF_CATEGORIES)
-    interval_in_seconds = config.get(CONF_SCAN_INTERVAL) or timedelta(
-        minutes=5)
+    interval_in_seconds = config.get(
+        CONF_SCAN_INTERVAL) or DEFAULT_TIME_BETWEEN_UPDATES
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     if None in (home_latitude, home_longitude):
