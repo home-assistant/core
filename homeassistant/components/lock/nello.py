@@ -99,6 +99,7 @@ class NelloLock(LockDevice):
         """Unlock the device."""
         # Optimistically assume the door has been opened
         self._locked = False
-        self._nello_lock.open_door()
+        if not self._nello_lock.open_door():
+            _LOGGER.error("Failed to unlock")
         # Reset the state to locked
         self._locked = True
