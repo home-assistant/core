@@ -133,7 +133,8 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
                 _LOGGER.error("UPNP Responder socket exception occured: %s",
                               ex.__str__)
-                # this one is used to stop the followup error of data not being initialised
+                # without the following continue, a second exception occurs
+                # because the data object has not been initialized
                 continue
 
             if "M-SEARCH" in data.decode('utf-8'):
