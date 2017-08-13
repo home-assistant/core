@@ -1079,6 +1079,9 @@ class Config(object):
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
+        if path is None:
+            return False
+
         parent = pathlib.Path(path).parent
         try:
             parent = parent.resolve()  # pylint: disable=no-member
