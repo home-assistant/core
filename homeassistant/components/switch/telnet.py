@@ -13,9 +13,8 @@ import voluptuous as vol
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
                                              ENTITY_ID_FORMAT)
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_FRIENDLY_NAME, CONF_OPTIMISTIC, CONF_SWITCHES,
-    CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_COMMAND_STATE,
-    CONF_PORT)
+    CONF_RESOURCE, CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE,
+    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_COMMAND_STATE, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +28,6 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_COMMAND_ON): cv.string,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
 })
 
@@ -62,7 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
-                device_config.get(CONF_OPTIMISTIC),
                 value_template
             )
         )
@@ -78,8 +75,7 @@ class TelnetSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using telnet commands."""
 
     def __init__(self, hass, object_id, resource, port, friendly_name,
-                 command_on, command_off, command_state, optimistic,
-                 value_template):
+                 command_on, command_off, command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -90,10 +86,9 @@ class TelnetSwitch(SwitchDevice):
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
-        self._optimistic = optimistic
         self._value_template = value_template
 
-    def __telnet_command(self, command):
+    def _telnet_command(self, command):
         try:
             telnet = telnetlib.Telnet(self._resource, self._port)
             telnet.write(command.encode('ASCII') + b'\r')
@@ -123,16 +118,13 @@ class TelnetSwitch(SwitchDevice):
     @property
     def assumed_state(self):
         """Default ist true if no state command is defined, false otherwise."""
-        if self._optimistic is not None:
-            return self._optimistic
-
         return self._command_state is None
 
     def update(self):
         """Update device state."""
-        response = self.__telnet_command(self._command_state)
+        response = self._telnet_command(self._command_state)
         if response:
-            _LOGGER.error(
+            _LOGGER.info(
                 'Response for command %s: %s', self._command_state, response)
             rendered = self._value_template \
                 .render_with_possible_json_value(response)
@@ -143,12 +135,12 @@ class TelnetSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self.__telnet_command(self._command_on)
-        if self._optimistic:
+        self._telnet_command(self._command_on)
+        if self.assumed_state:
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.__telnet_command(self._command_off)
-        if self._optimistic:
+        self._telnet_command(self._command_off)
+        if self.assumed_state:
             self._state = False
