@@ -51,6 +51,7 @@ def request_configuration(hass, config, url, add_devices_callback):
     configurator = get_component('configurator')
     if 'gpmdp' in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING['gpmdp'], "Failed to register, please try again.")
 
         return
@@ -118,7 +119,7 @@ def setup_gpmdp(hass, config, code, add_devices):
 
     if 'gpmdp' in _CONFIGURING:
         configurator = get_component('configurator')
-        configurator.request_done(_CONFIGURING.pop('gpmdp'))
+        configurator.request_done(hass, _CONFIGURING.pop('gpmdp'))
 
     add_devices([GPMDP(name, url, code)], True)
 

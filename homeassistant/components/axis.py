@@ -83,7 +83,7 @@ def request_configuration(hass, name, host, serialnumber):
     def configuration_callback(callback_data):
         """Called when config is submitted."""
         if CONF_INCLUDE not in callback_data:
-            configurator.notify_errors(request_id,
+            configurator.notify_errors(hass, request_id,
                                        "Functionality mandatory.")
             return False
         callback_data[CONF_INCLUDE] = callback_data[CONF_INCLUDE].split()
@@ -93,7 +93,7 @@ def request_configuration(hass, name, host, serialnumber):
         try:
             config = DEVICE_SCHEMA(callback_data)
         except vol.Invalid:
-            configurator.notify_errors(request_id,
+            configurator.notify_errors(hass, request_id,
                                        "Bad input, please check spelling.")
             return False
 
@@ -102,9 +102,9 @@ def request_configuration(hass, name, host, serialnumber):
             config_file[serialnumber] = dict(config)
             del config_file[serialnumber]['hass']
             _write_config(hass, config_file)
-            configurator.request_done(request_id)
+            configurator.request_done(hass, request_id)
         else:
-            configurator.notify_errors(request_id,
+            configurator.notify_errors(hass, request_id,
                                        "Failed to register, please try again.")
             return False
 

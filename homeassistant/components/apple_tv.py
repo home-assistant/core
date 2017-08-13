@@ -88,7 +88,7 @@ def request_configuration(hass, config, atv, credentials):
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
 
-        hass.async_add_job(configurator.request_done, instance)
+        hass.async_add_job(configurator.request_done, hass, instance)
 
     instance = configurator.request_config(
         hass, 'Apple TV Authentication', configuration_callback,

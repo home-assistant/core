@@ -144,7 +144,7 @@ def setup_plexserver(
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
         configurator = get_component('configurator')
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
         _LOGGER.info("Discovery configuration done")
 
     # Save config
@@ -239,7 +239,7 @@ def request_configuration(host, hass, config, add_devices_callback):
     configurator = get_component('configurator')
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(_CONFIGURING[host],
+        configurator.notify_errors(hass, _CONFIGURING[host],
                                    'Failed to register, please try again.')
 
         return

@@ -210,7 +210,7 @@ class Icloud(DeviceScanner):
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
             configurator = get_component('configurator')
-            configurator.request_done(request_id)
+            configurator.request_done(self.hass, request_id)
 
         # Trigger the next step immediately
         self.icloud_need_verification_code()
@@ -260,7 +260,7 @@ class Icloud(DeviceScanner):
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
             configurator = get_component('configurator')
-            configurator.request_done(request_id)
+            configurator.request_done(self.hass, request_id)
 
     def icloud_need_verification_code(self):
         """Return the verification code."""

@@ -44,6 +44,7 @@ def request_configuration(network, hass, config):
     configurator = get_component('configurator')
     if 'ecobee' in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING['ecobee'], "Failed to register, please try again.")
 
         return
@@ -74,7 +75,7 @@ def setup_ecobee(hass, network, config):
 
     if 'ecobee' in _CONFIGURING:
         configurator = get_component('configurator')
-        configurator.request_done(_CONFIGURING.pop('ecobee'))
+        configurator.request_done(hass, _CONFIGURING.pop('ecobee'))
 
     hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 

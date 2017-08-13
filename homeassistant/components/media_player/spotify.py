@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     if hass.data.get(DOMAIN):
         configurator = get_component('configurator')
-        configurator.request_done(hass.data.get(DOMAIN))
+        configurator.request_done(hass, hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
     player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
                                 config[CONF_ALIASES])

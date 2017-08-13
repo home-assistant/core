@@ -18,8 +18,9 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
-_REQUESTS = {}
 _KEY_INSTANCE = 'configurator'
+
+DATA_REQUESTS = 'configurator_requets'
 
 ATTR_CONFIGURE_ID = 'configure_id'
 ATTR_DESCRIPTION = 'description'
@@ -59,7 +60,10 @@ def async_request_config(
         description, description_image, submit_caption,
         fields, link_name, link_url, entity_picture)
 
-    _REQUESTS[request_id] = instance
+    if DATA_REQUESTS not in hass.data:
+        hass.data[DATA_REQUESTS] = {}
+
+    hass.data[DATA_REQUESTS][request_id] = instance
 
     return request_id
 
@@ -75,11 +79,13 @@ def request_config(hass, *args, **kwargs):
     ).result()
 
 
+@bind_hass
 @async_callback
-def async_notify_errors(request_id, error):
+def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
     try:
-        _REQUESTS[request_id].async_notify_errors(request_id, error)
+        hass.data[DATA_REQUESTS][request_id].async_notify_errors(
+            request_id, error)
     except KeyError:
         # If request_id does not exist
         pass
@@ -89,15 +95,16 @@ def async_notify_errors(request_id, error):
 def notify_errors(hass, request_id, error):
     """Add errors to a config request."""
     return run_callback_threadsafe(
-        hass.loop, async_notify_errors, request_id, error
+        hass.loop, async_notify_errors, hass, request_id, error
     ).result()
 
 
+@bind_hass
 @async_callback
-def async_request_done(request_id):
+def async_request_done(hass, request_id):
     """Mark a configuration request as done."""
     try:
-        _REQUESTS.pop(request_id).async_request_done(request_id)
+        hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
     except KeyError:
         # If request_id does not exist
         pass
@@ -107,7 +114,7 @@ def async_request_done(request_id):
 def request_done(hass, request_id):
     """Mark a configuration request as done."""
     return run_callback_threadsafe(
-        hass.loop, async_request_done, request_id
+        hass.loop, async_request_done, hass, request_id
     ).result()
 
 

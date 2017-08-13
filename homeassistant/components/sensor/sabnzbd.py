@@ -91,7 +91,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
     configurator = get_component('configurator')
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(_CONFIGURING[host],
+        configurator.notify_errors(hass, _CONFIGURING[host],
                                    'Failed to register, please try again.')
 
         return
@@ -109,7 +109,7 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
                 conf[host] = {'api_key': api_key}
                 _write_config(hass, conf)
                 req_config = _CONFIGURING.pop(host)
-                hass.async_add_job(configurator.request_done, req_config)
+                hass.async_add_job(configurator.request_done, hass, req_config)
 
             hass.async_add_job(success)
 

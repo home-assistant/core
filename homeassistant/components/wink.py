@@ -124,7 +124,7 @@ def _request_app_setup(hass, config):
         else:
             error_msg = ("Your input was invalid. Please try again.")
             _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(_configurator, error_msg)
+            configurator.notify_errors(hass, _configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
@@ -154,7 +154,7 @@ def _request_oauth_completion(hass, config):
     configurator = get_component('configurator')
     if DOMAIN in hass.data[DOMAIN]['configuring']:
         configurator.notify_errors(
-            hass.data[DOMAIN]['configuring'][DOMAIN],
+            hass, hass.data[DOMAIN]['configuring'][DOMAIN],
             "Failed to register, please try again.")
         return
 

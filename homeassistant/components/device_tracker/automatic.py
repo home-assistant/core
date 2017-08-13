@@ -171,10 +171,10 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             session = yield from client.create_session_from_oauth_code(
                 code, state)
             yield from initialize_data(session)
-            configurator.async_request_done(request_id)
+            configurator.async_request_done(hass, request_id)
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
-            configurator.async_notify_errors(request_id, str(err))
+            configurator.async_notify_errors(hass, request_id, str(err))
             return False
 
     if DATA_CONFIGURING not in hass.data:

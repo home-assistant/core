@@ -167,7 +167,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         configurator = get_component('configurator')
 
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
 
     lights = {}
     lightgroups = {}
@@ -273,6 +273,7 @@ def request_configuration(host, hass, add_devices, filename,
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING[host], "Failed to register, please try again.")
 
         return

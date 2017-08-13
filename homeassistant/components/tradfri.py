@@ -56,7 +56,7 @@ def request_configuration(hass, config, host):
                                         callback_data.get('key'),
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
         if not res:
-            hass.async_add_job(configurator.notify_errors, instance,
+            hass.async_add_job(configurator.notify_errors, hass, instance,
                                "Unable to connect.")
             return
 
@@ -65,7 +65,7 @@ def request_configuration(hass, config, host):
             conf = _read_config(hass)
             conf[host] = {'key': callback_data.get('key')}
             _write_config(hass, conf)
-            hass.async_add_job(configurator.request_done, instance)
+            hass.async_add_job(configurator.request_done, hass, instance)
 
         hass.async_add_job(success)
 

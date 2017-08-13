@@ -62,6 +62,7 @@ def request_configuration(device_id, insteonhub, model, hass,
     # We got an error if this method is called while we are configuring
     if device_id in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING[device_id], 'Failed to register, please try again.')
 
         return
@@ -86,7 +87,7 @@ def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
     if device_id in _CONFIGURING:
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
         _LOGGER.info("Device configuration done!")
 
     conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))

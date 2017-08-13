@@ -115,7 +115,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
     if client.is_registered() and host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
         configurator = get_component('configurator')
-        configurator.request_done(request_id)
+        configurator.request_done(hass, request_id)
 
     add_devices([LgWebOSDevice(host, mac, name, customize, config)], True)
 
@@ -128,6 +128,7 @@ def request_configuration(
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING[host], 'Failed to pair, please try again.')
         return
 

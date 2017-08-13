@@ -166,7 +166,8 @@ def request_app_setup(hass, config, add_devices, config_path,
             if config_file == DEFAULT_CONFIG:
                 error_msg = ("You didn't correctly modify fitbit.conf",
                              " please try again")
-                configurator.notify_errors(_CONFIGURING['fitbit'], error_msg)
+                configurator.notify_errors(hass, _CONFIGURING['fitbit'],
+                                           error_msg)
             else:
                 setup_platform(hass, config, add_devices, discovery_info)
         else:
@@ -198,6 +199,7 @@ def request_oauth_completion(hass):
     configurator = get_component('configurator')
     if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
+            hass,
             _CONFIGURING['fitbit'], "Failed to register, please try again.")
 
         return
@@ -233,7 +235,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if "fitbit" in _CONFIGURING:
-        get_component('configurator').request_done(_CONFIGURING.pop("fitbit"))
+        get_component('configurator').request_done(
+            hass, _CONFIGURING.pop("fitbit"))
 
     import fitbit
 

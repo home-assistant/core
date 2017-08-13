@@ -58,6 +58,7 @@ def request_configuration(nest, hass, config):
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
         configurator.notify_errors(
+            hass,
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
@@ -93,7 +94,7 @@ def setup_nest(hass, nest, config, pin=None):
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configuration done")
         configurator = get_component('configurator')
-        configurator.request_done(_CONFIGURING.pop('nest'))
+        configurator.request_done(hass, _CONFIGURING.pop('nest'))
 
     _LOGGER.debug("proceeding with setup")
     conf = config[DOMAIN]
