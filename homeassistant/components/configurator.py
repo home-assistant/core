@@ -55,7 +55,7 @@ def async_request_config(
     if instance is None:
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
-    request_id = instance.request_config(
+    request_id = instance.async_request_config(
         name, callback,
         description, description_image, submit_caption,
         fields, link_name, link_url, entity_picture)
@@ -135,7 +135,8 @@ class Configurator(object):
         hass.services.async_register(
             DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call)
 
-    def request_config(
+    @async_callback
+    def async_request_config(
             self, name, callback,
             description, description_image, submit_caption,
             fields, link_name, link_url, entity_picture):
