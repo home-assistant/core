@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-simple-hipchat-v2==0.0.1']
+REQUIREMENTS = ['hipnotify==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,12 +25,15 @@ CONF_NOTIFY = 'notify'
 CONF_FORMAT = 'format'
 CONF_HOST = 'host'
 
+VALID_COLORS = {'yellow', 'green', 'red', 'purple', 'gray', 'random'}
+VALID_FORMATS = {'text', 'html'}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
-    vol.Required(CONF_ROOM): cv.string,
-    vol.Optional(CONF_COLOR, default='yellow'): cv.string,
+    vol.Required(CONF_ROOM): vol.Coerce(int),
+    vol.Optional(CONF_COLOR, default='yellow'): vol.In(VALID_COLORS),
     vol.Optional(CONF_NOTIFY, default=False): cv.boolean,
-    vol.Optional(CONF_FORMAT, default='text'): cv.string,
+    vol.Optional(CONF_FORMAT, default='text'): vol.In(VALID_FORMATS),
     vol.Optional(CONF_HOST, default='https://api.hipchat.com/'): cv.string,
 })
 
@@ -49,27 +52,30 @@ def get_service(hass, config, discovery_info=None):
 class HipchatNotificationService(BaseNotificationService):
     """Implement the notification service for HipChat."""
 
-    _valid_colors = {'yellow', 'green', 'red', 'purple', 'gray', 'random'}
-    _valid_formats = {'text', 'html'}
-
     def __init__(self, token, default_room, default_color, default_notify,
                  default_format, host):
         """Initialize the service."""
-        import hipchat_v2
         self._token = token
         self._default_room = default_room
-        if default_color in self._valid_colors:
+        if default_color in VALID_COLORS:
             self._default_color = default_color
         else:
             self._default_color = 'yellow'
-        if isinstance(default_notify, bool):
-            self._default_notify = default_notify
-        else:
-            self._default_notify = False
+        self._default_notify = default_notify
         self._default_format = default_format
         self._host = host
 
-        self._hipchat = hipchat_v2.HipChat(token=self._token, url=self._host)
+        self._rooms = {}
+        self._get_room(self._default_room)
+
+    def _get_room(self, room):
+        """Get Room object, creating it if necessary."""
+        from hipnotify import Room
+        if room not in self._rooms:
+            self._rooms[room] = Room(token=self._token,
+                                     room_id=room,
+                                     endpoint_url=self._host)
+        return self._rooms[room]
 
     def send_message(self, message="", **kwargs):
         """Send a message."""
@@ -80,24 +86,20 @@ class HipchatNotificationService(BaseNotificationService):
         if kwargs.get(ATTR_DATA) is not None:
             data = kwargs.get(ATTR_DATA)
             if ((data.get(CONF_COLOR) is not None)
-                    and (data.get(CONF_COLOR) in self._valid_colors)):
+                    and (data.get(CONF_COLOR) in VALID_COLORS)):
                 color = data.get(CONF_COLOR)
             if ((data.get(CONF_NOTIFY) is not None)
                     and isinstance(data.get(CONF_NOTIFY), bool)):
                 notify = data.get(CONF_NOTIFY)
             if ((data.get(CONF_FORMAT) is not None)
-                    and (data.get(CONF_FORMAT) in self._valid_formats)):
+                    and (data.get(CONF_FORMAT) in VALID_FORMATS)):
                 message_format = data.get(CONF_FORMAT)
 
-        if kwargs.get(ATTR_TARGET) is None:
-            targets = [self._default_room]
-        else:
-            targets = kwargs.get(ATTR_TARGET)
+        targets = kwargs.get(ATTR_TARGET, [self._default_room])
 
-        for room in targets:
-
-            self._hipchat.message_room(room_id=room,
-                                       message=message,
-                                       color=color,
-                                       notify=notify,
-                                       message_format=message_format)
+        for target in targets:
+            room = self._get_room(target)
+            room.notify(msg=message,
+                        color=color,
+                        notify=notify,
+                        message_format=message_format)
