@@ -100,12 +100,13 @@ class UnitSystem(object):
                                         from_unit, self.temperature_unit)
 
     def length(self: object, length: float, from_unit: str) -> float:
-        converted = self.length_with_display_obj(length, from_unit, '')
+        """Convert the given length to this unit system return a float."""
+        converted = self.length_with_display_obj(length, from_unit)
         return converted["value"]
 
-    def length_with_display_obj(self: object, length: float, from_unit: str,
-                                display_unit: str) -> dict:
-        """Convert the given length to this unit system."""
+    def length_with_display_obj(self: object, length: float,
+                                from_unit: str) -> dict:
+        """Convert the given length to this unit system return a dict."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 

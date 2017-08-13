@@ -28,7 +28,7 @@ VALID_UNITS = [
 
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
-    _LOGGER.warn("converting from " + unit_1 + " to " + unit_2)
+    _LOGGER.warn("Converting " + unit_1 + " to " + unit_2)
     if unit_1 not in VALID_UNITS:
         raise ValueError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
