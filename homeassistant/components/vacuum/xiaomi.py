@@ -220,12 +220,12 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from mirobo import VacuumException
+        from mirobo import DeviceException, VacuumException
         try:
             yield from self.hass.async_add_job(partial(func, *args, **kwargs))
             return True
-        except VacuumException as ex:
-            _LOGGER.error(mask_error, ex)
+        except (DeviceException, VacuumException) as exc:
+            _LOGGER.error(mask_error, exc)
             return False
 
     @asyncio.coroutine
