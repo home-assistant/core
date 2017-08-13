@@ -42,9 +42,7 @@ class NelloLock(LockDevice):
         """Initialize the lock."""
         self._nello_lock = nello_lock
         self._device_attrs = None
-        self._address = None
         self._activity = None
-        self._locked = True
         self._name = None
 
     @property
@@ -55,7 +53,7 @@ class NelloLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._locked
+        return True
 
     @property
     def device_state_attributes(self):
@@ -97,9 +95,5 @@ class NelloLock(LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        # Optimistically assume the door has been opened
-        self._locked = False
         if not self._nello_lock.open_door():
             _LOGGER.error("Failed to unlock")
-        # Reset the state to locked
-        self._locked = True
