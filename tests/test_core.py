@@ -829,6 +829,7 @@ class TestConfig(unittest.TestCase):
                 "/root/secure_file",
                 "/var/../etc/passwd",
                 test_file,
+                None,
             ]
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
