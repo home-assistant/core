@@ -24,6 +24,7 @@ CONF_XKNX_ROUTING = "routing"
 CONF_XKNX_TUNNELING = "tunneling"
 CONF_XKNX_LOCAL_IP = "local_ip"
 CONF_XKNX_FIRE_EVENT = "fire_event"
+CONF_XKNX_FIRE_EVENT_FILTER = "fire_event_filter"
 
 SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
@@ -39,7 +40,7 @@ SUPPORTED_DOMAINS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.6']
+REQUIREMENTS = ['xknx==0.7.7']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -57,7 +58,12 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Exclusive(CONF_XKNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
         vol.Exclusive(CONF_XKNX_TUNNELING, 'connection_type'):
             TUNNELING_SCHEMA,
-        vol.Optional(CONF_XKNX_FIRE_EVENT, default=False): cv.boolean
+        vol.Inclusive(CONF_XKNX_FIRE_EVENT, 'fire_ev'):
+            cv.boolean,
+        vol.Inclusive(CONF_XKNX_FIRE_EVENT_FILTER, 'fire_ev'):
+            vol.All(
+                cv.ensure_list,
+                [cv.string])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -178,9 +184,13 @@ class XKNXModule(object):
 
     def register_callbacks(self):
         """Register callbacks within XKNX object."""
-        if self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]:
+        if CONF_XKNX_FIRE_EVENT in self.config[DOMAIN] and \
+                self.config[DOMAIN][CONF_XKNX_FIRE_EVENT]:
+            from xknx.knx import AddressFilter
+            address_filters = list(map(lambda af: AddressFilter(af),
+                self.config[DOMAIN][CONF_XKNX_FIRE_EVENT_FILTER]))
             self.xknx.telegram_queue.register_telegram_received_cb(
-                self.telegram_received_cb)
+                self.telegram_received_cb, address_filters)
 
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
