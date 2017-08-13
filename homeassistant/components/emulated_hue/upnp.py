@@ -2,7 +2,6 @@
 import threading
 import socket
 import logging
-import os
 import select
 
 from aiohttp import web
