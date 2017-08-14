@@ -43,9 +43,9 @@ PLATFORM_SCHEMA = vol.Schema(
             vol.Email(),  # pylint: disable=no-value-for-parameter
             vol.Required(CONF_PASSWORD):
             cv.string,
-            vol.Required(CONF_PORT):
+            vol.Optional(CONF_PORT):
             cv.port,
-            vol.Required(CONF_SSL):
+            vol.Optional(CONF_SSL):
             cv.boolean,
             vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
             cv.positive_int
