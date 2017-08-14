@@ -43,7 +43,7 @@ ATTR_FUEL_LEVEL = 'fuel_level'
 
 EVENT_AUTOMATIC_UPDATE = 'automatic_update'
 
-AUTOMATIC_CONFIG_FILE = 'automatic/session-{}.json'
+AUTOMATIC_CONFIG_FILE = '.automatic/session-{}.json'
 
 DATA_CONFIGURING = 'automatic_configurator_clients'
 DATA_REFRESH_TOKEN = 'refresh_token'
