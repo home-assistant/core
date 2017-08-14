@@ -155,8 +155,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     configurator = hass.components.configurator
     request_id = configurator.async_request_config(
-        "Automatic", lambda _: None,
-        description=(
+        "Automatic", description=(
             "Authorization required for Automatic device tracker."),
         link_name="Click here to authorize Home Assistant.",
         link_url=client.generate_oauth_url(scope),

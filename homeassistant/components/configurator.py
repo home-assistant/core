@@ -43,7 +43,7 @@ STATE_CONFIGURED = 'configured'
 @bind_hass
 @async_callback
 def async_request_config(
-        hass, name, callback, description=None, description_image=None,
+        hass, name, callback=None, description=None, description_image=None,
         submit_caption=None, fields=None, link_name=None, link_url=None,
         entity_picture=None):
     """Create a new request for configuration.
@@ -219,8 +219,8 @@ class Configurator(object):
         entity_id, fields, callback = self._requests[request_id]
 
         # field validation goes here?
-
-        self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
+        if callback:
+            self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
