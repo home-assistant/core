@@ -33,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Toshiba Cast TV platform."""
@@ -166,7 +167,6 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         if self._volume < 100:
             self.send_key('40BF1A')
             self._volume += 1
-
         self._muted = False
 
     def volume_down(self):
@@ -174,7 +174,6 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         if self._volume > 0:
             self.send_key('40BF1E')
             self._volume -= 1
-
         self._muted = False
 
     def mute_volume(self, mute):
