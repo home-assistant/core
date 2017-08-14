@@ -33,11 +33,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Toshiba Cast TV platform."""
-
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
 
@@ -125,14 +123,6 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         return self._port
 
     @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
-                            verify=False).json()
-        self._volume = data['volume']
-        return self._volume
-
-    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
@@ -145,9 +135,6 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source of the device"""
-        data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
-                            verify=False).json()
-        self._current_source = data['external_input']
         return self._current_source
 
     @property
