@@ -20,7 +20,7 @@ from homeassistant.util.async import run_callback_threadsafe
 _LOGGER = logging.getLogger(__name__)
 _KEY_INSTANCE = 'configurator'
 
-DATA_REQUESTS = 'configurator_requets'
+DATA_REQUESTS = 'configurator_requests'
 
 ATTR_CONFIGURE_ID = 'configure_id'
 ATTR_DESCRIPTION = 'description'
