@@ -91,7 +91,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Backward compatibility, notify all devices in own account
             if url:
                 self.pushbullet.push_link(title, url, body=message)
-            if self.hass.config.is_allowed_path(filepath):
+            if filepath and self.hass.config.is_allowed_path(filepath):
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
                     self.pushbullet.push_file(title=title, body=message,
@@ -115,7 +115,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 if url:
                     self.pushbullet.push_link(
                         title, url, body=message, email=tname)
-                if self.hass.config.is_allowed_path(filepath):
+                if filepath and self.hass.config.is_allowed_path(filepath):
                     with open(filepath, "rb") as fileh:
                         filedata = self.pushbullet.upload_file(fileh, filepath)
                         self.pushbullet.push_file(title=title, body=message,
