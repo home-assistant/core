@@ -651,6 +651,9 @@ pymyq==0.0.8
 # homeassistant.components.mysensors
 pymysensors==0.10.0
 
+# homeassistant.components.lock.nello
+pynello==1.5
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
