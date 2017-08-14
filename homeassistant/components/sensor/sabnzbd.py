@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
@@ -88,7 +87,7 @@ def setup_sabnzbd(base_url, apikey, name, hass, config, add_devices, sab_api):
 
 def request_configuration(host, name, hass, config, add_devices, sab_api):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
@@ -114,7 +113,6 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
             hass.async_add_job(success)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass,
         DEFAULT_NAME,
         sabnzbd_configuration_callback,
         description=('Enter the API Key'),

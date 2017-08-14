@@ -110,7 +110,7 @@ def request_configuration(hass, name, host, serialnumber):
 
     title = '{} ({})'.format(name, host)
     request_id = configurator.request_config(
-        hass, title, configuration_callback,
+        title, configuration_callback,
         description='Functionality: ' + str(AXIS_INCLUDE),
         entity_picture="/static/images/logo_axis.png",
         link_name='Axis platform documentation',
