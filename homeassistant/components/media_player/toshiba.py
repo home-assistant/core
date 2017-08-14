@@ -135,7 +135,7 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """Return the current input source of the device"""
+        """Return the current input source of the device."""
         return self._current_source
 
     @property
