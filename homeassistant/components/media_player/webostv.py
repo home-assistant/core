@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, STATE_OFF,
     STATE_PLAYING, STATE_PAUSED,
     STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pylgtv==0.1.7',
@@ -114,7 +113,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
     # If we came here and configuring this host, mark as done.
     if client.is_registered() and host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
     add_devices([LgWebOSDevice(host, mac, name, customize, config)], True)
@@ -123,7 +122,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
 def request_configuration(
         host, mac, name, customize, config, hass, add_devices):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -137,7 +136,7 @@ def request_configuration(
         setup_tv(host, mac, name, customize, config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, name, lgtv_configuration_callback,
+        name, lgtv_configuration_callback,
         description='Click start and accept the pairing request on your TV.',
         description_image='/static/images/config_webos.png',
         submit_caption='Start pairing request'
