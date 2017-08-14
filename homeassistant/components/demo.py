@@ -196,12 +196,12 @@ def async_setup(hass, config):
         # First time it is called, pretend it failed.
         if len(configurator_ids) == 1:
             configurator.notify_errors(
-                hass, configurator_ids[0],
+                configurator_ids[0],
                 "Failed to register, please try again.")
 
             configurator_ids.append(0)
         else:
-            configurator.request_done(hass, configurator_ids[0])
+            configurator.request_done(configurator_ids[0])
 
     def setup_configurator():
         """Set up a configurator."""

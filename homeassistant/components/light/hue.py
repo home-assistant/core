@@ -23,7 +23,6 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
-from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
 
@@ -164,10 +163,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-
-        configurator = get_component('configurator')
-
-        configurator.request_done(hass, request_id)
+        configurator = hass.components.configurator
+        configurator.request_done(request_id)
 
     lights = {}
     lightgroups = {}
@@ -268,12 +265,11 @@ def request_configuration(host, hass, add_devices, filename,
                           allow_unreachable, allow_in_emulated_hue,
                           allow_hue_groups):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            hass,
             _CONFIGURING[host], "Failed to register, please try again.")
 
         return
@@ -285,7 +281,7 @@ def request_configuration(host, hass, add_devices, filename,
                      allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Philips Hue", hue_configuration_callback,
+        "Philips Hue", hue_configuration_callback,
         description=("Press the button on the bridge to register Philips Hue "
                      "with Home Assistant."),
         entity_picture="/static/images/logo_philips_hue.png",

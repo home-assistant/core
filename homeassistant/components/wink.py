@@ -13,7 +13,6 @@ from datetime import timedelta
 import voluptuous as vol
 import requests
 
-from homeassistant.loader import get_component
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers import discovery
@@ -103,7 +102,7 @@ def _read_config_file(file_path):
 def _request_app_setup(hass, config):
     """Assist user with configuring the Wink dev application."""
     hass.data[DOMAIN]['configurator'] = True
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
@@ -124,7 +123,7 @@ def _request_app_setup(hass, config):
         else:
             error_msg = ("Your input was invalid. Please try again.")
             _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(hass, _configurator, error_msg)
+            configurator.notify_errors(_configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
@@ -138,7 +137,7 @@ def _request_app_setup(hass, config):
                      """.format(start_url)
 
     hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        hass, DOMAIN, wink_configuration_callback,
+        DOMAIN, wink_configuration_callback,
         description=description, submit_caption="submit",
         description_image="/static/images/config_wink.png",
         fields=[{'id': 'client_id', 'name': 'Client ID', 'type': 'string'},
@@ -151,10 +150,10 @@ def _request_app_setup(hass, config):
 def _request_oauth_completion(hass, config):
     """Request user complete Wink OAuth2 flow."""
     hass.data[DOMAIN]['configurator'] = True
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if DOMAIN in hass.data[DOMAIN]['configuring']:
         configurator.notify_errors(
-            hass, hass.data[DOMAIN]['configuring'][DOMAIN],
+            hass.data[DOMAIN]['configuring'][DOMAIN],
             "Failed to register, please try again.")
         return
 
@@ -168,7 +167,7 @@ def _request_oauth_completion(hass, config):
     description = "Please authorize Wink by visiting {}".format(start_url)
 
     hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        hass, DOMAIN, wink_configuration_callback,
+        DOMAIN, wink_configuration_callback,
         description=description
     )
 
@@ -248,7 +247,7 @@ def setup(hass, config):
 
         if DOMAIN in hass.data[DOMAIN]['configuring']:
             _configurator = hass.data[DOMAIN]['configuring']
-            get_component('configurator').request_done(_configurator.pop(
+            hass.components.configurator.request_done(_configurator.pop(
                 DOMAIN))
 
         # Using oauth

@@ -88,10 +88,10 @@ def request_configuration(hass, config, atv, credentials):
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID)
 
-        hass.async_add_job(configurator.request_done, hass, instance)
+        hass.async_add_job(configurator.request_done, instance)
 
     instance = configurator.request_config(
-        hass, 'Apple TV Authentication', configuration_callback,
+        'Apple TV Authentication', configuration_callback,
         description='Please enter PIN code shown on screen.',
         submit_caption='Confirm',
         fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]

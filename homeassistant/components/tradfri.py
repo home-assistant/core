@@ -14,7 +14,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
-from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
 REQUIREMENTS = ['pytradfri==1.1']
@@ -41,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def request_configuration(hass, config, host):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     hass.data.setdefault(KEY_CONFIG, {})
     instance = hass.data[KEY_CONFIG].get(host)
 
@@ -56,7 +55,7 @@ def request_configuration(hass, config, host):
                                         callback_data.get('key'),
                                         DEFAULT_ALLOW_TRADFRI_GROUPS)
         if not res:
-            hass.async_add_job(configurator.notify_errors, hass, instance,
+            hass.async_add_job(configurator.notify_errors, instance,
                                "Unable to connect.")
             return
 
@@ -65,12 +64,12 @@ def request_configuration(hass, config, host):
             conf = _read_config(hass)
             conf[host] = {'key': callback_data.get('key')}
             _write_config(hass, conf)
-            hass.async_add_job(configurator.request_done, hass, instance)
+            hass.async_add_job(configurator.request_done, instance)
 
         hass.async_add_job(success)
 
     instance = configurator.request_config(
-        hass, "IKEA Trådfri", configuration_callback,
+        "IKEA Trådfri", configuration_callback,
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",

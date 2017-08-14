@@ -23,7 +23,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['plexapi==2.0.2']
 
@@ -143,8 +142,8 @@ def setup_plexserver(
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
-        configurator.request_done(hass, request_id)
+        configurator = hass.components.configurator
+        configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
     # Save config
@@ -236,10 +235,10 @@ def setup_plexserver(
 
 def request_configuration(host, hass, config, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(hass, _CONFIGURING[host],
+        configurator.notify_errors(_CONFIGURING[host],
                                    'Failed to register, please try again.')
 
         return
@@ -254,7 +253,6 @@ def request_configuration(host, hass, config, add_devices_callback):
         )
 
     _CONFIGURING[host] = configurator.request_config(
-        hass,
         'Plex Media Server',
         plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
