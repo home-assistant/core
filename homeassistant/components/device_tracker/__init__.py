@@ -8,7 +8,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from collections import OrderedDict
 from typing import Any, List, Sequence, Callable
 
 import aiohttp
@@ -133,7 +132,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
-    devices.append(Device(hass, 60, 1, 'internal_guest', '', name='Internal Guest Tracker'))
+    devices.append(Device(hass, 60, 1, 'internal_guest', '',
+                          name='Internal Guest Tracker'))
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     @asyncio.coroutine
@@ -225,7 +225,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         DOMAIN, SERVICE_SEE, async_see_service, descriptions.get(SERVICE_SEE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_GUEST_MODE, async_guest_mode_service, descriptions.get(SERVICE_GUEST_MODE))
+        DOMAIN, SERVICE_GUEST_MODE, async_guest_mode_service,
+        descriptions.get(SERVICE_GUEST_MODE))
 
 
     # restore
