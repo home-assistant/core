@@ -95,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entities = []
         for program in client.programs.all().get('programs'):
             if not program.get('active'):
-                pass
+                continue
 
             _LOGGER.debug('Adding program: %s', program)
             entities.append(
@@ -104,7 +104,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         for zone in client.zones.all().get('zones'):
             if not zone.get('active'):
-                pass
+                continue
 
             _LOGGER.debug('Adding zone: %s', zone)
             entities.append(
