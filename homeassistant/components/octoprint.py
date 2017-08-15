@@ -16,11 +16,15 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'octoprint'
+CONF_NUMBER_OF_TOOLS = 'number_of_tools'
+CONF_BED = 'bed'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NUMBER_OF_TOOLS, default=None): cv.positive_int,
+        vol.Optional(CONF_BED, default=False): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -29,8 +33,11 @@ def setup(hass, config):
     """Set up the OctoPrint component."""
     base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
     api_key = config[DOMAIN][CONF_API_KEY]
+    number_of_tools = config[DOMAIN][CONF_NUMBER_OF_TOOLS]
+    bed = config[DOMAIN][CONF_BED]
 
-    hass.data[DOMAIN] = {"api": None}
+    hass.data[DOMAIN] = {"api": None, CONF_NUMBER_OF_TOOLS: number_of_tools,
+                         CONF_BED: bed}
 
     try:
         octoprint_api = OctoPrintAPI(base_url, api_key)
@@ -61,8 +68,10 @@ class OctoPrintAPI(object):
 
     def get_tools(self):
         """Get the dynamic list of tools that temperature is monitored on."""
-        tools = self.printer_last_reading[0]['temperature']
-        return tools.keys()
+        tools = self.printer_last_reading[0].get('temperature')
+        if tools is not None:
+            return tools.keys()
+        return None
 
     def get(self, endpoint):
         """Send a get request, and return the response as a dict."""

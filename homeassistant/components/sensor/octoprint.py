@@ -9,6 +9,7 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.components.octoprint import CONF_NUMBER_OF_TOOLS, CONF_BED
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
@@ -42,12 +43,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    number_of_tools = hass.data[DOMAIN].get(CONF_NUMBER_OF_TOOLS)
+    bed = hass.data[DOMAIN].get(CONF_BED)
+    tools = []
+    if number_of_tools is not None:
+        for tool_number in range(0, number_of_tools):
+            tools.append("tool" + str(tool_number))
+    else:
+        tools = octoprint_api.get_tools()
+        if tools is None:
+            tools = []
+    if bed:
+        tools.append('bed')
+
+    if "Temperature" in monitored_conditions:
+        tool_count = len(tools)
+        if not bed and tool_count == 0:
+            error = "You must define bed presence or a tool in your config."
+            _LOGGER.error(error)
 
     devices = []
     types = ["actual", "target"]
     for octo_type in monitored_conditions:
         if octo_type == "Temperatures":
-            for tool in octoprint_api.get_tools():
+            for tool in tools:
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
                         octoprint_api, temp_type, temp_type, name,
