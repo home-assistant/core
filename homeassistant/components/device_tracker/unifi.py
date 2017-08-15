@@ -9,9 +9,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner, CONF_CONSIDER_HOME)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pyunifi==2.13']
 
@@ -61,15 +62,16 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl)
+    return UnifiScanner(ctrl, config[DOMAIN].get(CONF_CONSIDER_HOME))
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, controller):
+    def __init__(self, controller, consider_home):
         """Initialize the scanner."""
         self._controller = controller
+        self.consider_home = consider_home
         self._update()
 
     def _update(self):
@@ -81,7 +83,7 @@ class UnifiScanner(DeviceScanner):
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
-        self._clients = {client['mac']: client for client in clients}
+        self._clients = {client['mac']: client for client in clients if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(client['last_seen']))) < self.consider_home}
 
     def scan_devices(self):
         """Scan for devices."""
