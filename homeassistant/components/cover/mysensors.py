@@ -11,11 +11,12 @@ from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.const import STATE_ON, STATE_OFF
 
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for covers."""
+    """Set up the MySensors platform for covers."""
     if discovery_info is None:
         return
 
@@ -35,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             })
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsCover))
+            map_sv_types, devices, MySensorsCover, add_devices))
 
 
 class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
@@ -52,8 +53,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         set_req = self.gateway.const.SetReq
         if set_req.V_DIMMER in self._values:
             return self._values.get(set_req.V_DIMMER) == 0
-        else:
-            return self._values.get(set_req.V_LIGHT) == STATE_OFF
+        return self._values.get(set_req.V_LIGHT) == STATE_OFF
 
     @property
     def current_cover_position(self):
@@ -75,7 +75,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 100
             else:
                 self._values[set_req.V_LIGHT] = STATE_ON
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Move the cover down."""
@@ -88,7 +88,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 0
             else:
                 self._values[set_req.V_LIGHT] = STATE_OFF
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -99,7 +99,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the device."""

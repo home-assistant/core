@@ -4,7 +4,6 @@ Use serial protocol of Acer projector to obtain state of the projector.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/switch.acer_projector/
 """
-import os
 import logging
 import re
 
@@ -38,26 +37,19 @@ LAMP_HOURS = 'Lamp Hours'
 MODEL = 'Model'
 
 # Commands known to the projector
-CMD_DICT = {LAMP: '* 0 Lamp ?\r',
-            LAMP_HOURS: '* 0 Lamp\r',
-            INPUT_SOURCE: '* 0 Src ?\r',
-            ECO_MODE: '* 0 IR 052\r',
-            MODEL: '* 0 IR 035\r',
-            STATE_ON: '* 0 IR 001\r',
-            STATE_OFF: '* 0 IR 002\r'}
-
-
-def isdevice(dev):
-    """Check if dev a real device."""
-    try:
-        os.stat(dev)
-        return str(dev)
-    except OSError:
-        raise vol.Invalid("No device found!")
+CMD_DICT = {
+    LAMP: '* 0 Lamp ?\r',
+    LAMP_HOURS: '* 0 Lamp\r',
+    INPUT_SOURCE: '* 0 Src ?\r',
+    ECO_MODE: '* 0 IR 052\r',
+    MODEL: '* 0 IR 035\r',
+    STATE_ON: '* 0 IR 001\r',
+    STATE_OFF: '* 0 IR 002\r',
+}
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): isdevice,
+    vol.Required(CONF_FILENAME): cv.isdevice,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT):
@@ -72,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
     write_timeout = config.get(CONF_WRITE_TIMEOUT)
 
-    add_devices([AcerSwitch(serial_port, name, timeout, write_timeout)])
+    add_devices([AcerSwitch(serial_port, name, timeout, write_timeout)], True)
 
 
 class AcerSwitch(SwitchDevice):
@@ -93,7 +85,6 @@ class AcerSwitch(SwitchDevice):
             INPUT_SOURCE: STATE_UNKNOWN,
             ECO_MODE: STATE_UNKNOWN,
         }
-        self.update()
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""

@@ -1,10 +1,11 @@
 """
-Support for interface with an LG WebOS TV.
+Support for interface with an LG webOS Smart TV.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import logging
+import asyncio
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -12,60 +13,55 @@ import voluptuous as vol
 
 import homeassistant.util as util
 from homeassistant.components.media_player import (
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_CUSTOMIZE, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME)
-from homeassistant.loader import get_component
+    CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, STATE_OFF,
+    STATE_PLAYING, STATE_PAUSED,
+    STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.2.zip'
-                '#pylgtv==0.1.2']
+REQUIREMENTS = ['pylgtv==0.1.7',
+                'websockets==3.2',
+                'wakeonlan==0.2.2']
 
-_CONFIGURING = {}
+_CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
 
-DEFAULT_NAME = 'LG WebOS Smart TV'
+DEFAULT_NAME = 'LG webOS Smart TV'
 
-SUPPORT_WEBOSTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-                  SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-                  SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-                  SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA
+WEBOSTV_CONFIG_FILE = 'webostv.conf'
+
+SUPPORT_WEBOSTV = SUPPORT_TURN_OFF | \
+    SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
-WEBOS_APP_LIVETV = 'com.webos.app.livetv'
-WEBOS_APP_YOUTUBE = 'youtube.leanback.v4'
-WEBOS_APP_MAKO = 'makotv'
-
-WEBOS_APPS_SHORT = {
-    'livetv': WEBOS_APP_LIVETV,
-    'youtube': WEBOS_APP_YOUTUBE,
-    'makotv': WEBOS_APP_MAKO
-}
-
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SOURCES):
-        vol.All(cv.ensure_list, [vol.In(WEBOS_APPS_SHORT)]),
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG WebOS TV platform."""
+    """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
@@ -79,17 +75,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host in _CONFIGURING:
         return
 
+    mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     customize = config.get(CONF_CUSTOMIZE)
-    setup_tv(host, name, customize, hass, add_devices)
+    config = hass.config.path(config.get(CONF_FILENAME))
+    setup_tv(host, mac, name, customize, config, hass, add_devices)
 
 
-def setup_tv(host, name, customize, hass, add_devices):
-    """Setup a phue bridge based on host parameter."""
+def setup_tv(host, mac, name, customize, config, hass, add_devices):
+    """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
+    from websockets.exceptions import ConnectionClosed
 
-    client = WebOsClient(host)
+    client = WebOsClient(host, config)
 
     if not client.is_registered():
         if host in _CONFIGURING:
@@ -98,29 +97,32 @@ def setup_tv(host, name, customize, hass, add_devices):
                 client.register()
             except PyLGTVPairException:
                 _LOGGER.warning(
-                    "Connected to LG WebOS TV %s but not paired", host)
+                    "Connected to LG webOS TV %s but not paired", host)
                 return
-            except OSError:
+            except (OSError, ConnectionClosed, TypeError,
+                    asyncio.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
             # Not registered, request configuration.
-            _LOGGER.warning("LG WebOS TV %s needs to be paired", host)
-            request_configuration(host, name, customize, hass, add_devices)
+            _LOGGER.warning("LG webOS TV %s needs to be paired", host)
+            request_configuration(
+                host, mac, name, customize, config, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
     if client.is_registered() and host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, name, customize)])
+    add_devices([LgWebOSDevice(host, mac, name, customize, config)], True)
 
 
-def request_configuration(host, name, customize, hass, add_devices):
+def request_configuration(
+        host, mac, name, customize, config, hass, add_devices):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -130,11 +132,11 @@ def request_configuration(host, name, customize, hass, add_devices):
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
-        setup_tv(host, name, customize, hass, add_devices)
+        """Handle configuration changes."""
+        setup_tv(host, mac, name, customize, config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, 'LG WebOS TV', lgtv_configuration_callback,
+        name, lgtv_configuration_callback,
         description='Click start and accept the pairing request on your TV.',
         description_image='/static/images/config_webos.png',
         submit_caption='Start pairing request'
@@ -144,10 +146,13 @@ def request_configuration(host, name, customize, hass, add_devices):
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, host, name, customize):
+    def __init__(self, host, mac, name, customize, config):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
-        self._client = WebOsClient(host)
+        from wakeonlan import wol
+        self._client = WebOsClient(host, config)
+        self._wol = wol
+        self._mac = mac
         self._customize = customize
 
         self._name = name
@@ -158,47 +163,64 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
-        self._source_list = None
         self._state = STATE_UNKNOWN
-        self._app_list = None
-
-        self.update()
+        self._source_list = {}
+        self._app_list = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
+        from websockets.exceptions import ConnectionClosed
         try:
-            self._state = STATE_PLAYING
-            self._muted = self._client.get_muted()
-            self._volume = self._client.get_volume()
-            self._current_source_id = self._client.get_input()
-            self._source_list = {}
-            self._app_list = {}
+            current_input = self._client.get_input()
+            if current_input is not None:
+                self._current_source_id = current_input
+                if self._state in (STATE_UNKNOWN, STATE_OFF):
+                    self._state = STATE_PLAYING
+            else:
+                self._state = STATE_OFF
+                self._current_source = None
+                self._current_source_id = None
 
-            custom_sources = []
-            for source in self._customize.get(CONF_SOURCES, []):
-                app_id = WEBOS_APPS_SHORT.get(source, None)
-                if app_id:
-                    custom_sources.append(app_id)
-                else:
-                    custom_sources.append(source)
+            if self._state is not STATE_OFF:
+                self._muted = self._client.get_muted()
+                self._volume = self._client.get_volume()
 
-            for app in self._client.get_apps():
-                self._app_list[app['id']] = app
-                if app['id'] == self._current_source_id:
-                    self._current_source = app['title']
-                    self._source_list[app['title']] = app
-                if app['id'] in custom_sources:
-                    self._source_list[app['title']] = app
+                self._source_list = {}
+                self._app_list = {}
+                conf_sources = self._customize.get(CONF_SOURCES, [])
 
-            for source in self._client.get_inputs():
-                if not source['connected']:
-                    continue
-                app = self._app_list[source['appId']]
-                self._source_list[app['title']] = app
+                for app in self._client.get_apps():
+                    self._app_list[app['id']] = app
+                    if conf_sources:
+                        if app['id'] == self._current_source_id:
+                            self._current_source = app['title']
+                            self._source_list[app['title']] = app
+                        elif (app['id'] in conf_sources or
+                              any(word in app['title']
+                                  for word in conf_sources) or
+                              any(word in app['id']
+                                  for word in conf_sources)):
+                            self._source_list[app['title']] = app
+                    else:
+                        self._current_source = app['title']
+                        self._source_list[app['title']] = app
 
-        except OSError:
+                for source in self._client.get_inputs():
+                    if conf_sources:
+                        if source['id'] == self._current_source_id:
+                            self._source_list[source['label']] = source
+                        elif (source['label'] in conf_sources or
+                              any(source['label'].find(word) != -1
+                                  for word in conf_sources)):
+                            self._source_list[source['label']] = source
+                    else:
+                        self._source_list[source['label']] = source
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
             self._state = STATE_OFF
+            self._current_source = None
+            self._current_source_id = None
 
     @property
     def name(self):
@@ -239,18 +261,33 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._current_source_id in self._app_list:
-            return self._app_list[self._current_source_id]['largeIcon']
+            icon = self._app_list[self._current_source_id]['largeIcon']
+            if not icon.startswith('http'):
+                icon = self._app_list[self._current_source_id]['icon']
+            return icon
         return None
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        if self._mac:
+            return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
     def turn_off(self):
         """Turn off media player."""
+        from websockets.exceptions import ConnectionClosed
         self._state = STATE_OFF
-        self._client.power_off()
+        try:
+            self._client.power_off()
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
+            pass
+
+    def turn_on(self):
+        """Turn on the media player."""
+        if self._mac:
+            self._wol.send_magic_packet(self._mac)
 
     def volume_up(self):
         """Volume up the media player."""
@@ -279,9 +316,14 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._current_source_id = self._source_list[source]['id']
-        self._current_source = self._source_list[source]['title']
-        self._client.launch_app(self._source_list[source]['id'])
+        if self._source_list.get(source).get('title'):
+            self._current_source_id = self._source_list[source]['id']
+            self._current_source = self._source_list[source]['title']
+            self._client.launch_app(self._source_list[source]['id'])
+        elif self._source_list.get(source).get('label'):
+            self._current_source_id = self._source_list[source]['id']
+            self._current_source = self._source_list[source]['label']
+            self._client.set_input(self._source_list[source]['id'])
 
     def media_play(self):
         """Send play command."""

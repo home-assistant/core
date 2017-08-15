@@ -4,13 +4,16 @@ Component to interface with various locks that can be controlled remotely.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/lock/
 """
+import asyncio
 from datetime import timedelta
+import functools as ft
 import logging
 import os
 
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -20,14 +23,16 @@ from homeassistant.const import (
     STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import group
 
-DOMAIN = 'lock'
-SCAN_INTERVAL = 30
 ATTR_CHANGED_BY = 'changed_by'
 
-GROUP_NAME_ALL_LOCKS = 'all locks'
-ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
+DOMAIN = 'lock'
+DEPENDENCIES = ['group']
+SCAN_INTERVAL = timedelta(seconds=30)
 
+ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+GROUP_NAME_ALL_LOCKS = 'all locks'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -39,12 +44,14 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def is_locked(hass, entity_id=None):
     """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
+@bind_hass
 def lock(hass, entity_id=None, code=None):
     """Lock all or specified locks."""
     data = {}
@@ -56,6 +63,7 @@ def lock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
+@bind_hass
 def unlock(hass, entity_id=None, code=None):
     """Unlock all or specified locks."""
     data = {}
@@ -67,38 +75,54 @@ def unlock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for locks."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS)
-    component.setup(config)
 
-    def handle_lock_service(service):
+    yield from component.async_setup(config)
+
+    @asyncio.coroutine
+    def async_handle_lock_service(service):
         """Handle calls to the lock services."""
-        target_locks = component.extract_from_service(service)
+        target_locks = component.async_extract_from_service(service)
 
         code = service.data.get(ATTR_CODE)
 
-        for item in target_locks:
+        for entity in target_locks:
             if service.service == SERVICE_LOCK:
-                item.lock(code=code)
+                yield from entity.async_lock(code=code)
             else:
-                item.unlock(code=code)
+                yield from entity.async_unlock(code=code)
 
-        for item in target_locks:
-            if not item.should_poll:
+        update_tasks = []
+
+        for entity in target_locks:
+            if not entity.should_poll:
                 continue
 
-            item.update_ha_state(True)
+            update_coro = hass.async_add_job(
+                entity.async_update_ha_state(True))
+            if hasattr(entity, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_UNLOCK, handle_lock_service,
-                           descriptions.get(SERVICE_UNLOCK),
-                           schema=LOCK_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_LOCK, handle_lock_service,
-                           descriptions.get(SERVICE_LOCK),
-                           schema=LOCK_SERVICE_SCHEMA)
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
+        descriptions.get(SERVICE_UNLOCK), schema=LOCK_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_LOCK, async_handle_lock_service,
+        descriptions.get(SERVICE_LOCK), schema=LOCK_SERVICE_SCHEMA)
+
     return True
 
 
@@ -125,9 +149,23 @@ class LockDevice(Entity):
         """Lock the lock."""
         raise NotImplementedError()
 
+    def async_lock(self, **kwargs):
+        """Lock the lock.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.lock, **kwargs))
+
     def unlock(self, **kwargs):
         """Unlock the lock."""
         raise NotImplementedError()
+
+    def async_unlock(self, **kwargs):
+        """Unlock the lock.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
     @property
     def state_attributes(self):

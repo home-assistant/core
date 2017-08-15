@@ -4,7 +4,7 @@ import unittest.mock as mock
 
 import requests
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELSIUS
@@ -38,29 +38,31 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_missing_config(self):
+    @mock.patch('mficlient.client.MFiClient')
+    def test_setup_missing_config(self, mock_client):
         """Test setup with missing configuration."""
         config = {
             'sensor': {
                 'platform': 'mfi',
             }
         }
-        self.assertFalse(self.PLATFORM.setup_platform(self.hass, config, None))
+        assert setup_component(self.hass, 'sensor', config)
+        assert not mock_client.called
 
-    @mock.patch('mficlient.client')
+    @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_login(self, mock_client):
         """Test setup with login failure."""
-        mock_client.FailedToLogin = Exception()
-        mock_client.MFiClient.side_effect = mock_client.FailedToLogin
+        from mficlient.client import FailedToLogin
+
+        mock_client.side_effect = FailedToLogin
         self.assertFalse(
             self.PLATFORM.setup_platform(
                 self.hass, dict(self.GOOD_CONFIG), None))
 
-    @mock.patch('mficlient.client')
+    @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_connect(self, mock_client):
         """Test setup with conection failure."""
-        mock_client.FailedToLogin = Exception()
-        mock_client.MFiClient.side_effect = requests.exceptions.ConnectionError
+        mock_client.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
             self.PLATFORM.setup_platform(
                 self.hass, dict(self.GOOD_CONFIG), None))
@@ -116,7 +118,6 @@ class TestMfiSensorSetup(unittest.TestCase):
         ports = {i: mock.MagicMock(model=model)
                  for i, model in enumerate(mfi.SENSOR_MODELS)}
         ports['bad'] = mock.MagicMock(model='notasensor')
-        print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
         assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)

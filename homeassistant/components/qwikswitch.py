@@ -5,27 +5,32 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch/
 """
 import logging
+
 import voluptuous as vol
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL)
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.switch import SwitchDevice
 
-DOMAIN = 'qwikswitch'
-REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
-                '#pyqwikswitch==0.4']
+REQUIREMENTS = ['pyqwikswitch==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'qwikswitch'
+
+CONF_DIMMER_ADJUST = 'dimmer_adjust'
+CONF_BUTTON_EVENTS = 'button_events'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required('url', default='http://127.0.0.1:2020'): vol.Coerce(str),
-        vol.Optional('dimmer_adjust', default=1): CV_DIM_VALUE,
-        vol.Optional('button_events'): vol.Coerce(str)
+        vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
+            vol.Coerce(str),
+        vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
+        vol.Optional(CONF_BUTTON_EVENTS): vol.Coerce(str)
     })}, extra=vol.ALLOW_EXTRA)
 
 QSUSB = {}
@@ -84,7 +89,7 @@ class QSToggleEntity(object):
         if value != self._value:
             self._value = value
             # pylint: disable=no-member
-            super().update_ha_state()  # Part of Entity/ToggleEntity
+            super().schedule_update_ha_state()  # Part of Entity/ToggleEntity
         return self._value
 
     def turn_on(self, **kwargs):
@@ -118,17 +123,18 @@ class QSLight(QSToggleEntity, Light):
 
 
 def setup(hass, config):
-    """Setup the QSUSB component."""
-    from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
-                              PQS_VALUE, PQS_TYPE, QSType)
+    """Set up the QSUSB component."""
+    from pyqwikswitch import (
+        QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
+        QSType)
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
-    cmd_buttons = config[DOMAIN].get('button_events', ','.join(CMD_BUTTONS))
+    cmd_buttons = config[DOMAIN].get(CONF_BUTTON_EVENTS, ','.join(CMD_BUTTONS))
     cmd_buttons = cmd_buttons.split(',')
 
-    url = config[DOMAIN]['url']
-    dimmer_adjust = config[DOMAIN]['dimmer_adjust']
+    url = config[DOMAIN][CONF_URL]
+    dimmer_adjust = config[DOMAIN][CONF_DIMMER_ADJUST]
 
     qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
 
@@ -159,13 +165,13 @@ def setup(hass, config):
 
     # Load platforms
     for comp_name in ('switch', 'light'):
-        if len(QSUSB[comp_name]) > 0:
+        if QSUSB[comp_name]:
             load_platform(hass, comp_name, 'qwikswitch', {}, config)
 
     def qs_callback(item):
         """Typically a button press or update signal."""
         if qsusb is None:  # Shutting down
-            _LOGGER.info("Done")
+            _LOGGER.info("Botton press or updating signal done")
             return
 
         # If button pressed, fire a hass event
@@ -177,10 +183,10 @@ def setup(hass, config):
         qsreply = qsusb.devices()
         if qsreply is False:
             return
-        for item in qsreply:
-            if item[QS_ID] in QSUSB:
-                QSUSB[item[QS_ID]].update_value(
-                    round(min(item[PQS_VALUE], 100) * 2.55))
+        for itm in qsreply:
+            if itm[QS_ID] in QSUSB:
+                QSUSB[itm[QS_ID]].update_value(
+                    round(min(itm[PQS_VALUE], 100) * 2.55))
 
     def _start(event):
         """Start listening."""

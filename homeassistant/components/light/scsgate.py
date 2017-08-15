@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate switches."""
+    """Set up the SCSGate switches."""
     devices = config.get(CONF_DEVICES)
     lights = []
     logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SCSGateLight(Light):
-    """representation of a SCSGate light."""
+    """Representation of a SCSGate light."""
 
     def __init__(self, scs_id, name, logger):
         """Initialize the light."""
@@ -106,7 +106,7 @@ class SCSGateLight(Light):
             return
 
         self._toggled = message.toggled
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         command = "off"
         if self._toggled:

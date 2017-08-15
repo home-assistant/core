@@ -13,7 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pycups==1.9.73']
 
@@ -36,7 +35,7 @@ DEFAULT_PORT = 631
 
 ICON = 'mdi:printer'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PRINTER_STATES = {
     3: 'idle',
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Printer is not present: %s", printer)
             continue
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class CupsSensor(Entity):
@@ -83,7 +82,6 @@ class CupsSensor(Entity):
         self.data = data
         self._name = printer
         self._printer = None
-        self.update()
 
     @property
     def name(self):
@@ -140,7 +138,6 @@ class CupsData(object):
         self._port = port
         self.printers = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from CUPS."""
         from cups import Connection

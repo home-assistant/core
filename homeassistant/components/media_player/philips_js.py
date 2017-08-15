@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.util import Throttle
@@ -28,7 +28,7 @@ SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
 
 SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
-                        SUPPORT_PREVIOUS_TRACK
+                        SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Philips TV platform."""
+    """Set up the Philips TV platform."""
     import haphilipsjs
 
     name = config.get(CONF_NAME)
@@ -86,12 +86,11 @@ class PhilipsTV(MediaPlayerDevice):
         return True
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._watching_tv:
             return SUPPORT_PHILIPS_JS_TV
-        else:
-            return SUPPORT_PHILIPS_JS
+        return SUPPORT_PHILIPS_JS
 
     @property
     def state(self):
@@ -162,13 +161,9 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._watching_tv:
-            if self._channel_name:
-                return '{} - {}'.format(self._source, self._channel_name)
-            else:
-                return self._source
-        else:
-            return self._source
+        if self._watching_tv and self._channel_name:
+            return '{} - {}'.format(self._source, self._channel_name)
+        return self._source
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 """Download the latest Polymer v1 iconset for materialdesignicons.com."""
+
 import gzip
 import os
 import re

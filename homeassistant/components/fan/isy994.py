@@ -8,7 +8,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
-                                          SPEED_LOW, SPEED_MED,
+                                          SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
@@ -20,8 +20,8 @@ VALUE_TO_STATE = {
     0: SPEED_OFF,
     63: SPEED_LOW,
     64: SPEED_LOW,
-    190: SPEED_MED,
-    191: SPEED_MED,
+    190: SPEED_MEDIUM,
+    191: SPEED_MEDIUM,
     255: SPEED_HIGH,
 }
 
@@ -29,15 +29,15 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
-STATES = [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+STATES = [SPEED_OFF, SPEED_LOW, 'med', SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 fan platform."""
+    """Set up the ISY994 fan platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []
@@ -64,7 +64,11 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def __init__(self, node) -> None:
         """Initialize the ISY994 fan device."""
         isy.ISYDevice.__init__(self, node)
-        self.speed = self.state
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self.state
 
     @property
     def state(self) -> str:
@@ -74,7 +78,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
         if not self._node.on(val=STATE_TO_VALUE.get(speed, 0)):
-            _LOGGER.debug('Unable to set fan speed')
+            _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
 
@@ -85,7 +89,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""
         if not self._node.off():
-            _LOGGER.debug('Unable to set fan speed')
+            _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
 
@@ -108,13 +112,13 @@ class ISYFanProgram(ISYFanDevice):
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""
         if not self._actions.runThen():
-            _LOGGER.error('Unable to open the cover')
+            _LOGGER.error("Unable to turn off the fan")
         else:
             self.speed = STATE_ON if self.is_on else STATE_OFF
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
-            _LOGGER.error('Unable to close the cover')
+            _LOGGER.error("Unable to turn on the fan")
         else:
             self.speed = STATE_ON if self.is_on else STATE_OFF

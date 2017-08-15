@@ -1,6 +1,11 @@
-"""Contains functionality to use flic buttons as a binary sensor."""
-import asyncio
+"""
+Support to use flic buttons as a binary sensor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.flic/
+"""
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -10,8 +15,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.util.async import run_callback_threadsafe
-
 
 REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
 
@@ -19,34 +22,34 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 3
 
-CLICK_TYPE_SINGLE = "single"
-CLICK_TYPE_DOUBLE = "double"
-CLICK_TYPE_HOLD = "hold"
+CLICK_TYPE_SINGLE = 'single'
+CLICK_TYPE_DOUBLE = 'double'
+CLICK_TYPE_HOLD = 'hold'
 CLICK_TYPES = [CLICK_TYPE_SINGLE, CLICK_TYPE_DOUBLE, CLICK_TYPE_HOLD]
 
-CONF_IGNORED_CLICK_TYPES = "ignored_click_types"
+CONF_IGNORED_CLICK_TYPES = 'ignored_click_types'
 
-EVENT_NAME = "flic_click"
-EVENT_DATA_NAME = "button_name"
-EVENT_DATA_ADDRESS = "button_address"
-EVENT_DATA_TYPE = "click_type"
-EVENT_DATA_QUEUED_TIME = "queued_time"
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 5551
 
-# Validation of the user's configuration
+EVENT_NAME = 'flic_click'
+EVENT_DATA_NAME = 'button_name'
+EVENT_DATA_ADDRESS = 'button_address'
+EVENT_DATA_TYPE = 'click_type'
+EVENT_DATA_QUEUED_TIME = 'queued_time'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default='localhost'): cv.string,
-    vol.Optional(CONF_PORT, default=5551): cv.port,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_IGNORED_CLICK_TYPES): vol.All(cv.ensure_list,
-                                                    [vol.In(CLICK_TYPES)])
+    vol.Optional(CONF_IGNORED_CLICK_TYPES):
+        vol.All(cv.ensure_list, [vol.In(CLICK_TYPES)])
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Setup the flic platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the flic platform."""
     import pyflic
 
     # Initialize flic client responsible for
@@ -58,32 +61,35 @@ def async_setup_platform(hass, config, async_add_entities,
     try:
         client = pyflic.FlicClient(host, port)
     except ConnectionRefusedError:
-        _LOGGER.error("Failed to connect to flic server.")
+        _LOGGER.error("Failed to connect to flic server")
         return
 
     def new_button_callback(address):
-        """Setup newly verified button as device in home assistant."""
-        hass.add_job(async_setup_button(hass, config, async_add_entities,
-                                        client, address))
+        """Set up newly verified button as device in Home Assistant."""
+        setup_button(hass, config, add_entities, client, address)
 
     client.on_new_verified_button = new_button_callback
     if discovery:
-        start_scanning(hass, config, async_add_entities, client)
+        start_scanning(config, add_entities, client)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               lambda event: client.close())
-    hass.loop.run_in_executor(None, client.handle_events)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         lambda event: client.close())
+
+    # Start the pyflic event handling thread
+    threading.Thread(target=client.handle_events).start()
+
+    def get_info_callback(items):
+        """Add entities for already verified buttons."""
+        addresses = items['bd_addr_of_verified_buttons'] or []
+        for address in addresses:
+            setup_button(hass, config, add_entities, client, address)
 
     # Get addresses of already verified buttons
-    addresses = yield from async_get_verified_addresses(client)
-    if addresses:
-        for address in addresses:
-            yield from async_setup_button(hass, config, async_add_entities,
-                                          client, address)
+    client.get_info(get_info_callback)
 
 
-def start_scanning(hass, config, async_add_entities, client):
-    """Start a new flic client for scanning & connceting to new buttons."""
+def start_scanning(config, add_entities, client):
+    """Start a new flic client for scanning and connecting to new buttons."""
     import pyflic
 
     scan_wizard = pyflic.ScanWizard()
@@ -91,42 +97,26 @@ def start_scanning(hass, config, async_add_entities, client):
     def scan_completed_callback(scan_wizard, result, address, name):
         """Restart scan wizard to constantly check for new buttons."""
         if result == pyflic.ScanWizardResult.WizardSuccess:
-            _LOGGER.info("Found new button (%s)", address)
+            _LOGGER.info("Found new button %s", address)
         elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
-            _LOGGER.warning("Failed to connect to button (%s). Reason: %s",
-                            address, result)
+            _LOGGER.warning(
+                "Failed to connect to button %s. Reason: %s", address, result)
 
         # Restart scan wizard
-        start_scanning(hass, config, async_add_entities, client)
+        start_scanning(config, add_entities, client)
 
     scan_wizard.on_completed = scan_completed_callback
     client.add_scan_wizard(scan_wizard)
 
 
-@asyncio.coroutine
-def async_setup_button(hass, config, async_add_entities, client, address):
-    """Setup single button device."""
+def setup_button(hass, config, add_entities, client, address):
+    """Set up a single button device."""
     timeout = config.get(CONF_TIMEOUT)
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
-    _LOGGER.info("Connected to button (%s)", address)
+    _LOGGER.info("Connected to button %s", address)
 
-    yield from async_add_entities([button])
-
-
-@asyncio.coroutine
-def async_get_verified_addresses(client):
-    """Retrieve addresses of verified buttons."""
-    future = asyncio.Future()
-    loop = asyncio.get_event_loop()
-
-    def get_info_callback(items):
-        """Set the addressed of connected buttons as result of the future."""
-        addresses = items["bd_addr_of_verified_buttons"]
-        run_callback_threadsafe(loop, future.set_result, addresses)
-    client.get_info(get_info_callback)
-
-    return future
+    add_entities([button])
 
 
 class FlicButton(BinarySensorDevice):
@@ -177,7 +167,7 @@ class FlicButton(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "flic_%s" % self.address.replace(":", "")
+        return 'flic_{}'.format(self.address.replace(':', ''))
 
     @property
     def address(self):
@@ -195,28 +185,24 @@ class FlicButton(BinarySensorDevice):
         return False
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return device specific state attributes."""
-        attr = super(FlicButton, self).state_attributes
-        attr["address"] = self.address
-
-        return attr
+        return {'address': self.address}
 
     def _queued_event_check(self, click_type, time_diff):
         """Generate a log message and returns true if timeout exceeded."""
         time_string = "{:d} {}".format(
-            time_diff, "second" if time_diff == 1 else "seconds")
+            time_diff, 'second' if time_diff == 1 else 'seconds')
 
         if time_diff > self._timeout:
             _LOGGER.warning(
-                "Queued %s dropped for %s. Time in queue was %s.",
+                "Queued %s dropped for %s. Time in queue was %s",
                 click_type, self.address, time_string)
             return True
-        else:
-            _LOGGER.info(
-                "Queued %s allowed for %s. Time in queue was %s.",
-                click_type, self.address, time_string)
-            return False
+        _LOGGER.info(
+            "Queued %s allowed for %s. Time in queue was %s",
+            click_type, self.address, time_string)
+        return False
 
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""
@@ -246,8 +232,8 @@ class FlicButton(BinarySensorDevice):
             EVENT_DATA_TYPE: hass_click_type
         })
 
-    def _connection_status_changed(self, channel,
-                                   connection_status, disconnect_reason):
+    def _connection_status_changed(
+            self, channel, connection_status, disconnect_reason):
         """Remove device, if button disconnects."""
         import pyflic
 

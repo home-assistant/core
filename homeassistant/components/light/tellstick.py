@@ -6,12 +6,11 @@ https://home-assistant.io/components/light.tellstick/
 """
 import voluptuous as vol
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellstick import (DEFAULT_SIGNAL_REPETITIONS,
-                                                ATTR_DISCOVER_DEVICES,
-                                                ATTR_DISCOVER_CONFIG,
-                                                DOMAIN, TellstickDevice)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.tellstick import (
+    DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG,
+    DOMAIN, TellstickDevice)
 
 PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
 
@@ -20,14 +19,13 @@ SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick lights."""
+    """Set up the Tellstick lights."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
-    # Allow platform level override, fallback to module config
-    signal_repetitions = discovery_info.get(ATTR_DISCOVER_CONFIG,
-                                            DEFAULT_SIGNAL_REPETITIONS)
+    signal_repetitions = discovery_info.get(
+        ATTR_DISCOVER_CONFIG, DEFAULT_SIGNAL_REPETITIONS)
 
     add_devices(TellstickLight(tellcore_id, hass.data['tellcore_registry'],
                                signal_repetitions)
@@ -38,7 +36,7 @@ class TellstickLight(TellstickDevice, Light):
     """Representation of a Tellstick light."""
 
     def __init__(self, tellcore_id, tellcore_registry, signal_repetitions):
-        """Initialize the light."""
+        """Initialize the Tellstick light."""
         super().__init__(tellcore_id, tellcore_registry, signal_repetitions)
 
         self._brightness = 255
@@ -62,8 +60,7 @@ class TellstickLight(TellstickDevice, Light):
         if tellcore_data is not None:
             brightness = int(tellcore_data)
             return brightness
-        else:
-            return None
+        return None
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
@@ -80,9 +77,12 @@ class TellstickLight(TellstickDevice, Light):
         else:
             self._state = False
 
-    def _send_tellstick_command(self):
-        """Let tellcore update the device to match the current state."""
-        if self._state:
+    def _send_device_command(self, requested_state, requested_data):
+        """Let tellcore update the actual device to the requested state."""
+        if requested_state:
+            if requested_data is not None:
+                self._brightness = int(requested_data)
+
             self._tellcore_device.dim(self._brightness)
         else:
             self._tellcore_device.turn_off()

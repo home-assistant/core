@@ -2,10 +2,11 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.automation as automation
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, mock_component)
 
 
 # pylint: disable=invalid-name
@@ -15,7 +16,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
+        mock_component(self.hass, 'group')
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
@@ -369,7 +370,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'template',

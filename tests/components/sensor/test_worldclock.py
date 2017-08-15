@@ -1,7 +1,7 @@
 """The test for the World clock sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 import homeassistant.util.dt as dt_util
 

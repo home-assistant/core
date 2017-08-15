@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 from subprocess import SubprocessError
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import shell_command
 
 from tests.common import get_test_home_assistant

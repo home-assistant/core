@@ -15,9 +15,10 @@ from homeassistant.components.binary_sensor import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SSL, EVENT_HOMEASSISTANT_STOP, ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
+    CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
+    ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.0.6', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyhik==0.1.3']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -29,10 +30,9 @@ DEFAULT_DELAY = 0
 
 ATTR_DELAY = 'delay'
 
-SENSOR_CLASS_MAP = {
+DEVICE_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
-    'IO Trigger': None,
     'Field Detection': 'motion',
     'Video Loss': None,
     'Tamper Detection': 'motion',
@@ -46,6 +46,7 @@ SENSOR_CLASS_MAP = {
     'Bad Video': None,
     'PIR Alarm': 'motion',
     'Face Detection': 'motion',
+    'Scene Change Detection': 'motion',
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
@@ -66,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup Hikvision binary sensor devices."""
+    """Set up the Hikvision binary sensor devices."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -76,38 +77,44 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     customize = config.get(CONF_CUSTOMIZE)
 
     if config.get(CONF_SSL):
-        protocol = "https"
+        protocol = 'https'
     else:
-        protocol = "http"
+        protocol = 'http'
 
     url = '{}://{}'.format(protocol, host)
 
     data = HikvisionData(hass, url, port, name, username, password)
 
     if data.sensors is None:
-        _LOGGER.error('Hikvision event stream has no data, unable to setup.')
+        _LOGGER.error("Hikvision event stream has no data, unable to setup")
         return False
 
     entities = []
 
-    for sensor in data.sensors:
-        # Build sensor name, then parse customize config.
-        sensor_name = sensor.replace(' ', '_')
+    for sensor, channel_list in data.sensors.items():
+        for channel in channel_list:
+            # Build sensor name, then parse customize config.
+            if data.type == 'NVR':
+                sensor_name = '{}_{}'.format(
+                    sensor.replace(' ', '_'), channel[1])
+            else:
+                sensor_name = sensor.replace(' ', '_')
 
-        custom = customize.get(sensor_name.lower(), {})
-        ignore = custom.get(CONF_IGNORED)
-        delay = custom.get(CONF_DELAY)
+            custom = customize.get(sensor_name.lower(), {})
+            ignore = custom.get(CONF_IGNORED)
+            delay = custom.get(CONF_DELAY)
 
-        _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
-                      data.name, sensor_name, ignore, delay)
-        if not ignore:
-            entities.append(HikvisionBinarySensor(hass, sensor, data, delay))
+            _LOGGER.debug("Entity: %s - %s, Options - Ignore: %s, Delay: %s",
+                          data.name, sensor_name, ignore, delay)
+            if not ignore:
+                entities.append(HikvisionBinarySensor(
+                    hass, sensor, channel[1], data, delay))
 
     add_entities(entities)
 
 
 class HikvisionData(object):
-    """Hikvision camera event stream object."""
+    """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data oject."""
@@ -119,49 +126,64 @@ class HikvisionData(object):
         self._password = password
 
         # Establish camera
-        self._cam = HikCamera(self._url, self._port,
-                              self._username, self._password)
+        self.camdata = HikCamera(
+            self._url, self._port, self._username, self._password)
 
         if self._name is None:
-            self._name = self._cam.get_name
-
-        # Start event stream
-        self._cam.start_stream()
+            self._name = self.camdata.get_name
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop_hik)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.start_hik)
 
     def stop_hik(self, event):
         """Shutdown Hikvision subscriptions and subscription thread on exit."""
-        self._cam.disconnect()
+        self.camdata.disconnect()
+
+    def start_hik(self, event):
+        """Start Hikvision event stream thread."""
+        self.camdata.start_stream()
 
     @property
     def sensors(self):
         """Return list of available sensors and their states."""
-        return self._cam.current_event_states
+        return self.camdata.current_event_states
 
     @property
     def cam_id(self):
-        """Return camera id."""
-        return self._cam.get_id
+        """Return device id."""
+        return self.camdata.get_id
 
     @property
     def name(self):
-        """Return camera name."""
+        """Return device name."""
         return self._name
+
+    @property
+    def type(self):
+        """Return device type."""
+        return self.camdata.get_type
+
+    def get_attributes(self, sensor, channel):
+        """Return attribute list for sensor/channel."""
+        return self.camdata.fetch_attributes(sensor, channel)
 
 
 class HikvisionBinarySensor(BinarySensorDevice):
     """Representation of a Hikvision binary sensor."""
 
-    def __init__(self, hass, sensor, cam, delay):
+    def __init__(self, hass, sensor, channel, cam, delay):
         """Initialize the binary_sensor."""
-        from pydispatch import dispatcher
-
         self._hass = hass
         self._cam = cam
-        self._name = self._cam.name + ' ' + sensor
-        self._id = self._cam.cam_id + '.' + sensor
         self._sensor = sensor
+        self._channel = channel
+
+        if self._cam.type == 'NVR':
+            self._name = '{} {} {}'.format(self._cam.name, sensor, channel)
+        else:
+            self._name = '{} {}'.format(self._cam.name, sensor)
+
+        self._id = '{}.{}.{}'.format(self._cam.cam_id, sensor, channel)
 
         if delay is None:
             self._delay = 0
@@ -170,20 +192,16 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
         self._timer = None
 
-        # Form signal for dispatcher
-        signal = 'ValueChanged.{}'.format(self._cam.cam_id)
-
-        dispatcher.connect(self._update_callback,
-                           signal=signal,
-                           sender=self._sensor)
+        # Register callback function with pyHik
+        self._cam.camdata.add_update_callback(self._update_callback, self._id)
 
     def _sensor_state(self):
         """Extract sensor state."""
-        return self._cam.sensors[self._sensor][0]
+        return self._cam.get_attributes(self._sensor, self._channel)[0]
 
     def _sensor_last_update(self):
         """Extract sensor last update time."""
-        return self._cam.sensors[self._sensor][3]
+        return self._cam.get_attributes(self._sensor, self._channel)[3]
 
     @property
     def name(self):
@@ -201,10 +219,10 @@ class HikvisionBinarySensor(BinarySensorDevice):
         return self._sensor_state()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         try:
-            return SENSOR_CLASS_MAP[self._sensor]
+            return DEVICE_CLASS_MAP[self._sensor]
         except KeyError:
             # Sensor must be unknown to us, add as generic
             return None
@@ -225,19 +243,15 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
         return attr
 
-    def _update_callback(self, signal, sender):
+    def _update_callback(self, msg):
         """Update the sensor's state, if needed."""
-        _LOGGER.debug('Dispatcher callback, signal: %s, sender: %s',
-                      signal, sender)
-
-        if sender is not self._sensor:
-            return
+        _LOGGER.debug('Callback signal from: %s', msg)
 
         if self._delay > 0 and not self.is_on:
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug('%s Called delayed (%ssec) update.',
+                _LOGGER.debug("%s Called delayed (%ssec) update",
                               self._name, self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None

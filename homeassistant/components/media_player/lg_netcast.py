@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
@@ -32,7 +32,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-               SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+               SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
+               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -44,12 +45,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG TV platform."""
+    """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
-    client = LgNetCastClient(config.get(CONF_HOST),
-                             config.get(CONF_ACCESS_TOKEN))
+    host = config.get(CONF_HOST)
+    access_token = config.get(CONF_ACCESS_TOKEN)
+    name = config.get(CONF_NAME)
 
-    add_devices([LgTVDevice(client, config[CONF_NAME])])
+    client = LgNetCastClient(host, access_token)
+
+    add_devices([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):
@@ -68,8 +72,6 @@ class LgTVDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._sources = {}
         self._source_names = []
-
-        self.update()
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
@@ -109,7 +111,7 @@ class LgTVDevice(MediaPlayerDevice):
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [(k, self._sources[k].find('major').text)
-                                     for k in self._sources.keys()]
+                                     for k in self._sources]
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1]))
                     self._source_names = [n for n, k in sorted_sources]
@@ -162,8 +164,8 @@ class LgTVDevice(MediaPlayerDevice):
         return self._program_name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_LGTV
 
     @property

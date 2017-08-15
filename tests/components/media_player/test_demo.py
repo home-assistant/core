@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 import asyncio
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
@@ -69,7 +69,6 @@ class TestDemoMediaPlayer(unittest.TestCase):
             self.hass, mp.DOMAIN,
             {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
-        print(state)
         assert 1.0 == state.attributes.get('volume_level')
 
         mp.set_volume_level(self.hass, None, entity_id)
@@ -156,28 +155,28 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 1 == state.attributes.get('media_track')
         assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_media_commands'))
+                     state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 3 == state.attributes.get('media_track')
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
 
         mp.media_previous_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
 
         assert setup_component(
             self.hass, mp.DOMAIN,
@@ -186,24 +185,24 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
         assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_media_commands'))
+                     state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 2 == state.attributes.get('media_episode')
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
 
         mp.media_previous_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
         assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_media_commands'))
+                     state.attributes.get('supported_features'))
 
     @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
-           'media_seek')
+           'media_seek', autospec=True)
     def test_play_media(self, mock_seek):
         """Test play_media ."""
         assert setup_component(
@@ -212,21 +211,21 @@ class TestDemoMediaPlayer(unittest.TestCase):
         ent_id = 'media_player.living_room'
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
         assert state.attributes.get('media_content_id') is not None
 
         mp.play_media(self.hass, None, 'some_id', ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
         assert not 'some_id' == state.attributes.get('media_content_id')
 
         mp.play_media(self.hass, 'youtube', 'some_id', ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
-                    state.attributes.get('supported_media_commands'))
+                    state.attributes.get('supported_features'))
         assert 'some_id' == state.attributes.get('media_content_id')
 
         assert not mock_seek.called
@@ -285,8 +284,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
             def get(self, url):
                 return MockResponse()
 
-            @asyncio.coroutine
-            def close(self):
+            def detach(self):
                 pass
 
         self.hass.data[DATA_CLIENTSESSION] = MockWebsession()

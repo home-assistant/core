@@ -2,10 +2,10 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import automation, zone
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 # pylint: disable=invalid-name
@@ -15,7 +15,7 @@ class TestAutomationZone(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
+        mock_component(self.hass, 'group')
         assert setup_component(self.hass, zone.DOMAIN, {
             'zone': {
                 'name': 'test',

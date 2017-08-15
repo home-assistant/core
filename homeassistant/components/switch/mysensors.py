@@ -28,7 +28,7 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for switches."""
+    """Set up the mysensors platform for switches."""
     # Only act if loaded via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if discovery_info is None:
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, device_class_map))
+            map_sv_types, devices, device_class_map, add_devices))
         platform_devices.append(devices)
 
     def send_ir_code_service(service):
@@ -135,7 +135,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
             return self._values[self.value_type] == STATE_ON
         return False
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
@@ -144,7 +144,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
             self._values[self.value_type] = STATE_ON
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
@@ -158,7 +158,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
     """IR switch child class to MySensorsSwitch."""
 
     def __init__(self, *args):
-        """Setup instance attributes."""
+        """Set up instance attributes."""
         MySensorsSwitch.__init__(self, *args)
         self._ir_code = None
 
@@ -191,7 +191,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
             # turn off switch after switch was turned on
             self.turn_off()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the IR switch off."""
         set_req = self.gateway.const.SetReq
         if set_req.V_LIGHT not in self._values:

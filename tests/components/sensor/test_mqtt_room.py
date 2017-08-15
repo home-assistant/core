@@ -4,7 +4,7 @@ import datetime
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS,
                                            DEFAULT_QOS)

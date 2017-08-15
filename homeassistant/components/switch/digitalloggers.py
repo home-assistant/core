@@ -1,15 +1,8 @@
 """
 Support for Digital Loggers DIN III Relays.
 
-Support for Digital Loggers DIN III Relays and possibly other items
-through Dwight Hubbard's, python-dlipower.
-
-For more details about python-dlipower, please see
-https://github.com/dwighthubbard/python-dlipower
-
-Custom ports are NOT supported due to a limitation of the dlipower
-library, not the digital loggers switch
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.digitalloggers/
 """
 import logging
 from datetime import timedelta
@@ -22,8 +15,9 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-
 REQUIREMENTS = ['dlipower==0.7.165']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CYCLETIME = 'cycletime'
 
@@ -35,8 +29,6 @@ DEFAULT_CYCLETIME = 2
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -46,7 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
     vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-
 })
 
 
@@ -67,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )
 
     if not power_switch.verify():
-        _LOGGER.error('Could not connect to DIN III Relay')
+        _LOGGER.error("Could not connect to DIN III Relay")
         return False
 
     devices = []
@@ -78,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in power_switch
     )
 
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class DINRelay(SwitchDevice):
@@ -89,7 +80,8 @@ class DINRelay(SwitchDevice):
         self._parent_device = parent_device
         self.controllername = name
         self.outletnumber = outletnumber
-        self.update()
+        self._outletname = ''
+        self._is_on = False
 
     @property
     def name(self):
@@ -103,7 +95,7 @@ class DINRelay(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed."""
+        """Return the polling state."""
         return True
 
     def turn_on(self, **kwargs):
@@ -120,7 +112,7 @@ class DINRelay(SwitchDevice):
         self._is_on = (
             self._parent_device.statuslocal[self.outletnumber - 1][2] == 'ON'
         )
-        self._outletname = "{}_{}".format(
+        self._outletname = '{}_{}'.format(
             self.controllername,
             self._parent_device.statuslocal[self.outletnumber - 1][1]
         )
@@ -132,7 +124,7 @@ class DINRelayDevice(object):
     def __init__(self, device):
         """Initialize the DINRelay device."""
         self._device = device
-        self.update()
+        self.statuslocal = None
 
     def turn_on(self, **kwargs):
         """Instruct the relay to turn on."""

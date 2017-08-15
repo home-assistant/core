@@ -3,7 +3,7 @@
 import unittest
 import os
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -206,10 +206,10 @@ class TestLight(unittest.TestCase):
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
-        # Specify a profile and attributes to overwrite it
+        # Specify a profile and a brightness attribute to overwrite it
         light.turn_on(
             self.hass, dev2.entity_id,
-            profile=prof_name, brightness=100, xy_color=(.4, .6))
+            profile=prof_name, brightness=100)
 
         self.hass.block_till_done()
 
@@ -222,10 +222,10 @@ class TestLight(unittest.TestCase):
         _, data = dev2.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: (.4, .6)},
+             light.ATTR_XY_COLOR: (.5119, .4147)},
             data)
 
-        # Test shitty data
+        # Test bad data
         light.turn_on(self.hass)
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
@@ -245,7 +245,10 @@ class TestLight(unittest.TestCase):
         # faulty attributes will not trigger a service call
         light.turn_on(
             self.hass, dev1.entity_id,
-            profile=prof_name, brightness='bright', rgb_color='yellowish')
+            profile=prof_name, brightness='bright')
+        light.turn_on(
+            self.hass, dev1.entity_id,
+            rgb_color='yellowish')
         light.turn_on(
             self.hass, dev2.entity_id,
             white_value='high')

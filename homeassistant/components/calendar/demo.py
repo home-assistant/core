@@ -10,7 +10,7 @@ from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo binary sensor platform."""
+    """Set up the Demo Calendar platform."""
     calendar_data_future = DemoGoogleCalendarDataFuture()
     calendar_data_current = DemoGoogleCalendarDataCurrent()
     add_devices([
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoGoogleCalendarData(object):
-    """Setup base class for data."""
+    """Representation of a Demo Calendar element."""
 
     # pylint: disable=no-self-use
     def update(self):
@@ -36,7 +36,7 @@ class DemoGoogleCalendarData(object):
 
 
 class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
-    """Setup future data event."""
+    """Representation of a Demo Calendar for a future event."""
 
     def __init__(self):
         """Set the event to a future event."""
@@ -55,7 +55,7 @@ class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
 
 
 class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
-    """Create a current event we're in the middle of."""
+    """Representation of a Demo Calendar for a current event."""
 
     def __init__(self):
         """Set the event data."""
@@ -74,9 +74,9 @@ class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
 
 
 class DemoGoogleCalendar(CalendarEventDevice):
-    """A Demo binary sensor."""
+    """Representation of a Demo Calendar element."""
 
     def __init__(self, hass, calendar_data, data):
-        """The same as a google calendar but without the api calls."""
+        """Initialize Google Calendar but without the API calls."""
         self.data = calendar_data
         super().__init__(hass, data)

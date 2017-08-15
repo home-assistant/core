@@ -12,14 +12,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_ATTRIBUTES, ENTITY_ID_FORMAT)
+    PLATFORM_SCHEMA, DOMAIN, ATTR_ATTRIBUTES, ENTITY_ID_FORMAT, DeviceScanner)
 from homeassistant.components.zone import active_zone
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +54,12 @@ DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'wipedTimestamp', 'modelDisplayName', 'locationEnabled',
                    'isMac', 'locFoundEnabled']
 
-DEVICESTATUSCODES = {'200': 'online', '201': 'offline', '203': 'pending',
-                     '204': 'unregistered'}
+DEVICESTATUSCODES = {
+    '200': 'online',
+    '201': 'offline',
+    '203': 'pending',
+    '204': 'unregistered',
+}
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
@@ -71,7 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see):
+def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Set up the iCloud Scanner."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -87,7 +90,7 @@ def setup_scanner(hass, config: dict, see):
         return False
 
     def lost_iphone(call):
-        """Call the lost iphone function if the device is found."""
+        """Call the lost iPhone function if the device is found."""
         accounts = call.data.get(ATTR_ACCOUNTNAME, ICLOUDTRACKERS)
         devicename = call.data.get(ATTR_DEVICENAME)
         for account in accounts:
@@ -97,7 +100,7 @@ def setup_scanner(hass, config: dict, see):
                            schema=SERVICE_SCHEMA)
 
     def update_icloud(call):
-        """Call the update function of an icloud account."""
+        """Call the update function of an iCloud account."""
         accounts = call.data.get(ATTR_ACCOUNTNAME, ICLOUDTRACKERS)
         devicename = call.data.get(ATTR_DEVICENAME)
         for account in accounts:
@@ -107,7 +110,7 @@ def setup_scanner(hass, config: dict, see):
                            schema=SERVICE_SCHEMA)
 
     def reset_account_icloud(call):
-        """Reset an icloud account."""
+        """Reset an iCloud account."""
         accounts = call.data.get(ATTR_ACCOUNTNAME, ICLOUDTRACKERS)
         for account in accounts:
             if account in ICLOUDTRACKERS:
@@ -116,7 +119,7 @@ def setup_scanner(hass, config: dict, see):
                            reset_account_icloud, schema=SERVICE_SCHEMA)
 
     def setinterval(call):
-        """Call the update function of an icloud account."""
+        """Call the update function of an iCloud account."""
         accounts = call.data.get(ATTR_ACCOUNTNAME, ICLOUDTRACKERS)
         interval = call.data.get(ATTR_INTERVAL)
         devicename = call.data.get(ATTR_DEVICENAME)
@@ -131,8 +134,8 @@ def setup_scanner(hass, config: dict, see):
     return True
 
 
-class Icloud(object):
-    """Represent an icloud account in Home Assistant."""
+class Icloud(DeviceScanner):
+    """Representation of an iCloud account."""
 
     def __init__(self, hass, username, password, name, see):
         """Initialize an iCloud account."""
@@ -157,12 +160,10 @@ class Icloud(object):
 
         randomseconds = random.randint(10, 59)
         track_utc_time_change(
-            self.hass, self.keep_alive,
-            second=randomseconds
-        )
+            self.hass, self.keep_alive, second=randomseconds)
 
     def reset_account_icloud(self):
-        """Reset an icloud account."""
+        """Reset an iCloud account."""
         from pyicloud import PyiCloudService
         from pyicloud.exceptions import (
             PyiCloudFailedLoginException, PyiCloudNoDevicesException)
@@ -178,7 +179,7 @@ class Icloud(object):
                 verify=True)
         except PyiCloudFailedLoginException as error:
             self.api = None
-            _LOGGER.error('Error logging into iCloud Service: %s', error)
+            _LOGGER.error("Error logging into iCloud Service: %s", error)
             return
 
         try:
@@ -196,66 +197,87 @@ class Icloud(object):
             _LOGGER.error('No iCloud Devices found!')
 
     def icloud_trusted_device_callback(self, callback_data):
-        """The trusted device is chosen."""
-        self._trusted_device = int(callback_data.get('0', '0'))
+        """Handle chosen trusted devices."""
+        self._trusted_device = int(callback_data.get('trusted_device'))
         self._trusted_device = self.api.trusted_devices[self._trusted_device]
+
+        if not self.api.send_verification_code(self._trusted_device):
+            _LOGGER.error("Failed to send verification code")
+            self._trusted_device = None
+            return
+
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
+
+        # Trigger the next step immediately
+        self.icloud_need_verification_code()
 
     def icloud_need_trusted_device(self):
         """We need a trusted device."""
-        configurator = get_component('configurator')
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
         devicesstring = ''
         devices = self.api.trusted_devices
         for i, device in enumerate(devices):
-            devicesstring += "{}: {};".format(i, device.get('deviceName'))
+            devicename = device.get(
+                'deviceName', 'SMS to %s' % device.get('phoneNumber'))
+            devicesstring += "{}: {};".format(i, devicename)
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_trusted_device_callback,
             description=(
                 'Please choose your trusted device by entering'
                 ' the index from this list: ' + devicesstring),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'id': '0'}]
+            fields=[{'id': 'trusted_device', 'name': 'Trusted Device'}]
         )
 
     def icloud_verification_callback(self, callback_data):
-        """The trusted device is chosen."""
-        self._verification_code = callback_data.get('0')
+        """Handle the chosen trusted device."""
+        from pyicloud.exceptions import PyiCloudException
+        self._verification_code = callback_data.get('code')
+
+        try:
+            if not self.api.validate_verification_code(
+                    self._trusted_device, self._verification_code):
+                raise PyiCloudException('Unknown failure')
+        except PyiCloudException as error:
+            # Reset to the inital 2FA state to allow the user to retry
+            _LOGGER.error("Failed to verify verification code: %s", error)
+            self._trusted_device = None
+            self._verification_code = None
+
+            # Trigger the next step immediately
+            self.icloud_need_trusted_device()
+
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
 
     def icloud_need_verification_code(self):
-        """We need a verification code."""
-        configurator = get_component('configurator')
+        """Return the verification code."""
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
-        if self.api.send_verification_code(self._trusted_device):
-            self._verification_code = 'waiting'
-
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_verification_callback,
             description=('Please enter the validation code:'),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'code': '0'}]
+            fields=[{'id': 'code', 'name': 'code'}]
         )
 
     def keep_alive(self, now):
-        """Keep the api alive."""
-        from pyicloud.exceptions import PyiCloud2FARequiredError
-
+        """Keep the API alive."""
         if self.api is None:
             self.reset_account_icloud()
 
@@ -263,9 +285,8 @@ class Icloud(object):
             return
 
         if self.api.requires_2fa:
+            from pyicloud.exceptions import PyiCloudException
             try:
-                self.api.authenticate()
-            except PyiCloud2FARequiredError:
                 if self._trusted_device is None:
                     self.icloud_need_trusted_device()
                     return
@@ -274,12 +295,14 @@ class Icloud(object):
                     self.icloud_need_verification_code()
                     return
 
-                if self._verification_code == 'waiting':
-                    return
+                self.api.authenticate()
+                if self.api.requires_2fa:
+                    raise Exception('Unknown failure')
 
-                if self.api.validate_verification_code(
-                        self._trusted_device, self._verification_code):
-                    self._verification_code = None
+                self._trusted_device = None
+                self._verification_code = None
+            except PyiCloudException as error:
+                _LOGGER.error("Error setting up 2FA: %s", error)
         else:
             self.api.authenticate()
 
@@ -297,8 +320,8 @@ class Icloud(object):
         zone_state = self.hass.states.get('zone.home')
         zone_state_lat = zone_state.attributes['latitude']
         zone_state_long = zone_state.attributes['longitude']
-        distancefromhome = distance(latitude, longitude, zone_state_lat,
-                                    zone_state_long)
+        distancefromhome = distance(
+            latitude, longitude, zone_state_lat, zone_state_long)
         distancefromhome = round(distancefromhome / 1000, 1)
 
         currentzone = active_zone(self.hass, latitude, longitude)
@@ -377,7 +400,7 @@ class Icloud(object):
             _LOGGER.error('No iCloud Devices found!')
 
     def lost_iphone(self, devicename):
-        """Call the lost iphone function if the device is found."""
+        """Call the lost iPhone function if the device is found."""
         if self.api is None:
             return
 
@@ -397,21 +420,21 @@ class Icloud(object):
         try:
             if devicename is not None:
                 if devicename in self.devices:
-                    self.devices[devicename].update_icloud()
+                    self.devices[devicename].location()
                 else:
                     _LOGGER.error("devicename %s unknown for account %s",
                                   devicename, self._attrs[ATTR_ACCOUNTNAME])
             else:
                 for device in self.devices:
-                    self.devices[device].update_icloud()
+                    self.devices[device].location()
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error("No iCloud Devices found")
 
     def setinterval(self, interval=None, devicename=None):
         """Set the interval of the given devices."""
         devs = [devicename] if devicename else self.devices
         for device in devs:
-            devid = DOMAIN + '.' + device
+            devid = '{}.{}'.format(DOMAIN, device)
             devicestate = self.hass.states.get(devid)
             if interval is not None:
                 if devicestate is not None:

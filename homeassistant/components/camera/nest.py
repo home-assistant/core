@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    camera_devices = hass.data[nest.DATA_NEST].camera_devices()
+    camera_devices = hass.data[nest.DATA_NEST].cameras()
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
     add_devices(cameras, True)
@@ -43,7 +43,7 @@ class NestCamera(Camera):
         self.device = device
         self._location = None
         self._name = None
-        self._is_online = None
+        self._online = None
         self._is_streaming = None
         self._is_video_history_enabled = False
         # Default to non-NestAware subscribed, but will be fixed during update
@@ -76,7 +76,7 @@ class NestCamera(Camera):
         """Cache value from Python-nest."""
         self._location = self.device.where
         self._name = self.device.name
-        self._is_online = self.device.is_online
+        self._online = self.device.online
         self._is_streaming = self.device.is_streaming
         self._is_video_history_enabled = self.device.is_video_history_enabled
 

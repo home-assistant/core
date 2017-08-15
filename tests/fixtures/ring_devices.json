@@ -1,0 +1,79 @@
+{
+    "authorized_doorbots": [],
+    "chimes": [
+        {
+            "address": "123 Main St",
+            "alerts": {"connection": "online"},
+            "description": "Downstairs",
+            "device_id": "abcdef123",
+            "do_not_disturb": {"seconds_left": 0},
+            "features": {"ringtones_enabled": true},
+            "firmware_version": "1.2.3",
+            "id": 999999,
+            "kind": "chime",
+            "latitude": 12.000000,
+            "longitude": -70.12345,
+            "owned": true,
+            "owner": {
+                "email": "foo@bar.org",
+                "first_name": "Marcelo",
+                "id": 999999,
+                "last_name": "Assistant"},
+            "settings": {
+                "ding_audio_id": null,
+                "ding_audio_user_id": null,
+                "motion_audio_id": null,
+                "motion_audio_user_id": null,
+                "volume": 2},
+            "time_zone": "America/New_York"}],
+    "doorbots": [
+        {
+            "address": "123 Main St",
+            "alerts": {"connection": "online"},
+            "battery_life": 4081,
+            "description": "Front Door",
+            "device_id": "aacdef123",
+            "external_connection": false,
+            "features": {
+                "advanced_motion_enabled": false,
+                "motion_message_enabled": false,
+                "motions_enabled": true,
+                "people_only_enabled": false,
+                "shadow_correction_enabled": false,
+                "show_recordings": true},
+            "firmware_version": "1.4.26",
+            "id": 987652,
+            "kind": "lpd_v1",
+            "latitude": 12.000000,
+            "longitude": -70.12345,
+            "motion_snooze": null,
+            "owned": true,
+            "owner": {
+                "email": "foo@bar.org",
+                "first_name": "Home",
+                "id": 999999,
+                "last_name": "Assistant"},
+            "settings": {
+                "chime_settings": {
+                    "duration": 3,
+                    "enable": true,
+                    "type": 0},
+                "doorbell_volume": 1,
+                "enable_vod": true,
+                "live_view_preset_profile": "highest",
+                "live_view_presets": [
+                    "low",
+                    "middle",
+                    "high",
+                    "highest"],
+                "motion_announcement": false,
+                "motion_snooze_preset_profile": "low",
+                "motion_snooze_presets": [
+                    "null",
+                    "low",
+                    "medium",
+                    "high"]},
+            "subscribed": true,
+            "subscribed_motions": true,
+            "time_zone": "America/New_York"}]
+}

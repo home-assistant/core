@@ -5,18 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.cisco_ios/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
-from homeassistant.util import Throttle
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +35,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class CiscoDeviceScanner(object):
+class CiscoDeviceScanner(DeviceScanner):
     """This class queries a wireless router running Cisco IOS firmware."""
 
     def __init__(self, config):
@@ -56,7 +52,7 @@ class CiscoDeviceScanner(object):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get the firmware doesn't save the name of the wireless device."""
         return None
 
     def scan_devices(self):
@@ -65,7 +61,6 @@ class CiscoDeviceScanner(object):
 
         return self.last_results
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """
         Ensure the information from the Cisco router is up to date.
@@ -87,21 +82,20 @@ class CiscoDeviceScanner(object):
             lines_result = lines_result[2:]
 
             for line in lines_result:
-                if len(line.split()) is 6:
-                    parts = line.split()
-                    if len(parts) != 6:
-                        continue
+                parts = line.split()
+                if len(parts) != 6:
+                    continue
 
-                    # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
-                    # 'GigabitEthernet0']
-                    age = parts[2]
-                    hw_addr = parts[3]
+                # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
+                # 'GigabitEthernet0']
+                age = parts[2]
+                hw_addr = parts[3]
 
-                    if age != "-":
-                        mac = _parse_cisco_mac_address(hw_addr)
-                        age = int(age)
-                        if age < 1:
-                            last_results.append(mac)
+                if age != "-":
+                    mac = _parse_cisco_mac_address(hw_addr)
+                    age = int(age)
+                    if age < 1:
+                        last_results.append(mac)
 
             self.last_results = last_results
             return True
@@ -134,9 +128,9 @@ class CiscoDeviceScanner(object):
 
             devices_result = cisco_ssh.before
 
-            return devices_result.decode("utf-8")
+            return devices_result.decode('utf-8')
         except pxssh.ExceptionPxssh as px_e:
-            _LOGGER.error("pxssh failed on login.")
+            _LOGGER.error("pxssh failed on login")
             _LOGGER.error(px_e)
 
         return None

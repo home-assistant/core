@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick switches."""
+    """Set up Tellstick switches."""
     if discovery_info is None:
         return
     add_devices(TelldusLiveSwitch(hass, switch) for switch in discovery_info)

@@ -2,38 +2,39 @@
 Offer time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#time-trigger
+at https://home-assistant.io/docs/automation/trigger/#time-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_AFTER, CONF_PLATFORM
+from homeassistant.const import CONF_AT, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
-CONF_HOURS = "hours"
-CONF_MINUTES = "minutes"
-CONF_SECONDS = "seconds"
+CONF_HOURS = 'hours'
+CONF_MINUTES = 'minutes'
+CONF_SECONDS = 'seconds'
 
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'time',
-    CONF_AFTER: cv.time,
+    CONF_AT: cv.time,
     CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES,
-                            CONF_SECONDS, CONF_AFTER))
+}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AT))
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
-    if CONF_AFTER in config:
-        after = config.get(CONF_AFTER)
-        hours, minutes, seconds = after.hour, after.minute, after.second
+    if CONF_AT in config:
+        at_time = config.get(CONF_AT)
+        hours, minutes, seconds = at_time.hour, at_time.minute, at_time.second
     else:
         hours = config.get(CONF_HOURS)
         minutes = config.get(CONF_MINUTES)

@@ -1,4 +1,4 @@
-"""The tests for the REST switch platform."""
+"""The tests for the REST sensor platform."""
 import unittest
 from unittest.mock import patch, Mock
 
@@ -6,15 +6,17 @@ import requests
 from requests.exceptions import Timeout, MissingSchema, RequestException
 import requests_mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
+import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.rest as rest
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.config_validation import template
+
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
-class TestRestSwitchSetup(unittest.TestCase):
-    """Tests for setting up the REST switch platform."""
+class TestRestSensorSetup(unittest.TestCase):
+    """Tests for setting up the REST sensor platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -26,10 +28,9 @@ class TestRestSwitchSetup(unittest.TestCase):
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost'
-        }, None))
+        with assert_setup_component(0):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': {'platform': 'rest'}})
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
@@ -40,7 +41,8 @@ class TestRestSwitchSetup(unittest.TestCase):
                 'method': 'GET'
             }, None)
 
-    @patch('requests.get', side_effect=requests.exceptions.ConnectionError())
+    @patch('requests.Session.send',
+           side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
@@ -48,7 +50,7 @@ class TestRestSwitchSetup(unittest.TestCase):
             'resource': 'http://localhost',
         }, None))
 
-    @patch('requests.get', side_effect=Timeout())
+    @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
@@ -131,9 +133,9 @@ class TestRestSensor(unittest.TestCase):
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
 
-        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement,
-                                      self.value_template)
+        self.sensor = rest.RestSensor(
+            self.hass, self.rest, self.name, self.unit_of_measurement,
+            self.value_template)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -149,17 +151,18 @@ class TestRestSensor(unittest.TestCase):
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
-        self.assertEqual(self.unit_of_measurement,
-                         self.sensor.unit_of_measurement)
+        self.assertEqual(
+            self.unit_of_measurement, self.sensor.unit_of_measurement)
 
     def test_state(self):
         """Test the initial state."""
+        self.sensor.update()
         self.assertEqual(self.initial_state, self.sensor.state)
 
     def test_update_when_value_is_none(self):
         """Test state gets updated to unknown when sensor returns no data."""
-        self.rest.update = Mock('rest.RestData.update',
-                                side_effect=self.update_side_effect(None))
+        self.rest.update = Mock(
+            'rest.RestData.update', side_effect=self.update_side_effect(None))
         self.sensor.update()
         self.assertEqual(STATE_UNKNOWN, self.sensor.state)
 
@@ -176,8 +179,8 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
-        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None)
+        self.sensor = rest.RestSensor(
+            self.hass, self.rest, self.name, self.unit_of_measurement, None)
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
 
@@ -190,8 +193,8 @@ class TestRestData(unittest.TestCase):
         self.method = "GET"
         self.resource = "http://localhost"
         self.verify_ssl = True
-        self.rest = rest.RestData(self.method, self.resource, None, None, None,
-                                  self.verify_ssl)
+        self.rest = rest.RestData(
+            self.method, self.resource, None, None, None, self.verify_ssl)
 
     @requests_mock.Mocker()
     def test_update(self, mock_req):
@@ -200,7 +203,7 @@ class TestRestData(unittest.TestCase):
         self.rest.update()
         self.assertEqual('test data', self.rest.data)
 
-    @patch('requests.get', side_effect=RequestException)
+    @patch('requests.Session', side_effect=RequestException)
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()

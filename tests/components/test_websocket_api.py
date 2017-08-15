@@ -1,3 +1,4 @@
+"""Tests for the Home Assistant Websocket API."""
 import asyncio
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.components import websocket_api as wapi, frontend
 
-from tests.common import mock_http_component_app
+from tests.common import mock_http_component_app, mock_coro
 
 API_PASSWORD = 'test1234'
 
@@ -49,6 +50,13 @@ def no_auth_websocket_client(hass, loop, test_client):
         loop.run_until_complete(ws.close())
 
 
+@pytest.fixture
+def mock_low_queue():
+    """Mock a low queue."""
+    with patch.object(wapi, 'MAX_PENDING_MSG', 5):
+        yield
+
+
 @asyncio.coroutine
 def test_auth_via_msg(no_auth_websocket_client):
     """Test authenticating."""
@@ -65,13 +73,16 @@ def test_auth_via_msg(no_auth_websocket_client):
 @asyncio.coroutine
 def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     """Test authenticating."""
-    no_auth_websocket_client.send_json({
-        'type': wapi.TYPE_AUTH,
-        'api_password': API_PASSWORD + 'wrong'
-    })
+    with patch('homeassistant.components.websocket_api.process_wrong_login',
+               return_value=mock_coro()) as mock_process_wrong_login:
+        no_auth_websocket_client.send_json({
+            'type': wapi.TYPE_AUTH,
+            'api_password': API_PASSWORD + 'wrong'
+        })
 
-    msg = yield from no_auth_websocket_client.receive_json()
+        msg = yield from no_auth_websocket_client.receive_json()
 
+    assert mock_process_wrong_login.called
     assert msg['type'] == wapi.TYPE_AUTH_INVALID
     assert msg['message'] == 'Invalid password'
 
@@ -213,7 +224,7 @@ def test_subscribe_unsubscribe_events(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_states(hass, websocket_client):
-    """ Test get_states command."""
+    """Test get_states command."""
     hass.states.async_set('greeting.hello', 'world')
     hass.states.async_set('greeting.bye', 'universe')
 
@@ -239,7 +250,7 @@ def test_get_states(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_services(hass, websocket_client):
-    """ Test get_services command."""
+    """Test get_services command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_SERVICES,
@@ -254,7 +265,7 @@ def test_get_services(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_config(hass, websocket_client):
-    """ Test get_config command."""
+    """Test get_config command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_CONFIG,
@@ -264,12 +275,19 @@ def test_get_config(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
+
+    if 'components' in msg['result']:
+        msg['result']['components'] = set(msg['result']['components'])
+    if 'whitelist_external_dirs' in msg['result']:
+        msg['result']['whitelist_external_dirs'] = \
+            set(msg['result']['whitelist_external_dirs'])
+
     assert msg['result'] == hass.config.as_dict()
 
 
 @asyncio.coroutine
 def test_get_panels(hass, websocket_client):
-    """ Test get_panels command."""
+    """Test get_panels command."""
     frontend.register_built_in_panel(hass, 'map', 'Map',
                                      'mdi:account-location')
 
@@ -287,7 +305,7 @@ def test_get_panels(hass, websocket_client):
 
 @asyncio.coroutine
 def test_ping(websocket_client):
-    """ Test get_panels command."""
+    """Test get_panels command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_PING,
@@ -296,3 +314,15 @@ def test_ping(websocket_client):
     msg = yield from websocket_client.receive_json()
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_PONG
+
+
+@asyncio.coroutine
+def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
+    """Test get_panels command."""
+    for idx in range(10):
+        websocket_client.send_json({
+            'id': idx + 1,
+            'type': wapi.TYPE_PING,
+        })
+    msg = yield from websocket_client.receive()
+    assert msg.type == WSMsgType.close

@@ -7,25 +7,25 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE)
 
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 
-OPERATION_LIST = ["Heat", "Cool", "Auto Changeover", "Off"]
-FAN_OPERATION_LIST = ["On", "Auto", "Cycle"]
+OPERATION_LIST = ['Heat', 'Cool', 'Auto Changeover', 'Off']
+FAN_OPERATION_LIST = ['On', 'Auto', 'Cycle']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return Vera thermostats."""
+    """Set up of Vera thermostats."""
     add_devices_callback(
         VeraThermostat(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['climate'])
@@ -37,24 +37,25 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         mode = self.vera_device.get_hvac_mode()
-        if mode == "HeatOn":
+        if mode == 'HeatOn':
             return OPERATION_LIST[0]  # heat
-        elif mode == "CoolOn":
+        elif mode == 'CoolOn':
             return OPERATION_LIST[1]  # cool
-        elif mode == "AutoChangeOver":
+        elif mode == 'AutoChangeOver':
             return OPERATION_LIST[2]  # auto
-        elif mode == "Off":
+        elif mode == 'Off':
             return OPERATION_LIST[3]  # off
-        return "Off"
+        return 'Off'
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         return OPERATION_LIST
 
     @property
@@ -71,7 +72,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
     def set_fan_mode(self, mode):
@@ -84,14 +85,14 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             return self.vera_device.fan_cycle()
 
     @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         power = self.vera_device.power
         if power:
-            return convert(power, float, 0.0) * 1000
+            return convert(power, float, 0.0)
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Handle state updates."""
         self._state = self.vera_device.get_hvac_mode()
 
     @property

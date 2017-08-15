@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Command Line notification service."""
     command = config[CONF_COMMAND]
 
@@ -43,6 +43,6 @@ class CommandLineNotificationService(BaseNotificationService):
                                     stdin=subprocess.PIPE, shell=True)
             proc.communicate(input=message)
             if proc.returncode != 0:
-                _LOGGER.error('Command failed: %s', self.command)
+                _LOGGER.error("Command failed: %s", self.command)
         except subprocess.SubprocessError:
-            _LOGGER.error('Error trying to exec Command: %s', self.command)
+            _LOGGER.error("Error trying to exec Command: %s", self.command)

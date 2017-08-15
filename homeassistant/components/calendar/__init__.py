@@ -3,14 +3,14 @@ Support for Google Calendar event device sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar/
-
 """
+import asyncio
 import logging
+from datetime import timedelta
 import re
 
-from homeassistant.components.google import (CONF_OFFSET,
-                                             CONF_DEVICE_ID,
-                                             CONF_NAME)
+from homeassistant.components.google import (
+    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity, generate_entity_id
@@ -21,16 +21,19 @@ from homeassistant.util import dt
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+SCAN_INTERVAL = timedelta(seconds=60)
 
-def setup(hass, config):
+
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, 60, DOMAIN)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
-    component.setup(config)
-
+    yield from component.async_setup(config)
     return True
 
 
@@ -52,9 +55,8 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
-                                            self.dev_id,
-                                            hass=hass)
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
         self._cal_data = {
             'all_day': False,
@@ -84,7 +86,7 @@ class CalendarEventDevice(Entity):
 
     @property
     def device_state_attributes(self):
-        """State Attributes for HA."""
+        """Return the device state attributes."""
         start = self._cal_data.get('start', None)
         end = self._cal_data.get('end', None)
         start = start.strftime(DATE_STR_FORMAT) if start is not None else None
@@ -144,15 +146,14 @@ class CalendarEventDevice(Entity):
         def _get_date(date):
             """Get the dateTime from date or dateTime as a local."""
             if 'date' in date:
-                return dt.as_utc(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time()))
-            else:
-                return dt.parse_datetime(date['dateTime'])
+                return dt.start_of_local_day(dt.dt.datetime.combine(
+                    dt.parse_date(date['date']), dt.dt.time.min))
+            return dt.as_local(dt.parse_datetime(date['dateTime']))
 
         start = _get_date(self.data.event['start'])
         end = _get_date(self.data.event['end'])
 
-        summary = self.data.event['summary']
+        summary = self.data.event.get('summary', '')
 
         # check if we have an offset tag in the message
         # time is HH:MM or MM

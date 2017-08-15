@@ -1,9 +1,8 @@
 """The tests for the MQTT eventstream component."""
 import json
-import unittest
 from unittest.mock import ANY, patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
@@ -19,16 +18,15 @@ from tests.common import (
 )
 
 
-class TestMqttEventStream(unittest.TestCase):
+class TestMqttEventStream(object):
     """Test the MQTT eventstream module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setup_method(self):
         """Setup things to be run when tests are started."""
-        super(TestMqttEventStream, self).setUp()
         self.hass = get_test_home_assistant()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -44,30 +42,30 @@ class TestMqttEventStream(unittest.TestCase):
 
     def test_setup_succeeds(self):
         """"Test the success of the setup."""
-        self.assertTrue(self.add_eventstream())
+        assert self.add_eventstream()
 
     def test_setup_with_pub(self):
         """"Test the setup with subscription."""
         # Should start off with no listeners for all events
-        self.assertEqual(self.hass.bus.listeners.get('*'), None)
+        assert self.hass.bus.listeners.get('*') is None
 
-        self.assertTrue(self.add_eventstream(pub_topic='bar'))
+        assert self.add_eventstream(pub_topic='bar')
         self.hass.block_till_done()
 
         # Verify that the event handler has been added as a listener
-        self.assertEqual(self.hass.bus.listeners.get('*'), 1)
+        assert self.hass.bus.listeners.get('*') == 1
 
-    @patch('homeassistant.components.mqtt.subscribe')
+    @patch('homeassistant.components.mqtt.async_subscribe')
     def test_subscribe(self, mock_sub):
         """"Test the subscription."""
         sub_topic = 'foo'
-        self.assertTrue(self.add_eventstream(sub_topic=sub_topic))
+        assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
 
         # Verify that the this entity was subscribed to the topic
         mock_sub.assert_called_with(self.hass, sub_topic, ANY)
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
         """"Test the sending of a new message if event changed."""
@@ -77,7 +75,7 @@ class TestMqttEventStream(unittest.TestCase):
         mock_utcnow.return_value = now
 
         # Add the eventstream component for publishing events
-        self.assertTrue(self.add_eventstream(pub_topic=pub_topic))
+        assert self.add_eventstream(pub_topic=pub_topic)
         self.hass.block_till_done()
 
         # Reset the mock because it will have already gotten calls for the
@@ -91,7 +89,7 @@ class TestMqttEventStream(unittest.TestCase):
         # The order of the JSON is indeterminate,
         # so first just check that publish was called
         mock_pub.assert_called_with(self.hass, pub_topic, ANY)
-        self.assertTrue(mock_pub.called)
+        assert mock_pub.called
 
         # Get the actual call to publish and make sure it was the one
         # we were looking for
@@ -108,12 +106,12 @@ class TestMqttEventStream(unittest.TestCase):
         event['event_data'] = {"new_state": new_state, "entity_id": e_id}
 
         # Verify that the message received was that expected
-        self.assertEqual(json.loads(msg), event)
+        assert json.loads(msg) == event
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):
         """"Test the sending of a new message if time event."""
-        self.assertTrue(self.add_eventstream(pub_topic='bar'))
+        assert self.add_eventstream(pub_topic='bar')
         self.hass.block_till_done()
 
         # Reset the mock because it will have already gotten calls for the
@@ -121,12 +119,12 @@ class TestMqttEventStream(unittest.TestCase):
         mock_pub.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow())
-        self.assertFalse(mock_pub.called)
+        assert not mock_pub.called
 
     def test_receiving_remote_event_fires_hass_event(self):
         """"Test the receiving of the remotely fired event."""
         sub_topic = 'foo'
-        self.assertTrue(self.add_eventstream(sub_topic=sub_topic))
+        assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
 
         calls = []
@@ -145,4 +143,4 @@ class TestMqttEventStream(unittest.TestCase):
         fire_mqtt_message(self.hass, sub_topic, payload)
         self.hass.block_till_done()
 
-        self.assertEqual(1, len(calls))
+        assert 1 == len(calls)

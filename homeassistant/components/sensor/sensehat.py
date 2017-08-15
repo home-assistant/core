@@ -21,19 +21,21 @@ REQUIREMENTS = ['sense-hat==2.2.0']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'sensehat'
+CONF_IS_HAT_ATTACHED = 'is_hat_attached'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
-    'humidity': ['humidity', "%"],
-    'pressure': ['pressure', "mb"],
+    'humidity': ['humidity', '%'],
+    'pressure': ['pressure', 'mb'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
         [vol.In(SENSOR_TYPES)],
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean
 })
 
 
@@ -51,23 +53,23 @@ def get_average(temp_base):
     get_average.temp[2] = get_average.temp[1]
     get_average.temp[1] = get_average.temp[0]
     get_average.temp[0] = temp_base
-    temp_avg = (get_average.temp[0]+get_average.temp[1]+get_average.temp[2])/3
+    temp_avg = (get_average.temp[0] + get_average.temp[1]
+                + get_average.temp[2]) / 3
     return temp_avg
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
-    data = SenseHatData()
+    """Set up the Sense HAT sensor platform."""
+    data = SenseHatData(config.get(CONF_IS_HAT_ATTACHED))
     dev = []
-
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(SenseHatSensor(data, variable))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class SenseHatSensor(Entity):
-    """Representation of a sensehat sensor."""
+    """Representation of a Sense HAT sensor."""
 
     def __init__(self, data, sensor_types):
         """Initialize the sensor."""
@@ -76,8 +78,6 @@ class SenseHatSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
         self.type = sensor_types
         self._state = None
-        """updating data."""
-        self.update()
 
     @property
     def name(self):
@@ -98,7 +98,7 @@ class SenseHatSensor(Entity):
         """Get the latest data and updates the states."""
         self.data.update()
         if not self.data.humidity:
-            _LOGGER.error("Don't receive data!")
+            _LOGGER.error("Don't receive data")
             return
 
         if self.type == 'temperature':
@@ -112,23 +112,29 @@ class SenseHatSensor(Entity):
 class SenseHatData(object):
     """Get the latest data and update."""
 
-    def __init__(self):
+    def __init__(self, is_hat_attached):
         """Initialize the data object."""
         self.temperature = None
         self.humidity = None
         self.pressure = None
+        self.is_hat_attached = is_hat_attached
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from sensehat."""
+        """Get the latest data from Sense HAT."""
         from sense_hat import SenseHat
         sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()
         temp_from_p = sense.get_temperature_from_pressure()
-        t_cpu = get_cpu_temp()
-        t_total = (temp_from_h+temp_from_p)/2
-        t_correct = t_total - ((t_cpu-t_total)/1.5)
-        t_correct = get_average(t_correct)
+        t_total = (temp_from_h + temp_from_p) / 2
+
+        if self.is_hat_attached:
+            t_cpu = get_cpu_temp()
+            t_correct = t_total - ((t_cpu - t_total) / 1.5)
+            t_correct = get_average(t_correct)
+        else:
+            t_correct = get_average(t_total)
+
         self.temperature = t_correct
         self.humidity = sense.get_humidity()
         self.pressure = sense.get_pressure()

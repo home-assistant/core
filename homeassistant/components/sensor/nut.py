@@ -46,13 +46,13 @@ SENSOR_TYPES = {
     'ups.load': ['Load', '%', 'mdi:gauge'],
     'ups.load.high': ['Overload Setting', '%', 'mdi:gauge'],
     'ups.id': ['System identifier', '', 'mdi:information-outline'],
-    'ups.delay.start': ['Load Restart Delay', 'sec', 'mdi:timer'],
-    'ups.delay.reboot': ['UPS Reboot Delay', 'sec', 'mdi:timer'],
-    'ups.delay.shutdown': ['UPS Shutdown Delay', 'sec', 'mdi:timer'],
-    'ups.timer.start': ['Load Start Timer', 'sec', 'mdi:timer'],
-    'ups.timer.reboot': ['Load Reboot Timer', 'sec', 'mdi:timer'],
-    'ups.timer.shutdown': ['Load Shutdown Timer', 'sec', 'mdi:timer'],
-    'ups.test.interval': ['Self-Test Interval', 'sec', 'mdi:timer'],
+    'ups.delay.start': ['Load Restart Delay', 's', 'mdi:timer'],
+    'ups.delay.reboot': ['UPS Reboot Delay', 's', 'mdi:timer'],
+    'ups.delay.shutdown': ['UPS Shutdown Delay', 's', 'mdi:timer'],
+    'ups.timer.start': ['Load Start Timer', 's', 'mdi:timer'],
+    'ups.timer.reboot': ['Load Reboot Timer', 's', 'mdi:timer'],
+    'ups.timer.shutdown': ['Load Shutdown Timer', 's', 'mdi:timer'],
+    'ups.test.interval': ['Self-Test Interval', 's', 'mdi:timer'],
     'ups.test.result': ['Self-Test Result', '', 'mdi:information-outline'],
     'ups.test.date': ['Self-Test Date', '', 'mdi:calendar'],
     'ups.display.language': ['Language', '', 'mdi:information-outline'],
@@ -84,10 +84,10 @@ SENSOR_TYPES = {
     'battery.current.total': ['Total Battery Current', 'A', 'mdi:flash'],
     'battery.temperature':
         ['Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'battery.runtime': ['Battery Runtime', 'sec', 'mdi:timer'],
-    'battery.runtime.low': ['Low Battery Runtime', 'sec', 'mdi:timer'],
+    'battery.runtime': ['Battery Runtime', 's', 'mdi:timer'],
+    'battery.runtime.low': ['Low Battery Runtime', 's', 'mdi:timer'],
     'battery.runtime.restart':
-        ['Minimum Battery Runtime to Start', 'sec', 'mdi:timer'],
+        ['Minimum Battery Runtime to Start', 's', 'mdi:timer'],
     'battery.alarm.threshold':
         ['Battery Alarm Threshold', '', 'mdi:information-outline'],
     'battery.date': ['Battery Date', '', 'mdi:calendar'],
@@ -135,7 +135,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the NUT sensors."""
+    """Set up the NUT sensors."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -146,7 +146,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = PyNUTData(host, port, alias, username, password)
 
     if data.status is None:
-        _LOGGER.error("NUT Sensor has no data, unable to setup.")
+        _LOGGER.error("NUT Sensor has no data, unable to setup")
         return False
 
     _LOGGER.debug('NUT Sensors Available: %s', data.status)
@@ -160,17 +160,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             entities.append(NUTSensor(name, data, sensor_type))
         else:
             _LOGGER.warning(
-                'Sensor type: "%s" does not appear in the NUT status '
-                'output, cannot add.', sensor_type)
+                "Sensor type: %s does not appear in the NUT status "
+                "output, cannot add", sensor_type)
 
     try:
         data.update(no_throttle=True)
     except data.pynuterror as err:
         _LOGGER.error("Failure while testing NUT status retrieval. "
-                      "Cannot continue setup., %s", err)
+                      "Cannot continue setup: %s", err)
         return False
 
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 class NUTSensor(Entity):
@@ -180,9 +180,9 @@ class NUTSensor(Entity):
         """Initialize the sensor."""
         self._data = data
         self.type = sensor_type
-        self._name = name + ' ' + SENSOR_TYPES[sensor_type][0]
+        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
         self._unit = SENSOR_TYPES[sensor_type][1]
-        self.update()
+        self._state = None
 
     @property
     def name(self):
@@ -207,7 +207,7 @@ class NUTSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the sensor attributes."""
-        attr = {}
+        attr = dict()
         attr[ATTR_STATE] = self.opp_state()
         return attr
 
@@ -217,7 +217,9 @@ class NUTSensor(Entity):
             return STATE_TYPES['OFF']
         else:
             try:
-                return STATE_TYPES[self._data.status[KEY_STATUS]]
+                return " ".join(
+                    STATE_TYPES[state]
+                    for state in self._data.status[KEY_STATUS].split())
             except KeyError:
                 return STATE_UNKNOWN
 
@@ -279,8 +281,8 @@ class PyNUTData(object):
         try:
             return self._client.list_vars(self._alias)
         except (self.pynuterror, ConnectionResetError) as err:
-            _LOGGER.debug("Error getting NUT vars for host %s: %s",
-                          self._host, err)
+            _LOGGER.debug(
+                "Error getting NUT vars for host %s: %s", self._host, err)
             return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

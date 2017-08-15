@@ -1,94 +1,84 @@
 """Static file handling for HTTP component."""
 import asyncio
-import mimetypes
 import re
 
 from aiohttp import hdrs
-from aiohttp.file_sender import FileSender
+from aiohttp.web import FileResponse
+from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-from aiohttp.web_exceptions import HTTPNotModified
+from yarl import unquote
 
 from .const import KEY_DEVELOPMENT
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
-class GzipFileSender(FileSender):
-    """FileSender class capable of sending gzip version if available."""
-
-    # pylint: disable=invalid-name
+class CachingStaticResource(StaticResource):
+    """Static Resource handler that will add cache headers."""
 
     @asyncio.coroutine
-    def send(self, request, filepath):
-        """Send filepath to client using request."""
-        gzip = False
-        if 'gzip' in request.headers[hdrs.ACCEPT_ENCODING]:
-            gzip_path = filepath.with_name(filepath.name + '.gz')
+    def _handle(self, request):
+        filename = unquote(request.match_info['filename'])
+        try:
+            # PyLint is wrong about resolve not being a member.
+            # pylint: disable=no-member
+            filepath = self._directory.joinpath(filename).resolve()
+            if not self._follow_symlinks:
+                filepath.relative_to(self._directory)
+        except (ValueError, FileNotFoundError) as error:
+            # relatively safe
+            raise HTTPNotFound() from error
+        except Exception as error:
+            # perm error or other kind!
+            request.app.logger.exception(error)
+            raise HTTPNotFound() from error
 
-            if gzip_path.is_file():
-                filepath = gzip_path
-                gzip = True
-
-        st = filepath.stat()
-
-        modsince = request.if_modified_since
-        if modsince is not None and st.st_mtime <= modsince.timestamp():
-            raise HTTPNotModified()
-
-        ct, encoding = mimetypes.guess_type(str(filepath))
-        if not ct:
-            ct = 'application/octet-stream'
-
-        resp = self._response_factory()
-        resp.content_type = ct
-        if encoding:
-            resp.headers[hdrs.CONTENT_ENCODING] = encoding
-        if gzip:
-            resp.headers[hdrs.VARY] = hdrs.ACCEPT_ENCODING
-        resp.last_modified = st.st_mtime
-
-        # CACHE HACK
-        if not request.app[KEY_DEVELOPMENT]:
-            cache_time = 31 * 86400  # = 1 month
-            resp.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                cache_time)
-
-        file_size = st.st_size
-
-        resp.content_length = file_size
-        with filepath.open('rb') as f:
-            yield from self._sendfile(request, resp, f, file_size)
-
-        return resp
+        if filepath.is_dir():
+            return (yield from super()._handle(request))
+        elif filepath.is_file():
+            return CachingFileResponse(filepath, chunk_size=self._chunk_size)
+        else:
+            raise HTTPNotFound
 
 
-GZIP_FILE_SENDER = GzipFileSender()
-FILE_SENDER = FileSender()
+class CachingFileResponse(FileResponse):
+    """FileSender class that caches output if not in dev mode."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the hass file sender."""
+        super().__init__(*args, **kwargs)
+
+        orig_sendfile = self._sendfile
+
+        @asyncio.coroutine
+        def sendfile(request, fobj, count):
+            """Sendfile that includes a cache header."""
+            if not request.app[KEY_DEVELOPMENT]:
+                cache_time = 31 * 86400  # = 1 month
+                self.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
+                    cache_time)
+
+            yield from orig_sendfile(request, fobj, count)
+
+        # Overwriting like this because __init__ can change implementation.
+        self._sendfile = sendfile
 
 
 @asyncio.coroutine
 def staticresource_middleware(app, handler):
-    """Enhance StaticResourceHandler middleware.
-
-    Adds gzip encoding and fingerprinting matching.
-    """
-    inst = getattr(handler, '__self__', None)
-    if not isinstance(inst, StaticResource):
-        return handler
-
-    # pylint: disable=protected-access
-    inst._file_sender = GZIP_FILE_SENDER
-
+    """Middleware to strip out fingerprint from fingerprinted assets."""
     @asyncio.coroutine
     def static_middleware_handler(request):
         """Strip out fingerprints from resource names."""
+        if not request.path.startswith('/static/'):
+            return handler(request)
+
         fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
 
         if fingerprinted:
             request.match_info['filename'] = \
                 '{}.{}'.format(*fingerprinted.groups())
 
-        resp = yield from handler(request)
-        return resp
+        return handler(request)
 
     return static_middleware_handler

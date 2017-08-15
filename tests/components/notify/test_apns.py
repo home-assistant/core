@@ -1,20 +1,53 @@
 """The tests for the APNS component."""
+import io
 import unittest
-import os
+from unittest.mock import Mock, patch, mock_open
+
+from apns2.errors import Unregistered
+import yaml
 
 import homeassistant.components.notify as notify
+from homeassistant.setup import setup_component
+from homeassistant.components.notify import apns
 from homeassistant.core import State
-from homeassistant.components.notify.apns import ApnsNotificationService
-from tests.common import get_test_home_assistant
-from homeassistant.config import load_yaml_config_file
-from unittest.mock import patch
-from apns2.errors import Unregistered
+
+from tests.common import assert_setup_component, get_test_home_assistant
+
+CONFIG = {
+    notify.DOMAIN: {
+        'platform': 'apns',
+        'name': 'test_app',
+        'topic': 'testapp.appname',
+        'cert_file': 'test_app.pem'
+    }
+}
 
 
+@patch('homeassistant.components.notify.apns.open', mock_open(), create=True)
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
-    def test_apns_setup_full(self):
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    @patch('os.path.isfile', Mock(return_value=True))
+    @patch('os.access', Mock(return_value=True))
+    def _setup_notify(self):
+        assert isinstance(apns.load_yaml_config_file, Mock), \
+            'Found unmocked load_yaml'
+
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, CONFIG)
+        assert handle_config[notify.DOMAIN]
+
+    @patch('os.path.isfile', return_value=True)
+    @patch('os.access', return_value=True)
+    def test_apns_setup_full(self, mock_access, mock_isfile):
         """Test setup with all data."""
         config = {
             'notify': {
@@ -25,140 +58,147 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        self.assertTrue(notify.setup(hass, config))
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert handle_config[notify.DOMAIN]
 
     def test_apns_setup_missing_name(self):
         """Test setup with missing name."""
         config = {
             'notify': {
                 'platform': 'apns',
-                'sandbox': 'True',
                 'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
+                'cert_file': 'test_app.pem',
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
 
     def test_apns_setup_missing_certificate(self):
-        """Test setup with missing name."""
+        """Test setup with missing certificate."""
         config = {
             'notify': {
                 'platform': 'apns',
+                'name': 'test_app',
                 'topic': 'testapp.appname',
-                'name': 'test_app'
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
 
     def test_apns_setup_missing_topic(self):
         """Test setup with missing topic."""
         config = {
             'notify': {
                 'platform': 'apns',
+                'name': 'test_app',
                 'cert_file': 'test_app.pem',
-                'name': 'test_app'
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
 
-    def test_register_new_device(self):
+    @patch('homeassistant.components.notify.apns._write_device')
+    def test_register_new_device(self, mock_write):
         """Test registering a new device with a name."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-        hass = get_test_home_assistant()
+        yaml_file = {5678: {'name': 'test device 2'}}
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('5678: {name: test device 2}\n')
+        written_devices = []
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'test device'},
-                                           blocking=True))
+        def fake_write(_out, device):
+            """Fake write_device."""
+            written_devices.append(device)
 
-        devices = {str(key): value for (key, value) in
-                   load_yaml_config_file(devices_path).items()}
+        mock_write.side_effect = fake_write
 
-        test_device_1 = devices.get('1234')
-        test_device_2 = devices.get('5678')
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
 
-        self.assertIsNotNone(test_device_1)
-        self.assertIsNotNone(test_device_2)
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'test device'},
+                                                blocking=True))
 
-        self.assertEqual('test device', test_device_1.get('name'))
+        assert len(written_devices) == 1
+        assert written_devices[0].name == 'test device'
 
-        os.remove(devices_path)
-
-    def test_register_device_without_name(self):
+    @patch('homeassistant.components.notify.apns._write_device')
+    def test_register_device_without_name(self, mock_write):
         """Test registering a without a name."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+                'tracking_device_id': 'tracking123',
+            },
+            5678: {
+                'name': 'test device 2',
+                'tracking_device_id': 'tracking456',
+            },
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('5678: {name: test device 2}\n')
+        written_devices = []
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns', 'test_app',
-                                           {'push_id': '1234'},
-                                           blocking=True))
+        def fake_write(_out, device):
+            """Fake write_device."""
+            written_devices.append(device)
 
-        devices = {str(key): value for (key, value) in
-                   load_yaml_config_file(devices_path).items()}
+        mock_write.side_effect = fake_write
+
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
+
+        self.assertTrue(self.hass.services.call(notify.DOMAIN, 'apns_test_app',
+                                                {'push_id': '1234'},
+                                                blocking=True))
+
+        devices = {dev.push_id: dev for dev in written_devices}
 
         test_device = devices.get('1234')
 
         self.assertIsNotNone(test_device)
-        self.assertIsNone(test_device.get('name'))
+        self.assertIsNone(test_device.name)
 
-        os.remove(devices_path)
-
-    def test_update_existing_device(self):
+    @patch('homeassistant.components.notify.apns._write_device')
+    def test_update_existing_device(self, mock_write):
         """Test updating an existing device."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+            },
+            5678: {
+                'name': 'test device 2',
+            },
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1}\n')
-            out.write('5678: {name: test device 2}\n')
+        written_devices = []
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'updated device 1'},
-                                           blocking=True))
+        def fake_write(_out, device):
+            """Fake write_device."""
+            written_devices.append(device)
 
-        devices = {str(key): value for (key, value) in
-                   load_yaml_config_file(devices_path).items()}
+        mock_write.side_effect = fake_write
+
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
+
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'updated device 1'},
+                                                blocking=True))
+
+        devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         test_device_2 = devices.get('5678')
@@ -166,38 +206,42 @@ class TestApns(unittest.TestCase):
         self.assertIsNotNone(test_device_1)
         self.assertIsNotNone(test_device_2)
 
-        self.assertEqual('updated device 1', test_device_1.get('name'))
+        self.assertEqual('updated device 1', test_device_1.name)
 
-        os.remove(devices_path)
-
-    def test_update_existing_device_with_tracking_id(self):
+    @patch('homeassistant.components.notify.apns._write_device')
+    def test_update_existing_device_with_tracking_id(self, mock_write):
         """Test updating an existing device that has a tracking id."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+                'tracking_device_id': 'tracking123',
+            },
+            5678: {
+                'name': 'test device 2',
+                'tracking_device_id': 'tracking456',
+            },
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, '
-                      'tracking_device_id: tracking123}\n')
-            out.write('5678: {name: test device 2, '
-                      'tracking_device_id: tracking456}\n')
+        written_devices = []
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'updated device 1'},
-                                           blocking=True))
+        def fake_write(_out, device):
+            """Fake write_device."""
+            written_devices.append(device)
 
-        devices = {str(key): value for (key, value) in
-                   load_yaml_config_file(devices_path).items()}
+        mock_write.side_effect = fake_write
+
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
+
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'updated device 1'},
+                                                blocking=True))
+
+        devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         test_device_2 = devices.get('5678')
@@ -206,41 +250,29 @@ class TestApns(unittest.TestCase):
         self.assertIsNotNone(test_device_2)
 
         self.assertEqual('tracking123',
-                         test_device_1.get('tracking_device_id'))
+                         test_device_1.tracking_device_id)
         self.assertEqual('tracking456',
-                         test_device_2.get('tracking_device_id'))
-
-        os.remove(devices_path)
+                         test_device_2.tracking_device_id)
 
     @patch('apns2.client.APNsClient')
     def test_send(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1}\n')
+        yaml_file = {1234: {'name': 'test device 1'}}
 
-        notify.setup(hass, config)
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello',
-                                            'data': {
-                                                'badge': 1,
-                                                'sound': 'test.mp3',
-                                                'category': 'testing'
-                                                }
-                                            },
-                                           blocking=True))
+        self.assertTrue(self.hass.services.call(
+            'notify', 'test_app',
+            {'message': 'Hello', 'data': {
+                'badge': 1,
+                'sound': 'test.mp3',
+                'category': 'testing'}},
+            blocking=True))
 
         self.assertTrue(send.called)
         self.assertEqual(1, len(send.mock_calls))
@@ -258,31 +290,24 @@ class TestApns(unittest.TestCase):
     def test_send_when_disabled(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, disabled: True}\n')
+        yaml_file = {1234: {
+            'name': 'test device 1',
+            'disabled': True,
+        }}
 
-        notify.setup(hass, config)
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello',
-                                            'data': {
-                                                'badge': 1,
-                                                'sound': 'test.mp3',
-                                                'category': 'testing'
-                                            }
-                                            },
-                                           blocking=True))
+        self.assertTrue(self.hass.services.call(
+            'notify', 'test_app',
+            {'message': 'Hello', 'data': {
+                'badge': 1,
+                'sound': 'test.mp3',
+                'category': 'testing'}},
+            blocking=True))
 
         self.assertFalse(send.called)
 
@@ -291,29 +316,33 @@ class TestApns(unittest.TestCase):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
 
-        hass = get_test_home_assistant()
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+                'tracking_device_id': 'tracking123',
+            },
+            5678: {
+                'name': 'test device 2',
+                'tracking_device_id': 'tracking456',
+            },
+        }
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, '
-                      'tracking_device_id: tracking123}\n')
-            out.write('5678: {name: test device 2, '
-                      'tracking_device_id: tracking456}\n')
-
-        notify_service = ApnsNotificationService(
-            hass,
-            'test_app',
-            'testapp.appname',
-            False,
-            'test_app.pem'
-        )
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)), \
+                patch('os.path.isfile', Mock(return_value=True)):
+            notify_service = apns.ApnsNotificationService(
+                self.hass,
+                'test_app',
+                'testapp.appname',
+                False,
+                'test_app.pem'
+            )
 
         notify_service.device_state_changed_listener(
             'device_tracker.tracking456',
             State('device_tracker.tracking456', None),
             State('device_tracker.tracking456', 'home'))
-
-        hass.block_till_done()
 
         notify_service.send_message(message='Hello', target='home')
 
@@ -327,36 +356,58 @@ class TestApns(unittest.TestCase):
         self.assertEqual('Hello', payload.alert)
 
     @patch('apns2.client.APNsClient')
-    def test_disable_when_unregistered(self, mock_client):
+    @patch('homeassistant.components.notify.apns._write_device')
+    def test_disable_when_unregistered(self, mock_write, mock_client):
         """Test disabling a device when it is unregistered."""
         send = mock_client.return_value.send_notification
         send.side_effect = Unregistered()
 
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+                'tracking_device_id': 'tracking123',
+            },
+            5678: {
+                'name': 'test device 2',
+                'tracking_device_id': 'tracking456',
+            },
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1}\n')
+        written_devices = []
 
-        notify.setup(hass, config)
+        def fake_write(_out, device):
+            """Fake write_device."""
+            written_devices.append(device)
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello'},
-                                           blocking=True))
+        mock_write.side_effect = fake_write
 
-        devices = {str(key): value for (key, value) in
-                   load_yaml_config_file(devices_path).items()}
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)):
+            self._setup_notify()
+
+        self.assertTrue(self.hass.services.call('notify', 'test_app',
+                                                {'message': 'Hello'},
+                                                blocking=True))
+
+        devices = {dev.push_id: dev for dev in written_devices}
 
         test_device_1 = devices.get('1234')
         self.assertIsNotNone(test_device_1)
-        self.assertEqual(True, test_device_1.get('disabled'))
+        self.assertEqual(True, test_device_1.disabled)
 
-        os.remove(devices_path)
+
+def test_write_device():
+    """Test writing device."""
+    out = io.StringIO()
+    device = apns.ApnsDevice('123', 'name', 'track_id', True)
+
+    apns._write_device(out, device)
+    data = yaml.load(out.getvalue())
+    assert data == {
+        123: {
+            'name': 'name',
+            'tracking_device_id': 'track_id',
+            'disabled': True
+        },
+    }
