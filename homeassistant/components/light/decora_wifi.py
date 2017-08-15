@@ -116,8 +116,8 @@ class DecoraWifiLight(Light):
         attribs = {'power': 'ON'}
 
         if ATTR_BRIGHTNESS in kwargs:
-            min_level = self._switch.get('minLevel', 0)
-            max_level = self._switch.get('maxLevel', 100)
+            min_level = self._switch.data.get('minLevel', 0)
+            max_level = self._switch.data.get('maxLevel', 100)
             brightness = int(kwargs[ATTR_BRIGHTNESS] * max_level / 255)
             brightness = max(brightness, min_level)
             attribs['brightness'] = brightness
