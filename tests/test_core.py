@@ -833,7 +833,7 @@ class TestConfig(unittest.TestCase):
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
 
-            with self.assertRaises(ValueError):
+            with self.assertRaises(AssertionError):
                 self.config.is_allowed_path(None)
 
 
