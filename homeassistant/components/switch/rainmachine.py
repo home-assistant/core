@@ -94,21 +94,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         entities = []
         for program in client.programs.all().get('programs'):
-            if program.get('active'):
-                _LOGGER.debug('Adding program: %s', program)
-                entities.append(
-                    RainMachineProgram(
-                        client, program, device_name=rainmachine_device_name))
+            if not program.get('active'):
+                pass
+
+            _LOGGER.debug('Adding program: %s', program)
+            entities.append(
+                RainMachineProgram(
+                    client, program, device_name=rainmachine_device_name))
 
         for zone in client.zones.all().get('zones'):
-            if zone.get('active'):
-                _LOGGER.debug('Adding zone: %s', zone)
-                entities.append(
-                    RainMachineZone(
-                        client,
-                        zone,
-                        zone_run_time,
-                        device_name=rainmachine_device_name, ))
+            if not zone.get('active'):
+                pass
+
+            _LOGGER.debug('Adding zone: %s', zone)
+            entities.append(
+                RainMachineZone(
+                    client,
+                    zone,
+                    zone_run_time,
+                    device_name=rainmachine_device_name, ))
 
         async_add_devices(entities)
     except rm.exceptions.HTTPError as exc_info:
