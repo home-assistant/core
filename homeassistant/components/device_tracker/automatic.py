@@ -128,17 +128,8 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 refresh_token)
             yield from initialize_data(session)
             return True
-        except aioautomatic.exceptions.BadRequestError as err:
-            if str(err) == 'err_invalid_refresh_token':
-                _LOGGER.error("Stored refresh token was invalid.")
-                yield from hass.async_add_job(
-                    _write_refresh_token_to_file, hass, filename, None)
-            else:
-                _LOGGER.error(str(err))
-                return False
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
-            return False
 
     configurator = hass.components.configurator
     request_id = configurator.async_request_config(
