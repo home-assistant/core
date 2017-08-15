@@ -133,6 +133,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
+    devices.append(Device(hass, 60, 1, 'internal_guest', '', name='Internal Guest Tracker'))
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     @asyncio.coroutine
@@ -213,7 +214,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     @asyncio.coroutine
     def async_guest_mode_service(call):
         """Service to set guestmode state for all devices."""
-        location_state =  call.data.get(ATTR_STATE, STATE_HOME)
+        location_state = call.data.get(ATTR_STATE, STATE_HOME)
         yield from tracker.async_guest(location_state)
 
     descriptions = yield from hass.async_add_job(
@@ -269,12 +270,11 @@ class DeviceTracker(object):
     def async_guest(self, location_state):
         """ Update the internal guest device with the location state """
         device = self.devices.get('internal_guest')
-        if self.group:
-            self.group.async_set_group(
-                self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
-                name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
-        device._state = location_state
-        device.async_update()
+        if device:
+            yield from device.async_seen(location_name=location_state)
+            if device.track:
+                yield from device.async_update_ha_state()
+            return
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
@@ -690,11 +690,6 @@ def async_load_config(path: str, hass: HomeAssistantType,
         except HomeAssistantError as err:
             _LOGGER.error("Unable to load %s: %s", path, str(err))
             return []
-
-        
-        # Add a internal device to track guests in the home. 
-        devices['internal_guest'] = OrderedDict()
-        devices['internal_guest']['name'] = 'Internal Guest Tracker'
 
         for dev_id, device in devices.items():
             try:
