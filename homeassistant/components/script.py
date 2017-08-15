@@ -39,13 +39,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 
-_SCRIPT_ENTRY_SCHEMA = vol.Schema({
+SCRIPT_ENTRY_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
     vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({cv.slug: _SCRIPT_ENTRY_SCHEMA})
+    DOMAIN: vol.Schema({cv.slug: SCRIPT_ENTRY_SCHEMA})
 }, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
@@ -86,6 +86,15 @@ def turn_off(hass, entity_id):
 def toggle(hass, entity_id):
     """Toggle the script."""
     hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+
+@bind_hass
+def async_reload(hass):
+    """Reload the automation from config.
+
+    Returns a coroutine object.
+    """
+    return hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 @asyncio.coroutine
