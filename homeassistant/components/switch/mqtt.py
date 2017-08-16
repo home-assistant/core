@@ -24,17 +24,25 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
+CONF_PAYLOAD_AVAILABLE = 'payload_available'
+CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
+
 DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
+DEFAULT_PAYLOAD_AVAILABLE = 'ON'
+DEFAULT_PAYLOAD_NOT_AVAILABLE = 'OFF'
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_AVAILABILITY_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
+    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
 })
 
 
@@ -58,6 +66,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_OPTIMISTIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
     )])
 
@@ -67,7 +77,7 @@ class MqttSwitch(SwitchDevice):
 
     def __init__(self, name, state_topic, command_topic, availability_topic,
                  qos, retain, payload_on, payload_off, optimistic,
-                 value_template):
+                 payload_available, payload_not_available, value_template):
         """Initialize the MQTT switch."""
         self._state = False
         self._name = name
@@ -81,6 +91,8 @@ class MqttSwitch(SwitchDevice):
         self._payload_off = payload_off
         self._optimistic = optimistic
         self._template = value_template
+        self._payload_available = payload_available
+        self._payload_not_available = payload_not_available
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -104,9 +116,9 @@ class MqttSwitch(SwitchDevice):
         @callback
         def availability_message_received(topic, payload, qos):
             """Handle new MQTT availability messages."""
-            if payload == self._payload_on:
+            if payload == self._payload_available:
                 self._available = True
-            elif payload == self._payload_off:
+            elif payload == self._payload_not_available:
                 self._available = False
 
             self.hass.async_add_job(self.async_update_ha_state())
