@@ -103,6 +103,7 @@ def async_setup(hass, config):
                 raise HomeAssistantError("Invalid notify platform.")
 
             if notify_service is None:
+                # Platforms can decide not to create a service based on discovery data.
                 if discovery_info is None:
                     _LOGGER.error(
                         "Failed to initialize notification service %s",

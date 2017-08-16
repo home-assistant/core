@@ -23,7 +23,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config, discovery_info=None):
+@asyncio.coroutine
+def async_get_service(hass, config, discovery_info=None):
     """Get the XKNX notification service."""
     if DATA_XKNX not in hass.data \
             or not hass.data[DATA_XKNX].initialized:
