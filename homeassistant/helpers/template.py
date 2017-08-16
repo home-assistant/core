@@ -10,7 +10,8 @@ from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
+    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
+    ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
@@ -200,7 +201,8 @@ class DomainStates(object):
 
     def __getattr__(self, name):
         """Return the states."""
-        return self._hass.states.get('{}.{}'.format(self._domain, name))
+        return _wrap_state(
+            self._hass.states.get('{}.{}'.format(self._domain, name)))
 
     def __iter__(self):
         """Return the iteration over all the states."""
@@ -208,6 +210,38 @@ class DomainStates(object):
             (state for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
+
+
+class InvalidtemplateState(object):
+    """Class that is an invalid template state."""
+
+    def __getattr(self, name):
+        """Return invalid state."""
+        return '<invalid state>'
+
+
+class TemplateState(object):
+    """Class to represent a state object in a template."""
+
+    def __init__(self, state):
+        """Initialize template state."""
+        self._state = state
+
+    @property
+    def state_with_unit(self):
+        """Return the state concatenated with the unit if available."""
+        state = self._state
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return "{} {}".format(state.state, unit) if unit is not None else state
+
+    def __getattr__(self, name):
+        """Return an attribute of the state."""
+        return getattr(self._state, name)
+
+
+def _wrap_state(state):
+    """Helper function to wrap a state."""
+    return InvalidtemplateState() if state is None else TemplateState(state)
 
 
 class LocationMethods(object):
@@ -278,7 +312,7 @@ class LocationMethods(object):
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]
 
-        return loc_helper.closest(latitude, longitude, states)
+        return _wrap_state(loc_helper.closest(latitude, longitude, states))
 
     def distance(self, *args):
         """Calculate distance.

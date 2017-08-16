@@ -1,4 +1,5 @@
 """Test Home Assistant template helper methods."""
+import asyncio
 from datetime import datetime
 import unittest
 import random
@@ -750,3 +751,25 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
+
+
+@asyncio.coroutine
+def test_state_with_unit(hass):
+    """Test the state_with_unit property helper."""
+    hass.states.async_set('sensor.test', '23', {
+        'unit_of_measurement': 'beers',
+    })
+
+    tpl = template.Template('{{ states.sensor.test.state_with_unit }}',
+                            hass)
+
+    assert tpl.async_render() == '23 beers'
+
+
+@asyncio.coroutine
+def test_invalid_state(hass):
+    """Test rendering an invalid state."""
+    tpl = template.Template('{{ states.sensor.test.state_with_unit }}',
+                            hass)
+
+    assert tpl.async_render() == '<invalid state>'
