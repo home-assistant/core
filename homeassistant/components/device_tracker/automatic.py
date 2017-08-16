@@ -17,14 +17,13 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, ATTR_ATTRIBUTES, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_MAC,
     ATTR_GPS, ATTR_GPS_ACCURACY)
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.5.0']
+REQUIREMENTS = ['aioautomatic==0.6.0']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,8 +50,6 @@ DATA_REFRESH_TOKEN = 'refresh_token'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
-    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
     vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
     vol.Optional(CONF_DEVICES, default=None): vol.All(
         cv.ensure_list, [cv.string])
@@ -131,27 +128,8 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 refresh_token)
             yield from initialize_data(session)
             return True
-        except aioautomatic.exceptions.BadRequestError as err:
-            if str(err) == 'err_invalid_refresh_token':
-                _LOGGER.error("Stored refresh token was invalid.")
-                yield from hass.async_add_job(
-                    _write_refresh_token_to_file, hass, filename, None)
-            else:
-                _LOGGER.error(str(err))
-                return False
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
-            return False
-
-    if CONF_USERNAME in config:
-        try:
-            session = yield from client.create_session_from_password(
-                scope, config[CONF_USERNAME], config[CONF_PASSWORD])
-            yield from initialize_data(session)
-            return True
-        except aioautomatic.exceptions.AutomaticError as err:
-            _LOGGER.error(str(err))
-            return False
 
     configurator = hass.components.configurator
     request_id = configurator.async_request_config(
