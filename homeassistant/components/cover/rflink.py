@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components.rflink import (
     DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND, CoverableRflinkDevice)
+    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, CoverableRflinkDevice)
 from homeassistant.components.cover import (
-    CoverDevice)
+    CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,10 +34,8 @@ CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):    DEVICE_DEFAULTS_SCHEMA,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
