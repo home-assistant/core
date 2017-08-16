@@ -63,12 +63,6 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def reload(hass):
-    """Reload script component."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
-
-
-@bind_hass
 def turn_on(hass, entity_id, variables=None):
     """Turn script on."""
     _, object_id = split_entity_id(entity_id)
@@ -89,8 +83,14 @@ def toggle(hass, entity_id):
 
 
 @bind_hass
+def reload(hass):
+    """Reload script component."""
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
+@bind_hass
 def async_reload(hass):
-    """Reload the automation from config.
+    """Reload the scripts from config.
 
     Returns a coroutine object.
     """
