@@ -45,9 +45,6 @@ def test_invalid_credentials(
     assert mock_create_session.called
     assert len(mock_create_session.mock_calls) == 1
     assert mock_create_session.mock_calls[0][1][0] == 'bad_token'
-    assert mock_json_dump.called
-    assert len(mock_json_dump.mock_calls) == 1
-    assert mock_json_dump.mock_calls[0][1][0] == {'refresh_token': None}
 
 
 @patch('aioautomatic.Client.create_session_from_refresh_token')
