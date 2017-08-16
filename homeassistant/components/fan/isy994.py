@@ -102,7 +102,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-      
+
 class ISYFanProgram(ISYFanDevice):
     """Representation of an ISY994 fan program."""
 
