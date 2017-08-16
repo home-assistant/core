@@ -57,10 +57,7 @@ class HipchatNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._token = token
         self._default_room = default_room
-        if default_color in VALID_COLORS:
-            self._default_color = default_color
-        else:
-            self._default_color = 'yellow'
+        self._default_color = default_color
         self._default_notify = default_notify
         self._default_format = default_format
         self._host = host
