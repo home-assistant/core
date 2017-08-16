@@ -576,7 +576,7 @@ pyeight==0.0.7
 pyemby==1.4
 
 # homeassistant.components.envisalink
-pyenvisalink==2.1
+pyenvisalink==2.2
 
 # homeassistant.components.sensor.fido
 pyfido==1.0.1
