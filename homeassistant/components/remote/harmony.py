@@ -214,14 +214,15 @@ class HarmonyRemote(remote.RemoteDevice):
         if device is None:
             _LOGGER.error("Missing required argument: device")
             return
+        params = {}
         num_repeats = kwargs.pop(ATTR_NUM_REPEATS, None)
         if num_repeats is not None:
-            kwargs[ATTR_NUM_REPEATS] = num_repeats
+            params['repeat_num'] = num_repeats
         delay_secs = kwargs.pop(ATTR_DELAY_SECS, None)
         if delay_secs is not None:
-            kwargs[ATTR_DELAY_SECS] = delay_secs
+            params['delay_secs'] = delay_secs
         pyharmony.ha_send_commands(
-            self._token, self.host, self._port, device, command, **kwargs)
+            self._token, self.host, self._port, device, command, **params)
 
     def sync(self):
         """Sync the Harmony device with the web service."""
