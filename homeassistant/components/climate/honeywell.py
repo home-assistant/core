@@ -120,7 +120,6 @@ class RoundThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self.client = client
         self._current_temperature = None
-        self._current_humidity = None
         self._target_temperature = None
         self._name = 'round connected'
         self._id = zone_id
@@ -143,11 +142,6 @@ class RoundThermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return self._current_humidity
 
     @property
     def target_temperature(self):
@@ -313,7 +307,7 @@ class HoneywellUSThermostat(ClimateDevice):
         data = {
             ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
             ATTR_FAN_MODE: self._device.fan_mode,
-            ATTR_OPERATION_MODE: self._device.system_mode
+            ATTR_OPERATION_MODE: self._device.system_mode,
         }
         data[ATTR_FAN_LIST] = somecomfort.FAN_MODES
         data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
