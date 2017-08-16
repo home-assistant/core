@@ -110,6 +110,7 @@ class TwitterNotificationService(BaseNotificationService):
         return media_id
 
     def media_info(self, media_path):
+        """Determines mime type and Twitter media category for given media."""
         (media_type, _) = mimetypes.guess_type(media_path)
         media_category = self.media_category_for_type(media_type)
         _LOGGER.debug("media %s is mime type %s and translates to %s",
@@ -183,6 +184,7 @@ class TwitterNotificationService(BaseNotificationService):
 
     @staticmethod
     def media_category_for_type(media_type):
+        """Determines Twitter media category by mime type."""
         if media_type is None:
             return None
 
