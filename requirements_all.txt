@@ -283,6 +283,9 @@ heatmiserV3==0.9.1
 # homeassistant.components.switch.hikvisioncam
 hikvision==0.4
 
+# homeassistant.components.notify.hipchat
+hipnotify==1.0.8
+
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
