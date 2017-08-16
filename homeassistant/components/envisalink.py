@@ -74,7 +74,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
         vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
+        vol.Optional(CONF_ZONEDUMP_INTERVAL, 
+            default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
