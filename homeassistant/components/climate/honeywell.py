@@ -53,7 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    hass.states.set('is.custom', 'true')
     """Set up the Honeywell thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
