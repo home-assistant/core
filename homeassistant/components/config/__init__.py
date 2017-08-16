@@ -14,7 +14,7 @@ from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
-SECTIONS = ('core', 'group', 'hassbian', 'automation')
+SECTIONS = ('core', 'group', 'hassbian', 'automation', 'script')
 ON_DEMAND = ('zwave')
 
 
