@@ -10,7 +10,6 @@ VALID_CONFIG = {
     'platform': 'london_air',
     LOCATIONS: [
         'Merton',
-        'Westminster',
     ]
 }
 
@@ -39,6 +38,3 @@ class TestLondonAirSensor(unittest.TestCase):
         assert state.attributes.get('updated') == '2017-08-03 03:00:00'
         assert state.attributes.get('sites') == 2
         assert state.attributes.get('data')[0]['site_code'] == 'ME2'
-
-        state = self.hass.states.get('sensor.westminster')
-        assert state.state == 'Low'
