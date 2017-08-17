@@ -47,6 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                                                        [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL,
+                 default=DEFAULT_SCAN_INTERVAL): cv.time_period
 })
 
 
@@ -61,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices,
     radius_in_km = config.get(CONF_RADIUS)
     name = config.get(CONF_NAME)
     categories = config.get(CONF_CATEGORIES)
-    scan_interval = config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
@@ -72,8 +74,7 @@ def async_setup_platform(hass, config, async_add_devices,
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor(hass, None, [], name, icon,
-                                     unit_of_measurement)
+        device = GeoRssServiceSensor(hass, None, [], name, unit_of_measurement)
         devices.append(device)
     else:
         for category in categories:
