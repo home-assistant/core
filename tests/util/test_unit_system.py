@@ -46,13 +46,6 @@ class TestUnitSystem(unittest.TestCase):
             UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
                        INVALID_UNIT)
 
-    def test_invalid_value(self):
-        """Test no conversion happens if value is non-numeric."""
-        with self.assertRaises(TypeError):
-            METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
-        with self.assertRaises(TypeError):
-            METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
-
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""
         expected = {
@@ -63,6 +56,13 @@ class TestUnitSystem(unittest.TestCase):
         }
 
         self.assertEqual(expected, METRIC_SYSTEM.as_dict())
+
+    def test_invalid_value(self):
+        """Test no conversion happens if value is non-numeric."""
+        with self.assertRaises(TypeError):
+            METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
+        with self.assertRaises(TypeError):
+            METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
 
     def test_temperature_same_unit(self):
         """Test no conversion happens if to unit is same as from unit."""
@@ -147,7 +147,7 @@ class TestUnitSystem(unittest.TestCase):
         self.assertTrue(result["unit"] == LENGTH_INCHES)
 
     def test_conver_from_imperial_with_alternate_display(self):
-        """Test conversion from feet to cm"""
+        """Test conversion from feet to cm."""
         m = float(2)
         result = METRIC_SYSTEM.length_with_display_obj(
                 m, LENGTH_FEET)

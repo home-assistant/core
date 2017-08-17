@@ -28,6 +28,7 @@ LENGTH_UNITS = (
     LENGTH_METERS, LENGTH_MILES, LENGTH_YARD
 )
 
+
 def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
                        hass: Optional[HomeAssistant]=None) -> str:
