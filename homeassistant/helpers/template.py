@@ -182,8 +182,10 @@ class AllStates(object):
 
     def __iter__(self):
         """Return all states."""
-        return iter(sorted(self._hass.states.async_all(),
-                           key=lambda state: state.entity_id))
+        return iter(
+            _wrap_state(state) for state in
+            sorted(self._hass.states.async_all(),
+                   key=lambda state: state.entity_id))
 
     def __call__(self, entity_id):
         """Return the states."""
@@ -236,7 +238,9 @@ class TemplateState(State):
         """Return the state concatenated with the unit if available."""
         state = object.__getattribute__(self, '_state')
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        return "{} {}".format(state.state, unit) if unit is not None else state
+        if unit is None:
+            return state.state
+        return "{} {}".format(state.state, unit)
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""

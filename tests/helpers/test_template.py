@@ -760,17 +760,25 @@ def test_state_with_unit(hass):
     hass.states.async_set('sensor.test', '23', {
         'unit_of_measurement': 'beers',
     })
+    hass.states.async_set('sensor.test2', 'wow')
 
-    tpl = template.Template('{{ states.sensor.test.state_with_unit }}',
-                            hass)
+    tpl = template.Template(
+        '{{ states.sensor.test.state_with_unit }}', hass)
 
     assert tpl.async_render() == '23 beers'
 
+    tpl = template.Template(
+        '{{ states.sensor.test2.state_with_unit }}', hass)
 
-@asyncio.coroutine
-def test_invalid_state(hass):
-    """Test rendering an invalid state."""
-    tpl = template.Template('{{ states.sensor.test.state_with_unit }}',
+    assert tpl.async_render() == 'wow'
+
+    tpl = template.Template(
+        '{% for state in states %}{{ state.state_with_unit }} {% endfor %}',
+        hass)
+
+    assert tpl.async_render() == '23 beers wow'
+
+    tpl = template.Template('{{ states.sensor.non_existing.state_with_unit }}',
                             hass)
 
     assert tpl.async_render() == '<invalid state>'
