@@ -18,8 +18,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL,
-                                 CONF_UNIT_OF_MEASUREMENT, CONF_NAME,
-                                 CONF_ICON)
+                                 CONF_UNIT_OF_MEASUREMENT, CONF_NAME)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -44,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
     vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list,
                                                        [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
@@ -62,7 +60,6 @@ def async_setup_platform(hass, config, async_add_devices,
     url = config.get(CONF_URL)
     radius_in_km = config.get(CONF_RADIUS)
     name = config.get(CONF_NAME)
-    icon = config.get(CONF_ICON)
     categories = config.get(CONF_CATEGORIES)
     scan_interval = config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -80,7 +77,7 @@ def async_setup_platform(hass, config, async_add_devices,
         devices.append(device)
     else:
         for category in categories:
-            device = GeoRssServiceSensor(hass, category, data, name, icon,
+            device = GeoRssServiceSensor(hass, category, data, name,
                                          unit_of_measurement)
             devices.append(device)
     async_add_devices(devices)
@@ -96,15 +93,13 @@ def async_setup_platform(hass, config, async_add_devices,
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, hass, category, data, name, icon,
-                 unit_of_measurement):
+    def __init__(self, hass, category, data, name, unit_of_measurement):
         """Initialize the sensor."""
         self.hass = hass
         self._category = category
         self._data = data
         self._state = STATE_UNKNOWN
         self._name = name
-        self._icon = icon
         self._unit_of_measurement = unit_of_measurement
         id_base = 'any' if category is None else category
         if name is not None:
@@ -140,8 +135,8 @@ class GeoRssServiceSensor(Entity):
 
     @property
     def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
+        """Return the default icon to use in the frontend."""
+        return DEFAULT_ICON
 
     @property
     def device_state_attributes(self):
