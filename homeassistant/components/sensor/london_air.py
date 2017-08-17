@@ -145,7 +145,7 @@ class AirSensor(Entity):
 
 
 def parse_species(species_data):
-    """Iterate over list of species at each site"""
+    """Iterate over list of species at each site."""
     parsed_species_data = []
     quality_list = []
     for species in species_data:
@@ -163,7 +163,7 @@ def parse_species(species_data):
 
 
 def parse_site(entry_sites_data):
-    """Iterate over all sites at an authority"""
+    """Iterate over all sites at an authority."""
     authority_data = []
     for site in entry_sites_data:
         site_data = {}
@@ -200,7 +200,7 @@ def parse_site(entry_sites_data):
 
 
 def parse_api_response(response):
-    """API can return dict or list of data so need to check. """
+    """API can return dict or list of data so need to check."""
     data = dict.fromkeys(AUTHORITIES)
     for authority in AUTHORITIES:
         for entry in response['HourlyAirQualityIndex']['LocalAuthority']:
