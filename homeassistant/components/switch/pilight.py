@@ -129,10 +129,6 @@ class PilightSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
-        if self.entity_id is None:
-            self.entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, self._name, hass=self._hass)
-
         state = yield from async_get_last_state(self._hass, self.entity_id)
         if state:
             self._state = state.state == STATE_ON
