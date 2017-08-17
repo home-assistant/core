@@ -116,7 +116,7 @@ class UnitSystem(object):
                 to_unit = LENGTH_CENTIMETERS
             elif from_unit == LENGTH_YARD:
                 to_unit = LENGTH_METERS
-        else:
+        elif self == IMPERIAL_SYSTEM:
             if from_unit == LENGTH_CENTIMETERS:
                 to_unit = LENGTH_INCHES
             elif from_unit == LENGTH_METERS:

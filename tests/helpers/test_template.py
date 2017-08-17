@@ -7,12 +7,12 @@ from unittest.mock import patch
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import UnitSystem
 from homeassistant.const import (
-    LENGTH_METERS,
     TEMP_CELSIUS,
-    MASS_GRAMS,
+    LENGTH_METERS,
     VOLUME_LITERS,
+    MASS_GRAMS,
     MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
@@ -27,8 +27,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def setUp(self):
         """Setup the tests."""
         self.hass = get_test_home_assistant()
-        self.hass.config.units = METRIC_SYSTEM
-        self.hass.config.units.length_unit = LENGTH_METERS
+        self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
+                                            LENGTH_METERS, VOLUME_LITERS,
+                                            MASS_GRAMS)
 
     # pylint: disable=invalid-name
     def tearDown(self):
