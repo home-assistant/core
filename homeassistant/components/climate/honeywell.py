@@ -13,14 +13,14 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, ATTR_CURRENT_HUMIDITY)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
-                'somecomfort==0.4.1']
+                'somecomfort==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -253,6 +253,11 @@ class HoneywellUSThermostat(ClimateDevice):
         return self._device.current_temperature
 
     @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._device.current_humidity
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self._device.system_mode == 'cool':
@@ -306,6 +311,13 @@ class HoneywellUSThermostat(ClimateDevice):
         }
         data[ATTR_FAN_LIST] = somecomfort.FAN_MODES
         data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
+        """Add humidy attribute
+
+        somecomfort does not expose uiData.IndoorHumiditySensorAvailable
+        and returns a value of 128 when no humidity sensor is present
+        """
+        if self._device.current_humidity != 128:
+            data[ATTR_CURRENT_HUMIDITY] = self._device.current_humidity
         return data
 
     @property
@@ -365,6 +377,7 @@ class HoneywellUSThermostat(ClimateDevice):
         while retries > 0:
             try:
                 self._device.refresh()
+
                 break
             except (somecomfort.client.APIRateLimited, OSError,
                     requests.exceptions.ReadTimeout) as exp:
