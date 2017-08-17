@@ -110,10 +110,7 @@ class GeoRssServiceSensor(Entity):
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit_of_measurement
-        if category is not None:
-            id_base = category
-        else:
-            id_base = 'any'
+        id_base = 'any' if category is None else category
         if name is not None:
             id_base = '{}_{}'.format(name, id_base)
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id_base,
