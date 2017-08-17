@@ -14,7 +14,6 @@ import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
                                  CONF_PROTOCOL, STATE_ON)
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
