@@ -653,8 +653,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
         self.assertEqual(
-            'None',
-            template.Template('{{ closest(states) }}', self.hass).render())
+            '<invalid state>',
+            template.Template('{{ closest(states).entity_id }}',
+                              self.hass).render())
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""

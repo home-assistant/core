@@ -215,12 +215,16 @@ class DomainStates(object):
 class InvalidtemplateState(object):
     """Class that is an invalid template state."""
 
-    def __getattr(self, name):
+    def __getattr__(self, name):
         """Return invalid state."""
         return '<invalid state>'
 
+    def __str__(self):
+        """String representation."""
+        return '<invalid state>'
 
-class TemplateState(object):
+
+class TemplateState(State):
     """Class to represent a state object in a template."""
 
     def __init__(self, state):
@@ -230,13 +234,20 @@ class TemplateState(object):
     @property
     def state_with_unit(self):
         """Return the state concatenated with the unit if available."""
-        state = self._state
+        state = object.__getattribute__(self, '_state')
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return "{} {}".format(state.state, unit) if unit is not None else state
 
-    def __getattr__(self, name):
+    def __getattribute__(self, name):
         """Return an attribute of the state."""
-        return getattr(self._state, name)
+        if name in TemplateState.__dict__:
+            return object.__getattribute__(self, name)
+        else:
+            return getattr(object.__getattribute__(self, '_state'), name)
+
+    def __repr__(self):
+        rep = object.__getattribute__(self, '_state').__repr__()
+        return '<template ' + rep[1:]
 
 
 def _wrap_state(state):
