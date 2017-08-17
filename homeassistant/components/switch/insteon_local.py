@@ -10,7 +10,6 @@ import os
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.loader import get_component
 import homeassistant.util as util
 
 _CONFIGURING = {}
@@ -51,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 def request_configuration(
         device_id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if device_id in _CONFIGURING:
@@ -66,7 +65,7 @@ def request_configuration(
                      add_devices_callback)
 
     _CONFIGURING[device_id] = configurator.request_config(
-        hass, 'Insteon Switch ' + model + ' addr: ' + device_id,
+        'Insteon Switch ' + model + ' addr: ' + device_id,
         insteon_switch_config_callback,
         description=('Enter a name for ' + model + ' addr: ' + device_id),
         entity_picture='/static/images/config_insteon.png',
@@ -79,7 +78,7 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
     """Set up the switch."""
     if device_id in _CONFIGURING:
         request_id = _CONFIGURING.pop(device_id)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
         _LOGGER.info("Device configuration done")
 

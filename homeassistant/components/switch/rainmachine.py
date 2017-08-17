@@ -8,20 +8,21 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS,
-                                 CONF_EMAIL, CONF_IP_ADDRESS, CONF_PASSWORD,
-                                 CONF_PLATFORM, CONF_SCAN_INTERVAL)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_EMAIL, CONF_IP_ADDRESS,
+    CONF_PASSWORD, CONF_PLATFORM, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
 from homeassistant.util import Throttle
 
 _LOGGER = getLogger(__name__)
-REQUIREMENTS = ['regenmaschine==0.3.2']
+REQUIREMENTS = ['regenmaschine==0.4.1']
 
 ATTR_CYCLES = 'cycles'
 ATTR_TOTAL_DURATION = 'total_duration'
 
-CONF_HIDE_DISABLED_ENTITIES = 'hide_disabled_entities'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
+DEFAULT_PORT = 8080
+DEFAULT_SSL = True
 DEFAULT_ZONE_RUN_SECONDS = 60 * 10
 
 MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
@@ -42,10 +43,12 @@ PLATFORM_SCHEMA = vol.Schema(
             vol.Email(),  # pylint: disable=no-value-for-parameter
             vol.Required(CONF_PASSWORD):
             cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+            cv.boolean,
             vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-            cv.positive_int,
-            vol.Optional(CONF_HIDE_DISABLED_ENTITIES, default=True):
-            cv.boolean
+            cv.positive_int
         }),
     extra=vol.ALLOW_EXTRA)
 
@@ -64,28 +67,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     _LOGGER.debug('Password: %s', password)
 
-    hide_disabled_entities = config.get(CONF_HIDE_DISABLED_ENTITIES)
-    _LOGGER.debug('Show disabled entities: %s', hide_disabled_entities)
-
     zone_run_time = config.get(CONF_ZONE_RUN_TIME)
     _LOGGER.debug('Zone run time: %s', zone_run_time)
 
     try:
         if ip_address:
-            _LOGGER.debug('Configuring local API...')
-            auth = rm.Authenticator.create_local(ip_address, password)
+            port = config.get(CONF_PORT)
+            _LOGGER.debug('Port: %s', port)
+
+            ssl = config.get(CONF_SSL)
+            _LOGGER.debug('SSL: %s', ssl)
+
+            _LOGGER.debug('Configuring local API')
+            auth = rm.Authenticator.create_local(
+                ip_address, password, port=port, https=ssl)
         elif email_address:
-            _LOGGER.debug('Configuring remote API...')
+            _LOGGER.debug('Configuring remote API')
             auth = rm.Authenticator.create_remote(email_address, password)
 
-        _LOGGER.debug('Instantiating RainMachine client...')
+        _LOGGER.debug('Querying against: %s', auth.url)
+
+        _LOGGER.debug('Instantiating RainMachine client')
         client = rm.Client(auth)
 
         rainmachine_device_name = client.provision.device_name().get('name')
 
         entities = []
         for program in client.programs.all().get('programs'):
-            if hide_disabled_entities and program.get('active') is False:
+            if not program.get('active'):
                 continue
 
             _LOGGER.debug('Adding program: %s', program)
@@ -94,7 +103,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     client, program, device_name=rainmachine_device_name))
 
         for zone in client.zones.all().get('zones'):
-            if hide_disabled_entities and zone.get('active') is False:
+            if not zone.get('active'):
                 continue
 
             _LOGGER.debug('Adding zone: %s', zone)

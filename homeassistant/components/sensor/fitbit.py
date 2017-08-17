@@ -17,7 +17,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.2.3']
@@ -155,7 +154,7 @@ def config_from_file(filename, config=None):
 def request_app_setup(hass, config, add_devices, config_path,
                       discovery_info=None):
     """Assist user with configuring the Fitbit dev application."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
@@ -166,7 +165,8 @@ def request_app_setup(hass, config, add_devices, config_path,
             if config_file == DEFAULT_CONFIG:
                 error_msg = ("You didn't correctly modify fitbit.conf",
                              " please try again")
-                configurator.notify_errors(_CONFIGURING['fitbit'], error_msg)
+                configurator.notify_errors(_CONFIGURING['fitbit'],
+                                           error_msg)
             else:
                 setup_platform(hass, config, add_devices, discovery_info)
         else:
@@ -187,7 +187,7 @@ def request_app_setup(hass, config, add_devices, config_path,
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
     _CONFIGURING['fitbit'] = configurator.request_config(
-        hass, 'Fitbit', fitbit_configuration_callback,
+        'Fitbit', fitbit_configuration_callback,
         description=description, submit_caption=submit,
         description_image="/static/images/config_fitbit_app.png"
     )
@@ -195,7 +195,7 @@ def request_app_setup(hass, config, add_devices, config_path,
 
 def request_oauth_completion(hass):
     """Request user complete Fitbit OAuth2 flow."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['fitbit'], "Failed to register, please try again.")
@@ -211,7 +211,7 @@ def request_oauth_completion(hass):
     description = "Please authorize Fitbit by visiting {}".format(start_url)
 
     _CONFIGURING['fitbit'] = configurator.request_config(
-        hass, 'Fitbit', fitbit_configuration_callback,
+        'Fitbit', fitbit_configuration_callback,
         description=description,
         submit_caption="I have authorized Fitbit."
     )
@@ -233,7 +233,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if "fitbit" in _CONFIGURING:
-        get_component('configurator').request_done(_CONFIGURING.pop("fitbit"))
+        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
 
     import fitbit
 
