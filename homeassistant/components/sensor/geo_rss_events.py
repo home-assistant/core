@@ -224,7 +224,7 @@ class GeoRssServiceUpdater:
             if distance <= self._radius_in_km:
                 event = self.create_event(entry, distance, geometry)
                 events.append(event)
-        _LOGGER.info("Events found nearby: %s", events)
+        _LOGGER.debug("%s events found nearby", len(events))
         return events
 
     @staticmethod
