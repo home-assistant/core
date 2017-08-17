@@ -67,10 +67,6 @@ def async_setup_platform(hass, config, async_add_devices,
     scan_interval = config.get(CONF_SCAN_INTERVAL) or DEFAULT_SCAN_INTERVAL
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    if None in (home_latitude, home_longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
-
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
 
