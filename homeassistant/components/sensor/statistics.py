@@ -44,7 +44,7 @@ ICON = 'mdi:calculator'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE): cv.positive_int,
+    vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE): vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_MAX_AGE): cv.time_period
 })
 
@@ -79,15 +79,9 @@ class StatisticsSensor(Entity):
         self._sampling_size = sampling_size
         self._max_age = max_age
         self._unit_of_measurement = None
-        if self._sampling_size == 0:
-            self.states = deque()
-        else:
-            self.states = deque(maxlen=self._sampling_size)
+        self.states = deque(maxlen=self._sampling_size)
         if self._max_age is not None:
-            if self._sampling_size == 0:
-                self.ages = deque()
-            else:
-                self.ages = deque(maxlen=self._sampling_size)
+            self.ages = deque(maxlen=self._sampling_size)
 
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
@@ -144,8 +138,7 @@ class StatisticsSensor(Entity):
                 ATTR_MAX_VALUE: self.max,
                 ATTR_MEDIAN: self.median,
                 ATTR_MIN_VALUE: self.min,
-                ATTR_SAMPLING_SIZE: 'unlimited' if self._sampling_size is
-                                    0 else self._sampling_size,
+                ATTR_SAMPLING_SIZE: self._sampling_size,
                 ATTR_STANDARD_DEVIATION: self.stdev,
                 ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
