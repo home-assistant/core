@@ -73,14 +73,14 @@ FITBIT_RESOURCES_LIST = {
     'body/bmi': 'BMI',
     'body/fat': '%',
     'devices/battery': 'level',
-    'sleep/awakeningsCount': 'times awaken',
+    'sleep/awakeningsCount': 'times',
     'sleep/efficiency': '%',
     'sleep/minutesAfterWakeup': 'minutes',
     'sleep/minutesAsleep': 'minutes',
     'sleep/minutesAwake': 'minutes',
     'sleep/minutesToFallAsleep': 'minutes',
-    'sleep/startTime': 'start time',
-    'sleep/timeInBed': 'time in bed',
+    'sleep/startTime': 'hours',
+    'sleep/timeInBed': 'minutes',
     'body/weight': ''
 }
 
@@ -370,16 +370,52 @@ class FitbitSensor(Entity):
         pretty_resource = self.resource_type.replace('activities/', '')
         pretty_resource = pretty_resource.replace('/', ' ')
         pretty_resource = pretty_resource.title()
-        if pretty_resource == 'Body Bmi':
+        if pretty_resource == 'Activitycalories':
+            pretty_resource = 'Activity Calories'
+        elif pretty_resource == 'Caloriesbmr':
+            pretty_resource = 'Calories BMR'
+        elif pretty_resource == 'Body Bmi':
             pretty_resource = 'BMI'
-        elif pretty_resource == 'Heart':
-            pretty_resource = 'Resting Heart Rate'
         elif pretty_resource == 'Devices Battery':
             if self.extra:
                 pretty_resource = \
                     '{0} Battery'.format(self.extra.get('deviceVersion'))
             else:
                 pretty_resource = 'Battery'
+        elif pretty_resource == 'Heart':
+            pretty_resource = 'Resting Heart Rate'
+        elif pretty_resource == 'Minutesfairlyactive':
+            pretty_resource = 'Minutes Fairly Active'
+        elif pretty_resource == 'Minuteslightlyactive':
+            pretty_resource = 'Minutes Lightly Active'
+        elif pretty_resource == 'Minutessedentary':
+            pretty_resource = 'Minutes Sedentary'
+        elif pretty_resource == 'Minutesveryactive':
+            pretty_resource = 'Minutes Very Active'
+        elif pretty_resource == 'Sleep Awakeningscount':
+            pretty_resource = 'Sleep Awakenings Count'
+        elif pretty_resource == 'Sleep Minutesafterwakeup':
+            pretty_resource = 'Sleep Minutes After Wakeup'
+        elif pretty_resource == 'Sleep Minutesasleep':
+            pretty_resource = 'Sleep Minutes Asleep'
+        elif pretty_resource == 'Sleep Minutesawake':
+            pretty_resource = 'Sleep Minutes Awake'
+        elif pretty_resource == 'Sleep Minutestofallasleep':
+            pretty_resource = 'Sleep Minutes to Fall Asleep'
+        elif pretty_resource == 'Sleep Starttime':
+            pretty_resource = 'Sleep Start Time'
+        elif pretty_resource == 'Sleep Timeinbed':
+            pretty_resource = 'Sleep Time in Bed'
+        elif pretty_resource == 'Tracker Activitycalories':
+            pretty_resource = 'Tracker Activity Calories'
+        elif pretty_resource == 'Tracker Minutesfairlyactive':
+            pretty_resource = 'Tracker Minutes Fairly Active'
+        elif pretty_resource == 'Tracker Minuteslightlyactive':
+            pretty_resource = 'Tracker Minutes Lightly Active'
+        elif pretty_resource == 'Tracker Minutessedentary':
+            pretty_resource = 'Tracker Minutes Sedentary'
+        elif pretty_resource == 'Tracker Minutesveryactive':
+            pretty_resource = 'Tracker Minutes Very Active'
 
         self._name = pretty_resource
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
@@ -409,13 +445,22 @@ class FitbitSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        if self.resource_type != 'devices/battery':
+            if self.resource_type != 'sleep/startTime':
+                return self._unit_of_measurement
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self.resource_type == 'devices/battery':
-            return 'mdi:battery-50'
+        if self.resource_type == 'devices/battery' and self.extra:
+            if self.extra.get('battery') == 'High':
+                return 'mdi:battery'
+            elif self.extra.get('battery') == 'Medium':
+                return 'mdi:battery-50'
+            elif self.extra.get('battery') == 'Low':
+                return 'mdi:battery-20'
+            elif self.extra.get('battery') == 'Empty':
+                return 'mdi:battery-outline'
         return 'mdi:walk'
 
     @property
@@ -438,7 +483,24 @@ class FitbitSensor(Entity):
         else:
             container = self.resource_type.replace("/", "-")
             response = self.client.time_series(self.resource_type, period='7d')
-            self._state = response[container][-1].get('value')
+            raw_state = response[container][-1].get('value')
+            if self.resource_type == 'activities/distance':
+                self._state = format(float(raw_state), '.2f')
+            elif self.resource_type == 'activities/tracker/distance':
+                self._state = format(float(raw_state), '.2f')
+            elif self.resource_type == 'body/bmi':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'body/fat':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'body/weight':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'sleep/startTime':
+                self._state = raw_state
+            else:
+                try:
+                    self._state = '{:,}'.format(int(raw_state))
+                except TypeError:
+                    self._state = raw_state
 
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \
