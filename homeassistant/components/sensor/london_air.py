@@ -144,68 +144,73 @@ class AirSensor(Entity):
             self._state = STATE_UNKNOWN
 
 
+def parse_species(species_data):
+    """Iterate over list of species at each site"""
+    parsed_species_data = []
+    quality_list = []
+    for species in species_data:
+        if species['@AirQualityBand'] != 'No data':
+            species_dict = {}
+            species_dict['description'] = species['@SpeciesDescription']
+            species_dict['code'] = species['@SpeciesCode']
+            species_dict['quality'] = species['@AirQualityBand']
+            species_dict['index'] = species['@AirQualityIndex']
+            species_dict['summary'] = (species_dict['code'] + ' is '
+                                       + species_dict['quality'])
+            parsed_species_data.append(species_dict)
+            quality_list.append(species_dict['quality'])
+    return parsed_species_data, quality_list
+
+
+def parse_site(entry_sites_data):
+    """Iterate over all sites at an authority"""
+    authority_data = []
+    for site in entry_sites_data:
+        site_data = {}
+        species_data = []
+
+        site_data['updated'] = site['@BulletinDate']
+        site_data['latitude'] = site['@Latitude']
+        site_data['longitude'] = site['@Longitude']
+        site_data['site_code'] = site['@SiteCode']
+        site_data['site_name'] = site['@SiteName'].split("-")[-1].lstrip()
+        site_data['site_type'] = site['@SiteType']
+
+        if isinstance(site['Species'], dict):
+            species_data = [site['Species']]
+        else:
+            species_data = site['Species']
+
+        parsed_species_data, quality_list = parse_species(species_data)
+
+        if not parsed_species_data:
+            parsed_species_data.append('no_species_data')
+        site_data['pollutants'] = parsed_species_data
+
+        if quality_list:
+            site_data['pollutants_status'] = max(set(quality_list),
+                                                 key=quality_list.count)
+            site_data['number_of_pollutants'] = len(quality_list)
+        else:
+            site_data['pollutants_status'] = 'no_species_data'
+            site_data['number_of_pollutants'] = 0
+
+        authority_data.append(site_data)
+    return authority_data
+
+
 def parse_api_response(response):
-    """Take in the API response."""
+    """API can return dict or list of data so need to check. """
     data = dict.fromkeys(AUTHORITIES)
     for authority in AUTHORITIES:
         for entry in response['HourlyAirQualityIndex']['LocalAuthority']:
             if entry['@LocalAuthorityName'] == authority:
-                authority_data = []
 
                 if isinstance(entry['Site'], dict):
                     entry_sites_data = [entry['Site']]
                 else:
                     entry_sites_data = entry['Site']
 
-                for site in entry_sites_data:
-                    site_data = {}
-                    species_data = []
-
-                    site_data['updated'] = site['@BulletinDate']
-                    site_data['latitude'] = site['@Latitude']
-                    site_data['longitude'] = site['@Longitude']
-                    site_data['site_code'] = site['@SiteCode']
-                    site_data['site_name'] = site[
-                        '@SiteName'].split("-")[-1].lstrip()
-                    site_data['site_type'] = site['@SiteType']
-
-                    if isinstance(site['Species'], dict):
-                        species_data = [site['Species']]
-                    else:
-                        species_data = site['Species']
-
-                    parsed_species_data = []
-                    quality_list = []
-                    for species in species_data:
-                        if species['@AirQualityBand'] != 'No data':
-                            species_dict = {}
-                            species_dict['description'] = species[
-                                '@SpeciesDescription']
-                            species_dict['code'] = species[
-                                '@SpeciesCode']
-                            species_dict['quality'] = species[
-                                '@AirQualityBand']
-                            species_dict['index'] = species[
-                                '@AirQualityIndex']
-                            species_dict['summary'] = species_dict[
-                                'code'] + ' is ' + species_dict['quality']
-                            parsed_species_data.append(species_dict)
-                            quality_list.append(species_dict['quality'])
-                    # If no valid species data.
-                    if not parsed_species_data:
-                        parsed_species_data.append('no_species_data')
-                    site_data['pollutants'] = parsed_species_data
-
-                    if quality_list:
-                        site_data['pollutants_status'] = max(
-                            set(quality_list), key=quality_list.count)
-                        site_data['number_of_pollutants'] = len(quality_list)
-                    else:
-                        site_data['pollutants_status'] = 'no_species_data'
-                        site_data['number_of_pollutants'] = 0
-
-                    authority_data.append(site_data)
-
-                data[authority] = authority_data
+                data[authority] = parse_site(entry_sites_data)
 
     return data
