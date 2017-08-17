@@ -165,7 +165,6 @@ class GeoRssServiceSensor(Entity):
                 if event.category == self._category:
                     my_events.append(event)
             self._state = my_events
-            _LOGGER.info("New state: %s", self._state)
 
 
 class GeoRssServiceData(object):
