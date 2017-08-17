@@ -313,8 +313,8 @@ class HoneywellUSThermostat(ClimateDevice):
         data[ATTR_OPERATION_LIST] = somecomfort.SYSTEM_MODES
         """Add humidy attribute
 
-            somecomfort does not expose uiData.IndoorHumiditySensorAvailable
-            and returns a value of 128 when no humidity sensor is present
+        somecomfort does not expose uiData.IndoorHumiditySensorAvailable
+        and returns a value of 128 when no humidity sensor is present
         """
         if self._device.current_humidity != 128:
             data[ATTR_CURRENT_HUMIDITY] = self._device.current_humidity
