@@ -1,4 +1,5 @@
 """Test Home Assistant template helper methods."""
+import asyncio
 from datetime import datetime
 import unittest
 import random
@@ -652,8 +653,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
         self.assertEqual(
-            'None',
-            template.Template('{{ closest(states) }}', self.hass).render())
+            '',
+            template.Template('{{ closest(states).entity_id }}',
+                              self.hass).render())
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
@@ -750,3 +752,33 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
+
+
+@asyncio.coroutine
+def test_state_with_unit(hass):
+    """Test the state_with_unit property helper."""
+    hass.states.async_set('sensor.test', '23', {
+        'unit_of_measurement': 'beers',
+    })
+    hass.states.async_set('sensor.test2', 'wow')
+
+    tpl = template.Template(
+        '{{ states.sensor.test.state_with_unit }}', hass)
+
+    assert tpl.async_render() == '23 beers'
+
+    tpl = template.Template(
+        '{{ states.sensor.test2.state_with_unit }}', hass)
+
+    assert tpl.async_render() == 'wow'
+
+    tpl = template.Template(
+        '{% for state in states %}{{ state.state_with_unit }} {% endfor %}',
+        hass)
+
+    assert tpl.async_render() == '23 beers wow'
+
+    tpl = template.Template('{{ states.sensor.non_existing.state_with_unit }}',
+                            hass)
+
+    assert tpl.async_render() == ''
