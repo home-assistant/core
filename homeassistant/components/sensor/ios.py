@@ -92,24 +92,15 @@ class IOSSensor(Entity):
             else:
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
-            # Why is MDI missing 10, 50, 70?
-            if rounded_level in (20, 30, 40, 60, 80, 90, 100):
-                returning_icon_level = "{}-charging-{}".format(
-                    DEFAULT_ICON_LEVEL, str(rounded_level))
-                returning_icon_state = DEFAULT_ICON_STATE
-            else:
-                returning_icon_level = "{}-charging".format(
-                    DEFAULT_ICON_LEVEL)
-                returning_icon_state = DEFAULT_ICON_STATE
+            returning_icon_level = "{}-charging".format(DEFAULT_ICON_LEVEL)
+            returning_icon_state = DEFAULT_ICON_STATE
         elif battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED:
-            if rounded_level < 10:
-                returning_icon_level = "{}-outline".format(
-                    DEFAULT_ICON_LEVEL)
+            if battery_level < 10:
+                returning_icon_level = "{}-outline".format(DEFAULT_ICON_LEVEL)
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-            elif battery_level > 95:
+            elif battery_level >= 95:
+                returning_icon_level = DEFAULT_ICON_LEVEL
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-                returning_icon_level = "{}-outline".format(
-                    DEFAULT_ICON_LEVEL)
             else:
                 returning_icon_level = "{}-{}".format(DEFAULT_ICON_LEVEL,
                                                       str(rounded_level))
