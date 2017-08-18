@@ -1,5 +1,6 @@
 """
 Support for getting statistical data from a DWD Weather Warnings.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dwd_weather_warnings/
 
@@ -106,7 +107,6 @@ class DwdWeatherWarningsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
-
         data = {}
         data[ATTR_ATTRIBUTION] = ATTRIBUTION
         data['region_name'] = self._api.region_name
