@@ -65,7 +65,7 @@ class AbodeBinarySensor(BinarySensorDevice):
         if self._device.type == 'Door Contact':
             return self._device.status != 'Closed'
         elif self._device.type == 'Motion Camera':
-            return self._device._json_state.get('motion_event') == '1'
+            return self._device.get_value('motion_event') == '1'
 
     @property
     def device_class(self):
