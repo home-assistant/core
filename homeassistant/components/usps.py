@@ -4,17 +4,16 @@ Support for USPS packages and mail.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/usps/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import now
+from homeassistant.helpers import (config_validation as cv, discovery)
 from homeassistant.util import Throttle
+from homeassistant.util.dt import now
 
 REQUIREMENTS = ['myusps==1.1.3']
 
@@ -34,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
         vol.Optional(CONF_CAM_INTERVAL, default=DEFAULT_CAM_INTERVAL):
             cv.positive_int
     }),
@@ -74,51 +73,21 @@ class USPSData(object):
 
     def __init__(self, session, name, cam_interval):
         """Initialize the data oject."""
-        self._session = session
-        self._name = name or DOMAIN
-        self._cam_interval = cam_interval
-        self._packages = []
-        self._mail = []
-        self._attr = None
+        self.session = session
+        self.name = name
+        self.cam_interval = cam_interval
+        self.packages = []
+        self.mail = []
+        self.attribution = None
         self._mail_img = []
-
-    @property
-    def name(self):
-        """Return name for sensors/camera."""
-        return self._name
-
-    @property
-    def cam_interval(self):
-        """Return interval to update mail camera images."""
-        return self._cam_interval
-
-    @property
-    def attribution(self):
-        """Return attribution for sensors/camera."""
-        return self._attr
-
-    @property
-    def packages(self):
-        """Get latest update if throttle allows. Return status."""
-        return self._packages
-
-    @property
-    def mail(self):
-        """Get latest update if throttle allows. Return status."""
-        return self._mail
-
-    @property
-    def session(self):
-        """Return USPS session object."""
-        return self._session
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
         """Fetch the latest info from USPS."""
         import myusps
-        self._packages = myusps.get_packages(self._session)
-        self._mail = myusps.get_mail(self._session, now().date())
-        self._attr = myusps.ATTRIBUTION
+        self.packages = myusps.get_packages(self.session)
+        self.mail = myusps.get_mail(self.session, now().date())
+        self.attribution = myusps.ATTRIBUTION
         _LOGGER.debug("Mail, request date: %s, list: %s",
-                      now().date(), self._mail)
-        _LOGGER.debug("Package list: %s", self._packages)
+                      now().date(), self.mail)
+        _LOGGER.debug("Package list: %s", self.packages)
