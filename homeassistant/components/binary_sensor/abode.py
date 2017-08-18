@@ -84,10 +84,8 @@ class AbodeBinarySensor(BinarySensorDevice):
 
     def refresh(self):
         """Refresh HA state when the device has changed."""
-        _LOGGER.debug("Abode refresh")
         self.schedule_update_ha_state()
 
     def update(self):
         """Update the device state."""
-        _LOGGER.debug("Abode update sensor")
         self._device.refresh()
