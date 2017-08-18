@@ -101,7 +101,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 class ISYFanProgram(ISYFanDevice):
