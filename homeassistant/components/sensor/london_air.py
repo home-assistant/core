@@ -53,8 +53,8 @@ URL = ('http://api.erg.kcl.ac.uk/AirQuality/Hourly/'
        'MonitoringIndex/GroupName=London/Json')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(LOCATIONS):
-        vol.All(cv.ensure_list, [vol.In(list(AUTHORITIES))]),
+    vol.Optional(LOCATIONS, default=AUTHORITIES):
+        vol.All(cv.ensure_list, [vol.In(AUTHORITIES)]),
 })
 
 
