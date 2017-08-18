@@ -35,7 +35,7 @@ class AbodeAlarm(alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
     def __init__(self, hass, data, device):
-        """Initialize a alarm control panel for Abode."""
+        """Initialize the alarm control panel."""
         super(AbodeAlarm, self).__init__()
         self._device = device
         self._name = "{0}".format(DEFAULT_NAME)
