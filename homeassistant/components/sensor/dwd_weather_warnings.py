@@ -21,12 +21,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MONITORED_CONDITIONS)
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor.rest import RestData
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTRIBUTION = "Data provided by DWD"
 
 DEFAULT_NAME = 'DWD-Weather-Warnings'
 
@@ -90,6 +92,13 @@ class DwdWeatherWarningsSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._var_units
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     # pylint: disable=no-member
     @property
