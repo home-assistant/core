@@ -176,6 +176,9 @@ omit =
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
+    homeassistant/components/usps.py
+    homeassistant/components/*/usps.py
+
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
 
@@ -519,7 +522,6 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
-    homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
