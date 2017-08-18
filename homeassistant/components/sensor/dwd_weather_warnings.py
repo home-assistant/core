@@ -93,13 +93,6 @@ class DwdWeatherWarningsSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._var_units
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-
     # pylint: disable=no-member
     @property
     def state(self):
@@ -115,6 +108,7 @@ class DwdWeatherWarningsSensor(Entity):
         """Return the state attributes of the DWD-Weather-Warnings."""
 
         data = {}
+        data[ATTR_ATTRIBUTION] = ATTRIBUTION
         data['region_name'] = self._api.region_name
 
         if self._api.region_id is not None:
