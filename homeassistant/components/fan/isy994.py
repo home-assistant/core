@@ -8,24 +8,24 @@ import logging
 from typing import Callable
 
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
-                                          SPEED_LOW, SPEED_MEDIUM,
+                                          SPEED_LOW, 
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_MEDIUM = 'med'
+#Define term used for medium speed. This must be set as the fan component uses 'medium' which the ISY does not understand 
+ISY_SPEED_MEDIUM = 'med'
 
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
     63: SPEED_LOW,
     64: SPEED_LOW,
-    190: SPEED_MEDIUM,
-    191: SPEED_MEDIUM,
+    190: ISY_SPEED_MEDIUM,
+    191: ISY_SPEED_MEDIUM,
     255: SPEED_HIGH,
 }
 
@@ -33,7 +33,7 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
-STATES = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+STATES = [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
@@ -98,9 +98,9 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
             self.speed = self.state
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self ) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
 
 
 class ISYFanProgram(ISYFanDevice):
