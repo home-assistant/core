@@ -653,7 +653,7 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
         self.assertEqual(
-            '<invalid state>',
+            '',
             template.Template('{{ closest(states).entity_id }}',
                               self.hass).render())
 
@@ -781,4 +781,4 @@ def test_state_with_unit(hass):
     tpl = template.Template('{{ states.sensor.non_existing.state_with_unit }}',
                             hass)
 
-    assert tpl.async_render() == '<invalid state>'
+    assert tpl.async_render() == ''

@@ -214,18 +214,6 @@ class DomainStates(object):
             key=lambda state: state.entity_id))
 
 
-class InvalidtemplateState(object):
-    """Class that is an invalid template state."""
-
-    def __getattr__(self, name):
-        """Return invalid state."""
-        return '<invalid state>'
-
-    def __str__(self):
-        """String representation."""
-        return '<invalid state>'
-
-
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
@@ -259,7 +247,7 @@ class TemplateState(State):
 
 def _wrap_state(state):
     """Helper function to wrap a state."""
-    return InvalidtemplateState() if state is None else TemplateState(state)
+    return None if state is None else TemplateState(state)
 
 
 class LocationMethods(object):
