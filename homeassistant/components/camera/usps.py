@@ -88,7 +88,6 @@ class USPSCamera(Camera):
 
     def update(self):
         """Update mail image index."""
-        _LOGGER.debug('Updating usps mail index...')
         if self._mail_index < (self._mail_count - 1):
             self._mail_index += 1
         else:
