@@ -2,13 +2,14 @@
 import unittest
 import requests_mock
 
-from homeassistant.components.sensor.london_air import LOCATIONS, URL
+from homeassistant.components.sensor.london_air import (
+    CONF_LOCATIONS, URL)
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
 VALID_CONFIG = {
     'platform': 'london_air',
-    LOCATIONS: [
+    CONF_LOCATIONS: [
         'Merton',
     ]
 }
