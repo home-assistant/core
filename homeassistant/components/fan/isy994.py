@@ -16,8 +16,8 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-#Define term used for medium speed. This must be set as the fan component uses 
-#'medium' which the ISY does not understand
+# Define term used for medium speed. This must be set as the fan component uses 
+# 'medium' which the ISY does not understand
 ISY_SPEED_MEDIUM = 'med'
 
 
