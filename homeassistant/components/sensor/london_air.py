@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-LOCATIONS = 'locations'
+CONF_LOCATIONS = 'locations'
 SCAN_INTERVAL = timedelta(minutes=30)
 AUTHORITIES = [
     'Barking and Dagenham',
@@ -53,7 +53,7 @@ URL = ('http://api.erg.kcl.ac.uk/AirQuality/Hourly/'
        'MonitoringIndex/GroupName=London/Json')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(LOCATIONS, default=AUTHORITIES):
+    vol.Optional(CONF_LOCATIONS, default=AUTHORITIES):
         vol.All(cv.ensure_list, [vol.In(AUTHORITIES)]),
 })
 
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = APIData()
     data.update()
     sensors = []
-    for name in config.get(LOCATIONS):
+    for name in config.get(CONF_LOCATIONS):
         sensors.append(AirSensor(name, data))
 
     add_devices(sensors, True)
