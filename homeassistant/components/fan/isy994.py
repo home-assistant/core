@@ -8,7 +8,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
-                                          SPEED_LOW, 
+                                          SPEED_LOW,
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
@@ -16,7 +16,8 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-#Define term used for medium speed. This must be set as the fan component uses 'medium' which the ISY does not understand 
+#Define term used for medium speed. This must be set as the fan component uses 
+#'medium' which the ISY does not understand
 ISY_SPEED_MEDIUM = 'med'
 
 
@@ -98,7 +99,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
             self.speed = self.state
 
     @property
-    def speed_list(self ) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
 
