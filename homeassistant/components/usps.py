@@ -24,9 +24,6 @@ DATA_USPS = 'data_usps'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 COOKIE = 'usps_cookies.pickle'
 
-CONF_CAM_INTERVAL = 'interval'
-DEFAULT_CAM_INTERVAL = 10
-
 USPS_TYPE = ['sensor', 'camera']
 
 CONFIG_SCHEMA = vol.Schema({
@@ -34,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Optional(CONF_CAM_INTERVAL, default=DEFAULT_CAM_INTERVAL):
-            cv.positive_int
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -46,7 +41,6 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     name = conf.get(CONF_NAME)
-    cam_interval = conf.get(CONF_CAM_INTERVAL)
 
     import myusps
     try:
@@ -56,7 +50,7 @@ def setup(hass, config):
         _LOGGER.exception('Could not connect to My USPS')
         return False
 
-    hass.data[DATA_USPS] = USPSData(session, name, cam_interval)
+    hass.data[DATA_USPS] = USPSData(session, name)
 
     for component in USPS_TYPE:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -71,15 +65,13 @@ class USPSData(object):
     updates from the server.
     """
 
-    def __init__(self, session, name, cam_interval):
+    def __init__(self, session, name):
         """Initialize the data oject."""
         self.session = session
         self.name = name
-        self.cam_interval = cam_interval
         self.packages = []
         self.mail = []
         self.attribution = None
-        self._mail_img = []
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):

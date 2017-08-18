@@ -6,16 +6,15 @@ https://home-assistant.io/components/camera.usps/
 """
 from datetime import timedelta
 import logging
-import os
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.usps import DATA_USPS
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['usps']
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -45,12 +44,6 @@ class USPSCamera(Camera):
 
         self._timer = None
 
-        # Fetch no mail camera image
-        image_path = os.path.join(
-            os.path.dirname(__file__), 'nomail.jpg')
-        with open(image_path, 'rb') as fil:
-            self._no_mail_img = fil.read()
-
     def camera_image(self):
         """Update the camera's image if it has changed."""
         self._usps.update()
@@ -58,7 +51,7 @@ class USPSCamera(Camera):
             self._mail_count = len(self._usps.mail)
         except TypeError:
             # No mail
-            return self._no_mail_img
+            return None
 
         if self._usps.mail != self._last_mail:
             # Mail items must have changed
@@ -70,26 +63,10 @@ class USPSCamera(Camera):
                     img = self._session.get(article['image']).content
                     self._mail_img.append(img)
 
-        def _interval_update(now):
-            """Timer callback for increasing index."""
-            if self._mail_index < (self._mail_count - 1):
-                self._mail_index += 1
-            else:
-                self._mail_index = 0
-            # Reset Timer
-            self._timer = track_point_in_utc_time(
-                self.hass, _interval_update,
-                utcnow() + timedelta(seconds=self._usps.cam_interval))
-
-        if self._timer is None:
-            self._timer = track_point_in_utc_time(
-                self.hass, _interval_update,
-                utcnow() + timedelta(seconds=self._usps.cam_interval))
-
         try:
             return self._mail_img[self._mail_index]
         except IndexError:
-            return self._no_mail_img
+            return None
 
     @property
     def name(self):
@@ -103,3 +80,16 @@ class USPSCamera(Camera):
             return 'Date: {}'.format(self._usps.mail[0]['date'])
         except IndexError:
             return None
+
+    @property
+    def should_poll(self):
+        """Update the mail image index periodically."""
+        return True
+
+    def update(self):
+        """Update mail image index."""
+        _LOGGER.debug('Updating usps mail index...')
+        if self._mail_index < (self._mail_count - 1):
+            self._mail_index += 1
+        else:
+            self._mail_index = 0
