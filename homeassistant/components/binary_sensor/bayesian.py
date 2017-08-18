@@ -47,7 +47,7 @@ NUMERIC_STATE_SCHEMA = vol.Schema({
 })
 
 STATE_SCHEMA = vol.Schema({
-    CONF_PLATFORM: 'state',
+    CONF_PLATFORM: CONF_STATE,
     CONF_ENTITY_ID: cv.string,
     CONF_TO_STATE: cv.string,
     CONF_P_GIVEN_T: vol.Coerce(float),
@@ -61,8 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.string,
     vol.Required(CONF_OBSERVATIONS):
     vol.Schema(
-        vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA)
-                                 ])),
+        vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
+                                         STATE_SCHEMA)])),
     vol.Required(CONF_PRIOR):
     vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
@@ -71,6 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def update_probability(prior, prob_true, prob_false):
+    """Update probability using Bayes' rule."""
     numerator = prob_true * prior
     denominator = numerator + prob_false * (1 - prior)
 
@@ -119,6 +120,7 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
         @callback
         # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(entity, old_state,
