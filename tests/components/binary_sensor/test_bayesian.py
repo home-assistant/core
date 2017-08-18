@@ -2,6 +2,7 @@
 import unittest
 
 from homeassistant.setup import setup_component
+from homeassistant.components.binary_sensor import bayesian
 
 from tests.common import get_test_home_assistant
 
@@ -30,12 +31,17 @@ class TestBayesianBinarySensor(unittest.TestCase):
                     'entity_id': 'sensor.test_monitored',
                     'below': 10,
                     'above': 5,
-                    'probability': 0.8
+                    'prob_given_true': 0.6
+                }, {
+                    'platform': 'numeric_state',
+                    'entity_id': 'sensor.test_monitored1',
+                    'below': 7,
+                    'above': 5,
+                    'prob_given_true': 0.9,
+                    'prob_given_false': 0.1
                 }],
                 'prior':
                 0.2,
-                'probability_threshold':
-                0.4,
             }
         }
 
@@ -56,21 +62,30 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.states.set('sensor.test_monitored', 4)
         self.hass.block_till_done()
         self.hass.states.set('sensor.test_monitored', 6)
+        self.hass.states.set('sensor.test_monitored1', 6)
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test_binary')
-        self.assertEqual([0.8], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.5, state.attributes.get('probability'))
+        self.assertEqual([{
+            'prob_false': 0.4,
+            'prob_true': 0.6
+        }, {
+            'prob_false': 0.1,
+            'prob_true': 0.9
+        }], state.attributes.get('observations'))
+        self.assertAlmostEqual(0.7714285714285715,
+                               state.attributes.get('probability'))
 
         assert state.state == 'on'
 
         self.hass.states.set('sensor.test_monitored', 6)
+        self.hass.states.set('sensor.test_monitored1', 0)
         self.hass.block_till_done()
         self.hass.states.set('sensor.test_monitored', 4)
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test_binary')
-        self.assertAlmostEqual(0.2, state.attributes.get('probability'))
+        self.assertEqual(0.2, state.attributes.get('probability'))
 
         assert state.state == 'off'
 
@@ -93,12 +108,13 @@ class TestBayesianBinarySensor(unittest.TestCase):
                     'platform': 'state',
                     'entity_id': 'sensor.test_monitored',
                     'to_state': 'off',
-                    'probability': 0.8
+                    'prob_given_true': 0.8,
+                    'prob_given_false': 0.4
                 }],
                 'prior':
                 0.2,
                 'probability_threshold':
-                0.4,
+                0.32,
             }
         }
 
@@ -121,8 +137,11 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('binary_sensor.test_binary')
-        self.assertEqual([0.8], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.5, state.attributes.get('probability'))
+        self.assertEqual([{
+            'prob_true': 0.8,
+            'prob_false': 0.4
+        }], state.attributes.get('observations'))
+        self.assertAlmostEqual(0.33333333, state.attributes.get('probability'))
 
         assert state.state == 'on'
 
@@ -135,3 +154,22 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.assertAlmostEqual(0.2, state.attributes.get('probability'))
 
         assert state.state == 'off'
+
+    def test_probability_updates(self):
+        prob_true = [0.3, 0.6, 0.8]
+        prob_false = [0.7, 0.4, 0.2]
+        prior = 0.5
+
+        for pt, pf in zip(prob_true, prob_false):
+            prior = bayesian.update_probability(prior, pt, pf)
+
+        self.assertAlmostEqual(0.720000, prior)
+
+        prob_true = [0.8, 0.3, 0.9]
+        prob_false = [0.6, 0.4, 0.2]
+        prior = 0.7
+
+        for pt, pf in zip(prob_true, prob_false):
+            prior = bayesian.update_probability(prior, pt, pf)
+
+        self.assertAlmostEqual(0.9130434782608695, prior)
