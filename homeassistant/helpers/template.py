@@ -229,6 +229,8 @@ class InvalidtemplateState(object):
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
+    # Inheritance is done so functions that check against State keep working
+    # pylint: disable=super-init-not-called
     def __init__(self, state):
         """Initialize template state."""
         self._state = state
@@ -250,6 +252,7 @@ class TemplateState(State):
             return getattr(object.__getattribute__(self, '_state'), name)
 
     def __repr__(self):
+        """Representation of Template State."""
         rep = object.__getattribute__(self, '_state').__repr__()
         return '<template ' + rep[1:]
 
