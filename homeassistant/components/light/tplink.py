@@ -15,9 +15,7 @@ from homeassistant.util.color import \
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-from typing import Tuple, TYPE_CHECKING
-if TYPE_CHECKING:
-    from pyHS100 import SmartBulb
+from typing import Tuple
 
 REQUIREMENTS = ['pyHS100==0.2.4.2']
 
@@ -95,8 +93,6 @@ class TPLinkSmartBulb(Light):
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs.get(ATTR_RGB_COLOR)
             self.smartbulb.hsv = rgb_to_hsv(rgb)
-
-
 
     def turn_off(self):
         """Turn the light off."""
