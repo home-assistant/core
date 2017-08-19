@@ -43,8 +43,6 @@ class AbodeBinarySensor(BinarySensorDevice):
         super(AbodeBinarySensor, self).__init__()
         self._device = device
 
-        data.abode.register(device, self.refresh)
-
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -77,10 +75,6 @@ class AbodeBinarySensor(BinarySensorDevice):
         attrs['battery_low'] = self._device.battery_low
 
         return attrs
-
-    def refresh(self):
-        """Refresh HA state when the device has changed."""
-        self.schedule_update_ha_state()
 
     def update(self):
         """Update the device state."""
