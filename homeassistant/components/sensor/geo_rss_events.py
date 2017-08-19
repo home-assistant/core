@@ -9,7 +9,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.geo_rss_events/
 """
 
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -19,8 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL,
                                  CONF_UNIT_OF_MEASUREMENT, CONF_NAME)
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 
@@ -38,6 +37,8 @@ DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
 DOMAIN = 'geo_rss_events'
 ENTITY_ID_FORMAT = 'sensor.' + DOMAIN + '_{}'
+# Minimum time between updates from the source.
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
@@ -52,9 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):  # pragma: no cover
+def setup_platform(hass, config, add_devices,
+                   discovery_info=None):  # pragma: no cover
     """Set up the GeoRSS component."""
     # Grab location from config
     home_latitude = hass.config.latitude
@@ -63,32 +63,27 @@ def async_setup_platform(hass, config, async_add_devices,
     radius_in_km = config.get(CONF_RADIUS)
     name = config.get(CONF_NAME)
     categories = config.get(CONF_CATEGORIES)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
 
-    data = GeoRssServiceData()
+    # Initialise update service.
+    data = GeoRssServiceData(hass, home_latitude, home_longitude, url,
+                             radius_in_km)
 
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor(hass, None, [], name, unit_of_measurement)
+        device = GeoRssServiceSensor(hass, None, data, name,
+                                     unit_of_measurement)
         devices.append(device)
     else:
         for category in categories:
             device = GeoRssServiceSensor(hass, category, data, name,
                                          unit_of_measurement)
             devices.append(device)
-    async_add_devices(devices)
-
-    # Initialise update service.
-    updater = GeoRssServiceUpdater(hass, data, home_latitude, home_longitude,
-                                   url, radius_in_km, devices)
-    async_track_time_interval(hass, updater.async_update, scan_interval)
-    yield from updater.async_update()
-    return True
+    add_devices(devices)
 
 
 class GeoRssServiceSensor(Entity):
@@ -105,8 +100,9 @@ class GeoRssServiceSensor(Entity):
         id_base = 'any' if category is None else category
         if name is not None:
             id_base = '{}_{}'.format(name, id_base)
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id_base,
-                                                  hass=hass)
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, id_base,
+                                            hass=hass)
+        self.update()
 
     @property
     def name(self):
@@ -123,11 +119,6 @@ class GeoRssServiceSensor(Entity):
             return len(self._state)
         else:
             return self._state
-
-    @property
-    def should_poll(self):  # pylint: disable=no-self-use
-        """No polling needed."""
-        return False
 
     @property
     def unit_of_measurement(self):
@@ -150,6 +141,8 @@ class GeoRssServiceSensor(Entity):
 
     def update(self):
         """Update this sensor from the GeoRSS service."""
+        _LOGGER.debug("About to update sensor %s", self.entity_id)
+        self._data.update()
         all_events = self._data.events
         if self._category is None:
             # Add all events regardless of category.
@@ -157,35 +150,27 @@ class GeoRssServiceSensor(Entity):
         else:
             # Group events by category.
             my_events = []
-            for event in all_events:
-                if event.category == self._category:
-                    my_events.append(event)
+            if all_events:
+                for event in all_events:
+                    if event.category == self._category:
+                        my_events.append(event)
             self._state = my_events
 
 
 class GeoRssServiceData(object):
-    """Stores the latest data from the GeoRSS service."""
+    """Provides access to GeoRSS feed and stores the latest data."""
 
-    def __init__(self):
-        """Initialize the data object."""
-        self.events = None
-
-
-class GeoRssServiceUpdater:
-    """Provides access to GeoRSS feed and creates and updates UI devices."""
-
-    def __init__(self, hass, data, home_latitude, home_longitude, url,
-                 radius_in_km, devices):
+    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km):
         """Initialize the update service."""
         self._hass = hass
-        self._data = data
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
-        self._devices = devices
+        self.devices = None
+        self.events = None
 
-    @asyncio.coroutine
-    def async_update(self, *_):  # pragma: no cover
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):  # pragma: no cover
         """Retrieve data from GeoRSS feed and update devices."""
         import feedparser
         feed_data = feedparser.parse(self._url)
@@ -193,14 +178,7 @@ class GeoRssServiceUpdater:
             _LOGGER.error("Error fetching feed data from %s", self._url)
         else:
             events = self.filter_entries(feed_data)
-            self._data.events = events
-            # Update devices.
-            tasks = []
-            if self._devices:
-                for device in self._devices:
-                    tasks.append(device.async_update_ha_state(True))
-            if tasks:
-                yield from asyncio.wait(tasks, loop=self._hass.loop)
+            self.events = events
 
     def filter_entries(self, feed_data):
         """Filter entries by distance from home coordinates."""
