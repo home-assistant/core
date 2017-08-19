@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
     BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.prowlapp.com/publicapi/'
@@ -56,7 +57,7 @@ class ProwlNotificationService(BaseNotificationService):
 
         try:
             _LOGGER.debug("Attempting call Prowl service at %s.", url)
-            session = aiohttp.ClientSession()
+            session = async_get_clientsession(self._hass)
             with async_timeout.timeout(10, loop=self._hass.loop):
                 response = yield from session.post(url, data=payload)
             if response.status != 200:
@@ -72,8 +73,6 @@ class ProwlNotificationService(BaseNotificationService):
             _LOGGER.exception("Error accessing Prowl at %s.", url)
             return False
         finally:
-            if session:
-                yield from session.close()
             if response:
                 yield from response.release()
         _LOGGER.debug("Data from Prowl: %s", result)
