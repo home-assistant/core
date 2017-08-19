@@ -23,12 +23,8 @@ ICON = 'mdi:security'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
     data = hass.data.get(DATA_ABODE)
-    if not data:
-        _LOGGER.debug('No DATA_ABODE')
-        return False
 
     add_devices([AbodeAlarm(hass, data, data.abode.get_alarm())])
-    return True
 
 
 class AbodeAlarm(alarm.AlarmControlPanel):

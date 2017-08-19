@@ -24,9 +24,6 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
     data = hass.data.get(DATA_ABODE)
-    if not data:
-        _LOGGER.debug('No DATA_ABODE')
-        return False
 
     sensors = []
     for sensor in data.devices:
@@ -36,7 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug('Adding %d sensors', len(sensors))
     add_devices(sensors)
-    return True
 
 
 class AbodeBinarySensor(BinarySensorDevice):
