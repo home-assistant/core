@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
 })
 
 
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_tv(host, mac, name, customize, config, timeout, hass, add_devices):
-    """Setup a LG WebOS TV based on host parameter."""
+    """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
