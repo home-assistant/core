@@ -54,7 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 'If you do not want to have your printer on <br />'
                 ' at all times, and you would like to monitor <br /> '
                 'temperatures, please add <br />'
-                'bed and/or number\_of\_tools to your config.',
+                'bed and/or number&#95of&#95tools to your config <br />'
+                'and restart.',
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
