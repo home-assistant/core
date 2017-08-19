@@ -48,8 +48,6 @@ def setup(hass, config):
         for component in ['binary_sensor', 'alarm_control_panel']:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-        data.abode.start_listener()
-
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
         hass.components.persistent_notification.create(
