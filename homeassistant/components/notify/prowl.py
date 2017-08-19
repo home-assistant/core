@@ -58,23 +58,14 @@ class ProwlNotificationService(BaseNotificationService):
         try:
             _LOGGER.debug("Attempting call Prowl service at %s.", url)
             session = async_get_clientsession(self._hass)
+            
             with async_timeout.timeout(10, loop=self._hass.loop):
                 response = yield from session.post(url, data=payload)
-            if response.status != 200:
+                result = yield from response.text()
+            
+            if response.status != 200 or 'error' in result:                
                 _LOGGER.error("Prowl service returned http "
                               "status %d, response %s.",
                               response.status, (yield from response.text()))
-                return False
-            result = yield from response.text()
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s.", url)
-            return False
-        except aiohttp.ClientError:
-            _LOGGER.exception("Error accessing Prowl at %s.", url)
-            return False
-        finally:
-            if response:
-                yield from response.release()
-        _LOGGER.debug("Data from Prowl: %s", result)
-        if 'error' in result:
-            _LOGGER.error("Prowl returned error: %s", result)
