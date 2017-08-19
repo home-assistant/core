@@ -27,10 +27,10 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
     def test_filter_entries(self):
         """Test filtering entries."""
         import feedparser
-        updater = self.setup_updater()
+        data = self.setup_data()
         raw_data = load_fixture('geo_rss_events.xml')
         feed_data = feedparser.parse(raw_data)
-        filtered_entries = updater.filter_entries(feed_data)
+        filtered_entries = data.filter_entries(feed_data)
         # Check the number of entries found
         assert len(filtered_entries) == 4
         # Check entries of first hit
@@ -51,24 +51,15 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                                              tzinfo=pytz.utc).timetuple()
         assert filtered_entries[3].pub_date == comparison_date3
 
-    def setup_updater(self):
-        """Set up updater component for use in static tests."""
-        data = self.setup_data()
+    def setup_data(self):
+        """Set up data object for use by sensors."""
         home_latitude = -33.865
         home_longitude = 151.209444
         radius_in_km = 500
-        url = ''
-        devices = []
-        updater = geo_rss_events.GeoRssServiceUpdater(self.hass, data,
-                                                      home_latitude,
-                                                      home_longitude,
-                                                      url, radius_in_km,
-                                                      devices)
-        return updater
-
-    def setup_data(self):
-        """Set up data object for use by sensors."""
-        data = geo_rss_events.GeoRssServiceData()
+        url = 'url'
+        data = geo_rss_events.GeoRssServiceData(self.hass, home_latitude,
+                                                home_longitude, url,
+                                                radius_in_km)
         return data
 
     def test_sensors(self):
@@ -76,21 +67,18 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         category1 = "Category 1"
         data1 = self.setup_data()
         name1 = "Name 1"
-        icon1 = "Icon 1"
         unit_of_measurement1 = "Unit 1"
         sensor1 = geo_rss_events.GeoRssServiceSensor(self.hass, category1,
-                                                     data1, name1, icon1,
+                                                     data1, name1,
                                                      unit_of_measurement1)
         assert sensor1.name == "Category 1"
-        assert sensor1.icon == "Icon 1"
         assert sensor1.unit_of_measurement == "Unit 1"
 
         data2 = self.setup_data()
         name2 = "Name 2"
-        icon2 = "Icon 2"
         unit_of_measurement2 = "Unit 2"
-        sensor2 = geo_rss_events.GeoRssServiceSensor(self.hass, None,
-                                                     data2, name2, icon2,
+        sensor2 = geo_rss_events.GeoRssServiceSensor(self.hass, None, data2,
+                                                     name2,
                                                      unit_of_measurement2)
         event1 = type('obj', (object,), {'title': 'Title 1', 'distance': 10.0})
         event2 = type('obj', (object,), {'title': 'Title 2', 'distance': 20.0})
