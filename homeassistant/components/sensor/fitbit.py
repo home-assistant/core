@@ -19,7 +19,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fitbit==0.2.3']
+REQUIREMENTS = ['fitbit==0.3.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
+CONF_CLOCK_FORMAT = 'clock_format'
 CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
@@ -48,40 +49,50 @@ DEFAULT_CONFIG = {
 }
 
 FITBIT_RESOURCES_LIST = {
-    'activities/activityCalories': 'cal',
-    'activities/calories': 'cal',
-    'activities/caloriesBMR': 'cal',
-    'activities/distance': '',
-    'activities/elevation': '',
-    'activities/floors': 'floors',
-    'activities/heart': 'bpm',
-    'activities/minutesFairlyActive': 'minutes',
-    'activities/minutesLightlyActive': 'minutes',
-    'activities/minutesSedentary': 'minutes',
-    'activities/minutesVeryActive': 'minutes',
-    'activities/steps': 'steps',
-    'activities/tracker/activityCalories': 'cal',
-    'activities/tracker/calories': 'cal',
-    'activities/tracker/distance': '',
-    'activities/tracker/elevation': '',
-    'activities/tracker/floors': 'floors',
-    'activities/tracker/minutesFairlyActive': 'minutes',
-    'activities/tracker/minutesLightlyActive': 'minutes',
-    'activities/tracker/minutesSedentary': 'minutes',
-    'activities/tracker/minutesVeryActive': 'minutes',
-    'activities/tracker/steps': 'steps',
-    'body/bmi': 'BMI',
-    'body/fat': '%',
-    'devices/battery': 'level',
-    'sleep/awakeningsCount': 'times',
-    'sleep/efficiency': '%',
-    'sleep/minutesAfterWakeup': 'minutes',
-    'sleep/minutesAsleep': 'minutes',
-    'sleep/minutesAwake': 'minutes',
-    'sleep/minutesToFallAsleep': 'minutes',
-    'sleep/startTime': 'hours',
-    'sleep/timeInBed': 'minutes',
-    'body/weight': ''
+    'activities/activityCalories': ['Activity Calories', 'cal', 'fire'],
+    'activities/calories': ['Calories', 'cal', 'fire'],
+    'activities/caloriesBMR': ['Calories BMR', 'cal', 'fire'],
+    'activities/distance': ['Distance', '', 'map-marker'],
+    'activities/elevation': ['Elevation', '', 'walk'],
+    'activities/floors': ['Floors', 'floors', 'walk'],
+    'activities/heart': ['Resting Heart Rate', 'bpm', 'heart-pulse'],
+    'activities/minutesFairlyActive':
+        ['Minutes Fairly Active', 'minutes', 'walk'],
+    'activities/minutesLightlyActive':
+        ['Minutes Lightly Active', 'minutes', 'walk'],
+    'activities/minutesSedentary':
+        ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+    'activities/minutesVeryActive': ['Minutes Very Active', 'minutes', 'run'],
+    'activities/steps': ['Steps', 'steps', 'walk'],
+    'activities/tracker/activityCalories':
+        ['Tracker Activity Calories', 'cal', 'fire'],
+    'activities/tracker/calories': ['Tracker Calories', 'cal', 'fire'],
+    'activities/tracker/distance': ['Tracker Distance', '', 'map-marker'],
+    'activities/tracker/elevation': ['Tracker Elevation', '', 'walk'],
+    'activities/tracker/floors': ['Tracker Floors', 'floors', 'walk'],
+    'activities/tracker/minutesFairlyActive':
+        ['Tracker Minutes Fairly Active', 'minutes', 'walk'],
+    'activities/tracker/minutesLightlyActive':
+        ['Tracker Minutes Lightly Active', 'minutes', 'walk'],
+    'activities/tracker/minutesSedentary':
+        ['Tracker Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+    'activities/tracker/minutesVeryActive':
+        ['Tracker Minutes Very Active', 'minutes', 'run'],
+    'activities/tracker/steps': ['Tracker Steps', 'steps', 'walk'],
+    'body/bmi': ['BMI', 'BMI', 'human'],
+    'body/fat': ['Body Fat', '%', 'human'],
+    'body/weight': ['Weight', '', 'human'],
+    'devices/battery': ['Battery', None, None],
+    'sleep/awakeningsCount':
+        ['Awakenings Count', 'times awaken', 'sleep'],
+    'sleep/efficiency': ['Sleep Efficiency', '%', 'sleep'],
+    'sleep/minutesAfterWakeup': ['Minutes After Wakeup', 'minutes', 'sleep'],
+    'sleep/minutesAsleep': ['Sleep Minutes Asleep', 'minutes', 'sleep'],
+    'sleep/minutesAwake': ['Sleep Minutes Awake', 'minutes', 'sleep'],
+    'sleep/minutesToFallAsleep':
+        ['Sleep Minutes to Fall Asleep', 'minutes', 'sleep'],
+    'sleep/startTime': ['Sleep Start Time', None, 'clock'],
+    'sleep/timeInBed': ['Sleep Time in Bed', 'minutes', 'hotel']
 }
 
 FITBIT_MEASUREMENTS = {
@@ -123,6 +134,8 @@ FITBIT_MEASUREMENTS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
+    vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
+        vol.In(['12H', '24H'])
 })
 
 
@@ -257,6 +270,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         dev = []
         registered_devs = authd_client.get_devices()
+        clock_format = config.get(CONF_CLOCK_FORMAT)
         for resource in config.get(CONF_MONITORED_RESOURCES):
 
             # monitor battery for all linked FitBit devices
@@ -264,11 +278,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 for dev_extra in registered_devs:
                     dev.append(FitbitSensor(
                         authd_client, config_path, resource,
-                        hass.config.units.is_metric, dev_extra))
+                        hass.config.units.is_metric, clock_format, dev_extra))
             else:
                 dev.append(FitbitSensor(
                     authd_client, config_path, resource,
-                    hass.config.units.is_metric))
+                    hass.config.units.is_metric, clock_format))
         add_devices(dev, True)
 
     else:
@@ -361,70 +375,24 @@ class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
     def __init__(self, client, config_path, resource_type,
-                 is_metric, extra=None):
+                 is_metric, clock_format, extra=None):
         """Initialize the Fitbit sensor."""
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
+        self.is_metric = is_metric
+        self.clock_format = clock_format
         self.extra = extra
-        pretty_resource = self.resource_type.replace('activities/', '')
-        pretty_resource = pretty_resource.replace('/', ' ')
-        pretty_resource = pretty_resource.title()
-        if pretty_resource == 'Activitycalories':
-            pretty_resource = 'Activity Calories'
-        elif pretty_resource == 'Caloriesbmr':
-            pretty_resource = 'Calories BMR'
-        elif pretty_resource == 'Body Bmi':
-            pretty_resource = 'BMI'
-        elif pretty_resource == 'Devices Battery':
-            if self.extra:
-                pretty_resource = \
-                    '{0} Battery'.format(self.extra.get('deviceVersion'))
-            else:
-                pretty_resource = 'Battery'
-        elif pretty_resource == 'Heart':
-            pretty_resource = 'Resting Heart Rate'
-        elif pretty_resource == 'Minutesfairlyactive':
-            pretty_resource = 'Minutes Fairly Active'
-        elif pretty_resource == 'Minuteslightlyactive':
-            pretty_resource = 'Minutes Lightly Active'
-        elif pretty_resource == 'Minutessedentary':
-            pretty_resource = 'Minutes Sedentary'
-        elif pretty_resource == 'Minutesveryactive':
-            pretty_resource = 'Minutes Very Active'
-        elif pretty_resource == 'Sleep Awakeningscount':
-            pretty_resource = 'Sleep Awakenings Count'
-        elif pretty_resource == 'Sleep Minutesafterwakeup':
-            pretty_resource = 'Sleep Minutes After Wakeup'
-        elif pretty_resource == 'Sleep Minutesasleep':
-            pretty_resource = 'Sleep Minutes Asleep'
-        elif pretty_resource == 'Sleep Minutesawake':
-            pretty_resource = 'Sleep Minutes Awake'
-        elif pretty_resource == 'Sleep Minutestofallasleep':
-            pretty_resource = 'Sleep Minutes to Fall Asleep'
-        elif pretty_resource == 'Sleep Starttime':
-            pretty_resource = 'Sleep Start Time'
-        elif pretty_resource == 'Sleep Timeinbed':
-            pretty_resource = 'Sleep Time in Bed'
-        elif pretty_resource == 'Tracker Activitycalories':
-            pretty_resource = 'Tracker Activity Calories'
-        elif pretty_resource == 'Tracker Minutesfairlyactive':
-            pretty_resource = 'Tracker Minutes Fairly Active'
-        elif pretty_resource == 'Tracker Minuteslightlyactive':
-            pretty_resource = 'Tracker Minutes Lightly Active'
-        elif pretty_resource == 'Tracker Minutessedentary':
-            pretty_resource = 'Tracker Minutes Sedentary'
-        elif pretty_resource == 'Tracker Minutesveryactive':
-            pretty_resource = 'Tracker Minutes Very Active'
-
-        self._name = pretty_resource
-        unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
+        self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
+        if self.extra:
+            self._name = '{0} Battery'.format(self.extra.get('deviceVersion'))
+        unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split('/')
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
-                if is_metric:
+                if self.is_metric:
                     measurement_system = FITBIT_MEASUREMENTS['metric']
                 else:
                     measurement_system = FITBIT_MEASUREMENTS['en_US']
@@ -445,9 +413,7 @@ class FitbitSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self.resource_type != 'devices/battery':
-            if self.resource_type != 'sleep/startTime':
-                return self._unit_of_measurement
+        return self._unit_of_measurement
 
     @property
     def icon(self):
@@ -461,7 +427,7 @@ class FitbitSensor(Entity):
                 return 'mdi:battery-20'
             elif self.extra.get('battery') == 'Empty':
                 return 'mdi:battery-outline'
-        return 'mdi:walk'
+        return 'mdi:{}'.format(FITBIT_RESOURCES_LIST[self.resource_type][2])
 
     @property
     def device_state_attributes(self):
@@ -495,12 +461,28 @@ class FitbitSensor(Entity):
             elif self.resource_type == 'body/weight':
                 self._state = format(float(raw_state), '.1f')
             elif self.resource_type == 'sleep/startTime':
-                self._state = raw_state
-            else:
-                try:
-                    self._state = '{:,}'.format(int(raw_state))
-                except TypeError:
+                if raw_state == '':
+                    self._state = '-'
+                elif self.clock_format == '12H':
+                    hours, minutes = raw_state.split(':')
+                    hours, minutes = int(hours), int(minutes)
+                    setting = 'AM'
+                    if hours > 12:
+                        setting = 'PM'
+                        hours -= 12
+                    elif hours == 0:
+                        hours = 12
+                    self._state = '{}:{} {}'.format(hours, minutes, setting)
+                else:
                     self._state = raw_state
+            else:
+                if self.is_metric:
+                    self._state = raw_state
+                else:
+                    try:
+                        self._state = '{0:,}'.format(int(raw_state))
+                    except TypeError:
+                        self._state = raw_state
 
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \
