@@ -84,22 +84,21 @@ class IOSSensor(Entity):
         device_battery = self._device[ios.ATTR_BATTERY]
         battery_state = device_battery[ios.ATTR_BATTERY_STATE]
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
+        charging = True
+        icon_state = DEFAULT_ICON_STATE
         if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
                 battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
-            icon_level = icon_for_battery_level(battery_level=battery_level,
-                                                charging=False)
+            charging = False
             icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-        elif battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
-            icon_level = "{}-charging".format(DEFAULT_ICON_LEVEL)
-            icon_state = DEFAULT_ICON_STATE
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
-            icon_level = icon_for_battery_level(battery_level=None,
-                                                charging=False)
+            battery_level = None
+            charging = False
             icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
 
         if self.type == "state":
             return icon_state
-        return icon_level
+        return icon_for_battery_level(battery_level=battery_level,
+                                      charging=charging)
 
     def update(self):
         """Get the latest state of the sensor."""
