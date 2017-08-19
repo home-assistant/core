@@ -9,7 +9,6 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.octoprint import CONF_NUMBER_OF_TOOLS, CONF_BED
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
@@ -21,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
+NOTIFICATION_ID = 'octoprint_notification'
+NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 
 SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
@@ -43,24 +44,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-    number_of_tools = hass.data[DOMAIN].get(CONF_NUMBER_OF_TOOLS)
-    bed = hass.data[DOMAIN].get(CONF_BED)
-    tools = []
-    if number_of_tools is not None:
-        for tool_number in range(0, number_of_tools):
-            tools.append("tool" + str(tool_number))
-    else:
-        tools = octoprint_api.get_tools()
-        if tools is None:
-            tools = []
-    if bed:
-        tools.append('bed')
+    tools = octoprint_api.get_tools()
+    _LOGGER.error(str(tools))
 
-    if "Temperature" in monitored_conditions:
-        tool_count = len(tools)
-        if not bed and tool_count == 0:
-            error = "You must define bed presence or a tool in your config."
-            _LOGGER.error(error)
+    if "Temperatures" in monitored_conditions:
+        if not tools:
+            hass.components.persistent_notification.create(
+                'Your printer appears to be offline.<br />'
+                'If you do not want to have your printer on <br />'
+                ' at all times, and you would like to monitor <br /> '
+                'temperatures, please add <br />'
+                'bed and/or number\_of\_tools to your config.',
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
 
     devices = []
     types = ["actual", "target"]
