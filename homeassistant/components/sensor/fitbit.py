@@ -17,6 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.3.0']
@@ -129,6 +130,13 @@ FITBIT_MEASUREMENTS = {
         'blood glucose': 'mmol/L',
         'battery': '',
     }
+}
+
+BATTERY_LEVELS = {
+    'High': 100,
+    'Medium': 50,
+    'Low': 20,
+    'Empty': 0
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -419,14 +427,9 @@ class FitbitSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if self.resource_type == 'devices/battery' and self.extra:
-            if self.extra.get('battery') == 'High':
-                return 'mdi:battery'
-            elif self.extra.get('battery') == 'Medium':
-                return 'mdi:battery-50'
-            elif self.extra.get('battery') == 'Low':
-                return 'mdi:battery-20'
-            elif self.extra.get('battery') == 'Empty':
-                return 'mdi:battery-outline'
+            battery_level = BATTERY_LEVELS[self.extra.get('battery')]
+            return icon_for_battery_level(battery_level=battery_level,
+                                          charging=None)
         return 'mdi:{}'.format(FITBIT_RESOURCES_LIST[self.resource_type][2])
 
     @property
