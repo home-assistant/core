@@ -16,6 +16,11 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+# Define term used for medium speed. This must be set as the fan component uses
+# 'medium' which the ISY does not understand
+ISY_SPEED_MEDIUM = 'med'
+
+
 VALUE_TO_STATE = {
     0: SPEED_OFF,
     63: SPEED_LOW,
@@ -29,7 +34,7 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
-STATES = [SPEED_OFF, SPEED_LOW, 'med', SPEED_HIGH]
+STATES = [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
@@ -92,6 +97,11 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
             _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
+
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 class ISYFanProgram(ISYFanDevice):
