@@ -511,7 +511,7 @@ pushbullet.py==0.11.0
 pushetta==1.0.15
 
 # homeassistant.components.light.rpi_gpio_pwm
-pwmled==1.1.1
+pwmled==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0
