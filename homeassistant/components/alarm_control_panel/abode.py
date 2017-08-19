@@ -36,8 +36,6 @@ class AbodeAlarm(alarm.AlarmControlPanel):
         self._device = device
         self._name = "{0}".format(DEFAULT_NAME)
 
-        data.abode.register(device, self.refresh)
-
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -80,10 +78,6 @@ class AbodeAlarm(alarm.AlarmControlPanel):
         self._device.set_mode(mode=ALARM_STATE_AWAY)
         self.schedule_update_ha_state()
         _LOGGER.debug("Abode security armed")
-
-    def refresh(self):
-        """Refresh HA state when the device has changed."""
-        self.schedule_update_ha_state()
 
     def update(self):
         """Update the device state."""
