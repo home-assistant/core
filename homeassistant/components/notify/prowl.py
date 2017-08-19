@@ -7,7 +7,6 @@ https://home-assistant.io/components/notify.prowl/
 import logging
 import asyncio
 
-import aiohttp
 import async_timeout
 import voluptuous as vol
 
@@ -58,12 +57,12 @@ class ProwlNotificationService(BaseNotificationService):
         try:
             _LOGGER.debug("Attempting call Prowl service at %s.", url)
             session = async_get_clientsession(self._hass)
-            
+
             with async_timeout.timeout(10, loop=self._hass.loop):
                 response = yield from session.post(url, data=payload)
                 result = yield from response.text()
-            
-            if response.status != 200 or 'error' in result:                
+
+            if response.status != 200 or 'error' in result:
                 _LOGGER.error("Prowl service returned http "
                               "status %d, response %s.",
                               response.status, (yield from response.text()))
