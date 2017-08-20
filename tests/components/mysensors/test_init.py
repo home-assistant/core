@@ -77,7 +77,7 @@ async def test_bad_device(hass, mock_mysensors):
     config = {'mysensors': {
         'gateways': [{'device': ''}], 'version': '2.0', 'persistence': False}}
 
-    with patch('homeassistant.components.mysensors.cv.isdevice',
+    with patch('homeassistant.components.mysensors.gateway.cv.isdevice',
                side_effect=vol.Invalid('Bad device')):
         with patch('socket.getaddrinfo',
                    side_effect=OSError('Not a socket address')):
@@ -109,7 +109,9 @@ async def test_bad_win_device(hass, mock_mysensors):
 
     with patch('homeassistant.components.mysensors.gateway.sys.platform',
                return_value='win32'):
-        res = await async_setup_component(hass, 'mysensors', config)
+        with patch('socket.getaddrinfo',
+                   side_effect=OSError('Not a socket address')):
+            res = await async_setup_component(hass, 'mysensors', config)
     assert not res
 
 
