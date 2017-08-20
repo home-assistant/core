@@ -1,5 +1,5 @@
 """
-Support for KNX/IP covers via KNX.
+Support for KNX/IP covers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.knx/
