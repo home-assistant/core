@@ -4,8 +4,8 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
+import asyncio
 import os
-import time
 import logging
 from datetime import timedelta
 from functools import partial
@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_HOSTS, CONF_NAME, ATTR_ENTITY_ID)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['pyhomematic==0.1.30']
@@ -121,7 +121,6 @@ CONF_RESOLVENAMES_OPTIONS = [
 ]
 
 DATA_HOMEMATIC = 'homematic'
-DATA_DELAY = 'homematic_delay'
 DATA_DEVINIT = 'homematic_devinit'
 DATA_STORE = 'homematic_store'
 
@@ -134,7 +133,6 @@ CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
-CONF_DELAY = 'delay'
 CONF_PRIMARY = 'primary'
 
 DEFAULT_LOCAL_IP = '0.0.0.0'
@@ -145,7 +143,6 @@ DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
 DEFAULT_VARIABLES = False
 DEFAULT_DEVICES = True
-DEFAULT_DELAY = 0.5
 DEFAULT_PRIMARY = False
 
 
@@ -177,7 +174,6 @@ CONFIG_SCHEMA = vol.Schema({
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
         vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(float),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -249,7 +245,6 @@ def setup(hass, config):
     """Set up the Homematic component."""
     from pyhomematic import HMConnection
 
-    hass.data[DATA_DELAY] = config[DOMAIN].get(CONF_DELAY)
     hass.data[DATA_DEVINIT] = {}
     hass.data[DATA_STORE] = set()
 
@@ -575,9 +570,8 @@ def _device_from_servicecall(hass, service):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
-    def __init__(self, hass, name, use_variables):
+    def __init__(self, name, use_variables):
         """Initialize HomeMatic hub."""
-        self.hass = hass
         self.entity_id = "{}.{}".format(DOMAIN, name.lower())
         self._homematic = hass.data[DATA_HOMEMATIC]
         self._variables = {}
@@ -585,14 +579,17 @@ class HMHub(Entity):
         self._state = STATE_UNKNOWN
         self._use_variables = use_variables
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Load data init callbacks."""
         # Load data
-        track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
-        self._update_hub(None)
+        async_track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
+        yield from self.hass.async_add_job(self._update_hub, None)
 
         if self._use_variables:
-            track_time_interval(
+            async_track_time_interval(
                 hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
-            self._update_variables(None)
+            yield from self.hass.async_add_job(self._update_variables, None)
 
     @property
     def name(self):
@@ -624,7 +621,9 @@ class HMHub(Entity):
         """Retrieve latest state."""
         state = self._homematic.getServiceMessages(self._name)
         self._state = STATE_UNKNOWN if state is None else len(state)
-        self.schedule_update_ha_state()
+
+        if now:
+            self.schedule_update_ha_state()
 
     def _update_variables(self, now):
         """Retrive all variable data and update hmvariable states."""
@@ -640,7 +639,7 @@ class HMHub(Entity):
             state_change = True
             self._variables.update({key: value})
 
-        if state_change:
+        if state_change and now:
             self.schedule_update_ha_state()
 
     def hm_set_variable(self, name, value):
@@ -662,9 +661,8 @@ class HMHub(Entity):
 class HMDevice(Entity):
     """The HomeMatic device base object."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize a generic HomeMatic device."""
-        self.hass = hass
         self._homematic = hass.data[DATA_HOMEMATIC]
         self._name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
@@ -679,6 +677,11 @@ class HMDevice(Entity):
         # Set parameter to uppercase
         if self._state:
             self._state = self._state.upper()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Load data init callbacks."""
+        yield from self.hass.async_add_job(self.link_homematic)
 
     @property
     def should_poll(self):
@@ -734,10 +737,6 @@ class HMDevice(Entity):
         try:
             # Initialize datapoints of this object
             self._init_data()
-            if self.hass.data[DATA_DELAY]:
-                # We optionally delay / pause loading of data to avoid
-                # overloading of CCU / Homegear
-                time.sleep(self.hass.data[DATA_DELAY])
             self._load_data_from_hm()
 
             # Link events from pyhomematic
