@@ -39,7 +39,7 @@ SoCo==0.12
 TwitterAPI==2.4.6
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.4.0
+aioautomatic==0.6.0
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -128,7 +128,7 @@ broadlink==0.5
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
-buienradar==0.8
+buienradar==0.9
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
@@ -219,7 +219,7 @@ fedexdeliverymanager==1.0.3
 feedparser==5.2.1
 
 # homeassistant.components.sensor.fitbit
-fitbit==0.2.3
+fitbit==0.3.0
 
 # homeassistant.components.sensor.fixer
 fixerio==0.1.1
@@ -269,7 +269,7 @@ gps3==0.33.3
 gstreamer-player==1.1.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.5
+ha-ffmpeg==1.7
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
@@ -282,6 +282,9 @@ heatmiserV3==0.9.1
 
 # homeassistant.components.switch.hikvisioncam
 hikvision==0.4
+
+# homeassistant.components.notify.hipchat
+hipnotify==1.0.8
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
@@ -409,8 +412,8 @@ miniupnpc==1.9
 # homeassistant.components.tts
 mutagen==1.38
 
-# homeassistant.components.sensor.usps
-myusps==1.1.2
+# homeassistant.components.usps
+myusps==1.1.3
 
 # homeassistant.components.media_player.nad
 # homeassistant.components.media_player.nadtcp
@@ -432,7 +435,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.media_player.onkyo
-onkyo-eiscp==1.1
+onkyo-eiscp==1.2.3
 
 # homeassistant.components.camera.onvif
 onvif-py3==0.1.3
@@ -508,7 +511,7 @@ pushbullet.py==0.11.0
 pushetta==1.0.15
 
 # homeassistant.components.light.rpi_gpio_pwm
-pwmled==1.1.1
+pwmled==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0
@@ -576,7 +579,7 @@ pyeight==0.0.7
 pyemby==1.4
 
 # homeassistant.components.envisalink
-pyenvisalink==2.1
+pyenvisalink==2.2
 
 # homeassistant.components.sensor.fido
 pyfido==1.0.1
@@ -650,6 +653,9 @@ pymyq==0.0.8
 
 # homeassistant.components.mysensors
 pymysensors==0.10.0
+
+# homeassistant.components.lock.nello
+pynello==1.5
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
@@ -748,7 +754,7 @@ python-nest==3.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.notify.pushover
-python-pushover==0.2
+python-pushover==0.3
 
 # homeassistant.components.sensor.ripple
 python-ripple-api==0.0.2
@@ -826,7 +832,7 @@ radiotherm==1.3
 # raspihats==2.2.1
 
 # homeassistant.components.switch.rainmachine
-regenmaschine==0.3.2
+regenmaschine==0.4.1
 
 # homeassistant.components.python_script
 restrictedpython==4.0a3

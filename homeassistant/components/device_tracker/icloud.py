@@ -19,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,7 +208,7 @@ class Icloud(DeviceScanner):
 
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
 
         # Trigger the next step immediately
@@ -217,7 +216,7 @@ class Icloud(DeviceScanner):
 
     def icloud_need_trusted_device(self):
         """We need a trusted device."""
-        configurator = get_component('configurator')
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
@@ -229,7 +228,7 @@ class Icloud(DeviceScanner):
             devicesstring += "{}: {};".format(i, devicename)
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_trusted_device_callback,
             description=(
                 'Please choose your trusted device by entering'
@@ -259,17 +258,17 @@ class Icloud(DeviceScanner):
 
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
 
     def icloud_need_verification_code(self):
         """Return the verification code."""
-        configurator = get_component('configurator')
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_verification_callback,
             description=('Please enter the validation code:'),
             entity_picture="/static/images/config_icloud.png",

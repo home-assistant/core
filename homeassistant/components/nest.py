@@ -14,7 +14,6 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS)
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['python-nest==3.1.0']
 
@@ -54,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def request_configuration(nest, hass, config):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
         configurator.notify_errors(
@@ -68,7 +67,7 @@ def request_configuration(nest, hass, config):
         setup_nest(hass, nest, config, pin=pin)
 
     _CONFIGURING['nest'] = configurator.request_config(
-        hass, "Nest", nest_configuration_callback,
+        "Nest", nest_configuration_callback,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
@@ -92,7 +91,7 @@ def setup_nest(hass, nest, config, pin=None):
 
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configuration done")
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('nest'))
 
     _LOGGER.debug("proceeding with setup")
