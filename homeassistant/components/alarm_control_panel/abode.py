@@ -65,19 +65,16 @@ class AbodeAlarm(alarm.AlarmControlPanel):
         """Send disarm command."""
         self._device.set_mode(mode=ALARM_STATE_STANDBY)
         self.schedule_update_ha_state()
-        _LOGGER.debug("Abode security disarmed")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._device.set_mode(mode=ALARM_STATE_HOME)
         self.schedule_update_ha_state()
-        _LOGGER.debug("Abode security home")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_mode(mode=ALARM_STATE_AWAY)
         self.schedule_update_ha_state()
-        _LOGGER.debug("Abode security armed")
 
     def update(self):
         """Update the device state."""
