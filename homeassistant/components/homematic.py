@@ -583,12 +583,13 @@ class HMHub(Entity):
     def async_added_to_hass(self):
         """Load data init callbacks."""
         # Load data
-        async_track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
+        async_track_time_interval(
+            self.hass, self._update_hub, SCAN_INTERVAL_HUB)
         yield from self.hass.async_add_job(self._update_hub, None)
 
         if self._use_variables:
             async_track_time_interval(
-                hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
+                self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
             yield from self.hass.async_add_job(self._update_variables, None)
 
     @property
