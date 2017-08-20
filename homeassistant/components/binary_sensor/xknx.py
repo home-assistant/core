@@ -7,12 +7,12 @@ https://home-assistant.io/components/binary_sensor.xknx/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
+from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES, \
+    XKNXAutomation
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, \
     BinarySensorDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.script import Script
 
 CONF_ADDRESS = 'address'
 CONF_DEVICE_CLASS = 'device_class'
@@ -86,38 +86,19 @@ def add_devices_from_platform(hass, config, add_devices):
         group_address=config.get(CONF_ADDRESS),
         device_class=config.get(CONF_DEVICE_CLASS),
         significant_bit=config.get(CONF_SIGNIFICANT_BIT))
+    hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
 
-    class XKNXAutomation(xknx.devices.ActionBase):
-        """Base Class for handling commands triggered by KNX bus."""
-
-        def __init__(self, hass, hook, action, name, counter=1):
-            """Initialize XKNXAutomation class."""
-            super(XKNXAutomation, self).__init__(
-                hass.data[DATA_XKNX].xknx, hook, counter)
-            self.hass = hass
-            self.script = Script(hass, action, name)
-
-        @asyncio.coroutine
-        def execute(self):
-            """Execute action."""
-            yield from self.script.async_run()
-
+    entity = XKNXBinarySensor(hass, binary_sensor)
     automations = config.get(CONF_AUTOMATION)
     if automations is not None:
         for automation in automations:
             counter = automation.get(CONF_COUNTER)
             hook = automation.get(CONF_HOOK)
             action = automation.get(CONF_ACTION)
-            automation = XKNXAutomation(
-                hass=hass,
-                hook=hook,
-                counter=counter,
-                action=action,
-                name="{} turn ON script".format(name))
-            binary_sensor.actions.append(automation)
-
-    hass.data[DATA_XKNX].xknx.devices.add(binary_sensor)
-    add_devices([XKNXBinarySensor(hass, binary_sensor)])
+            entity.automations.append(XKNXAutomation(
+                hass=hass, device=binary_sensor, hook=hook,
+                action=action, counter=counter))
+    add_devices([entity])
 
 
 class XKNXBinarySensor(BinarySensorDevice):
@@ -128,6 +109,7 @@ class XKNXBinarySensor(BinarySensorDevice):
         self.device = device
         self.hass = hass
         self.register_callbacks()
+        self.automations = []
 
     def register_callbacks(self):
         """Register callbacks to update hass after device was changed."""

@@ -15,6 +15,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     CONF_HOST, CONF_PORT
+from homeassistant.helpers.script import Script
 
 DOMAIN = "xknx"
 DATA_XKNX = "data_xknx"
@@ -233,3 +234,22 @@ class XKNXModule(object):
         telegram.payload = payload
         telegram.group_address = address
         yield from self.xknx.telegrams.put(telegram)
+
+
+class XKNXAutomation():
+    """Wrapper around xknx.devices.ActionCallback object.."""
+
+    def __init__(self, hass, device, hook, action, counter=1):
+        """Initialize Automation class."""
+        self.hass = hass
+        self.device = device
+        script_name = "{} turn ON script".format(device.get_name())
+        self.script = Script(hass, action, script_name)
+
+        import xknx
+        self.action = xknx.devices.ActionCallback(
+            hass.data[DATA_XKNX].xknx,
+            self.script.async_run,
+            hook=hook,
+            counter=counter)
+        device.actions.append(self.action)
