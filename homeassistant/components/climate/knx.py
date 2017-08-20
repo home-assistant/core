@@ -16,7 +16,8 @@ CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
 CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
-CONF_OPERATION_MODE_PROTECTION_ADDRESS = 'operation_mode_protection_address'
+CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = \
+    'operation_mode_frost_protection_address'
 CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
 CONF_OPERATION_MODE_COMFORT_ADDRESS = 'operation_mode_comfort_address'
 
@@ -29,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_PROTECTION_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
 })
@@ -75,7 +76,7 @@ def add_devices_from_platform(hass, config, add_devices):
         group_address_operation_mode=config.get(
             CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_protection=config.get(
-            CONF_OPERATION_MODE_PROTECTION_ADDRESS),
+            CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS),
         group_address_operation_mode_night=config.get(
             CONF_OPERATION_MODE_NIGHT_ADDRESS),
         group_address_operation_mode_comfort=config.get(
