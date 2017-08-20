@@ -196,7 +196,7 @@ async def _gw_start(hass, gateway):
     if gateway.device == 'mqtt':
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
-    gateway_ready = asyncio.Future()
+    gateway_ready = asyncio.Future(loop=hass.loop)
     gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
     hass.data[gateway_ready_key] = gateway_ready
 
@@ -279,17 +279,17 @@ def _validate_child(gateway, node_id, child):
     if not child.values:
         _LOGGER.debug(
             "No child values for node %s child %s", node_id, child.id)
-        return validated
+        return dict(validated)
     if gateway.sensors[node_id].sketch_name is None:
         _LOGGER.debug("Node %s is missing sketch name", node_id)
-        return validated
+        return dict(validated)
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
     s_name = next(
         (member.name for member in pres if member.value == child.type), None)
     if s_name not in MYSENSORS_CONST_SCHEMA:
         _LOGGER.warning("Child type %s is not supported", s_name)
-        return validated
+        return dict(validated)
     child_schemas = MYSENSORS_CONST_SCHEMA[s_name]
 
     def msg(name):
@@ -323,4 +323,4 @@ def _validate_child(gateway, node_id, child):
             continue
         dev_id = id(gateway), node_id, child.id, value_type
         validated[platform].append(dev_id)
-    return validated
+    return dict(validated)
