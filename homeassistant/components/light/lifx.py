@@ -335,7 +335,7 @@ class LIFXManager(object):
             if version_resp:
                 color_resp = yield from ack(device.get_color)
 
-            if (version_resp is None or color_resp is None):
+            if version_resp is None or color_resp is None:
                 _LOGGER.error("Failed to initialize %s", device.ip_addr)
             else:
                 device.timeout = MESSAGE_TIMEOUT
