@@ -77,7 +77,7 @@ def test_update_device_config(hass, test_client):
             patch('homeassistant.components.config._write', mock_write):
         resp = yield from client.post(
             '/api/config/zwave/device_config/hello.beer', data=json.dumps({
-                'polling_intensity': 2
+                'ignored': False
             }))
 
     assert resp.status == 200
