@@ -58,7 +58,7 @@ def mock_gw_ready(loop):
         yield mock_future
 
 
-async def test_no_mqtt_config(hass, mock_mysensors):  # noqa
+async def test_no_mqtt_config(hass, mock_mysensors):
     """Test setup of mysensors with mqtt device but without mqtt config."""
     config = {'mysensors': {
         'gateways': [{'device': 'mqtt'}], 'version': '2.0',
@@ -72,7 +72,7 @@ async def test_no_mqtt_config(hass, mock_mysensors):  # noqa
     assert not res
 
 
-async def test_bad_device(hass, mock_mysensors):  # noqa
+async def test_bad_device(hass, mock_mysensors):
     """Test setup of mysensors with bad device referens."""
     config = {'mysensors': {
         'gateways': [{'device': ''}], 'version': '2.0', 'persistence': False}}
@@ -85,7 +85,7 @@ async def test_bad_device(hass, mock_mysensors):  # noqa
     assert not res
 
 
-async def test_win_device(hass, mock_mysensors, mock_gw_ready):  # noqa
+async def test_win_device(hass, mock_mysensors, mock_gw_ready):
     """Test setup of mysensors with windows serial device."""
     config = {'mysensors': {
         'gateways': [{'device': 'COM4'}],
@@ -101,7 +101,7 @@ async def test_win_device(hass, mock_mysensors, mock_gw_ready):  # noqa
     assert not gateway.sensors
 
 
-async def test_bad_win_device(hass, mock_mysensors):  # noqa
+async def test_bad_win_device(hass, mock_mysensors):
     """Test setup of mysensors with bad windows serial device."""
     config = {'mysensors': {
         'gateways': [{'device': 'bad'}],
