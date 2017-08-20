@@ -30,14 +30,7 @@ SERVICE_XKNX_SEND = "send"
 SERVICE_XKNX_ATTR_ADDRESS = "address"
 SERVICE_XKNX_ATTR_PAYLOAD = "payload"
 
-SUPPORTED_DOMAINS = [
-    'switch',
-    'climate',
-    'cover',
-    'light',
-    'sensor',
-    'binary_sensor',
-    'notify']
+ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,9 +80,19 @@ def async_setup(hass, config):
         _LOGGER.exception("Can't connect to KNX interface: %s", ex)
         return False
 
-    for component in SUPPORTED_DOMAINS:
+    for component, discovery_type in (
+            ('switch', 'Switch'),
+            ('climate', 'Climate'),
+            ('cover', 'Cover'),
+            ('light', 'Light'),
+            ('sensor', 'Sensor'),
+            ('binary_sensor', 'Binary_Sensor'),
+            ('notify', 'Notification')):
+        found_devices = _get_devices(hass, discovery_type)
         hass.async_add_job(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config))
+            discovery.async_load_platform(hass, component, DOMAIN, {
+                ATTR_DISCOVER_DEVICES: found_devices
+            }, config))
 
     hass.services.async_register(
         DOMAIN, SERVICE_XKNX_SEND,
@@ -97,6 +100,14 @@ def async_setup(hass, config):
         schema=SERVICE_XKNX_SEND_SCHEMA)
 
     return True
+
+
+def _get_devices(hass, discovery_type):
+    return list(
+        map(lambda device: device.name,
+            filter(
+                lambda device: type(device).__name__ == discovery_type,
+                hass.data[DATA_XKNX].xknx.devices)))
 
 
 class XKNXModule(object):
@@ -147,8 +158,7 @@ class XKNXModule(object):
             return self.connection_config_tunneling()
         elif CONF_XKNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        else:
-            return self.connection_config_auto()
+        return self.connection_config_auto()
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""

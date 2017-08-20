@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.xknx/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX
+from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -34,26 +34,22 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
+def add_devices_from_component(hass, discovery_info, add_devices):
     """Set up switches for XKNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Switch) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXSwitch(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(XKNXSwitch(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up switch for XKNX platform configured within plattform."""
     import xknx
@@ -62,7 +58,6 @@ def add_devices_from_platform(hass, config, add_devices):
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS),
         group_address_state=config.get(CONF_STATE_ADDRESS))
-    switch.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(switch)
     add_devices([XKNXSwitch(hass, switch)])
 

@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX
+from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.notify import PLATFORM_SCHEMA, \
     BaseNotificationService
 from homeassistant.const import CONF_NAME
@@ -30,19 +30,17 @@ def async_get_service(hass, config, discovery_info=None):
             or not hass.data[DATA_XKNX].initialized:
         return False
 
-    return get_service_from_component(hass) \
+    return get_service_from_component(hass, discovery_info) \
         if discovery_info is not None else \
         get_service_from_platform(hass, config)
 
 
-def get_service_from_component(hass):
+def get_service_from_component(hass, discovery_info):
     """Set up notifications for XKNX platform configured via xknx.yaml."""
     notification_devices = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx
-        if isinstance(device, xknx.devices.Notification) and \
-                not hasattr(device, "already_added_to_hass"):
-            notification_devices.append(device)
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        notification_devices.append(device)
     return \
         XKNXNotificationService(hass, notification_devices) \
         if len(notification_devices) > 0 else \
@@ -56,7 +54,6 @@ def get_service_from_platform(hass, config):
         hass.data[DATA_XKNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS))
-    notification.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(notification)
     return XKNXNotificationService(hass, [notification, ])
 

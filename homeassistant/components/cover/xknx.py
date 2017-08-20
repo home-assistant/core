@@ -7,7 +7,8 @@ https://home-assistant.io/components/cover.xknx/
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX, _LOGGER
+from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES, \
+    _LOGGER
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.core import callback
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
@@ -47,26 +48,22 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        yield from add_devices_from_component(hass, add_devices)
+        add_devices_from_component(hass, discovery_info, add_devices)
     else:
-        yield from add_devices_from_platform(hass, config, add_devices)
+        add_devices_from_platform(hass, config, add_devices)
 
     return True
 
 
-@asyncio.coroutine
-def add_devices_from_component(hass, add_devices):
+def add_devices_from_component(hass, discovery_info, add_devices):
     """Set up covers for XKNX platform configured via xknx.yaml."""
     entities = []
-    for device in hass.data[DATA_XKNX].xknx.devices:
-        import xknx.devices
-        if isinstance(device, xknx.devices.Cover) and \
-                not hasattr(device, "already_added_to_hass"):
-            entities.append(XKNXCover(hass, device))
+    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
+        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        entities.append(XKNXCover(hass, device))
     add_devices(entities)
 
 
-@asyncio.coroutine
 def add_devices_from_platform(hass, config, add_devices):
     """Set up cover for XKNX platform configured within plattform."""
     import xknx
@@ -81,7 +78,6 @@ def add_devices_from_platform(hass, config, add_devices):
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
         travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
 
-    cover.already_added_to_hass = True
     hass.data[DATA_XKNX].xknx.devices.add(cover)
     add_devices([XKNXCover(hass, cover)])
 
