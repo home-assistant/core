@@ -54,10 +54,10 @@ class ProwlNotificationService(BaseNotificationService):
             'priority': data['priority'] if data and 'priority' in data else 0
         }
 
-        try:
-            _LOGGER.debug("Attempting call Prowl service at %s.", url)
-            session = async_get_clientsession(self._hass)
+        _LOGGER.debug("Attempting call Prowl service at %s.", url)
+        session = async_get_clientsession(self._hass)
 
+        try:
             with async_timeout.timeout(10, loop=self._hass.loop):
                 response = yield from session.post(url, data=payload)
                 result = yield from response.text()
@@ -65,6 +65,6 @@ class ProwlNotificationService(BaseNotificationService):
             if response.status != 200 or 'error' in result:
                 _LOGGER.error("Prowl service returned http "
                               "status %d, response %s.",
-                              response.status, (yield from response.text()))
+                              response.status, result)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s.", url)
