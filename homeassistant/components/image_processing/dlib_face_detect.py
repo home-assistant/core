@@ -15,7 +15,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 
-REQUIREMENTS = ['face_recognition==0.2.0']
+REQUIREMENTS = ['face_recognition==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
