@@ -42,7 +42,7 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        data = AbodeData(hass, username, password)
+        data = AbodeData(username, password)
         hass.data[DATA_ABODE] = data
 
         for component in ['binary_sensor', 'alarm_control_panel']:
@@ -56,6 +56,7 @@ def setup(hass, config):
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
+        return False
 
     return True
 
@@ -63,7 +64,7 @@ def setup(hass, config):
 class AbodeData:
     """Shared Abode data."""
 
-    def __init__(self, hass, username, password):
+    def __init__(self, username, password):
         """Initialize Abode oject."""
         import abodepy
 
