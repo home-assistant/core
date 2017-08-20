@@ -31,28 +31,26 @@ CONF_TO_STATE = 'to_state'
 
 DEFAULT_NAME = 'BayesianBinary'
 
-NUMERIC_STATE_SCHEMA = vol.Schema({
-    CONF_PLATFORM:
-    'numeric_state',
-    CONF_ENTITY_ID:
-    cv.string,
-    vol.Optional(CONF_ABOVE):
-    vol.Coerce(float),
-    vol.Optional(CONF_BELOW):
-    vol.Coerce(float),
-    CONF_P_GIVEN_T:
-    vol.Coerce(float),
-    vol.Optional(CONF_P_GIVEN_F):
-    vol.Coerce(float)
-})
+NUMERIC_STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: 'numeric_state',
+        CONF_ENTITY_ID: cv.entity_id,
+        vol.Optional(CONF_ABOVE): vol.Coerce(float),
+        vol.Optional(CONF_BELOW): vol.Coerce(float),
+        CONF_P_GIVEN_T: vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+    },
+    required=True)
 
-STATE_SCHEMA = vol.Schema({
-    CONF_PLATFORM: CONF_STATE,
-    CONF_ENTITY_ID: cv.string,
-    CONF_TO_STATE: cv.string,
-    CONF_P_GIVEN_T: vol.Coerce(float),
-    vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
-})
+STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: CONF_STATE,
+        CONF_ENTITY_ID: cv.entity_id,
+        CONF_TO_STATE: cv.string,
+        CONF_P_GIVEN_T: vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+    },
+    required=True)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME):
@@ -62,7 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_OBSERVATIONS):
     vol.Schema(
         vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
-                                         STATE_SCHEMA)])),
+                                         STATE_SCHEMA)])
+    ),
     vol.Required(CONF_PRIOR):
     vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
@@ -149,6 +148,22 @@ class BayesianBinarySensor(BinarySensorDevice):
             async_track_state_change(self.hass, entity_id,
                                      async_threshold_sensor_state_listener)
 
+    def _update_current_obs(self, entity_observation, should_trigger):
+        entity = entity_observation['entity_id']
+
+        if should_trigger:
+            prob_true = entity_observation['prob_given_true']
+            prob_false = entity_observation.get('prob_given_false',
+                                                1 - prob_true)
+
+            self.current_obs[entity] = {
+                'prob_true': prob_true,
+                'prob_false': prob_false
+            }
+
+        else:
+            self.current_obs.pop(entity, None)
+
     def _process_numeric_state(self, entity_observation):
         entity = entity_observation['entity_id']
 
@@ -157,18 +172,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             entity_observation.get('below'),
             entity_observation.get('above'), None, entity_observation)
 
-        if should_trigger:
-            prob_true = entity_observation['prob_given_true']
-            prob_false = entity_observation.get('prob_given_false',
-                                                1 - prob_true)
-
-            self.current_obs[entity] = {
-                'prob_true': prob_true,
-                'prob_false': prob_false
-            }
-
-        else:
-            self.current_obs.pop(entity, None)
+        self._update_current_obs(entity_observation, should_trigger)
 
     def _process_state(self, entity_observation):
         entity = entity_observation['entity_id']
@@ -176,18 +180,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         should_trigger = condition.state(self.hass, entity,
                                          entity_observation.get('to_state'))
 
-        if should_trigger:
-            prob_true = entity_observation['prob_given_true']
-            prob_false = entity_observation.get('prob_given_false',
-                                                1 - prob_true)
-
-            self.current_obs[entity] = {
-                'prob_true': prob_true,
-                'prob_false': prob_false
-            }
-
-        else:
-            self.current_obs.pop(entity, None)
+        self._update_current_obs(entity_observation, should_trigger)
 
     @property
     def name(self):
