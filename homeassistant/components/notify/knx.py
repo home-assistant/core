@@ -1,21 +1,21 @@
 """
-Demo notification service.
+KNX notification service.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
+https://home-assistant.io/components/notify.knx/
 """
 import asyncio
 import voluptuous as vol
 
-from homeassistant.components.xknx import DATA_XKNX, ATTR_DISCOVER_DEVICES
+from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.notify import PLATFORM_SCHEMA, \
     BaseNotificationService
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
-DEFAULT_NAME = 'XKNX Notify'
-DEPENDENCIES = ['xknx']
+DEFAULT_NAME = 'KNX Notify'
+DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
@@ -25,9 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_service(hass, config, discovery_info=None):
-    """Get the XKNX notification service."""
-    if DATA_XKNX not in hass.data \
-            or not hass.data[DATA_XKNX].initialized:
+    """Get the KNX notification service."""
+    if DATA_KNX not in hass.data \
+            or not hass.data[DATA_KNX].initialized:
         return False
 
     return get_service_from_component(hass, discovery_info) \
@@ -36,29 +36,29 @@ def async_get_service(hass, config, discovery_info=None):
 
 
 def get_service_from_component(hass, discovery_info):
-    """Set up notifications for XKNX platform configured via xknx.yaml."""
+    """Set up notifications for KNX platform configured via xknx.yaml."""
     notification_devices = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_XKNX].xknx.devices[device_name]
+        device = hass.data[DATA_KNX].xknx.devices[device_name]
         notification_devices.append(device)
     return \
-        XKNXNotificationService(hass, notification_devices) \
+        KNXNotificationService(hass, notification_devices) \
         if len(notification_devices) > 0 else \
         None
 
 
 def get_service_from_platform(hass, config):
-    """Set up notification for XKNX platform configured within plattform."""
+    """Set up notification for KNX platform configured within plattform."""
     import xknx
     notification = xknx.devices.Notification(
-        hass.data[DATA_XKNX].xknx,
+        hass.data[DATA_KNX].xknx,
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS))
-    hass.data[DATA_XKNX].xknx.devices.add(notification)
-    return XKNXNotificationService(hass, [notification, ])
+    hass.data[DATA_KNX].xknx.devices.add(notification)
+    return KNXNotificationService(hass, [notification, ])
 
 
-class XKNXNotificationService(BaseNotificationService):
+class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
     def __init__(self, hass, devices):
