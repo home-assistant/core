@@ -887,7 +887,7 @@ shodan==1.7.4
 simplisafe-python==1.0.4
 
 # homeassistant.components.notify.slack
-slacker==0.9.50
+slacker==0.9.60
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.2
