@@ -7,9 +7,9 @@ https://home-assistant.io/components/notify.slack/
 import logging
 
 import requests
-import voluptuous as vol
 from requests.auth import HTTPBasicAuth
 from requests.auth import HTTPDigestAuth
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
