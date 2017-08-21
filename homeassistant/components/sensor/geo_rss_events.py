@@ -71,6 +71,7 @@ def setup_platform(hass, config, add_devices,
     # Initialise update service.
     data = GeoRssServiceData(hass, home_latitude, home_longitude, url,
                              radius_in_km)
+    data.update()
 
     # Create all sensors based on categories.
     devices = []
@@ -83,7 +84,7 @@ def setup_platform(hass, config, add_devices,
             device = GeoRssServiceSensor(hass, category, data, name,
                                          unit_of_measurement)
             devices.append(device)
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class GeoRssServiceSensor(Entity):
@@ -102,7 +103,6 @@ class GeoRssServiceSensor(Entity):
             id_base = '{}_{}'.format(name, id_base)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, id_base,
                                             hass=hass)
-        self.update()
 
     @property
     def name(self):
@@ -146,6 +146,8 @@ class GeoRssServiceSensor(Entity):
         all_events = self._data.events
         if self._category is None:
             # Add all events regardless of category.
+            _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
+                          all_events)
             self._state = all_events
         else:
             # Group events by category.
@@ -154,6 +156,8 @@ class GeoRssServiceSensor(Entity):
                 for event in all_events:
                     if event.category == self._category:
                         my_events.append(event)
+            _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
+                          my_events)
             self._state = my_events
 
 
@@ -166,12 +170,11 @@ class GeoRssServiceData(object):
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
-        self.devices = None
         self.events = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):  # pragma: no cover
-        """Retrieve data from GeoRSS feed and update devices."""
+        """Retrieve data from GeoRSS feed and store events."""
         import feedparser
         feed_data = feedparser.parse(self._url)
         if not feed_data:
