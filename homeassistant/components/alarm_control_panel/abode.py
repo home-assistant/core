@@ -52,15 +52,14 @@ class AbodeAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        state = STATE_UNKNOWN
-
         if self._device.mode == "standby":
             state = STATE_ALARM_DISARMED
         elif self._device.mode == "away":
             state = STATE_ALARM_ARMED_AWAY
         elif self._device.mode == "home":
             state = STATE_ALARM_ARMED_HOME
-
+        else:
+            state = STATE_UNKNOWN
         return state
 
     def alarm_disarm(self, code=None):
