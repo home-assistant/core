@@ -75,7 +75,7 @@ def test_get_changed_since(hass):
 def test_reproduce_with_no_entity(hass):
     """Test reproduce_state with no entity."""
     calls = async_mock_service(
-        hass, 'light', SERVICE_TURN_ON, state_to_set='on')
+        hass, 'light', SERVICE_TURN_ON, state='on')
 
     yield from state.async_reproduce_state(hass, ha.State('light.test', 'on'))
     yield from hass.async_block_till_done()
@@ -107,7 +107,7 @@ def test_reproduce_group(hass):
 def test_reproduce_turn_on(hass):
     """Test reproduce_state with SERVICE_TURN_ON."""
     calls = async_mock_service(
-        hass, 'light', SERVICE_TURN_ON, state_to_set='on')
+        hass, 'light', SERVICE_TURN_ON, state='on')
     hass.states.async_set('light.test', 'off')
 
     yield from state.async_reproduce_state(hass, ha.State('light.test', 'on'))
@@ -124,7 +124,7 @@ def test_reproduce_turn_on(hass):
 def test_reproduce_turn_off(hass):
     """Test reproduce_state with SERVICE_TURN_OFF."""
     calls = async_mock_service(
-        hass, 'light', SERVICE_TURN_OFF, state_to_set='off')
+        hass, 'light', SERVICE_TURN_OFF, state='off')
     hass.states.async_set('light.test', 'on')
 
     yield from state.async_reproduce_state(hass, ha.State('light.test', 'off'))
@@ -187,7 +187,7 @@ def test_reproduce_media_data(hass):
 def test_reproduce_media_play(hass):
     """Test reproduce_state with SERVICE_MEDIA_PLAY."""
     calls = async_mock_service(
-        hass, 'media_player', SERVICE_MEDIA_PLAY, state_to_set='playing')
+        hass, 'media_player', SERVICE_MEDIA_PLAY, state='playing')
     hass.states.async_set('media_player.test', 'off')
 
     yield from state.async_reproduce_state(
@@ -205,7 +205,7 @@ def test_reproduce_media_play(hass):
 def test_reproduce_media_pause(hass):
     """Test reproduce_state with SERVICE_MEDIA_PAUSE."""
     calls = async_mock_service(
-        hass, 'media_player', SERVICE_MEDIA_PAUSE, state_to_set='paused')
+        hass, 'media_player', SERVICE_MEDIA_PAUSE, state='paused')
     hass.states.async_set('media_player.test', 'playing')
 
     yield from state.async_reproduce_state(

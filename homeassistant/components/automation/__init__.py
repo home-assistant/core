@@ -232,7 +232,7 @@ def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
             descriptions.get(service), schema=SERVICE_SCHEMA,
-            state_to_set=state)
+            state=state)
 
     return True
 

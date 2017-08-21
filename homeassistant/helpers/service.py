@@ -127,8 +127,8 @@ def async_get_state_services(hass, domain, state):
     services = defaultdict(dict)
 
     for service_name, service_obj in domain_services.items():
-        if (service_obj.state_to_set is not None and
-                service_obj.state_to_set == state.state):
+        if (service_obj.state is not None and
+                service_obj.state == state.state):
             services[service_name]['state'] = state.state
         if (service_obj.schema is None or
                 # service with no state to set must require attributes

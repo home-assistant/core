@@ -177,7 +177,7 @@ def test_get_state_services_no_domain(hass, caplog):
 def test_get_state_services_no_schema(hass):
     """Test async_get_state_services with no schema for service."""
     domain = 'light'
-    async_mock_service(hass, domain, SERVICE_TURN_ON, state_to_set='on')
+    async_mock_service(hass, domain, SERVICE_TURN_ON, state='on')
     state_attrs = {'transition': 999, 'brightness': 100}
     state = ha.State('light.test', 'on', state_attrs)
 

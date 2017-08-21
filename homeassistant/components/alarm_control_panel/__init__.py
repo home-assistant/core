@@ -157,7 +157,7 @@ def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service, async_alarm_service_handler,
             descriptions.get(service), schema=ALARM_SERVICE_SCHEMA,
-            state_to_set=SERVICE_TO_METHOD[service]['state'])
+            state=SERVICE_TO_METHOD[service]['state'])
 
     return True
 

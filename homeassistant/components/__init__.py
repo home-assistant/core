@@ -150,10 +150,10 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service,
-        state_to_set=STATE_OFF)
+        state=STATE_OFF)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service,
-        state_to_set=STATE_ON)
+        state=STATE_ON)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
 

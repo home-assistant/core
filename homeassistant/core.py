@@ -749,9 +749,9 @@ class Service(object):
     """Representation of a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_callback', 'is_coroutinefunction', 'state_to_set']
+                 'is_callback', 'is_coroutinefunction', 'state']
 
-    def __init__(self, func, description, fields, schema, state_to_set=None):
+    def __init__(self, func, description, fields, schema, state=None):
         """Initialize a service."""
         self.func = func
         self.description = description or ''
@@ -759,7 +759,7 @@ class Service(object):
         self.schema = schema
         self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
-        self.state_to_set = state_to_set
+        self.state = state
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -850,7 +850,7 @@ class ServiceRegistry(object):
         return service.lower() in self._services.get(domain.lower(), [])
 
     def register(self, domain, service, service_func, description=None,
-                 schema=None, state_to_set=None):
+                 schema=None, state=None):
         """
         Register a service.
 
@@ -859,7 +859,7 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
 
-        Use state_to_set to know what state the service sets.
+        Use state to know what state the service sets.
         """
         run_callback_threadsafe(
             self._hass.loop,
@@ -869,7 +869,7 @@ class ServiceRegistry(object):
 
     @callback
     def async_register(self, domain, service, service_func, description=None,
-                       schema=None, state_to_set=None):
+                       schema=None, state=None):
         """
         Register a service.
 
@@ -878,7 +878,7 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
 
-        Use state_to_set to know what state the service sets.
+        Use state to know what state the service sets.
 
         This method must be run in the event loop.
         """
@@ -887,7 +887,7 @@ class ServiceRegistry(object):
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
                               description.get('fields', {}), schema,
-                              state_to_set)
+                              state)
 
         if domain in self._services:
             self._services[domain][service] = service_obj

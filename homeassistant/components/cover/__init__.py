@@ -199,7 +199,7 @@ def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service_name, async_handle_cover_service,
             descriptions.get(service_name), schema=schema,
-            state_to_set=SERVICE_TO_METHOD[service_name].get('state'))
+            state=SERVICE_TO_METHOD[service_name].get('state'))
 
     return True
 

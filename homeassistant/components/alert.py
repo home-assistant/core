@@ -139,11 +139,11 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
         descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA,
-        state_to_set=STATE_OFF)
+        state=STATE_OFF)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_alert_service,
         descriptions.get(SERVICE_TURN_ON), schema=ALERT_SERVICE_SCHEMA,
-        state_to_set=STATE_ON)
+        state=STATE_ON)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
         descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
