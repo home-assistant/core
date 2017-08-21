@@ -768,6 +768,14 @@ class Service(object):
             'fields': self.fields,
         }
 
+    def can_call(self, service_data):
+        """Return True if service can be called with service_data."""
+        try:
+            self.schema(service_data)
+            return True
+        except vol.Invalid:
+            return False
+
 
 class ServiceCall(object):
     """Representation of a call to a service."""
