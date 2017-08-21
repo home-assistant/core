@@ -441,7 +441,7 @@ class FitbitSensor(Entity):
 
         if self.extra:
             attrs['model'] = self.extra.get('deviceVersion')
-            attrs['type'] = self.extra.get('type')
+            attrs['type'] = self.extra.get('type').lower()
 
         return attrs
 
