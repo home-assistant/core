@@ -7,7 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (DATA_ABODE, DEFAULT_NAME)
-from homeassistant.const import (STATE_UNKNOWN, STATE_ALARM_ARMED_AWAY,
+from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.components.alarm_control_panel as alarm
 
@@ -59,7 +59,7 @@ class AbodeAlarm(alarm.AlarmControlPanel):
         elif self._device.mode == "home":
             state = STATE_ALARM_ARMED_HOME
         else:
-            state = STATE_UNKNOWN
+            state = None
         return state
 
     def alarm_disarm(self, code=None):
