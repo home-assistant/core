@@ -42,12 +42,16 @@ def brightness_from_percentage(percent):
     return (percent*255.0)/100.0
 
 
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
 def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
     hue, sat, value = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
     return int(hue * 360), int(sat * 100), int(value * 100)
 
 
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
     red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
