@@ -7,16 +7,14 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (DATA_ABODE, DEFAULT_NAME)
-from homeassistant.const import (STATE_UNKNOWN)
+from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.components.alarm_control_panel as alarm
 
 DEPENDENCIES = ['abode']
 
 _LOGGER = logging.getLogger(__name__)
 
-ALARM_STATE_HOME = 'home'
-ALARM_STATE_STANDBY = 'standby'
-ALARM_STATE_AWAY = 'away'
 ICON = 'mdi:security'
 
 
@@ -54,26 +52,29 @@ class AbodeAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        status = self._device.mode
-
-        if status in [ALARM_STATE_STANDBY, ALARM_STATE_HOME, ALARM_STATE_AWAY]:
-            return status
-
-        return STATE_UNKNOWN
+        if self._device.mode == "standby":
+            state = STATE_ALARM_DISARMED
+        elif self._device.mode == "away":
+            state = STATE_ALARM_ARMED_AWAY
+        elif self._device.mode == "home":
+            state = STATE_ALARM_ARMED_HOME
+        else:
+            state = None
+        return state
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._device.set_mode(mode=ALARM_STATE_STANDBY)
+        self._device.set_standby()
         self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._device.set_mode(mode=ALARM_STATE_HOME)
+        self._device.set_home()
         self.schedule_update_ha_state()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._device.set_mode(mode=ALARM_STATE_AWAY)
+        self._device.set_away()
         self.schedule_update_ha_state()
 
     def update(self):
