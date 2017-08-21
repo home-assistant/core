@@ -73,6 +73,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                                                      unit_of_measurement1)
         assert sensor1.name == "Category 1"
         assert sensor1.unit_of_measurement == "Unit 1"
+        assert sensor1.icon == "mdi:alert"
 
         data2 = self.setup_data()
         name2 = "Name 2"
@@ -83,10 +84,10 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         event1 = type('obj', (object,), {'title': 'Title 1', 'distance': 10.0})
         event2 = type('obj', (object,), {'title': 'Title 2', 'distance': 20.0})
         matrix = {'Title 1': "10km", 'Title 2': "20km"}
-        data2.events = [event1, event2]
-        sensor2.update()
+        sensor2._state = [event1, event2]
         assert sensor2.name == "Any"
         device_state_attributes2 = sensor2.device_state_attributes
+        print(device_state_attributes2)
         assert device_state_attributes2["Title 1"] == matrix["Title 1"]
         assert device_state_attributes2["Title 2"] == matrix["Title 2"]
         assert device_state_attributes2 == matrix

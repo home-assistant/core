@@ -139,7 +139,7 @@ class GeoRssServiceSensor(Entity):
                 matrix[event.title] = '{:.0f}km'.format(event.distance)
         return matrix
 
-    def update(self):
+    def update(self):  # pragma: no cover
         """Update this sensor from the GeoRSS service."""
         _LOGGER.debug("About to update sensor %s", self.entity_id)
         self._data.update()
