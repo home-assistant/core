@@ -834,13 +834,13 @@ class ServiceRegistry(object):
 
     @callback
     def async_full_services(self):
-        """Return dict with per domain a dict with the service instances.
+        """Return read only dict with per domain a dict with service instances.
 
         This method must be run in the event loop.
         """
-        return {domain: {key: value for key, value
-                         in self._services[domain].items()}
-                for domain in self._services}
+        return MappingProxyType({
+            domain: MappingProxyType(services)
+            for domain, services in self._services.items()})
 
     def has_service(self, domain, service):
         """Test if specified service exists.
@@ -886,8 +886,7 @@ class ServiceRegistry(object):
         service = service.lower()
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}), schema,
-                              state)
+                              description.get('fields', {}), schema, state)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
