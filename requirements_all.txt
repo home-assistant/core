@@ -438,7 +438,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.media_player.onkyo
-onkyo-eiscp==1.2.3
+onkyo-eiscp==1.2.4
 
 # homeassistant.components.camera.onvif
 onvif-py3==0.1.3
