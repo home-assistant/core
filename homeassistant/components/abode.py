@@ -12,9 +12,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ATTRIBUTION,
-    CONF_USERNAME, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['abodepy==0.7.2']
+REQUIREMENTS = ['abodepy==0.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +37,11 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+ABODE_COMPONENTS = [
+    'alarm_control_panel', 'binary_sensor', 'lock',  'switch', 'cover'
+]
+
+
 def setup(hass, config):
     """Set up Abode component."""
     global ABODE_CONTROLLER
@@ -55,7 +60,7 @@ def setup(hass, config):
         _LOGGER.info("Logged in to Abode and found %s devices",
                      len(devices))
 
-        for component in ['binary_sensor', 'alarm_control_panel', 'lock']:
+        for component in ABODE_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
         def logout(event):
@@ -88,7 +93,6 @@ class AbodeDevice(Entity):
         """Initialize a sensor for Abode device."""
         self._controller = controller
         self._device = device
-        self._name = "{0} {1}".format(self._device.type, self._device.name)
         self._attrs = None
 
         self._controller.register(self._device, self._update_callback)
@@ -103,7 +107,7 @@ class AbodeDevice(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._device.name
 
     @property
     def device_state_attributes(self):
@@ -118,5 +122,4 @@ class AbodeDevice(Entity):
     def _update_callback(self, device):
         """Update the device state."""
         _LOGGER.info("Device update received: %s", self.name)
-        self._device = device
         self.schedule_update_ha_state()

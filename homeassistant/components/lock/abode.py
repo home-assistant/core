@@ -18,18 +18,21 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode lock devices."""
-    sensors = []
-    for sensor in ABODE_CONTROLLER.get_devices():
-        _LOGGER.debug('Sensor type %s', sensor.type)
-        if sensor.type == 'Door Lock':
-            sensors.append(AbodeLock(hass, ABODE_CONTROLLER, sensor))
+    import abodepy.helpers.constants as CONST
 
-    _LOGGER.debug('Adding %d sensors', len(sensors))
+    sensors = []
+
+    for sensor in ABODE_CONTROLLER.get_devices(
+            type_filter=(CONST.DEVICE_DOOR_LOCK)):
+        sensors.append(AbodeLock(hass, ABODE_CONTROLLER, sensor))
+        _LOGGER.debug('Added Lock %s', sensor.name)
+
+    _LOGGER.debug('Adding %d Locks', len(sensors))
     add_devices(sensors)
 
 
 class AbodeLock(AbodeDevice, LockDevice):
-    """Representation of a Vera lock."""
+    """Representation of an Abode lock."""
 
     def __init__(self, hass, controller, device):
         """Initialize the Abode device."""

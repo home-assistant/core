@@ -22,7 +22,8 @@ ICON = 'mdi:security'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
 
-    add_devices([AbodeAlarm(hass, ABODE_CONTROLLER, ABODE_CONTROLLER.get_alarm())])
+    add_devices([AbodeAlarm(hass, ABODE_CONTROLLER,
+                            ABODE_CONTROLLER.get_alarm())])
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
@@ -41,11 +42,11 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._device.mode == "standby":
+        if self._device.is_standby:
             state = STATE_ALARM_DISARMED
-        elif self._device.mode == "away":
+        elif self._device.is_away:
             state = STATE_ALARM_ARMED_AWAY
-        elif self._device.mode == "home":
+        elif self._device.is_home:
             state = STATE_ALARM_ARMED_HOME
         else:
             state = None
