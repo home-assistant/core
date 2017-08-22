@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if None in (lat, lon):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
 
-    add_devices([WorldTidesInfoSensor(name, lat, lon, key)])
+    add_devices([WorldTidesInfoSensor(name, lat, lon, key)], True)
 
 
 class WorldTidesInfoSensor(Entity):
@@ -56,7 +56,6 @@ class WorldTidesInfoSensor(Entity):
         self._lat = lat
         self._lon = lon
         self._key = key
-        self.update()
 
     @property
     def name(self):
