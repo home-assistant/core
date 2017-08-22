@@ -216,7 +216,7 @@ class FritzBoxCallMonitor(object):
             self._sensor.set_attributes(att)
         elif line[1] == "CONNECT":
             self._sensor.set_state(VALUE_CONNECT)
-            att = {"with": line[4], "device": [3], "accepted": isotime}
+            att = {"with": line[4], "device": line[3], "accepted": isotime}
             att["with_name"] = self._sensor.number_to_name(att["with"])
             self._sensor.set_attributes(att)
         elif line[1] == "DISCONNECT":
