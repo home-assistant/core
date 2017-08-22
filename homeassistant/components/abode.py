@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ABODE_COMPONENTS = [
-    'alarm_control_panel', 'binary_sensor', 'lock',  'switch', 'cover'
+    'alarm_control_panel', 'binary_sensor', 'lock', 'switch', 'cover'
 ]
 
 

@@ -21,7 +21,6 @@ ICON = 'mdi:security'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-
     add_devices([AbodeAlarm(hass, ABODE_CONTROLLER,
                             ABODE_CONTROLLER.get_alarm())])
 
