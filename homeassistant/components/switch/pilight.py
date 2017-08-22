@@ -4,6 +4,7 @@ Support for switching devices via Pilight to on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pilight/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
-                                 CONF_PROTOCOL)
+                                 CONF_PROTOCOL, STATE_ON)
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +122,13 @@ class PilightSwitch(SwitchDevice):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        state = yield from async_get_last_state(self._hass, self.entity_id)
+        if state:
+            self._state = state.state == STATE_ON
+
     @property
     def name(self):
         """Get the name of the switch."""
@@ -129,6 +138,11 @@ class PilightSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed, state set when correct code is received."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return True
 
     @property
     def is_on(self):
