@@ -6,7 +6,6 @@ https://home-assistant.io/components/light.yeelight/
 """
 import logging
 import colorsys
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -88,10 +87,6 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
     EFFECT_STOP]
-
-
-if TYPE_CHECKING:
-    import yeelight
 
 
 def _cmd(func):
