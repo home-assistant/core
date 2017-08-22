@@ -16,13 +16,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'WorldTidesInfo'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
+SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -56,6 +55,7 @@ class WorldTidesInfoSensor(Entity):
         self._lat = lat
         self._lon = lon
         self._key = key
+        self.data = None
 
     @property
     def name(self):
@@ -95,7 +95,6 @@ class WorldTidesInfoSensor(Entity):
         else:
             return STATE_UNKNOWN
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
