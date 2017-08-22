@@ -130,7 +130,7 @@ class PhilipsLight(Light):
             _LOGGER.debug("Response received from light: %s", result)
 
             return result == SUCCESS
-        except (DeviceException) as exc:
+        except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
 
