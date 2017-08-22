@@ -18,9 +18,6 @@ from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'switch'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
 CONF_OFF_CODE = 'off_code'
 CONF_OFF_CODE_RECIEVE = 'off_code_receive'
 CONF_ON_CODE = 'on_code'
@@ -141,6 +138,11 @@ class PilightSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed, state set when correct code is received."""
         return False
+
+    @property 
+    def assumed_state(self): 
+        """Return True if unable to access real state of the entity.""" 
+        return True 
 
     @property
     def is_on(self):
