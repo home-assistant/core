@@ -56,7 +56,7 @@ class DiscordNotificationService(BaseNotificationService):
             except (discord.errors.HTTPException,
                     discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
-            # pylint: disable=too-broad-exception
+            # pylint: disable=broad-except
             except KeyError:
                 _LOGGER.warning("No target specified")
             yield from discord_bot.logout()
