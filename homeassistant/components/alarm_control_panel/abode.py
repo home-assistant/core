@@ -7,7 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, DATA_ABODE, DEFAULT_NAME)
+    AbodeDevice, ABODE_CONTROLLER, DEFAULT_NAME)
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.components.alarm_control_panel as alarm
@@ -21,17 +21,16 @@ ICON = 'mdi:security'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    data = hass.data.get(DATA_ABODE)
 
-    add_devices([AbodeAlarm(hass, data, data.abode.get_alarm())])
+    add_devices([AbodeAlarm(hass, ABODE_CONTROLLER, ABODE_CONTROLLER.get_alarm())])
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
-    def __init__(self, hass, data, device):
+    def __init__(self, hass, controller, device):
         """Initialize the alarm control panel."""
-        AbodeDevice.__init__(self, hass, data, device)
+        AbodeDevice.__init__(self, hass, controller, device)
         self._device = device
         self._name = "{0}".format(DEFAULT_NAME)
 
@@ -56,17 +55,14 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._device.set_standby()
-        self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._device.set_home()
-        self.schedule_update_ha_state()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_away()
-        self.schedule_update_ha_state()
 
     @property
     def device_state_attributes(self):
