@@ -179,7 +179,8 @@ class PhilipsLight(Light):
                 "Got exception from light (%s) while fetching the state: "
                 "%s", ex, self.host)
 
-    def translate(self, value, left_min, left_max, right_min, right_max):
+    @staticmethod
+    def translate(value, left_min, left_max, right_min, right_max):
         """Map a value from left span to right span."""
         left_span = left_max - left_min
         right_span = right_max - right_min
