@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['uber_rides==0.4.1']
+REQUIREMENTS = ['uber_rides==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
