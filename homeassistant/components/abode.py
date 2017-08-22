@@ -15,7 +15,7 @@ from homeassistant.const import (ATTR_ATTRIBUTION,
                                  CONF_USERNAME, CONF_PASSWORD,
                                  CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['abodepy==0.8.2']
+REQUIREMENTS = ['abodepy==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 

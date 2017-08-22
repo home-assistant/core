@@ -2,7 +2,7 @@
 This component provides HA cover support for Abode Security System.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.abode/
+https://home-assistant.io/components/cover.abode/
 """
 import logging
 
