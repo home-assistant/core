@@ -6,7 +6,8 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 """
 import logging
 
-from homeassistant.components.abode import (DATA_ABODE, DEFAULT_NAME)
+from homeassistant.components.abode import (
+    AbodeDevice, DATA_ABODE, DEFAULT_NAME)
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.components.alarm_control_panel as alarm
@@ -25,24 +26,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([AbodeAlarm(hass, data, data.abode.get_alarm())])
 
 
-class AbodeAlarm(alarm.AlarmControlPanel):
+class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
     def __init__(self, hass, data, device):
         """Initialize the alarm control panel."""
-        super(AbodeAlarm, self).__init__()
+        AbodeDevice.__init__(self, hass, data, device)
         self._device = device
         self._name = "{0}".format(DEFAULT_NAME)
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def icon(self):
@@ -77,6 +68,11 @@ class AbodeAlarm(alarm.AlarmControlPanel):
         self._device.set_away()
         self.schedule_update_ha_state()
 
-    def update(self):
-        """Update the device state."""
-        self._device.refresh()
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        self._attrs = super().device_state_attributes
+        self._attrs['battery_backup'] = self._device.battery
+        self._attrs['cellular_backup'] = self._device.is_cellular
+
+        return self._attrs
