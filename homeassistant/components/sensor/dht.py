@@ -128,7 +128,11 @@ class DHTSensor(Entity):
         data = self.dht_client.data
 
         if self.type == SENSOR_TEMPERATURE:
-            temperature = data[SENSOR_TEMPERATURE]
+            try:
+                temperature = data[SENSOR_TEMPERATURE]
+            except KeyError:
+                _LOGGER.error("Error reading temperature data")
+                return
             _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
                           temperature, temperature_offset)
             if (temperature >= -20) and (temperature < 80):
@@ -136,7 +140,11 @@ class DHTSensor(Entity):
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY:
-            humidity = data[SENSOR_HUMIDITY]
+            try:
+                humidity = data[SENSOR_HUMIDITY]
+            except KeyError:
+                _LOGGER.error("Error reading humidity data")
+                return
             _LOGGER.debug("Humidity %.1f%% + offset %.1f",
                           humidity, humidity_offset)
             if (humidity >= 0) and (humidity <= 100):
