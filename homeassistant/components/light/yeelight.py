@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.yeelight/
 """
 import logging
 import colorsys
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -87,6 +88,10 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
     EFFECT_STOP]
+
+
+if TYPE_CHECKING:
+    import yeelight
 
 
 def _cmd(func):
@@ -192,9 +197,9 @@ class YeelightLight(Light):
         if color_mode == 2:  # color temperature
             return color_temperature_to_rgb(self.color_temp)
         if color_mode == 3:  # hsv
-            hue = self._properties.get('hue')
-            sat = self._properties.get('sat')
-            val = self._properties.get('bright')
+            hue = int(self._properties.get('hue'))
+            sat = int(self._properties.get('sat'))
+            val = int(self._properties.get('bright'))
             return colorsys.hsv_to_rgb(hue, sat, val)
 
         rgb = int(rgb)
@@ -214,7 +219,7 @@ class YeelightLight(Light):
         return self._bulb.last_properties
 
     @property
-    def _bulb(self) -> object:
+    def _bulb(self) -> 'yeelight.Bulb':
         import yeelight
         if self._bulb_device is None:
             try:
