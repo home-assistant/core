@@ -139,10 +139,10 @@ class PilightSwitch(SwitchDevice):
         """No polling needed, state set when correct code is received."""
         return False
 
-    @property 
-    def assumed_state(self): 
-        """Return True if unable to access real state of the entity.""" 
-        return True 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return True
 
     @property
     def is_on(self):
