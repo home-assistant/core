@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 
-REQUIREMENTS = ['abodepy==0.5.1']
+REQUIREMENTS = ['abodepy==0.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
