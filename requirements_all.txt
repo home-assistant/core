@@ -1013,7 +1013,7 @@ yeelight==0.3.2
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.8.6
+youtube_dl==2017.8.18
 
 # homeassistant.components.light.zengge
 zengge==0.2
