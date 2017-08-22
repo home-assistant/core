@@ -177,7 +177,7 @@ class PhilipsLight(Light):
         except DeviceException as ex:
             _LOGGER.error(
                 "Got exception from light (%s) while fetching the state: "
-                "%s", ex, self.host)
+                "%s", self.host, ex)
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
