@@ -80,11 +80,11 @@ def async_setup(hass, config):
         # Override the device default capabilities for a specific address
         #
         if isinstance(device['platform'], list):
-          plm.protocol.devices.add_override(
-              device['address'], 'capabilities', device['platform'])
+            plm.protocol.devices.add_override(
+                device['address'], 'capabilities', device['platform'])
         else:
-          plm.protocol.devices.add_override(
-              device['address'], 'capabilities', [device['platform']])
+            plm.protocol.devices.add_override(
+                device['address'], 'capabilities', [device['platform']])
 
 
     hass.data['insteon_plm'] = plm
