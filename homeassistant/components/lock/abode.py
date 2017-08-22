@@ -7,7 +7,7 @@ https://home-assistant.io/components/lock.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, CONF_ATTRIBUTION, DATA_ABODE)
+    AbodeDevice, ABODE_CONTROLLER)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
@@ -18,13 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode lock devices."""
-    data = hass.data.get(DATA_ABODE)
-
     sensors = []
-    for sensor in data.devices:
+    for sensor in ABODE_CONTROLLER.get_devices():
         _LOGGER.debug('Sensor type %s', sensor.type)
         if sensor.type == 'Door Lock':
-            sensors.append(AbodeLock(hass, data, sensor))
+            sensors.append(AbodeLock(hass, ABODE_CONTROLLER, sensor))
 
     _LOGGER.debug('Adding %d sensors', len(sensors))
     add_devices(sensors)
@@ -33,19 +31,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeLock(AbodeDevice, LockDevice):
     """Representation of a Vera lock."""
 
-    def __init__(self, hass, data, device):
+    def __init__(self, hass, controller, device):
         """Initialize the Abode device."""
-        AbodeDevice.__init__(self, hass, data, device)
+        AbodeDevice.__init__(self, hass, controller, device)
 
     def lock(self, **kwargs):
         """Lock the device."""
         self._device.lock()
-        self.schedule_update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self._device.unlock()
-        self.schedule_update_ha_state()
 
     @property
     def is_locked(self):

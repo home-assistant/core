@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, CONF_ATTRIBUTION, DATA_ABODE)
+    AbodeDevice, ABODE_CONTROLLER)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 
 DEPENDENCIES = ['abode']
@@ -23,13 +23,11 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    data = hass.data.get(DATA_ABODE)
-
     sensors = []
-    for sensor in data.devices:
+    for sensor in ABODE_CONTROLLER.get_devices():
         _LOGGER.debug('Sensor type %s', sensor.type)
         if sensor.type in ['Door Contact', 'Motion Camera']:
-            sensors.append(AbodeBinarySensor(hass, data, sensor))
+            sensors.append(AbodeBinarySensor(hass, ABODE_CONTROLLER, sensor))
 
     _LOGGER.debug('Adding %d sensors', len(sensors))
     add_devices(sensors)
@@ -38,9 +36,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     """A binary sensor implementation for Abode device."""
 
-    def __init__(self, hass, data, device):
+    def __init__(self, hass, controller, device):
         """Initialize a sensor for Abode device."""
-        AbodeDevice.__init__(self, hass, data, device)
+        AbodeDevice.__init__(self, hass, controller, device)
 
     @property
     def is_on(self):

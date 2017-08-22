@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ATTRIBUTION,
-    CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
+    CONF_USERNAME, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['abodepy==0.7.1']
 
@@ -22,8 +22,9 @@ CONF_ATTRIBUTION = "Data provided by goabode.com"
 
 DOMAIN = 'abode'
 DEFAULT_NAME = 'Abode'
-DATA_ABODE = 'data_abode'
 DEFAULT_ENTITY_NAMESPACE = 'abode'
+
+ABODE_CONTROLLER = None
 
 NOTIFICATION_ID = 'abode_notification'
 NOTIFICATION_TITLE = 'Abode Security Setup'
@@ -45,16 +46,34 @@ SENSOR_TYPES = {
 
 def setup(hass, config):
     """Set up Abode component."""
+    global ABODE_CONTROLLER
+    import abodepy
+
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
 
     try:
-        data = AbodeData(username, password)
-        hass.data[DATA_ABODE] = data
+        ABODE_CONTROLLER = abodepy.Abode(username, password)
+        hass.data[DOMAIN] = ABODE_CONTROLLER
+
+        devices = ABODE_CONTROLLER.get_devices()
+
+        _LOGGER.info("Logged in to Abode and found %s devices",
+                     len(devices))
 
         for component in ['binary_sensor', 'alarm_control_panel', 'lock']:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+        def logout(event):
+            """Logout of the SimpliSafe API."""
+            ABODE_CONTROLLER.stop_listener()
+            ABODE_CONTROLLER.logout()
+            _LOGGER.info("Logged out of Abode")
+
+        hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
+
+        ABODE_CONTROLLER.start_listener()
 
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
@@ -69,33 +88,22 @@ def setup(hass, config):
     return True
 
 
-class AbodeData:
-    """Shared Abode data."""
-
-    def __init__(self, username, password):
-        """Initialize Abode oject."""
-        import abodepy
-
-        self.abode = abodepy.Abode(username, password)
-        self.devices = self.abode.get_devices()
-
-        _LOGGER.debug("Abode Security set up with %s devices",
-                      len(self.devices))
-
 class AbodeDevice(Entity):
     """Representation of an Abode device."""
 
-    def __init__(self, hass, data, device):
+    def __init__(self, hass, controller, device):
         """Initialize a sensor for Abode device."""
-        self._data = data
+        self._controller = controller
         self._device = device
         self._name = "{0} {1}".format(self._device.type, self._device.name)
         self._attrs = None
 
+        self._controller.register(self._device, self.update)
+
     @property
     def should_poll(self):
         """Return the polling state."""
-        return True
+        return False
 
     @property
     def name(self):
@@ -117,6 +125,8 @@ class AbodeDevice(Entity):
 
         return self._attrs
 
-    def update(self):
+    def update(self, device):
         """Update the device state."""
+        _LOGGER.info("Device update received: %s", device.device_id)
         self._device.refresh()
+        self.schedule_update_ha_state()
