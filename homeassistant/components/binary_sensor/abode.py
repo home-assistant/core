@@ -47,3 +47,8 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
             return self._device.status != 'Closed'
         elif self._device.type == 'Motion Camera':
             return self._device.get_value('motion_event') == '1'
+
+    @property
+    def device_class(self):
+        """Return the class of the binary sensor."""
+        return SENSOR_TYPES.get(self._device.type)

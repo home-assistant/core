@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ATTRIBUTION,
     CONF_USERNAME, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['abodepy==0.7.1']
+REQUIREMENTS = ['abodepy==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,13 +36,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-# Sensor types: Name, device_class
-SENSOR_TYPES = {
-    'Door Contact': 'opening',
-    'Motion Camera': 'motion',
-    'Door Lock': 'lock'
-}
 
 def setup(hass, config):
     """Set up Abode component."""
@@ -66,7 +59,7 @@ def setup(hass, config):
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
         def logout(event):
-            """Logout of the SimpliSafe API."""
+            """Logout of Abode."""
             ABODE_CONTROLLER.stop_listener()
             ABODE_CONTROLLER.logout()
             _LOGGER.info("Logged out of Abode")
@@ -98,7 +91,9 @@ class AbodeDevice(Entity):
         self._name = "{0} {1}".format(self._device.type, self._device.name)
         self._attrs = None
 
-        self._controller.register(self._device, self.update)
+        self._controller.register(self._device, self._update_callback)
+
+        _LOGGER.info("Device initialized: %s", self.name)
 
     @property
     def should_poll(self):
@@ -111,11 +106,6 @@ class AbodeDevice(Entity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return SENSOR_TYPES.get(self._device.type)
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         self._attrs = {}
@@ -125,8 +115,8 @@ class AbodeDevice(Entity):
 
         return self._attrs
 
-    def update(self, device):
+    def _update_callback(self, device):
         """Update the device state."""
-        _LOGGER.info("Device update received: %s", device.device_id)
-        self._device.refresh()
+        _LOGGER.info("Device update received: %s", self.name)
+        self._device = device
         self.schedule_update_ha_state()
