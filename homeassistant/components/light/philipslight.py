@@ -4,6 +4,8 @@ Support for Xiaomi Philips Lights (LED Ball & Ceil).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/light.philipslight/
 """
+import asyncio
+from functools import partial
 import logging
 import math
 
@@ -17,15 +19,16 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP, Light, )
 
-from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME,
-                                 CONF_HOST, CONF_TOKEN, )
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'Philips Light'
+PLATFORM = 'philipslight'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 REQUIREMENTS = ['python-mirobo==0.1.3']
@@ -38,28 +41,37 @@ SUCCESS = ['ok']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the light from config."""
+    from mirobo import Ceil
+    if PLATFORM not in hass.data:
+        hass.data[PLATFORM] = {}
+
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
 
-    add_devices_callback([PhilipsLight(name, host, token)], True)
+    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    light = Ceil(host, token)
+
+    philips_light = PhilipsLight(name, light)
+    hass.data[PLATFORM][host] = philips_light
+
+    async_add_devices([philips_light], update_before_add=True)
 
 
 class PhilipsLight(Light):
     """Representation of a Philips Light."""
 
-    def __init__(self, name, host, token):
+    def __init__(self, name, light):
         """Initialize the light device."""
-        self._name = name or DEVICE_DEFAULT_NAME
-        self.host = host
-        self.token = token
+        self._name = name
 
         self._brightness = 180
         self._color_temp = None
 
-        self._light = None
+        self._light = light
         self._state = None
 
     @property
@@ -107,66 +119,87 @@ class PhilipsLight(Light):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
-    @property
-    def light(self):
-        """Property accessor for light object."""
-        if not self._light:
-            from mirobo import Ceil
-            _LOGGER.info("Initializing light with host %s", self.host)
-            self._light = Ceil(self.host, self.token)
+    @asyncio.coroutine
+    def _try_command(self, mask_error, func, *args, **kwargs):
+        """Call a light command handling error messages."""
+        from mirobo import DeviceException
+        try:
+            result = yield from self.hass.async_add_job(
+                partial(func, *args, **kwargs))
 
-        return self._light
+            _LOGGER.debug("Response received from light: %s", result)
 
-    def turn_on(self, **kwargs):
+            if result == SUCCESS:
+                return True
+            else:
+                return False
+
+        except (DeviceException) as exc:
+            _LOGGER.error(mask_error, exc)
+            return False
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = int(100 * brightness / 255)
 
-            percent_brightness = int(100 * self._brightness / 255)
+            _LOGGER.debug(
+                "Setting brightness: %s %s%%",
+                self.brightness, percent_brightness)
 
-            if self.light.set_bright(percent_brightness) == SUCCESS:
-                _LOGGER.debug("Setting brightness of light (%s): %s %s%%",
-                              self.host, self.brightness, percent_brightness)
-            else:
-                _LOGGER.error(
-                    "Setting brightness of light (%s) failed: %s %s%%",
-                    self.host, self.brightness, percent_brightness)
+            result = yield from self._try_command(
+                "Setting brightness failed: %s",
+                self._light.set_bright, percent_brightness)
+
+            if result:
+                self._brightness = brightness
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._color_temp = kwargs[ATTR_COLOR_TEMP]
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+            percent_color_temp = self.translate(
+                color_temp, self.max_mireds,
+                self.min_mireds, CCT_MIN, CCT_MAX)
 
-            percent_cct = self.translate(self._color_temp, self.max_mireds,
-                                         self.min_mireds, CCT_MIN, CCT_MAX)
+            _LOGGER.debug(
+                "Setting color temperature: "
+                "%s mireds, %s%% cct",
+                color_temp, percent_color_temp)
 
-            if self.light.set_cct(percent_cct) == SUCCESS:
-                _LOGGER.debug(
-                    "Setting color temperature of light (%s): "
-                    "%s mireds, %s%% cct",
-                    self.host, self._color_temp, percent_cct)
-            else:
-                _LOGGER.error(
-                    "Setting color temperature of light (%s) failed: "
-                    "%s mireds, %s%% cct",
-                    self.host, self._color_temp, percent_cct)
+            result = yield from self._try_command(
+                "Setting color temperature failed: %s cct",
+                self._light.set_cct, percent_color_temp)
 
-        if self.light.on() == SUCCESS:
+            if result:
+                self._color_temp = color_temp
+
+        result = yield from self._try_command(
+            "Turning the light on failed.", self._light.on)
+
+        if result:
             self._state = True
-        else:
-            _LOGGER.error("Turning the light (%s) on failed.", self.host)
 
-    def turn_off(self, **kwargs):
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        if self.light.off() == SUCCESS:
-            self._state = False
-        else:
-            _LOGGER.error("Turning the light (%s) off failed.", self.host)
+        result = yield from self._try_command(
+            "Turning the light off failed.", self._light.off)
 
-    def update(self):
+        if result:
+            self._state = True
+
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    @asyncio.coroutine
+    def async_update(self):
         """Fetch state from the device."""
         from mirobo import DeviceException
         try:
-            state = self.light.status()
-            _LOGGER.debug("Got state from light (%s): %s", self.host, state)
+            state = yield from self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state.data)
 
             self._state = state.is_on
             self._brightness = int(255 * 0.01 * state.bright)
@@ -175,9 +208,7 @@ class PhilipsLight(Light):
                                               self.min_mireds)
 
         except DeviceException as ex:
-            _LOGGER.error(
-                "Got exception from light (%s) while fetching the state: "
-                "%s", self.host, ex)
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
