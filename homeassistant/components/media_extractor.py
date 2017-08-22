@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2017.8.6']
+REQUIREMENTS = ['youtube_dl==2017.8.18']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def setup(hass, config):
                      'media_player', 'services.yaml'))
 
     def play_media(call):
-        """Get stream URL and send it to the media_player.play_media."""
+        """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
     hass.services.register(DOMAIN,
@@ -66,7 +66,7 @@ class MEQueryException(Exception):
     pass
 
 
-class MediaExtractor:
+class MediaExtractor(object):
     """Class which encapsulates all extraction logic."""
 
     def __init__(self, hass, component_config, call_data):
@@ -107,15 +107,14 @@ class MediaExtractor:
         ydl = YoutubeDL({'quiet': True, 'logger': _LOGGER})
 
         try:
-            all_media = ydl.extract_info(self.get_media_url(),
-                                         process=False)
+            all_media = ydl.extract_info(self.get_media_url(), process=False)
         except DownloadError:
             # This exception will be logged by youtube-dl itself
             raise MEDownloadException()
 
         if 'entries' in all_media:
-            _LOGGER.warning("Playlists are not supported, "
-                            "looking for the first video")
+            _LOGGER.warning(
+                "Playlists are not supported, looking for the first video")
             entries = list(all_media['entries'])
             if len(entries) > 0:
                 selected_media = entries[0]
@@ -126,14 +125,14 @@ class MediaExtractor:
             selected_media = all_media
 
         def stream_selector(query):
-            """Find stream url that matches query."""
+            """Find stream URL that matches query."""
             try:
                 ydl.params['format'] = query
-                requested_stream = ydl.process_ie_result(selected_media,
-                                                         download=False)
+                requested_stream = ydl.process_ie_result(
+                    selected_media, download=False)
             except (ExtractorError, DownloadError):
-                _LOGGER.error("Could not extract stream for the query: %s",
-                              query)
+                _LOGGER.error(
+                    "Could not extract stream for the query: %s", query)
                 raise MEQueryException()
 
             return requested_stream['url']
@@ -141,7 +140,7 @@ class MediaExtractor:
         return stream_selector
 
     def call_media_player_service(self, stream_selector, entity_id):
-        """Call media_player.play_media service."""
+        """Call Media player play_media service."""
         stream_query = self.get_stream_query_for_entity(entity_id)
 
         try:
@@ -164,8 +163,8 @@ class MediaExtractor:
 
     def get_stream_query_for_entity(self, entity_id):
         """Get stream format query for entity."""
-        default_stream_query = self.config.get(CONF_DEFAULT_STREAM_QUERY,
-                                               DEFAULT_STREAM_QUERY)
+        default_stream_query = self.config.get(
+            CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY)
 
         if entity_id:
             media_content_type = self.call_data.get(ATTR_MEDIA_CONTENT_TYPE)
