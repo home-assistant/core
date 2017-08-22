@@ -734,8 +734,8 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.vacuum.xiaomi
 # homeassistant.components.light.philipslight
+# homeassistant.components.vacuum.xiaomi
 python-mirobo==0.1.3
 
 # homeassistant.components.media_player.mpd
