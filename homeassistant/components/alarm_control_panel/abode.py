@@ -10,7 +10,7 @@ from homeassistant.components.abode import (
     AbodeDevice, ABODE_CONTROLLER, DEFAULT_NAME)
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
 
 DEPENDENCIES = ['abode']
 
@@ -25,13 +25,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([AbodeAlarm(hass, ABODE_CONTROLLER, ABODE_CONTROLLER.get_alarm())])
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
+class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
     def __init__(self, hass, controller, device):
         """Initialize the alarm control panel."""
         AbodeDevice.__init__(self, hass, controller, device)
-        self._device = device
         self._name = "{0}".format(DEFAULT_NAME)
 
     @property
