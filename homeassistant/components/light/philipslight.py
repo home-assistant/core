@@ -2,7 +2,7 @@
 Support for Xiaomi Philips Lights (LED Ball & Ceil).
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.philipslight/
+https://home-assistant.io/components/light.philipslight/
 """
 import logging
 import math
