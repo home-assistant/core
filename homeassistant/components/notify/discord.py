@@ -44,6 +44,10 @@ class DiscordNotificationService(BaseNotificationService):
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
+        if ATTR_TARGET not in kwargs:
+            _LOGGER.error("No target specified")
+            return None
+
         # pylint: disable=unused-variable
         @discord_bot.event
         @asyncio.coroutine
@@ -56,9 +60,6 @@ class DiscordNotificationService(BaseNotificationService):
             except (discord.errors.HTTPException,
                     discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
-            # pylint: disable=broad-except
-            except KeyError:
-                _LOGGER.warning("No target specified")
             yield from discord_bot.logout()
             yield from discord_bot.close()
 
