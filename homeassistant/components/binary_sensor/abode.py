@@ -6,8 +6,8 @@ https://home-assistant.io/components/binary_sensor.abode/
 """
 import logging
 
-from homeassistant.components.abode import (CONF_ATTRIBUTION, DATA_ABODE)
-from homeassistant.const import (ATTR_ATTRIBUTION)
+from homeassistant.components.abode import (
+    AbodeDevice, CONF_ATTRIBUTION, DATA_ABODE)
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 
 DEPENDENCIES = ['abode']
@@ -35,23 +35,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-class AbodeBinarySensor(BinarySensorDevice):
+class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     """A binary sensor implementation for Abode device."""
 
     def __init__(self, hass, data, device):
         """Initialize a sensor for Abode device."""
-        super(AbodeBinarySensor, self).__init__()
-        self._device = device
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{0} {1}".format(self._device.type, self._device.name)
+        AbodeDevice.__init__(self, hass, data, device)
 
     @property
     def is_on(self):
@@ -60,22 +49,3 @@ class AbodeBinarySensor(BinarySensorDevice):
             return self._device.status != 'Closed'
         elif self._device.type == 'Motion Camera':
             return self._device.get_value('motion_event') == '1'
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return SENSOR_TYPES.get(self._device.type)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs['device_id'] = self._device.device_id
-        attrs['battery_low'] = self._device.battery_low
-
-        return attrs
-
-    def update(self):
-        """Update the device state."""
-        self._device.refresh()

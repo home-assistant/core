@@ -10,7 +10,9 @@ import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import (ATTR_ATTRIBUTION,
+    CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 
 REQUIREMENTS = ['abodepy==0.7.1']
 
@@ -34,6 +36,12 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+# Sensor types: Name, device_class
+SENSOR_TYPES = {
+    'Door Contact': 'opening',
+    'Motion Camera': 'motion',
+    'Door Lock': 'lock'
+}
 
 def setup(hass, config):
     """Set up Abode component."""
@@ -45,7 +53,7 @@ def setup(hass, config):
         data = AbodeData(username, password)
         hass.data[DATA_ABODE] = data
 
-        for component in ['binary_sensor', 'alarm_control_panel']:
+        for component in ['binary_sensor', 'alarm_control_panel', 'lock']:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     except (ConnectTimeout, HTTPError) as ex:
@@ -73,3 +81,42 @@ class AbodeData:
 
         _LOGGER.debug("Abode Security set up with %s devices",
                       len(self.devices))
+
+class AbodeDevice(Entity):
+    """Representation of an Abode device."""
+
+    def __init__(self, hass, data, device):
+        """Initialize a sensor for Abode device."""
+        self._data = data
+        self._device = device
+        self._name = "{0} {1}".format(self._device.type, self._device.name)
+        self._attrs = None
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return True
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_class(self):
+        """Return the class of the binary sensor."""
+        return SENSOR_TYPES.get(self._device.type)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        self._attrs = {}
+        self._attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        self._attrs['device_id'] = self._device.device_id
+        self._attrs['battery_low'] = self._device.battery_low
+
+        return self._attrs
+
+    def update(self):
+        """Update the device state."""
+        self._device.refresh()
