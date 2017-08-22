@@ -12,7 +12,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ATTRIBUTION,
-                                 CONF_USERNAME, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+                                 CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['abodepy==0.8.2']
 

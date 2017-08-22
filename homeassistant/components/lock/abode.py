@@ -9,7 +9,6 @@ import logging
 from homeassistant.components.abode import (
     AbodeDevice, ABODE_CONTROLLER)
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 DEPENDENCIES = ['abode']
 

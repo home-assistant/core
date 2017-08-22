@@ -40,7 +40,7 @@ class AbodeCover(AbodeDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._device.is_open == False
+        return self._device.is_open is False
 
     def close_cover(self):
         """Issue close command to cover."""
