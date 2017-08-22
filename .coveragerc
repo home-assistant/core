@@ -164,6 +164,8 @@ omit =
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
+    homeassistant/components/sensor/tank_utility.py
+
     homeassistant/components/tellduslive.py
     homeassistant/components/*/tellduslive.py
 
