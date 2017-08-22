@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.yeelight/
 """
 import logging
 import colorsys
+from typing import Tuple
 
 import voluptuous as vol
 
@@ -87,6 +88,14 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
     EFFECT_STOP]
+
+
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
+def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
+    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
+    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    return int(red * 255), int(green * 255), int(blue * 255)
 
 
 def _cmd(func):
@@ -195,7 +204,7 @@ class YeelightLight(Light):
             hue = int(self._properties.get('hue'))
             sat = int(self._properties.get('sat'))
             val = int(self._properties.get('bright'))
-            return colorsys.hsv_to_rgb(hue, sat, val)
+            return hsv_to_rgb((hue, sat, val))
 
         rgb = int(rgb)
         blue = rgb & 0xff
