@@ -187,7 +187,7 @@ class FroniusSensor(Entity):
                         'friendly_name': 'Current autonomy',
                         'unit_of_measurement':
                             data['Relative_Current_Autonomy']['unit'],
-                        'icon': 'mdi:leaf'
+                        'icon': 'mdi:all-inclusive'
                         }
                 }
             ]
