@@ -734,7 +734,7 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.light.philipslight
+# homeassistant.components.light.xiaomi_philipslight
 # homeassistant.components.vacuum.xiaomi
 python-mirobo==0.1.3
 
