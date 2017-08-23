@@ -15,7 +15,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL,
                                  CONF_UNIT_OF_MEASUREMENT, CONF_NAME)
 from homeassistant.helpers.entity import Entity, generate_entity_id
@@ -36,7 +36,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
 DOMAIN = 'geo_rss_events'
-ENTITY_ID_FORMAT = 'sensor.' + DOMAIN + '_{}'
 # Minimum time between updates from the source.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
