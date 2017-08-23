@@ -286,35 +286,14 @@ class Entity(object):
 
         unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
         units = self.hass.config.units
-        try:
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
-                # Convert temperature if we detect one
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+        converted = units.convert(state, unit_of_measure)
 
-        try:
-            if (unit_of_measure in LENGTH_UNITS and
-                    unit_of_measure != units.length_unit):
-                # Convert length if we detect one
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                display_unit = ''
-                converted = units.length(float(state), unit_of_measure,
-                                         display_unit)
-                length = converted["value"]
-                state = str(round(length))
-                if prec != 0:
-                    state = round(length, prec)
-                attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
 
-        except ValueError:
-            # Could not convert state to float
-            pass
+        if not converted is None:
+            if converted["unit"] is not None:
+                attr[UNIT_OF_MEASUREMENT] = converted["unit"]
+            if converted["value"] is not None:
+                state = converted["value"]
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)

@@ -138,7 +138,42 @@ class UnitSystem(object):
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit
         }
+    
+    def convert(self, state, unit_of_measure):
+        """Generic conversion method."""
+        converted = None
+        try:
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != self.temperature_unit):
+                # Convert temperature if we detect one
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                temp = self.temperature(float(state), unit_of_measure)
+                state = str(round(temp) if prec == 0 else round(temp, prec))
+                converted = {}
+                converted["value"] = state
+                converted["units"] = self.temperature_unit
+        except ValueError:
+            # Could not convert state to float
+            pass
 
+        try:
+            if (unit_of_measure in LENGTH_UNITS and
+                    unit_of_measure != self.length_unit):
+                # Convert length if we detect one
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                display_unit = ''
+                converted = self.length_with_display_obj(
+                    float(state), unit_of_measure)
+                length = converted["value"]
+                state = str(round(length))
+                if prec != 0:
+                    state = round(length, prec)
+                converted["value"] = state
+        except ValueError:
+            # Could not convert state to float
+            pass
+        
+        return converted
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
                            LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS)
