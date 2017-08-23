@@ -10,7 +10,6 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -182,11 +181,11 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                         })
 
             if self._next_buses:
-                self._state = min(map(
-                    _delta_mins, [bus['scheduled'] for bus in self._next_buses]
-                    ))
+                self._state = min(
+                    _delta_mins(bus['scheduled'])
+                    for bus in self._next_buses)
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
 
     @property
     def device_state_attributes(self):
@@ -247,12 +246,11 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                         })
 
                 if self._next_trains:
-                    self._state = min(map(
-                        _delta_mins,
-                        [train['scheduled'] for train in self._next_trains]
-                        ))
+                    self._state = min(
+                        _delta_mins(train['scheduled'])
+                        for train in self._next_trains)
                 else:
-                    self._state = STATE_UNKNOWN
+                    self._state = None
 
     @property
     def device_state_attributes(self):
