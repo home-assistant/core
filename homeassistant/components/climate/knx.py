@@ -95,13 +95,13 @@ class KNXClimate(ClimateDevice):
         """Initialization of KNXClimate."""
         self.device = device
         self.hass = hass
-        self.register_callbacks()
+        self.async_register_callbacks()
 
         self._unit_of_measurement = TEMP_CELSIUS
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
 
-    def register_callbacks(self):
+    def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):

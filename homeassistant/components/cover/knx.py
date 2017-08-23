@@ -91,11 +91,12 @@ class KNXCover(CoverDevice):
         """Initialize the cover."""
         self.device = device
         self.hass = hass
-        self.register_callbacks()
+        self.async_register_callbacks()
 
         self._unsubscribe_auto_updater = None
 
-    def register_callbacks(self):
+    @callback
+    def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
