@@ -43,6 +43,7 @@ RUN pip3 install --no-cache-dir tox
 # Copy over everything required to run tox
 COPY requirements_test_all.txt setup.cfg setup.py tox.ini ./
 COPY homeassistant/const.py homeassistant/const.py
+COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 
 # Prefetch dependencies for tox
 RUN tox -e py36 --notest
@@ -51,5 +52,7 @@ RUN tox -e py36 --notest
 
 # Copy source
 COPY . .
+
+RUN python -m pip install ./pytradfri
 
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
