@@ -7,7 +7,6 @@ https://home-assistant.io/components/light.xiaomi_philipslight/
 import asyncio
 from functools import partial
 import logging
-import math
 
 import voluptuous as vol
 
@@ -42,7 +41,7 @@ SUCCESS = ['ok']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the light from config."""
-    from mirobo import Ceil,DeviceException
+    from mirobo import Ceil, DeviceException
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
