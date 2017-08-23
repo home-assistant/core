@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-ABODE_COMPONENTS = [
+ABODE_PLATFORMS = [
     'alarm_control_panel', 'binary_sensor', 'lock', 'switch', 'cover'
 ]
 
@@ -59,8 +59,8 @@ def setup(hass, config):
         _LOGGER.info("Logged in to Abode and found %s devices",
                      len(devices))
 
-        for component in ABODE_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
+        for platform in ABODE_PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
         def logout(event):
             """Logout of Abode."""
