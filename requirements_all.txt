@@ -296,7 +296,7 @@ holidays==0.8.1
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
 # homeassistant.components.xiaomi
-https://github.com/Danielhiversen/PyXiaomiGateway/archive/aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#PyXiaomiGateway==0.2.0
+https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.zip#PyXiaomiGateway==0.3.0
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
