@@ -53,6 +53,7 @@ RUN tox -e py36 --notest
 # Copy source
 COPY . .
 
+run apt update && apt install -y git
 RUN git clone https://github.com/ggravlingen/pytradfri.git
 RUN python -m pip install ./pytradfri
 
