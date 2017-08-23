@@ -174,9 +174,9 @@ class UnitSystem(object):
 
         return converted
 
+
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
                            LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS)
 
 IMPERIAL_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_IMPERIAL, TEMP_FAHRENHEIT,
                              LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS)
-
