@@ -138,7 +138,7 @@ class UnitSystem(object):
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit
         }
-    
+
     def convert(self, state, unit_of_measure):
         """Generic conversion method."""
         converted = None
@@ -161,7 +161,6 @@ class UnitSystem(object):
                     unit_of_measure != self.length_unit):
                 # Convert length if we detect one
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                display_unit = ''
                 converted = self.length_with_display_obj(
                     float(state), unit_of_measure)
                 length = converted["value"]
@@ -172,7 +171,7 @@ class UnitSystem(object):
         except ValueError:
             # Could not convert state to float
             pass
-        
+
         return converted
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,

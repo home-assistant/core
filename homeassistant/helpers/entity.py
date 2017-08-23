@@ -288,10 +288,9 @@ class Entity(object):
         units = self.hass.config.units
         converted = units.convert(state, unit_of_measure)
 
-
-        if not converted is None:
+        if converted is not None:
             if converted["unit"] is not None:
-                attr[UNIT_OF_MEASUREMENT] = converted["unit"]
+                attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
             if converted["value"] is not None:
                 state = converted["value"]
 
