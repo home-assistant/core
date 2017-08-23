@@ -68,7 +68,7 @@ class XiaomiPhilipsLight(Light):
         """Initialize the light device."""
         self._name = name
 
-        self._brightness = 180
+        self._brightness = None
         self._color_temp = None
 
         self._light = light
@@ -107,12 +107,12 @@ class XiaomiPhilipsLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return math.floor(kelvin_to_mired(5700))
+        return 175
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return math.floor(kelvin_to_mired(3000))
+        return 333
 
     @property
     def supported_features(self):
