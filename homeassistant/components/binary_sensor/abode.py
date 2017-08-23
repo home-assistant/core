@@ -48,6 +48,7 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     def __init__(self, hass, controller, device):
         """Initialize a sensor for Abode device."""
         AbodeDevice.__init__(self, hass, controller, device)
+        self._device_class = map_abode_device_class().get(self._device.type)
 
     @property
     def is_on(self):
@@ -60,4 +61,4 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return map_abode_device_class().get(self._device.type)
+        return self._device_class
