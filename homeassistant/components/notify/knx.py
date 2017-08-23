@@ -11,6 +11,7 @@ from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.notify import PLATFORM_SCHEMA, \
     BaseNotificationService
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
@@ -30,12 +31,13 @@ def async_get_service(hass, config, discovery_info=None):
             or not hass.data[DATA_KNX].initialized:
         return False
 
-    return get_service_from_component(hass, discovery_info) \
+    return async_get_service_discovery(hass, discovery_info) \
         if discovery_info is not None else \
-        get_service_from_platform(hass, config)
+        async_get_service_config(hass, config)
 
 
-def get_service_from_component(hass, discovery_info):
+@callback
+def async_get_service_discovery(hass, discovery_info):
     """Set up notifications for KNX platform configured via xknx.yaml."""
     notification_devices = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
@@ -47,7 +49,8 @@ def get_service_from_component(hass, discovery_info):
         None
 
 
-def get_service_from_platform(hass, config):
+@callback
+def async_get_service_config(hass, config):
     """Set up notification for KNX platform configured within plattform."""
     import xknx
     notification = xknx.devices.Notification(

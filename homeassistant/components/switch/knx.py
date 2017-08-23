@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_ADDRESS = 'address'
@@ -34,14 +35,15 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        add_devices_from_component(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, add_devices)
     else:
-        add_devices_from_platform(hass, config, add_devices)
+        async_add_devices_config(hass, config, add_devices)
 
     return True
 
 
-def add_devices_from_component(hass, discovery_info, add_devices):
+@callback
+def async_add_devices_discovery(hass, discovery_info, add_devices):
     """Set up switches for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
@@ -50,7 +52,8 @@ def add_devices_from_component(hass, discovery_info, add_devices):
     add_devices(entities)
 
 
-def add_devices_from_platform(hass, config, add_devices):
+@callback
+def async_add_devices_config(hass, config, add_devices):
     """Set up switch for KNX platform configured within plattform."""
     import xknx
     switch = xknx.devices.Switch(

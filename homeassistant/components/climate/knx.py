@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_SETPOINT_ADDRESS = 'setpoint_address'
@@ -45,14 +46,15 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        add_devices_from_component(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, add_devices)
     else:
-        add_devices_from_platform(hass, config, add_devices)
+        async_add_devices_config(hass, config, add_devices)
 
     return True
 
 
-def add_devices_from_component(hass, discovery_info, add_devices):
+@callback
+def async_add_devices_discovery(hass, discovery_info, add_devices):
     """Set up climates for KNX platform configured within plattform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
@@ -61,7 +63,8 @@ def add_devices_from_component(hass, discovery_info, add_devices):
     add_devices(entities)
 
 
-def add_devices_from_platform(hass, config, add_devices):
+@callback
+def async_add_devices_config(hass, config, add_devices):
     """Set up climate for KNX platform configured within plattform."""
     import xknx
     climate = xknx.devices.Climate(
@@ -157,6 +160,7 @@ class KNXClimate(ClimateDevice):
                 operation_mode in
                 self.device.get_supported_operation_modes()]
 
+    @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.device.supports_operation_mode:
