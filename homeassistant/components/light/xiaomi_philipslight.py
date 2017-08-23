@@ -2,7 +2,7 @@
 Support for Xiaomi Philips Lights (LED Ball & Ceil).
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/light.philipslight/
+https://home-assistant.io/components/light.xiaomi_philipslight/
 """
 import asyncio
 from functools import partial
@@ -23,8 +23,8 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Philips Light'
-PLATFORM = 'philipslight'
+DEFAULT_NAME = 'Xiaomi Philips Light'
+PLATFORM = 'xiaomi_philipslight'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -55,14 +55,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
     light = Ceil(host, token)
 
-    philips_light = PhilipsLight(name, light)
+    philips_light = XiaomiPhilipsLight(name, light)
     hass.data[PLATFORM][host] = philips_light
 
     async_add_devices([philips_light], update_before_add=True)
 
 
-class PhilipsLight(Light):
-    """Representation of a Philips Light."""
+class XiaomiPhilipsLight(Light):
+    """Representation of a Xiaomi Philips Light."""
 
     def __init__(self, name, light):
         """Initialize the light device."""
