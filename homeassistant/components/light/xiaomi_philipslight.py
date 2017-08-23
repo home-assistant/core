@@ -11,15 +11,13 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired, )
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP, Light, )
 
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ SUCCESS = ['ok']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the light from config."""
-    from mirobo import Ceil
+    from mirobo import Ceil,DeviceException
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -53,10 +51,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     token = config.get(CONF_TOKEN)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    light = Ceil(host, token)
 
-    philips_light = XiaomiPhilipsLight(name, light)
-    hass.data[PLATFORM][host] = philips_light
+    try:
+        light = Ceil(host, token)
+
+        philips_light = XiaomiPhilipsLight(name, light)
+        hass.data[PLATFORM][host] = philips_light
+    except DeviceException:
+        raise PlatformNotReady
 
     async_add_devices([philips_light], update_before_add=True)
 
