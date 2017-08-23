@@ -611,9 +611,9 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return true if entity is available."""
         return self.value_type in self._values
 
-    def _update_callback(self):
+    def _async_update_callback(self):
         """Update the entity."""
-        self.schedule_update_ha_state(True)
+        self.hass.async_add_job(self.async_update_ha_state(True))
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -621,4 +621,4 @@ class MySensorsEntity(MySensorsDevice, Entity):
         dev_id = id(self.gateway), self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
             self.hass, SIGNAL_CALLBACK.format(*dev_id),
-            self._update_callback)
+            self._async_update_callback)
