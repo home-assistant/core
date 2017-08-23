@@ -292,7 +292,7 @@ class DarkSkySensor(Entity):
         state = getattr(data, lookup_type, None)
 
         if state is None:
-            return state
+            return 'none'
 
         if 'summary' in self.type:
             self._icon = getattr(data, 'icon', '')
