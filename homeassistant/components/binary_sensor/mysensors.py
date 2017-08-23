@@ -12,11 +12,9 @@ from homeassistant.const import STATE_ON
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for binary sensors."""
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsBinarySensor)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsBinarySensor,
+        add_devices=add_devices)
 
 
 class MySensorsBinarySensor(

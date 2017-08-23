@@ -11,11 +11,8 @@ from homeassistant.const import STATE_ON, STATE_OFF
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for covers."""
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsCover)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsCover, add_devices=add_devices)
 
 
 class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):

@@ -22,11 +22,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'S_RGB_LIGHT': MySensorsLightRGB,
         'S_RGBW_LIGHT': MySensorsLightRGBW,
     }
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, device_class_map)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, device_class_map,
+        add_devices=add_devices)
 
 
 class MySensorsLight(mysensors.MySensorsEntity, Light):

@@ -508,13 +508,16 @@ def get_mysensors_gateway(hass, gateway_id):
 
 
 def setup_mysensors_platform(
-        hass, domain, discovery_info, device_class, *args, **kwargs):
+        hass, domain, discovery_info, device_class, device_args=None,
+        add_devices=None):
     """Set up a mysensors platform."""
     # Only act if called via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if not discovery_info:
         return
-    new_devices = {}
+    if device_args is None:
+        device_args = ()
+    new_devices = []
     new_dev_ids = discovery_info[ATTR_DEVICES]
     for dev_id in new_dev_ids:
         devices = get_mysensors_devices(hass, domain)
@@ -532,11 +535,14 @@ def setup_mysensors_platform(
         name = get_mysensors_name(gateway, node_id, child_id)
 
         # python 3.4 cannot unpack inside tuple, but combining tuples works
-        args_copy = args + (gateway, node_id, child_id, name, value_type)
-        devices[dev_id] = device_class_copy(*args_copy, **kwargs)
-        new_devices[dev_id] = devices[dev_id]
+        args_copy = device_args + (
+            gateway, node_id, child_id, name, value_type)
+        devices[dev_id] = device_class_copy(*args_copy)
+        new_devices.append(devices[dev_id])
     if new_devices:
-        _LOGGER.info("Adding new devices: %s", new_devices.values())
+        _LOGGER.info("Adding new devices: %s", new_devices)
+        if add_devices is not None:
+            add_devices(new_devices, True)
     return new_devices
 
 

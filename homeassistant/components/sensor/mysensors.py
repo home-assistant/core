@@ -11,11 +11,8 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MySensors platform for sensors."""
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsSensor)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsSensor, add_devices=add_devices)
 
 
 class MySensorsSensor(mysensors.MySensorsEntity):

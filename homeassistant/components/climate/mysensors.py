@@ -26,11 +26,8 @@ DICT_MYS_TO_HA = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsHVAC)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsHVAC, add_devices=add_devices)
 
 
 class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):

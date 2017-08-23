@@ -40,11 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'S_MOISTURE': MySensorsSwitch,
         'S_WATER_QUALITY': MySensorsSwitch,
     }
-    new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, device_class_map)
-    if not new_devices:
-        return
-    add_devices(new_devices.values(), True)
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, device_class_map,
+        add_devices=add_devices)
 
     def send_ir_code_service(service):
         """Set IR code as device state attribute."""
