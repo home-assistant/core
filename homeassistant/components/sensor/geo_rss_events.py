@@ -150,14 +150,10 @@ class GeoRssServiceSensor(Entity):
             self._state = all_events
         else:
             # Group events by category.
-            my_events = []
-            if all_events:
-                for event in all_events:
-                    if event.category == self._category:
-                        my_events.append(event)
+            self._state = [event for event in all_events if
+                           event.category == self._category]
             _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
-                          my_events)
-            self._state = my_events
+                          self._state)
 
 
 class GeoRssServiceData(object):
