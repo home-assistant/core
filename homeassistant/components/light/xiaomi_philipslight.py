@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Xiaomi Philips Light'
 PLATFORM = 'xiaomi_philipslight'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
+    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
