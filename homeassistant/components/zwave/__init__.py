@@ -42,6 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 CLASS_ID = 'class_id'
 CONF_AUTOHEAL = 'autoheal'
 CONF_DEBUG = 'debug'
+CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
@@ -123,6 +124,7 @@ SET_WAKEUP_SCHEMA = vol.Schema({
 })
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
+    vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_INVERT_OPENCLOSE_BUTTONS,
                  default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
@@ -801,6 +803,11 @@ class ZWaveDeviceEntityValues():
             # No entity will be created for this value
             self._workaround_ignore = True
             return
+
+        polling_intensity = convert(
+            node_config.get(CONF_POLLING_INTENSITY), int)
+        if polling_intensity:
+            self.primary.enable_poll(polling_intensity)
 
         platform = get_platform(component, DOMAIN)
         device = platform.get_device(
