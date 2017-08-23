@@ -6,9 +6,9 @@ https://home-assistant.io/components/lock.abode/
 """
 import logging
 
-from homeassistant.components.abode import (
-    AbodeDevice, ABODE_CONTROLLER)
+from homeassistant.components.abode import AbodeDevice, DATA_ABODE
 from homeassistant.components.lock import LockDevice
+
 
 DEPENDENCIES = ['abode']
 
@@ -19,14 +19,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode lock devices."""
     import abodepy.helpers.constants as CONST
 
+    abode = hass.data[DATA_ABODE]
+
     sensors = []
+    for sensor in abode.get_devices(type_filter=(CONST.DEVICE_DOOR_LOCK)):
+        sensors.append(AbodeLock(hass, abode, sensor))
 
-    for sensor in ABODE_CONTROLLER.get_devices(
-            type_filter=(CONST.DEVICE_DOOR_LOCK)):
-        sensors.append(AbodeLock(hass, ABODE_CONTROLLER, sensor))
-        _LOGGER.debug('Added Lock %s', sensor.name)
-
-    _LOGGER.debug('Adding %d Locks', len(sensors))
     add_devices(sensors)
 
 

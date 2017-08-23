@@ -6,58 +6,40 @@ https://home-assistant.io/components/binary_sensor.abode/
 """
 import logging
 
-from homeassistant.components.abode import (
-    AbodeDevice, ABODE_CONTROLLER)
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.abode import AbodeDevice, DATA_ABODE
+from homeassistant.components.binary_sensor import BinarySensorDevice
+
 
 DEPENDENCIES = ['abode']
 
 _LOGGER = logging.getLogger(__name__)
 
-# Sensor types: Name, device_class
-SENSOR_TYPES = {
-    'Door Contact': 'opening',
-    'Motion Camera': 'motion',
-}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
+    abode = hass.data[DATA_ABODE]
 
-    device_types = [
-        CONST.DEVICE_GLASS_BREAK, CONST.DEVICE_KEYPAD,
-        CONST.DEVICE_DOOR_CONTACT, CONST.DEVICE_STATUS_DISPLAY,
-        CONST.DEVICE_MOTION_CAMERA, CONST.DEVICE_WATER_SENSOR]
+    device_types = map_abode_device_class().keys()
 
     sensors = []
-    for sensor in ABODE_CONTROLLER.get_devices(type_filter=device_types):
-        sensors.append(AbodeBinarySensor(hass, ABODE_CONTROLLER, sensor))
-        _LOGGER.debug('Added Binary Sensor %s', sensor.name)
-
-    _LOGGER.debug('Adding %d Binary Snsors', len(sensors))
+    for sensor in abode.get_devices(type_filter=device_types):
+        sensors.append(AbodeBinarySensor(hass, abode, sensor))
 
     add_devices(sensors)
 
 
-def map_abode_device_class(abode_device):
+def map_abode_device_class():
     """Map Abode device types to Home Assistant binary sensor class."""
     import abodepy.helpers.constants as CONST
 
-    if abode_device.type == CONST.DEVICE_GLASS_BREAK:
-        return 'connectivity'
-    elif abode_device.type == CONST.DEVICE_KEYPAD:
-        return 'connectivity'
-    elif abode_device.type == CONST.DEVICE_DOOR_CONTACT:
-        return 'opening'
-    elif abode_device.type == CONST.DEVICE_STATUS_DISPLAY:
-        return 'connectivity'
-    elif abode_device.type == CONST.DEVICE_MOTION_CAMERA:
-        return 'motion'
-    elif abode_device.type == CONST.DEVICE_WATER_SENSOR:
-        return 'moisture'
-
-    return None
+    return {
+        CONST.DEVICE_GLASS_BREAK: 'connectivity',
+        CONST.DEVICE_KEYPAD: 'connectivity',
+        CONST.DEVICE_DOOR_CONTACT: 'opening',
+        CONST.DEVICE_STATUS_DISPLAY: 'connectivity',
+        CONST.DEVICE_MOTION_CAMERA: 'motion',
+        CONST.DEVICE_WATER_SENSOR: 'moisture'
+    }
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
@@ -72,10 +54,10 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
         """Return True if the binary sensor is on."""
         if self.device_class == 'motion':
             return self._device.get_value('motion_event') == '1'
-        else:
-            return self._device.is_on
+
+        return self._device.is_on
 
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return map_abode_device_class(self._device)
+        return map_abode_device_class().get(self._device.type, None)

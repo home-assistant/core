@@ -7,10 +7,11 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, ABODE_CONTROLLER, DEFAULT_NAME)
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    AbodeDevice, DATA_ABODE, DEFAULT_NAME, CONF_ATTRIBUTION)
 from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
+from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+
 
 DEPENDENCIES = ['abode']
 
@@ -21,8 +22,9 @@ ICON = 'mdi:security'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    add_devices([AbodeAlarm(hass, ABODE_CONTROLLER,
-                            ABODE_CONTROLLER.get_alarm())])
+    abode = hass.data[DATA_ABODE]
+
+    add_devices([AbodeAlarm(hass, abode, abode.get_alarm())])
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
@@ -66,8 +68,10 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs = super().device_state_attributes
-        self._attrs['battery_backup'] = self._device.battery
-        self._attrs['cellular_backup'] = self._device.is_cellular
-
-        return self._attrs
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'device_id': self._device.device_id,
+            'battery_low': self._device.battery_low,
+            'battery_backup': self._device.battery,
+            'cellular_backup': self._device.is_cellular
+        }
