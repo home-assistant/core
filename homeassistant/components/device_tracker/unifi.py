@@ -83,7 +83,12 @@ class UnifiScanner(DeviceScanner):
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
-        self._clients = {client['mac']: client for client in clients if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(client['last_seen']))) < self.consider_home}
+        self._clients = {
+        client['mac']: client
+        for client in clients
+        if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
+                client['last_seen']))) < self.consider_home
+                }
 
     def scan_devices(self):
         """Scan for devices."""
