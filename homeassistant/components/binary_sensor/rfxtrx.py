@@ -62,7 +62,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                     entity[CONF_COMMAND_ON],
                                     entity[CONF_COMMAND_OFF])
         device.hass = hass
-        device.is_lighting4 = (packet_id[2:4] == '13')
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
 
@@ -86,17 +85,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if not config[ATTR_AUTOMATIC_ADD]:
                 return
 
-            poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
-
-            if poss_dev is not None:
-                poss_id = slugify(poss_dev.event.device.id_string.lower())
-                _LOGGER.info("Found possible matching deviceid %s.",
-                             poss_id)
+            if event.device.packettype == 0x13:
+                poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
+                if poss_dev is not None:
+                    poss_id = slugify(poss_dev.event.device.id_string.lower())
+                    _LOGGER.info("Found possible matching deviceid %s.",
+                                 poss_id)
 
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
             sensor.hass = hass
-            sensor.is_lighting4 = (pkt_id[2:4] == '13')
             rfxtrx.RFX_DEVICES[device_id] = sensor
             add_devices_callback([sensor])
             _LOGGER.info("Added binary sensor %s "
@@ -114,6 +112,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                          slugify(event.device.id_string.lower()),
                          event.device.__class__.__name__,
                          event.device.subtype)
+
         if sensor.is_lighting4:
             if sensor.data_bits is not None:
                 cmd = rfxtrx.get_pt2262_cmd(device_id, sensor.data_bits)
@@ -154,7 +153,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
-        self.is_lighting4 = False
+        self.is_lighting4 = (event.device.packettype == 0x13)
         self.delay_listener = None
         self._data_bits = data_bits
         self._cmd_on = cmd_on
