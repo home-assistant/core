@@ -93,7 +93,7 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
     yield from async_aiohttp_proxy_stream(hass, request, req.content,
                                           req.headers.get(CONTENT_TYPE))
 
-    yield from req.close()
+    req.close()
 
 
 @asyncio.coroutine
