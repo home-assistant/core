@@ -1,5 +1,8 @@
 """
 Calculates the weighted average of a sensor's historical numeric values.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.history_average/
 """
 import datetime
 from collections import defaultdict
@@ -13,12 +16,11 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_UNIT_OF_MEASUREMENT,
+    CONF_NAME, CONF_ENTITY_ID, CONF_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.template import DATE_STR_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ DEFAULT_NAME = 'unnamed average'
 ICON = 'mdi:chart-line'
 
 ATTR_DURATION = 'duration'
+
 
 def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
@@ -75,9 +78,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             template.hass = hass
 
     add_devices([HistoryAverageSensor(hass, entity_id, start, end,
-                                    duration, name, unit)])
+                                      duration, name, unit)])
 
     return True
+
 
 class HistoryAverageSensor(Entity):
     """Representation of a HistoryAverage sensor."""
@@ -195,15 +199,15 @@ class HistoryAverageSensor(Entity):
 
             if (last_state is None) or (current_state == last_state):
                 # record time spent in current state
-                intervals[float(current_state)] += elapsed                
+                intervals[float(current_state)] += elapsed
             else:
                 # average previous interval's state
                 average_state = (float(current_state) + float(last_state)) / 2
                 intervals[average_state] += elapsed
-    
+
             last_time = current_time
             last_state = current_state
-                
+
         # Count time elapsed between last history state and end of measure
         measure_end = min(end_timestamp, now_timestamp)
         elapsed = measure_end - last_time
@@ -211,7 +215,10 @@ class HistoryAverageSensor(Entity):
 
         # Calculate the weighted average
         value = 0
-        # todo: maybe instead just do a sum of all the elapsed time? And compare / display it as an attribute
+        # TODO: maybe instead just do a sum of all the elapsed time,
+        # and compare / display it as an attribute vs. relying upon the
+        # period - for example when there's not enough data to cover the
+        # entire period
         period = HistoryAverageHelper.period_in_seconds(self._period)
         for state in intervals:
             value += float(state) * (intervals[state] / period)
