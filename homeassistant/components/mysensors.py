@@ -49,6 +49,10 @@ CONF_TOPIC_IN_PREFIX = 'topic_in_prefix'
 CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
 CONF_VERSION = 'version'
 
+CONF_NODES = 'nodes'
+CONF_NODE_ID = 'id'
+CONF_NODE_NAME = 'name'
+
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = '1.4'
@@ -132,6 +136,14 @@ def deprecated(key):
     return validator
 
 
+NODE_SCHEMA = vol.All(
+    cv.ensure_list,
+    [{
+        vol.Required(CONF_NODE_ID): cv.positive_int,
+        vol.Optional(CONF_NODE_NAME): cv.string
+    }]
+)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(deprecated(CONF_DEBUG), {
         vol.Required(CONF_GATEWAYS): vol.All(
@@ -151,6 +163,7 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
                 vol.Optional(
                     CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+                vol.Optional(CONF_NODES, default=[]): NODE_SCHEMA,
             }]
         ),
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
@@ -285,7 +298,7 @@ def setup(hass, config):
     persistence = config[DOMAIN].get(CONF_PERSISTENCE)
 
     def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
-                      out_prefix):
+                      out_prefix, nodes_config):
         """Return gateway after setup of the gateway."""
         if device == MQTT_COMPONENT:
             if not setup_component(hass, MQTT_COMPONENT, config):
@@ -354,9 +367,10 @@ def setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
+        nodes_config = gway.get(CONF_NODES)
         ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
-            out_prefix)
+            out_prefix, nodes_config)
         if ready_gateway is not None:
             gateways[id(ready_gateway)] = ready_gateway
 
