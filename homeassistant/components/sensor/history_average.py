@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_END, default=None): cv.template,
     vol.Optional(CONF_DURATION, default=None): cv.time_period,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
 }), exactly_two_period_keys)
 
 
@@ -66,7 +66,6 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HistoryAverage sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
-    # entity_state = config.get(CONF_STATE)
     start = config.get(CONF_START)
     end = config.get(CONF_END)
     duration = config.get(CONF_DURATION)
