@@ -107,7 +107,7 @@ class GeofencyView(HomeAssistantView):
         return data
 
     def _is_mobile_beacon(self, data):
-        """Check if we have a mobile beacon"""
+        """Check if we have a mobile beacon."""
         return 'beaconUUID' in data and data['name'] in self.mobile_beacons
 
     @staticmethod
