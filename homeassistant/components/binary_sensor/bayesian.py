@@ -60,8 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_OBSERVATIONS):
     vol.Schema(
         vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
-                                         STATE_SCHEMA)])
-    ),
+                                         STATE_SCHEMA)])),
     vol.Required(CONF_PRIOR):
     vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
@@ -148,7 +147,9 @@ class BayesianBinarySensor(BinarySensorDevice):
             async_track_state_change(self.hass, entity_id,
                                      async_threshold_sensor_state_listener)
 
+    @callback
     def _update_current_obs(self, entity_observation, should_trigger):
+        """Update current observation."""
         entity = entity_observation['entity_id']
 
         if should_trigger:
@@ -164,7 +165,9 @@ class BayesianBinarySensor(BinarySensorDevice):
         else:
             self.current_obs.pop(entity, None)
 
+    @callback
     def _process_numeric_state(self, entity_observation):
+        """Add entity to current_obs if numeric state conditions are met."""
         entity = entity_observation['entity_id']
 
         should_trigger = condition.async_numeric_state(
@@ -174,7 +177,9 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self._update_current_obs(entity_observation, should_trigger)
 
+    @callback
     def _process_state(self, entity_observation):
+        """Add entity to current observations if state conditions are met."""
         entity = entity_observation['entity_id']
 
         should_trigger = condition.state(self.hass, entity,
