@@ -33,9 +33,7 @@ CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 DEFAULT_NAME = 'unnamed average'
 ICON = 'mdi:chart-line'
 
-ATTR_START = 'Start'
-ATTR_END = 'End'
-ATTR_DURATION = 'Duration'
+ATTR_DURATION = 'duration'
 
 def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
@@ -133,14 +131,8 @@ class HistoryAverageSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        start = self._period[0]
-        start_attribute = start.strftime(DATE_STR_FORMAT) if start is not None else None
-        end = self._period[1]
-        end_attribute = end.strftime(DATE_STR_FORMAT) if end is not None else None
         hah = HistoryAverageHelper
         return {
-            ATTR_START: start_attribute,
-            ATTR_END: end_attribute,
             ATTR_DURATION: hah.pretty_duration(self._period),
         }
 
