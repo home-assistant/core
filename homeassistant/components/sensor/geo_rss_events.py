@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices,
 
     # Initialise update service.
     data = GeoRssServiceData(hass, home_latitude, home_longitude, url,
-                             radius_in_km)
+                             radius_in_km, categories)
     data.update()
 
     # Create all sensors based on categories.
@@ -159,12 +159,14 @@ class GeoRssServiceSensor(Entity):
 class GeoRssServiceData(object):
     """Provides access to GeoRSS feed and stores the latest data."""
 
-    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km):
+    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km,
+                 categories):
         """Initialize the update service."""
         self._hass = hass
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
+        self._categories = categories
         self.events = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -194,40 +196,16 @@ class GeoRssServiceData(object):
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
             if distance <= self._radius_in_km:
-                event = self.create_event(entry, distance, geometry)
+                event = {
+                    'category': None if not hasattr(entry,
+                                                    'category') else entry.category,
+                    'title': None if not hasattr(entry,
+                                                 'title') else entry.title,
+                    'distance': distance
+                }
                 events.append(event)
         _LOGGER.debug("%s events found nearby", len(events))
         return events
-
-    @staticmethod
-    def create_event(feature, distance, geometry):
-        """Create an event from the RSS feed's entry and geo information."""
-        category_candidate = None
-        if hasattr(feature, 'category'):
-            category_candidate = feature.category
-        title_candidate = None
-        if hasattr(feature, 'title'):
-            title_candidate = feature.title
-        id_candidate = None
-        if hasattr(feature, 'id'):
-            id_candidate = feature.id
-        elif hasattr(feature, 'link'):
-            id_candidate = feature.link
-        pup_date_candidate = None
-        if hasattr(feature, 'updated_parsed'):
-            pup_date_candidate = feature.updated_parsed
-        elif hasattr(feature, 'published_parsed'):
-            pup_date_candidate = feature.published_parsed
-        summary_candidate = None
-        if hasattr(feature, 'summary'):
-            summary_candidate = feature.summary
-        return Event(category_candidate,
-                     title_candidate,
-                     id_candidate,
-                     pup_date_candidate,
-                     summary_candidate,
-                     geometry,
-                     distance)
 
     def calculate_distance_to_geometry(self, geometry):
         """Calculate the distance between HA and provided geometry."""
@@ -271,53 +249,3 @@ class GeoRssServiceData(object):
         _LOGGER.debug("Distance from %s to %s: %s km", self._home_coordinates,
                       polygon, distance)
         return distance
-
-
-class Event(object):
-    """Class for storing events retrieved."""
-
-    def __init__(self, category, title, guid, pub_date, description, geometry,
-                 distance):
-        """Initialize the data object."""
-        self._category = category
-        self._title = title
-        self._guid = guid
-        self._pub_date = pub_date
-        self._description = description
-        self._geometry = geometry
-        self._distance = distance
-
-    @property
-    def category(self):
-        """Return the event's category."""
-        return self._category
-
-    @property
-    def title(self):
-        """Return the event's title."""
-        return self._title
-
-    @property
-    def guid(self):
-        """Return the event's GUID."""
-        return self._guid
-
-    @property
-    def pub_date(self):
-        """Return the event's publication date."""
-        return self._pub_date
-
-    @property
-    def description(self):
-        """Return the event's description."""
-        return self._description
-
-    @property
-    def geometry(self):
-        """Return the event's geometry details."""
-        return self._geometry
-
-    @property
-    def distance(self):
-        """Return the event's distance to HA in km."""
-        return self._distance
