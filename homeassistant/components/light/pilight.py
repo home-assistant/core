@@ -135,7 +135,7 @@ class PilightDimmableLight(Light):
 
     @property
     def brightness(self):
-        """Return the brightness"""
+        """Return the brightness."""
         return self._brightness
 
     @property
@@ -146,7 +146,6 @@ class PilightDimmableLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-
         if self._dimmable:
             return SUPPORT_BRIGHTNESS
         else:
