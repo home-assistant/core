@@ -28,16 +28,18 @@ def setup(hass, config):
     from pyrainbird import RainbirdController
 
     controller = RainbirdController(_LOGGER)
-    controller.setConfig(server,password)
+    controller.setConfig(server, password)
     _LOGGER.info("Rainbird Controller setup to " + str(server))
 
     def startirrigation(call):
-        station_id=call.data.get('station')
-        duration=call.data.get('duration')
-        _LOGGER.info("Requesting irrigation for " + str(station_id) + " duration " + str(duration))
-        result = controller.startIrrigation(station_id,duration)
+        station_id = call.data.get('station')
+        duration = call.data.get('duration')
+        _LOGGER.info("Requesting irrigation for " +\
+            str(station_id) + " duration " + str(duration))
+        result = controller.startIrrigation(station_id, duration)
         if (result == 1):
-            _LOGGER.info("Irrigation started on "+str(station_id)+ " for " + str(duration))
+            _LOGGER.info("Irrigation started on "+str(station_id)+\
+                " for " + str(duration))
         elif (result == 0):
             _LOGGER.error("Error sending request")
         else:
@@ -48,7 +50,7 @@ def setup(hass, config):
         result = controller.stopIrrigation()
         if (result == 1):
             _LOGGER.info("Stopped irrigation")
-            print ("Success")
+            print("Success")
         elif (result == 0):
             _LOGGER.error("Error sending request")
         else:
@@ -56,7 +58,7 @@ def setup(hass, config):
 
     def getirrigation():
         _LOGGER.info("Request irrigation state")
-        result=controller.currentIrrigation()
+        result = controller.currentIrrigation()
         if (result < 0):
             _LOGGER.error("Error sending request")
             return -1
@@ -64,42 +66,15 @@ def setup(hass, config):
         return result
     initialstatus = getirrigation()
     hass.states.set(STATE_VAR, initialstatus)
-    
+
     hass.services.register(DOMAIN, 'start_irrigation', startirrigation)
     hass.services.register(DOMAIN, 'stop_irrigation', stopirrigation)
 
-    helpers.event.track_time_change(hass, lambda _: hass.states.set(STATE_VAR, getirrigation()), year=None, month=None, day=None, hour=None, minute=None, second=[00,30])
+    helpers.event.track_time_change(hass, \
+     lambda _: hass.states.set(STATE_VAR, getirrigation()), \
+     year=None, month=None, day=None, hour=None, minute=None, second=[00,30])
 
 
     _LOGGER.info("Initialized Rainbird Controller")
 
     return True
-
-class Rainbird(Entity):
-    """The base class for raibird entities."""
-
-    def __init__(self,hass,stationid,name):
-        self._id=stationid
-        self._name=name
-
-    @property
-    def should_poll(self):
-        return True
-
-    @property
-    def state(self):
-        return self_state
-
-    def name(self):
-        return self._name
-
-    def id(self):
-        return self._id
-
-    @property
-    def state_attributes(self):
-        attr = {
-            'zone_id': self.stationid,
-        }
-
-        return attr
