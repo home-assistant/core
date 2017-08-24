@@ -23,7 +23,7 @@ def setup(hass, config):
 
     controller = RainbirdController(_LOGGER)
     controller.setConfig(server, password)
-    _LOGGER.info("Rainbird Controller setup to " + str(server))
+    _LOGGER.info("Rainbird Controller set to " + str(server))
 
     def startirrigation(call):
         station_id = call.data.get('station')
