@@ -10,7 +10,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
-from homeassistant.components.light import (ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, 
+                                            SUPPORT_BRIGHTNESS, Light,
+											PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_DEVICES, CONF_STATE,
                                  CONF_PROTOCOL)
 
@@ -95,7 +97,7 @@ class _ReceiveHandle(object):
 
     def run(self, light, turn_on):
         """Change the state of the switch."""
-        switch.set_state(turn_on=turn_on, send_code=self.echo)
+        light.set_state(turn_on=turn_on, send_code=self.echo)
 
 
 class PilightDimmableLight(Light):
@@ -183,7 +185,7 @@ class PilightDimmableLight(Light):
                 code = self._code_on
 
                 if self._dimmable:
-                    code.update({'dimlevel':dimlevel})
+                    code.update({'dimlevel': dimlevel})
 
                 self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                          code, blocking=True)
