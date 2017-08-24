@@ -884,7 +884,7 @@ sharp_aquos_rc==0.3.2
 shodan==1.7.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.4
+simplisafe-python==1.0.5
 
 # homeassistant.components.notify.slack
 slacker==0.9.60
