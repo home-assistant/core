@@ -611,6 +611,9 @@ pyhydroquebec==1.2.0
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 
+# homeassistant.components.climate.intesishome
+pyintesishome==0.4
+
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 

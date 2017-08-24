@@ -255,6 +255,7 @@ omit =
     homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
+    homeassistant/components/climate/intesishome.py
     homeassistant/components/climate/knx.py
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
