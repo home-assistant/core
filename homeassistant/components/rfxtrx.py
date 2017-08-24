@@ -396,6 +396,12 @@ class RfxtrxDevice(Entity):
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
         self._brightness = 0
+        self._added_to_hass = False
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self._added_to_hass = True
 
     @property
     def should_poll(self):
@@ -430,7 +436,8 @@ class RfxtrxDevice(Entity):
         """Update det state of the device."""
         self._state = state
         self._brightness = brightness
-        self.schedule_update_ha_state()
+        if not self._added_to_hass:
+            self.schedule_update_ha_state()
 
     def _send_command(self, command, brightness=0):
         if not self._event:
