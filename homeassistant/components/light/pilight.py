@@ -10,9 +10,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
-from homeassistant.components.light import (ATTR_BRIGHTNESS, 
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light,
-											PLATFORM_SCHEMA)
+                                            PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_DEVICES, CONF_STATE,
                                  CONF_PROTOCOL)
 
