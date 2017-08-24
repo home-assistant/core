@@ -19,18 +19,18 @@ STATE_VAR='rainbird.activestation'
 
 
 def setup(hass, config):
-    
+
     server = config[DOMAIN].get('stickip')
     password = config[DOMAIN].get('password')
     totalstations= config[DOMAIN].get('totalstations')
-    
+
     # RainbirdSetup
     from pyrainbird import RainbirdController
-    
+
     controller = RainbirdController(_LOGGER)
     controller.setConfig(server,password)
     _LOGGER.info("Rainbird Controller setup to " + str(server))
-   
+
     def startirrigation(call):
         station_id=call.data.get('station')
         duration=call.data.get('duration')
@@ -42,7 +42,7 @@ def setup(hass, config):
             _LOGGER.error("Error sending request")
         else:
             _LOGGER.error("Request was not acknowledged!")
-    
+
     def stopirrigation(call):
         _LOGGER.info("Stop request irrigation")
         result = controller.stopIrrigation()
@@ -53,7 +53,7 @@ def setup(hass, config):
             _LOGGER.error("Error sending request")
         else:
             _LOGGER.error("Request was not acknowledged!")
-    
+
     def getirrigation():
         _LOGGER.info("Request irrigation state")
         result=controller.currentIrrigation()
@@ -69,10 +69,10 @@ def setup(hass, config):
     hass.services.register(DOMAIN, 'stop_irrigation', stopirrigation)
 
     helpers.event.track_time_change(hass, lambda _: hass.states.set(STATE_VAR, getirrigation()), year=None, month=None, day=None, hour=None, minute=None, second=[00,30])
-    
-    
+
+
     _LOGGER.info("Initialized Rainbird Controller")
-    
+
     return True
 
 class Rainbird(Entity):
@@ -81,7 +81,7 @@ class Rainbird(Entity):
     def __init__(self,hass,stationid,name):
         self._id=stationid
         self._name=name
-        
+
     @property
     def should_poll(self):
         return True
@@ -89,10 +89,10 @@ class Rainbird(Entity):
     @property
     def state(self):
         return self_state
-    
+
     def name(self):
         return self._name
-    
+
     def id(self):
         return self._id
 
