@@ -286,7 +286,7 @@ def find_possible_pt2262_device(device_id):
     return None
 
 
-def get_devices_from_config(config, device, hass):
+def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
@@ -310,7 +310,7 @@ def get_devices_from_config(config, device, hass):
     return devices
 
 
-def get_new_device(event, config, device, hass):
+def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id in RFX_DEVICES:
