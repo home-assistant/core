@@ -38,6 +38,13 @@ def discover_sensors(topic, payload):
         else:
             unit = TEMP_CELSIUS
         return ArwnSensor(name, 'temp', unit)
+    if domain == "moisture":
+        name = parts[2] + " Moisture"
+        return ArwnSensor(name, 'moisture', unit, "mdi:water-percent")
+    if domain == "rain":
+        if len(parts) >= 2 and parts[2] == "today":
+            return ArwnSensor("Rain Since Midnight", 'since_midnight',
+                              "in", "mdi:water")
     if domain == 'barometer':
         return ArwnSensor('Barometer', 'pressure', unit,
                           "mdi:thermometer-lines")
@@ -116,6 +123,7 @@ class ArwnSensor(Entity):
         """Update the sensor with the most recent event."""
         self.event = {}
         self.event.update(event)
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def state(self):
@@ -134,18 +142,15 @@ class ArwnSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit this state is expressed in."""
+        """Return the unit of measurement the state is expressed in."""
         return self._unit_of_measurement
 
     @property
     def should_poll(self):
-        """Should we poll."""
+        """Return the polling state."""
         return False
 
     @property
     def icon(self):
-        """Icon of device based on its type."""
-        if self._icon:
-            return self._icon
-        else:
-            return super().icon
+        """Return the icon of device based on its type."""
+        return self._icon

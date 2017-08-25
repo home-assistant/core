@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Fast.com sensor."""
+    """Set up the Fast.com sensor."""
     data = SpeedtestData(hass, config)
     sensor = SpeedtestSensor(data)
     add_devices([sensor])
@@ -87,7 +87,7 @@ class SpeedtestSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
+        """Handle entity which will be added."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
@@ -101,14 +101,13 @@ class SpeedtestData(object):
         """Initialize the data object."""
         self.data = None
         if not config.get(CONF_MANUAL):
-            track_time_change(hass, self.update,
-                              second=config.get(CONF_SECOND),
-                              minute=config.get(CONF_MINUTE),
-                              hour=config.get(CONF_HOUR),
-                              day=config.get(CONF_DAY))
+            track_time_change(
+                hass, self.update, second=config.get(CONF_SECOND),
+                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
+                day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from fast.com."""
         from fastdotcom import fast_com
-        _LOGGER.info('Executing fast.com speedtest')
+        _LOGGER.info("Executing fast.com speedtest")
         self.data = {'download': fast_com()}

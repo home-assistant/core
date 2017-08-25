@@ -10,7 +10,6 @@ import os
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.loader import get_component
 import homeassistant.util as util
 
 _CONFIGURING = {}
@@ -31,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     conf_switches = config_from_file(hass.config.path(
         INSTEON_LOCAL_SWITCH_CONF))
-    if len(conf_switches):
+    if conf_switches:
         for device_id in conf_switches:
             setup_switch(
                 device_id, conf_switches[device_id], insteonhub, hass,
@@ -48,10 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                       hass, add_devices)
 
 
-def request_configuration(device_id, insteonhub, model, hass,
-                          add_devices_callback):
+def request_configuration(
+        device_id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if device_id in _CONFIGURING:
@@ -61,12 +60,12 @@ def request_configuration(device_id, insteonhub, model, hass,
         return
 
     def insteon_switch_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         setup_switch(device_id, data.get('name'), insteonhub, hass,
                      add_devices_callback)
 
     _CONFIGURING[device_id] = configurator.request_config(
-        hass, 'Insteon Switch ' + model + ' addr: ' + device_id,
+        'Insteon Switch ' + model + ' addr: ' + device_id,
         insteon_switch_config_callback,
         description=('Enter a name for ' + model + ' addr: ' + device_id),
         entity_picture='/static/images/config_insteon.png',
@@ -79,9 +78,9 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
     """Set up the switch."""
     if device_id in _CONFIGURING:
         request_id = _CONFIGURING.pop(device_id)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
-        _LOGGER.info("Device configuration done!")
+        _LOGGER.info("Device configuration done")
 
     conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if device_id not in conf_switch:

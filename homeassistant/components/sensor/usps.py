@@ -6,90 +6,62 @@ https://home-assistant.io/components/sensor.usps/
 """
 from collections import defaultdict
 import logging
-from datetime import timedelta
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION)
+from homeassistant.components.usps import DATA_USPS
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['myusps==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-COOKIE = 'usps_cookies.pickle'
-CONF_UPDATE_INTERVAL = 'update_interval'
-ICON = 'mdi:package-variant-closed'
+DEPENDENCIES = ['usps']
+
 STATUS_DELIVERED = 'delivered'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-})
 
-
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the USPS platform."""
-    import myusps
-    try:
-        cookie = hass.config.path(COOKIE)
-        session = myusps.get_session(config.get(CONF_USERNAME),
-                                     config.get(CONF_PASSWORD),
-                                     cookie_path=cookie)
-    except myusps.USPSError:
-        _LOGGER.exception('Could not connect to My USPS')
-        return False
+    if discovery_info is None:
+        return
 
-    add_devices([USPSSensor(session, config.get(CONF_NAME),
-                            config.get(CONF_UPDATE_INTERVAL))])
+    usps = hass.data[DATA_USPS]
+    add_devices([USPSPackageSensor(usps),
+                 USPSMailSensor(usps)], True)
 
 
-class USPSSensor(Entity):
-    """USPS Sensor."""
+class USPSPackageSensor(Entity):
+    """USPS Package Sensor."""
 
-    def __init__(self, session, name, interval):
+    def __init__(self, usps):
         """Initialize the sensor."""
-        import myusps
-        self._session = session
-        self._name = name
-        self._profile = myusps.get_profile(session)
+        self._usps = usps
+        self._name = self._usps.name
         self._attributes = None
         self._state = None
-        self.update = Throttle(interval)(self._update)
-        self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name or self._profile.get('address')
+        return '{} packages'.format(self._name)
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
 
-    def _update(self):
+    def update(self):
         """Update device state."""
-        import myusps
+        self._usps.update()
         status_counts = defaultdict(int)
-        for package in myusps.get_packages(self._session):
+        for package in self._usps.packages:
             status = slugify(package['primary_status'])
             if status == STATUS_DELIVERED and \
                     parse_datetime(package['date']).date() < now().date():
                 continue
             status_counts[status] += 1
         self._attributes = {
-            ATTR_ATTRIBUTION: myusps.ATTRIBUTION
+            ATTR_ATTRIBUTION: self._usps.attribution
         }
         self._attributes.update(status_counts)
         self._state = sum(status_counts.values())
@@ -102,4 +74,59 @@ class USPSSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON
+        return 'mdi:package-variant-closed'
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'packages'
+
+
+class USPSMailSensor(Entity):
+    """USPS Mail Sensor."""
+
+    def __init__(self, usps):
+        """Initialize the sensor."""
+        self._usps = usps
+        self._name = self._usps.name
+        self._attributes = None
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return '{} mail'.format(self._name)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Update device state."""
+        self._usps.update()
+        if self._usps.mail is not None:
+            self._state = len(self._usps.mail)
+        else:
+            self._state = 0
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attr = {}
+        attr[ATTR_ATTRIBUTION] = self._usps.attribution
+        try:
+            attr[ATTR_DATE] = self._usps.mail[0]['date']
+        except IndexError:
+            pass
+        return attr
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return 'mdi:mailbox'
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'pieces'

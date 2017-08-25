@@ -13,7 +13,7 @@ from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog>2.1,<3',)
+REQUIREMENTS = ('colorlog==3.0.1',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -50,7 +50,7 @@ def color(the_color, *args, reset=None):
     """Color helper."""
     from colorlog.escape_codes import escape_codes, parse_colors
     try:
-        if len(args) == 0:
+        if not args:
             assert reset is None, "You cannot reset if nothing being printed"
             return parse_colors(the_color)
         return parse_colors(the_color) + ' '.join(args) + \
@@ -106,7 +106,7 @@ def run(script_args: List) -> int:
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
-    if len(res['except']) > 0:
+    if res['except']:
         print(color('bold_white', 'Failed config'))
         for domain, config in res['except'].items():
             domain_info.append(domain)
@@ -288,7 +288,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
         indent_str = indent_str[:-1] + '-'
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
-            if isinstance(value, dict) or isinstance(value, list):
+            if isinstance(value, (dict, list)):
                 print(indent_str, key + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:

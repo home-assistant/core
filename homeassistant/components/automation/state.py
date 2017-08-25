@@ -2,7 +2,7 @@
 Offer state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#state-trigger
+at https://home-assistant.io/docs/automation/trigger/#state-trigger
 """
 import asyncio
 import voluptuous as vol
@@ -14,11 +14,10 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_point_in_utc_time)
 import homeassistant.helpers.config_validation as cv
 
-CONF_ENTITY_ID = "entity_id"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_STATE = "state"
-CONF_FOR = "for"
+CONF_ENTITY_ID = 'entity_id'
+CONF_FROM = 'from'
+CONF_TO = 'to'
+CONF_FOR = 'for'
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema({
@@ -27,11 +26,9 @@ TRIGGER_SCHEMA = vol.All(
         # These are str on purpose. Want to catch YAML conversions
         CONF_FROM: str,
         CONF_TO: str,
-        CONF_STATE: str,
         CONF_FOR: vol.All(cv.time_period, cv.positive_timedelta),
     }),
-    vol.Any(cv.key_dependency(CONF_FOR, CONF_TO),
-            cv.key_dependency(CONF_FOR, CONF_STATE))
+    cv.key_dependency(CONF_FOR, CONF_TO),
 )
 
 
@@ -40,10 +37,11 @@ def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
+    to_state = config.get(CONF_TO, MATCH_ALL)
     time_delta = config.get(CONF_FOR)
     async_remove_state_for_cancel = None
     async_remove_state_for_listener = None
+    match_all = (from_state == MATCH_ALL and to_state == MATCH_ALL)
 
     @callback
     def clear_listener():
@@ -74,6 +72,11 @@ def async_trigger(hass, config, action):
                     'for': time_delta,
                 }
             })
+
+        # Ignore changes to state attributes if from/to is in use
+        if (not match_all and from_s is not None and to_s is not None and
+                from_s.last_changed == to_s.last_changed):
+            return
 
         if time_delta is None:
             call_action()

@@ -1,5 +1,5 @@
 """
-Component that will help set the microsoft face for verify processing.
+Component that will help set the Microsoft face for verify processing.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.microsoft_face_identify/
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the microsoft face identify platform."""
+    """Set up the Microsoft Face identify platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     face_group = config[CONF_GROUP]
     confidence = config[CONF_CONFIDENCE]
@@ -62,8 +62,8 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     def __init__(self):
         """Initialize base face identify/verify entity."""
-        self.faces = []  # last scan data
-        self.total_faces = 0  # face count
+        self.faces = []
+        self.total_faces = 0
 
     @property
     def state(self):
@@ -71,11 +71,11 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         confidence = 0
         state = STATE_UNKNOWN
 
-        # no confidence support
+        # No confidence support
         if not self.confidence:
             return self.total_faces
 
-        # search high confidence
+        # Search high confidence
         for face in self.faces:
             if ATTR_CONFIDENCE not in face:
                 continue
@@ -128,7 +128,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
         This method must be run in the event loop.
         """
-        # send events
+        # Send events
         for face in faces:
             if ATTR_CONFIDENCE in face and self.confidence:
                 if face[ATTR_CONFIDENCE] < self.confidence:
@@ -139,16 +139,16 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 self.hass.bus.async_fire, EVENT_DETECT_FACE, face
             )
 
-        # update entity store
+        # Update entity store
         self.faces = faces
         self.total_faces = total
 
 
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
-    """Microsoft face api entity for identify."""
+    """Representation of the Microsoft Face API entity for identify."""
 
     def __init__(self, camera_entity, api, face_group, confidence, name=None):
-        """Initialize openalpr local api."""
+        """Initialize the Microsoft Face API."""
         super().__init__()
 
         self._api = api
@@ -197,15 +197,15 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
                 {'faceIds': face_ids, 'personGroupId': self._face_group})
 
         except HomeAssistantError as err:
-            _LOGGER.error("Can't process image on microsoft face: %s", err)
+            _LOGGER.error("Can't process image on Microsoft face: %s", err)
             return
 
-        # parse data
+        # Parse data
         knwon_faces = []
         total = 0
         for face in detect:
             total += 1
-            if len(face['candidates']) == 0:
+            if not face['candidates']:
                 continue
 
             data = face['candidates'][0]
@@ -220,5 +220,4 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
                 ATTR_CONFIDENCE: data['confidence'] * 100,
             })
 
-        # process data
         self.async_process_faces(knwon_faces, total)

@@ -36,7 +36,7 @@ class TestLockMQTT(unittest.TestCase):
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', 'LOCK')
         self.hass.block_till_done()

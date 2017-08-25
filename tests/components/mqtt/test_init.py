@@ -209,6 +209,118 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hi/test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('hi/test-topic', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hi/test-topic/here-iam', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('hi/test-topic/here-iam', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hi/here-iam/test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_no_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hi/another-test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_subscribe_topic_sys_root(self):
+        """Test the subscription of $ root topics."""
+        mqtt.subscribe(self.hass, '$test-topic/subtree/on', self.record_calls)
+
+        fire_mqtt_message(self.hass, '$test-topic/subtree/on', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('$test-topic/subtree/on', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_sys_root_and_wildcard_topic(self):
+        """Test the subscription of $ root and wildcard topics."""
+        mqtt.subscribe(self.hass, '$test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, '$test-topic/some-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('$test-topic/some-topic', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(self):
+        """Test the subscription of $ root and wildcard subtree topics."""
+        mqtt.subscribe(self.hass, '$test-topic/subtree/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, '$test-topic/subtree/some-topic',
+                          'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('$test-topic/subtree/some-topic', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_special_characters(self):
+        """Test the subscription to topics with special characters."""
+        topic = '/test-topic/$(.)[^]{-}'
+        payload = 'p4y.l[]a|> ?'
+
+        mqtt.subscribe(self.hass, topic, self.record_calls)
+
+        fire_mqtt_message(self.hass, topic, payload)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(topic, self.calls[0][0])
+        self.assertEqual(payload, self.calls[0][1])
+
+    def test_subscribe_binary_topic(self):
+        """Test the subscription to a binary topic."""
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls,
+                       0, None)
+
+        fire_mqtt_message(self.hass, 'test-topic', 0x9a)
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('test-topic', self.calls[0][0])
+        self.assertEqual(0x9a, self.calls[0][1])
+
+    def test_receiving_non_utf8_message_gets_logged(self):
+        """Test receiving a non utf8 encoded message."""
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
+
+        with self.assertLogs(level='ERROR') as test_handle:
+            fire_mqtt_message(self.hass, 'test-topic', 0x9a)
+            self.hass.block_till_done()
+            self.assertIn(
+                "ERROR:homeassistant.components.mqtt:Illegal payload "
+                "encoding utf-8 from MQTT "
+                "topic: test-topic, Payload: 154",
+                test_handle.output[0])
+
 
 class TestMQTTCallbacks(unittest.TestCase):
     """Test the MQTT callbacks."""
@@ -255,7 +367,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         last_event = calls[0]
-        self.assertEqual('Hello World!', last_event['payload'])
+        self.assertEqual(bytearray('Hello World!', 'utf-8'),
+                         last_event['payload'])
         self.assertEqual(message.topic, last_event['topic'])
         self.assertEqual(message.qos, last_event['qos'])
 
@@ -297,38 +410,6 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Test invalid topics."""
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
-
-    def test_receiving_non_utf8_message_gets_logged(self):
-        """Test receiving a non utf8 encoded message."""
-        calls = []
-
-        @callback
-        def record(topic, payload, qos):
-            """Helper to record calls."""
-            data = {
-                'topic': topic,
-                'payload': payload,
-                'qos': qos,
-            }
-            calls.append(data)
-
-        async_dispatcher_connect(
-            self.hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, record)
-
-        payload = 0x9a
-        topic = 'test_topic'
-        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage(topic, 1, payload)
-        with self.assertLogs(level='ERROR') as test_handle:
-            self.hass.data['mqtt']._mqtt_on_message(
-                None,
-                {'hass': self.hass},
-                message)
-            self.hass.block_till_done()
-            self.assertIn(
-                "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
-                "payload from MQTT topic: %s, Payload: " % topic,
-                test_handle.output[0])
 
 
 @asyncio.coroutine

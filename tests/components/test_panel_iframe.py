@@ -53,9 +53,7 @@ class TestPanelIframe(unittest.TestCase):
                 },
             })
 
-        # 5 dev tools + map are automatically loaded + 2 iframe panels
-        assert len(self.hass.data[frontend.DATA_PANELS]) == 8
-        assert self.hass.data[frontend.DATA_PANELS]['router'] == {
+        assert self.hass.data[frontend.DATA_PANELS].get('router') == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
@@ -64,7 +62,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'router'
         }
 
-        assert self.hass.data[frontend.DATA_PANELS]['weather'] == {
+        assert self.hass.data[frontend.DATA_PANELS].get('weather') == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',

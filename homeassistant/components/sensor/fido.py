@@ -21,62 +21,44 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["pyfido==0.1.4"]
+REQUIREMENTS = ['pyfido==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = "Kb"  # type: str
-PRICE = "CAD"  # type: str
-MESSAGES = "messages"  # type: str
-MINUTES = "minutes"  # type: str
+KILOBITS = 'Kb'  # type: str
+PRICE = 'CAD'  # type: str
+MESSAGES = 'messages'  # type: str
+MINUTES = 'minutes'  # type: str
 
-DEFAULT_NAME = "Fido"
+DEFAULT_NAME = 'Fido'
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-
 SENSOR_TYPES = {
-    'fido_dollar': ['Fido dollar',
-                    PRICE, 'mdi:square-inc-cash'],
-    'balance': ['Balance',
-                PRICE, 'mdi:square-inc-cash'],
-    'data_used': ['Data used',
-                  KILOBITS, 'mdi:download'],
-    'data_limit': ['Data limit',
-                   KILOBITS, 'mdi:download'],
-    'data_remaining': ['Data remaining',
-                       KILOBITS, 'mdi:download'],
-    'text_used': ['Text used',
-                  MESSAGES, 'mdi:message-text'],
-    'text_limit': ['Text limit',
-                   MESSAGES, 'mdi:message-text'],
-    'text_remaining': ['Text remaining',
-                       MESSAGES, 'mdi:message-text'],
-    'mms_used': ['MMS used',
-                 MESSAGES, 'mdi:message-image'],
-    'mms_limit': ['MMS limit',
-                  MESSAGES, 'mdi:message-image'],
-    'mms_remaining': ['MMS remaining',
-                      MESSAGES, 'mdi:message-image'],
+    'fido_dollar': ['Fido dollar', PRICE, 'mdi:square-inc-cash'],
+    'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
+    'data_used': ['Data used', KILOBITS, 'mdi:download'],
+    'data_limit': ['Data limit', KILOBITS, 'mdi:download'],
+    'data_remaining': ['Data remaining', KILOBITS, 'mdi:download'],
+    'text_used': ['Text used', MESSAGES, 'mdi:message-text'],
+    'text_limit': ['Text limit', MESSAGES, 'mdi:message-text'],
+    'text_remaining': ['Text remaining', MESSAGES, 'mdi:message-text'],
+    'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
+    'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
+    'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
     'text_int_used': ['International text used',
                       MESSAGES, 'mdi:message-alert'],
     'text_int_limit': ['International text limit',
                        MESSAGES, 'mdi:message-alart'],
     'text_int_remaining': ['Internaltional remaining',
                            MESSAGES, 'mdi:message-alert'],
-    'talk_used': ['Talk used',
-                  MINUTES, 'mdi:cellphone'],
-    'talk_limit': ['Talk limit',
-                   MINUTES, 'mdi:cellphone'],
-    'talt_remaining': ['Talk remaining',
-                       MINUTES, 'mdi:cellphone'],
-    'other_talk_used': ['Other Talk used',
-                        MINUTES, 'mdi:cellphone'],
-    'other_talk_limit': ['Other Talk limit',
-                         MINUTES, 'mdi:cellphone'],
-    'other_talk_remaining': ['Other Talk remaining',
-                             MINUTES, 'mdi:cellphone'],
+    'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
+    'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
+    'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
+    'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
+    'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
+    'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -103,8 +85,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     sensors = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        sensors.append(FidoSensor(fido_data, variable, name))
+    for number in fido_data.client.get_phone_numbers():
+        for variable in config[CONF_MONITORED_VARIABLES]:
+            sensors.append(FidoSensor(fido_data, variable, name, number))
 
     add_devices(sensors, True)
 
@@ -112,9 +95,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FidoSensor(Entity):
     """Implementation of a Fido sensor."""
 
-    def __init__(self, fido_data, sensor_type, name):
+    def __init__(self, fido_data, sensor_type, name, number):
         """Initialize the sensor."""
         self.client_name = name
+        self._number = number
         self.type = sensor_type
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -125,7 +109,7 @@ class FidoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return '{} {} {}'.format(self.client_name, self._number, self._name)
 
     @property
     def state(self):
@@ -142,21 +126,33 @@ class FidoSensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            'number': self._number,
+        }
+
     def update(self):
         """Get the latest data from Fido and update the state."""
         self.fido_data.update()
-        if self.type in self.fido_data.data:
-            if self.fido_data.data[self.type] is not None:
+        if self.type == 'balance':
+            if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
+        else:
+            if self.fido_data.data.get(self._number, {}).get(self.type) \
+                  is not None:
+                self._state = self.fido_data.data[self._number][self.type]
+                self._state = round(self._state, 2)
 
 
 class FidoData(object):
     """Get data from Fido."""
 
-    def __init__(self, number, password):
+    def __init__(self, username, password):
         """Initialize the data object."""
         from pyfido import FidoClient
-        self.client = FidoClient(number, password, REQUESTS_TIMEOUT)
+        self.client = FidoClient(username, password, REQUESTS_TIMEOUT)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

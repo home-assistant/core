@@ -6,27 +6,29 @@ https://home-assistant.io/ecosystem/ios/
 """
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.icon import icon_for_battery_level
 
-DEPENDENCIES = ["ios"]
+DEPENDENCIES = ['ios']
 
 SENSOR_TYPES = {
-    "level": ["Battery Level", "%"],
-    "state": ["Battery State", None]
+    'level': ['Battery Level', '%'],
+    'state': ['Battery State', None]
 }
 
-DEFAULT_ICON = "mdi:battery"
+DEFAULT_ICON_LEVEL = 'mdi:battery'
+DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the iOS sensor."""
+    """Set up the iOS sensor."""
     if discovery_info is None:
         return
     dev = list()
     for device_name, device in ios.devices().items():
-        for sensor_type in ("level", "state"):
+        for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class IOSSensor(Entity):
@@ -35,12 +37,11 @@ class IOSSensor(Entity):
     def __init__(self, sensor_type, device_name, device):
         """Initialize the sensor."""
         self._device_name = device_name
-        self._name = device_name + " " + SENSOR_TYPES[sensor_type][0]
+        self._name = "{} {}".format(device_name, SENSOR_TYPES[sensor_type][0])
         self._device = device
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -56,7 +57,8 @@ class IOSSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "sensor_ios_battery_{}_{}".format(self.type, self._device_name)
+        device_id = self._device[ios.ATTR_DEVICE_ID]
+        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
@@ -82,29 +84,21 @@ class IOSSensor(Entity):
         device_battery = self._device[ios.ATTR_BATTERY]
         battery_state = device_battery[ios.ATTR_BATTERY_STATE]
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
-        rounded_level = round(battery_level, -1)
-        returning_icon = DEFAULT_ICON
-        if battery_state == ios.ATTR_BATTERY_STATE_FULL:
-            returning_icon = DEFAULT_ICON
-        elif battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
-            # Why is MDI missing 10, 50, 70?
-            if rounded_level in (20, 30, 40, 60, 80, 90, 100):
-                returning_icon = "{}-charging-{}".format(DEFAULT_ICON,
-                                                         str(rounded_level))
-            else:
-                returning_icon = "{}-charging".format(DEFAULT_ICON)
-        elif battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED:
-            if rounded_level < 10:
-                returning_icon = "{}-outline".format(DEFAULT_ICON)
-            elif battery_level == 100:
-                returning_icon = DEFAULT_ICON
-            else:
-                returning_icon = "{}-{}".format(DEFAULT_ICON,
-                                                str(rounded_level))
+        charging = True
+        icon_state = DEFAULT_ICON_STATE
+        if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
+                battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
+            charging = False
+            icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
-            returning_icon = "{}-unknown".format(DEFAULT_ICON)
+            battery_level = None
+            charging = False
+            icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
 
-        return returning_icon
+        if self.type == "state":
+            return icon_state
+        return icon_for_battery_level(battery_level=battery_level,
+                                      charging=charging)
 
     def update(self):
         """Get the latest state of the sensor."""

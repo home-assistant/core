@@ -47,7 +47,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     data={
                         'username': username,
                         'password': password})
-            data = yield from response.json()
+            # The Hook API returns JSON but calls it 'text/html'.  Setting
+            # content_type=None disables aiohttp's content-type validation.
+            data = yield from response.json(content_type=None)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed authentication API call: %s", error)
             return False
@@ -63,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             response = yield from websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": token})
-        data = yield from response.json()
+        data = yield from response.json(content_type=None)
     except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
@@ -110,7 +112,7 @@ class HookSmartHome(SwitchDevice):
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.get(
                     url, params={"token": self._token})
-            data = yield from response.json()
+            data = yield from response.json(content_type=None)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed setting state: %s", error)
@@ -120,7 +122,7 @@ class HookSmartHome(SwitchDevice):
         return data['return_value'] == '1'
 
     @asyncio.coroutine
-    def async_turn_on(self):
+    def async_turn_on(self, **kwargs):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
         url = '{}{}{}{}'.format(
@@ -129,7 +131,7 @@ class HookSmartHome(SwitchDevice):
         self._state = success
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
         url = '{}{}{}{}'.format(

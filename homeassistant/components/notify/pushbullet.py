@@ -14,10 +14,12 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pushbullet.py==0.11.0']
+
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pushbullet.py==0.10.0']
 
 ATTR_URL = 'url'
+ATTR_FILE = 'file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -33,9 +35,7 @@ def get_service(hass, config, discovery_info=None):
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
     except InvalidKeyError:
-        _LOGGER.error(
-            "Wrong API key supplied. "
-            "Get it at https://www.pushbullet.com/account")
+        _LOGGER.error("Wrong API key supplied")
         return None
 
     return PushBulletNotificationService(pushbullet)
@@ -81,16 +81,15 @@ class PushBulletNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
         url = None
+        filepath = None
         if data:
             url = data.get(ATTR_URL, None)
+            filepath = data.get(ATTR_FILE, None)
         refreshed = False
 
         if not targets:
             # Backward compatibility, notify all devices in own account
-            if url:
-                self.pushbullet.push_link(title, url, body=message)
-            else:
-                self.pushbullet.push_note(title, message)
+            self._push_data(filepath, message, title, url)
             _LOGGER.info("Sent notification to self")
             return
 
@@ -105,11 +104,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                if url:
-                    self.pushbullet.push_link(
-                        title, url, body=message, email=tname)
-                else:
-                    self.pushbullet.push_note(title, message, email=tname)
+                self._push_data(filepath, message, title, url, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
                 continue
 
@@ -140,3 +135,15 @@ class PushBulletNotificationService(BaseNotificationService):
             except self.pushbullet.errors.PushError:
                 _LOGGER.error("Notify failed to: %s/%s", ttype, tname)
                 continue
+
+    def _push_data(self, filepath, message, title, url, tname=None):
+        if url:
+            self.pushbullet.push_link(
+                title, url, body=message, email=tname)
+        elif filepath and self.hass.config.is_allowed_path(filepath):
+            with open(filepath, "rb") as fileh:
+                filedata = self.pushbullet.upload_file(fileh, filepath)
+                self.pushbullet.push_file(title=title, body=message,
+                                          **filedata)
+        else:
+            self.pushbullet.push_note(title, message, email=tname)

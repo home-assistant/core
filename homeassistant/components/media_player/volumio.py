@@ -113,8 +113,8 @@ class Volumio(MediaPlayerDevice):
             return STATE_PAUSED
         elif status == 'play':
             return STATE_PLAYING
-        else:
-            return STATE_IDLE
+
+        return STATE_IDLE
 
     @property
     def media_title(self):
@@ -140,7 +140,7 @@ class Volumio(MediaPlayerDevice):
         if str(url[0:2]).lower() == 'ht':
             mediaurl = url
         else:
-            mediaurl = "http://" + self.host + ":" + str(self.port) + url
+            mediaurl = "http://{}:{}{}".format(self.host, self.port, url)
         return mediaurl
 
     @property
@@ -190,6 +190,8 @@ class Volumio(MediaPlayerDevice):
 
     def async_media_pause(self):
         """Send media_pause command to media player."""
+        if self._state['trackType'] == 'webradio':
+            return self.send_volumio_msg('commands', params={'cmd': 'stop'})
         return self.send_volumio_msg('commands', params={'cmd': 'pause'})
 
     def async_set_volume_level(self, volume):
@@ -205,6 +207,6 @@ class Volumio(MediaPlayerDevice):
             self._lastvol = self._state['volume']
             return self.send_volumio_msg(
                 'commands', params={'cmd': 'volume', 'volume': mutecmd})
-        else:
-            return self.send_volumio_msg(
-                'commands', params={'cmd': 'volume', 'volume': self._lastvol})
+
+        return self.send_volumio_msg(
+            'commands', params={'cmd': 'volume', 'volume': self._lastvol})

@@ -7,7 +7,8 @@ https://home-assistant.io/components/tellduslive/
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -46,18 +47,18 @@ ATTR_LAST_UPDATED = 'time_last_updated'
 
 
 def setup(hass, config):
-    """Setup the Telldus Live component."""
+    """Set up the Telldus Live component."""
     client = TelldusLiveClient(hass, config)
 
     if not client.validate_session():
         _LOGGER.error(
-            'Authentication Error: '
-            'Please make sure you have configured your keys '
-            'that can be aquired from https://api.telldus.com/keys/index')
+            "Authentication Error: Please make sure you have configured your "
+            "keys that can be aquired from https://api.telldus.com/keys/index")
         return False
 
     hass.data[DOMAIN] = client
-    client.update(utcnow())
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, client.update)
 
     return True
 
@@ -92,9 +93,9 @@ class TelldusLiveClient(object):
         response = self._client.request_user()
         return response and 'email' in response
 
-    def update(self, now):
+    def update(self, *args):
         """Periodically poll the servers for current state."""
-        _LOGGER.debug('Updating')
+        _LOGGER.debug("Updating")
         try:
             self._sync()
         finally:
@@ -104,7 +105,7 @@ class TelldusLiveClient(object):
     def _sync(self):
         """Update local list of devices."""
         if not self._client.update():
-            _LOGGER.warning('Failed request')
+            _LOGGER.warning("Failed request")
 
         def identify_device(device):
             """Find out what type of HA component to create."""
@@ -115,17 +116,16 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
-            else:
-                _LOGGER.warning('Unidentified device type (methods: %d)',
-                                device.methods)
-                return 'switch'
+            _LOGGER.warning(
+                "Unidentified device type (methods: %d)", device.methods)
+            return 'switch'
 
         def discover(device_id, component):
             """Discover the component."""
             discovery.load_platform(
                 self._hass, component, DOMAIN, [device_id], self._config)
 
-        known_ids = set([entity.device_id for entity in self.entities])
+        known_ids = {entity.device_id for entity in self.entities}
         for device in self._client.devices:
             if device.device_id in known_ids:
                 continue
@@ -158,10 +158,10 @@ class TelldusLiveEntity(Entity):
         self._client = hass.data[DOMAIN]
         self._client.entities.append(self)
         self._name = self.device.name
-        _LOGGER.debug('Created device %s', self)
+        _LOGGER.debug("Created device %s", self)
 
     def changed(self):
-        """A property of the device might have changed."""
+        """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
         self.schedule_update_ha_state()
@@ -183,7 +183,7 @@ class TelldusLiveEntity(Entity):
 
     @property
     def should_poll(self):
-        """Polling is not needed."""
+        """Return the polling state."""
         return False
 
     @property

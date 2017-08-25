@@ -21,7 +21,7 @@ from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.0']
+REQUIREMENTS = ['libnacl==1.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,8 +85,8 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         try:
             keylen, decrypt = get_cipher()
         except OSError:
-            _LOGGER.warning('Ignoring encrypted payload '
-                            'because libsodium not installed.')
+            _LOGGER.warning(
+                "Ignoring encrypted payload because libsodium not installed")
             return None
 
         if isinstance(secret, dict):
@@ -95,9 +95,9 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             key = secret
 
         if key is None:
-            _LOGGER.warning('Ignoring encrypted payload '
-                            'because no decryption key known '
-                            'for topic %s.', topic)
+            _LOGGER.warning(
+                "Ignoring encrypted payload because no decryption key known "
+                "for topic %s", topic)
             return None
 
         key = key.encode("utf-8")
@@ -111,19 +111,18 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             _LOGGER.debug("Decrypted payload: %s", message)
             return message
         except ValueError:
-            _LOGGER.warning('Ignoring encrypted payload '
-                            'because unable to decrypt using key '
-                            'for topic %s.', topic)
+            _LOGGER.warning(
+                "Ignoring encrypted payload because unable to decrypt using "
+                "key for topic %s", topic)
             return None
 
-    # pylint: disable=too-many-return-statements
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
         try:
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
-            _LOGGER.error('Unable to parse payload as JSON: %s', payload)
+            _LOGGER.error("Unable to parse payload as JSON: %s", payload)
             return None
 
         if isinstance(data, dict) and \
@@ -132,26 +131,25 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             plaintext_payload = decrypt_payload(topic, data['data'])
             if plaintext_payload is None:
                 return None
-            else:
-                return validate_payload(topic, plaintext_payload, data_type)
+            return validate_payload(topic, plaintext_payload, data_type)
 
         if not isinstance(data, dict) or data.get('_type') != data_type:
-            _LOGGER.debug('Skipping %s update for following data '
-                          'because of missing or malformatted data: %s',
+            _LOGGER.debug("Skipping %s update for following data "
+                          "because of missing or malformatted data: %s",
                           data_type, data)
             return None
         if data_type == VALIDATE_TRANSITION or data_type == VALIDATE_WAYPOINTS:
             return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
-            _LOGGER.info('Ignoring %s update because expected GPS '
-                         'accuracy %s is not met: %s',
+            _LOGGER.info("Ignoring %s update because expected GPS "
+                         "accuracy %s is not met: %s",
                          data_type, max_gps_accuracy, payload)
             return None
         if convert(data.get('acc'), float, 1.0) == 0.0:
-            _LOGGER.warning('Ignoring %s update because GPS accuracy '
-                            'is zero: %s',
-                            data_type, payload)
+            _LOGGER.warning(
+                "Ignoring %s update because GPS accuracy is zero: %s",
+                data_type, payload)
             return None
 
         return data
@@ -169,7 +167,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         if regions_entered[dev_id]:
             _LOGGER.debug(
-                "location update ignored - inside region %s",
+                "Location update ignored, inside region %s",
                 regions_entered[-1])
             return
 
@@ -178,7 +176,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     @callback
     def async_owntracks_event_update(topic, payload, qos):
-        """MQTT event (geofences) received."""
+        """Handle MQTT event (geofences)."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
         data = validate_payload(topic, payload, VALIDATE_TRANSITION)
@@ -242,15 +240,14 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                     if data['acc'] == 0.0:
                         valid_gps = False
                         _LOGGER.warning(
-                            'Ignoring GPS in region exit because accuracy'
-                            'is zero: %s',
-                            payload)
+                            "Ignoring GPS in region exit because accuracy"
+                            "is zero: %s", payload)
                     if (max_gps_accuracy is not None and
                             data['acc'] > max_gps_accuracy):
                         valid_gps = False
                         _LOGGER.info(
-                            'Ignoring GPS in region exit because expected '
-                            'GPS accuracy %s is not met: %s',
+                            "Ignoring GPS in region exit because expected "
+                            "GPS accuracy %s is not met: %s",
                             max_gps_accuracy, payload)
                 if valid_gps:
                     hass.async_add_job(async_see(**kwargs))
@@ -267,7 +264,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             leave_event()
         else:
             _LOGGER.error(
-                'Misformatted mqtt msgs, _type=transition, event=%s',
+                "Misformatted mqtt msgs, _type=transition, event=%s",
                 data['event'])
             return
 
@@ -356,12 +353,20 @@ def _parse_see_args(topic, data):
     kwargs = {
         'dev_id': dev_id,
         'host_name': host_name,
-        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY])
+        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY]),
+        'attributes': {}
     }
     if 'acc' in data:
         kwargs['gps_accuracy'] = data['acc']
     if 'batt' in data:
         kwargs['battery'] = data['batt']
+    if 'vel' in data:
+        kwargs['attributes']['velocity'] = data['vel']
+    if 'tid' in data:
+        kwargs['attributes']['tid'] = data['tid']
+    if 'addr' in data:
+        kwargs['attributes']['address'] = data['addr']
+
     return dev_id, kwargs
 
 

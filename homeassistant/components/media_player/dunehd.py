@@ -22,7 +22,7 @@ CONF_SOURCES = 'sources'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SOURCES): cv.ordered_dict(cv.string, cv.string),
+    vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -34,27 +34,26 @@ DUNEHD_PLAYER_SUPPORT = \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the media player demo platform."""
-    sources = config.get(CONF_SOURCES, {})
-
+    """Set up the DuneHD media player platform."""
     from pdunehd import DuneHDPlayer
-    add_devices([DuneHDPlayerEntity(
-        DuneHDPlayer(config[CONF_HOST]),
-        config[CONF_NAME],
-        sources)])
+
+    sources = config.get(CONF_SOURCES, {})
+    host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME)
+
+    add_devices([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerDevice):
     """Implementation of the Dune HD player."""
 
     def __init__(self, player, name, sources):
-        """Setup entity to control Dune HD."""
+        """Initialize entity to control Dune HD."""
         self._player = player
         self._name = name
         self._sources = sources
         self._media_title = None
         self._state = None
-        self.update()
 
     def update(self):
         """Update internal status of the entity."""
@@ -83,17 +82,17 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
+        """Return the volume level of the media player (0..1)."""
         return int(self._state.get('playback_volume', 0)) / 100
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return a boolean if volume is currently muted."""
         return int(self._state.get('playback_mute', 0)) == 1
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return a list of available input sources."""
         return list(self._sources.keys())
 
     @property
@@ -136,7 +135,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """Current media source."""
+        """Return the current media source."""
         self.__update_title()
         if self._media_title:
             return self._media_title

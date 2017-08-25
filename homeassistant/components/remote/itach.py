@@ -14,8 +14,7 @@ import homeassistant.components.remote as remote
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
     CONF_DEVICES)
-from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, ATTR_COMMAND)
+from homeassistant.components.remote import PLATFORM_SCHEMA
 
 REQUIREMENTS = ['pyitachip2ir==0.0.6']
 
@@ -62,10 +61,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = data.get(CONF_NAME)
         modaddr = int(data.get(CONF_MODADDR, 1))
         connaddr = int(data.get(CONF_CONNADDR, 1))
-        cmddata = ""
+        cmddatas = ""
         for cmd in data.get(CONF_COMMANDS):
-            cmddata += cmd[CONF_NAME] + "\n" + cmd[CONF_DATA] + "\n"
-        itachip2ir.addDevice(name, modaddr, connaddr, cmddata)
+            cmdname = cmd[CONF_NAME].strip()
+            if not cmdname:
+                cmdname = '""'
+            cmddata = cmd[CONF_DATA].strip()
+            if not cmddata:
+                cmddata = '""'
+            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+        itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_devices(devices, True)
     return True
@@ -96,15 +101,16 @@ class ITachIP2IRRemote(remote.RemoteDevice):
         self.itachip2ir.send(self._name, "ON", 1)
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         self._power = False
         self.itachip2ir.send(self._name, "OFF", 1)
         self.schedule_update_ha_state()
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        self.itachip2ir.send(self._name, kwargs[ATTR_COMMAND], 1)
+        for single_command in command:
+            self.itachip2ir.send(self._name, single_command, 1)
 
     def update(self):
         """Update the device."""

@@ -6,27 +6,20 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.setup import setup_component
-
-from tests.common import mock_http_component
-import logging
+from homeassistant.setup import async_setup_component
 
 
 @asyncio.coroutine
 def test_loading_file(hass, test_client):
     """Test that it loads image from disk."""
-    @mock.patch('os.path.isfile', mock.Mock(return_value=True))
-    @mock.patch('os.access', mock.Mock(return_value=True))
-    def setup_platform():
-        """Setup platform inside callback."""
-        assert setup_component(hass, 'camera', {
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        yield from async_setup_component(hass, 'camera', {
             'camera': {
                 'name': 'config_test',
                 'platform': 'local_file',
                 'file_path': 'mock.file',
             }})
-
-    yield from hass.loop.run_in_executor(None, setup_platform)
 
     client = yield from test_client(hass.http.app)
 
@@ -45,23 +38,76 @@ def test_loading_file(hass, test_client):
 @asyncio.coroutine
 def test_file_not_readable(hass, caplog):
     """Test a warning is shown setup when file is not readable."""
-    mock_http_component(hass)
-
-    @mock.patch('os.path.isfile', mock.Mock(return_value=True))
-    @mock.patch('os.access', mock.Mock(return_value=False))
-    def run_test():
-
-        caplog.set_level(
-            logging.WARNING, logger='requests.packages.urllib3.connectionpool')
-
-        assert setup_component(hass, 'camera', {
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=False)):
+        yield from async_setup_component(hass, 'camera', {
             'camera': {
                 'name': 'config_test',
                 'platform': 'local_file',
                 'file_path': 'mock.file',
             }})
-        assert 'Could not read' in caplog.text
-        assert 'config_test' in caplog.text
-        assert 'mock.file' in caplog.text
 
-    yield from hass.loop.run_in_executor(None, run_test)
+    assert 'Could not read' in caplog.text
+    assert 'config_test' in caplog.text
+    assert 'mock.file' in caplog.text
+
+
+@asyncio.coroutine
+def test_camera_content_type(hass, test_client):
+    """Test local_file camera content_type."""
+    cam_config_jpg = {
+        'name': 'test_jpg',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.jpg',
+    }
+    cam_config_png = {
+        'name': 'test_png',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.png',
+    }
+    cam_config_svg = {
+        'name': 'test_svg',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.svg',
+    }
+    cam_config_noext = {
+        'name': 'test_no_ext',
+        'platform': 'local_file',
+        'file_path': '/path/to/image',
+    }
+
+    yield from async_setup_component(hass, 'camera', {
+        'camera': [cam_config_jpg, cam_config_png,
+                   cam_config_svg, cam_config_noext]})
+
+    client = yield from test_client(hass.http.app)
+
+    image = 'hello'
+    m_open = MockOpen(read_data=image.encode())
+    with mock.patch('homeassistant.components.camera.local_file.open',
+                    m_open, create=True):
+        resp_1 = yield from client.get('/api/camera_proxy/camera.test_jpg')
+        resp_2 = yield from client.get('/api/camera_proxy/camera.test_png')
+        resp_3 = yield from client.get('/api/camera_proxy/camera.test_svg')
+        resp_4 = yield from client.get('/api/camera_proxy/camera.test_no_ext')
+
+    assert resp_1.status == 200
+    assert resp_1.content_type == 'image/jpeg'
+    body = yield from resp_1.text()
+    assert body == image
+
+    assert resp_2.status == 200
+    assert resp_2.content_type == 'image/png'
+    body = yield from resp_2.text()
+    assert body == image
+
+    assert resp_3.status == 200
+    assert resp_3.content_type == 'image/svg+xml'
+    body = yield from resp_3.text()
+    assert body == image
+
+    # default mime type
+    assert resp_4.status == 200
+    assert resp_4.content_type == 'image/jpeg'
+    body = yield from resp_4.text()
+    assert body == image

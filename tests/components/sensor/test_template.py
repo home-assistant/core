@@ -72,7 +72,7 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert 'icon' not in state.attributes
+        assert state.attributes.get('icon') == ''
 
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.block_till_done()

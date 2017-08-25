@@ -1,5 +1,4 @@
 """
-
 Interfaces with Alarm.com alarm control panels.
 
 For more details about this platform, please refer to the documentation at
@@ -17,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyalarmdotcom==0.2.9']
+REQUIREMENTS = ['pyalarmdotcom==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a Alarm.com control panel."""
+    """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
@@ -93,8 +92,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         elif self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):

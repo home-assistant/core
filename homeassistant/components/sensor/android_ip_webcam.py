@@ -15,7 +15,7 @@ DEPENDENCIES = ['android_ip_webcam']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the IP Webcam Sensor."""
+    """Set up the IP Webcam Sensor."""
     if discovery_info is None:
         return
 

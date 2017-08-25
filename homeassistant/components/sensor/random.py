@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Random number sensor."""
+    """Set up the Random number sensor."""
     name = config.get(CONF_NAME)
     minimum = config.get(CONF_MINIMUM)
     maximum = config.get(CONF_MAXIMUM)
@@ -66,7 +66,7 @@ class RandomSensor(Entity):
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend, if any."""
         return ICON
 
     @property

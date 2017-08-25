@@ -20,14 +20,14 @@ DEPENDENCIES = ['http']
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup an endpoint for the GPSLogger application."""
+    """Set up an endpoint for the GPSLogger application."""
     hass.http.register_view(GPSLoggerView(see))
 
     return True
 
 
 class GPSLoggerView(HomeAssistantView):
-    """View to handle gpslogger requests."""
+    """View to handle GPSLogger requests."""
 
     url = '/api/gpslogger'
     name = 'api:gpslogger'
@@ -38,21 +38,20 @@ class GPSLoggerView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request):
-        """A GPSLogger message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        """Handle for GPSLogger message received as GET."""
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
     def _handle(self, hass, data):
-        """Handle gpslogger request."""
+        """Handle GPSLogger requests."""
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
         if 'device' not in data:
-            _LOGGER.error('Device id not specified.')
-            return ('Device id not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
+            _LOGGER.error("Device id not specified")
+            return ('Device id not specified.', HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
         gps_location = (data['latitude'], data['longitude'])
@@ -76,10 +75,10 @@ class GPSLoggerView(HomeAssistantView):
         if 'activity' in data:
             attrs['activity'] = data['activity']
 
-        yield from hass.loop.run_in_executor(
-            None, partial(self.see, dev_id=device,
-                          gps=gps_location, battery=battery,
-                          gps_accuracy=accuracy,
-                          attributes=attrs))
+        yield from hass.async_add_job(
+            partial(self.see, dev_id=device,
+                    gps=gps_location, battery=battery,
+                    gps_accuracy=accuracy,
+                    attributes=attrs))
 
         return 'Setting location for {}'.format(device)

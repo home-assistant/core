@@ -10,15 +10,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
 
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-_LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = 'initial'
 CONF_OPTIONS = 'options'
@@ -56,12 +57,12 @@ SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
 
 
 def _cv_input_select(cfg):
-    """Config validation helper for input select (Voluptuous)."""
+    """Configure validation helper for input select (voluptuous)."""
     options = cfg[CONF_OPTIONS]
-    state = cfg.get(CONF_INITIAL, options[0])
-    if state not in options:
+    initial = cfg.get(CONF_INITIAL)
+    if initial is not None and initial not in options:
         raise vol.Invalid('initial state "{}" is not part of the options: {}'
-                          .format(state, ','.join(options)))
+                          .format(initial, ','.join(options)))
     return cfg
 
 
@@ -77,6 +78,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
+@bind_hass
 def select_option(hass, entity_id, option):
     """Set value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
@@ -85,6 +87,7 @@ def select_option(hass, entity_id, option):
     })
 
 
+@bind_hass
 def select_next(hass, entity_id):
     """Set next value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
@@ -92,6 +95,7 @@ def select_next(hass, entity_id):
     })
 
 
+@bind_hass
 def select_previous(hass, entity_id):
     """Set previous value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
@@ -99,6 +103,7 @@ def select_previous(hass, entity_id):
     })
 
 
+@bind_hass
 def set_options(hass, entity_id, options):
     """Set options of input_select."""
     hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, {
@@ -109,7 +114,7 @@ def set_options(hass, entity_id, options):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup input select."""
+    """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
@@ -117,9 +122,9 @@ def async_setup(hass, config):
     for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-        state = cfg.get(CONF_INITIAL, options[0])
+        initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
-        entities.append(InputSelect(object_id, name, state, options, icon))
+        entities.append(InputSelect(object_id, name, initial, options, icon))
 
     if not entities:
         return False
@@ -187,23 +192,25 @@ def async_setup(hass, config):
 class InputSelect(Entity):
     """Representation of a select input."""
 
-    def __init__(self, object_id, name, state, options, icon):
+    def __init__(self, object_id, name, initial, options, icon):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
-        self._current_option = state
+        self._current_option = initial
         self._options = options
         self._icon = icon
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity about to be added to hass."""
+        """Run when entity about to be added."""
+        if self._current_option is not None:
+            return
+
         state = yield from async_get_last_state(self.hass, self.entity_id)
-        if not state:
-            return
-        if state.state not in self._options:
-            return
-        self._current_option = state.state
+        if not state or state.state not in self._options:
+            self._current_option = self._options[0]
+        else:
+            self._current_option = state.state
 
     @property
     def should_poll(self):

@@ -74,12 +74,12 @@ class LannouncerNotificationService(BaseNotificationService):
             # Check response
             buffer = sock.recv(1024)
             if buffer != b'LANnouncer: OK':
-                _LOGGER.error('Error sending data to Lannnouncer: %s',
+                _LOGGER.error("Error sending data to Lannnouncer: %s",
                               buffer.decode())
 
             # Close socket
             sock.close()
         except socket.gaierror:
-            _LOGGER.error('Unable to connect to host %s', self._host)
+            _LOGGER.error("Unable to connect to host %s", self._host)
         except socket.error:
-            _LOGGER.exception('Failed to send data to Lannnouncer')
+            _LOGGER.exception("Failed to send data to Lannnouncer")

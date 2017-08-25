@@ -6,18 +6,16 @@ https://home-assistant.io/components/sensor.coinmarketcap/
 """
 import logging
 from datetime import timedelta
-import json
 from urllib.error import HTTPError
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['coinmarketcap==2.0.1']
+REQUIREMENTS = ['coinmarketcap==3.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +30,12 @@ ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
 
 CONF_ATTRIBUTION = "Data provided by CoinMarketCap"
-CONF_CURRENCY = 'currency'
 
 DEFAULT_CURRENCY = 'bitcoin'
 
 ICON = 'mdi:currency-usd'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
@@ -52,11 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         CoinMarketCapData(currency).update()
     except HTTPError:
-        _LOGGER.warning("Currency '%s' is not available. Using 'bitcoin'",
+        _LOGGER.warning("Currency %s is not available. Using bitcoin",
                         currency)
         currency = DEFAULT_CURRENCY
 
-    add_devices([CoinMarketCapSensor(CoinMarketCapData(currency))])
+    add_devices([CoinMarketCapSensor(CoinMarketCapData(currency))], True)
 
 
 class CoinMarketCapSensor(Entity):
@@ -67,7 +64,6 @@ class CoinMarketCapSensor(Entity):
         self.data = data
         self._ticker = None
         self._unit_of_measurement = 'USD'
-        self.update()
 
     @property
     def name(self):
@@ -106,8 +102,7 @@ class CoinMarketCapSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._ticker = json.loads(
-            self.data.ticker.decode('utf-8').strip('\n '))[0]
+        self._ticker = self.data.ticker[0]
 
 
 class CoinMarketCapData(object):
@@ -118,9 +113,7 @@ class CoinMarketCapData(object):
         self.currency = currency
         self.ticker = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from blockchain.info."""
         from coinmarketcap import Market
-
-        self.ticker = Market().ticker(self.currency)
+        self.ticker = Market().ticker(self.currency, limit=1)

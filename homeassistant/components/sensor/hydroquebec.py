@@ -16,48 +16,54 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
+    CONF_NAME, CONF_MONITORED_VARIABLES, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==1.0.0']
+REQUIREMENTS = ['pyhydroquebec==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOWATT_HOUR = "kWh"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-CONF_CONTRACT = "contract"  # type: str
+KILOWATT_HOUR = 'kWh'  # type: str
+PRICE = 'CAD'  # type: str
+DAYS = 'days'  # type: str
+CONF_CONTRACT = 'contract'  # type: str
 
-DEFAULT_NAME = "HydroQuebec"
+DEFAULT_NAME = 'HydroQuebec'
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
-    'period_total_bill': ['Current period bill',
-                          PRICE, 'mdi:square-inc-cash'],
-    'period_length': ['Current period length',
-                      DAYS, 'mdi:calendar-today'],
-    'period_total_days': ['Total number of days in this period',
-                          DAYS, 'mdi:calendar-today'],
-    'period_mean_daily_bill': ['Period daily average bill',
-                               PRICE, 'mdi:square-inc-cash'],
-    'period_mean_daily_consumption': ['Period daily average consumption',
-                                      KILOWATT_HOUR, 'mdi:flash'],
-    'period_total_consumption': ['Total Consumption',
-                                 KILOWATT_HOUR, 'mdi:flash'],
-    'period_lower_price_consumption': ['Period Lower price consumption',
-                                       KILOWATT_HOUR, 'mdi:flash'],
-    'period_higher_price_consumption': ['Period Higher price consumption',
-                                        KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_total_consumption': ['Yesterday total consumption',
-                                    KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_lower_price_consumption': ['Yesterday lower price consumption',
-                                          KILOWATT_HOUR, 'mdi:flash'],
+    'balance':
+    ['Balance', PRICE, 'mdi:square-inc-cash'],
+    'period_total_bill':
+    ['Period total bill', PRICE, 'mdi:square-inc-cash'],
+    'period_length':
+    ['Period length', DAYS, 'mdi:calendar-today'],
+    'period_total_days':
+    ['Period total days', DAYS, 'mdi:calendar-today'],
+    'period_mean_daily_bill':
+    ['Period mean daily bill', PRICE, 'mdi:square-inc-cash'],
+    'period_mean_daily_consumption':
+    ['Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_total_consumption':
+    ['Period total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_lower_price_consumption':
+    ['Period lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_higher_price_consumption':
+    ['Period higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_total_consumption':
+    ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_lower_price_consumption':
+    ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_higher_price_consumption':
     ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_average_temperature':
+    ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'period_average_temperature':
+    ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -69,10 +75,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-HOST = "https://www.hydroquebec.com"
-HOME_URL = "{}/portail/web/clientele/authentification".format(HOST)
-PROFILE_URL = ("{}/portail/fr/group/clientele/"
-               "portrait-de-consommation".format(HOST))
+HOST = 'https://www.hydroquebec.com'
+HOME_URL = '{}/portail/web/clientele/authentification'.format(HOST)
+PROFILE_URL = ('{}/portail/fr/group/clientele/'
+               'portrait-de-consommation'.format(HOST))
 MONTHLY_MAP = (('period_total_bill', 'montantFacturePeriode'),
                ('period_length', 'nbJourLecturePeriode'),
                ('period_total_days', 'nbJourPrevuPeriode'),
@@ -119,7 +125,6 @@ class HydroQuebecSensor(Entity):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
-        self.entity_id = "sensor.{}_{}".format(name, sensor_type)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._icon = SENSOR_TYPES[sensor_type][2]
@@ -159,9 +164,8 @@ class HydroquebecData(object):
     def __init__(self, username, password, contract=None):
         """Initialize the data object."""
         from pyhydroquebec import HydroQuebecClient
-        self.client = HydroQuebecClient(username,
-                                        password,
-                                        REQUESTS_TIMEOUT)
+        self.client = HydroQuebecClient(
+            username, password, REQUESTS_TIMEOUT)
         self._contract = contract
         self.data = {}
 
@@ -183,7 +187,5 @@ class HydroquebecData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Return the latest collected data from HydroQuebec."""
-        # Fetch data
         self._fetch_data()
-        # Update data
         self.data = self.client.get_data(self._contract)[self._contract]

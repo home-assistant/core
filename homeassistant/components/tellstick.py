@@ -13,17 +13,16 @@ from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = 'tellstick'
-
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SIGNAL_REPETITIONS = 'signal_repetitions'
-DEFAULT_SIGNAL_REPETITIONS = 1
-
-ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_DISCOVER_CONFIG = 'config'
+ATTR_DISCOVER_DEVICES = 'devices'
+ATTR_SIGNAL_REPETITIONS = 'signal_repetitions'
+
+DEFAULT_SIGNAL_REPETITIONS = 1
+DOMAIN = 'tellstick'
 
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
 # calling concurrently.
@@ -42,8 +41,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _discover(hass, config, component_name, found_tellcore_devices):
-    """Setup and send the discovery event."""
-    if not len(found_tellcore_devices):
+    """Set up and send the discovery event."""
+    if not found_tellcore_devices:
         return
 
     _LOGGER.info("Discovered %d new %s devices", len(found_tellcore_devices),
@@ -57,7 +56,7 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 
 
 def setup(hass, config):
-    """Setup the Tellstick component."""
+    """Set up the Tellstick component."""
     from tellcore.constants import TELLSTICK_DIM
     from tellcore.telldus import AsyncioCallbackDispatcher
     from tellcore.telldus import TelldusCore
@@ -66,7 +65,7 @@ def setup(hass, config):
         tellcore_lib = TelldusCore(
             callback_dispatcher=AsyncioCallbackDispatcher(hass.loop))
     except OSError:
-        _LOGGER.exception('Could not initialize Tellstick')
+        _LOGGER.exception("Could not initialize Tellstick")
         return False
 
     # Get all devices, switches and lights alike
@@ -152,7 +151,7 @@ class TellstickDevice(Entity):
     """
 
     def __init__(self, tellcore_id, tellcore_registry, signal_repetitions):
-        """Initalize the Tellstick device."""
+        """Init the Tellstick device."""
         self._signal_repetitions = signal_repetitions
         self._state = None
         self._requested_state = None
@@ -218,7 +217,7 @@ class TellstickDevice(Entity):
                     _LOGGER.error(err)
 
     def _change_device_state(self, new_state, data):
-        """The logic for actually turning on or off the device."""
+        """Turn on or off the device."""
         with TELLSTICK_LOCK:
             # Set the requested state and number of repeats before calling
             # _send_repeated_command the first time. Subsequent calls will be
@@ -245,8 +244,8 @@ class TellstickDevice(Entity):
 
     def _update_model_from_command(self, tellcore_command, tellcore_data):
         """Update the model, from a sent tellcore command and data."""
-        from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
-                                        TELLSTICK_DIM)
+        from tellcore.constants import (
+            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM)
 
         if tellcore_command not in [TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                     TELLSTICK_DIM]:
@@ -269,8 +268,8 @@ class TellstickDevice(Entity):
     def _update_from_tellcore(self):
         """Read the current state of the device from the tellcore library."""
         from tellcore.library import TelldusError
-        from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
-                                        TELLSTICK_DIM)
+        from tellcore.constants import (
+            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM)
 
         with TELLSTICK_LOCK:
             try:

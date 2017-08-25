@@ -1,15 +1,8 @@
 """
-Tracks devices by sending a ICMP ping.
+Tracks devices by sending a ICMP echo request (ping).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ping/
-
-device_tracker:
-  - platform: ping
-    count: 2
-    hosts:
-      host_one: pc.local
-      host_two: 192.168.2.25
 """
 import logging
 import subprocess
@@ -18,14 +11,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
-import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Host:
+class Host(object):
     """Host object with ping detection."""
 
     def __init__(self, ip_address, dev_id, hass, config):
@@ -46,15 +37,17 @@ class Host:
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
-        if sys.platform == "win32":
-            self._ping_cmd = ['ping', '-n 1', '-w 1000', self.ip_address]
+        if sys.platform == 'win32':
+            self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
         else:
             self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
                               self.ip_address]
 
     def ping(self):
-        """Send ICMP ping and return True if success."""
-        pinger = subprocess.Popen(self._ping_cmd, stdout=subprocess.PIPE)
+        """Send an ICMP echo request and return True if success."""
+        pinger = subprocess.Popen(self._ping_cmd,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL)
         try:
             pinger.communicate()
             return pinger.returncode == 0
@@ -64,17 +57,17 @@ class Host:
     def update(self, see):
         """Update device state by sending one or more ping messages."""
         failed = 0
-        while failed < self._count:  # check more times if host in unreachable
+        while failed < self._count:  # check more times if host is unreachable
             if self.ping():
                 see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
                 return True
             failed += 1
 
-        _LOGGER.debug("ping KO on ip=%s failed=%d", self.ip_address, failed)
+        _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the Host objects and return the update function."""
+    """Set up the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]
     interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + \

@@ -1,5 +1,6 @@
 """The tests for the InfluxDB component."""
 import unittest
+import datetime
 from unittest import mock
 
 import influxdb as influx_client
@@ -96,7 +97,10 @@ class TestInfluxDB(unittest.TestCase):
                 'host': 'host',
                 'username': 'user',
                 'password': 'pass',
-                'blacklist': ['fake.blacklisted']
+                'exclude': {
+                    'entities': ['fake.blacklisted'],
+                    'domains': ['another_fake']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
@@ -117,10 +121,16 @@ class TestInfluxDB(unittest.TestCase):
             attrs = {
                 'unit_of_measurement': 'foobars',
                 'longitude': '1.1',
-                'latitude': '2.2'
+                'latitude': '2.2',
+                'battery_level': '99%',
+                'temperature': '20c',
+                'last_seen': 'Last seen 23 minutes ago',
+                'updated_at': datetime.datetime(2017, 1, 1, 0, 0),
+                'multi_periods': '0.120.240.2023873'
             }
             state = mock.MagicMock(
-                state=in_, domain='fake', object_id='entity', attributes=attrs)
+                state=in_, domain='fake', entity_id='fake.entity-id',
+                object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             if isinstance(out, str):
                 body = [{
@@ -133,7 +143,16 @@ class TestInfluxDB(unittest.TestCase):
                     'fields': {
                         'state': out,
                         'longitude': 1.1,
-                        'latitude': 2.2
+                        'latitude': 2.2,
+                        'battery_level_str': '99%',
+                        'battery_level': 99.0,
+                        'temperature_str': '20c',
+                        'temperature': 20.0,
+                        'last_seen_str': 'Last seen 23 minutes ago',
+                        'last_seen': 23.0,
+                        'updated_at_str': '2017-01-01 00:00:00',
+                        'updated_at': 20170101000000,
+                        'multi_periods_str': '0.120.240.2023873'
                     },
                 }]
 
@@ -148,7 +167,16 @@ class TestInfluxDB(unittest.TestCase):
                     'fields': {
                         'value': out,
                         'longitude': 1.1,
-                        'latitude': 2.2
+                        'latitude': 2.2,
+                        'battery_level_str': '99%',
+                        'battery_level': 99.0,
+                        'temperature_str': '20c',
+                        'temperature': 20.0,
+                        'last_seen_str': 'Last seen 23 minutes ago',
+                        'last_seen': 23.0,
+                        'updated_at_str': '2017-01-01 00:00:00',
+                        'updated_at': 20170101000000,
+                        'multi_periods_str': '0.120.240.2023873'
                     },
                 }]
             self.handler_method(event)
@@ -171,11 +199,11 @@ class TestInfluxDB(unittest.TestCase):
             else:
                 attrs = {}
             state = mock.MagicMock(
-                state=1, domain='fake', entity_id='entity-id',
+                state=1, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
-                'measurement': 'entity-id',
+                'measurement': 'fake.entity-id',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
@@ -200,8 +228,8 @@ class TestInfluxDB(unittest.TestCase):
         self._setup()
 
         state = mock.MagicMock(
-            state=1, domain='fake', entity_id='entity-id', object_id='entity',
-            attributes={})
+            state=1, domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes={})
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         mock_client.return_value.write_points.side_effect = \
             influx_client.exceptions.InfluxDBClientError('foo')
@@ -213,11 +241,11 @@ class TestInfluxDB(unittest.TestCase):
 
         for state_state in (1, 'unknown', '', 'unavailable'):
             state = mock.MagicMock(
-                state=state_state, domain='fake', entity_id='entity-id',
+                state=state_state, domain='fake', entity_id='fake.entity-id',
                 object_id='entity', attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
-                'measurement': 'entity-id',
+                'measurement': 'fake.entity-id',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
@@ -273,8 +301,131 @@ class TestInfluxDB(unittest.TestCase):
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
 
+    def test_event_listener_blacklist_domain(self, mock_client):
+        """Test the event listener against a blacklist."""
+        self._setup()
+
+        for domain in ('ok', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if domain == 'ok':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_whitelist(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'include': {
+                    'entities': ['fake.included'],
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        for entity_id in ('included', 'default'):
+            state = mock.MagicMock(
+                state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
+                object_id=entity_id, attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': 'fake.{}'.format(entity_id),
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': entity_id,
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if entity_id == 'included':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_whitelist_domain(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'include': {
+                    'domains': ['fake'],
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        for domain in ('fake', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if domain == 'fake':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
     def test_event_listener_invalid_type(self, mock_client):
-        """Test the event listener when an attirbute has an invalid type."""
+        """Test the event listener when an attribute has an invalid type."""
         self._setup()
 
         valid = {
@@ -292,7 +443,8 @@ class TestInfluxDB(unittest.TestCase):
                 'invalid_attribute': ['value1', 'value2']
             }
             state = mock.MagicMock(
-                state=in_, domain='fake', object_id='entity', attributes=attrs)
+                state=in_, domain='fake', entity_id='fake.entity-id',
+                object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             if isinstance(out, str):
                 body = [{
@@ -343,7 +495,9 @@ class TestInfluxDB(unittest.TestCase):
                 'username': 'user',
                 'password': 'pass',
                 'default_measurement': 'state',
-                'blacklist': ['fake.blacklisted']
+                'exclude': {
+                    'entities': ['fake.blacklisted']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
@@ -376,4 +530,109 @@ class TestInfluxDB(unittest.TestCase):
                 )
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_tags_attributes(self, mock_client):
+        """Test the event listener when some attributes should be tags."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'tags_attributes': ['friendly_fake']
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        attrs = {
+            'friendly_fake': 'tag_str',
+            'field_fake': 'field_str',
+        }
+        state = mock.MagicMock(
+            state=1, domain='fake',
+            entity_id='fake.something',
+            object_id='something', attributes=attrs)
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        body = [{
+            'measurement': 'fake.something',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'something',
+                'friendly_fake': 'tag_str'
+            },
+            'time': 12345,
+            'fields': {
+                'value': 1,
+                'field_fake_str': 'field_str'
+            },
+        }]
+        self.handler_method(event)
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_component_override_measurement(self, mock_client):
+        """Test the event listener with overrided measurements."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'component_config': {
+                    'sensor.fake_humidity': {
+                        'override_measurement': 'humidity'
+                    }
+                },
+                'component_config_glob': {
+                    'binary_sensor.*motion': {
+                        'override_measurement': 'motion'
+                    }
+                },
+                'component_config_domain': {
+                    'climate': {
+                        'override_measurement': 'hvac'
+                    }
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        test_components = [
+            {'domain': 'sensor', 'id': 'fake_humidity', 'res': 'humidity'},
+            {'domain': 'binary_sensor', 'id': 'fake_motion', 'res': 'motion'},
+            {'domain': 'climate', 'id': 'fake_thermostat', 'res': 'hvac'},
+            {'domain': 'other', 'id': 'just_fake', 'res': 'other.just_fake'},
+        ]
+        for comp in test_components:
+            state = mock.MagicMock(
+                state=1, domain=comp['domain'],
+                entity_id=comp['domain'] + '.' + comp['id'],
+                object_id=comp['id'], attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': comp['res'],
+                'tags': {
+                    'domain': comp['domain'],
+                    'entity_id': comp['id']
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 1
+            )
+            self.assertEqual(
+                mock_client.return_value.write_points.call_args,
+                mock.call(body)
+            )
             mock_client.return_value.write_points.reset_mock()

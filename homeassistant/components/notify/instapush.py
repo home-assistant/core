@@ -13,7 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.instapush.im/v1/'
@@ -23,6 +24,9 @@ CONF_EVENT = 'event'
 CONF_TRACKER = 'tracker'
 
 DEFAULT_TIMEOUT = 10
+
+HTTP_HEADER_APPID = 'x-instapush-appid'
+HTTP_HEADER_APPSECRET = 'x-instapush-appsecret'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -34,25 +38,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Instapush notification service."""
-    headers = {'x-instapush-appid': config[CONF_API_KEY],
-               'x-instapush-appsecret': config[CONF_APP_SECRET]}
+    headers = {
+        HTTP_HEADER_APPID: config[CONF_API_KEY],
+        HTTP_HEADER_APPSECRET: config[CONF_APP_SECRET],
+    }
 
     try:
         response = requests.get(
             '{}{}'.format(_RESOURCE, 'events/list'), headers=headers,
             timeout=DEFAULT_TIMEOUT).json()
     except ValueError:
-        _LOGGER.error('Unexpected answer from Instapush API.')
+        _LOGGER.error("Unexpected answer from Instapush API")
         return None
 
     if 'error' in response:
         _LOGGER.error(response['msg'])
         return None
 
-    if len([app for app in response
-            if app['title'] == config[CONF_EVENT]]) == 0:
-        _LOGGER.error("No app match your given value. "
-                      "Please create an app at https://instapush.im")
+    if not [app for app in response if app['title'] == config[CONF_EVENT]]:
+        _LOGGER.error("No app match your given value")
         return None
 
     return InstapushNotificationService(
@@ -70,16 +74,17 @@ class InstapushNotificationService(BaseNotificationService):
         self._event = event
         self._tracker = tracker
         self._headers = {
-            'x-instapush-appid': self._api_key,
-            'x-instapush-appsecret': self._app_secret,
-            'Content-Type': 'application/json'}
+            HTTP_HEADER_APPID: self._api_key,
+            HTTP_HEADER_APPSECRET: self._app_secret,
+            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
+        }
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = {
             'event': self._event,
-            'trackers': {self._tracker: title + ' : ' + message}
+            'trackers': {self._tracker: '{} : {}'.format(title, message)}
         }
 
         response = requests.post(

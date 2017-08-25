@@ -45,20 +45,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lyft sensor."""
     from lyft_rides.auth import ClientCredentialGrant
+    from lyft_rides.errors import APIError
 
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
                                       scopes="public",
                                       is_sandbox_mode=False)
-    session = auth_flow.get_session()
+    try:
+        session = auth_flow.get_session()
+
+        timeandpriceest = LyftEstimate(
+            session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
+            config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
+        timeandpriceest.fetch_data()
+    except APIError as exc:
+        _LOGGER.error("Error setting up Lyft platform: %s", exc)
+        return False
 
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = LyftEstimate(
-        session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
-        config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
@@ -79,8 +86,8 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(self._product['display_name'],
-                                    self._sensortype)
+        self._name = '{} {}'.format(
+            self._product['display_name'], self._sensortype)
         if 'lyft' not in self._name.lower():
             self._name = 'Lyft{}'.format(self._name)
         if self._sensortype == 'time':
@@ -137,10 +144,8 @@ class LyftSensor(Entity):
             params['Trip duration (in seconds)'] = estimate.get(
                 'estimated_duration_seconds')
 
-            # Ignore the Prime Time percentage -- the Lyft API always
-            # returns 0 unless a user is logged in.
-            # params['Prime Time percentage'] = estimate.get(
-            #    'primetime_percentage')
+            params['Prime Time percentage'] = estimate.get(
+                'primetime_percentage')
 
         if self._product.get("eta") is not None:
             eta = self._product['eta']
@@ -161,13 +166,14 @@ class LyftSensor(Entity):
             self._product = self.data.products[self._product_id]
         except KeyError:
             return
+        self._state = None
         if self._sensortype == 'time':
             eta = self._product['eta']
             if (eta is not None) and (eta.get('is_valid_estimate')):
-                time_estimate = eta.get('eta_seconds', 0)
+                time_estimate = eta.get('eta_seconds')
+                if time_estimate is None:
+                    return
                 self._state = int(time_estimate / 60)
-            else:
-                self._state = 0
         elif self._sensortype == 'price':
             estimate = self._product['estimate']
             if (estimate is not None) and \
@@ -175,8 +181,6 @@ class LyftSensor(Entity):
                 self._state = (int(
                     (estimate.get('estimated_cost_cents_min', 0) +
                      estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
-            else:
-                self._state = 0
 
 
 class LyftEstimate(object):
@@ -191,14 +195,18 @@ class LyftEstimate(object):
         self.end_latitude = end_latitude
         self.end_longitude = end_longitude
         self.products = None
-        self.__real_update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest product info and estimates from the Lyft API."""
-        self.__real_update()
+        from lyft_rides.errors import APIError
+        try:
+            self.fetch_data()
+        except APIError as exc:
+            _LOGGER.error("Error fetching Lyft data: %s", exc)
 
-    def __real_update(self):
+    def fetch_data(self):
+        """Get the latest product info and estimates from the Lyft API."""
         from lyft_rides.client import LyftRidesClient
         client = LyftRidesClient(self._session)
 

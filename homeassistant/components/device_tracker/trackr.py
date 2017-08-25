@@ -37,18 +37,18 @@ class TrackRDeviceScanner(object):
         """Initialize the TrackR device scanner."""
         from pytrackr.api import trackrApiInterface
         self.hass = hass
-        self.api = trackrApiInterface(config.get(CONF_USERNAME),
-                                      config.get(CONF_PASSWORD))
+        self.api = trackrApiInterface(
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
         self.see = see
         self.devices = self.api.get_trackrs()
         self._update_info()
 
-        track_utc_time_change(self.hass, self._update_info,
-                              second=range(0, 60, 30))
+        track_utc_time_change(
+            self.hass, self._update_info, second=range(0, 60, 30))
 
     def _update_info(self, now=None) -> None:
         """Update the device info."""
-        _LOGGER.debug('Updating devices %s', now)
+        _LOGGER.debug("Updating devices %s", now)
 
         # Update self.devices to collect new devices added
         # to the users account.

@@ -38,29 +38,37 @@ class TestCoverDemo(unittest.TestCase):
     def test_close_cover(self):
         """Test closing the cover."""
         state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'open')
         self.assertEqual(70, state.attributes.get('current_position'))
         cover.close_cover(self.hass, ENTITY_COVER)
         self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'closing')
         for _ in range(7):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'closed')
         self.assertEqual(0, state.attributes.get('current_position'))
 
     def test_open_cover(self):
         """Test opening the cover."""
         state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'open')
         self.assertEqual(70, state.attributes.get('current_position'))
         cover.open_cover(self.hass, ENTITY_COVER)
         self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'opening')
         for _ in range(7):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY_COVER)
+        self.assertEqual(state.state, 'open')
         self.assertEqual(100, state.attributes.get('current_position'))
 
     def test_set_cover_position(self):

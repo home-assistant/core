@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = litejet_.get_switch_name(i)
         if not litejet.is_ignored(hass, name):
             devices.append(LiteJetSwitch(hass, litejet_, i, name))
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class LiteJetSwitch(SwitchDevice):
@@ -42,17 +42,15 @@ class LiteJetSwitch(SwitchDevice):
         lj.on_switch_pressed(i, self._on_switch_pressed)
         lj.on_switch_released(i, self._on_switch_released)
 
-        self.update()
-
     def _on_switch_pressed(self):
         _LOGGER.debug("Updating pressed for %s", self._name)
         self._state = True
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.schedule_update_ha_state()
 
     def _on_switch_released(self):
         _LOGGER.debug("Updating released for %s", self._name)
         self._state = False
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.schedule_update_ha_state()
 
     @property
     def name(self):

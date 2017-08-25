@@ -15,6 +15,8 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
+CONF_DATA = 'data'
+CONF_DATA_TEMPLATE = 'data_template'
 CONF_MESSAGE_PARAMETER_NAME = 'message_param_name'
 CONF_TARGET_PARAMETER_NAME = 'target_param_name'
 CONF_TITLE_PARAMETER_NAME = 'title_param_name'
@@ -34,6 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TARGET_PARAM_NAME): cv.string,
     vol.Optional(CONF_TITLE_PARAMETER_NAME,
                  default=DEFAULT_TITLE_PARAM_NAME): cv.string,
+    vol.Optional(CONF_DATA,
+                 default=None): dict,
+    vol.Optional(CONF_DATA_TEMPLATE,
+                 default=None): {cv.match_all: cv.template_complex}
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,23 +52,28 @@ def get_service(hass, config, discovery_info=None):
     message_param_name = config.get(CONF_MESSAGE_PARAMETER_NAME)
     title_param_name = config.get(CONF_TITLE_PARAMETER_NAME)
     target_param_name = config.get(CONF_TARGET_PARAMETER_NAME)
+    data = config.get(CONF_DATA)
+    data_template = config.get(CONF_DATA_TEMPLATE)
 
     return RestNotificationService(
-        resource, method, message_param_name, title_param_name,
-        target_param_name)
+        hass, resource, method, message_param_name,
+        title_param_name, target_param_name, data, data_template)
 
 
 class RestNotificationService(BaseNotificationService):
     """Implementation of a notification service for REST."""
 
-    def __init__(self, resource, method, message_param_name, title_param_name,
-                 target_param_name):
+    def __init__(self, hass, resource, method, message_param_name,
+                 title_param_name, target_param_name, data, data_template):
         """Initialize the service."""
         self._resource = resource
+        self._hass = hass
         self._method = method.upper()
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
+        self._data = data
+        self._data_template = data_template
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -71,13 +82,27 @@ class RestNotificationService(BaseNotificationService):
         }
 
         if self._title_param_name is not None:
-            data[self._title_param_name] = kwargs.get(ATTR_TITLE,
-                                                      ATTR_TITLE_DEFAULT)
+            data[self._title_param_name] = kwargs.get(
+                ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if self._target_param_name is not None and ATTR_TARGET in kwargs:
             # Target is a list as of 0.29 and we don't want to break existing
             # integrations, so just return the first target in the list.
             data[self._target_param_name] = kwargs[ATTR_TARGET][0]
+
+        if self._data:
+            data.update(self._data)
+        elif self._data_template:
+            def _data_template_creator(value):
+                """Recursive template creator helper function."""
+                if isinstance(value, list):
+                    return [_data_template_creator(item) for item in value]
+                elif isinstance(value, dict):
+                    return {key: _data_template_creator(item)
+                            for key, item in value.items()}
+                value.hass = self._hass
+                return value.async_render(kwargs)
+            data.update(_data_template_creator(self._data_template))
 
         if self._method == 'POST':
             response = requests.post(self._resource, data=data, timeout=10)

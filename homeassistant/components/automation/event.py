@@ -2,7 +2,7 @@
 Offer event listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#event-trigger
+at https://home-assistant.io/docs/automation/trigger/#event-trigger
 """
 import asyncio
 import logging
@@ -13,8 +13,8 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
-CONF_EVENT_TYPE = "event_type"
-CONF_EVENT_DATA = "event_data"
+CONF_EVENT_TYPE = 'event_type'
+CONF_EVENT_DATA = 'event_data'
 
 _LOGGER = logging.getLogger(__name__)
 

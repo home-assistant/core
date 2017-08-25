@@ -40,17 +40,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Pioneer platform."""
-    pioneer = PioneerDevice(config.get(CONF_NAME),
-                            config.get(CONF_HOST),
-                            config.get(CONF_PORT),
-                            config.get(CONF_TIMEOUT))
+    """Set up the Pioneer platform."""
+    pioneer = PioneerDevice(
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT))
 
     if pioneer.update():
         add_devices([pioneer])
-        return True
-    else:
-        return False
 
 
 class PioneerDevice(MediaPlayerDevice):
@@ -89,14 +85,13 @@ class PioneerDevice(MediaPlayerDevice):
         return None
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
+        """Establish a telnet connection and sends command."""
         try:
             try:
-                telnet = telnetlib.Telnet(self._host,
-                                          self._port,
-                                          self._timeout)
-            except ConnectionRefusedError:
-                _LOGGER.debug("Pioneer %s refused connection", self._name)
+                telnet = telnetlib.Telnet(
+                    self._host, self._port, self._timeout)
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
@@ -109,8 +104,8 @@ class PioneerDevice(MediaPlayerDevice):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except ConnectionRefusedError:
-            _LOGGER.debug("Pioneer %s refused connection", self._name)
+        except (ConnectionRefusedError, OSError):
+            _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 
         pwstate = self.telnet_request(telnet, "?P", "PWR")
@@ -126,9 +121,8 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet,
-                                             "?RGB" + str(i).zfill(2),
-                                             "RGB")
+                result = self.telnet_request(
+                    telnet, "?RGB" + str(i).zfill(2), "RGB")
 
                 if not result:
                     continue

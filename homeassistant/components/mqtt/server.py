@@ -47,7 +47,7 @@ def async_start(hass, server_config):
         broker = Broker(server_config, hass.loop)
         yield from broker.start()
     except BrokerException:
-        logging.getLogger(__name__).exception('Error initializing MQTT server')
+        logging.getLogger(__name__).exception("Error initializing MQTT server")
         return False, None
     finally:
         passwd.close()

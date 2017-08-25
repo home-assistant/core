@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo binary sensor platform."""
+    """Set up the Demo binary sensor platform."""
     add_devices([
         DemoBinarySensor('Basement Floor Wet', False, 'moisture'),
         DemoBinarySensor('Movement Backyard', True, 'motion'),
@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoBinarySensor(BinarySensorDevice):
-    """A Demo binary sensor."""
+    """representation of a Demo binary sensor."""
 
     def __init__(self, name, state, device_class):
         """Initialize the demo sensor."""

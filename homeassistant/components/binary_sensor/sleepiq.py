@@ -11,7 +11,7 @@ DEPENDENCIES = ['sleepiq']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SleepIQ sensors."""
+    """Set up the SleepIQ sensors."""
     if discovery_info is None:
         return
 

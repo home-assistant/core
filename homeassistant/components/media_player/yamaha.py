@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yamaha platform."""
+    """Set up the Yamaha platform."""
     import rxv
     # keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
@@ -59,17 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     zone_ignore = config.get(CONF_ZONE_IGNORE)
 
     if discovery_info is not None:
-        name = discovery_info[0]
-        model = discovery_info[1]
-        ctrl_url = discovery_info[2]
-        desc_url = discovery_info[3]
+        name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        ctrl_url = discovery_info.get('control_url')
+        desc_url = discovery_info.get('description_url')
         if ctrl_url in hass.data[KNOWN]:
             _LOGGER.info("%s already manually configured", ctrl_url)
             return
         receivers = rxv.RXV(
-            ctrl_url,
-            model_name=model,
-            friendly_name=name,
+            ctrl_url, model_name=model, friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
         # when we are dynamically discovered config is empty
@@ -86,7 +84,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone not in zone_ignore:
             hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)])
+                YamahaDevice(name, receiver, source_ignore, source_names)
+            ], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
@@ -106,7 +105,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
-        self.update()
         self._name = name
         self._zone = receiver.zone
 
@@ -241,7 +239,7 @@ class YamahaDevice(MediaPlayerDevice):
             function()
         except rxv.exceptions.ResponseException:
             _LOGGER.warning(
-                'Failed to execute %s on %s', function_text, self._name)
+                "Failed to execute %s on %s", function_text, self._name)
 
     def select_source(self, source):
         """Select input source."""
@@ -289,5 +287,5 @@ class YamahaDevice(MediaPlayerDevice):
             # just the one we have.
             if song and station:
                 return '{}: {}'.format(station, song)
-            else:
-                return song or station
+
+            return song or station

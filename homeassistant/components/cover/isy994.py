@@ -12,7 +12,6 @@ import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
 
-
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
@@ -27,15 +26,14 @@ STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening', 'stopped']
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 cover platform."""
+    """Set up the ISY994 cover platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []
 
-    for node in isy.filter_nodes(isy.NODES, units=UOM,
-                                 states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM, states=STATES):
         devices.append(ISYCoverDevice(node))
 
     for program in isy.PROGRAMS.get(DOMAIN, []):
@@ -60,7 +58,7 @@ class ISYCoverDevice(isy.ISYDevice, CoverDevice):
 
     @property
     def current_cover_position(self) -> int:
-        """Get the current cover position."""
+        """Return the current cover position."""
         return sorted((0, self.value, 100))[1]
 
     @property
@@ -76,12 +74,12 @@ class ISYCoverDevice(isy.ISYDevice, CoverDevice):
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover device."""
         if not self._node.on(val=100):
-            _LOGGER.error('Unable to open the cover')
+            _LOGGER.error("Unable to open the cover")
 
     def close_cover(self, **kwargs) -> None:
         """Send the close cover command to the ISY994 cover device."""
         if not self._node.off():
-            _LOGGER.error('Unable to close the cover')
+            _LOGGER.error("Unable to close the cover")
 
 
 class ISYCoverProgram(ISYCoverDevice):
@@ -101,9 +99,9 @@ class ISYCoverProgram(ISYCoverDevice):
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover program."""
         if not self._actions.runThen():
-            _LOGGER.error('Unable to open the cover')
+            _LOGGER.error("Unable to open the cover")
 
     def close_cover(self, **kwargs) -> None:
         """Send the close cover command to the ISY994 cover program."""
         if not self._actions.runElse():
-            _LOGGER.error('Unable to close the cover')
+            _LOGGER.error("Unable to close the cover")

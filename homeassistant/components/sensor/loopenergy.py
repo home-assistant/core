@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Loop Energy sensors."""
+    """Set up the Loop Energy sensors."""
     import pyloopenergy
 
     elec_config = config.get(CONF_ELEC)
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def stop_loopenergy(event):
         """Shutdown loopenergy thread on exit."""
-        _LOGGER.info("Shutting down loopenergy.")
+        _LOGGER.info("Shutting down loopenergy")
         controller.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_loopenergy)

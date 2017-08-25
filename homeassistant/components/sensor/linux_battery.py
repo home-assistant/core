@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Linux Battery sensor."""
+    """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No battery found")
         return False
 
-    add_devices([LinuxBatterySensor(name, battery_id)])
+    add_devices([LinuxBatterySensor(name, battery_id)], True)
 
 
 class LinuxBatterySensor(Entity):
@@ -75,7 +75,6 @@ class LinuxBatterySensor(Entity):
         self._battery_stat = None
         self._battery_id = battery_id - 1
         self._unit_of_measurement = '%'
-        self.update()
 
     @property
     def name(self):

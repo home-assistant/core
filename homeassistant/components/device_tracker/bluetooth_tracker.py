@@ -1,4 +1,9 @@
-"""Tracking for bluetooth devices."""
+"""
+Tracking for bluetooth devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.bluetooth_tracker/
+"""
 import logging
 
 import voluptuous as vol
@@ -22,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the Bluetooth Scanner."""
+    """Set up the Bluetooth Scanner."""
     # pylint: disable=import-error
     import bluetooth
 
@@ -31,11 +36,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
         see(mac=BT_PREFIX + device[0], host_name=device[1])
 
     def discover_devices():
-        """Discover bluetooth devices."""
-        result = bluetooth.discover_devices(duration=8,
-                                            lookup_names=True,
-                                            flush_cache=True,
-                                            lookup_class=False)
+        """Discover Bluetooth devices."""
+        result = bluetooth.discover_devices(
+            duration=8, lookup_names=True, flush_cache=True,
+            lookup_class=False)
         _LOGGER.debug("Bluetooth devices discovered = " + str(len(result)))
         return result
 
@@ -47,14 +51,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # We just need the devices so set consider_home and home range
     # to 0
     for device in load_config(yaml_path, hass, 0):
-        # check if device is a valid bluetooth device
+        # Check if device is a valid bluetooth device
         if device.mac and device.mac[:3].upper() == BT_PREFIX:
             if device.track:
                 devs_to_track.append(device.mac[3:])
             else:
                 devs_donot_track.append(device.mac[3:])
 
-    # if track new devices is true discover new devices on startup.
+    # If track new devices is true discover new devices on startup.
     track_new = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
     if track_new:
         for dev in discover_devices():
@@ -66,7 +70,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_bluetooth(now):
-        """Lookup bluetooth device and update status."""
+        """Lookup Bluetooth device and update status."""
         try:
             if track_new:
                 for dev in discover_devices():
@@ -74,14 +78,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
                        dev[0] not in devs_donot_track:
                         devs_to_track.append(dev[0])
             for mac in devs_to_track:
-                _LOGGER.debug("Scanning " + mac)
+                _LOGGER.debug("Scanning %s", mac)
                 result = bluetooth.lookup_name(mac, timeout=5)
                 if not result:
                     # Could not lookup device name
                     continue
                 see_device((mac, result))
         except bluetooth.BluetoothError:
-            _LOGGER.exception('Error looking up bluetooth device!')
+            _LOGGER.exception("Error looking up Bluetooth device")
         track_point_in_utc_time(
             hass, update_bluetooth, dt_util.utcnow() + interval)
 

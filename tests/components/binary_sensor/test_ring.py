@@ -1,4 +1,5 @@
 """The tests for the Ring binary sensor platform."""
+import os
 import unittest
 import requests_mock
 
@@ -6,7 +7,8 @@ from homeassistant.components.binary_sensor import ring
 from homeassistant.components import ring as base_ring
 
 from tests.components.test_ring import ATTRIBUTION, VALID_CONFIG
-from tests.common import get_test_home_assistant, load_fixture
+from tests.common import (
+    get_test_config_dir, get_test_home_assistant, load_fixture)
 
 
 class TestRingBinarySensorSetup(unittest.TestCase):
@@ -19,9 +21,15 @@ class TestRingBinarySensorSetup(unittest.TestCase):
         for device in devices:
             self.DEVICES.append(device)
 
+    def cleanup(self):
+        """Cleanup any data created from the tests."""
+        if os.path.isfile(self.cache):
+            os.remove(self.cache)
+
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.cache = get_test_config_dir(base_ring.DEFAULT_CACHEDB)
         self.config = {
             'username': 'foo',
             'password': 'bar',
@@ -31,6 +39,7 @@ class TestRingBinarySensorSetup(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+        self.cleanup()
 
     @requests_mock.Mocker()
     def test_binary_sensor(self, mock):

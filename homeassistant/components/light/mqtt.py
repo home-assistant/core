@@ -92,7 +92,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Add MQTT Light."""
+    """Set up a MQTT Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
@@ -142,7 +142,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class MqttLight(Light):
-    """MQTT light."""
+    """Representation of a MQTT light."""
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
@@ -197,7 +197,7 @@ class MqttLight(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
@@ -211,7 +211,7 @@ class MqttLight(Light):
 
         @callback
         def state_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             payload = templates[CONF_STATE](payload)
             if payload == self._payload['on']:
                 self._state = True
@@ -226,7 +226,7 @@ class MqttLight(Light):
 
         @callback
         def brightness_received(topic, payload, qos):
-            """A new MQTT message for the brightness has been received."""
+            """Handle new MQTT messages for the brightness."""
             device_value = float(templates[CONF_BRIGHTNESS](payload))
             percent_bright = device_value / self._brightness_scale
             self._brightness = int(percent_bright * 255)
@@ -244,7 +244,7 @@ class MqttLight(Light):
 
         @callback
         def rgb_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages for RGB."""
             self._rgb = [int(val) for val in
                          templates[CONF_RGB](payload).split(',')]
             self.hass.async_add_job(self.async_update_ha_state())
@@ -261,7 +261,7 @@ class MqttLight(Light):
 
         @callback
         def color_temp_received(topic, payload, qos):
-            """A new MQTT message for color temp has been received."""
+            """Handle new MQTT messages for color temperature."""
             self._color_temp = int(templates[CONF_COLOR_TEMP](payload))
             self.hass.async_add_job(self.async_update_ha_state())
 
@@ -277,7 +277,7 @@ class MqttLight(Light):
 
         @callback
         def effect_received(topic, payload, qos):
-            """A new MQTT message for effect has been received."""
+            """Handle new MQTT messages for effect."""
             self._effect = templates[CONF_EFFECT](payload)
             self.hass.async_add_job(self.async_update_ha_state())
 
@@ -293,7 +293,7 @@ class MqttLight(Light):
 
         @callback
         def white_value_received(topic, payload, qos):
-            """A new MQTT message for the white value has been received."""
+            """Handle new MQTT messages for white value."""
             device_value = float(templates[CONF_WHITE_VALUE](payload))
             percent_white = device_value / self._white_value_scale
             self._white_value = int(percent_white * 255)
@@ -311,7 +311,7 @@ class MqttLight(Light):
 
         @callback
         def xy_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages for  color."""
             self._xy = [float(val) for val in
                         templates[CONF_XY](payload).split(',')]
             self.hass.async_add_job(self.async_update_ha_state())

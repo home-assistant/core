@@ -4,6 +4,8 @@ Support for Wink thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
+import asyncio
+
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
@@ -30,7 +32,7 @@ ATTR_OCCUPIED = "occupied"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink thermostat."""
+    """Set up the Wink thermostat."""
     import pywink
     temp_unit = hass.config.units.temperature_unit
     for climate in pywink.get_thermostats():
@@ -43,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkAC(climate, hass, temp_unit)])
 
 
-# pylint: disable=abstract-method,too-many-public-methods, too-many-branches
+# pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
 
@@ -51,6 +53,11 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
         self._config_temp_unit = temp_unit
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['climate'].append(self)
 
     @property
     def temperature_unit(self):
@@ -104,8 +111,8 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             # This will address both possibilities
             if self.wink.current_humidity() < 1:
                 return self.wink.current_humidity() * 100
-            else:
-                return self.wink.current_humidity()
+            return self.wink.current_humidity()
+        return None
 
     @property
     def external_temperature(self):
@@ -168,10 +175,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 return self.wink.current_max_set_point()
             elif self.current_operation == STATE_HEAT:
                 return self.wink.current_min_set_point()
-            else:
-                return None
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
@@ -199,8 +203,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return True
         elif self.wink.current_hvac_mode() == 'aux' and not self.wink.is_on():
             return False
-        else:
-            return None
+        return None
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -263,9 +266,8 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return STATE_ON
         elif self.wink.current_fan_mode() == 'auto':
             return STATE_AUTO
-        else:
-            # No Fan available so disable slider
-            return None
+        # No Fan available so disable slider
+        return None
 
     @property
     def fan_list(self):
@@ -444,12 +446,11 @@ class WinkAC(WinkDevice, ClimateDevice):
             return SPEED_MEDIUM
         elif speed <= 1.0 and speed > 0.8:
             return SPEED_HIGH
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, mode):

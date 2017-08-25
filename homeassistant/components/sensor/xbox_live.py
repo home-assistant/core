@@ -8,9 +8,9 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['xboxapi==0.1.1']
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if new_device.success_init:
             devices.append(new_device)
 
-    if len(devices) > 0:
+    if devices:
         add_devices(devices)
     else:
         return False

@@ -4,25 +4,25 @@ Platform for the MAX! Cube LAN Gateway.
 For more details about this component, please refer to the documentation
 https://home-assistant.io/components/maxcube/
 """
-
-from socket import timeout
 import logging
 import time
+from socket import timeout
 from threading import Lock
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 
 REQUIREMENTS = ['maxcube-api==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'maxcube'
-MAXCUBE_HANDLE = 'maxcube'
-
 DEFAULT_PORT = 62910
+DOMAIN = 'maxcube'
+
+MAXCUBE_HANDLE = 'maxcube'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,11 +37,9 @@ def setup(hass, config):
     from maxcube.connection import MaxCubeConnection
     from maxcube.cube import MaxCube
 
-    # Read Config
     host = config.get(DOMAIN).get(CONF_HOST)
     port = config.get(DOMAIN).get(CONF_PORT)
 
-    # Assign Cube Handle to global variable
     try:
         cube = MaxCube(MaxCubeConnection(host, port))
     except timeout:
@@ -51,13 +49,9 @@ def setup(hass, config):
 
     hass.data[MAXCUBE_HANDLE] = MaxCubeHandle(cube)
 
-    # Load Climate (for Thermostats)
     load_platform(hass, 'climate', DOMAIN)
-
-    # Load BinarySensor (for Window Shutter)
     load_platform(hass, 'binary_sensor', DOMAIN)
 
-    # Initialization successfull
     return True
 
 
@@ -66,13 +60,8 @@ class MaxCubeHandle(object):
 
     def __init__(self, cube):
         """Initialize the Cube Handle."""
-        # Cube handle
         self.cube = cube
-
-        # Instantiate Mutex
         self.mutex = Lock()
-
-        # Update Timestamp
         self._updatets = time.time()
 
     def update(self):
@@ -81,7 +70,7 @@ class MaxCubeHandle(object):
         with self.mutex:
             # Only update every 60s
             if (time.time() - self._updatets) >= 60:
-                _LOGGER.debug("UPDATE: Updating")
+                _LOGGER.debug("Updating")
 
                 try:
                     self.cube.update()
@@ -91,4 +80,4 @@ class MaxCubeHandle(object):
 
                 self._updatets = time.time()
             else:
-                _LOGGER.debug("UPDATE: Skipping")
+                _LOGGER.debug("Skipping update")

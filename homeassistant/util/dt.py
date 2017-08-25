@@ -1,4 +1,4 @@
-"""Provides helper methods to handle the time in HA."""
+"""Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
 
@@ -184,6 +184,7 @@ def get_age(date: dt.datetime) -> str:
         elif number > 1:
             return "%d %ss" % (number, unit)
 
+    # pylint: disable=invalid-sequence-index
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
         return first // second, first % second

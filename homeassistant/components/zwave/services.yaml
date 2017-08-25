@@ -3,41 +3,46 @@ change_association:
   fields:
     association:
       description: Specify add or remove assosication
+      example: add
     node_id:
       description: Node id of the node to set association for.
+      example: 10
     target_node_id:
       description: Node id of the node to associate to.
+      example: 42
     group:
       description: Group number to set association for.
     instance:
-      description: (Optional) Instance of association. Defaults to 0.
+      description: (Optional) Instance of multichannel association. Defaults to 0.
 
 add_node:
-  description: Add a new node to the Z-Wave network. Refer to OZW.log for details.
+  description: Add a new (unsecure) node to the Z-Wave network. Refer to OZW.log for progress.
 
 add_node_secure:
-  description: Add a new node to the Z-Wave network with secure communications. Node must support this, and network key must be set. Refer to OZW.log for details.
+  description: Add a new node to the Z-Wave network with secure communications. Secure network key must be set, this process will fallback to add_node (unsecure) for unsupported devices. Note that unsecure devices can't directly talk to secure devices. Refer to OZW.log for progress.
 
 cancel_command:
   description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you wasn't going to use it but activated it.
 
 heal_network:
-  description: Start a Z-Wave network heal. This might take a while and will slow down the Z-Wave network greatly while it is being processed. Refer to OZW.log for details.
+  description: Start a Z-Wave network heal. This might take a while and will slow down the Z-Wave network greatly while it is being processed. Refer to OZW.log for progress.
 
 remove_node:
-  description: Remove a node from the Z-Wave network. Refer to OZW.log for details.
+  description: Remove a node from the Z-Wave network. Refer to OZW.log for progress.
 
 remove_failed_node:
-  descsription: This command will remove a failed node from the network. The node should be on the controllers failed nodes list, otherwise this command will fail. Refer to OZW.log for details.
+  description: This command will remove a failed node from the network. The node should be on the controllers failed nodes list, otherwise this command will fail. Refer to OZW.log for progress.
   fields:
     node_id:
       description: Node id of the device to remove (integer).
+      example: 10
 
 replace_failed_node:
-  descsription: Replace a failed node with another. If the node is not in the controller's failed nodes list, or the node responds, this command will fail. Refer to OZW.log for details.
+  description: Replace a failed node with another. If the node is not in the controller's failed nodes list, or the node responds, this command will fail. Refer to OZW.log for progress.
   fields:
     node_id:
       description: Node id of the device to replace (integer).
+      example: 10
 
 set_config_parameter:
   description: Set a config parameter to a node on the Z-Wave network.
@@ -47,9 +52,9 @@ set_config_parameter:
     parameter:
       description: Parameter number to set (integer).
     value:
-      description: Value to set on parameter. (integer).
+      description: Value to set for parameter. (String value for list and bool parameters, integer for others).
     size:
-      description: (Optional) The size of the value. Defaults to 2.
+      description: (Optional) Set the size of the parameter value. Only needed if no parameters are available.
 
 print_config_parameter:
   description: Prints a Z-Wave node config parameter value to log.
@@ -97,14 +102,35 @@ soft_reset:
   description: This will reset the controller without removing its data. Use carefully because not all controllers support this. Refer to controllers manual.
 
 test_network:
-  description: This will send test to nodes in the Z-Wave network. This will greatly slow down the Z-Wave network while it is being processed. Refer to OZW.log for details.
+  description: This will send test to nodes in the Z-Wave network. This will greatly slow down the Z-Wave network while it is being processed. Refer to OZW.log for progress.
 
 rename_node:
-  description: Set the name(s) of a node.
+  description: Set the name of a node. This will also affect the IDs of all entities in the node.
   fields:
-    entity_id:
-      description: Name(s) of entities to to rename
-      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+    node_id:
+      description: ID of the node to rename.
+      example: 10
     name:
       description: New Name
       example: 'kitchen'
+
+rename_value:
+  description: Set the name of a node value. This will affect the ID of the value entity. Value IDs can be queried from /api/zwave/values/{node_id}
+  fields:
+    node_id:
+      description: ID of the node to rename.
+      example: 10
+    value_id:
+      description: ID of the value to rename.
+      example: 72037594255792737
+    name:
+      description: New Name
+      example: 'Luminosity'
+
+reset_node_meters:
+  description: Resets the meter counters of a node.
+  fields:
+    node_id:
+      description: Node id of the device to reset meters for. (integer)
+    instance:
+      description: (Optional) Instance of association. Defaults to instance 1.

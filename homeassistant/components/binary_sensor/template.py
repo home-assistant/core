@@ -15,11 +15,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_SENSOR_CLASS, CONF_SENSORS, CONF_DEVICE_CLASS,
-    EVENT_HOMEASSISTANT_START, STATE_ON)
+    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, STATE_ON)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -30,7 +28,6 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -41,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup template binary sensors."""
+    """Set up template binary sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -49,23 +46,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        device_class = get_deprecated(
-            device_config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
 
         if value_template is not None:
             value_template.hass = hass
 
         sensors.append(
             BinarySensorTemplate(
-                hass,
-                device,
-                friendly_name,
-                device_class,
-                value_template,
+                hass, device, friendly_name, device_class, value_template,
                 entity_ids)
             )
     if not sensors:
-        _LOGGER.error('No sensors added')
+        _LOGGER.error("No sensors added")
         return False
 
     async_add_devices(sensors, True)
@@ -79,8 +71,8 @@ class BinarySensorTemplate(BinarySensorDevice):
                  value_template, entity_ids):
         """Initialize the Template binary sensor."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device,
-                                                  hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, device, hass=hass)
         self._name = friendly_name
         self._device_class = device_class
         self._template = value_template
@@ -96,7 +88,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
-            """Called when the target device changes state."""
+            """Handle the target device state changes."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
@@ -139,8 +131,8 @@ class BinarySensorTemplate(BinarySensorDevice):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning('Could not render template %s,'
-                                ' the state is unknown.', self._name)
+                _LOGGER.warning("Could not render template %s, "
+                                "the state is unknown", self._name)
                 return
-            _LOGGER.error('Could not render template %s: %s', self._name, ex)
+            _LOGGER.error("Could not render template %s: %s", self._name, ex)
             self._state = False

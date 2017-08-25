@@ -86,13 +86,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None,
                                                  '', {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': True,
             'offset_reached': False,
@@ -145,13 +145,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -207,13 +207,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_ON)
+        self.assertEqual(cal.state, STATE_ON)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -270,13 +270,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertTrue(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': False,
             'offset_reached': True,
@@ -339,13 +339,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertTrue(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': True,
             'offset_reached': True,
@@ -406,13 +406,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': True,
             'offset_reached': False,

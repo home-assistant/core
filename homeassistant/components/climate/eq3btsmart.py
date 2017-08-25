@@ -21,15 +21,15 @@ REQUIREMENTS = ['python-eq3bt==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_BOOST = "boost"
-STATE_AWAY = "away"
-STATE_MANUAL = "manual"
+STATE_BOOST = 'boost'
+STATE_AWAY = 'away'
+STATE_MANUAL = 'manual'
 
-ATTR_STATE_WINDOW_OPEN = "window_open"
-ATTR_STATE_VALVE = "valve"
-ATTR_STATE_LOCKED = "is_locked"
-ATTR_STATE_LOW_BAT = "low_battery"
-ATTR_STATE_AWAY_END = "away_end"
+ATTR_STATE_WINDOW_OPEN = 'window_open'
+ATTR_STATE_VALVE = 'valve'
+ATTR_STATE_LOCKED = 'is_locked'
+ATTR_STATE_LOW_BAT = 'low_battery'
+ATTR_STATE_AWAY_END = 'away_end'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the eQ-3 BLE thermostats."""
+    """Set up the eQ-3 BLE thermostats."""
     devices = []
 
     for name, device_cfg in config[CONF_DEVICES].items():
@@ -112,14 +112,14 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Current mode."""
+        """Return the current operation mode."""
         if self._thermostat.mode < 0:
             return None
         return self.modes[self._thermostat.mode]
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         return [x for x in self.modes.values()]
 
     def set_operation_mode(self, operation_mode):

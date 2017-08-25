@@ -13,6 +13,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -22,14 +23,16 @@ from homeassistant.const import (
     STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import group
 
-DOMAIN = 'lock'
-SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
 
-GROUP_NAME_ALL_LOCKS = 'all locks'
-ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
+DOMAIN = 'lock'
+DEPENDENCIES = ['group']
+SCAN_INTERVAL = timedelta(seconds=30)
 
+ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+GROUP_NAME_ALL_LOCKS = 'all locks'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -41,12 +44,14 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def is_locked(hass, entity_id=None):
     """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
+@bind_hass
 def lock(hass, entity_id=None, code=None):
     """Lock all or specified locks."""
     data = {}
@@ -58,6 +63,7 @@ def lock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
+@bind_hass
 def unlock(hass, entity_id=None, code=None):
     """Unlock all or specified locks."""
     data = {}
@@ -106,8 +112,8 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -148,8 +154,7 @@ class LockDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.lock, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.lock, **kwargs))
 
     def unlock(self, **kwargs):
         """Unlock the lock."""
@@ -160,8 +165,7 @@ class LockDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.unlock, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
     @property
     def state_attributes(self):

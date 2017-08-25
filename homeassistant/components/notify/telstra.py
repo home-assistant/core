@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     BaseNotificationService, ATTR_TITLE, PLATFORM_SCHEMA)
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def get_service(hass, config, discovery_info=None):
     phone_number = config.get(CONF_PHONE_NUMBER)
 
     if _authenticate(consumer_key, consumer_secret) is False:
-        _LOGGER.exception('Error obtaining authorization from Telstra API')
+        _LOGGER.exception("Error obtaining authorization from Telstra API")
         return None
 
     return TelstraNotificationService(
@@ -73,7 +73,7 @@ class TelstraNotificationService(BaseNotificationService):
         }
         message_resource = 'https://api.telstra.com/v1/sms/messages'
         message_headers = {
-            'Content-Type': CONTENT_TYPE_JSON,
+            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
             'Authorization': 'Bearer ' + token_response['access_token'],
         }
         message_response = requests.post(

@@ -9,10 +9,12 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.components.google import (CONF_CAL_ID, CONF_ENTITIES,
-                                             CONF_TRACK, TOKEN_FILE,
-                                             GoogleCalendarService)
+from homeassistant.components.google import (
+    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
+    GoogleCalendarService)
 from homeassistant.util import Throttle, dt
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
@@ -20,18 +22,15 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'singleEvents': True,
 }
 
-# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, disc_info=None):
-    """Setup the calendar platform for event devices."""
+    """Set up the calendar platform for event devices."""
     if disc_info is None:
         return
 
-    if not any([data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]]):
+    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
@@ -40,7 +39,6 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
-# pylint: disable=too-many-instance-attributes
 class GoogleCalendarEventDevice(CalendarEventDevice):
     """A calendar event device."""
 
@@ -55,7 +53,7 @@ class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search=None):
-        """Setup how we are going to search the google calendar."""
+        """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search

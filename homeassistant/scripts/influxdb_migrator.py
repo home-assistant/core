@@ -32,7 +32,7 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
 
 
 def run(script_args: List) -> int:
-    """The actual script body."""
+    """Run the actual script."""
     from influxdb import InfluxDBClient
 
     parser = argparse.ArgumentParser(

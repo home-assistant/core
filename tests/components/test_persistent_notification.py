@@ -64,3 +64,16 @@ class TestPersistentNotification:
         state = self.hass.states.get(entity_ids[0])
         assert state.state == '{{ message + 1 }}'
         assert state.attributes.get('title') == '{{ title + 1 }}'
+
+    def test_dismiss_notification(self):
+        """Ensure removal of specific notification."""
+        assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
+
+        pn.create(self.hass, 'test', notification_id='Beer 2')
+        self.hass.block_till_done()
+
+        assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 1
+        pn.dismiss(self.hass, notification_id='Beer 2')
+        self.hass.block_till_done()
+
+        assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0

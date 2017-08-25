@@ -134,7 +134,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     @property
     def state(self) -> str:
-        """Cached state of device."""
+        """Cache state of device."""
         return self._state
 
     def _update(self, device=None):

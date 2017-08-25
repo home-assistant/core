@@ -8,13 +8,12 @@ import logging
 import socket
 import datetime
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
-                                              ATTR_FAN_MODE, ATTR_FAN_LIST,
-                                              ATTR_OPERATION_MODE,
-                                              ATTR_OPERATION_LIST)
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE)
@@ -54,19 +53,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Honeywell thermostat."""
+    """Set up the Honeywell thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     region = config.get(CONF_REGION)
 
     if region == 'us':
         return _setup_us(username, password, config, add_devices)
-    else:
-        return _setup_round(username, password, config, add_devices)
+
+    return _setup_round(username, password, config, add_devices)
 
 
 def _setup_round(username, password, config, add_devices):
-    """Setup rounding function."""
+    """Set up the rounding function."""
     from evohomeclient import EvohomeClient
 
     away_temp = config.get(CONF_AWAY_TEMPERATURE)
@@ -76,7 +75,8 @@ def _setup_round(username, password, config, add_devices):
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
             add_devices(
-                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)]
+                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
+                True
             )
     except socket.error:
         _LOGGER.error(
@@ -87,16 +87,16 @@ def _setup_round(username, password, config, add_devices):
 
 # config will be used later
 def _setup_us(username, password, config, add_devices):
-    """Setup user."""
+    """Set up the user."""
     import somecomfort
 
     try:
         client = somecomfort.SomeComfort(username, password)
     except somecomfort.AuthError:
-        _LOGGER.error('Failed to login to honeywell account %s', username)
+        _LOGGER.error("Failed to login to honeywell account %s", username)
         return False
     except somecomfort.SomeComfortError as ex:
-        _LOGGER.error('Failed to initialize honeywell client: %s', str(ex))
+        _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
         return False
 
     dev_id = config.get('thermostat')
@@ -116,9 +116,9 @@ def _setup_us(username, password, config, add_devices):
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    def __init__(self, device, zone_id, master, away_temp):
+    def __init__(self, client, zone_id, master, away_temp):
         """Initialize the thermostat."""
-        self.device = device
+        self.client = client
         self._current_temperature = None
         self._target_temperature = None
         self._name = 'round connected'
@@ -127,7 +127,6 @@ class RoundThermostat(ClimateDevice):
         self._is_dhw = False
         self._away_temp = away_temp
         self._away = False
-        self.update()
 
     @property
     def name(self):
@@ -156,12 +155,12 @@ class RoundThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self.device.set_temperature(self._name, temperature)
+        self.client.set_temperature(self._name, temperature)
 
     @property
     def current_operation(self: ClimateDevice) -> str:
         """Get the current operation of the system."""
-        return getattr(self.device, ATTR_SYSTEM_MODE, None)
+        return getattr(self.client, ATTR_SYSTEM_MODE, None)
 
     @property
     def is_away_mode_on(self):
@@ -170,8 +169,8 @@ class RoundThermostat(ClimateDevice):
 
     def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
-        if hasattr(self.device, ATTR_SYSTEM_MODE):
-            self.device.system_mode = operation_mode
+        if hasattr(self.client, ATTR_SYSTEM_MODE):
+            self.client.system_mode = operation_mode
 
     def turn_away_mode_on(self):
         """Turn away on.
@@ -181,25 +180,25 @@ class RoundThermostat(ClimateDevice):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        self.device.set_temperature(self._name, self._away_temp)
+        self.client.set_temperature(self._name, self._away_temp)
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self._away = False
-        self.device.cancel_temp_override(self._name)
+        self.client.cancel_temp_override(self._name)
 
     def update(self):
         """Get the latest date."""
         try:
             # Only refresh if this is the "master" device,
             # others will pick up the cache
-            for val in self.device.temperatures(force_refresh=self._master):
+            for val in self.client.temperatures(force_refresh=self._master):
                 if val['id'] == self._id:
                     data = val
 
         except StopIteration:
             _LOGGER.error("Did not receive any temperature data from the "
-                          "evohomeclient API.")
+                          "evohomeclient API")
             return
 
         self._current_temperature = data['temp']
@@ -210,6 +209,12 @@ class RoundThermostat(ClimateDevice):
         else:
             self._name = data['name']
             self._is_dhw = False
+
+            # The underlying library doesn't expose the thermostat's mode
+            # but we can pull it out of the big dictionary of information.
+            device = self.client.devices[self._id]
+            self.client.system_mode = device[
+                'thermostat']['changeableValues']['mode']
 
 
 class HoneywellUSThermostat(ClimateDevice):
@@ -252,8 +257,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self._device.system_mode == 'cool':
             return self._device.setpoint_cool
-        else:
-            return self._device.setpoint_heat
+        return self._device.setpoint_heat
 
     @property
     def current_operation(self: ClimateDevice) -> str:
@@ -289,7 +293,7 @@ class HoneywellUSThermostat(ClimateDevice):
                     "setpoint_{}".format(mode),
                     temperature)
         except somecomfort.SomeComfortError:
-            _LOGGER.error('Temperature %.1f out of range', temperature)
+            _LOGGER.error("Temperature %.1f out of range", temperature)
 
     @property
     def device_state_attributes(self):
@@ -369,8 +373,8 @@ class HoneywellUSThermostat(ClimateDevice):
                     raise exp
                 if not self._retry():
                     raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying "
-                              "- Error: %s", exp)
+                _LOGGER.error(
+                    "SomeComfort update failed, Retrying - Error: %s", exp)
 
     def _retry(self):
         """Recreate a new somecomfort client.
@@ -380,14 +384,14 @@ class HoneywellUSThermostat(ClimateDevice):
         """
         import somecomfort
         try:
-            self._client = somecomfort.SomeComfort(self._username,
-                                                   self._password)
+            self._client = somecomfort.SomeComfort(
+                self._username, self._password)
         except somecomfort.AuthError:
-            _LOGGER.error('Failed to login to honeywell account %s',
+            _LOGGER.error("Failed to login to honeywell account %s",
                           self._username)
             return False
         except somecomfort.SomeComfortError as ex:
-            _LOGGER.error('Failed to initialize honeywell client: %s',
+            _LOGGER.error("Failed to initialize honeywell client: %s",
                           str(ex))
             return False
 
@@ -397,7 +401,7 @@ class HoneywellUSThermostat(ClimateDevice):
                    if device.name == self._device.name]
 
         if len(devices) != 1:
-            _LOGGER.error('Failed to find device %s', self._device.name)
+            _LOGGER.error("Failed to find device %s", self._device.name)
             return False
 
         self._device = devices[0]

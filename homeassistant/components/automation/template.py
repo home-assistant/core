@@ -2,7 +2,7 @@
 Offer template automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#template-trigger
+at https://home-assistant.io/docs/automation/trigger/#template-trigger
 """
 import asyncio
 import logging

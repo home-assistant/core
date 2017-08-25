@@ -14,9 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/miracle2k/onkyo-eiscp/archive/'
-                '066023aec04770518d494c32fb72eea0ec5c1b7c.zip#'
-                'onkyo-eiscp==1.0']
+REQUIREMENTS = ['onkyo-eiscp==1.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Onkyo platform."""
+    """Set up the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
 
@@ -52,18 +50,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
-            hosts.append(OnkyoDevice(eiscp.eISCP(host),
-                                     config.get(CONF_SOURCES),
-                                     name=config.get(CONF_NAME)))
+            hosts.append(OnkyoDevice(
+                eiscp.eISCP(host), config.get(CONF_SOURCES),
+                name=config.get(CONF_NAME)))
             KNOWN_HOSTS.append(host)
         except OSError:
-            _LOGGER.error('Unable to connect to receiver at %s.', host)
+            _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
-    add_devices(hosts)
+    add_devices(hosts, True)
 
 
 class OnkyoDevice(MediaPlayerDevice):
@@ -81,7 +79,6 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_list = list(sources.values())
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
-        self.update()
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -90,9 +87,9 @@ class OnkyoDevice(MediaPlayerDevice):
         except (ValueError, OSError, AttributeError, AssertionError):
             if self._receiver.command_socket:
                 self._receiver.command_socket = None
-                _LOGGER.info('Resetting connection to %s.', self._name)
+                _LOGGER.info("Resetting connection to %s", self._name)
             else:
-                _LOGGER.info('%s is disconnected. Attempting to reconnect.',
+                _LOGGER.info("%s is disconnected. Attempting to reconnect",
                              self._name)
             return False
         return result
@@ -142,7 +139,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
+        """Return the volume level of the media player (0..1)."""
         return self._volume
 
     @property
@@ -157,7 +154,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """"Return the current input source of the device."""
+        """Return the current input source of the device."""
         return self._current_source
 
     @property

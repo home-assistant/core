@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.yeelight/
 """
 import logging
 import colorsys
+from typing import Tuple
 
 import voluptuous as vol
 
@@ -16,21 +17,21 @@ from homeassistant.util.color import (
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG,
+    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
+    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.2.2']
+REQUIREMENTS = ['yeelight==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TRANSITION = "transition"
+CONF_TRANSITION = 'transition'
 DEFAULT_TRANSITION = 350
 
-CONF_SAVE_ON_CHANGE = "save_on_change"
-CONF_MODE_MUSIC = "use_music_mode"
+CONF_SAVE_ON_CHANGE = 'save_on_change'
+CONF_MODE_MUSIC = 'use_music_mode'
 
 DOMAIN = 'yeelight'
 
@@ -50,11 +51,55 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_RGB_COLOR |
+                        SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
+
+EFFECT_DISCO = "Disco"
+EFFECT_TEMP = "Slow Temp"
+EFFECT_STROBE = "Strobe epilepsy!"
+EFFECT_STROBE_COLOR = "Strobe color"
+EFFECT_ALARM = "Alarm"
+EFFECT_POLICE = "Police"
+EFFECT_POLICE2 = "Police2"
+EFFECT_CHRISTMAS = "Christmas"
+EFFECT_RGB = "RGB"
+EFFECT_RANDOM_LOOP = "Random Loop"
+EFFECT_FAST_RANDOM_LOOP = "Fast Random Loop"
+EFFECT_SLOWDOWN = "Slowdown"
+EFFECT_WHATSAPP = "WhatsApp"
+EFFECT_FACEBOOK = "Facebook"
+EFFECT_TWITTER = "Twitter"
+EFFECT_STOP = "Stop"
+
+YEELIGHT_EFFECT_LIST = [
+    EFFECT_DISCO,
+    EFFECT_TEMP,
+    EFFECT_STROBE,
+    EFFECT_STROBE_COLOR,
+    EFFECT_ALARM,
+    EFFECT_POLICE,
+    EFFECT_POLICE2,
+    EFFECT_CHRISTMAS,
+    EFFECT_RGB,
+    EFFECT_RANDOM_LOOP,
+    EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_SLOWDOWN,
+    EFFECT_WHATSAPP,
+    EFFECT_FACEBOOK,
+    EFFECT_TWITTER,
+    EFFECT_STOP]
+
+
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
+def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
+    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
+    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    return int(red * 255), int(green * 255), int(blue * 255)
 
 
 def _cmd(func):
-    """A wrapper to catch exceptions from the bulb."""
+    """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -67,14 +112,14 @@ def _cmd(func):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yeelight bulbs."""
+    """Set up the Yeelight bulbs."""
     lights = []
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
-        # not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info["device_type"],
-                                   discovery_info["properties"]["mac"])
+        # Not using hostname, as it seems to vary.
+        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+                                   discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
         lights.append(YeelightLight(device, DEVICE_SCHEMA({})))
@@ -85,14 +130,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
             lights.append(YeelightLight(device, device_config))
 
-    add_devices(lights, True)  # true to request an update before adding.
+    add_devices(lights, True)
 
 
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
     def __init__(self, device, config):
-        """Initialize the light."""
+        """Initialize the Yeelight light."""
         self.config = config
         self._name = device['name']
         self._ipaddr = device['ipaddr']
@@ -115,6 +160,11 @@ class YeelightLight(Light):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return YEELIGHT_EFFECT_LIST
 
     @property
     def unique_id(self) -> str:
@@ -142,8 +192,8 @@ class YeelightLight(Light):
         return self._brightness
 
     def _get_rgb_from_properties(self):
-        rgb = self._properties.get("rgb", None)
-        color_mode = self._properties.get("color_mode", None)
+        rgb = self._properties.get('rgb', None)
+        color_mode = self._properties.get('color_mode', None)
         if not rgb or not color_mode:
             return rgb
 
@@ -151,10 +201,10 @@ class YeelightLight(Light):
         if color_mode == 2:  # color temperature
             return color_temperature_to_rgb(self.color_temp)
         if color_mode == 3:  # hsv
-            hue = self._properties.get("hue")
-            sat = self._properties.get("sat")
-            val = self._properties.get("bright")
-            return colorsys.hsv_to_rgb(hue, sat, val)
+            hue = int(self._properties.get('hue'))
+            sat = int(self._properties.get('sat'))
+            val = int(self._properties.get('bright'))
+            return hsv_to_rgb((hue, sat, val))
 
         rgb = int(rgb)
         blue = rgb & 0xff
@@ -173,7 +223,7 @@ class YeelightLight(Light):
         return self._bulb.last_properties
 
     @property
-    def _bulb(self) -> object:
+    def _bulb(self) -> 'yeelight.Bulb':
         import yeelight
         if self._bulb_device is None:
             try:
@@ -204,13 +254,13 @@ class YeelightLight(Light):
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
 
-            self._is_on = self._properties.get("power") == "on"
+            self._is_on = self._properties.get('power') == 'on'
 
-            bright = self._properties.get("bright", None)
+            bright = self._properties.get('bright', None)
             if bright:
                 self._brightness = 255 * (int(bright) / 100)
 
-            temp_in_k = self._properties.get("ct", None)
+            temp_in_k = self._properties.get('ct', None)
             if temp_in_k:
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 
@@ -255,7 +305,8 @@ class YeelightLight(Light):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            from yeelight import RGBTransition, SleepTransition, Flow
+            from yeelight import (RGBTransition, SleepTransition, Flow,
+                                  BulbException)
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
@@ -280,35 +331,110 @@ class YeelightLight(Light):
                               duration=duration))
 
             flow = Flow(count=count, transitions=transitions)
-            self._bulb.start_flow(flow)
+            try:
+                self._bulb.start_flow(flow)
+            except BulbException as ex:
+                _LOGGER.error("Unable to set flash: %s", ex)
+
+    @_cmd
+    def set_effect(self, effect) -> None:
+        """Activate effect."""
+        if effect:
+            from yeelight import (Flow, BulbException)
+            from yeelight.transitions import (disco, temp, strobe, pulse,
+                                              strobe_color, alarm, police,
+                                              police2, christmas, rgb,
+                                              randomloop, slowdown)
+            if effect == EFFECT_STOP:
+                self._bulb.stop_flow()
+                return
+            if effect == EFFECT_DISCO:
+                flow = Flow(count=0, transitions=disco())
+            if effect == EFFECT_TEMP:
+                flow = Flow(count=0, transitions=temp())
+            if effect == EFFECT_STROBE:
+                flow = Flow(count=0, transitions=strobe())
+            if effect == EFFECT_STROBE_COLOR:
+                flow = Flow(count=0, transitions=strobe_color())
+            if effect == EFFECT_ALARM:
+                flow = Flow(count=0, transitions=alarm())
+            if effect == EFFECT_POLICE:
+                flow = Flow(count=0, transitions=police())
+            if effect == EFFECT_POLICE2:
+                flow = Flow(count=0, transitions=police2())
+            if effect == EFFECT_CHRISTMAS:
+                flow = Flow(count=0, transitions=christmas())
+            if effect == EFFECT_RGB:
+                flow = Flow(count=0, transitions=rgb())
+            if effect == EFFECT_RANDOM_LOOP:
+                flow = Flow(count=0, transitions=randomloop())
+            if effect == EFFECT_FAST_RANDOM_LOOP:
+                flow = Flow(count=0, transitions=randomloop(duration=250))
+            if effect == EFFECT_SLOWDOWN:
+                flow = Flow(count=0, transitions=slowdown())
+            if effect == EFFECT_WHATSAPP:
+                flow = Flow(count=2, transitions=pulse(37, 211, 102))
+            if effect == EFFECT_FACEBOOK:
+                flow = Flow(count=2, transitions=pulse(59, 89, 152))
+            if effect == EFFECT_TWITTER:
+                flow = Flow(count=2, transitions=pulse(0, 172, 237))
+
+            try:
+                self._bulb.start_flow(flow)
+            except BulbException as ex:
+                _LOGGER.error("Unable to set effect: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
+        import yeelight
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
+        effect = kwargs.get(ATTR_EFFECT)
 
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self._bulb.turn_on(duration=duration)
+        try:
+            self._bulb.turn_on(duration=duration)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb on: %s", ex)
+            return
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
-            self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            try:
+                self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to turn on music mode,"
+                              "consider disabling it: %s", ex)
 
-        # values checked for none in methods
-        self.set_rgb(rgb, duration)
-        self.set_colortemp(colortemp, duration)
-        self.set_brightness(brightness, duration)
-        self.set_flash(flash)
+        try:
+            # values checked for none in methods
+            self.set_rgb(rgb, duration)
+            self.set_colortemp(colortemp, duration)
+            self.set_brightness(brightness, duration)
+            self.set_flash(flash)
+            self.set_effect(effect)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set bulb properties: %s", ex)
+            return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE]:
-            if brightness or colortemp or rgb:
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
+                                                 or colortemp
+                                                 or rgb):
+            try:
                 self.set_default()
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to set the defaults: %s", ex)
+                return
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
-        self._bulb.turn_off()
+        import yeelight
+        try:
+            self._bulb.turn_off()
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb off: %s", ex)

@@ -45,12 +45,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG TV platform."""
+    """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
-    client = LgNetCastClient(config.get(CONF_HOST),
-                             config.get(CONF_ACCESS_TOKEN))
+    host = config.get(CONF_HOST)
+    access_token = config.get(CONF_ACCESS_TOKEN)
+    name = config.get(CONF_NAME)
 
-    add_devices([LgTVDevice(client, config[CONF_NAME])])
+    client = LgNetCastClient(host, access_token)
+
+    add_devices([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):
@@ -69,8 +72,6 @@ class LgTVDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._sources = {}
         self._source_names = []
-
-        self.update()
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
@@ -110,7 +111,7 @@ class LgTVDevice(MediaPlayerDevice):
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [(k, self._sources[k].find('major').text)
-                                     for k in self._sources.keys()]
+                                     for k in self._sources]
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1]))
                     self._source_names = [n for n, k in sorted_sources]

@@ -13,8 +13,10 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
-    SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
+    SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_NIGHT)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,6 +32,7 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_DISARM: 'alarm_disarm',
     SERVICE_ALARM_ARM_HOME: 'alarm_arm_home',
     SERVICE_ALARM_ARM_AWAY: 'alarm_arm_away',
+    SERVICE_ALARM_ARM_NIGHT: 'alarm_arm_night',
     SERVICE_ALARM_TRIGGER: 'alarm_trigger'
 }
 
@@ -44,6 +47,7 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def alarm_disarm(hass, code=None, entity_id=None):
     """Send the alarm the command for disarm."""
     data = {}
@@ -55,6 +59,7 @@ def alarm_disarm(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_DISARM, data)
 
 
+@bind_hass
 def alarm_arm_home(hass, code=None, entity_id=None):
     """Send the alarm the command for arm home."""
     data = {}
@@ -66,6 +71,7 @@ def alarm_arm_home(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_HOME, data)
 
 
+@bind_hass
 def alarm_arm_away(hass, code=None, entity_id=None):
     """Send the alarm the command for arm away."""
     data = {}
@@ -77,6 +83,19 @@ def alarm_arm_away(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data)
 
 
+@bind_hass
+def alarm_arm_night(hass, code=None, entity_id=None):
+    """Send the alarm the command for arm night."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data)
+
+
+@bind_hass
 def alarm_trigger(hass, code=None, entity_id=None):
     """Send the alarm the command for trigger."""
     data = {}
@@ -123,8 +142,8 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     for service in SERVICE_TO_METHOD:
@@ -158,8 +177,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_disarm, code)
+        return self.hass.async_add_job(self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -170,8 +188,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_arm_home, code)
+        return self.hass.async_add_job(self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -182,8 +199,18 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_arm_away, code)
+        return self.hass.async_add_job(self.alarm_arm_away, code)
+
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        raise NotImplementedError()
+
+    def async_alarm_arm_night(self, code=None):
+        """Send arm night command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.alarm_arm_night, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
@@ -194,8 +221,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_trigger, code)
+        return self.hass.async_add_job(self.alarm_trigger, code)
 
     @property
     def state_attributes(self):

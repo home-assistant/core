@@ -40,7 +40,7 @@ def get_unit_status(code):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the x10 Light platform."""
+    """Set up the x10 Light platform."""
     try:
         x10_command('info')
     except CalledProcessError as err:
@@ -67,7 +67,7 @@ class X10Light(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
+        """Return the brightness of the light."""
         return self._brightness
 
     @property

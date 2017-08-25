@@ -4,7 +4,6 @@ Support for MAX! Window Shutter via MAX! Cube.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/maxcube/
 """
-
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -15,27 +14,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Iterate through all MAX! Devices and add window shutters to HASS."""
+    """Iterate through all MAX! Devices and add window shutters."""
     cube = hass.data[MAXCUBE_HANDLE].cube
-
-    # List of devices
     devices = []
 
     for device in cube.devices:
-        # Create device name by concatenating room name + device name
-        name = "%s %s" % (cube.room_by_id(device.room_id).name, device.name)
+        name = "{} {}".format(
+            cube.room_by_id(device.room_id).name, device.name)
 
         # Only add Window Shutters
         if cube.is_windowshutter(device):
-            # add device to HASS
             devices.append(MaxCubeShutter(hass, name, device.rf_address))
 
-    if len(devices) > 0:
+    if devices:
         add_devices(devices)
 
 
 class MaxCubeShutter(BinarySensorDevice):
-    """MAX! Cube BinarySensor device."""
+    """Representation of a MAX! Cube Binary Sensor device."""
 
     def __init__(self, hass, name, rf_address):
         """Initialize MAX! Cube BinarySensorDevice."""
@@ -47,7 +43,7 @@ class MaxCubeShutter(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """Polling is required."""
+        """Return the polling state."""
         return True
 
     @property
@@ -68,9 +64,5 @@ class MaxCubeShutter(BinarySensorDevice):
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-
-        # Get the device we want to update
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Update our internal state
         self._state = device.is_open

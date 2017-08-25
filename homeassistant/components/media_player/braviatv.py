@@ -11,7 +11,6 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
@@ -21,8 +20,8 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.6.zip'
-    '#braviarc==0.3.6']
+    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
+    '#braviarc==0.3.7']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -59,8 +58,7 @@ def _get_mac_address(ip_address):
                       pid_component)
     if match is not None:
         return match.groups()[0]
-    else:
-        return None
+    return None
 
 
 def _config_from_file(filename, config=None):
@@ -76,7 +74,7 @@ def _config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(new_config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
@@ -88,7 +86,7 @@ def _config_from_file(filename, config=None):
             except ValueError as error:
                 return {}
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading config file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -97,16 +95,16 @@ def _config_from_file(filename, config=None):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sony Bravia TV platform."""
+    """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)
 
     if host is None:
-        return  # if no host configured, do not continue
+        return
 
     pin = None
     bravia_config = _config_from_file(hass.config.path(BRAVIA_CONFIG_FILE))
-    while len(bravia_config):
-        # Setup a configured TV
+    while bravia_config:
+        # Set up a configured TV
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config['pin']
@@ -119,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_bravia(config, pin, hass, add_devices):
-    """Setup a Sony Bravia TV based on host parameter."""
+    """Set up a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
@@ -133,15 +131,15 @@ def setup_bravia(config, pin, hass, add_devices):
         # If we came here and configuring this host, mark as done
         if host in _CONFIGURING:
             request_id = _CONFIGURING.pop(host)
-            configurator = get_component('configurator')
+            configurator = hass.components.configurator
             configurator.request_done(request_id)
-            _LOGGER.info('Discovery configuration done!')
+            _LOGGER.info("Discovery configuration done")
 
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
                 {host: {'pin': pin, 'host': host, 'mac': mac}}):
-            _LOGGER.error('failed to save config file')
+            _LOGGER.error("Failed to save configuration file")
 
         add_devices([BraviaTVDevice(host, mac, name, pin)])
 
@@ -151,7 +149,7 @@ def request_configuration(config, hass, add_devices):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -160,7 +158,7 @@ def request_configuration(config, hass, add_devices):
         return
 
     def bravia_configuration_callback(data):
-        """Callback after user enter PIN."""
+        """Handle the entry of user PIN."""
         from braviarc import braviarc
 
         pin = data.get('pin')
@@ -172,7 +170,7 @@ def request_configuration(config, hass, add_devices):
             request_configuration(config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, name, bravia_configuration_callback,
+        name, bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
         'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",
@@ -236,7 +234,7 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._state = STATE_ON
                 playing_info = self._braviarc.get_playing_info()
                 self._reset_playing_info()
-                if playing_info is None or len(playing_info) == 0:
+                if playing_info is None or not playing_info:
                     self._channel_name = 'App'
                 else:
                     self._program_name = playing_info.get('programTitle')
@@ -275,7 +273,7 @@ class BraviaTVDevice(MediaPlayerDevice):
             self._muted = volume_info.get('mute')
 
     def _refresh_channels(self):
-        if len(self._source_list) == 0:
+        if not self._source_list:
             self._content_mapping = self._braviarc. \
                 load_source_list()
             self._source_list = []
@@ -307,8 +305,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._volume is not None:
             return self._volume / 100
-        else:
-            return None
+        return None
 
     @property
     def is_volume_muted(self):

@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MAC_ADDRESS = 'mac_address'
 CONF_OFF_ACTION = 'turn_off'
+CONF_BROADCAST_ADDRESS = 'broadcast_address'
 
 DEFAULT_NAME = 'Wake on LAN'
 DEFAULT_PING_TIMEOUT = 1
@@ -28,6 +29,7 @@ DEFAULT_PING_TIMEOUT = 1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC_ADDRESS): cv.string,
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
 })
@@ -38,29 +40,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     mac_address = config.get(CONF_MAC_ADDRESS)
+    broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     off_action = config.get(CONF_OFF_ACTION)
 
-    add_devices([WOLSwitch(hass, name, host, mac_address, off_action)])
+    add_devices([WOLSwitch(hass, name, host, mac_address,
+                           off_action, broadcast_address)], True)
 
 
 class WOLSwitch(SwitchDevice):
     """Representation of a wake on lan switch."""
 
-    def __init__(self, hass, name, host, mac_address, off_action):
+    def __init__(self, hass, name, host, mac_address,
+                 off_action, broadcast_address):
         """Initialize the WOL switch."""
         from wakeonlan import wol
         self._hass = hass
         self._name = name
         self._host = host
         self._mac_address = mac_address
+        self._broadcast_address = broadcast_address
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
         self._wol = wol
-        self.update()
 
     @property
     def should_poll(self):
-        """Poll for status regularly."""
+        """Return the polling state."""
         return True
 
     @property
@@ -70,14 +75,14 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     def turn_on(self):
         """Turn the device on."""
-        if self._host:
-            self._wol.send_magic_packet(self._mac_address,
-                                        ip_address=self._host)
+        if self._broadcast_address:
+            self._wol.send_magic_packet(
+                self._mac_address, ip_address=self._broadcast_address)
         else:
             self._wol.send_magic_packet(self._mac_address)
 
@@ -95,5 +100,5 @@ class WOLSwitch(SwitchDevice):
             ping_cmd = ['ping', '-c', '1', '-W',
                         str(DEFAULT_PING_TIMEOUT), str(self._host)]
 
-        status = sp.call(ping_cmd, stdout=sp.DEVNULL)
+        status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)

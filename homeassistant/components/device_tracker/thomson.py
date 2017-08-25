@@ -7,8 +7,6 @@ https://home-assistant.io/components/device_tracker.thomson/
 import logging
 import re
 import telnetlib
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -16,10 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +49,6 @@ class ThomsonDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
-        self.lock = threading.Lock()
-
         self.last_results = {}
 
         # Test the router is accessible.
@@ -78,7 +69,6 @@ class ThomsonDeviceScanner(DeviceScanner):
                 return client['host']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the THOMSON router is up to date.
 
@@ -87,17 +77,16 @@ class ThomsonDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info('Checking ARP')
-            data = self.get_thomson_data()
-            if not data:
-                return False
+        _LOGGER.info("Checking ARP")
+        data = self.get_thomson_data()
+        if not data:
+            return False
 
-            # Flag C stands for CONNECTED
-            active_clients = [client for client in data.values() if
-                              client['status'].find('C') != -1]
-            self.last_results = active_clients
-            return True
+        # Flag C stands for CONNECTED
+        active_clients = [client for client in data.values() if
+                          client['status'].find('C') != -1]
+        self.last_results = active_clients
+        return True
 
     def get_thomson_data(self):
         """Retrieve data from THOMSON and return parsed result."""
@@ -112,11 +101,11 @@ class ThomsonDeviceScanner(DeviceScanner):
             devices_result = telnet.read_until(b'=>').split(b'\r\n')
             telnet.write('exit\r\n'.encode('ascii'))
         except EOFError:
-            _LOGGER.exception('Unexpected response from router')
+            _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception('Connection refused by router,'
-                              ' is telnet enabled?')
+            _LOGGER.exception(
+                "Connection refused by router. Telnet enabled?")
             return
 
         devices = {}

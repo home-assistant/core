@@ -63,7 +63,7 @@ class AiohttpClientMocker:
 
     @property
     def call_count(self):
-        """Number of requests made."""
+        """Return the number of requests made."""
         return len(self.mock_calls)
 
     def clear_requests(self):
@@ -75,8 +75,10 @@ class AiohttpClientMocker:
     @asyncio.coroutine
     # pylint: disable=unused-variable
     def match_request(self, method, url, *, data=None, auth=None, params=None,
-                      headers=None, allow_redirects=None):
+                      headers=None, allow_redirects=None, timeout=None,
+                      json=None):
         """Match a request against pre-registered requests."""
+        data = data or json
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url, data))

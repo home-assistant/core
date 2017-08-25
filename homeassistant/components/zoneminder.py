@@ -109,7 +109,7 @@ def _zm_request(method, api_url, data=None):
             break
 
     else:
-        _LOGGER.exception("Unable to get API response from ZoneMinder")
+        _LOGGER.error("Unable to get API response from ZoneMinder")
 
     try:
         return req.json()

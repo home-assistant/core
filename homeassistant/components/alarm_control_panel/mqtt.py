@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the MQTT platform."""
+    """Set up the MQTT Alarm Control Panel platform."""
     async_add_devices([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -62,7 +62,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, name, state_topic, command_topic, qos, payload_disarm,
                  payload_arm_home, payload_arm_away, code):
-        """Initalize the MQTT alarm panel."""
+        """Init the MQTT Alarm Control Panel."""
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
@@ -80,11 +80,11 @@ class MqttAlarm(alarm.AlarmControlPanel):
         """
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Run when new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                                STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
                                STATE_ALARM_TRIGGERED):
-                _LOGGER.warning('Received unexpected payload: %s', payload)
+                _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
             self._state = payload
             self.hass.async_add_job(self.async_update_ha_state())

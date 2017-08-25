@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sendgrid==3.6.5']
+REQUIREMENTS = ['sendgrid==5.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,5 +74,5 @@ class SendgridNotificationService(BaseNotificationService):
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code is not 202:
-            _LOGGER.error('Unable to send notification with SendGrid')
+        if response.status_code != 202:
+            _LOGGER.error("Unable to send notification")

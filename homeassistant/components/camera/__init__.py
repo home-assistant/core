@@ -12,23 +12,30 @@ from datetime import timedelta
 import logging
 import hashlib
 from random import SystemRandom
+import os
 
 import aiohttp
 from aiohttp import web
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_EN_MOTION = 'enable_motion_detection'
+SERVICE_DISEN_MOTION = 'disable_motion_detection'
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -38,10 +45,31 @@ STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
+DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
+
+CAMERA_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+
+@bind_hass
+def enable_motion_detection(hass, entity_id=None):
+    """Enable Motion Detection."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_EN_MOTION, data))
+
+
+@bind_hass
+def disable_motion_detection(hass, entity_id=None):
+    """Disable Motion Detection."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_DISEN_MOTION, data))
 
 
 @asyncio.coroutine
@@ -76,7 +104,7 @@ def async_get_image(hass, entity_id, timeout=10):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the camera component."""
+    """Set up the camera component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(CameraImageView(component.entities))
@@ -92,6 +120,44 @@ def async_setup(hass, config):
             hass.async_add_job(entity.async_update_ha_state())
 
     async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+
+    @asyncio.coroutine
+    def async_handle_camera_service(service):
+        """Handle calls to the camera services."""
+        target_cameras = component.async_extract_from_service(service)
+
+        for camera in target_cameras:
+            if service.service == SERVICE_EN_MOTION:
+                yield from camera.async_enable_motion_detection()
+            elif service.service == SERVICE_DISEN_MOTION:
+                yield from camera.async_disable_motion_detection()
+
+        update_tasks = []
+        for camera in target_cameras:
+            if not camera.should_poll:
+                continue
+
+            update_coro = hass.async_add_job(
+                camera.async_update_ha_state(True))
+            if hasattr(camera, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_EN_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_EN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_DISEN_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_DISEN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+
     return True
 
 
@@ -101,6 +167,7 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
+        self.content_type = DEFAULT_CONTENT_TYPE
         self.access_tokens = collections.deque([], 2)
         self.async_update_token()
 
@@ -121,12 +188,17 @@ class Camera(Entity):
 
     @property
     def brand(self):
-        """Camera brand."""
+        """Return the camera brand."""
+        return None
+
+    @property
+    def motion_detection_enabled(self):
+        """Return the camera motion detection status."""
         return None
 
     @property
     def model(self):
-        """Camera model."""
+        """Return the camera model."""
         return None
 
     def camera_image(self):
@@ -138,7 +210,7 @@ class Camera(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.camera_image)
+        return self.hass.async_add_job(self.camera_image)
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
@@ -149,16 +221,17 @@ class Camera(Entity):
         response = web.StreamResponse()
 
         response.content_type = ('multipart/x-mixed-replace; '
-                                 'boundary=--jpegboundary')
+                                 'boundary=--frameboundary')
         yield from response.prepare(request)
 
         def write(img_bytes):
             """Write image to stream."""
             response.write(bytes(
-                '--jpegboundary\r\n'
-                'Content-Type: image/jpeg\r\n'
+                '--frameboundary\r\n'
+                'Content-Type: {}\r\n'
                 'Content-Length: {}\r\n\r\n'.format(
-                    len(img_bytes)), 'utf-8') + img_bytes + b'\r\n')
+                    self.content_type, len(img_bytes)),
+                'utf-8') + img_bytes + b'\r\n')
 
         last_image = None
 
@@ -191,17 +264,32 @@ class Camera(Entity):
 
     @property
     def state(self):
-        """Camera state."""
+        """Return the camera state."""
         if self.is_recording:
             return STATE_RECORDING
         elif self.is_streaming:
             return STATE_STREAMING
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
+
+    def enable_motion_detection(self):
+        """Enable motion detection in the camera."""
+        raise NotImplementedError()
+
+    def async_enable_motion_detection(self):
+        """Call the job and enable motion detection."""
+        return self.hass.async_add_job(self.enable_motion_detection)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        raise NotImplementedError()
+
+    def async_disable_motion_detection(self):
+        """Call the job and disable motion detection."""
+        return self.hass.async_add_job(self.disable_motion_detection)
 
     @property
     def state_attributes(self):
-        """Camera state attributes."""
+        """Return the camera state attributes."""
         attr = {
             'access_token': self.access_tokens[-1],
         }
@@ -211,6 +299,9 @@ class Camera(Entity):
 
         if self.brand:
             attr['brand'] = self.brand
+
+        if self.motion_detection_enabled:
+            attr['motion_detection'] = self.motion_detection_enabled
 
         return attr
 
@@ -233,7 +324,7 @@ class CameraView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, entity_id):
-        """Start a get request."""
+        """Start a GET request."""
         camera = self.entities.get(entity_id)
 
         if camera is None:
@@ -241,7 +332,7 @@ class CameraView(HomeAssistantView):
             return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.GET.get('token') in camera.access_tokens)
+                         request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
             return web.Response(status=401)
@@ -251,15 +342,15 @@ class CameraView(HomeAssistantView):
 
     @asyncio.coroutine
     def handle(self, request, camera):
-        """Hanlde the camera request."""
+        """Handle the camera request."""
         raise NotImplementedError()
 
 
 class CameraImageView(CameraView):
     """Camera view to serve an image."""
 
-    url = "/api/camera_proxy/{entity_id}"
-    name = "api:camera:image"
+    url = '/api/camera_proxy/{entity_id}'
+    name = 'api:camera:image'
 
     @asyncio.coroutine
     def handle(self, request, camera):
@@ -269,7 +360,8 @@ class CameraImageView(CameraView):
                 image = yield from camera.async_camera_image()
 
             if image:
-                return web.Response(body=image)
+                return web.Response(body=image,
+                                    content_type=camera.content_type)
 
         return web.Response(status=500)
 
@@ -277,8 +369,8 @@ class CameraImageView(CameraView):
 class CameraMjpegStream(CameraView):
     """Camera View to serve an MJPEG stream."""
 
-    url = "/api/camera_proxy_stream/{entity_id}"
-    name = "api:camera:stream"
+    url = '/api/camera_proxy_stream/{entity_id}'
+    name = 'api:camera:stream'
 
     @asyncio.coroutine
     def handle(self, request, camera):

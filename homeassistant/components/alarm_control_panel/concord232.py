@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Concord232Alarm(alarm.AlarmControlPanel):
-    """Represents the Concord232-based alarm panel."""
+    """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, hass, url, name):
         """Initialize the Concord232 alarm panel."""
@@ -79,7 +79,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """The characters if code is defined."""
+        """Return the characters if code is defined."""
         return '[0-9]{4}([0-9]{2})?'
 
     @property
@@ -117,7 +117,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('home')
+        self._alarm.arm('stay')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
