@@ -174,8 +174,8 @@ class CoverTemplate(CoverDevice):
                             (not state_template and not position_template))
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
-        self._position = 0
-        self._tilt_value = 0
+        self._position = None
+        self._tilt_value = None
         self._entities = entity_ids
 
         if self._template is not None:
