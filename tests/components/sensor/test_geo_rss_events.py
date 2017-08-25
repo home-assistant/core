@@ -1,10 +1,8 @@
 """The test for the geo rss events sensor platform."""
-import datetime
 import unittest
 
 from tests.common import load_fixture, get_test_home_assistant
 import homeassistant.components.sensor.geo_rss_events as geo_rss_events
-import pytz
 
 VALID_CONFIG = {
     'platform': 'geo_rss_events',
