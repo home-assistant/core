@@ -110,14 +110,15 @@ class TankUtilitySensor(Entity):
         data = {}
         try:
             data = device.get_device_data(self._token, self.device)
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == requests.codes.unauthorized:
+        except requests.exceptions.HTTPError as http_error:
+            if (http_error.response.status_code ==
+                    requests.codes.unauthorized):  # pylint: disable=no-member
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password,
                                              force=True)
                 data = device.get_device_data(self._token, self.device)
             else:
-                raise e
+                raise http_error
         data.update(data.pop("device", {}))
         data.update(data.pop("lastReading", {}))
         return data
@@ -129,5 +130,5 @@ class TankUtilitySensor(Entity):
             self._state = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)
             self._attributes = {k: v for k, v in data.items() if k in
                                 SENSOR_ATTRS}
-        except Exception as e:
-            _LOGGER.error("Error updating data for %s: %s", self.device, e)
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.error("Error updating data for %s: %s", self.device, exc)
