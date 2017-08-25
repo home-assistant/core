@@ -12,13 +12,14 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     ATTR_ENTITY_ID, TEMP_CELSIUS,
     CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
 )
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyRFXtrx==0.19.0']
+REQUIREMENTS = ['pyRFXtrx==0.20.0']
 
 DOMAIN = 'rfxtrx'
 
@@ -181,15 +182,18 @@ def setup(hass, config):
 
     if dummy_connection:
         RFXOBJECT =\
-            rfxtrxmod.Connect(device, handle_receive, debug=debug,
+            rfxtrxmod.Connect(device, None, debug=debug,
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        RFXOBJECT = rfxtrxmod.Connect(device, handle_receive, debug=debug)
+        RFXOBJECT = rfxtrxmod.Connect(device, None, debug=debug)
+
+    def _start_rfxtrx(event):
+        RFXOBJECT.event_callback = handle_receive
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         RFXOBJECT.close_connection()
-
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
@@ -395,12 +399,6 @@ class RfxtrxDevice(Entity):
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
         self._brightness = 0
-        self._added_to_hass = False
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        self._added_to_hass = True
 
     @property
     def should_poll(self):
@@ -435,8 +433,7 @@ class RfxtrxDevice(Entity):
         """Update det state of the device."""
         self._state = state
         self._brightness = brightness
-        if not self._added_to_hass:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def _send_command(self, command, brightness=0):
         if not self._event:
