@@ -438,31 +438,36 @@ class RfxtrxDevice(Entity):
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_on(self.hass.data[RFXOBJECT].transport)
+                self._event.device.send_on(self.hass.data[RFXOBJECT]
+                                           .transport)
             self._state = True
 
         elif command == "dim":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_dim(self.hass.data[RFXOBJECT].transport,
-                                            brightness)
+                self._event.device.send_dim(self.hass.data[RFXOBJECT]
+                                            .transport, brightness)
             self._state = True
 
         elif command == 'turn_off':
             for _ in range(self.signal_repetitions):
-                self._event.device.send_off(self.hass.data[RFXOBJECT].transport)
+                self._event.device.send_off(self.hass.data[RFXOBJECT]
+                                            .transport)
             self._state = False
             self._brightness = 0
 
         elif command == "roll_up":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_open(self.hass.data[RFXOBJECT].transport)
+                self._event.device.send_open(self.hass.data[RFXOBJECT]
+                                             .transport)
 
         elif command == "roll_down":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_close(self.hass.data[RFXOBJECT].transport)
+                self._event.device.send_close(self.hass.data[RFXOBJECT]
+                                              .transport)
 
         elif command == "stop_roll":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_stop(self.hass.data[RFXOBJECT].transport)
+                self._event.device.send_stop(self.hass.data[RFXOBJECT]
+                                             .transport)
 
         self.schedule_update_ha_state()
