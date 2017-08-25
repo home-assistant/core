@@ -57,6 +57,7 @@ DEFAULT_CORE_CONFIG = (
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
+    (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
