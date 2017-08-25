@@ -583,7 +583,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test_template_cover')
-        assert state.attributes.get('current_position') == 0.0
+        assert state.attributes.get('current_position') is None
 
         cover.set_cover_position(self.hass, 42,
                                  'cover.test_template_cover')
@@ -625,7 +625,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test_template_cover')
-        assert state.attributes.get('current_tilt_position') == 0.0
+        assert state.attributes.get('current_tilt_position') is None
 
         cover.set_cover_tilt_position(self.hass, 42,
                                       'cover.test_template_cover')
