@@ -89,15 +89,7 @@ class PushBulletNotificationService(BaseNotificationService):
 
         if not targets:
             # Backward compatibility, notify all devices in own account
-            if url:
-                self.pushbullet.push_link(title, url, body=message)
-            elif filepath and self.hass.config.is_allowed_path(filepath):
-                with open(filepath, "rb") as fileh:
-                    filedata = self.pushbullet.upload_file(fileh, filepath)
-                    self.pushbullet.push_file(title=title, body=message,
-                                              **filedata)
-            else:
-                self.pushbullet.push_note(title, message)
+            self._push_data(filepath, message, title, url)
             _LOGGER.info("Sent notification to self")
             return
 
@@ -112,16 +104,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                if url:
-                    self.pushbullet.push_link(
-                        title, url, body=message, email=tname)
-                if filepath and self.hass.config.is_allowed_path(filepath):
-                    with open(filepath, "rb") as fileh:
-                        filedata = self.pushbullet.upload_file(fileh, filepath)
-                        self.pushbullet.push_file(title=title, body=message,
-                                                  **filedata)
-                else:
-                    self.pushbullet.push_note(title, message, email=tname)
+                self._push_data(filepath, message, title, url, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
                 continue
 
@@ -152,3 +135,15 @@ class PushBulletNotificationService(BaseNotificationService):
             except self.pushbullet.errors.PushError:
                 _LOGGER.error("Notify failed to: %s/%s", ttype, tname)
                 continue
+
+    def _push_data(self, filepath, message, title, url, tname=None):
+        if url:
+            self.pushbullet.push_link(
+                title, url, body=message, email=tname)
+        elif filepath and self.hass.config.is_allowed_path(filepath):
+            with open(filepath, "rb") as fileh:
+                filedata = self.pushbullet.upload_file(fileh, filepath)
+                self.pushbullet.push_file(title=title, body=message,
+                                          **filedata)
+        else:
+            self.pushbullet.push_note(title, message, email=tname)
