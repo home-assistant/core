@@ -34,22 +34,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         # Check the number of entries found
         assert len(filtered_entries) == 4
         # Check entries of first hit
-        assert filtered_entries[0].title == "Title 1"
-        assert filtered_entries[0].category == "Category 1"
-        assert filtered_entries[0].description == "Description 1"
-        assert filtered_entries[0].guid == "GUID 1"
-        comparison_date0 = datetime.datetime(2017, 7, 30, 9, 0, 0,
-                                             tzinfo=pytz.utc).timetuple()
-        assert filtered_entries[0].pub_date == comparison_date0
-        assert filtered_entries[0].geometry.type == 'Point'
-        assert filtered_entries[0].geometry.coordinates == (151.75, -32.916667)
+        assert filtered_entries[0][geo_rss_events.ATTR_TITLE] == "Title 1"
+        assert filtered_entries[0][
+                   geo_rss_events.ATTR_CATEGORY] == "Category 1"
         distance0 = 116.586
-        self.assertAlmostEqual(filtered_entries[0].distance, distance0, 0)
-        # Check entry with link instead of GUID
-        assert filtered_entries[3].guid == "Link 6"
-        comparison_date3 = datetime.datetime(2017, 7, 30, 9, 25, 0,
-                                             tzinfo=pytz.utc).timetuple()
-        assert filtered_entries[3].pub_date == comparison_date3
+        self.assertAlmostEqual(filtered_entries[0][
+                                   geo_rss_events.ATTR_DISTANCE], distance0, 0)
 
     def setup_data(self):
         """Set up data object for use by sensors."""
@@ -85,9 +75,9 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         event2 = type('obj', (object,), {'title': 'Title 2', 'distance': 20.0})
         matrix = {'Title 1': "10km", 'Title 2': "20km"}
         sensor2._state = [event1, event2]
+        sensor2._state_attributes = matrix
         assert sensor2.name == "Any"
         device_state_attributes2 = sensor2.device_state_attributes
-        print(device_state_attributes2)
         assert device_state_attributes2["Title 1"] == matrix["Title 1"]
         assert device_state_attributes2["Title 2"] == matrix["Title 2"]
         assert device_state_attributes2 == matrix

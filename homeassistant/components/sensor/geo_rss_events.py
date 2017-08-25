@@ -25,6 +25,10 @@ REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CATEGORY = 'category'
+ATTR_DISTANCE = 'distance'
+ATTR_TITLE = 'title'
+
 CONF_CATEGORIES = 'categories'
 CONF_RADIUS = 'radius'
 CONF_URL = 'url'
@@ -36,6 +40,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
 DOMAIN = 'geo_rss_events'
+
 # Minimum time between updates from the source.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -69,7 +74,7 @@ def setup_platform(hass, config, add_devices,
 
     # Initialise update service.
     data = GeoRssServiceData(hass, home_latitude, home_longitude, url,
-                             radius_in_km, categories)
+                             radius_in_km)
     data.update()
 
     # Create all sensors based on categories.
@@ -95,6 +100,7 @@ class GeoRssServiceSensor(Entity):
         self._category = category
         self._data = data
         self._state = STATE_UNKNOWN
+        self._state_attributes = None
         self._name = name
         self._unit_of_measurement = unit_of_measurement
         id_base = 'any' if category is None else category
@@ -114,10 +120,7 @@ class GeoRssServiceSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if isinstance(self._state, list):
-            return len(self._state)
-        else:
-            return self._state
+        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -132,41 +135,40 @@ class GeoRssServiceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        matrix = {}
-        if self._state is not STATE_UNKNOWN:
-            for event in self._state:
-                matrix[event.title] = '{:.0f}km'.format(event.distance)
-        return matrix
+        return self._state_attributes
 
     def update(self):  # pragma: no cover
         """Update this sensor from the GeoRSS service."""
         _LOGGER.debug("About to update sensor %s", self.entity_id)
         self._data.update()
-        all_events = self._data.events
         if self._category is None:
             # Add all events regardless of category.
-            _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
-                          all_events)
-            self._state = all_events
+            my_events = self._data.events
         else:
-            # Group events by category.
-            self._state = [event for event in all_events if
-                           event.category == self._category]
-            _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
-                          self._state)
+            # Only keep events that belong to sensor's category.
+            my_events = [event for event in self._data.events if
+                         event[ATTR_CATEGORY] == self._category]
+        _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
+                      my_events)
+        self._state = len(my_events)
+        # And now compute the attributes from the filtered events.
+        matrix = {}
+        if my_events:
+            for event in my_events:
+                matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
+                    event[ATTR_DISTANCE])
+        self._state_attributes = matrix
 
 
 class GeoRssServiceData(object):
     """Provides access to GeoRSS feed and stores the latest data."""
 
-    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km,
-                 categories):
+    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km):
         """Initialize the update service."""
         self._hass = hass
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
-        self._categories = categories
         self.events = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -197,11 +199,11 @@ class GeoRssServiceData(object):
                 distance = self.calculate_distance_to_geometry(geometry)
             if distance <= self._radius_in_km:
                 event = {
-                    'category': None if not hasattr(entry,
-                                                    'category') else entry.category,
-                    'title': None if not hasattr(entry,
-                                                 'title') else entry.title,
-                    'distance': distance
+                    ATTR_CATEGORY: None if not hasattr(entry, 'category') else
+                    entry.category,
+                    ATTR_TITLE: None if not hasattr(entry, 'title') else
+                    entry.title,
+                    ATTR_DISTANCE: distance
                 }
                 events.append(event)
         _LOGGER.debug("%s events found nearby", len(events))
