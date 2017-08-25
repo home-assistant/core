@@ -147,4 +147,4 @@ class PushBulletNotificationService(BaseNotificationService):
                 pusher.push_note(title, message, email=tname)
 
         except PushError as err:
-            _LOGGER.error("Notify failed: ", err)
+            _LOGGER.error("Notify failed: %s", err)
