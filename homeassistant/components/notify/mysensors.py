@@ -6,35 +6,19 @@ https://home-assistant.io/components/notify.mysensors/
 """
 from homeassistant.components import mysensors
 from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService)
+    ATTR_TARGET, DOMAIN, BaseNotificationService)
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the MySensors notification service."""
-    if discovery_info is None:
+    new_devices = mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsNotificationDevice)
+    if not new_devices:
         return
-    platform_devices = []
-    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
-    if not gateways:
-        return
-
-    for gateway in gateways:
-        if float(gateway.protocol_version) < 2.0:
-            continue
-        pres = gateway.const.Presentation
-        set_req = gateway.const.SetReq
-        map_sv_types = {
-            pres.S_INFO: [set_req.V_TEXT],
-        }
-        devices = {}
-        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, MySensorsNotificationDevice))
-        platform_devices.append(devices)
-
-    return MySensorsNotificationService(platform_devices)
+    return MySensorsNotificationService(hass)
 
 
-class MySensorsNotificationDevice(mysensors.MySensorsDeviceEntity):
+class MySensorsNotificationDevice(mysensors.MySensorsDevice):
     """Represent a MySensors Notification device."""
 
     def send_msg(self, msg):
@@ -44,24 +28,25 @@ class MySensorsNotificationDevice(mysensors.MySensorsDeviceEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, self.value_type, sub_msg)
 
+    def __repr__(self):
+        """Return the representation."""
+        return "<MySensorsNotificationDevice {}>".format(self.name)
+
 
 class MySensorsNotificationService(BaseNotificationService):
-    """Implement MySensors notification service."""
+    """Implement a MySensors notification service."""
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, platform_devices):
+    def __init__(self, hass):
         """Initialize the service."""
-        self.platform_devices = platform_devices
+        self.devices = mysensors.get_mysensors_devices(hass, DOMAIN)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         target_devices = kwargs.get(ATTR_TARGET)
-        devices = []
-        for gw_devs in self.platform_devices:
-            for device in gw_devs.values():
-                if target_devices is None or device.name in target_devices:
-                    devices.append(device)
+        devices = [device for device in self.devices.values()
+                   if target_devices is None or device.name in target_devices]
 
         for device in devices:
             device.send_msg(message)
