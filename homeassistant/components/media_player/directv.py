@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
 import voluptuous as vol
+import requests
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
@@ -53,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = 'DirecTV_' + discovery_info.get('serial', '')
 
         # attempt to discover additional RVU units
-        import requests
         try:
             resp = requests.get(
                 'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
