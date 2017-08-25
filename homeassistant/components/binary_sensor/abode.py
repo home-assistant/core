@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor in abode.get_devices(type_filter=device_types):
-        sensors.append(AbodeBinarySensor(hass, abode, sensor))
+        sensors.append(AbodeBinarySensor(abode, sensor))
 
     add_devices(sensors)
 
@@ -45,9 +45,9 @@ def map_abode_device_class():
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     """A binary sensor implementation for Abode device."""
 
-    def __init__(self, hass, controller, device):
+    def __init__(self, controller, device):
         """Initialize a sensor for Abode device."""
-        AbodeDevice.__init__(self, hass, controller, device)
+        AbodeDevice.__init__(self, controller, device)
         self._device_class = map_abode_device_class().get(self._device.type)
 
     @property

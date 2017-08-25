@@ -1,6 +1,5 @@
 """
 This component provides HA lock support for Abode Security System.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.abode/
 """
@@ -23,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor in abode.get_devices(type_filter=(CONST.DEVICE_DOOR_LOCK)):
-        sensors.append(AbodeLock(hass, abode, sensor))
+        sensors.append(AbodeLock(abode, sensor))
 
     add_devices(sensors)
 
@@ -31,9 +30,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeLock(AbodeDevice, LockDevice):
     """Representation of an Abode lock."""
 
-    def __init__(self, hass, controller, device):
+    def __init__(self, controller, device):
         """Initialize the Abode device."""
-        AbodeDevice.__init__(self, hass, controller, device)
+        AbodeDevice.__init__(self, controller, device)
 
     def lock(self, **kwargs):
         """Lock the device."""

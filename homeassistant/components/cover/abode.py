@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor in abode.get_devices(type_filter=(CONST.DEVICE_SECURE_BARRIER)):
-        sensors.append(AbodeCover(hass, abode, sensor))
+        sensors.append(AbodeCover(abode, sensor))
 
     add_devices(sensors)
 
@@ -31,9 +31,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeCover(AbodeDevice, CoverDevice):
     """Representation of an Abode cover."""
 
-    def __init__(self, hass, controller, device):
+    def __init__(self, controller, device):
         """Initialize the Abode device."""
-        AbodeDevice.__init__(self, hass, controller, device)
+        AbodeDevice.__init__(self, controller, device)
 
     @property
     def is_closed(self):

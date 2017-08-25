@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor in abode.get_devices(type_filter=(CONST.DEVICE_POWER_SWITCH)):
-        sensors.append(AbodeSwitch(hass, abode, sensor))
+        sensors.append(AbodeSwitch(abode, sensor))
 
     add_devices(sensors)
 
@@ -31,9 +31,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeSwitch(AbodeDevice, SwitchDevice):
     """Representation of an Abode switch."""
 
-    def __init__(self, hass, controller, device):
+    def __init__(self, controller, device):
         """Initialize the Abode device."""
-        AbodeDevice.__init__(self, hass, controller, device)
+        AbodeDevice.__init__(self, controller, device)
 
     def turn_on(self, **kwargs):
         """Turn on the device."""
