@@ -14,7 +14,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
-from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
 REQUIREMENTS = ['pytradfri==1.1']
@@ -41,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def request_configuration(hass, config, host):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     hass.data.setdefault(KEY_CONFIG, {})
     instance = hass.data[KEY_CONFIG].get(host)
 
@@ -70,7 +69,7 @@ def request_configuration(hass, config, host):
         hass.async_add_job(success)
 
     instance = configurator.request_config(
-        hass, "IKEA Trådfri", configuration_callback,
+        "IKEA Trådfri", configuration_callback,
         description='Please enter the security code written at the bottom of '
                     'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",

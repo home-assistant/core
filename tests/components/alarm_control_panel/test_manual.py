@@ -6,7 +6,7 @@ from unittest.mock import patch
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
@@ -177,6 +177,84 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_away(self.hass, CODE + '2')
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_night_no_pending(self):
+        """Test arm night method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 0,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_night(self.hass, CODE)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_NIGHT,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_night_with_pending(self):
+        """Test arm night method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 1,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_night(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_NIGHT,
+                         self.hass.states.get(entity_id).state)
+
+    def test_arm_night_with_invalid_code(self):
+        """Attempt to night home without a valid code."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'code': CODE,
+                'pending_time': 1,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_night(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,

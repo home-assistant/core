@@ -95,7 +95,8 @@ class LogitechMediaServer(object):
         """Create a list of devices connected to LMS."""
         result = []
         data = yield from self.async_query('players', 'status')
-
+        if data is False:
+            return result
         for players in data.get('players_loop', []):
             player = SqueezeBoxDevice(
                 self, players['playerid'], players['name'])
