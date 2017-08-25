@@ -69,7 +69,6 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-
     for platform in ABODE_PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
