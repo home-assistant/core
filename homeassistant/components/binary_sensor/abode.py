@@ -37,7 +37,7 @@ def map_abode_device_class():
         CONST.DEVICE_KEYPAD: 'connectivity',
         CONST.DEVICE_DOOR_CONTACT: 'opening',
         CONST.DEVICE_STATUS_DISPLAY: 'connectivity',
-        CONST.DEVICE_MOTION_CAMERA: 'motion',
+        CONST.DEVICE_MOTION_CAMERA: 'connectivity',
         CONST.DEVICE_WATER_SENSOR: 'moisture'
     }
 
@@ -53,9 +53,6 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        if self.device_class == 'motion':
-            return self._device.get_value('motion_event') == '1'
-
         return self._device.is_on
 
     @property

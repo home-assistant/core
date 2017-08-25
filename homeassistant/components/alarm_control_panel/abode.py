@@ -71,7 +71,6 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._device.device_id,
-            'battery_low': self._device.battery_low,
             'battery_backup': self._device.battery,
             'cellular_backup': self._device.is_cellular
         }

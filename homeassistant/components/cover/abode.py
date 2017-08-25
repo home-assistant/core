@@ -42,8 +42,8 @@ class AbodeCover(AbodeDevice, CoverDevice):
 
     def close_cover(self):
         """Issue close command to cover."""
-        self._device.switch_off()
+        self._device.close_cover()
 
     def open_cover(self):
         """Issue open command to cover."""
-        self._device.switch_on()
+        self._device.open_cover()

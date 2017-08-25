@@ -21,8 +21,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     abode = hass.data[DATA_ABODE]
 
+    device_types = [
+        CONST.DEVICE_POWER_SWITCH_SENSOR,
+        CONST.DEVICE_POWER_SWITCH_METER]
+
     sensors = []
-    for sensor in abode.get_devices(type_filter=(CONST.DEVICE_POWER_SWITCH)):
+    for sensor in abode.get_devices(type_filter=device_types):
         sensors.append(AbodeSwitch(abode, sensor))
 
     add_devices(sensors)

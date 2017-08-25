@@ -17,7 +17,7 @@ from homeassistant.const import (ATTR_ATTRIBUTION,
                                  CONF_NAME, EVENT_HOMEASSISTANT_STOP,
                                  EVENT_HOMEASSISTANT_START)
 
-REQUIREMENTS = ['abodepy==0.8.3']
+REQUIREMENTS = ['abodepy==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +121,8 @@ class AbodeDevice(Entity):
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._device.device_id,
-            'battery_low': self._device.battery_low
+            'battery_low': self._device.battery_low,
+            'no_response': self._device.no_response
         }
 
     def _update_callback(self, device):
