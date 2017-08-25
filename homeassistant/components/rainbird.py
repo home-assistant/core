@@ -1,5 +1,5 @@
 """
-Module for interacting with WiFi LNK module of the Rainbird Irrigation system
+Module for interacting with WiFi LNK module of the Rainbird Irrigation system.
 
 This project has no affiliation with Rainbird. This module works with the
 Rainbird LNK WiFi Module. For more information see:
@@ -29,11 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """
-    Standard setup function Home Assistant
+    Call from Home Assistant.
+
     @param hass: default homeassistant hass class
     @param config: default homeassistant config class
     """
-
     server = config[DOMAIN].get('stickip')
     password = config[DOMAIN].get('password')
 
@@ -46,11 +46,11 @@ def setup(hass, config):
 
     def startirrigation(call):
         """
-        Start Irrigation command towards Rainbird WiFi LNK stick
+        Start Irrigation command towards Rainbird WiFi LNK stick.
+
         @param call: should be a home assistant call object with data
         station for Zone to sprinkle and duration for the time
         """
-
         station_id = call.data.get('station')
         duration = call.data.get('duration')
         _LOGGER.info("Requesting irrigation for " +
@@ -65,10 +65,7 @@ def setup(hass, config):
             _LOGGER.error("Request was not acknowledged!")
 
     def stopirrigation():
-        """
-        Stops the irrigation (if one is running)
-        """
-
+        """Stop the irrigation (if one is running)."""
         _LOGGER.info("Stop request irrigation")
         result = controller.stopIrrigation()
         if result == 1:
@@ -81,10 +78,10 @@ def setup(hass, config):
 
     def getirrigation():
         """
-        Get current active station
+        Get current active station.
+
         @return: integer which station is active
         """
-
         _LOGGER.info("Request irrigation state")
         result = controller.currentIrrigation()
         if result < 0:
