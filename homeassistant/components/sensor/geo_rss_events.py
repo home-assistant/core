@@ -200,9 +200,9 @@ class GeoRssServiceData(object):
             if distance <= self._radius_in_km:
                 event = {
                     ATTR_CATEGORY: None if not hasattr(entry, 'category') else
-                    entry.category,
+                                   entry.category,
                     ATTR_TITLE: None if not hasattr(entry, 'title') else
-                    entry.title,
+                                entry.title,
                     ATTR_DISTANCE: distance
                 }
                 events.append(event)
