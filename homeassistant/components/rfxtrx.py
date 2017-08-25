@@ -77,9 +77,13 @@ def _valid_device(value, device_type):
         if not len(key) % 2 == 0:
             key = '0' + key
 
-        if get_rfx_object(key) is None:
-            raise vol.Invalid('Rfxtrx device {} is invalid: '
-                              'Invalid device id for {}'.format(key, value))
+        try:
+            if get_rfx_object(key) is None:
+                raise vol.Invalid('Rfxtrx device {} is invalid: Invalid'
+                                  ' device id for {}'.format(key, value))
+        except ImportError:
+            _LOGGER.warning('Restart Home Assistant to'
+                            ' validate the rfxtrx config again.')
 
         if device_type == 'sensor':
             config[key] = DEVICE_SCHEMA_SENSOR(device)
