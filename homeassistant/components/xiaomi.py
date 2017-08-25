@@ -66,8 +66,8 @@ def setup(hass, config):
                                                    interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
-    for try in range(discovery_retry):
-        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', try + 1)
+    for k in range(discovery_retry):
+        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', k + 1)
         hass.data[PY_XIAOMI_GATEWAY].discover_gateways()
         if len(hass.data[PY_XIAOMI_GATEWAY].gateways) >= len(gateways):
             break
