@@ -50,7 +50,6 @@ CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
 CONF_VERSION = 'version'
 
 CONF_NODES = 'nodes'
-CONF_NODE_ID = 'id'
 CONF_NODE_NAME = 'name'
 
 DEFAULT_BAUD_RATE = 115200
@@ -136,13 +135,11 @@ def deprecated(key):
     return validator
 
 
-NODE_SCHEMA = vol.All(
-    cv.ensure_list,
-    [{
-        vol.Required(CONF_NODE_ID): cv.positive_int,
-        vol.Optional(CONF_NODE_NAME): cv.string
-    }]
-)
+NODE_SCHEMA = vol.Schema({
+    cv.positive_int: {
+        vol.Required(CONF_NODE_NAME): cv.string
+    }
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(deprecated(CONF_DEBUG), {
@@ -163,7 +160,7 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
                 vol.Optional(
                     CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
-                vol.Optional(CONF_NODES, default=[]): NODE_SCHEMA,
+                vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
