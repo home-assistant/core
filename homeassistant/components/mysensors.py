@@ -4,30 +4,37 @@ Connect to a MySensors gateway via pymysensors API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
+import asyncio
+from collections import defaultdict
 import logging
 import os
 import socket
 import sys
+from timeit import default_timer as timer
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.setup import setup_component
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
+from homeassistant.setup import setup_component
 
-REQUIREMENTS = ['pymysensors==0.10.0']
+REQUIREMENTS = ['pymysensors==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHILD_ID = 'child_id'
 ATTR_DESCRIPTION = 'description'
 ATTR_DEVICE = 'device'
+ATTR_DEVICES = 'devices'
 ATTR_NODE_ID = 'node_id'
 
 CONF_BAUD_RATE = 'baud_rate'
@@ -44,11 +51,16 @@ CONF_VERSION = 'version'
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
-DEFAULT_VERSION = 1.4
+DEFAULT_VERSION = '1.4'
 DOMAIN = 'mysensors'
 
 MQTT_COMPONENT = 'mqtt'
 MYSENSORS_GATEWAYS = 'mysensors_gateways'
+MYSENSORS_PLATFORM_DEVICES = 'mysensors_devices_{}'
+PLATFORM = 'platform'
+SCHEMA = 'schema'
+SIGNAL_CALLBACK = 'mysensors_callback_{}_{}_{}_{}'
+TYPE = 'type'
 
 
 def is_socket_address(value):
@@ -144,9 +156,125 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
         vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
         vol.Optional(CONF_RETAIN, default=True): cv.boolean,
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.Coerce(float),
+        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
     }))
 }, extra=vol.ALLOW_EXTRA)
+
+
+# mysensors const schemas
+BINARY_SENSOR_SCHEMA = {PLATFORM: 'binary_sensor', TYPE: 'V_TRIPPED'}
+CLIMATE_SCHEMA = {PLATFORM: 'climate', TYPE: 'V_HVAC_FLOW_STATE'}
+LIGHT_DIMMER_SCHEMA = {
+    PLATFORM: 'light', TYPE: 'V_DIMMER',
+    SCHEMA: {'V_DIMMER': cv.string, 'V_LIGHT': cv.string}}
+LIGHT_PERCENTAGE_SCHEMA = {
+    PLATFORM: 'light', TYPE: 'V_PERCENTAGE',
+    SCHEMA: {'V_PERCENTAGE': cv.string, 'V_STATUS': cv.string}}
+LIGHT_RGB_SCHEMA = {
+    PLATFORM: 'light', TYPE: 'V_RGB', SCHEMA: {
+        'V_RGB': cv.string, 'V_STATUS': cv.string}}
+LIGHT_RGBW_SCHEMA = {
+    PLATFORM: 'light', TYPE: 'V_RGBW', SCHEMA: {
+        'V_RGBW': cv.string, 'V_STATUS': cv.string}}
+NOTIFY_SCHEMA = {PLATFORM: 'notify', TYPE: 'V_TEXT'}
+DEVICE_TRACKER_SCHEMA = {PLATFORM: 'device_tracker', TYPE: 'V_POSITION'}
+DUST_SCHEMA = [
+    {PLATFORM: 'sensor', TYPE: 'V_DUST_LEVEL'},
+    {PLATFORM: 'sensor', TYPE: 'V_LEVEL'}]
+SWITCH_LIGHT_SCHEMA = {PLATFORM: 'switch', TYPE: 'V_LIGHT'}
+SWITCH_STATUS_SCHEMA = {PLATFORM: 'switch', TYPE: 'V_STATUS'}
+MYSENSORS_CONST_SCHEMA = {
+    'S_DOOR': [BINARY_SENSOR_SCHEMA, {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_MOTION': [BINARY_SENSOR_SCHEMA, {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_SMOKE': [BINARY_SENSOR_SCHEMA, {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_SPRINKLER': [
+        BINARY_SENSOR_SCHEMA, {PLATFORM: 'switch', TYPE: 'V_STATUS'}],
+    'S_WATER_LEAK': [
+        BINARY_SENSOR_SCHEMA, {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_SOUND': [
+        BINARY_SENSOR_SCHEMA, {PLATFORM: 'sensor', TYPE: 'V_LEVEL'},
+        {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_VIBRATION': [
+        BINARY_SENSOR_SCHEMA, {PLATFORM: 'sensor', TYPE: 'V_LEVEL'},
+        {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_MOISTURE': [
+        BINARY_SENSOR_SCHEMA, {PLATFORM: 'sensor', TYPE: 'V_LEVEL'},
+        {PLATFORM: 'switch', TYPE: 'V_ARMED'}],
+    'S_HVAC': [CLIMATE_SCHEMA],
+    'S_COVER': [
+        {PLATFORM: 'cover', TYPE: 'V_DIMMER'},
+        {PLATFORM: 'cover', TYPE: 'V_PERCENTAGE'},
+        {PLATFORM: 'cover', TYPE: 'V_LIGHT'},
+        {PLATFORM: 'cover', TYPE: 'V_STATUS'}],
+    'S_DIMMER': [LIGHT_DIMMER_SCHEMA, LIGHT_PERCENTAGE_SCHEMA],
+    'S_RGB_LIGHT': [LIGHT_RGB_SCHEMA],
+    'S_RGBW_LIGHT': [LIGHT_RGBW_SCHEMA],
+    'S_INFO': [NOTIFY_SCHEMA, {PLATFORM: 'sensor', TYPE: 'V_TEXT'}],
+    'S_GPS': [
+        DEVICE_TRACKER_SCHEMA, {PLATFORM: 'sensor', TYPE: 'V_POSITION'}],
+    'S_TEMP': [{PLATFORM: 'sensor', TYPE: 'V_TEMP'}],
+    'S_HUM': [{PLATFORM: 'sensor', TYPE: 'V_HUM'}],
+    'S_BARO': [
+        {PLATFORM: 'sensor', TYPE: 'V_PRESSURE'},
+        {PLATFORM: 'sensor', TYPE: 'V_FORECAST'}],
+    'S_WIND': [
+        {PLATFORM: 'sensor', TYPE: 'V_WIND'},
+        {PLATFORM: 'sensor', TYPE: 'V_GUST'},
+        {PLATFORM: 'sensor', TYPE: 'V_DIRECTION'}],
+    'S_RAIN': [
+        {PLATFORM: 'sensor', TYPE: 'V_RAIN'},
+        {PLATFORM: 'sensor', TYPE: 'V_RAINRATE'}],
+    'S_UV': [{PLATFORM: 'sensor', TYPE: 'V_UV'}],
+    'S_WEIGHT': [
+        {PLATFORM: 'sensor', TYPE: 'V_WEIGHT'},
+        {PLATFORM: 'sensor', TYPE: 'V_IMPEDANCE'}],
+    'S_POWER': [
+        {PLATFORM: 'sensor', TYPE: 'V_WATT'},
+        {PLATFORM: 'sensor', TYPE: 'V_KWH'},
+        {PLATFORM: 'sensor', TYPE: 'V_VAR'},
+        {PLATFORM: 'sensor', TYPE: 'V_VA'},
+        {PLATFORM: 'sensor', TYPE: 'V_POWER_FACTOR'}],
+    'S_DISTANCE': [{PLATFORM: 'sensor', TYPE: 'V_DISTANCE'}],
+    'S_LIGHT_LEVEL': [
+        {PLATFORM: 'sensor', TYPE: 'V_LIGHT_LEVEL'},
+        {PLATFORM: 'sensor', TYPE: 'V_LEVEL'}],
+    'S_IR': [
+        {PLATFORM: 'sensor', TYPE: 'V_IR_RECEIVE'},
+        {PLATFORM: 'switch', TYPE: 'V_IR_SEND',
+         SCHEMA: {'V_IR_SEND': cv.string, 'V_LIGHT': cv.string}}],
+    'S_WATER': [
+        {PLATFORM: 'sensor', TYPE: 'V_FLOW'},
+        {PLATFORM: 'sensor', TYPE: 'V_VOLUME'}],
+    'S_CUSTOM': [
+        {PLATFORM: 'sensor', TYPE: 'V_VAR1'},
+        {PLATFORM: 'sensor', TYPE: 'V_VAR2'},
+        {PLATFORM: 'sensor', TYPE: 'V_VAR3'},
+        {PLATFORM: 'sensor', TYPE: 'V_VAR4'},
+        {PLATFORM: 'sensor', TYPE: 'V_VAR5'},
+        {PLATFORM: 'sensor', TYPE: 'V_CUSTOM'}],
+    'S_SCENE_CONTROLLER': [
+        {PLATFORM: 'sensor', TYPE: 'V_SCENE_ON'},
+        {PLATFORM: 'sensor', TYPE: 'V_SCENE_OFF'}],
+    'S_COLOR_SENSOR': [{PLATFORM: 'sensor', TYPE: 'V_RGB'}],
+    'S_MULTIMETER': [
+        {PLATFORM: 'sensor', TYPE: 'V_VOLTAGE'},
+        {PLATFORM: 'sensor', TYPE: 'V_CURRENT'},
+        {PLATFORM: 'sensor', TYPE: 'V_IMPEDANCE'}],
+    'S_GAS': [
+        {PLATFORM: 'sensor', TYPE: 'V_FLOW'},
+        {PLATFORM: 'sensor', TYPE: 'V_VOLUME'}],
+    'S_WATER_QUALITY': [
+        {PLATFORM: 'sensor', TYPE: 'V_TEMP'},
+        {PLATFORM: 'sensor', TYPE: 'V_PH'},
+        {PLATFORM: 'sensor', TYPE: 'V_ORP'},
+        {PLATFORM: 'sensor', TYPE: 'V_EC'},
+        {PLATFORM: 'switch', TYPE: 'V_STATUS'}],
+    'S_AIR_QUALITY': DUST_SCHEMA,
+    'S_DUST': DUST_SCHEMA,
+    'S_LIGHT': [SWITCH_LIGHT_SCHEMA],
+    'S_BINARY': [SWITCH_STATUS_SCHEMA],
+    'S_LOCK': [{PLATFORM: 'switch', TYPE: 'V_LOCK_STATUS'}],
+}
 
 
 def setup(hass, config):
@@ -197,20 +325,14 @@ def setup(hass, config):
                     # invalid ip address
                     return
         gateway.metric = hass.config.units.is_metric
-        optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
-        gateway = GatewayWrapper(gateway, optimistic, device)
-        # pylint: disable=attribute-defined-outside-init
-        gateway.event_callback = gateway.callback_factory()
+        gateway.optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
+        gateway.device = device
+        gateway.event_callback = gw_callback_factory(hass)
 
         def gw_start(event):
             """Trigger to start of the gateway and any persistence."""
             if persistence:
-                for node_id in gateway.sensors:
-                    node = gateway.sensors[node_id]
-                    for child_id in node.children:
-                        msg = mysensors.Message().modify(
-                            node_id=node_id, child_id=child_id)
-                        gateway.event_callback(msg)
+                discover_persistent_devices(hass, gateway)
             gateway.start()
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                  lambda event: gateway.stop())
@@ -219,15 +341,8 @@ def setup(hass, config):
 
         return gateway
 
-    gateways = hass.data.get(MYSENSORS_GATEWAYS)
-    if gateways is not None:
-        _LOGGER.error(
-            "%s already exists in %s, will not setup %s component",
-            MYSENSORS_GATEWAYS, hass.data, DOMAIN)
-        return False
-
     # Setup all devices from config
-    gateways = []
+    gateways = {}
     conf_gateways = config[DOMAIN][CONF_GATEWAYS]
 
     for index, gway in enumerate(conf_gateways):
@@ -243,7 +358,7 @@ def setup(hass, config):
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
-            gateways.append(ready_gateway)
+            gateways[id(ready_gateway)] = ready_gateway
 
     if not gateways:
         _LOGGER.error(
@@ -252,115 +367,187 @@ def setup(hass, config):
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
 
-    for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
-                      'cover']:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
-
-    discovery.load_platform(
-        hass, 'device_tracker', DOMAIN, {}, config)
-
-    discovery.load_platform(
-        hass, 'notify', DOMAIN, {CONF_NAME: DOMAIN}, config)
-
     return True
 
 
-def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
-    """Return a new callback for the platform."""
-    def mysensors_callback(gateway, msg):
-        """Run when a message from the gateway arrives."""
-        if gateway.sensors[msg.node_id].sketch_name is None:
-            _LOGGER.debug("No sketch_name: node %s", msg.node_id)
-            return
-        child = gateway.sensors[msg.node_id].children.get(msg.child_id)
+def validate_child(gateway, node_id, child):
+    """Validate that a child has the correct values according to schema.
+
+    Return a dict of platform with a list of device ids for validated devices.
+    """
+    validated = defaultdict(list)
+
+    if not child.values:
+        _LOGGER.debug(
+            "No child values for node %s child %s", node_id, child.id)
+        return validated
+    if gateway.sensors[node_id].sketch_name is None:
+        _LOGGER.debug("Node %s is missing sketch name", node_id)
+        return validated
+    pres = gateway.const.Presentation
+    set_req = gateway.const.SetReq
+    s_name = next(
+        (member.name for member in pres if member.value == child.type), None)
+    if s_name not in MYSENSORS_CONST_SCHEMA:
+        _LOGGER.warning("Child type %s is not supported", s_name)
+        return validated
+    child_schemas = MYSENSORS_CONST_SCHEMA[s_name]
+
+    def msg(name):
+        """Return a message for an invalid schema."""
+        return "{} requires value_type {}".format(
+            pres(child.type).name, set_req[name].name)
+
+    for schema in child_schemas:
+        platform = schema[PLATFORM]
+        v_name = schema[TYPE]
+        value_type = next(
+            (member.value for member in set_req if member.name == v_name),
+            None)
+        if value_type is None:
+            continue
+        _child_schema = child.get_schema(gateway.protocol_version)
+        vol_schema = _child_schema.extend(
+            {vol.Required(set_req[key].value, msg=msg(key)):
+             _child_schema.schema.get(set_req[key].value, val)
+             for key, val in schema.get(SCHEMA, {v_name: cv.string}).items()},
+            extra=vol.ALLOW_EXTRA)
+        try:
+            vol_schema(child.values)
+        except vol.Invalid as exc:
+            level = (logging.WARNING if value_type in child.values
+                     else logging.DEBUG)
+            _LOGGER.log(
+                level,
+                "Invalid values: %s: %s platform: node %s child %s: %s",
+                child.values, platform, node_id, child.id, exc)
+            continue
+        dev_id = id(gateway), node_id, child.id, value_type
+        validated[platform].append(dev_id)
+    return validated
+
+
+def discover_mysensors_platform(hass, platform, new_devices):
+    """Discover a mysensors platform."""
+    discovery.load_platform(
+        hass, platform, DOMAIN, {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN})
+
+
+def discover_persistent_devices(hass, gateway):
+    """Discover platforms for devices loaded via persistence file."""
+    new_devices = defaultdict(list)
+    for node_id in gateway.sensors:
+        node = gateway.sensors[node_id]
+        for child in node.children.values():
+            validated = validate_child(gateway, node_id, child)
+            for platform, dev_ids in validated.items():
+                new_devices[platform].extend(dev_ids)
+    for platform, dev_ids in new_devices.items():
+        discover_mysensors_platform(hass, platform, dev_ids)
+
+
+def get_mysensors_devices(hass, domain):
+    """Return mysensors devices for a platform."""
+    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
+        hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
+    return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
+
+
+def gw_callback_factory(hass):
+    """Return a new callback for the gateway."""
+    def mysensors_callback(msg):
+        """Default callback for a mysensors gateway."""
+        start = timer()
+        _LOGGER.debug(
+            "Node update: node %s child %s", msg.node_id, msg.child_id)
+
+        child = msg.gateway.sensors[msg.node_id].children.get(msg.child_id)
         if child is None:
+            _LOGGER.debug(
+                "Not a child update for node %s", msg.node_id)
             return
-        for value_type in child.values:
-            key = msg.node_id, child.id, value_type
-            if child.type not in map_sv_types or \
-                    value_type not in map_sv_types[child.type]:
-                continue
-            if key in devices:
-                if add_devices:
-                    devices[key].schedule_update_ha_state(True)
-                else:
-                    devices[key].update()
-                continue
-            name = '{} {} {}'.format(
-                gateway.sensors[msg.node_id].sketch_name, msg.node_id,
-                child.id)
-            if isinstance(entity_class, dict):
-                device_class = entity_class[child.type]
-            else:
-                device_class = entity_class
-            devices[key] = device_class(
-                gateway, msg.node_id, child.id, name, value_type)
-            if add_devices:
-                _LOGGER.info("Adding new devices: %s", [devices[key]])
-                add_devices([devices[key]], True)
-            else:
-                devices[key].update()
+
+        signals = []
+
+        # Update all platforms for the device via dispatcher.
+        # Add/update entity if schema validates to true.
+        validated = validate_child(msg.gateway, msg.node_id, child)
+        for platform, dev_ids in validated.items():
+            devices = get_mysensors_devices(hass, platform)
+            for idx, dev_id in enumerate(list(dev_ids)):
+                if dev_id in devices:
+                    dev_ids.pop(idx)
+                    signals.append(SIGNAL_CALLBACK.format(*dev_id))
+            if dev_ids:
+                discover_mysensors_platform(hass, platform, dev_ids)
+        for signal in set(signals):
+            # Only one signal per device is needed.
+            # A device can have multiple platforms, ie multiple schemas.
+            # FOR LATER: Add timer to not signal if another update comes in.
+            dispatcher_send(hass, signal)
+        end = timer()
+        if end - start > 0.1:
+            _LOGGER.debug(
+                "Callback for node %s child %s took %.3f seconds",
+                msg.node_id, msg.child_id, end - start)
     return mysensors_callback
 
 
-class GatewayWrapper(object):
-    """Gateway wrapper class."""
-
-    def __init__(self, gateway, optimistic, device):
-        """Set up the class attributes on instantiation.
-
-        Args:
-        gateway (mysensors.SerialGateway): Gateway to wrap.
-        optimistic (bool): Send values to actuators without feedback state.
-        device (str): Path to serial port, ip adress or mqtt.
-
-        Attributes:
-        _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
-        platform_callbacks (list): Callback functions, one per platform.
-        optimistic (bool): Send values to actuators without feedback state.
-        device (str): Device configured as gateway.
-        __initialised (bool): True if GatewayWrapper is initialised.
-
-        """
-        self._wrapped_gateway = gateway
-        self.platform_callbacks = []
-        self.optimistic = optimistic
-        self.device = device
-        self.__initialised = True
-
-    def __getattr__(self, name):
-        """See if this object has attribute name."""
-        # Do not use hasattr, it goes into infinite recurrsion
-        if name in self.__dict__:
-            # This object has the attribute.
-            return getattr(self, name)
-        # The wrapped object has the attribute.
-        return getattr(self._wrapped_gateway, name)
-
-    def __setattr__(self, name, value):
-        """See if this object has attribute name then set to value."""
-        if '_GatewayWrapper__initialised' not in self.__dict__:
-            return object.__setattr__(self, name, value)
-        elif name in self.__dict__:
-            object.__setattr__(self, name, value)
-        else:
-            object.__setattr__(self._wrapped_gateway, name, value)
-
-    def callback_factory(self):
-        """Return a new callback function."""
-        def node_update(msg):
-            """Handle node updates from the MySensors gateway."""
-            _LOGGER.debug(
-                "Update: node %s, child %s sub_type %s",
-                msg.node_id, msg.child_id, msg.sub_type)
-            for callback in self.platform_callbacks:
-                callback(self, msg)
-
-        return node_update
+def get_mysensors_name(gateway, node_id, child_id):
+    """Return a name for a node child."""
+    return '{} {} {}'.format(
+        gateway.sensors[node_id].sketch_name, node_id, child_id)
 
 
-class MySensorsDeviceEntity(object):
-    """Representation of a MySensors entity."""
+def get_mysensors_gateway(hass, gateway_id):
+    """Return gateway."""
+    if MYSENSORS_GATEWAYS not in hass.data:
+        hass.data[MYSENSORS_GATEWAYS] = {}
+    gateways = hass.data.get(MYSENSORS_GATEWAYS)
+    return gateways.get(gateway_id)
+
+
+def setup_mysensors_platform(
+        hass, domain, discovery_info, device_class, device_args=None,
+        add_devices=None):
+    """Set up a mysensors platform."""
+    # Only act if called via mysensors by discovery event.
+    # Otherwise gateway is not setup.
+    if not discovery_info:
+        return
+    if device_args is None:
+        device_args = ()
+    new_devices = []
+    new_dev_ids = discovery_info[ATTR_DEVICES]
+    for dev_id in new_dev_ids:
+        devices = get_mysensors_devices(hass, domain)
+        if dev_id in devices:
+            continue
+        gateway_id, node_id, child_id, value_type = dev_id
+        gateway = get_mysensors_gateway(hass, gateway_id)
+        if not gateway:
+            continue
+        device_class_copy = device_class
+        if isinstance(device_class, dict):
+            child = gateway.sensors[node_id].children[child_id]
+            s_type = gateway.const.Presentation(child.type).name
+            device_class_copy = device_class[s_type]
+        name = get_mysensors_name(gateway, node_id, child_id)
+
+        # python 3.4 cannot unpack inside tuple, but combining tuples works
+        args_copy = device_args + (
+            gateway, node_id, child_id, name, value_type)
+        devices[dev_id] = device_class_copy(*args_copy)
+        new_devices.append(devices[dev_id])
+    if new_devices:
+        _LOGGER.info("Adding new devices: %s", new_devices)
+        if add_devices is not None:
+            add_devices(new_devices, True)
+    return new_devices
+
+
+class MySensorsDevice(object):
+    """Representation of a MySensors device."""
 
     def __init__(self, gateway, node_id, child_id, name, value_type):
         """Set up the MySensors device."""
@@ -372,11 +559,6 @@ class MySensorsDeviceEntity(object):
         child = gateway.sensors[node_id].children[child_id]
         self.child_type = child.type
         self._values = {}
-
-    @property
-    def should_poll(self):
-        """Mysensor gateway pushes its state to HA."""
-        return False
 
     @property
     def name(self):
@@ -399,18 +581,9 @@ class MySensorsDeviceEntity(object):
         set_req = self.gateway.const.SetReq
 
         for value_type, value in self._values.items():
-            try:
-                attr[set_req(value_type).name] = value
-            except ValueError:
-                _LOGGER.error("Value_type %s is not valid for mysensors "
-                              "version %s", value_type,
-                              self.gateway.protocol_version)
-        return attr
+            attr[set_req(value_type).name] = value
 
-    @property
-    def available(self):
-        """Return true if entity is available."""
-        return self.value_type in self._values
+        return attr
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
@@ -419,7 +592,8 @@ class MySensorsDeviceEntity(object):
         set_req = self.gateway.const.SetReq
         for value_type, value in child.values.items():
             _LOGGER.debug(
-                "%s: value_type %s, value = %s", self._name, value_type, value)
+                "Entity update: %s: value_type %s, value = %s",
+                self._name, value_type, value)
             if value_type in (set_req.V_ARMED, set_req.V_LIGHT,
                               set_req.V_LOCK_STATUS, set_req.V_TRIPPED):
                 self._values[value_type] = (
@@ -428,3 +602,29 @@ class MySensorsDeviceEntity(object):
                 self._values[value_type] = int(value)
             else:
                 self._values[value_type] = value
+
+
+class MySensorsEntity(MySensorsDevice, Entity):
+    """Representation of a MySensors entity."""
+
+    @property
+    def should_poll(self):
+        """Mysensor gateway pushes its state to HA."""
+        return False
+
+    @property
+    def available(self):
+        """Return true if entity is available."""
+        return self.value_type in self._values
+
+    def _async_update_callback(self):
+        """Update the entity."""
+        self.hass.async_add_job(self.async_update_ha_state(True))
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update callback."""
+        dev_id = id(self.gateway), self.node_id, self.child_id, self.value_type
+        async_dispatcher_connect(
+            self.hass, SIGNAL_CALLBACK.format(*dev_id),
+            self._async_update_callback)
