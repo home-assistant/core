@@ -8,6 +8,7 @@ import json
 import logging
 import mimetypes
 import os
+import time
 
 import voluptuous as vol
 
@@ -86,11 +87,10 @@ class TwitterNotificationService(BaseNotificationService):
         if not media_path:
             return None
 
-        (media_type, _) = mimetypes.guess_type(media_path)
-        total_bytes = os.path.getsize(media_path)
-
         file = open(media_path, 'rb')
-        resp = self.upload_media_init(media_type, total_bytes)
+        total_bytes = os.path.getsize(media_path)
+        (media_category, media_type) = self.media_info(media_path)
+        resp = self.upload_media_init(media_type, media_category, total_bytes)
 
         if 199 > resp.status_code < 300:
             self.log_error_resp(resp)
@@ -102,15 +102,27 @@ class TwitterNotificationService(BaseNotificationService):
         resp = self.upload_media_finalize(media_id)
         if 199 > resp.status_code < 300:
             self.log_error_resp(resp)
+            return None
+
+        processing_info = resp.json().get('processing_info', None)
+        self.upload_media_check_status(media_id, processing_info)
 
         return media_id
 
-    def upload_media_init(self, media_type, total_bytes):
+    def media_info(self, media_path):
+        """Determine mime type and Twitter media category for given media."""
+        (media_type, _) = mimetypes.guess_type(media_path)
+        media_category = self.media_category_for_type(media_type)
+        _LOGGER.debug("media %s is mime type %s and translates to %s",
+                      media_path, media_type, media_category)
+        return media_category, media_type
+
+    def upload_media_init(self, media_type, media_category, total_bytes):
         """Upload media, INIT phase."""
-        resp = self.api.request('media/upload',
+        return self.api.request('media/upload',
                                 {'command': 'INIT', 'media_type': media_type,
+                                 'media_category': media_category,
                                  'total_bytes': total_bytes})
-        return resp
 
     def upload_media_chunked(self, file, total_bytes, media_id):
         """Upload media, chunked append."""
@@ -128,16 +140,62 @@ class TwitterNotificationService(BaseNotificationService):
         return media_id
 
     def upload_media_append(self, chunk, media_id, segment_id):
-        """Upload media, append phase."""
+        """Upload media, APPEND phase."""
         return self.api.request('media/upload',
                                 {'command': 'APPEND', 'media_id': media_id,
                                  'segment_index': segment_id},
                                 {'media': chunk})
 
     def upload_media_finalize(self, media_id):
-        """Upload media, finalize phase."""
+        """Upload media, FINALIZE phase."""
         return self.api.request('media/upload',
                                 {'command': 'FINALIZE', 'media_id': media_id})
+
+    def upload_media_check_status(self, media_id, processing_info=None):
+        """Upload media, STATUS phase."""
+        if processing_info is None:
+            return None
+
+        _LOGGER.debug("media processing %s status: %s", media_id,
+                      processing_info)
+
+        if processing_info['state'] == u'succeeded':
+            return True
+
+        if processing_info['state'] == u'failed':
+            _LOGGER.error("media processing failed")
+            return False
+
+        check_after_secs = processing_info['check_after_secs']
+        _LOGGER.debug("media processing waiting %s seconds to check status",
+                      str(check_after_secs))
+
+        time.sleep(check_after_secs)
+
+        resp = self.api.request('media/upload',
+                                {'command': 'STATUS', 'media_id': media_id},
+                                method_override='GET')
+
+        if resp.status_code != 200:
+            _LOGGER.error("media processing error: %s", resp.json())
+
+        processing_info = resp.json()['processing_info']
+        self.upload_media_check_status(media_id, processing_info)
+
+    @staticmethod
+    def media_category_for_type(media_type):
+        """Determine Twitter media category by mime type."""
+        if media_type is None:
+            return None
+
+        if media_type.startswith('image/gif'):
+            return 'tweet_gif'
+        elif media_type.startswith('video/'):
+            return 'tweet_video'
+        elif media_type.startswith('image/'):
+            return 'tweet_image'
+
+        return None
 
     @staticmethod
     def log_bytes_sent(bytes_sent, total_bytes):
