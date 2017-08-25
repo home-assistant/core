@@ -1,41 +1,36 @@
 """
-Module for interacting with WiFi LNK module of the Rainbird Irrigation system.
+Support for Rainbird Irrigation system WiFi LNK Module.
 
-This project has no affiliation with Rainbird. This module works with the
-Rainbird LNK WiFi Module. For more information see:
-http://www.rainbird.com/landscape/products/controllers/LNK-WiFi.htm
-
-This module communicates directly towards the IP Address of the WiFi module it
-does not support the cloud. You can start/stop the irrigation and get the
-currenltly active zone.
-
-I'm not a Python developer, so sorry for the bad code. I've developed it to
-control it from my domtica systems.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/rainbird/
 """
 
 import logging
+import voluptuous as vol
 import homeassistant.helpers as helpers
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD)
 
 REQUIREMENTS = ['pyrainbird==0.0.7']
 
-# Home Assistant Setup
 DOMAIN = 'rainbird'
-SERVER = ''
-PASSWORD = ''
 STATE_VAR = 'rainbird.activestation'
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
-    """
-    Call from Home Assistant.
-
-    @param hass: default homeassistant hass class
-    @param config: default homeassistant config class
-    """
-    server = config[DOMAIN].get('stickip')
-    password = config[DOMAIN].get('password')
+    """Set up the Rainbird component."""
+    server = config[DOMAIN].get(CONF_HOST)
+    password = config[DOMAIN].get(CONF_PASSWORD)
 
     # RainbirdSetup
     from pyrainbird import RainbirdController
@@ -70,7 +65,6 @@ def setup(hass, config):
         result = controller.stopIrrigation()
         if result == 1:
             _LOGGER.info("Stopped irrigation")
-            print("Success")
         elif result == 0:
             _LOGGER.error("Error sending request")
         else:
