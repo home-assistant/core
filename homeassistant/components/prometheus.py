@@ -12,16 +12,18 @@ from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components import recorder
-from homeassistant.const import (CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE,
-                                 CONF_INCLUDE, EVENT_STATE_CHANGED,
-                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE, TEMP_CELSIUS,
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN)
 from homeassistant import core as hacore
 from homeassistant.helpers import state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
+REQUIREMENTS = ['prometheus_client==0.0.19']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['prometheus_client==0.0.19']
+API_ENDPOINT = '/api/prometheus'
 
 DOMAIN = 'prometheus'
 DEPENDENCIES = ['http']
@@ -29,8 +31,6 @@ DEPENDENCIES = ['http']
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: recorder.FILTER_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
-
-API_ENDPOINT = '/api/prometheus'
 
 
 def setup(hass, config):
@@ -45,11 +45,10 @@ def setup(hass, config):
     metrics = Metrics(prometheus_client, exclude, include)
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
-
     return True
 
 
-class Metrics:
+class Metrics(object):
     """Model all of the metrics which should be exposed to Prometheus."""
 
     def __init__(self, prometheus_client, exclude, include):
@@ -81,7 +80,7 @@ class Metrics:
                                  entity_id not in self.include_entities):
             return
 
-        handler = '_handle_' + domain
+        handler = '_handle_{}'.format(domain)
 
         if hasattr(self, handler):
             getattr(self, handler)(state)
@@ -233,8 +232,8 @@ class PrometheusView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Handle request for Prometheus metrics."""
-        _LOGGER.debug('Received Prometheus metrics request')
+        _LOGGER.debug("Received Prometheus metrics request")
 
         return web.Response(
             body=self.prometheus_client.generate_latest(),
-            content_type="text/plain")
+            content_type=CONTENT_TYPE_TEXT_PLAIN)
