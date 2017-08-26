@@ -122,7 +122,6 @@ class XiaomiPlugSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-
         result = yield from self._try_command(
             "Turning the plug on failed.", self._plug.on)
 
