@@ -10,7 +10,6 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.loader import get_component
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
@@ -62,9 +61,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 def request_configuration(hass, config, add_devices, oauth):
     """Request Spotify authorization."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     hass.data[DOMAIN] = configurator.request_config(
-        hass, DEFAULT_NAME, lambda _: None,
+        DEFAULT_NAME, lambda _: None,
         link_name=CONFIGURATOR_LINK_NAME,
         link_url=oauth.get_authorize_url(),
         description=CONFIGURATOR_DESCRIPTION,
@@ -88,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         request_configuration(hass, config, add_devices, oauth)
         return
     if hass.data.get(DOMAIN):
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
     player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
@@ -186,7 +185,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._artist = ', '.join([artist.get('name')
                                       for artist in item.get('artists')])
             self._uri = current.get('uri')
-            self._image_url = item.get('album').get('images')[0].get('url')
+            images = item.get('album').get('images')
+            self._image_url = images[0].get('url') if images else None
         # Playing state
         self._state = STATE_PAUSED
         if current.get('is_playing'):

@@ -5,14 +5,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.tplink/
 """
 import logging
+import colorsys
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
-from homeassistant.util.color import \
-    color_temperature_kelvin_to_mired as kelvin_to_mired
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired)
+
+from typing import Tuple
 
 REQUIREMENTS = ['pyHS100==0.2.4.2']
 
@@ -39,10 +42,26 @@ def brightness_from_percentage(percent):
     return (percent*255.0)/100.0
 
 
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
+def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
+    """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
+    hue, sat, value = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
+    return int(hue * 360), int(sat * 100), int(value * 100)
+
+
+# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
+# pylint: disable=invalid-sequence-index
+def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
+    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
+    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    return int(red * 255), int(green * 255), int(blue * 255)
+
+
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb, name):
+    def __init__(self, smartbulb: 'SmartBulb', name):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
 
@@ -55,6 +74,7 @@ class TPLinkSmartBulb(Light):
         self._state = None
         self._color_temp = None
         self._brightness = None
+        self._rgb = None
         _LOGGER.debug("Setting up TP-Link Smart Bulb")
 
     @property
@@ -64,6 +84,8 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
+        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
                 mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
@@ -72,7 +94,9 @@ class TPLinkSmartBulb(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
             self.smartbulb.brightness = brightness_to_percentage(brightness)
-        self.smartbulb.state = self.smartbulb.BULB_STATE_ON
+        if ATTR_RGB_COLOR in kwargs:
+            rgb = kwargs.get(ATTR_RGB_COLOR)
+            self.smartbulb.hsv = rgb_to_hsv(rgb)
 
     def turn_off(self):
         """Turn the light off."""
@@ -87,6 +111,11 @@ class TPLinkSmartBulb(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def rgb_color(self):
+        """Return the color in RGB."""
+        return self._rgb
 
     @property
     def is_on(self):
@@ -106,10 +135,14 @@ class TPLinkSmartBulb(Light):
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+                self._rgb = hsv_to_rgb(self.smartbulb.hsv)
         except (SmartPlugException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_TPLINK
+        supported_features = SUPPORT_TPLINK
+        if self.smartbulb.is_color:
+            supported_features += SUPPORT_RGB_COLOR
+        return supported_features
