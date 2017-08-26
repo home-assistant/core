@@ -27,7 +27,7 @@ PyJWT==1.5.2
 SoCo==0.12
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.4.0
+aioautomatic==0.6.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -49,7 +49,7 @@ fuzzywuzzy==0.15.1
 gTTS-token==1.1.1
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.5
+ha-ffmpeg==1.7
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.8

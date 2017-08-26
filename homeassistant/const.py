@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 51
-PATCH_VERSION = '2'
+MINOR_VERSION = 52
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -199,7 +199,10 @@ STATE_STANDBY = 'standby'
 STATE_ALARM_DISARMED = 'disarmed'
 STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
+STATE_ALARM_ARMED_NIGHT = 'armed_night'
 STATE_ALARM_PENDING = 'pending'
+STATE_ALARM_ARMING = 'arming'
+STATE_ALARM_DISARMING = 'disarming'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
@@ -347,6 +350,7 @@ SERVICE_SHUFFLE_SET = 'shuffle_set'
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
+SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
 
 SERVICE_LOCK = 'lock'

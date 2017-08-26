@@ -7,35 +7,61 @@ import aioautomatic
 from homeassistant.components.device_tracker.automatic import (
     async_setup_scanner)
 
+from tests.common import mock_http_component
+
 _LOGGER = logging.getLogger(__name__)
 
 
-@patch('aioautomatic.Client.create_session_from_password')
-def test_invalid_credentials(mock_create_session, hass):
+@patch('aioautomatic.Client.create_session_from_refresh_token')
+@patch('json.load')
+@patch('json.dump')
+@patch('os.makedirs')
+@patch('os.path.isfile', return_value=True)
+@patch('homeassistant.components.device_tracker.automatic.open', create=True)
+def test_invalid_credentials(
+        mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
+        mock_create_session, hass):
     """Test with invalid credentials."""
+    mock_http_component(hass)
+
+    mock_json_load.return_value = {'refresh_token': 'bad_token'}
+
     @asyncio.coroutine
     def get_session(*args, **kwargs):
         """Return the test session."""
-        raise aioautomatic.exceptions.ForbiddenError()
+        raise aioautomatic.exceptions.BadRequestError(
+            'err_invalid_refresh_token')
 
     mock_create_session.side_effect = get_session
 
     config = {
         'platform': 'automatic',
-        'username': 'bad_username',
-        'password': 'bad_password',
         'client_id': 'client_id',
         'secret': 'client_secret',
         'devices': None,
     }
-    result = hass.loop.run_until_complete(
+    hass.loop.run_until_complete(
         async_setup_scanner(hass, config, None))
-    assert not result
+    assert mock_create_session.called
+    assert len(mock_create_session.mock_calls) == 1
+    assert mock_create_session.mock_calls[0][1][0] == 'bad_token'
 
 
-@patch('aioautomatic.Client.create_session_from_password')
-def test_valid_credentials(mock_create_session, hass):
+@patch('aioautomatic.Client.create_session_from_refresh_token')
+@patch('aioautomatic.Client.ws_connect')
+@patch('json.load')
+@patch('json.dump')
+@patch('os.makedirs')
+@patch('os.path.isfile', return_value=True)
+@patch('homeassistant.components.device_tracker.automatic.open', create=True)
+def test_valid_credentials(
+        mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
+        mock_ws_connect, mock_create_session, hass):
     """Test with valid credentials."""
+    mock_http_component(hass)
+
+    mock_json_load.return_value = {'refresh_token': 'good_token'}
+
     session = MagicMock()
     vehicle = MagicMock()
     trip = MagicMock()
@@ -66,13 +92,21 @@ def test_valid_credentials(mock_create_session, hass):
         return [trip]
 
     mock_create_session.side_effect = get_session
+    session.ws_connect = MagicMock()
     session.get_vehicles.side_effect = get_vehicles
     session.get_trips.side_effect = get_trips
+    session.refresh_token = 'mock_refresh_token'
+
+    @asyncio.coroutine
+    def ws_connect():
+        return asyncio.Future(loop=hass.loop)
+
+    mock_ws_connect.side_effect = ws_connect
 
     config = {
         'platform': 'automatic',
-        'username': 'bad_username',
-        'password': 'bad_password',
+        'username': 'good_username',
+        'password': 'good_password',
         'client_id': 'client_id',
         'secret': 'client_secret',
         'devices': None,
@@ -80,7 +114,14 @@ def test_valid_credentials(mock_create_session, hass):
     result = hass.loop.run_until_complete(
         async_setup_scanner(hass, config, mock_see))
 
+    hass.async_block_till_done()
+
     assert result
+
+    assert mock_create_session.called
+    assert len(mock_create_session.mock_calls) == 1
+    assert mock_create_session.mock_calls[0][1][0] == 'good_token'
+
     assert mock_see.called
     assert len(mock_see.mock_calls) == 2
     assert mock_see.mock_calls[0][2]['dev_id'] == 'mock_id'
@@ -89,3 +130,9 @@ def test_valid_credentials(mock_create_session, hass):
     assert mock_see.mock_calls[0][2]['attributes'] == {'fuel_level': 45.6}
     assert mock_see.mock_calls[0][2]['gps'] == (45.567, 34.345)
     assert mock_see.mock_calls[0][2]['gps_accuracy'] == 5.6
+
+    assert mock_json_dump.called
+    assert len(mock_json_dump.mock_calls) == 1
+    assert mock_json_dump.mock_calls[0][1][0] == {
+        'refresh_token': 'mock_refresh_token'
+    }

@@ -18,7 +18,6 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['websocket-client==0.37.0']
@@ -48,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def request_configuration(hass, config, url, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'gpmdp' in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['gpmdp'], "Failed to register, please try again.")
@@ -96,7 +95,7 @@ def request_configuration(hass, config, url, add_devices_callback):
             break
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
-        hass, DEFAULT_NAME, gpmdp_configuration_callback,
+        DEFAULT_NAME, gpmdp_configuration_callback,
         description=(
             'Enter the pin that is displayed in the '
             'Google Play Music Desktop Player.'),
@@ -117,7 +116,7 @@ def setup_gpmdp(hass, config, code, add_devices):
         return
 
     if 'gpmdp' in _CONFIGURING:
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
     add_devices([GPMDP(name, url, code)], True)

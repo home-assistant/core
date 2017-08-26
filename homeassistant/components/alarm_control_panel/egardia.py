@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 
-REQUIREMENTS = ['pythonegardia==1.0.17']
+REQUIREMENTS = ['pythonegardia==1.0.18']
 
 _LOGGER = logging.getLogger(__name__)
 

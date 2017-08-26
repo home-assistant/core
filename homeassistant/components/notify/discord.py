@@ -4,16 +4,18 @@ Discord platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.discord/
 """
-import logging
 import asyncio
+import logging
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService, ATTR_TARGET)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['discord.py==0.16.8']
+REQUIREMENTS = ['discord.py==0.16.10']
 
 CONF_TOKEN = 'token'
 
@@ -42,13 +44,22 @@ class DiscordNotificationService(BaseNotificationService):
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
+        if ATTR_TARGET not in kwargs:
+            _LOGGER.error("No target specified")
+            return None
+
+        # pylint: disable=unused-variable
         @discord_bot.event
         @asyncio.coroutine
-        def on_ready():  # pylint: disable=unused-variable
+        def on_ready():
             """Send the messages when the bot is ready."""
-            for channelid in kwargs[ATTR_TARGET]:
-                channel = discord.Object(id=channelid)
-                yield from discord_bot.send_message(channel, message)
+            try:
+                for channelid in kwargs[ATTR_TARGET]:
+                    channel = discord.Object(id=channelid)
+                    yield from discord_bot.send_message(channel, message)
+            except (discord.errors.HTTPException,
+                    discord.errors.NotFound) as error:
+                _LOGGER.warning("Communication error: %s", error)
             yield from discord_bot.logout()
             yield from discord_bot.close()
 
