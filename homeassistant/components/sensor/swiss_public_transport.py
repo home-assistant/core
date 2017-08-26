@@ -136,7 +136,7 @@ class PublicTransportData(object):
             'fields[]=connections/from/departureTimestamp/&' +
             'fields[]=connections/',
             timeout=10)
-        connections = response.json()['connections'][:2]
+        connections = response.json()['connections'][1:3]
 
         try:
             self.times = [

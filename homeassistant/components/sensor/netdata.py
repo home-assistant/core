@@ -38,11 +38,12 @@ SENSOR_TYPES = {
                           'running', 0],
     'processes_blocked': ['Processes Blocked', 'Count', 'system.processes',
                           'blocked', 0],
-    'system_load': ['System Load', '15 min', 'system.processes', 'running', 2],
+    'system_load': ['System Load', '15 min', 'system.load', 'load15', 2],
     'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
     'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
     'ipv4_in': ['IPv4 In', 'kb/s', 'system.ipv4', 'received', 0],
     'ipv4_out': ['IPv4 Out', 'kb/s', 'system.ipv4', 'sent', 0],
+    'disk_free': ['Disk Free', 'GiB', 'disk_space._', 'avail', 2],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

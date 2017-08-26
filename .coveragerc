@@ -8,6 +8,9 @@ omit =
     homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/abode.py
+    homeassistant/components/*/abode.py
+
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
@@ -176,6 +179,9 @@ omit =
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
+    homeassistant/components/usps.py
+    homeassistant/components/*/usps.py
+
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
 
@@ -326,6 +332,7 @@ omit =
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/lock/nello.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/lockitron.py
     homeassistant/components/lock/sesame.py
@@ -383,6 +390,7 @@ omit =
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py
+    homeassistant/components/notify/hipchat.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
@@ -391,6 +399,7 @@ omit =
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nfandroidtv.py
     homeassistant/components/notify/nma.py
+    homeassistant/components/notify/prowl.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
@@ -517,9 +526,9 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
-    homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py

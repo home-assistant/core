@@ -17,10 +17,10 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
+from homeassistant.util.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fitbit==0.2.3']
+REQUIREMENTS = ['fitbit==0.3.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
 
 CONF_MONITORED_RESOURCES = 'monitored_resources'
+CONF_CLOCK_FORMAT = 'clock_format'
 CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
@@ -49,40 +50,50 @@ DEFAULT_CONFIG = {
 }
 
 FITBIT_RESOURCES_LIST = {
-    'activities/activityCalories': 'cal',
-    'activities/calories': 'cal',
-    'activities/caloriesBMR': 'cal',
-    'activities/distance': '',
-    'activities/elevation': '',
-    'activities/floors': 'floors',
-    'activities/heart': 'bpm',
-    'activities/minutesFairlyActive': 'minutes',
-    'activities/minutesLightlyActive': 'minutes',
-    'activities/minutesSedentary': 'minutes',
-    'activities/minutesVeryActive': 'minutes',
-    'activities/steps': 'steps',
-    'activities/tracker/activityCalories': 'cal',
-    'activities/tracker/calories': 'cal',
-    'activities/tracker/distance': '',
-    'activities/tracker/elevation': '',
-    'activities/tracker/floors': 'floors',
-    'activities/tracker/minutesFairlyActive': 'minutes',
-    'activities/tracker/minutesLightlyActive': 'minutes',
-    'activities/tracker/minutesSedentary': 'minutes',
-    'activities/tracker/minutesVeryActive': 'minutes',
-    'activities/tracker/steps': 'steps',
-    'body/bmi': 'BMI',
-    'body/fat': '%',
-    'devices/battery': 'level',
-    'sleep/awakeningsCount': 'times awaken',
-    'sleep/efficiency': '%',
-    'sleep/minutesAfterWakeup': 'minutes',
-    'sleep/minutesAsleep': 'minutes',
-    'sleep/minutesAwake': 'minutes',
-    'sleep/minutesToFallAsleep': 'minutes',
-    'sleep/startTime': 'start time',
-    'sleep/timeInBed': 'time in bed',
-    'body/weight': ''
+    'activities/activityCalories': ['Activity Calories', 'cal', 'fire'],
+    'activities/calories': ['Calories', 'cal', 'fire'],
+    'activities/caloriesBMR': ['Calories BMR', 'cal', 'fire'],
+    'activities/distance': ['Distance', '', 'map-marker'],
+    'activities/elevation': ['Elevation', '', 'walk'],
+    'activities/floors': ['Floors', 'floors', 'walk'],
+    'activities/heart': ['Resting Heart Rate', 'bpm', 'heart-pulse'],
+    'activities/minutesFairlyActive':
+        ['Minutes Fairly Active', 'minutes', 'walk'],
+    'activities/minutesLightlyActive':
+        ['Minutes Lightly Active', 'minutes', 'walk'],
+    'activities/minutesSedentary':
+        ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+    'activities/minutesVeryActive': ['Minutes Very Active', 'minutes', 'run'],
+    'activities/steps': ['Steps', 'steps', 'walk'],
+    'activities/tracker/activityCalories':
+        ['Tracker Activity Calories', 'cal', 'fire'],
+    'activities/tracker/calories': ['Tracker Calories', 'cal', 'fire'],
+    'activities/tracker/distance': ['Tracker Distance', '', 'map-marker'],
+    'activities/tracker/elevation': ['Tracker Elevation', '', 'walk'],
+    'activities/tracker/floors': ['Tracker Floors', 'floors', 'walk'],
+    'activities/tracker/minutesFairlyActive':
+        ['Tracker Minutes Fairly Active', 'minutes', 'walk'],
+    'activities/tracker/minutesLightlyActive':
+        ['Tracker Minutes Lightly Active', 'minutes', 'walk'],
+    'activities/tracker/minutesSedentary':
+        ['Tracker Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+    'activities/tracker/minutesVeryActive':
+        ['Tracker Minutes Very Active', 'minutes', 'run'],
+    'activities/tracker/steps': ['Tracker Steps', 'steps', 'walk'],
+    'body/bmi': ['BMI', 'BMI', 'human'],
+    'body/fat': ['Body Fat', '%', 'human'],
+    'body/weight': ['Weight', '', 'human'],
+    'devices/battery': ['Battery', None, None],
+    'sleep/awakeningsCount':
+        ['Awakenings Count', 'times awaken', 'sleep'],
+    'sleep/efficiency': ['Sleep Efficiency', '%', 'sleep'],
+    'sleep/minutesAfterWakeup': ['Minutes After Wakeup', 'minutes', 'sleep'],
+    'sleep/minutesAsleep': ['Sleep Minutes Asleep', 'minutes', 'sleep'],
+    'sleep/minutesAwake': ['Sleep Minutes Awake', 'minutes', 'sleep'],
+    'sleep/minutesToFallAsleep':
+        ['Sleep Minutes to Fall Asleep', 'minutes', 'sleep'],
+    'sleep/startTime': ['Sleep Start Time', None, 'clock'],
+    'sleep/timeInBed': ['Sleep Time in Bed', 'minutes', 'hotel']
 }
 
 FITBIT_MEASUREMENTS = {
@@ -121,9 +132,18 @@ FITBIT_MEASUREMENTS = {
     }
 }
 
+BATTERY_LEVELS = {
+    'High': 100,
+    'Medium': 50,
+    'Low': 20,
+    'Empty': 0
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
+    vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
+        vol.In(['12H', '24H'])
 })
 
 
@@ -155,7 +175,7 @@ def config_from_file(filename, config=None):
 def request_app_setup(hass, config, add_devices, config_path,
                       discovery_info=None):
     """Assist user with configuring the Fitbit dev application."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
@@ -166,7 +186,8 @@ def request_app_setup(hass, config, add_devices, config_path,
             if config_file == DEFAULT_CONFIG:
                 error_msg = ("You didn't correctly modify fitbit.conf",
                              " please try again")
-                configurator.notify_errors(_CONFIGURING['fitbit'], error_msg)
+                configurator.notify_errors(_CONFIGURING['fitbit'],
+                                           error_msg)
             else:
                 setup_platform(hass, config, add_devices, discovery_info)
         else:
@@ -187,7 +208,7 @@ def request_app_setup(hass, config, add_devices, config_path,
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
     _CONFIGURING['fitbit'] = configurator.request_config(
-        hass, 'Fitbit', fitbit_configuration_callback,
+        'Fitbit', fitbit_configuration_callback,
         description=description, submit_caption=submit,
         description_image="/static/images/config_fitbit_app.png"
     )
@@ -195,7 +216,7 @@ def request_app_setup(hass, config, add_devices, config_path,
 
 def request_oauth_completion(hass):
     """Request user complete Fitbit OAuth2 flow."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
             _CONFIGURING['fitbit'], "Failed to register, please try again.")
@@ -211,7 +232,7 @@ def request_oauth_completion(hass):
     description = "Please authorize Fitbit by visiting {}".format(start_url)
 
     _CONFIGURING['fitbit'] = configurator.request_config(
-        hass, 'Fitbit', fitbit_configuration_callback,
+        'Fitbit', fitbit_configuration_callback,
         description=description,
         submit_caption="I have authorized Fitbit."
     )
@@ -233,7 +254,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if "fitbit" in _CONFIGURING:
-        get_component('configurator').request_done(_CONFIGURING.pop("fitbit"))
+        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
 
     import fitbit
 
@@ -257,6 +278,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         dev = []
         registered_devs = authd_client.get_devices()
+        clock_format = config.get(CONF_CLOCK_FORMAT)
         for resource in config.get(CONF_MONITORED_RESOURCES):
 
             # monitor battery for all linked FitBit devices
@@ -264,11 +286,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 for dev_extra in registered_devs:
                     dev.append(FitbitSensor(
                         authd_client, config_path, resource,
-                        hass.config.units.is_metric, dev_extra))
+                        hass.config.units.is_metric, clock_format, dev_extra))
             else:
                 dev.append(FitbitSensor(
                     authd_client, config_path, resource,
-                    hass.config.units.is_metric))
+                    hass.config.units.is_metric, clock_format))
         add_devices(dev, True)
 
     else:
@@ -361,34 +383,24 @@ class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
     def __init__(self, client, config_path, resource_type,
-                 is_metric, extra=None):
+                 is_metric, clock_format, extra=None):
         """Initialize the Fitbit sensor."""
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
+        self.is_metric = is_metric
+        self.clock_format = clock_format
         self.extra = extra
-        pretty_resource = self.resource_type.replace('activities/', '')
-        pretty_resource = pretty_resource.replace('/', ' ')
-        pretty_resource = pretty_resource.title()
-        if pretty_resource == 'Body Bmi':
-            pretty_resource = 'BMI'
-        elif pretty_resource == 'Heart':
-            pretty_resource = 'Resting Heart Rate'
-        elif pretty_resource == 'Devices Battery':
-            if self.extra:
-                pretty_resource = \
-                    '{0} Battery'.format(self.extra.get('deviceVersion'))
-            else:
-                pretty_resource = 'Battery'
-
-        self._name = pretty_resource
-        unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
+        self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
+        if self.extra:
+            self._name = '{0} Battery'.format(self.extra.get('deviceVersion'))
+        unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split('/')
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
-                if is_metric:
+                if self.is_metric:
                     measurement_system = FITBIT_MEASUREMENTS['metric']
                 else:
                     measurement_system = FITBIT_MEASUREMENTS['en_US']
@@ -414,9 +426,11 @@ class FitbitSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self.resource_type == 'devices/battery':
-            return 'mdi:battery-50'
-        return 'mdi:walk'
+        if self.resource_type == 'devices/battery' and self.extra:
+            battery_level = BATTERY_LEVELS[self.extra.get('battery')]
+            return icon_for_battery_level(battery_level=battery_level,
+                                          charging=None)
+        return 'mdi:{}'.format(FITBIT_RESOURCES_LIST[self.resource_type][2])
 
     @property
     def device_state_attributes(self):
@@ -427,7 +441,7 @@ class FitbitSensor(Entity):
 
         if self.extra:
             attrs['model'] = self.extra.get('deviceVersion')
-            attrs['type'] = self.extra.get('type')
+            attrs['type'] = self.extra.get('type').lower()
 
         return attrs
 
@@ -438,7 +452,40 @@ class FitbitSensor(Entity):
         else:
             container = self.resource_type.replace("/", "-")
             response = self.client.time_series(self.resource_type, period='7d')
-            self._state = response[container][-1].get('value')
+            raw_state = response[container][-1].get('value')
+            if self.resource_type == 'activities/distance':
+                self._state = format(float(raw_state), '.2f')
+            elif self.resource_type == 'activities/tracker/distance':
+                self._state = format(float(raw_state), '.2f')
+            elif self.resource_type == 'body/bmi':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'body/fat':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'body/weight':
+                self._state = format(float(raw_state), '.1f')
+            elif self.resource_type == 'sleep/startTime':
+                if raw_state == '':
+                    self._state = '-'
+                elif self.clock_format == '12H':
+                    hours, minutes = raw_state.split(':')
+                    hours, minutes = int(hours), int(minutes)
+                    setting = 'AM'
+                    if hours > 12:
+                        setting = 'PM'
+                        hours -= 12
+                    elif hours == 0:
+                        hours = 12
+                    self._state = '{}:{} {}'.format(hours, minutes, setting)
+                else:
+                    self._state = raw_state
+            else:
+                if self.is_metric:
+                    self._state = raw_state
+                else:
+                    try:
+                        self._state = '{0:,}'.format(int(raw_state))
+                    except TypeError:
+                        self._state = raw_state
 
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \

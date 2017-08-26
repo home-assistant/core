@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if ipaddr in light_ips:
             continue
         device['name'] = '{} {}'.format(device['id'], ipaddr)
-        device[ATTR_MODE] = 'rgbw'
+        device[ATTR_MODE] = MODE_RGBW
         device[CONF_PROTOCOL] = None
         light = FluxLight(device)
         lights.append(light)
@@ -216,9 +216,9 @@ class FluxLight(Light):
         elif rgb is not None:
             self._bulb.setRgb(*tuple(rgb))
         elif brightness is not None:
-            if self._mode == 'rgbw':
+            if self._mode == MODE_RGBW:
                 self._bulb.setWarmWhite255(brightness)
-            elif self._mode == 'rgb':
+            elif self._mode == MODE_RGB:
                 (red, green, blue) = self._bulb.getRgb()
                 self._bulb.setRgb(red, green, blue, brightness=brightness)
         elif effect == EFFECT_RANDOM:
