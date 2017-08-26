@@ -53,7 +53,7 @@ class FoscamCam(Camera):
         self._name = device_info.get(CONF_NAME)
         self._motion_status = False
 
-        from foscam import FoscamCamera
+        from foscam.foscam import FoscamCamera
 
         self._foscam_session = FoscamCamera(ip_address, port, self._username,
                                             self._password, verbose=False)
