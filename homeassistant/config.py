@@ -177,12 +177,15 @@ def create_default_config(config_dir, detect_location=True):
         CONFIG_PATH as AUTOMATION_CONFIG_PATH)
     from homeassistant.components.config.script import (
         CONFIG_PATH as SCRIPT_CONFIG_PATH)
+    from homeassistant.components.config.customize import (
+        CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
+    customize_yaml_path = os.path.join(config_dir, CUSTOMIZE_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -228,6 +231,9 @@ def create_default_config(config_dir, detect_location=True):
             fil.write('[]')
 
         with open(script_yaml_path, 'wt'):
+            pass
+
+        with open(customize_yaml_path, 'wt'):
             pass
 
         return config_path
