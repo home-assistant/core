@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
+ATTR_FILE_URL = 'file_url'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -82,14 +83,17 @@ class PushBulletNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
         url = None
         filepath = None
+        file_url = None
         if data:
-            url = data.get(ATTR_URL, None)
-            filepath = data.get(ATTR_FILE, None)
+            url = data.get(ATTR_URL)
+            filepath = data.get(ATTR_FILE)
+            file_url = data.get(ATTR_FILE_URL)
         refreshed = False
 
         if not targets:
             # Backward compatibility, notify all devices in own account
-            self._push_data(filepath, message, title, self.pushbullet, url)
+            self._push_data(filepath, message, title, file_url,
+                            self.pushbullet, url)
             _LOGGER.info("Sent notification to self")
             return
 
@@ -104,7 +108,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                self._push_data(filepath, message, title, url,
+                self._push_data(filepath, message, title, url, file_url,
                                 self.pushbullet, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
                 continue
@@ -124,18 +128,24 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                self._push_data(filepath, message, title, url,
+                self._push_data(filepath, message, title, url, file_url,
                                 self.pbtargets[ttype][tname])
                 _LOGGER.info("Sent notification to %s/%s", ttype, tname)
             except KeyError:
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, filepath, message, title, url, pusher, tname=None):
+    def _push_data(self, filepath, message, title, url, file_url, pusher, tname=None):
         from pushbullet import PushError
+        from pushbullet import Device
         try:
             if url:
                 pusher.push_link(title, url, body=message, email=tname)
+            elif file_url:
+                import mimetypes
+                pusher.push_file(title=title, body=message, file_name=file_url,
+                                 file_url=file_url,
+                                 file_type=mimetypes.guess_type(file_url)[0])
             elif filepath and self.hass.config.is_allowed_path(filepath):
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
@@ -144,7 +154,10 @@ class PushBulletNotificationService(BaseNotificationService):
                         return
                     pusher.push_file(title=title, body=message, **filedata)
             else:
-                pusher.push_note(title, message, email=tname)
+                if isinstance(pusher, Device):
+                    pusher.push_note(title, message)
+                else:
+                    pusher.push_note(title, message, email=tname)
 
         except PushError as err:
             _LOGGER.error("Notify failed: %s", err)
