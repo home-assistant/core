@@ -145,7 +145,7 @@ class XiaomiPlugSwitch(SwitchDevice):
         """Fetch state from the device."""
         from mirobo import DeviceException
 
-        # On changed state the device doesn't provide the new state immediately.
+        # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
             return
