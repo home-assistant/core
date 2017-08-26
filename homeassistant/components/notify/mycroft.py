@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['websocket-client']
+REQUIREMENTS = ['websocket-client==0.44.0']
 
 _LOGGER = logging.getLogger(__name__)
 
