@@ -177,8 +177,6 @@ class XiaomiPhilipsLight(Light):
         if result:
             self._state = True
 
-        self.hass.async_add_job(self.async_update_ha_state())
-
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -187,8 +185,6 @@ class XiaomiPhilipsLight(Light):
 
         if result:
             self._state = True
-
-        self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_update(self):
