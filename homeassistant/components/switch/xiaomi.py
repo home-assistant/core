@@ -6,9 +6,13 @@ from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LOAD_POWER = 'Load power'  # Load power in watts (W)
-ATTR_POWER_CONSUMED = 'Power consumed'
-ATTR_IN_USE = 'In use'
+# Load power in watts (W)
+ATTR_LOAD_POWER = 'load_power'
+
+# Total (lifetime) power consumption in watts
+ATTR_POWER_CONSUMED = 'power_consumed'
+ATTR_IN_USE = 'in_use'
+
 LOAD_POWER = 'load_power'
 POWER_CONSUMED = 'power_consumed'
 IN_USE = 'inuse'

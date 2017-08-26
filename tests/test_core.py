@@ -833,6 +833,9 @@ class TestConfig(unittest.TestCase):
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
 
+            with self.assertRaises(AssertionError):
+                self.config.is_allowed_path(None)
+
 
 @patch('homeassistant.core.monotonic')
 def test_create_timer(mock_monotonic, loop):

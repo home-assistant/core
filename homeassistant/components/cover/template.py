@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START, MATCH_ALL,
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
-    STATE_OPEN, STATE_CLOSED)
+    CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -39,6 +39,8 @@ CLOSE_ACTION = 'close_cover'
 STOP_ACTION = 'stop_cover'
 POSITION_ACTION = 'set_cover_position'
 TILT_ACTION = 'set_cover_tilt_position'
+CONF_TILT_OPTIMISTIC = 'tilt_optimistic'
+
 CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
 CONF_OPEN_OR_CLOSE = 'open_or_close'
 
@@ -56,6 +58,8 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
@@ -83,11 +87,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stop_action = device_config.get(STOP_ACTION)
         position_action = device_config.get(POSITION_ACTION)
         tilt_action = device_config.get(TILT_ACTION)
-
-        if position_template is None and state_template is None:
-            _LOGGER.error('Must specify either %s' or '%s',
-                          CONF_VALUE_TEMPLATE, CONF_VALUE_TEMPLATE)
-            continue
+        optimistic = device_config.get(CONF_OPTIMISTIC)
+        tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
 
         if position_action is None and open_action is None:
             _LOGGER.error('Must specify at least one of %s' or '%s',
@@ -125,7 +126,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 device, friendly_name, state_template,
                 position_template, tilt_template, icon_template,
                 open_action, close_action, stop_action,
-                position_action, tilt_action, entity_ids
+                position_action, tilt_action,
+                optimistic, tilt_optimistic, entity_ids
             )
         )
     if not covers:
@@ -142,7 +144,8 @@ class CoverTemplate(CoverDevice):
     def __init__(self, hass, device_id, friendly_name, state_template,
                  position_template, tilt_template, icon_template,
                  open_action, close_action, stop_action,
-                 position_action, tilt_action, entity_ids):
+                 position_action, tilt_action,
+                 optimistic, tilt_optimistic, entity_ids):
         """Initialize the Template cover."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -167,6 +170,9 @@ class CoverTemplate(CoverDevice):
         self._tilt_script = None
         if tilt_action is not None:
             self._tilt_script = Script(hass, tilt_action)
+        self._optimistic = (optimistic or
+                            (not state_template and not position_template))
+        self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
         self._position = None
         self._tilt_value = None
@@ -260,19 +266,23 @@ class CoverTemplate(CoverDevice):
     def async_open_cover(self, **kwargs):
         """Move the cover up."""
         if self._open_script:
-            self.hass.async_add_job(self._open_script.async_run())
+            yield from self._open_script.async_run()
         elif self._position_script:
-            self.hass.async_add_job(self._position_script.async_run(
-                {"position": 100}))
+            yield from self._position_script.async_run({"position": 100})
+        if self._optimistic:
+            self._position = 100
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
         """Move the cover down."""
         if self._close_script:
-            self.hass.async_add_job(self._close_script.async_run())
+            yield from self._close_script.async_run()
         elif self._position_script:
-            self.hass.async_add_job(self._position_script.async_run(
-                {"position": 0}))
+            yield from self._position_script.async_run({"position": 0})
+        if self._optimistic:
+            self._position = 0
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
@@ -284,29 +294,35 @@ class CoverTemplate(CoverDevice):
     def async_set_cover_position(self, **kwargs):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        self.hass.async_add_job(self._position_script.async_run(
-            {"position": self._position}))
+        yield from self._position_script.async_run(
+            {"position": self._position})
+        if self._optimistic:
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         self._tilt_value = 100
-        self.hass.async_add_job(self._tilt_script.async_run(
-            {"tilt": self._tilt_value}))
+        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        if self._tilt_optimistic:
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         self._tilt_value = 0
-        self.hass.async_add_job(self._tilt_script.async_run(
-            {"tilt": self._tilt_value}))
+        yield from self._tilt_script.async_run(
+            {"tilt": self._tilt_value})
+        if self._tilt_optimistic:
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        self.hass.async_add_job(self._tilt_script.async_run(
-            {"tilt": self._tilt_value}))
+        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        if self._tilt_optimistic:
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_update(self):
