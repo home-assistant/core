@@ -52,7 +52,7 @@ class ZWaveNodeValueView(HomeAssistantView):
         for entity_values in values_list:
             if entity_values.primary.node.node_id != nodeid:
                 continue
-#pylint: disable=protected-access
+# pylint: disable=protected-access
             values_data[entity_values.primary.value_id] = {
                 'entity_id': '{}.{}_{}'.format(
                     entity_values._schema['component'],
