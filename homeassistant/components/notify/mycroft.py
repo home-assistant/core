@@ -43,7 +43,7 @@ class MycroftNotificationService(BaseNotificationService):
         """Send a message mycroft to speak"""
         text = message
         _LOGGER.info("The text we are sending to mycroft is: {}".format(text))
-        ws = create_connection("ws://" + ip + ":8181/core", sslopt={"cert_reqs": ssl.CERT_NONE})
+        ws = create_connection("ws://" + self._ip + ":8181/core", sslopt={"cert_reqs": ssl.CERT_NONE})
         mycroft_speak = ('"{}"'.format(text))
         mycroft_type = '"speak"'
         mycroft_data = '{"expect_response": false, "utterance": %s}, "context": null' % mycroft_speak
