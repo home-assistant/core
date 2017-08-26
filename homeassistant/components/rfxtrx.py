@@ -296,6 +296,8 @@ def get_devices_from_config(config, device, hass):
     devices = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
+        if event is None:
+            continue
         device_id = slugify(event.device.id_string.lower())
         if device_id in RFX_DEVICES:
             continue
