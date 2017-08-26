@@ -575,6 +575,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[2] == 'zwave'
         assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
         assert args[4] == self.zwave_config
+        assert not self.primary.enable_poll.called
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
@@ -709,6 +710,37 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.hass.block_till_done()
 
         assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_config_polling_intensity(self, discovery, get_platform):
+        """Test polling intensity."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {self.entity_id: {
+            zwave.CONF_POLLING_INTENSITY: 123,
+        }}
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        assert self.primary.enable_poll.called
+        assert len(self.primary.enable_poll.mock_calls) == 1
+        assert self.primary.enable_poll.mock_calls[0][1][0] == 123
 
 
 class TestZwave(unittest.TestCase):
@@ -931,6 +963,7 @@ class TestZWaveServices(unittest.TestCase):
         disable_poll = value.disable_poll
         assert value.disable_poll.called
         assert len(disable_poll.mock_calls) == 1
+
 
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""

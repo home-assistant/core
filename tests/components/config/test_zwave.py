@@ -77,7 +77,7 @@ def test_update_device_config(hass, test_client):
             patch('homeassistant.components.config._write', mock_write):
         resp = yield from client.post(
             '/api/config/zwave/device_config/hello.beer', data=json.dumps({
-                'ignored': False
+                'polling_intensity': 2
             }))
 
     assert resp.status == 200
@@ -143,11 +143,10 @@ def test_get_values(hass, test_client):
 
     node = MockNode(node_id=1)
     value = MockValue(value_id=123456, node=node, label='Test Label',
-                      instance=1, index=2, poll_intensity=0)
+                      instance=1, index=2)
     values = MockEntityValues(primary=value)
     node2 = MockNode(node_id=2)
-    value2 = MockValue(value_id=234567, node=node2, label='Test Label 2',
-                       poll_intensity=2)
+    value2 = MockValue(value_id=234567, node=node2, label='Test Label 2')
     values2 = MockEntityValues(primary=value2)
     hass.data[const.DATA_ENTITY_VALUES] = [values, values2]
 
@@ -163,7 +162,6 @@ def test_get_values(hass, test_client):
             'label': 'Test Label',
             'instance': 1,
             'index': 2,
-            'poll_intensity': 0,
         }
     }
 

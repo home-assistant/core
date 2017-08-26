@@ -1,14 +1,16 @@
 """Provide configuration end points for Z-Wave."""
 import asyncio
-
+import logging
 import homeassistant.core as ha
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components.zwave import const, DEVICE_CONFIG_SCHEMA_ENTRY
+from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 
 
+_LOGGER = logging.getLogger(__name__)
 CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 URL_API_OZW_LOG = '/api/zwave/ozwlog'
@@ -50,11 +52,16 @@ class ZWaveNodeValueView(HomeAssistantView):
         for entity_values in values_list:
             if entity_values.primary.node.node_id != nodeid:
                 continue
-
+#pylint: disable=protected-access
             values_data[entity_values.primary.value_id] = {
+                'entity_id': '{}.{}_{}'.format(
+                    entity_values._schema['component'],
+                    slugify(entity_values.primary.node.name),
+                    slugify(entity_values.primary.label)),
                 'label': entity_values.primary.label,
                 'index': entity_values.primary.index,
                 'instance': entity_values.primary.instance,
+                'poll_intensity': entity_values.primary.poll_intensity,
             }
         return self.json(values_data)
 
