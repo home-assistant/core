@@ -328,6 +328,7 @@ omit =
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
+    homeassistant/components/light/xiaomi_philipslight.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
