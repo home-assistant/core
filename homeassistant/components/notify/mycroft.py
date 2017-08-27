@@ -6,7 +6,6 @@ https://home-assistant.io/components/notify.mycroft/
 """
 import logging
 
-import voluptuous as vol
 
 from homeassistant.components.notify import BaseNotificationService
 
@@ -28,8 +27,9 @@ class MycroftNotificationService(BaseNotificationService):
         self.mycroft_ip = mycroft_ip
 
     def send_message(self, message="", **kwargs):
-        from mycroftapi import MycroftAPI
         """Send a message mycroft to speak on instance"""
+        from mycroftapi import MycroftAPI
+
         text = message
         mycroft = MycroftAPI(self.mycroft_ip)
         if mycroft is not None:
