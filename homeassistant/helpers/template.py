@@ -209,7 +209,7 @@ class DomainStates(object):
     def __iter__(self):
         """Return the iteration over all the states."""
         return iter(sorted(
-            (state for state in self._hass.states.async_all()
+            (_wrap_state(state) for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 
