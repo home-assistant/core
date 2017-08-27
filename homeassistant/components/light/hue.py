@@ -84,6 +84,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+GROUP_NAME_ALL_HUE_LIGHTS = "All Hue Lights"
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -211,12 +212,14 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
             # is not returned by get_api() so explicity get it and include it.
             # See https://developers.meethue.com/documentation/
             #               groups-api#21_get_all_groups
+            _LOGGER.debug("Getting group 0 from bridge")
             all_lights = bridge.get_group(0)
             if not isinstance(all_lights, dict):
                 _LOGGER.error("Got unexpected result from Hue API for group 0")
                 return
             # Hue hub returns name of group 0 as "Group 0", so rename 
             # for ease of use in HA.
+            all_lights['name'] = GROUP_NAME_ALL_HUE_LIGHTS
             api_groups["0"] = all_lights
 
         new_lights = []
