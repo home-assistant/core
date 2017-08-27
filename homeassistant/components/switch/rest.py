@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         switch = RestSwitch(name, resource, method, auth, body_on, body_off,
-                    is_on_template, timeout)
+                            is_on_template, timeout)
 
         req = yield from switch._update_current_state(hass)
         if req.status >= 400:
@@ -125,8 +125,9 @@ class RestSwitch(SwitchDevice):
             if req.status == 200:
                 self._state = True
             else:
-                _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
-                              self._resource)
+                _LOGGER.error(
+                    "Can't turn on %s. Is resource/endpoint offline?",
+                    self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn on %s", self._resource)
 
@@ -140,8 +141,9 @@ class RestSwitch(SwitchDevice):
             if req.status == 200:
                 self._state = False
             else:
-                _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
-                              self._resource)
+                _LOGGER.error(
+                    "Can't turn off %s. Is resource/endpoint offline?",
+                    self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn off %s", self._resource)
 
