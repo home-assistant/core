@@ -16,7 +16,9 @@ REQUIREMENTS = ['mycroftapi']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 DOMAIN = 'mycroft'
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
