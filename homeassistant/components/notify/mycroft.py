@@ -8,8 +8,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (mycroft_ip)
+    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['mycroftapi==0.1.2']
@@ -21,6 +20,7 @@ mycroft_ip = 'mycroft_ip'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(mycroft_ip): cv.string
 })
+
 
 def get_service(hass, config, discovery_info=None):
     """Get the Mycroft notification service."""
