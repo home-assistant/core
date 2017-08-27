@@ -15,6 +15,10 @@ REQUIREMENTS = ['mycroftapi==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+def get_service(hass, config, discovery_info=None):
+    """Get the Mycroft notification service."""
+    return MycroftNotificationService(
+        hass.data['mycroft'])
 
 class MycroftNotificationService(BaseNotificationService):
     """The Mycroft Notification Service."""
@@ -32,5 +36,3 @@ class MycroftNotificationService(BaseNotificationService):
             mycroft.speak_text(text)
         else:
             _LOGGER.log("Could not reach this instance of mycroft")
-
-     return MycroftNotificationService(hass.data['mycroft'])
