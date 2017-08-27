@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             req = yield from websession.get(resource, auth=auth)
 
         if req.status >= 400:
@@ -90,18 +90,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     async_add_devices(
-        [RestSwitch(hass, name, resource, method, auth, body_on, body_off,
+        [RestSwitch(name, resource, method, auth, body_on, body_off,
                     is_on_template, timeout)])
 
 
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, method, auth, body_on, body_off,
+    def __init__(self, name, resource, method, auth, body_on, body_off,
                  is_on_template, timeout):
         """Initialize the REST switch."""
         self._state = None
-        self.hass = hass
         self._name = name
         self._resource = resource
         self._method = method
@@ -128,7 +127,7 @@ class RestSwitch(SwitchDevice):
         websession = async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self._timeout):
                 request = yield from getattr(websession, self._method)(
                     self._resource, auth=self._auth,
                     data=bytes(body_on_t, 'utf-8'))
@@ -149,7 +148,7 @@ class RestSwitch(SwitchDevice):
         websession = async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self._timeout):
                 request = yield from getattr(websession, self._method)(
                     self._resource, auth=self._auth,
                     data=bytes(body_off_t, 'utf-8'))
@@ -169,7 +168,7 @@ class RestSwitch(SwitchDevice):
         websession = async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self._timeout):
                 request = yield from websession.get(self._resource,
                     auth=self._auth)
                 text = yield from request.text()
