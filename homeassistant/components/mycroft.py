@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import mycroft_ip
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,8 +30,7 @@ def setup(hass, config):
     """Set up the Mycroft component."""
     from mycroftapi import MycroftAPI
 
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
 
-    mycroft_ip = config[DOMAIN].get(mycroft_ip)
 
     return True
