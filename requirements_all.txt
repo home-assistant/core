@@ -415,6 +415,9 @@ miniupnpc==1.9
 # homeassistant.components.tts
 mutagen==1.38
 
+# homeassistant.components.mycroft
+mycroftapi==0.1.2
+
 # homeassistant.components.usps
 myusps==1.1.3
 
