@@ -217,7 +217,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
             if not isinstance(all_lights, dict):
                 _LOGGER.error("Got unexpected result from Hue API for group 0")
                 return
-            # Hue hub returns name of group 0 as "Group 0", so rename 
+            # Hue hub returns name of group 0 as "Group 0", so rename
             # for ease of use in HA.
             all_lights['name'] = GROUP_NAME_ALL_HUE_LIGHTS
             api_groups["0"] = all_lights
