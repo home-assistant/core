@@ -1,5 +1,6 @@
 """
 Support for Mycroft AI.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mycroft
 """
@@ -8,9 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['mycroftapi']
