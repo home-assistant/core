@@ -49,6 +49,9 @@ CONF_TOPIC_IN_PREFIX = 'topic_in_prefix'
 CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
 CONF_VERSION = 'version'
 
+CONF_NODES = 'nodes'
+CONF_NODE_NAME = 'name'
+
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = '1.4'
@@ -132,6 +135,12 @@ def deprecated(key):
     return validator
 
 
+NODE_SCHEMA = vol.Schema({
+    cv.positive_int: {
+        vol.Required(CONF_NODE_NAME): cv.string
+    }
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(deprecated(CONF_DEBUG), {
         vol.Required(CONF_GATEWAYS): vol.All(
@@ -151,6 +160,7 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
                 vol.Optional(
                     CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+                vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
@@ -358,6 +368,7 @@ def setup(hass, config):
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
+            ready_gateway.nodes_config = gway.get(CONF_NODES)
             gateways[id(ready_gateway)] = ready_gateway
 
     if not gateways:
@@ -495,8 +506,13 @@ def gw_callback_factory(hass):
 
 def get_mysensors_name(gateway, node_id, child_id):
     """Return a name for a node child."""
-    return '{} {} {}'.format(
-        gateway.sensors[node_id].sketch_name, node_id, child_id)
+    node_name = '{} {}'.format(
+        gateway.sensors[node_id].sketch_name, node_id)
+    node_name = next(
+        (node[CONF_NODE_NAME] for conf_id, node in gateway.nodes_config.items()
+         if node.get(CONF_NODE_NAME) is not None and conf_id == node_id),
+        node_name)
+    return '{} {}'.format(node_name, child_id)
 
 
 def get_mysensors_gateway(hass, gateway_id):
