@@ -13,7 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD)
+    CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD, CONF_USERNAME,
+    CONF_PASSWORD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
@@ -41,6 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
 })
 
 
@@ -53,8 +56,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
     method = config.get(CONF_METHOD)
     name = config.get(CONF_NAME)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
     websession = async_get_clientsession(hass)
+
+    auth = None
+    if username:
+        auth = aiohttp.BasicAuth(username, password=password)
 
     if is_on_template is not None:
         is_on_template.hass = hass
@@ -66,7 +75,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            req = yield from websession.get(resource)
+            req = yield from websession.get(resource, auth=auth)
 
         if req.status >= 400:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
@@ -81,14 +90,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     async_add_devices(
-        [RestSwitch(hass, name, resource, method, body_on, body_off,
+        [RestSwitch(hass, name, resource, method, auth, body_on, body_off,
                     is_on_template, timeout)])
 
 
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, method, body_on, body_off,
+    def __init__(self, hass, name, resource, method, auth, body_on, body_off,
                  is_on_template, timeout):
         """Initialize the REST switch."""
         self._state = None
@@ -96,6 +105,7 @@ class RestSwitch(SwitchDevice):
         self._name = name
         self._resource = resource
         self._method = method
+        self._auth = auth
         self._body_on = body_on
         self._body_off = body_off
         self._is_on_template = is_on_template
@@ -120,7 +130,8 @@ class RestSwitch(SwitchDevice):
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from getattr(websession, self._method)(
-                    self._resource, data=bytes(body_on_t, 'utf-8'))
+                    self._resource, auth=self._auth,
+                    data=bytes(body_on_t, 'utf-8'))
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn on %s", self._resource)
             return
@@ -140,7 +151,8 @@ class RestSwitch(SwitchDevice):
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from getattr(websession, self._method)(
-                    self._resource, data=bytes(body_off_t, 'utf-8'))
+                    self._resource, auth=self._auth,
+                    data=bytes(body_off_t, 'utf-8'))
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn off %s", self._resource)
             return
@@ -158,7 +170,8 @@ class RestSwitch(SwitchDevice):
 
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
-                request = yield from websession.get(self._resource)
+                request = yield from websession.get(self._resource,
+                    auth=self._auth)
                 text = yield from request.text()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error while fetch data.")
