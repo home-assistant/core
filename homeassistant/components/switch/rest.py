@@ -118,43 +118,42 @@ class RestSwitch(SwitchDevice):
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         body_on_t = self._body_on.async_render()
-        websession = async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(self._timeout):
-                request = yield from getattr(websession, self._method)(
-                    self._resource, auth=self._auth,
-                    data=bytes(body_on_t, 'utf-8'))
+            req = yield from self._send_update(body_on_t)
+
+            if req.status == 200:
+                self._state = True
+            else:
+                _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
+                              self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn on %s", self._resource)
-            return
-
-        if request.status == 200:
-            self._state = True
-        else:
-            _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
-                          self._resource)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
         body_off_t = self._body_off.async_render()
-        websession = async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(self._timeout):
-                request = yield from getattr(websession, self._method)(
-                    self._resource, auth=self._auth,
-                    data=bytes(body_off_t, 'utf-8'))
+            req = yield from self._send_update(body_off_t)
+            if req.status == 200:
+                self._state = False
+            else:
+                _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
+                              self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn off %s", self._resource)
-            return
 
-        if request.status == 200:
-            self._state = False
-        else:
-            _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
-                          self._resource)
+    @asyncio.coroutine
+    def _send_update(self, body):
+        """Send a state update to the device."""
+        websession = async_get_clientsession(self.hass)
+
+        with async_timeout.timeout(self._timeout):
+            req = yield from getattr(websession, self._method)(
+                self._resource, auth=self._auth, data=bytes(body, 'utf-8'))
+            return req
 
     @asyncio.coroutine
     def async_update(self):
