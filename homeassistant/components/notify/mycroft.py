@@ -33,4 +33,4 @@ class MycroftNotificationService(BaseNotificationService):
         else:
             _LOGGER.log("Could not reach this instance of mycroft")
 
-return MycroftNotificationService(hass.data['mycroft'])
+     return MycroftNotificationService(hass.data['mycroft'])
