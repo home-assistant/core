@@ -158,7 +158,7 @@ def test_missing_themes(mock_http_client):
 
 @asyncio.coroutine
 def test_extra_urls(mock_http_client_with_urls):
-    """Test that extra urls are loaded"""
+    """Test that extra urls are loaded."""
     resp = yield from mock_http_client_with_urls.get('/states')
     assert resp.status == 200
     text = yield from resp.text()

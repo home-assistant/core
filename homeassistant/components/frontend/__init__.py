@@ -174,12 +174,12 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
 
 @bind_hass
-def add_extra_html_urls(hass, urls):
-    """Register extra html urls to load."""
+def add_extra_html_url(hass, url):
+    """Register extra html url to load."""
     url_set = hass.data.get(DATA_EXTRA_HTML_URL)
     if url_set is None:
         url_set = hass.data[DATA_EXTRA_HTML_URL] = set()
-    url_set.update(urls)
+    url_set.add(url)
 
 
 def add_manifest_json_key(key, val):
@@ -233,8 +233,8 @@ def setup(hass, config):
     themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
     setup_themes(hass, themes)
 
-    add_extra_html_urls(
-        hass, config.get(DOMAIN, {}).get(ATTR_EXTRA_HTML_URL, []))
+    for url in config.get(DOMAIN, {}).get(ATTR_EXTRA_HTML_URL, []):
+        add_extra_html_url(hass, url)
 
     return True
 
