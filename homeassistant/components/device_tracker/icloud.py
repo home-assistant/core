@@ -307,12 +307,15 @@ class Icloud(DeviceScanner):
             self.api.authenticate()
 
         currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
-        for devicename in self.devices:
-            interval = self._intervals.get(devicename, 1)
-            if ((currentminutes % interval == 0) or
-                    (interval > 10 and
-                     currentminutes % interval in [2, 4])):
-                self.update_device(devicename)
+        try:
+            for devicename in self.devices:
+                interval = self._intervals.get(devicename, 1)
+                if ((currentminutes % interval == 0) or
+                        (interval > 10 and
+                         currentminutes % interval in [2, 4])):
+                    self.update_device(devicename)
+        except ValueError:
+            _LOGGER.debug('iCloud API returned an error.')
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
