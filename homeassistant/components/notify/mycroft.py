@@ -1,5 +1,6 @@
 """
-Mycroft AI notification platform
+Mycroft AI notification platform.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.mycroft/
 """
@@ -8,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE)
+    PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['mycroftapi==0.1.2']
@@ -44,4 +45,3 @@ class MycroftNotificationService(BaseNotificationService):
             mycroft.speak_text(text)
         else:
             _LOGGER.log("Could not reach this instance of mycroft")
-
