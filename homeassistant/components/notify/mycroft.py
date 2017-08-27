@@ -11,6 +11,8 @@ from homeassistant.components.notify import BaseNotificationService
 
 DEPENDENCIES = ['mycroft']
 
+REQUIREMENTS = ['mycroftapi==0.1.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 
