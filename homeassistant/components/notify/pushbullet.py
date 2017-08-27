@@ -135,7 +135,8 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, filepath, message, title, url, file_url, pusher, tname=None):
+    def _push_data(self, filepath, message, title, url,
+                   file_url, pusher, tname=None):
         from pushbullet import PushError
         from pushbullet import Device
         try:
