@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the Mycroft notification service."""
+    _LOGGER.(hass.data)
     return MycroftNotificationService(
         hass.data['mycroft'])
 
