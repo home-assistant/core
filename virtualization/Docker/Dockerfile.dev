@@ -45,6 +45,7 @@ COPY requirements_test_all.txt setup.cfg setup.py tox.ini ./
 COPY homeassistant/const.py homeassistant/const.py
 
 # Prefetch dependencies for tox
+COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 RUN tox -e py36 --notest
 
 # END: Development additions
