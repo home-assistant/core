@@ -87,7 +87,7 @@ def async_setup(hass, config):
             ('cover', 'Cover'),
             ('light', 'Light'),
             ('sensor', 'Sensor'),
-            ('binary_sensor', 'Binary_Sensor'),
+            ('binary_sensor', 'BinarySensor'),
             ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
         hass.async_add_job(
