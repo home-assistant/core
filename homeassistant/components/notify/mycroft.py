@@ -14,10 +14,12 @@ REQUIREMENTS = ['mycroftapi==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def get_service(hass, config, discovery_info=None):
     """Get the Mycroft notification service."""
     return MycroftNotificationService(
         hass.data['mycroft'])
+
 
 class MycroftNotificationService(BaseNotificationService):
     """The Mycroft Notification Service."""
@@ -27,7 +29,7 @@ class MycroftNotificationService(BaseNotificationService):
         self.mycroft_ip = mycroft_ip
 
     def send_message(self, message="", **kwargs):
-        """Send a message mycroft to speak on instance"""
+        """Send a message mycroft to speak on instance."""
         from mycroftapi import MycroftAPI
 
         text = message
