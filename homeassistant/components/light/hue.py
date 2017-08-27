@@ -205,18 +205,19 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
         if not isinstance(api_groups, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
-            
+
         if not skip_groups:
-            # Group ID 0 is a special group in the hub for all lights, but it's not 
-            # returned by get_api() so explicity get it and include it. See
-            # https://developers.meethue.com/documentation/groups-api#21_get_all_groups
-            all_lamps = bridge.get_group(0)
-            if not isinstance(all_lamps, dict):
+            # Group ID 0 is a special group in the hub for all lights, but it
+            # is not returned by get_api() so explicity get it and include it.
+            # See https://developers.meethue.com/documentation/
+            #               groups-api#21_get_all_groups
+            all_lights = bridge.get_group(0)
+            if not isinstance(all_lights, dict):
                 _LOGGER.error("Got unexpected result from Hue API for group 0")
                 return
-            # Hue hub returns name of group 0 as "Group 0", so rename for ease of use in HA
-            all_lamps['name'] = "All Hue Lights" 
-            api_groups["0"] = all_lamps            
+            # Hue hub returns name of group 0 as "Group 0", so rename 
+            # for ease of use in HA.
+            api_groups["0"] = all_lights
 
         new_lights = []
 
