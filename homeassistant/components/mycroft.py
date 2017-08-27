@@ -21,7 +21,7 @@ DOMAIN = 'mycroft'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(mycroft_ip): cv.string
+        vol.Required(CONF_HOST): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
