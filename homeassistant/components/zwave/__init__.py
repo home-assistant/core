@@ -830,6 +830,25 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def network_value_changed(self, value):
         """Handle a value change on the network."""
+        if (value.command_class == const.COMMAND_CLASS_CENTRAL_SCENE and
+                value.node.node_id == self.node.node_id and
+                self.hass is not None):
+
+            scene_id = int(str(value.index) + str(value.data))
+
+            _LOGGER.info(
+                "Central Scene Triggered: Scene %d Key %d "
+                "(activating scene_id=%d for entity_id=%s)",
+                value.index, value.data, scene_id, self.entity_id)
+
+            self.hass.bus.fire(const.EVENT_SCENE_ACTIVATED, {
+                ATTR_ENTITY_ID:       self.entity_id,
+                const.ATTR_NODE_ID:   self.node.node_id,
+                const.ATTR_SCENE_ID:  scene_id
+            })
+
+            return
+
         if value.value_id in [v.value_id for v in self.values if v]:
             return self.value_changed()
 
