@@ -28,8 +28,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Mycroft component."""
-    from mycroftapi import MycroftAPI
-
     hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
 
     return True
