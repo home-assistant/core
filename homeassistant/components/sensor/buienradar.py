@@ -223,9 +223,9 @@ class BrSensor(Entity):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
-                    _LOGGER.debug("Data contained no forecast for fcday=%s...", fcday)
+                    _LOGGER.debug("No forecast for fcday=%s...", fcday)
                     return False
-                
+
                 if condition:
                     new_state = condition.get(CONDITION, None)
                     if self.type.startswith(SYMBOL):
@@ -248,7 +248,7 @@ class BrSensor(Entity):
                 try:
                     new_state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 except IndexError:
-                    _LOGGER.debug("Data contained no forecast for fcday=%s...", fcday)
+                    _LOGGER.debug("No forecast for fcday=%s...", fcday)
                     return False
 
                 if new_state != self._state:
