@@ -38,7 +38,7 @@ class MycroftNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         from mycroftapi import MycroftAPI
-        """Send a message mycroft to speak"""
+        """Send a message mycroft to speak on instance"""
         text = message
         mycroft = MycroftAPI(self.mycroft_ip)
         if mycroft is not None:
