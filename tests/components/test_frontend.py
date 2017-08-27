@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.frontend import DOMAIN, ATTR_THEMES
+from homeassistant.components.frontend import (
+    DOMAIN, ATTR_THEMES, ATTR_EXTRA_HTML_URL)
 
 
 @pytest.fixture
@@ -26,6 +27,16 @@ def mock_http_client_with_themes(hass, test_client):
                     'primary-color': 'red'
                 }
             }
+        }}))
+    return hass.loop.run_until_complete(test_client(hass.http.app))
+
+
+@pytest.fixture
+def mock_http_client_with_urls(hass, test_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            ATTR_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"]
         }}))
     return hass.loop.run_until_complete(test_client(hass.http.app))
 
@@ -143,3 +154,12 @@ def test_missing_themes(mock_http_client):
     json = yield from resp.json()
     assert json['default_theme'] == 'default'
     assert json['themes'] == {}
+
+
+@asyncio.coroutine
+def test_extra_urls(mock_http_client_with_urls):
+    """Test that extra urls are loaded."""
+    resp = yield from mock_http_client_with_urls.get('/states')
+    assert resp.status == 200
+    text = yield from resp.text()
+    assert text.find('href=\'https://domain.com/my_extra_url.html\'') >= 0
