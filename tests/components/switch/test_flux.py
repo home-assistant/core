@@ -348,8 +348,10 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.494, 0.397])
 
     def test_flux_before_sunrise_stop_next_day(self):
-        """Test the flux switch before sunrise, with stop_time
-         after midnight"""
+        """Test the flux switch before sunrise.
+
+        This test has the stop_time on the next day (after midnight).
+        """
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
@@ -397,8 +399,11 @@ class TestSwitchFlux(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset_stop_next_day(self):
-        """Test the flux switch after sunrise and before sunset, with stop_time
-         after midnight."""
+        """
+        Test the flux switch after sunrise and before sunset.
+
+        This test has the stop_time on the next day (after midnight).
+        """
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
@@ -446,8 +451,10 @@ class TestSwitchFlux(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_before_midnight_stop_next_day(self):
-        """Test the flux switch after sunset and before stop, with stop_time
-         after midnight."""
+        """Test the flux switch after sunset and before stop.
+
+        This test has the stop_time on the next day (after midnight).
+        """
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
@@ -495,8 +502,10 @@ class TestSwitchFlux(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_after_midnight_stop_next_day(self):
-        """Test the flux switch after sunset and before stop, with stop_time
-         after midnight."""
+        """Test the flux switch after sunset and before stop.
+
+        This test has the stop_time on the next day (after midnight).
+        """
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
@@ -544,8 +553,10 @@ class TestSwitchFlux(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise_stop_next_day(self):
-        """Test the flux switch after stop and before sunrise, with stop_time
-         after midnight."""
+        """Test the flux switch after stop and before sunrise.
+
+        This test has the stop_time on the next day (after midnight).
+        """
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
