@@ -295,7 +295,7 @@ def setup(hass, config):
     persistence = config[DOMAIN].get(CONF_PERSISTENCE)
 
     def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
-                      out_prefix, nodes_config):
+                      out_prefix):
         """Return gateway after setup of the gateway."""
         if device == MQTT_COMPONENT:
             if not setup_component(hass, MQTT_COMPONENT, config):
@@ -364,11 +364,11 @@ def setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
-        nodes_config = gway.get(CONF_NODES)
         ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
-            out_prefix, nodes_config)
+            out_prefix)
         if ready_gateway is not None:
+            ready_gateway.nodes_config = gway.get(CONF_NODES)
             gateways[id(ready_gateway)] = ready_gateway
 
     if not gateways:
@@ -506,8 +506,13 @@ def gw_callback_factory(hass):
 
 def get_mysensors_name(gateway, node_id, child_id):
     """Return a name for a node child."""
-    return '{} {} {}'.format(
-        gateway.sensors[node_id].sketch_name, node_id, child_id)
+    node_name = '{} {}'.format(
+        gateway.sensors[node_id].sketch_name, node_id)
+    node_name = next(
+        (node[CONF_NODE_NAME] for conf_id, node in gateway.nodes_config.items()
+         if node.get(CONF_NODE_NAME) is not None and conf_id == node_id),
+        node_name)
+    return '{} {}'.format(node_name, child_id)
 
 
 def get_mysensors_gateway(hass, gateway_id):
