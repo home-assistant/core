@@ -31,7 +31,5 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Mycroft component."""
     hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
-
-    
     discovery.load_platform(hass, 'notify', DOMAIN, {}, config)
     return True
