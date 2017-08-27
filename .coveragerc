@@ -381,6 +381,7 @@ omit =
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
     homeassistant/components/media_player/yamaha.py
+    homeassistant/components/mycroft.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
@@ -398,6 +399,7 @@ omit =
     homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
+    homeassistant/components/notify/mycroft.py
     homeassistant/components/notify/nfandroidtv.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/prowl.py
