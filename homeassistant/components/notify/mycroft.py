@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['websocket-client==0.44.0']
+REQUIREMENTS = ['mycroftapi==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,21 +35,15 @@ class MycroftNotificationService(BaseNotificationService):
 
     def __init__(self, mycroft_ip):
         """Initialize the service."""
-        self._ip = mycroft_ip
+        self.mycroft_ip = mycroft_ip
 
     def send_message(self, message="", **kwargs):
-        from websocket import create_connection
-        import ssl
+        from mycroftapi import MycroftAPI
         """Send a message mycroft to speak"""
         text = message
-        _LOGGER.info("The text we are sending to mycroft is: {}".format(text))
-        ws = create_connection("ws://" + self._ip + ":8181/core", 
-                               sslopt={"cert_reqs": ssl.CERT_NONE})
-        mycroft_speak = ('"{}"'.format(text))
-        mycroft_type = '"speak"'
-        mycroft_data = '{"expect_response": false, "utterance": %s}, "context": null' % mycroft_speak
-        message = '{"type": ' + mycroft_type + ', "data": ' + mycroft_data + '}'
-        try:
-            ws.send(message)
-        except:
-            _LOGGER("We hit an error trying to send to mycroft.")
+        mycroft = MycroftAPI(self.mycroft_ip)
+        if mycroft is not None:
+            mycroft.speak_text(text)
+        else:
+            _LOGGER.log("Could not reach this instance of mycroft")
+
