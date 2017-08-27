@@ -31,8 +31,5 @@ def setup(hass, config):
     from mycroftapi import MycroftAPI
 
     hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
-    mycroft = hass.data[DOMAIN][CONF_HOST]
-
-
 
     return True

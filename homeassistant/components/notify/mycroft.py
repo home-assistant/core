@@ -8,25 +8,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import BaseNotificationService
+
 
 REQUIREMENTS = ['mycroftapi==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
-
-mycroft_ip = 'mycroft_ip'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(mycroft_ip): cv.string
-})
-
-
-def get_service(hass, config, discovery_info=None):
-    """Get the Mycroft notification service."""
-    return MycroftNotificationService(
-        config.get(mycroft_ip))
 
 
 class MycroftNotificationService(BaseNotificationService):
@@ -45,3 +32,5 @@ class MycroftNotificationService(BaseNotificationService):
             mycroft.speak_text(text)
         else:
             _LOGGER.log("Could not reach this instance of mycroft")
+
+return MycroftNotificationService(hass.data['mycroft'])
