@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['mycroftapi==0.1.2']
@@ -31,4 +32,6 @@ def setup(hass, config):
     """Set up the Mycroft component."""
     hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
 
+    
+    discovery.load_platform(hass, 'notify', DOMAIN, {}, config)
     return True
