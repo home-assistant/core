@@ -28,6 +28,7 @@ URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
 
 ATTR_THEMES = 'themes'
+ATTR_EXTRA_HTML_URL = 'extra_html_url'
 DEFAULT_THEME_COLOR = '#03A9F4'
 MANIFEST_JSON = {
     'background_color': '#FFFFFF',
@@ -50,6 +51,7 @@ for size in (192, 384, 512, 1024):
     })
 
 DATA_PANELS = 'frontend_panels'
+DATA_EXTRA_HTML_URL = 'frontend_extra_html_url'
 DATA_INDEX_VIEW = 'frontend_index_view'
 DATA_THEMES = 'frontend_themes'
 DATA_DEFAULT_THEME = 'frontend_default_theme'
@@ -66,6 +68,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_THEMES): vol.Schema({
             cv.string: {cv.string: cv.string}
         }),
+        vol.Optional(ATTR_EXTRA_HTML_URL):
+            vol.All(cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -169,6 +173,15 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
             'get', '/{}/{{extra:.+}}'.format(url_path), index_view.get)
 
 
+@bind_hass
+def add_extra_html_url(hass, url):
+    """Register extra html url to load."""
+    url_set = hass.data.get(DATA_EXTRA_HTML_URL)
+    if url_set is None:
+        url_set = hass.data[DATA_EXTRA_HTML_URL] = set()
+    url_set.add(url)
+
+
 def add_manifest_json_key(key, val):
     """Add a keyval to the manifest.json."""
     MANIFEST_JSON[key] = val
@@ -208,6 +221,9 @@ def setup(hass, config):
     else:
         hass.data[DATA_PANELS] = {}
 
+    if DATA_EXTRA_HTML_URL not in hass.data:
+        hass.data[DATA_EXTRA_HTML_URL] = set()
+
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
@@ -216,6 +232,9 @@ def setup(hass, config):
 
     themes = config.get(DOMAIN, {}).get(ATTR_THEMES)
     setup_themes(hass, themes)
+
+    for url in config.get(DOMAIN, {}).get(ATTR_EXTRA_HTML_URL, []):
+        add_extra_html_url(hass, url)
 
     return True
 
@@ -362,7 +381,9 @@ class IndexView(HomeAssistantView):
             compatibility_url=compatibility_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
             panel_url=panel_url, panels=hass.data[DATA_PANELS],
-            dev_mode=request.app[KEY_DEVELOPMENT])
+            dev_mode=request.app[KEY_DEVELOPMENT],
+            theme_color=MANIFEST_JSON['theme_color'],
+            extra_urls=hass.data[DATA_EXTRA_HTML_URL])
 
         return web.Response(text=resp, content_type='text/html')
 
