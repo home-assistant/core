@@ -59,7 +59,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     resource = config.get(CONF_RESOURCE)
-    websession = async_get_clientsession(hass)
 
     auth = None
     if username:
@@ -74,24 +73,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        with async_timeout.timeout(timeout):
-            req = yield from websession.get(resource, auth=auth)
+        switch = RestSwitch(name, resource, method, auth, body_on, body_off,
+                    is_on_template, timeout)
 
+        req = yield from switch._update_current_state(hass)
         if req.status >= 400:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
-            return False
-
+        else:
+            async_add_devices([switch])
     except (TypeError, ValueError):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
-        return False
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
-        return False
-
-    async_add_devices(
-        [RestSwitch(name, resource, method, auth, body_on, body_off,
-                    is_on_template, timeout)])
 
 
 class RestSwitch(SwitchDevice):
@@ -164,17 +158,20 @@ class RestSwitch(SwitchDevice):
 
     @asyncio.coroutine
     def async_update(self):
-        """Get the latest data from REST API and update the state."""
-        websession = async_get_clientsession(self.hass)
-
+        """Get the current state, catching errors."""
         try:
-            with async_timeout.timeout(self._timeout):
-                request = yield from websession.get(self._resource,
-                    auth=self._auth)
-                text = yield from request.text()
+            yield from self._update_current_state(self.hass)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error while fetch data.")
-            return
+
+    @asyncio.coroutine
+    def _update_current_state(self, hass):
+        """Get the latest data from REST API and update the state."""
+        websession = async_get_clientsession(hass)
+
+        with async_timeout.timeout(self._timeout):
+            req = yield from websession.get(self._resource, auth=self._auth)
+            text = yield from req.text()
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(
@@ -193,3 +190,5 @@ class RestSwitch(SwitchDevice):
                 self._state = False
             else:
                 self._state = None
+
+        return req
