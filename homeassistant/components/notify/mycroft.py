@@ -13,7 +13,7 @@ from homeassistant.components.notify import BaseNotificationService
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(hass):
     """Get the Mycroft notification service."""
     return MycroftNotificationService(
         hass.data['mycroft'])
