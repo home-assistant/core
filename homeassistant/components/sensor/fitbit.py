@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fitbit==0.3.0']
+REQUIREMENTS = ['fitbit==0.2.3']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
