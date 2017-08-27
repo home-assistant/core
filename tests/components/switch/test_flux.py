@@ -347,12 +347,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 154)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.494, 0.397])
 
-
-
-
-
-
-
     def test_flux_before_sunrise_stop_next_day(self):
         """Test the flux switch before sunrise, with stop_time
          after midnight"""
@@ -596,12 +590,6 @@ class TestSwitchFlux(unittest.TestCase):
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
-
-
-
-
-
-
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_colortemps(self):
