@@ -170,7 +170,7 @@ class SonarrSensor(Entity):
         try:
             res = requests.get(ENDPOINTS[self.type].format(
                 self.ssl, self.host, self.port, self.urlbase,
-                start, end), headers={'X-Api-Key': self.apikey}, timeout=5)
+                start, end), headers={'X-Api-Key': self.apikey}, timeout=10)
         except OSError:
             _LOGGER.error("Host %s is not available", self.host)
             self._available = False
@@ -197,7 +197,7 @@ class SonarrSensor(Entity):
                     ENDPOINTS[self.type].format(
                         self.ssl, self.host, self.port, self.urlbase),
                         data['totalRecords']),
-                        headers={'X-Api-Key': self.apikey}, timeout=5)
+                        headers={'X-Api-Key': self.apikey}, timeout=10)
                 self.data = res.json()['records']
                 self._state = len(self.data)
             elif self.type == 'diskspace':
