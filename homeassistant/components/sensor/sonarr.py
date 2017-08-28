@@ -204,9 +204,9 @@ class SonarrSensor(Entity):
                     '{}?pageSize={}'.format(
                         ENDPOINTS[self.type].format(
                             self.ssl, self.host, self.port, self.urlbase),
-                            data['totalRecords']),
-                        headers={'X-Api-Key': self.apikey},
-                        timeout=10)
+                        data['totalRecords']),
+                    headers={'X-Api-Key': self.apikey},
+                    timeout=10)
                 self.data = res.json()['records']
                 self._state = len(self.data)
             elif self.type == 'diskspace':
