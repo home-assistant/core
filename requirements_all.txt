@@ -42,7 +42,7 @@ TwitterAPI==2.4.6
 abodepy==0.7.1
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.0
+aioautomatic==0.6.2
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -716,7 +716,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.12
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.8
+python-ecobee-api==0.0.9
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.5
