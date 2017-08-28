@@ -18,7 +18,7 @@ astral==1.4
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.isy994
-PyISY==1.0.7
+PyISY==1.0.8
 
 # homeassistant.components.notify.html5
 PyJWT==1.5.2
