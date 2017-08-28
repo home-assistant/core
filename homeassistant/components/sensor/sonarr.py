@@ -36,7 +36,8 @@ SENSOR_TYPES = {
     'upcoming': ['Upcoming', 'Episodes', 'mdi:television'],
     'wanted': ['Wanted', 'Episodes', 'mdi:television'],
     'series': ['Series', 'Shows', 'mdi:television'],
-    'commands': ['Commands', 'Commands', 'mdi:code-braces']
+    'commands': ['Commands', 'Commands', 'mdi:code-braces'],
+    'status': ['Status', 'Status', 'mdi:information']
 }
 
 ENDPOINTS = {
@@ -46,7 +47,8 @@ ENDPOINTS = {
         'http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}',
     'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing',
     'series': 'http{0}://{1}:{2}/{3}api/series',
-    'commands': 'http{0}://{1}:{2}/{3}api/command'
+    'commands': 'http{0}://{1}:{2}/{3}api/command',
+    'status': 'http{0}://{1}:{2}/{3}api/system/status'
 }
 
 # Support to Yottabytes for the future, why not
@@ -156,6 +158,8 @@ class SonarrSensor(Entity):
             for show in self.data:
                 attributes[show['title']] = '{}/{} Episodes'.format(
                     show['episodeFileCount'], show['episodeCount'])
+        elif self.type == 'status':
+            attributes = self.data
         return attributes
 
     @property
@@ -218,6 +222,9 @@ class SonarrSensor(Entity):
                         self._unit
                     )
                 )
+            elif self.type == 'status':
+                self.data = res.json()
+                self._state = self.data['version']
             self._available = True
 
 
