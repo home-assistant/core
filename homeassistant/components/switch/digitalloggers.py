@@ -115,7 +115,8 @@ class DINRelay(SwitchDevice):
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
 
-        outlet_status = self._parent_device._statuslist[self._outlet_number - 1]
+        outlet_status = self._parent_device._statuslist[
+                            self._outlet_number - 1]
 
         self._name = outlet_status[1]
         self._state = outlet_status[2] == 'ON'
