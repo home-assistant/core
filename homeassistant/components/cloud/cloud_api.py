@@ -12,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
 from .const import AUTH_FILE, REQUEST_TIMEOUT, SERVERS
+from .util import get_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,14 +38,14 @@ class UnknownError(CloudError):
 
 
 @asyncio.coroutine
-def async_load_auth(hass, mode):
+def async_load_auth(hass):
     """Load authentication from disk and verify it."""
-    auth = yield from hass.async_add_job(_read_auth, hass, mode)
+    auth = yield from hass.async_add_job(_read_auth, hass)
 
     if not auth:
         return None
 
-    cloud = Cloud(hass, mode, auth)
+    cloud = Cloud(hass, auth)
 
     try:
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
@@ -62,7 +63,7 @@ def async_load_auth(hass, mode):
 
 
 @asyncio.coroutine
-def async_login(hass, mode, username, password, scope=None):
+def async_login(hass, username, password, scope=None):
     """Get a token using a username and password.
 
     Returns a coroutine.
@@ -76,11 +77,11 @@ def async_login(hass, mode, username, password, scope=None):
         data['scope'] = scope
 
     auth = yield from _async_get_token(hass, data)
-    return Cloud(hass, mode, auth)
+    return Cloud(hass, auth)
 
 
 @asyncio.coroutine
-def _async_get_token(hass, mode, data):
+def _async_get_token(hass, data):
     """Get a new token and return it as a dictionary.
 
     Raises exceptions when errors occur:
@@ -88,11 +89,11 @@ def _async_get_token(hass, mode, data):
      - UnknownError
     """
     session = async_get_clientsession(hass)
-    auth = aiohttp.BasicAuth(*_client_credentials(mode))
+    auth = aiohttp.BasicAuth(*_client_credentials(hass))
 
     try:
         req = yield from session.post(
-            _url(mode, URL_CREATE_TOKEN),
+            _url(hass, URL_CREATE_TOKEN),
             data=data,
             auth=auth
         )
@@ -117,10 +118,9 @@ def _async_get_token(hass, mode, data):
 class Cloud:
     """Store Hass Cloud info."""
 
-    def __init__(self, hass, mode, auth):
+    def __init__(self, hass, auth):
         """Initialize Hass cloud info object."""
         self.hass = hass
-        self.mode = mode
         self.auth = auth
         self.account = None
 
@@ -165,7 +165,7 @@ class Cloud:
     def async_revoke_access_token(self):
         """Revoke active access token."""
         session = async_get_clientsession(self.hass)
-        client_id, client_secret = _client_credentials(self.mode)
+        client_id, client_secret = _client_credentials(self.hass)
         data = {
             'token': self.access_token,
             'client_id': client_id,
@@ -173,7 +173,7 @@ class Cloud:
         }
         try:
             req = yield from session.post(
-                _url(self.mode, URL_REVOKE_TOKEN),
+                _url(self.hass, URL_REVOKE_TOKEN),
                 data=data,
             )
 
@@ -182,7 +182,7 @@ class Cloud:
                 raise UnknownError(status=req.status)
 
             yield from self.hass.async_add_job(
-                _write_auth, self.hass, self.mode, None)
+                _write_auth, self.hass, None)
 
         except aiohttp.ClientError as err:
             raise UnknownError()
@@ -193,7 +193,7 @@ class Cloud:
 
         Will refresh the token if necessary."""
         session = async_get_clientsession(self.hass)
-        url = _url(self.mode, path)
+        url = _url(self.hass, path)
 
         if 'headers' not in kwargs:
             kwargs['headers'] = {}
@@ -228,7 +228,7 @@ class Cloud:
         return request
 
 
-def _read_auth(hass, mode):
+def _read_auth(hass):
     """Read auth file."""
     path = hass.config.path(AUTH_FILE)
 
@@ -236,14 +236,15 @@ def _read_auth(hass, mode):
         return None
 
     with open(path) as fp:
-        return json.load(fp).get(mode)
+        return json.load(fp).get(get_mode(hass))
 
 
-def _write_auth(hass, mode, data):
+def _write_auth(hass, data):
     """Write auth info for specified mode.
 
     Pass in None for data to remove authentication for that mode.
     """
+    mode = get_mode(hass)
     content = _read_auth(hass, mode) or {}
 
     if data is None:
@@ -255,22 +256,26 @@ def _write_auth(hass, mode, data):
         file.write(json.dumps(content))
 
 
-def _client_credentials(mode):
+def _client_credentials(hass):
     """Get the client credentials.
 
     Async friendly.
     """
+    mode = get_mode(hass)
+
     if mode not in SERVERS:
         raise ValueError('Mode {} is not supported.'.format(mode))
 
     return SERVERS[mode]['client_id'], SERVERS[mode]['client_secret']
 
 
-def _url(mode, path):
+def _url(hass, path):
     """Generate a url for the cloud.
 
     Async friendly.
     """
+    mode = get_mode(hass)
+
     if mode not in SERVERS:
         raise ValueError('Mode {} is not supported.'.format(mode))
 

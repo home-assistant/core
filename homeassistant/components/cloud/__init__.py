@@ -36,7 +36,7 @@ def async_setup(hass, config):
         'mode': mode
     }
 
-    cloud = yield from cloud_api.async_load_auth(hass, mode)
+    cloud = yield from cloud_api.async_load_auth(hass)
 
     if cloud is not None:
         data['cloud'] = cloud
