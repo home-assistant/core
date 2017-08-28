@@ -38,8 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Rain Bird switches over a Rain Bird controller."""
     devices = []
     rbdevice = hass.data.get("DATA_RAINBIRD")
-    for key, switch in config.get(CONF_SWITCHES).items():
-        devices.append(RainBirdSwitch(rbdevice, switch))
+    for dev_id, switch in config.get(CONF_SWITCHES).items():
+        devices.append(RainBirdSwitch(rbdevice, switch, dev_id))
     add_devices(devices)
     return True
 
@@ -47,9 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainBirdSwitch(SwitchDevice):
     """Representation of a Rain Bird switch."""
 
-    def __init__(self, rb, dev):
+    def __init__(self, rb, dev, dev_id):
         """Initialize a Rain Bird Switch Device."""
         self._rainbird = rb
+        self._devid = dev_id
         self._zone = int(dev.get(CONF_ZONE))
         self._name = dev.get(CONF_FRIENDLY_NAME, "Sprinker %s" % self._zone)
         self._state = self.get_device_status()
