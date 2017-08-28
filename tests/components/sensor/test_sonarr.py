@@ -553,18 +553,18 @@ def mocked_requests_get(*args, **kwargs):
         return MockResponse({
             "version": "2.0.0.1121",
             "buildTime": "2014-02-08T20:49:36.5560392Z",
-            "isDebug": false,
-            "isProduction": true,
-            "isAdmin": true,
-            "isUserInteractive": false,
+            "isDebug": "false",
+            "isProduction": "true",
+            "isAdmin": "true",
+            "isUserInteractive": "false",
             "startupPath": "C:\\ProgramData\\NzbDrone\\bin",
             "appData": "C:\\ProgramData\\NzbDrone",
             "osVersion": "6.2.9200.0",
-            "isMono": false,
-            "isLinux": false,
-            "isWindows": true,
+            "isMono": "false",
+            "isLinux": "false",
+            "isWindows": "true",
             "branch": "develop",
-            "authentication": false,
+            "authentication": "false",
             "startOfWeek": 0,
             "urlBase": ""
         }, 200)
@@ -837,7 +837,7 @@ class TestSonarrSetup(unittest.TestCase):
             self.assertEqual(
                 '6.2.9200.0',
                 device.device_state_attributes['osVersion'])
-            
+
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_ssl(self, req_mock):
