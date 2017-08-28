@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 URL_CREATE_TOKEN = 'o/token/'
 URL_REVOKE_TOKEN = 'o/revoke_token/'
+URL_ACCOUNT = 'account.json'
 
 
 class CloudError(Exception):
@@ -77,6 +78,9 @@ def async_login(hass, username, password, scope=None):
         data['scope'] = scope
 
     auth = yield from _async_get_token(hass, data)
+
+    yield from hass.async_add_job(_write_auth, hass, auth)
+
     return Cloud(hass, auth)
 
 
@@ -106,8 +110,8 @@ def _async_get_token(hass, data):
             raise UnknownError(status=req.status)
 
         response = yield from req.json(content_type=None)
-        data['expires_at'] = \
-            (utcnow() + timedelta(seconds=data['expires_in'])).isoformat()
+        response['expires_at'] = \
+            (utcnow() + timedelta(seconds=response['expires_in'])).isoformat()
 
         return response
 
@@ -136,8 +140,7 @@ class Cloud:
 
     @asyncio.coroutine
     def async_refresh_account_info(self):
-        req = yield from self.async_request(
-            self.hass, 'get', 'account.json')
+        req = yield from self.async_request('get', URL_ACCOUNT)
 
         if req.status != 200:
             return False
@@ -220,7 +223,7 @@ class Cloud:
 
         # If we are not already fetching the account info,
         # refresh the account info.
-        if path != URL_CREATE_TOKEN:
+        if path != URL_ACCOUNT:
             yield from self.async_refresh_account_info()
 
         request = yield from session.request(method, url, **kwargs)
@@ -244,16 +247,22 @@ def _write_auth(hass, data):
 
     Pass in None for data to remove authentication for that mode.
     """
+    path = hass.config.path(AUTH_FILE)
     mode = get_mode(hass)
-    content = _read_auth(hass, mode) or {}
+
+    if os.path.isfile(path):
+        with open(path) as fp:
+            content = json.load(fp)
+    else:
+        content = {}
 
     if data is None:
         content.pop(mode, None)
     else:
         content[mode] = data
 
-    with open(hass.config.path(AUTH_FILE), 'wt') as file:
-        file.write(json.dumps(content))
+    with open(path, 'wt') as file:
+        file.write(json.dumps(content, indent=4, sort_keys=True))
 
 
 def _client_credentials(hass):
