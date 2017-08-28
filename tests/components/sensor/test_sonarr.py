@@ -828,7 +828,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'status'
             ]
         }
-        radarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_devices, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('2.0.0.1121', device.state)
