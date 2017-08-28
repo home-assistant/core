@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.cloud import DOMAIN, http_api, cloud_api
+from homeassistant.components.cloud import DOMAIN, cloud_api
 
 from tests.common import mock_coro
 
@@ -12,12 +12,11 @@ from tests.common import mock_coro
 @pytest.fixture
 def cloud_client(hass, test_client):
     """Fixture that can fetch from the cloud client."""
-    hass.loop.run_until_complete(async_setup_component(hass, 'http', {
+    hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
         'cloud': {
-            'development': True
+            'mode': 'development'
         }
     }))
-    hass.loop.run_until_complete(http_api.async_setup(hass))
     return hass.loop.run_until_complete(test_client(hass.http.app))
 
 
@@ -32,7 +31,7 @@ def test_account_view_no_account(cloud_client):
 def test_account_view(hass, cloud_client):
     """Test fetching account if no account available."""
     cloud = MagicMock(account={'test': 'account'})
-    hass.data[DOMAIN] = cloud
+    hass.data[DOMAIN]['cloud'] = cloud
     req = yield from cloud_client.get('/api/cloud/account')
     assert req.status == 200
     result = yield from req.json()
@@ -56,7 +55,7 @@ def test_login_view(hass, cloud_client):
 
     result = yield from req.json()
     assert result == {'test': 'account'}
-    assert hass.data[DOMAIN] is cloud
+    assert hass.data[DOMAIN]['cloud'] is cloud
 
 
 @asyncio.coroutine
@@ -64,7 +63,7 @@ def test_login_view_invalid_json(hass, cloud_client):
     """Try logging in with invalid JSON."""
     req = yield from cloud_client.post('/api/cloud/login', data='Not JSON')
     assert req.status == 400
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -74,7 +73,7 @@ def test_login_view_invalid_schema(hass, cloud_client):
         'invalid': 'schema'
     })
     assert req.status == 400
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -88,7 +87,7 @@ def test_login_view_request_timeout(hass, cloud_client):
         })
 
     assert req.status == 502
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -102,7 +101,7 @@ def test_login_view_invalid_credentials(hass, cloud_client):
         })
 
     assert req.status == 401
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -116,7 +115,7 @@ def test_login_view_unknown_error(hass, cloud_client):
         })
 
     assert req.status == 500
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -124,13 +123,13 @@ def test_logout_view(hass, cloud_client):
     """Test logging out."""
     cloud = MagicMock()
     cloud.async_revoke_access_token.return_value = mock_coro(None)
-    hass.data[DOMAIN] = cloud
+    hass.data[DOMAIN]['cloud'] = cloud
 
     req = yield from cloud_client.post('/api/cloud/logout')
     assert req.status == 200
     data = yield from req.json()
     assert data == {'result': 'ok'}
-    assert DOMAIN not in hass.data
+    assert 'cloud' not in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -138,11 +137,11 @@ def test_logout_view_request_timeout(hass, cloud_client):
     """Test timeout while logging out."""
     cloud = MagicMock()
     cloud.async_revoke_access_token.side_effect = asyncio.TimeoutError
-    hass.data[DOMAIN] = cloud
+    hass.data[DOMAIN]['cloud'] = cloud
 
     req = yield from cloud_client.post('/api/cloud/logout')
     assert req.status == 502
-    assert DOMAIN in hass.data
+    assert 'cloud' in hass.data[DOMAIN]
 
 
 @asyncio.coroutine
@@ -150,8 +149,8 @@ def test_logout_view_unknown_error(hass, cloud_client):
     """Test unknown error while loggin out."""
     cloud = MagicMock()
     cloud.async_revoke_access_token.side_effect = cloud_api.UnknownError
-    hass.data[DOMAIN] = cloud
+    hass.data[DOMAIN]['cloud'] = cloud
 
     req = yield from cloud_client.post('/api/cloud/logout')
     assert req.status == 502
-    assert DOMAIN in hass.data
+    assert 'cloud' in hass.data[DOMAIN]

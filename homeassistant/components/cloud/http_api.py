@@ -68,7 +68,7 @@ class CloudLoginView(HomeAssistantView):
                 'Unable to reach Home Assistant cloud '
                 '(phase {}).'.format(phase), 502)
 
-        hass.data[DOMAIN] = cloud
+        hass.data[DOMAIN]['cloud'] = cloud
         return self.json(cloud.account)
 
 
@@ -84,9 +84,9 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app['hass']
         try:
             with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-                yield from hass.data[DOMAIN].async_revoke_access_token()
+                yield from hass.data[DOMAIN]['cloud'].async_revoke_access_token()
 
-            hass.data.pop(DOMAIN)
+            hass.data[DOMAIN].pop('cloud')
 
             return self.json({
                 'result': 'ok',
@@ -110,7 +110,7 @@ class CloudAccountView(HomeAssistantView):
         """Validate config and return results."""
         hass = request.app['hass']
 
-        if DOMAIN not in hass.data:
+        if 'cloud' not in hass.data[DOMAIN]:
             return self.json_message('Not logged in', 400)
 
-        return self.json(hass.data[DOMAIN].account)
+        return self.json(hass.data[DOMAIN]['cloud'].account)
