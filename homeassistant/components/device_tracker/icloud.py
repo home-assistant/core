@@ -315,7 +315,7 @@ class Icloud(DeviceScanner):
                          currentminutes % interval in [2, 4])):
                     self.update_device(devicename)
         except ValueError:
-            _LOGGER.debug('iCloud API returned an error.')
+            _LOGGER.debug("iCloud API returned an error")
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
@@ -400,7 +400,7 @@ class Icloud(DeviceScanner):
                     self.see(**kwargs)
                     self.seen_devices[devicename] = True
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error("No iCloud Devices found")
 
     def lost_iphone(self, devicename):
         """Call the lost iPhone function if the device is found."""
