@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-ecobee-api==0.0.8']
+REQUIREMENTS = ['python-ecobee-api==0.0.9']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
