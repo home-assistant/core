@@ -60,7 +60,8 @@ class XmppNotificationService(BaseNotificationService):
                      self._recipient, self._tls, self._verify, data)
 
 
-def send_message(sender, password, recipient, use_tls, verify_certificate, message):
+def send_message(sender, password, recipient, use_tls, 
+                verify_certificate, message):
     """Send a message over XMPP."""
     import sleekxmpp
 
@@ -78,7 +79,8 @@ def send_message(sender, password, recipient, use_tls, verify_certificate, messa
             self.add_event_handler('failed_auth', self.check_credentials)
             self.add_event_handler('session_start', self.start)
             if not verify_certificate:
-                self.add_event_handler('ssl_invalid_cert', self.discard_ssl_invalid_cert)
+                self.add_event_handler('ssl_invalid_cert', 
+                    self.discard_ssl_invalid_cert)
 
             self.connect(use_tls=self.use_tls, use_ssl=False)
             self.process()
