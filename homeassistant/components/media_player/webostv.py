@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_tv(
     host, mac, name, customize, config, timeout, hass,
-    add_devices, turn_on_action):
+        add_devices, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
