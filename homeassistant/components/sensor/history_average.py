@@ -4,7 +4,6 @@ Calculates the weighted average of a sensor's historical numeric values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_average/
 """
-import datetime
 from collections import defaultdict
 import logging
 import math
@@ -90,7 +89,6 @@ class HistoryAverageSensor(Entity):
             name, unit):
         """Initialize the HistoryAverage sensor."""
         self._hass = hass
-
         self._entity_id = entity_id
         self._duration = duration
         self._start = start
@@ -98,7 +96,7 @@ class HistoryAverageSensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
 
-        self._period = (datetime.datetime.now(), datetime.datetime.now())
+        self._period = (dt_util.utcnow(), dt_util.utcnow())
         self.value = 0
 
         def force_refresh(*args):
@@ -158,69 +156,56 @@ class HistoryAverageSensor(Entity):
         end = dt_util.as_utc(end)
         p_start = dt_util.as_utc(p_start)
         p_end = dt_util.as_utc(p_end)
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
 
-        # Compute integer timestamps
-        start_timestamp = math.floor(dt_util.as_timestamp(start))
-        end_timestamp = math.floor(dt_util.as_timestamp(end))
-        p_start_timestamp = math.floor(dt_util.as_timestamp(p_start))
-        p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
-        now_timestamp = math.floor(dt_util.as_timestamp(now))
+        # Compute timestamps
+        start_timestamp = dt_util.as_timestamp(start)
+        end_timestamp = dt_util.as_timestamp(end)
+        p_start_timestamp = dt_util.as_timestamp(p_start)
+        p_end_timestamp = dt_util.as_timestamp(p_end)
+        now_timestamp = dt_util.as_timestamp(now)
 
-        # If period has not changed and current time after the period end...
-        if start_timestamp == p_start_timestamp and \
-            end_timestamp == p_end_timestamp and \
-                end_timestamp <= now_timestamp:
-            # Don't compute anything as the value cannot have changed
+        # Only update value every second, and when the period has changed
+        if math.floor(start_timestamp) == math.floor(p_start_timestamp) and \
+            math.floor(end_timestamp) == math.floor(p_end_timestamp) and \
+                math.floor(end_timestamp) <= math.floor(now_timestamp):
+            # Don't compute anything as the value cannot have changed by much
             return
 
         # Get history between start and end
         history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id))
+            self._hass, start, end, str(self._entity_id))
 
-        if self._entity_id not in history_list.keys():
-            return
-
-        # Get the first state
-        last_state = history.get_state(self.hass, start, self._entity_id)
-        if last_state is not None:
-            last_state = last_state.state
-        last_time = start_timestamp
-
+        last_state = None
+        last_time = None
+        total_elapsed = 0
         intervals = defaultdict(float)
 
-        # Make calculations
-        for item in history_list.get(self._entity_id):
+        # Calculations
+        for item in history_list.get(self._entity_id) or []:
             current_state = item.state
             current_time = item.last_changed.timestamp()
 
-            elapsed = current_time - last_time
-
-            if (last_state is None) or (current_state == last_state):
-                # record time spent in current state
-                intervals[float(current_state)] += elapsed
-            else:
-                # average previous interval's state
-                average_state = (float(current_state) + float(last_state)) / 2
-                intervals[average_state] += elapsed
+            # average only over valid states
+            if last_state is not None:
+                elapsed = current_time - last_time
+                total_elapsed += elapsed
+                intervals[float(last_state)] += elapsed
 
             last_time = current_time
             last_state = current_state
 
         # Count time elapsed between last history state and end of measure
-        measure_end = min(end_timestamp, now_timestamp)
-        elapsed = measure_end - last_time
-        intervals[float(last_state)] += elapsed
+        if last_state is not None:
+            measure_end = min(end_timestamp, now_timestamp)
+            elapsed = measure_end - last_time
+            total_elapsed += elapsed
+            intervals[float(last_state)] += elapsed
 
         # Calculate the weighted average
-        value = 0
-        # TODO: maybe instead just do a sum of all the elapsed time,
-        # and compare / display it as an attribute vs. relying upon the
-        # period - for example when there's not enough data to cover the
-        # entire period
-        period = HistoryAverageHelper.period_in_seconds(self._period)
+        value = 0 if intervals else None
         for state in intervals:
-            value += float(state) * (intervals[state] / period)
+            value += float(state) * (intervals[state] / total_elapsed)
 
         self.value = value
 
@@ -239,8 +224,7 @@ class HistoryAverageSensor(Entity):
             start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
-                    start = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(start_rendered))))
+                    start = dt_util.utc_from_timestamp(float(start_rendered))
                 except ValueError:
                     _LOGGER.error("Parsing error: start must be a datetime"
                                   "or a timestamp")
@@ -256,8 +240,8 @@ class HistoryAverageSensor(Entity):
             end = dt_util.parse_datetime(end_rendered)
             if end is None:
                 try:
-                    end = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(end_rendered))))
+                    print(float(end_rendered))
+                    end = dt_util.utc_from_timestamp(float(end_rendered))
                 except ValueError:
                     _LOGGER.error("Parsing error: end must be a datetime "
                                   "or a timestamp")
