@@ -36,7 +36,7 @@ class TeslaDeviceTracker(object):
         for device in self.devices:
             device.update()
             name = device.name
-            _LOGGER.debug('Updating device position:', name)
+            _LOGGER.debug('Updating device position: {}'.format(name))
             tesla_id = slugify(device.uniq_name)
             dev_id = slugify(name)
 

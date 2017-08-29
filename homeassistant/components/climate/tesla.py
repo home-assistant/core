@@ -56,7 +56,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     def update(self):
         """Called by the Tesla device callback to update state."""
-        _LOGGER.debug('Updating:', self._name)
+        _LOGGER.debug('Updating: {}'.format(self._name))
         self.tesla_device.update()
         self._state = self.tesla_device.is_hvac_enabled()
         self._target_temperature = self.tesla_device.get_goal_temp()
@@ -88,14 +88,14 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        _LOGGER.debug('Setting temperature for:', self._name)
+        _LOGGER.debug('Setting temperature for: {}'.format(self._name))
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
             self.tesla_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, cool, heat, off)."""
-        _LOGGER.debug('Setting mode for:', self._name)
+        _LOGGER.debug('Setting mode for: {}'.format(self._name))
         if operation_mode == OPERATION_LIST[1]:  # off
             self.tesla_device.set_status(False)
         elif operation_mode == OPERATION_LIST[0]:  # heat

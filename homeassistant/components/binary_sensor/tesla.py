@@ -54,6 +54,6 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
 
     def update(self):
         """Update the state of the device."""
-        _LOGGER.debug('Updating sensor:', self._name)
+        _LOGGER.debug('Updating sensor: {}'.format(self._name))
         self.tesla_device.update()
         self._state = self.tesla_device.get_value()
