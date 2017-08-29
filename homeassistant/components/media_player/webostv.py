@@ -88,10 +88,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     config = hass.config.path(config.get(CONF_FILENAME))
 
     setup_tv(host, mac, name, customize, config, timeout, hass,
-        add_devices, turn_on_action)
+    add_devices, turn_on_action)
 
 
-def setup_tv(host, mac, name, customize, config, timeout, hass,
+def setup_tv(
+    host, mac, name, customize, config, timeout, hass,
     add_devices, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
