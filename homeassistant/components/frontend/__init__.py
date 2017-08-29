@@ -127,14 +127,16 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     if url_path in panels:
         _LOGGER.warning("Overwriting component %s", url_path)
-    if not os.path.isfile(path):
-        _LOGGER.error(
-            "Panel %s component does not exist: %s", component_name, path)
-        return
 
-    if md5 is None:
-        with open(path) as fil:
-            md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
+    if url is None:
+        if not os.path.isfile(path):
+            _LOGGER.error(
+                "Panel %s component does not exist: %s", component_name, path)
+            return
+
+        if md5 is None:
+            with open(path) as fil:
+                md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
     data = {
         'url_path': url_path,
