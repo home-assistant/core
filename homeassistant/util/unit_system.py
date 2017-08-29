@@ -127,7 +127,6 @@ class UnitSystem(object):
         conv = distance_util.convert(
             length, from_unit, to_unit)  # type: float
 
-
         return {
             "value": conv,
             "unit": to_unit,
