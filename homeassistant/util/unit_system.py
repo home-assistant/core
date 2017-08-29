@@ -105,8 +105,8 @@ class UnitSystem(object):
         return converted["value"]
 
     def length_and_unit(
-        self: object, length: float, from_unit: str,
-        auto_range: bool) -> dict:
+         self: object, length: float, from_unit: str,
+         auto_range: bool) -> dict:
         """Convert the given length to this unit system return a dict."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
@@ -127,7 +127,7 @@ class UnitSystem(object):
         conv = distance_util.convert(
             length, from_unit, to_unit)  # type: float
 
-        conversion_result = {}
+
         return {
             "value": conv,
             "unit": to_unit,
@@ -166,7 +166,7 @@ class UnitSystem(object):
                     float(value), unit, True)
             except ValueError:
                 return None
-        
+
             length = converted["value"]
             value = str(round(length))
             if prec != 0:
