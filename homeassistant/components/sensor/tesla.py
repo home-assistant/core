@@ -63,7 +63,7 @@ class TeslaSensor(TeslaDevice, Entity):
 
     def update(self):
         """Update the state from the sensor."""
-        _LOGGER.debug('Updating sensor: {}'.format(self._name))
+        _LOGGER.debug('Updating sensor: %s', self._name)
         self.tesla_device.update()
         if self.tesla_device.type == 'temperature sensor.':
             if self.type == 'outside':
