@@ -105,8 +105,8 @@ class UnitSystem(object):
         return converted["value"]
 
     def length_and_unit(
-         self: object, length: float, from_unit: str,
-         auto_range: bool) -> dict:
+            self: object, length: float, from_unit: str,
+            auto_range: bool) -> dict:
         """Convert the given length to this unit system return a dict."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
@@ -157,7 +157,7 @@ class UnitSystem(object):
             converted["value"] = value
             converted["units"] = self.temperature_unit
         elif (unit in LENGTH_UNITS and
-                unit != self.length_unit):
+              unit != self.length_unit):
             # Convert length if we detect one
             prec = len(value) - value.index('.') - 1 if '.' in value else 0
             try:
