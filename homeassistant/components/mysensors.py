@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.setup import setup_component
 
-REQUIREMENTS = ['pymysensors==0.11.0']
+REQUIREMENTS = ['pymysensors==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
