@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD)
 
-REQUIREMENTS = ['pyrainbird==0.0.7']
+REQUIREMENTS = ['pyrainbird==0.0.9']
 
 DOMAIN = 'rainbird'
 
@@ -101,6 +101,10 @@ class RainbirdDevice(Entity):
     def available(self):
         """Return True if entity is available."""
         return self._state != -1
+
+    def setstate(self, state):
+        """Force set the current state value."""
+        self._state = state
 
     @property
     def state(self):
