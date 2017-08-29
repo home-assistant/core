@@ -89,7 +89,7 @@ class PushBulletNotificationService(BaseNotificationService):
 
         if not targets:
             # Backward compatibility, notify all devices in own account
-            self._push_data(filepath, message, title, self.pushbullet, url)
+            self._push_data(filepath, message, title, url, self.pushbullet)
             _LOGGER.info("Sent notification to self")
             return
 
