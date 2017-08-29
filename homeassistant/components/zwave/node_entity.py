@@ -120,7 +120,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         if (value is not None and
                 value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
-            return
 
         self.node_changed()
 
