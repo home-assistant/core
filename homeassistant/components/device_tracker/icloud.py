@@ -307,12 +307,15 @@ class Icloud(DeviceScanner):
             self.api.authenticate()
 
         currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
-        for devicename in self.devices:
-            interval = self._intervals.get(devicename, 1)
-            if ((currentminutes % interval == 0) or
-                    (interval > 10 and
-                     currentminutes % interval in [2, 4])):
-                self.update_device(devicename)
+        try:
+            for devicename in self.devices:
+                interval = self._intervals.get(devicename, 1)
+                if ((currentminutes % interval == 0) or
+                        (interval > 10 and
+                         currentminutes % interval in [2, 4])):
+                    self.update_device(devicename)
+        except ValueError:
+            _LOGGER.debug("iCloud API returned an error")
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
@@ -397,7 +400,7 @@ class Icloud(DeviceScanner):
                     self.see(**kwargs)
                     self.seen_devices[devicename] = True
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error("No iCloud Devices found")
 
     def lost_iphone(self, devicename):
         """Call the lost iPhone function if the device is found."""

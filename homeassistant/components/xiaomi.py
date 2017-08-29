@@ -9,8 +9,7 @@ from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
 
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
-                'aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#'
-                'PyXiaomiGateway==0.2.0']
+                '0.3.zip#PyXiaomiGateway==0.3.0']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -67,8 +66,8 @@ def setup(hass, config):
                                                    interface)
 
     _LOGGER.debug("Expecting %s gateways", len(gateways))
-    for _ in range(discovery_retry):
-        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', _ + 1)
+    for k in range(discovery_retry):
+        _LOGGER.info('Discovering Xiaomi Gateways (Try %s)', k + 1)
         hass.data[PY_XIAOMI_GATEWAY].discover_gateways()
         if len(hass.data[PY_XIAOMI_GATEWAY].gateways) >= len(gateways):
             break
@@ -153,8 +152,8 @@ class XiaomiDevice(Entity):
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._device_state_attributes = {}
+        xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self.parse_data(device['data'])
         self.parse_voltage(device['data'])
 
@@ -165,7 +164,7 @@ class XiaomiDevice(Entity):
 
     @property
     def should_poll(self):
-        """Poll update device status."""
+        """No polling needed."""
         return False
 
     @property
