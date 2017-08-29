@@ -687,7 +687,7 @@ pyowm==2.7.1
 pyqwikswitch==0.4
 
 # homeassistant.components.rainbird
-pyrainbird==0.0.7
+pyrainbird==0.0.9
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1
