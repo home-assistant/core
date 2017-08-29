@@ -31,26 +31,22 @@ CONF_TO_STATE = 'to_state'
 
 DEFAULT_NAME = 'BayesianBinary'
 
-NUMERIC_STATE_SCHEMA = vol.Schema(
-    {
-        CONF_PLATFORM: 'numeric_state',
-        CONF_ENTITY_ID: cv.entity_id,
-        vol.Optional(CONF_ABOVE): vol.Coerce(float),
-        vol.Optional(CONF_BELOW): vol.Coerce(float),
-        CONF_P_GIVEN_T: vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
-    },
-    required=True)
+NUMERIC_STATE_SCHEMA = vol.Schema({
+    CONF_PLATFORM: 'numeric_state',
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_ABOVE): vol.Coerce(float),
+    vol.Optional(CONF_BELOW): vol.Coerce(float),
+    vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+    vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+}, required=True)
 
-STATE_SCHEMA = vol.Schema(
-    {
-        CONF_PLATFORM: CONF_STATE,
-        CONF_ENTITY_ID: cv.entity_id,
-        CONF_TO_STATE: cv.string,
-        CONF_P_GIVEN_T: vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
-    },
-    required=True)
+STATE_SCHEMA = vol.Schema({
+    CONF_PLATFORM: CONF_STATE,
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_TO_STATE): cv.string,
+    vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+    vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+}, required=True)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME):
@@ -58,7 +54,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Required(CONF_OBSERVATIONS): vol.Schema(
         vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
-                                         STATE_SCHEMA)])),
+                                         STATE_SCHEMA)])
+    ),
     vol.Required(CONF_PRIOR): vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
         vol.Coerce(float),
