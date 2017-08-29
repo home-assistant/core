@@ -815,7 +815,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_system_status(self, req_mock):
-        """Test getting system status"""
+        """Test getting system status."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
