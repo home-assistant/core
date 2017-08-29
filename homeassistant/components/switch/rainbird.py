@@ -57,6 +57,7 @@ class RainBirdSwitch(SwitchDevice):
         self._duration = dev.get(CONF_TRIGGER_TIME)
         self._attributes = {
             "duration": self._duration,
+            "zone" : self._zone
         }
 
     @property
@@ -78,11 +79,13 @@ class RainBirdSwitch(SwitchDevice):
         """Turn the switch on."""
         self._state = True
         self._rainbird.start_irrigation(self._zone, self._duration)
+        self._rainbird.setstate(self._zone)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = False
         self._rainbird.stop_irrigation()
+        self._rainbird.setstate(0)
 
     def get_device_status(self):
         """Get the status of the switch from Rain Bird Controller."""
