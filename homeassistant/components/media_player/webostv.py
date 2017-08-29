@@ -127,9 +127,9 @@ def setup_tv(
         configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, mac, name, customize, config, timeout,
-        hass, turn_on_action)],
-                True)
+    add_devices(
+        [LgWebOSDevice(host, mac, name, customize, config, timeout,
+        hass, turn_on_action)], True)
 
 
 def request_configuration(
@@ -161,7 +161,8 @@ def request_configuration(
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, host, mac, name, customize, config, timeout,
+    def __init__(
+        self, host, mac, name, customize, config, timeout,
         hass, on_action):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
