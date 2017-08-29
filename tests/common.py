@@ -119,7 +119,7 @@ def async_test_home_assistant(loop):
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, Mock):
-            return mock_coro(target())
+            return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
