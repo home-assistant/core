@@ -202,6 +202,9 @@ enocean==0.31
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
+# homeassistant.components.sensor.season
+ephem==3.7.6.0
+
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
