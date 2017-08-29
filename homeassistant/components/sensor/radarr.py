@@ -162,7 +162,7 @@ class RadarrSensor(Entity):
             res = requests.get(
                 ENDPOINTS[self.type].format(
                     self.ssl, self.host, self.port, self.urlbase, start, end),
-                headers={'X-Api-Key': self.apikey}, timeout=5)
+                headers={'X-Api-Key': self.apikey}, timeout=10)
         except OSError:
             _LOGGER.error("Host %s is not available", self.host)
             self._available = False
