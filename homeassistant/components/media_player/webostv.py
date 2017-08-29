@@ -129,7 +129,7 @@ def setup_tv(
 
     add_devices(
         [LgWebOSDevice(host, mac, name, customize, config, timeout,
-        hass, turn_on_action)], True)
+            hass, turn_on_action)], True)
 
 
 def request_configuration(
@@ -163,7 +163,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def __init__(
         self, host, mac, name, customize, config, timeout,
-        hass, on_action):
+            hass, on_action):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         from wakeonlan import wol
