@@ -11,11 +11,11 @@ from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_ABOVE, CONF_BELOW, CONF_DEVICE_CLASS,
-                                 CONF_ENTITY_ID, CONF_NAME, CONF_PLATFORM,
-                                 CONF_STATE, STATE_UNKNOWN)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_ABOVE, CONF_BELOW, CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_NAME,
+    CONF_PLATFORM, CONF_STATE, STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import async_track_state_change
@@ -54,17 +54,14 @@ STATE_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    cv.string,
-    vol.Required(CONF_OBSERVATIONS):
-    vol.Schema(
+        cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
+    vol.Required(CONF_OBSERVATIONS): vol.Schema(
         vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
                                          STATE_SCHEMA)])),
-    vol.Required(CONF_PRIOR):
-    vol.Coerce(float),
+    vol.Required(CONF_PRIOR): vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
-    vol.Coerce(float),
+        vol.Coerce(float),
 })
 
 
@@ -74,7 +71,6 @@ def update_probability(prior, prob_true, prob_false):
     denominator = numerator + prob_false * (1 - prior)
 
     probability = numerator / denominator
-
     return probability
 
 
@@ -146,7 +142,6 @@ class BayesianBinarySensor(BinarySensorDevice):
         async_track_state_change(
           self.hass, entities, async_threshold_sensor_state_listener)
 
-    @callback
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
         entity = entity_observation['entity_id']
@@ -164,7 +159,6 @@ class BayesianBinarySensor(BinarySensorDevice):
         else:
             self.current_obs.pop(entity, None)
 
-    @callback
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
         entity = entity_observation['entity_id']
@@ -176,7 +170,6 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self._update_current_obs(entity_observation, should_trigger)
 
-    @callback
     def _process_state(self, entity_observation):
         """Add entity to current observations if state conditions are met."""
         entity = entity_observation['entity_id']
