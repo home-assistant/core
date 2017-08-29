@@ -286,13 +286,14 @@ class Entity(object):
 
         unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
         units = self.hass.config.units
-        converted = units.convert(state, unit_of_measure)
 
-        if converted is not None:
-            if converted["unit"] is not None:
-                attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
-            if converted["value"] is not None:
-                state = converted["value"]
+        if unit_of_measure is not None:
+            converted = units.convert(state, unit_of_measure)
+            if converted is not None:
+                if converted["unit"] is not None:
+                    attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
+                if converted["value"] is not None:
+                    state = converted["value"]
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)

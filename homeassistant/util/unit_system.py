@@ -101,34 +101,37 @@ class UnitSystem(object):
 
     def length(self: object, length: float, from_unit: str) -> float:
         """Convert the given length to this unit system return a float."""
-        converted = self.length_with_display_obj(length, from_unit)
+        converted = self.length_and_unit(length, from_unit, False)
         return converted["value"]
 
-    def length_with_display_obj(self: object, length: float,
-                                from_unit: str) -> dict:
+    def length_and_unit(
+        self: object, length: float, from_unit: str,
+        auto_range: bool) -> dict:
         """Convert the given length to this unit system return a dict."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
         to_unit = self.length_unit
-        if self == METRIC_SYSTEM:
-            if from_unit in (LENGTH_FEET, LENGTH_INCHES):
-                to_unit = LENGTH_CENTIMETERS
-            elif from_unit == LENGTH_YARD:
-                to_unit = LENGTH_METERS
-        elif self == IMPERIAL_SYSTEM:
-            if from_unit == LENGTH_CENTIMETERS:
-                to_unit = LENGTH_INCHES
-            elif from_unit == LENGTH_METERS:
-                to_unit = LENGTH_INCHES
+        if auto_range:
+            if self == METRIC_SYSTEM:
+                if from_unit in (LENGTH_FEET, LENGTH_INCHES):
+                    to_unit = LENGTH_CENTIMETERS
+                elif from_unit == LENGTH_YARD:
+                    to_unit = LENGTH_METERS
+            elif self == IMPERIAL_SYSTEM:
+                if from_unit == LENGTH_CENTIMETERS:
+                    to_unit = LENGTH_INCHES
+                elif from_unit == LENGTH_METERS:
+                    to_unit = LENGTH_INCHES
 
         conv = distance_util.convert(
             length, from_unit, to_unit)  # type: float
 
         conversion_result = {}
-        conversion_result["value"] = conv
-        conversion_result["unit"] = to_unit
-        return conversion_result
+        return {
+            "value": conv,
+            "unit": to_unit,
+        }
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
@@ -139,38 +142,36 @@ class UnitSystem(object):
             VOLUME: self.volume_unit
         }
 
-    def convert(self, state, unit_of_measure):
+    def convert(self, value, unit):
         """Generic conversion method."""
         converted = None
-        try:
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != self.temperature_unit):
-                # Convert temperature if we detect one
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = self.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                converted = {}
-                converted["value"] = state
-                converted["units"] = self.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
-
-        try:
-            if (unit_of_measure in LENGTH_UNITS and
-                    unit_of_measure != self.length_unit):
-                # Convert length if we detect one
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                converted = self.length_with_display_obj(
-                    float(state), unit_of_measure)
-                length = converted["value"]
-                state = str(round(length))
-                if prec != 0:
-                    state = round(length, prec)
-                converted["value"] = state
-        except ValueError:
-            # Could not convert state to float
-            pass
+        if (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                unit != self.temperature_unit):
+            # Convert temperature if we detect one
+            prec = len(value) - value.index('.') - 1 if '.' in value else 0
+            try:
+                temp = self.temperature(float(value), unit)
+            except ValueError:
+                return None
+            value = str(round(temp) if prec == 0 else round(temp, prec))
+            converted = {}
+            converted["value"] = value
+            converted["units"] = self.temperature_unit
+        elif (unit in LENGTH_UNITS and
+                unit != self.length_unit):
+            # Convert length if we detect one
+            prec = len(value) - value.index('.') - 1 if '.' in value else 0
+            try:
+                converted = self.length_and_unit(
+                    float(value), unit, True)
+            except ValueError:
+                return None
+        
+            length = converted["value"]
+            value = str(round(length))
+            if prec != 0:
+                value = round(length, prec)
+            converted["value"] = value
 
         return converted
 

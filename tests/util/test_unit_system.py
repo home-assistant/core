@@ -138,8 +138,8 @@ class TestUnitSystem(unittest.TestCase):
     def test_conver_from_metric_with_alternate_display(self):
         """Test conversion from meters to inches."""
         m = float(2)
-        result = IMPERIAL_SYSTEM.length_with_display_obj(
-                m, LENGTH_METERS)
+        result = IMPERIAL_SYSTEM.length_and_unit(
+                m, LENGTH_METERS, True)
         self.assertEqual(
             78.74016,
             result["value"]
@@ -149,8 +149,8 @@ class TestUnitSystem(unittest.TestCase):
     def test_conver_from_imperial_with_alternate_display(self):
         """Test conversion from feet to cm."""
         m = float(2)
-        result = METRIC_SYSTEM.length_with_display_obj(
-                m, LENGTH_FEET)
+        result = METRIC_SYSTEM.length_and_unit(
+                m, LENGTH_FEET, True)
         self.assertEqual(
             60.96,
             result["value"]
