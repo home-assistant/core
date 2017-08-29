@@ -1,3 +1,4 @@
+"""Package to offer tools to communicate with the cloud."""
 import asyncio
 from datetime import timedelta
 import json
@@ -26,6 +27,7 @@ class CloudError(Exception):
     """Base class for cloud related errors."""
 
     def __init__(self, reason=None, status=None):
+        """Initialize a cloud error."""
         super().__init__(reason)
         self.status = status
 
@@ -140,6 +142,7 @@ class Cloud:
 
     @asyncio.coroutine
     def async_refresh_account_info(self):
+        """Refresh the account info."""
         req = yield from self.async_request('get', URL_ACCOUNT)
 
         if req.status != 200:
@@ -188,14 +191,15 @@ class Cloud:
             yield from self.hass.async_add_job(
                 _write_auth, self.hass, None)
 
-        except aiohttp.ClientError as err:
+        except aiohttp.ClientError:
             raise UnknownError()
 
     @asyncio.coroutine
     def async_request(self, method, path, **kwargs):
         """Make a request to Home Assistant cloud.
 
-        Will refresh the token if necessary."""
+        Will refresh the token if necessary.
+        """
         session = async_get_clientsession(self.hass)
         url = _url(self.hass, path)
 
@@ -240,8 +244,8 @@ def _read_auth(hass):
     if not os.path.isfile(path):
         return None
 
-    with open(path) as fp:
-        return json.load(fp).get(get_mode(hass))
+    with open(path) as file:
+        return json.load(file).get(get_mode(hass))
 
 
 def _write_auth(hass, data):
@@ -253,8 +257,8 @@ def _write_auth(hass, data):
     mode = get_mode(hass)
 
     if os.path.isfile(path):
-        with open(path) as fp:
-            content = json.load(fp)
+        with open(path) as file:
+            content = json.load(file)
     else:
         content = {}
 

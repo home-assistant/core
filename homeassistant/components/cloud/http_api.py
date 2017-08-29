@@ -1,3 +1,4 @@
+"""The HTTP api to control the cloud integration."""
 import asyncio
 import logging
 
@@ -14,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup(hass):
+    """Initialize the HTTP api."""
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudAccountView)
@@ -43,7 +45,7 @@ class CloudLoginView(HomeAssistantView):
         except vol.Invalid as err:
             _LOGGER.error('Login with invalid formatted data')
             return self.json_message(
-                'Message format incorrect: '.format(err), 400)
+                'Message format incorrect: {}'.format(err), 400)
 
         hass = request.app['hass']
         phase = 1
@@ -84,7 +86,8 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app['hass']
         try:
             with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-                yield from hass.data[DOMAIN]['cloud'].async_revoke_access_token()
+                yield from \
+                    hass.data[DOMAIN]['cloud'].async_revoke_access_token()
 
             hass.data[DOMAIN].pop('cloud')
 

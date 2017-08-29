@@ -1,12 +1,12 @@
+"""Tests for the tools to communicate with the cloud."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from urllib.parse import urljoin
 
 import aiohttp
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.cloud import DOMAIN, cloud_api, const
 import homeassistant.util.dt as dt_util
 
@@ -37,12 +37,14 @@ def cloud_hass(hass):
 
 @pytest.fixture
 def mock_write():
+    """Mock reading authentication."""
     with patch.object(cloud_api, '_write_auth') as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_read():
+    """Mock writing authentication."""
     with patch.object(cloud_api, '_read_auth') as mock:
         yield mock
 

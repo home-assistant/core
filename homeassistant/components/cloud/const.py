@@ -1,3 +1,4 @@
+"""Constants for the cloud component."""
 DOMAIN = 'cloud'
 REQUEST_TIMEOUT = 10
 AUTH_FILE = '.cloud'

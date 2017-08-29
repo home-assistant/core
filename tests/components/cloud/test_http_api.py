@@ -1,3 +1,4 @@
+"""Tests for the HTTP API for the cloud component."""
 import asyncio
 from unittest.mock import patch, MagicMock
 

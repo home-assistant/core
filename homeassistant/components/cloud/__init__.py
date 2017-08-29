@@ -1,3 +1,4 @@
+"""Component to integrate the Home Assistant cloud."""
 import asyncio
 import logging
 
