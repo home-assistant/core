@@ -7,7 +7,7 @@ jinja2>=2.9.5
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.2.5
-async_timeout==1.2.1
+async_timeout==1.3.0
 chardet==3.0.4
 astral==1.4
 
@@ -18,7 +18,7 @@ astral==1.4
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.isy994
-PyISY==1.0.7
+PyISY==1.0.8
 
 # homeassistant.components.notify.html5
 PyJWT==1.5.2
@@ -296,7 +296,7 @@ holidays==0.8.1
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
 # homeassistant.components.xiaomi
-https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.zip#PyXiaomiGateway==0.3.0
+https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.1.zip#PyXiaomiGateway==0.3.1
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
@@ -414,6 +414,9 @@ miniupnpc==1.9
 
 # homeassistant.components.tts
 mutagen==1.38
+
+# homeassistant.components.mycroft
+mycroftapi==0.1.2
 
 # homeassistant.components.usps
 myusps==1.1.3
@@ -716,7 +719,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.12
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.8
+python-ecobee-api==0.0.9
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.5
@@ -954,7 +957,7 @@ transmissionrpc==0.11
 twilio==5.7.0
 
 # homeassistant.components.sensor.uber
-uber_rides==0.5.1
+uber_rides==0.5.2
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
