@@ -58,7 +58,7 @@ def async_load_auth(hass):
 
             return cloud
 
-    except asyncio.TimeoutErrror:
+    except asyncio.TimeoutError:
         _LOGGER.error('Unable to reach server to validate credentials.')
         return None
 
@@ -102,14 +102,14 @@ def _async_get_token(hass, data):
             auth=auth
         )
 
-        if req.status in (401, 403):
+        if req.status == 401:
             _LOGGER.error('Cloud login failed: %d', req.status)
             raise Unauthenticated(status=req.status)
         elif req.status != 200:
             _LOGGER.error('Cloud login failed: %d', req.status)
             raise UnknownError(status=req.status)
 
-        response = yield from req.json(content_type=None)
+        response = yield from req.json()
         response['expires_at'] = \
             (utcnow() + timedelta(seconds=response['expires_in'])).isoformat()
 
@@ -184,6 +184,7 @@ class Cloud:
                 _LOGGER.error('Cloud logout failed: %d', req.status)
                 raise UnknownError(status=req.status)
 
+            self.auth = None
             yield from self.hass.async_add_job(
                 _write_auth, self.hass, None)
 
@@ -223,6 +224,7 @@ class Cloud:
 
         # If we are not already fetching the account info,
         # refresh the account info.
+
         if path != URL_ACCOUNT:
             yield from self.async_refresh_account_info()
 

@@ -10,11 +10,14 @@ from .const import DOMAIN
 DEPENDENCIES = ['http']
 CONF_MODE = 'mode'
 MODE_DEV = 'development'
+MODE_STAGING = 'staging'
+MODE_PRODUCTION = 'production'
 DEFAULT_MODE = MODE_DEV
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In([MODE_DEV]),
+        vol.Optional(CONF_MODE, default=DEFAULT_MODE):
+        vol.In([MODE_DEV, MODE_STAGING, MODE_PRODUCTION]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the Home Assistant cloud."""
-    mode = 'production'
+    mode = MODE_PRODUCTION
 
     if DOMAIN in config:
         mode = config[DOMAIN].get(CONF_MODE)
