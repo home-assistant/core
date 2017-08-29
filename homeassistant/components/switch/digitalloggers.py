@@ -121,6 +121,7 @@ class DINRelay(SwitchDevice):
         self._name = outlet_status[1]
         self._state = outlet_status[2] == 'ON'
 
+
 class DINRelayDevice(object):
     """Device representation for per device throttling."""
 
