@@ -77,10 +77,6 @@ def _valid_device(value, device_type):
         if not len(key) % 2 == 0:
             key = '0' + key
 
-        if get_rfx_object(key) is None:
-            raise vol.Invalid('Rfxtrx device {} is invalid: '
-                              'Invalid device id for {}'.format(key, value))
-
         if device_type == 'sensor':
             config[key] = DEVICE_SCHEMA_SENSOR(device)
         elif device_type == 'binary_sensor':
@@ -292,6 +288,9 @@ def get_devices_from_config(config, device, hass):
     devices = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
+            continue
         device_id = slugify(event.device.id_string.lower())
         if device_id in RFX_DEVICES:
             continue
