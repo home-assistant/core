@@ -130,6 +130,7 @@ class DINRelayDevice(object):
         self._statuslist = None
 
     def get_outlet_status(self, outlet_number):
+        """Get status of outlet from cached status list"""
         return self._statuslist[outlet_number - 1]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
