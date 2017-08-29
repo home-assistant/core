@@ -142,10 +142,9 @@ class BayesianBinarySensor(BinarySensorDevice):
 
             self.hass.async_add_job(self.async_update_ha_state, True)
 
-        for obs in self._observations:
-            entity_id = obs['entity_id']
-            async_track_state_change(self.hass, entity_id,
-                                     async_threshold_sensor_state_listener)
+        entities = [obs['entity_id'] for obs in self._observations]
+        async_track_state_change(
+          self.hass, entities, async_threshold_sensor_state_listener)
 
     @callback
     def _update_current_obs(self, entity_observation, should_trigger):
@@ -154,8 +153,8 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         if should_trigger:
             prob_true = entity_observation['prob_given_true']
-            prob_false = entity_observation.get('prob_given_false',
-                                                1 - prob_true)
+            prob_false = entity_observation.get(
+              'prob_given_false', 1 - prob_true)
 
             self.current_obs[entity] = {
                 'prob_true': prob_true,
@@ -182,8 +181,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Add entity to current observations if state conditions are met."""
         entity = entity_observation['entity_id']
 
-        should_trigger = condition.state(self.hass, entity,
-                                         entity_observation.get('to_state'))
+        should_trigger = condition.state(
+          self.hass, entity, entity_observation.get('to_state'))
 
         self._update_current_obs(entity_observation, should_trigger)
 
