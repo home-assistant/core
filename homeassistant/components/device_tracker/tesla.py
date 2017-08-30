@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Tesla tracker."""
     TeslaDeviceTracker(
-        hass, config, see, hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
+        hass, config, see,
+        hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
     return True
 
 
