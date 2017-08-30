@@ -23,7 +23,7 @@ REQUIRES = [
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.2.5',
-    'async_timeout==1.2.1',
+    'async_timeout==1.3.0',
     'chardet==3.0.4',
     'astral==1.4',
 ]
