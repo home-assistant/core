@@ -44,9 +44,8 @@ ICON = 'mdi:calculator'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SAMPLING_SIZE,
-                 default=DEFAULT_SIZE): vol.All(vol.Coerce(int),
-                                                vol.Range(min=1)),
+    vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_MAX_AGE): cv.time_period
 })
 
