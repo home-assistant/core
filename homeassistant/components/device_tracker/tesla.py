@@ -10,8 +10,9 @@ from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 
-DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['tesla']
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -40,7 +41,7 @@ class TeslaDeviceTracker(object):
         for device in self.devices:
             device.update()
             name = device.name
-            _LOGGER.debug('Updating device position: %s', name)
+            _LOGGER.debug("Updating device position: %s", name)
             dev_id = slugify(device.uniq_name)
             location = device.get_location()
             lat = location['latitude']
