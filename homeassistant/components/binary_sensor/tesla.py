@@ -16,10 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla binary sensor."""
-
-    devices = [TeslaBinarySensor(device,
-                                 hass.data[DOMAIN]['controller'], 'connectivity')
-               for device in hass.data[DOMAIN]['devices']['binary_sensor']]
+    devices = [
+        TeslaBinarySensor(
+            device, hass.data[DOMAIN]['controller'], 'connectivity')
+        for device in hass.data[DOMAIN]['devices']['binary_sensor']]
     add_devices(devices, True)
 
 
