@@ -930,6 +930,9 @@ steamodd==4.21
 # homeassistant.components.camera.onvif
 suds-py3==1.3.3.0
 
+# homeassistant.components.sensor.tank_utility
+tank_utility==1.4.0
+
 # homeassistant.components.binary_sensor.tapsaff
 tapsaff==0.1.3
 
