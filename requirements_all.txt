@@ -888,7 +888,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.7.4
+shodan==1.7.5
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5
