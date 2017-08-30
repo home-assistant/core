@@ -9,6 +9,8 @@
     <dict>
       <key>PATH</key>
       <string>/usr/local/bin/:/usr/bin:$PATH</string>
+      <key>LANG</key>
+      <string>en_US.UTF-8</string>
     </dict>
 
     <key>Program</key>
