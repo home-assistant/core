@@ -27,7 +27,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.setup import setup_component
 
+<<<<<<< HEAD
 REQUIREMENTS = ['pymysensors==0.11.1']
+=======
+REQUIREMENTS = ['pymysensors==0.11.0']
+>>>>>>> 555ba541b986f348346c632fe98aebe831f2adca
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -368,7 +372,10 @@ def setup(hass, config):
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
+<<<<<<< HEAD
             ready_gateway.nodes_config = gway.get(CONF_NODES)
+=======
+>>>>>>> 555ba541b986f348346c632fe98aebe831f2adca
             gateways[id(ready_gateway)] = ready_gateway
 
     if not gateways:
@@ -506,6 +513,7 @@ def gw_callback_factory(hass):
 
 def get_mysensors_name(gateway, node_id, child_id):
     """Return a name for a node child."""
+<<<<<<< HEAD
     node_name = '{} {}'.format(
         gateway.sensors[node_id].sketch_name, node_id)
     node_name = next(
@@ -513,6 +521,10 @@ def get_mysensors_name(gateway, node_id, child_id):
          if node.get(CONF_NODE_NAME) is not None and conf_id == node_id),
         node_name)
     return '{} {}'.format(node_name, child_id)
+=======
+    return '{} {} {}'.format(
+        gateway.sensors[node_id].sketch_name, node_id, child_id)
+>>>>>>> 555ba541b986f348346c632fe98aebe831f2adca
 
 
 def get_mysensors_gateway(hass, gateway_id):
