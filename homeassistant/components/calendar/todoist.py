@@ -12,12 +12,17 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 # Your Todoist API token, found at https://todoist.com/Users/viewPrefs?page=authorizations
 CONF_API_TOKEN = 'token'
+CONF_EXTRA_PROJECTS = 'extra_projects'
+CONF_PROJECT_NAME = 'name'
+CONF_PROJECT_DUE_DATE = 'due_date_days'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     token = config.get(CONF_API_TOKEN)
+
+    # Grab all projects
     projects = requests.get('https://beta.todoist.com/API/v8/projects',
         params={'token': token}
     ).json()
@@ -26,16 +31,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for project in projects:
         project_devices.append(TodoistProjectDevice(hass, project, token))
 
+    # Check config for more projects
+    extra_projects = config.get(CONF_EXTRA_PROJECTS)
+    if extra_projects is not None:
+        for project in extra_projects:
+            project_devices.append(TodoistProjectDevice(hass, project, token, project.get(CONF_PROJECT_DUE_DATE)))
+
     add_devices(project_devices)
 
 class TodoistProjectDevice(CalendarEventDevice):
     """
     A device for getting the next Task from a Todoist Project.
     """
-    def __init__(self, hass, data, token):
+    def __init__(self, hass, data, token, latest_task_due_date=None):
         """Create the Todoist Calendar Event Device."""
 
-        self.data = TodoistProjectData(data, token)
+        self.data = TodoistProjectData(data, token, latest_task_due_date)
 
         # Set up the calendar side of things
         calendar_format = {}
@@ -64,19 +75,41 @@ class TodoistProjectDevice(CalendarEventDevice):
         """Return the device state attributes."""
         if self.data.event is None:
             return {}
+
         attributes = super().device_state_attributes
+        # Add additional attributes
+        attributes['due_today'] = self.data.event['due_today']
         attributes['all_tasks'] = self._cal_data['all_tasks']
+        attributes['priority'] = self.data.event['priority']
         return attributes
 
 class TodoistProjectData(object):
-    """Class used by the Task Device service object to get the next task."""
-    def __init__(self, project_data, token):
+    """
+    Class used by the Task Device service object to hold all Todoist Tasks.
+    Takes a JSON representation of the project data (returned from the Todoist API),
+    a Todoist API token, and an optional integer specifying the latest number of days
+    from now a task can be due (7 means everything due in the next week, 0 means
+    today, etc.).
+    """
+    def __init__(self, project_data, token, latest_task_due_date=None):
+        self.event = None
+
         self._token = token
         self._name = project_data['name']
-        self._id = project_data['id']
+        # If no ID is defined, fetch all tasks
+        if 'id' in project_data:
+            self._id = project_data['id']
+        else:
+            self._id = None
         # Not tracked: order, indent, comment_count
 
         self.all_project_tasks = []
+        # The latest date a task can be due (for making lists of everything
+        # due today, or everything due in the next week, for example)
+        if latest_task_due_date is not None:
+            self._latest_due_date = datetime.now() + timedelta(days=latest_task_due_date)
+        else:
+            self._latest_due_date = None
 
     def create_todoist_task(self, data):
         task = {}
@@ -100,16 +133,29 @@ class TodoistProjectData(object):
                 task['end'] = datetime.strptime(due_date['datetime'], '%Y-%m-%dT%H:%M:%SZ')
             else:
                 task['end'] = datetime.strptime(due_date['date'], '%Y-%m-%d')
+
+            if self._latest_due_date is not None and task['end'] > self._latest_due_date:
+                # This task is out of range of our due date; it shouldn't be counted
+                return None
+
+            task['due_today'] = task['end'].date() == datetime.today().date()
         else:
+            # If we ask for everything due before a certain date, don't count things
+            # which have no due dates
+            if self._latest_due_date is not None:
+                return None
             task['end'] = None
             task['all_day'] = True
+            task['due_today'] = False
         # Not tracked: id, project_id order, indent, comment_count, label_ids, recurring
         return task
 
     def select_best_task(self, project_tasks):
         if len(project_tasks) > 0:
-            event = project_tasks[0]
-            """ 
+            # Start at the end of the list, so if tasks don't have a due date
+            # the newest ones are the most important
+            event = project_tasks[len(project_tasks) - 1]
+            """
             Search through all our events for the "best" event to select
             The "best" event is determined by the following criteria:
               * A proposed event must not be completed
@@ -126,6 +172,7 @@ class TodoistProjectData(object):
                 has the same priority as our current event, but is due earlier
                 in the day, select it
             """
+
             for proposed_event in project_tasks:
                 if event == proposed_event:
                     continue
@@ -152,8 +199,8 @@ class TodoistProjectData(object):
                     event = proposed_event
                     continue
                 else:
-                    if proposed_event['priority'] < event['priority']:
-                        # Proposed event has a higher priority (lower number)
+                    if proposed_event['priority'] > event['priority']:
+                        # Proposed event has a higher priority
                         event = proposed_event
                         continue
                     elif proposed_event['priority'] == event['priority'] and proposed_event['end'] < event['end']:
@@ -169,9 +216,16 @@ class TodoistProjectData(object):
         """Get the latest data."""
         self.all_project_tasks = []
 
-        project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks", 
-            params={"token": self._token, "project_id": self._id}
-        ).json()
+        if self._id is None:
+            # Grab all tasks
+            project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
+                params={"token": self._token}
+            ).json()
+        else:
+            # Grab tasks just for this project
+            project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
+                params={"token": self._token, "project_id": self._id}
+            ).json()
 
         # If we have no data, we can just return right away
         if len(project_task_json_data) == 0:
@@ -180,9 +234,16 @@ class TodoistProjectData(object):
 
         # Keep an updated list of all tasks in this project
         project_tasks = []
-        
+
         for task in project_task_json_data:
-            project_tasks.append(self.create_todoist_task(task))
+            todoist_task = self.create_todoist_task(task)
+            if todoist_task is not None:
+                # A None task means it is invalid for this project
+                project_tasks.append(todoist_task)
+
+        if len(project_tasks) == 0:
+            # We had no valid tasks
+            return True
 
         # Organize the best tasks (so users can see all the tasks they have, organized)
         while len(project_tasks) > 0:
