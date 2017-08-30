@@ -6,7 +6,7 @@ https://home-assistant.io/components/light.tradfri/
 """
 import logging
 
-from pytradfri.color import MIN_KELVIN, MAX_KELVIN
+from pytradfri.color import MIN_KELVIN_WS, MAX_KELVIN_WS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
@@ -117,11 +117,11 @@ class Tradfri(Light):
 
     @property
     def min_mireds(self):
-        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN)
+        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
 
     @property
     def max_mireds(self):
-        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN)
+        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
     @property
     def supported_features(self):
