@@ -79,14 +79,15 @@ class MpdDevice(MediaPlayerDevice):
         self._client = mpd.MPDClient()
         self._client.timeout = 5
         self._client.idletimeout = None
-        if password is not None:
-            self._client.password(password)
 
     def _connect(self):
         """Connect to MPD."""
         import mpd
         try:
             self._client.connect(self.server, self.port)
+
+            if self.password is not None:
+                self._client.password(self.password)
         except mpd.ConnectionError:
             return
 

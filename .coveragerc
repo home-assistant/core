@@ -8,6 +8,9 @@ omit =
     homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/abode.py
+    homeassistant/components/*/abode.py
+
     homeassistant/components/alarmdecoder.py
     homeassistant/components/*/alarmdecoder.py
 
@@ -176,6 +179,9 @@ omit =
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twilio_call.py
 
+    homeassistant/components/usps.py
+    homeassistant/components/*/usps.py
+
     homeassistant/components/velbus.py
     homeassistant/components/*/velbus.py
 
@@ -322,6 +328,7 @@ omit =
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
+    homeassistant/components/light/xiaomi_philipslight.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
@@ -374,6 +381,7 @@ omit =
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
     homeassistant/components/media_player/yamaha.py
+    homeassistant/components/mycroft.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
@@ -391,8 +399,10 @@ omit =
     homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
+    homeassistant/components/notify/mycroft.py
     homeassistant/components/notify/nfandroidtv.py
     homeassistant/components/notify/nma.py
+    homeassistant/components/notify/prowl.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
@@ -519,9 +529,9 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
-    homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
