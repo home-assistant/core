@@ -12,13 +12,15 @@ from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
 
-DEPENDENCIES = ['tesla']
-OPERATION_LIST = [STATE_ON, STATE_OFF]
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['tesla']
+
+OPERATION_LIST = [STATE_ON, STATE_OFF]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Tesla climate."""
+    """Set up the Tesla climate platform."""
     devices = [TeslaThermostat(device, hass.data[TESLA_DOMAIN]['controller'])
                for device in hass.data[TESLA_DOMAIN]['devices']['climate']]
     add_devices(devices, True)
@@ -51,7 +53,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     def update(self):
         """Called by the Tesla device callback to update state."""
-        _LOGGER.debug('Updating: %s', self._name)
+        _LOGGER.debug("Updating: %s", self._name)
         self.tesla_device.update()
         self._target_temperature = self.tesla_device.get_goal_temp()
         self._temperature = self.tesla_device.get_current_temp()
@@ -77,14 +79,14 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        _LOGGER.debug('Setting temperature for: %s', self._name)
+        _LOGGER.debug("Setting temperature for: %s", self._name)
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
             self.tesla_device.set_temperature(temperature)
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, cool, heat, off)."""
-        _LOGGER.debug('Setting mode for: %s', self._name)
+        _LOGGER.debug("Setting mode for: %s", self._name)
         if operation_mode == OPERATION_LIST[1]:  # off
             self.tesla_device.set_status(False)
         elif operation_mode == OPERATION_LIST[0]:  # heat
