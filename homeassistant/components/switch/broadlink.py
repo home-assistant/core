@@ -36,7 +36,7 @@ RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_pro_plus_bl', 'rm_mini_shate']
 SP1_TYPES = ['sp1']
 SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
-MP1_TYPES = ["mp1-1","mp1-2","mp1-3","mp1-4"]
+MP1_TYPES = ['mp1-1', 'mp1-2', 'mp1-3', 'mp1-4']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
@@ -283,19 +283,19 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
 class BroadlinkMP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
- 
-    def __init__(self, friendly_name, device, slot):
+
+     def __init__(self, friendly_name, device, slot):
         """Initialize the switch."""
         super().__init__(friendly_name, device, None, None)
         self._command_on = 1
-        self._command_off = 0      
+        self._command_off = 0
         self._slot = slot
  
     @property
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return False
-       
+      
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
         try:
@@ -308,16 +308,16 @@ class BroadlinkMP1Switch(BroadlinkRMSwitch):
                 return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
- 
+
     @property
     def should_poll(self):
         """Polling needed."""
         return True
- 
+
     def update(self):
         """Synchronize state with switch."""
         self._update()
- 
+
     def _update(self, retry=2):
         try:
             states = self._device.check_power()
