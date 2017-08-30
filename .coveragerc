@@ -416,7 +416,6 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/prometheus.py
-    homeassistant/components/rainbird.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
@@ -551,6 +550,7 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
     homeassistant/components/switch/pulseaudio_loopback.py
+    homeassistant/components/switch/rainbird.py
     homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
