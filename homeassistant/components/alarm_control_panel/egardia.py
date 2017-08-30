@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 
-REQUIREMENTS = ['pythonegardia==1.0.18']
+REQUIREMENTS = ['pythonegardia==1.0.19']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ CONF_REPORT_SERVER_PORT = 'report_server_port'
 DEFAULT_NAME = 'Egardia'
 DEFAULT_PORT = 80
 DEFAULT_REPORT_SERVER_ENABLED = False
-DEFAULT_REPORT_SERVER_PORT = 85
+DEFAULT_REPORT_SERVER_PORT = 52010
 DOMAIN = 'egardia'
 
 NOTIFICATION_ID = 'egardia_notification'
