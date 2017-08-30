@@ -6,14 +6,13 @@ https://home-assistant.io/components/light.tradfri/
 """
 import logging
 
-from pytradfri.color import MIN_KELVIN_WS, MAX_KELVIN_WS
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, KEY_API
+from homeassistant.components.tradfri import \
+    KEY_GATEWAY, KEY_TRADFRI_GROUPS, KEY_API
 from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
-ALLOWED_TEMPERATURES = { IKEA }
+ALLOWED_TEMPERATURES = {IKEA}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -113,14 +112,19 @@ class Tradfri(Light):
             else:
                 self._features |= SUPPORT_RGB_COLOR
 
-        self._ok_temps = self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
+        self._ok_temps = \
+            self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
 
     @property
     def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        from pytradfri.color import MAX_KELVIN_WS
         return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
 
     @property
     def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        from pytradfri.color import MIN_KELVIN_WS
         return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
     @property
@@ -147,10 +151,12 @@ class Tradfri(Light):
     def color_temp(self):
         """Return the CT color value in mireds."""
         if (self._light_data.kelvin_color is None or
-            self.supported_features & SUPPORT_COLOR_TEMP == 0 or
-            not self._ok_temps):
+                self.supported_features & SUPPORT_COLOR_TEMP == 0 or
+                not self._ok_temps):
             return None
-        return color_util.color_temperature_kelvin_to_mired(self._light_data.kelvin_color)
+        return color_util.color_temperature_kelvin_to_mired(
+            self._light_data.kelvin_color
+        )
 
     @property
     def rgb_color(self):
@@ -188,8 +194,8 @@ class Tradfri(Light):
         from pytradfri import RequestTimeout
         try:
             self._api(self._light.update())
-        except RequestTimeout as e:
-            _LOGGER.warning("Tradfri update request timed out: %s" % e)
+        except RequestTimeout as exception:
+            _LOGGER.warning("Tradfri update request timed out: %s", exception)
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
