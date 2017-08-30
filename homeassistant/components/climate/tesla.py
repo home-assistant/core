@@ -13,7 +13,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
 
 DEPENDENCIES = ['tesla']
-OPERATION_LIST = [STATE_ON,  STATE_OFF]
+OPERATION_LIST = [STATE_ON, STATE_OFF]
 _LOGGER = logging.getLogger(__name__)
 
 
