@@ -7,10 +7,9 @@ https://home-assistant.io/components/sensor.tesla/
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['tesla']
@@ -21,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting up."""
-    controller = hass.data[DOMAIN]['devices']['controller']
+    controller = hass.data[TESLA_DOMAIN]['devices']['controller']
     devices = []
 
-    for device in hass.data[DOMAIN]['devices']['sensor']:
+    for device in hass.data[TESLA_DOMAIN]['devices']['sensor']:
         if device.bin_type == 0x4:
             devices.append(TeslaSensor(device, controller, 'inside'))
             devices.append(TeslaSensor(device, controller, 'outside'))
@@ -42,11 +41,10 @@ class TeslaSensor(TeslaDevice, Entity):
         self._temperature_units = None
         self.last_changed_time = None
         self.type = sensor_type
-        TeslaDevice.__init__(self, tesla_device, controller)
+        super().__init__(tesla_device, controller)
 
         if self.type:
-            self._name = self.tesla_device.name + \
-                         ' ({})'.format(self.type)
+            self._name = self.tesla_device.name + ' ({})'.format(self.type)
             self.entity_id = ENTITY_ID_FORMAT.format(
                 '{}_{}'.format(self.tesla_id, self.type))
         else:
@@ -73,8 +71,7 @@ class TeslaSensor(TeslaDevice, Entity):
             else:
                 self.current_value = self.tesla_device.get_inside_temp()
 
-            tesla_temp_units = (
-                self.tesla_device.measurement)
+            tesla_temp_units = self.tesla_device.measurement
 
             if tesla_temp_units == 'F':
                 self._temperature_units = TEMP_FAHRENHEIT

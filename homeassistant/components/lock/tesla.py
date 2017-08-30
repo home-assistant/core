@@ -7,8 +7,8 @@ https://home-assistant.io/components/lock.tesla/
 import logging
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
-from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [TeslaLock(device, hass.data[DOMAIN]['controller'])
-               for device in hass.data[DOMAIN]['devices']['lock']]
+    devices = [TeslaLock(device, hass.data[TESLA_DOMAIN]['controller'])
+               for device in hass.data[TESLA_DOMAIN]['devices']['lock']]
     add_devices(devices, True)
 
 
@@ -27,7 +27,7 @@ class TeslaLock(TeslaDevice, LockDevice):
     def __init__(self, tesla_device, controller):
         """Initialisation."""
         self._state = None
-        TeslaDevice.__init__(self, tesla_device, controller)
+        super().__init__(tesla_device, controller)
         self._name = self.tesla_device.name
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
@@ -42,11 +42,6 @@ class TeslaLock(TeslaDevice, LockDevice):
         _LOGGER.debug('Unlocking doors for: %s', self._name)
         self.tesla_device.unlock()
         self._state = STATE_UNLOCKED
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo lock."""
-        return True
 
     @property
     def is_locked(self):

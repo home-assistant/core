@@ -6,9 +6,9 @@ https://home-assistant.io/components/binary_sensor.tesla/
 """
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, \
-    ENTITY_ID_FORMAT
-from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, ENTITY_ID_FORMAT)
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
@@ -18,8 +18,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla binary sensor."""
     devices = [
         TeslaBinarySensor(
-            device, hass.data[DOMAIN]['controller'], 'connectivity')
-        for device in hass.data[DOMAIN]['devices']['binary_sensor']]
+            device, hass.data[TESLA_DOMAIN]['controller'], 'connectivity')
+        for device in hass.data[TESLA_DOMAIN]['devices']['binary_sensor']]
     add_devices(devices, True)
 
 
@@ -28,7 +28,7 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
 
     def __init__(self, tesla_device, controller, sensor_type):
         """Initialisation of binary sensor."""
-        TeslaDevice.__init__(self, tesla_device, controller)
+        super().__init__(tesla_device, controller)
         self._name = self.tesla_device.name
         self._state = False
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
@@ -38,11 +38,6 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
     def device_class(self):
         """Return the class of this binary sensor."""
         return self._sensor_type
-
-    @property
-    def should_poll(self):
-        """Should be polled."""
-        return True
 
     @property
     def name(self):

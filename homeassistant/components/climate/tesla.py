@@ -6,20 +6,21 @@ https://home-assistant.io/components/climate.tesla/
 """
 import logging
 
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
-from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS,
-                                 ATTR_TEMPERATURE)
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from homeassistant.const import (
+    TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
 
 DEPENDENCIES = ['tesla']
-OPERATION_LIST = ["On", "Off"]
+OPERATION_LIST = [STATE_ON,  STATE_OFF]
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Tesla climate."""
-    devices = [TeslaThermostat(device, hass.data[DOMAIN]['controller'])
-               for device in hass.data[DOMAIN]['devices']['climate']]
+    devices = [TeslaThermostat(device, hass.data[TESLA_DOMAIN]['controller'])
+               for device in hass.data[TESLA_DOMAIN]['devices']['climate']]
     add_devices(devices, True)
 
 
@@ -28,10 +29,9 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     def __init__(self, tesla_device, controller):
         """Initialize the Tesla device."""
-        TeslaDevice.__init__(self, tesla_device, controller)
+        super().__init__(tesla_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
         self._target_temperature = None
-        self._state = None
         self._temperature = None
         self._name = self.tesla_device.name
 
@@ -53,15 +53,14 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         """Called by the Tesla device callback to update state."""
         _LOGGER.debug('Updating: %s', self._name)
         self.tesla_device.update()
-        self._state = self.tesla_device.is_hvac_enabled()
         self._target_temperature = self.tesla_device.get_goal_temp()
         self._temperature = self.tesla_device.get_current_temp()
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        tesla_temp_units = (
-            self.tesla_device.measurement)
+        tesla_temp_units = self.tesla_device.measurement
+
         if tesla_temp_units == 'F':
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
@@ -70,11 +69,6 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._temperature
-
-    @property
-    def operation(self):
-        """Return current operation ie. On and Off."""
-        return self._state
 
     @property
     def target_temperature(self):
@@ -86,7 +80,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         _LOGGER.debug('Setting temperature for: %s', self._name)
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
-            self.tesla_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
+            self.tesla_device.set_temperature(temperature)
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, cool, heat, off)."""

@@ -6,7 +6,7 @@ https://home-assistant.io/components/device_tracker.tesla/
 """
 import logging
 
-from homeassistant.components.tesla import DOMAIN
+from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 
@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Tesla tracker."""
-    TeslaDeviceTracker(hass, config, see,
-                       hass.data[DOMAIN]['devices']['devices_tracker'])
+    TeslaDeviceTracker(
+        hass, config, see, hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
     return True
 
 
