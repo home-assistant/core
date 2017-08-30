@@ -7,7 +7,7 @@ jinja2>=2.9.5
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.2.5
-async_timeout==1.2.1
+async_timeout==1.3.0
 chardet==3.0.4
 astral==1.4
 
@@ -18,7 +18,7 @@ astral==1.4
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.isy994
-PyISY==1.0.7
+PyISY==1.0.8
 
 # homeassistant.components.notify.html5
 PyJWT==1.5.2
@@ -39,10 +39,10 @@ SoCo==0.12
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.7.1
+abodepy==0.9.0
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.0
+aioautomatic==0.6.2
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -202,6 +202,9 @@ enocean==0.31
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
+# homeassistant.components.sensor.season
+ephem==3.7.6.0
+
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
@@ -216,7 +219,7 @@ evohomeclient==0.2.5
 fastdotcom==0.0.1
 
 # homeassistant.components.sensor.fedex
-fedexdeliverymanager==1.0.3
+fedexdeliverymanager==1.0.4
 
 # homeassistant.components.feedreader
 feedparser==5.2.1
@@ -296,7 +299,7 @@ holidays==0.8.1
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
 # homeassistant.components.xiaomi
-https://github.com/Danielhiversen/PyXiaomiGateway/archive/aa9325fe6fdd62a8ef8c9ca1dce31d3292f484bb.zip#PyXiaomiGateway==0.2.0
+https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.1.zip#PyXiaomiGateway==0.3.1
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
@@ -415,6 +418,9 @@ miniupnpc==1.9
 # homeassistant.components.tts
 mutagen==1.38
 
+# homeassistant.components.mycroft
+mycroftapi==0.1.2
+
 # homeassistant.components.usps
 myusps==1.1.3
 
@@ -527,7 +533,7 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.19.0
+pyRFXtrx==0.20.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.5.1
@@ -655,7 +661,7 @@ pymodbus==1.3.1
 pymyq==0.0.8
 
 # homeassistant.components.mysensors
-pymysensors==0.10.0
+pymysensors==0.11.1
 
 # homeassistant.components.lock.nello
 pynello==1.5
@@ -716,7 +722,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.12
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.8
+python-ecobee-api==0.0.9
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.5
@@ -740,8 +746,9 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.light.xiaomi_philipslight
 # homeassistant.components.vacuum.xiaomi
-python-mirobo==0.1.2
+python-mirobo==0.1.3
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -790,7 +797,7 @@ python-wink==1.5.1
 python_openzwave==0.4.0.31
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.17
+pythonegardia==1.0.18
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -884,7 +891,7 @@ sharp_aquos_rc==0.3.2
 shodan==1.7.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.4
+simplisafe-python==1.0.5
 
 # homeassistant.components.notify.slack
 slacker==0.9.60
@@ -902,7 +909,7 @@ sleepyq==0.6
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
-snapcast==2.0.6
+snapcast==2.0.7
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.4.1
@@ -953,7 +960,7 @@ transmissionrpc==0.11
 twilio==5.7.0
 
 # homeassistant.components.sensor.uber
-uber_rides==0.5.1
+uber_rides==0.5.2
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6

@@ -16,13 +16,13 @@ rm -rf homeassistant/components/frontend/www_static/core.js* \
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
 
 # Build frontend
-BUILD_DEV=0 gulp
+BUILD_DEV=0 ./node_modules/.bin/gulp
 cp bower_components/webcomponentsjs/webcomponents-lite.js ..
 cp bower_components/webcomponentsjs/custom-elements-es5-adapter.js ..
 cp build/*.js build/*.html ..
 mkdir ../panels
 cp build/panels/*.html ../panels
-BUILD_DEV=0 gulp gen-service-worker
+BUILD_DEV=0 ./node_modules/.bin/gulp gen-service-worker
 cp build/service_worker.js ..
 cd ..
 

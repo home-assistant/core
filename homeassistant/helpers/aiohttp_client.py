@@ -90,8 +90,15 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         # Something went wrong with the connection
         raise HTTPBadGateway() from err
 
-    yield from async_aiohttp_proxy_stream(hass, request, req.content,
-                                          req.headers.get(CONTENT_TYPE))
+    try:
+        yield from async_aiohttp_proxy_stream(
+            hass,
+            request,
+            req.content,
+            req.headers.get(CONTENT_TYPE)
+        )
+    finally:
+        req.close()
 
 
 @asyncio.coroutine
