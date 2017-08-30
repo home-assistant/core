@@ -269,7 +269,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                      expires_at=expires_at,
                                      refresh_cb=lambda x: None)
 
-        if int(time.time()) - config_file.get(ATTR_LAST_SAVED_AT, 0) > 3600:
+        if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
         authd_client.system = authd_client.user_profile_get()["user"]["locale"]
