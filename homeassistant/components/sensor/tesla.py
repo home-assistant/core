@@ -1,25 +1,26 @@
 """
-Allows the creation of a sensor that breaks out state_attributes.
+Sensors for the Tesla sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tesla/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 from homeassistant.helpers.entity import Entity
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['tesla']
 
 SCAN_INTERVAL = timedelta(minutes=5)
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setting up."""
+    """Set up the Tesla sensor platform."""
     controller = hass.data[TESLA_DOMAIN]['devices']['controller']
     devices = []
 
@@ -36,7 +37,7 @@ class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
     def __init__(self, tesla_device, controller, sensor_type=None):
-        """Initialisation."""
+        """Initialisation of the sensor."""
         self.current_value = None
         self._temperature_units = None
         self.last_changed_time = None
@@ -63,7 +64,7 @@ class TeslaSensor(TeslaDevice, Entity):
 
     def update(self):
         """Update the state from the sensor."""
-        _LOGGER.debug('Updating sensor: %s', self._name)
+        _LOGGER.debug("Updating sensor: %s", self._name)
         self.tesla_device.update()
         if self.tesla_device.bin_type == 0x4:
             if self.type == 'outside':
