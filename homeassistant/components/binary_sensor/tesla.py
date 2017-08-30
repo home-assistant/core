@@ -1,5 +1,5 @@
 """
-This component provides HA binary_sensor support for Tesla.
+Support for Tesla binary sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.tesla/
@@ -10,8 +10,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT)
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
-DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['tesla']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -51,6 +52,6 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
 
     def update(self):
         """Update the state of the device."""
-        _LOGGER.debug('Updating sensor: %s', self._name)
+        _LOGGER.debug("Updating sensor: %s", self._name)
         self.tesla_device.update()
         self._state = self.tesla_device.get_value()
