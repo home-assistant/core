@@ -146,7 +146,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if switch_type == "mp1-3":
             switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 3)]
         if switch_type == "mp1-4":
-            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 4)] 
+            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 4)]
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -284,7 +284,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 class BroadlinkMP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
 
-     def __init__(self, friendly_name, device, slot):
+    def __init__(self, friendly_name, device, slot):
         """Initialize the switch."""
         super().__init__(friendly_name, device, None, None)
         self._command_on = 1
