@@ -125,10 +125,6 @@ class TankUtilitySensor(Entity):
 
     def update(self):
         """Set the device state and attributes."""
-        try:
-            data = self.get_data()
-            self._state = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)
-            self._attributes = {k: v for k, v in data.items() if k in
-                                SENSOR_ATTRS}
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("Error updating data for %s: %s", self.device, exc)
+        data = self.get_data()
+        self._state = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)
+        self._attributes = {k: v for k, v in data.items() if k in SENSOR_ATTRS}
