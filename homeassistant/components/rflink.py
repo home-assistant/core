@@ -418,7 +418,7 @@ class SwitchableRflinkDevice(RflinkCommand):
 
 class CoverableRflinkDevice(RflinkCommand):
 
-pass
+    pass
 
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
