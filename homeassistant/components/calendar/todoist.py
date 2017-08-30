@@ -248,7 +248,7 @@ class TodoistProjectData(object):
         # Organize the best tasks (so users can see all the tasks they have, organized)
         while len(project_tasks) > 0:
             best_task = self.select_best_task(project_tasks)
-            _LOGGER.warning(best_task)
+            _LOGGER.info("Found Todoist Task: " + str(best_task))
             project_tasks.remove(best_task)
             self.all_project_tasks.append(best_task)
 
