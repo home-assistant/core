@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.10']
+REQUIREMENTS = ['teslajsonpy==0.0.11']
 
 DOMAIN = 'tesla'
 
@@ -43,16 +43,19 @@ def setup(hass, base_config):
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     update_interval = config.get(CONF_SCAN_INTERVAL)
-    hass.data[DOMAIN]['controller'] = \
-        teslaApi(email, password, update_interval)
-    hass.data[DOMAIN]['devices'] = defaultdict(list)
+    if hass.data.get(DOMAIN) is None:
+        hass.data[DOMAIN] = {
+            'controller': teslaApi(email, password, update_interval),
+            'devices': defaultdict(list)
+        }
+
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
 
     if not all_devices:
         return False
 
     for device in all_devices:
-        hass.data[DOMAIN]['devices'].append(device)
+        hass.data[DOMAIN]['devices'][device.hass_type].append(device)
 
     for component in TESLA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
