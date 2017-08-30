@@ -272,7 +272,7 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(_system_callback_handler, hass, config)
-    hass.data[DATA_HOMEMATIC] = HMConnection(
+    hass.data[DATA_HOMEMATIC] = homematic = HMConnection(
         local=config[DOMAIN].get(CONF_LOCAL_IP),
         localport=config[DOMAIN].get(CONF_LOCAL_PORT),
         remotes=remotes,
@@ -281,7 +281,7 @@ def setup(hass, config):
     )
 
     # Start server thread, connect to hosts, initialize to receive events
-    hass.data[DATA_HOMEMATIC].start()
+    homematic.start()
 
     # Stops server when HASS is shutting down
     hass.bus.listen_once(
@@ -291,7 +291,7 @@ def setup(hass, config):
     entity_hubs = []
     for _, hub_data in hosts.items():
         entity_hubs.append(HMHub(
-            hass, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
+            homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
     # Register HomeMatic services
     descriptions = load_yaml_config_file(
@@ -354,7 +354,7 @@ def setup(hass, config):
 
     def _service_handle_reconnect(service):
         """Service to reconnect all HomeMatic hubs."""
-        hass.data[DATA_HOMEMATIC].reconnect()
+        homematic.reconnect()
 
     hass.services.register(
         DOMAIN, SERVICE_RECONNECT, _service_handle_reconnect,
@@ -570,10 +570,10 @@ def _device_from_servicecall(hass, service):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
-    def __init__(self, name, use_variables):
+    def __init__(self, homematic, name, use_variables):
         """Initialize HomeMatic hub."""
         self.entity_id = "{}.{}".format(DOMAIN, name.lower())
-        self._homematic = hass.data[DATA_HOMEMATIC]
+        self._homematic = homematic
         self._variables = {}
         self._name = name
         self._state = STATE_UNKNOWN
@@ -664,13 +664,13 @@ class HMDevice(Entity):
 
     def __init__(self, config):
         """Initialize a generic HomeMatic device."""
-        self._homematic = hass.data[DATA_HOMEMATIC]
         self._name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
         self._proxy = config.get(ATTR_PROXY)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._data = {}
+        self._homematic = None
         self._hmdevice = None
         self._connected = False
         self._available = False
@@ -682,6 +682,7 @@ class HMDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Load data init callbacks."""
+        self._homematic = self.hass.data[DATA_HOMEMATIC]
         yield from self.hass.async_add_job(self.link_homematic)
 
     @property
