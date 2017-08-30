@@ -545,10 +545,10 @@ pyalarmdotcom==0.3.0
 pyarlo==0.0.4
 
 # homeassistant.components.notify.xmpp
-pyasn1-modules==0.0.11
+pyasn1-modules==0.1.1
 
 # homeassistant.components.notify.xmpp
-pyasn1==0.3.2
+pyasn1==0.3.3
 
 # homeassistant.components.apple_tv
 pyatv==0.3.4
