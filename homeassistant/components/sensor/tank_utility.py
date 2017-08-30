@@ -53,7 +53,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
     devices = config.get(CONF_DEVICES)
-    token = auth.get_token(email, password)
+
+    try:
+        token = auth.get_token(email, password)
+    except requests.exceptions.HTTPError as http_error:
+        if (http_error.response.status_code ==
+                requests.codes.unauthorized):  # pylint: disable=no-member
+            _LOGGER.error("Invalid credentials")
+            return False
+
     all_sensors = []
     for device in devices:
         sensor = TankUtilitySensor(email, password, token, device)
