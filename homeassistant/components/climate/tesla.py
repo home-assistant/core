@@ -5,26 +5,21 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.tesla/
 """
 import logging
-from datetime import timedelta
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
-from homeassistant.const import (
-    TEMP_FAHRENHEIT,
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE)
 
-from homeassistant.components.tesla import (
-    TESLA_CONTROLLER, TESLA_DEVICES, TeslaDevice)
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
+from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS,
+                                 ATTR_TEMPERATURE)
 
 DEPENDENCIES = ['tesla']
 OPERATION_LIST = ["On", "Off"]
-SCAN_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Tesla climate."""
-    devices = [TeslaThermostat(device, TESLA_CONTROLLER)
-               for device in TESLA_DEVICES['climate']]
+    devices = [TeslaThermostat(device, hass.data[DOMAIN]['controller'])
+               for device in hass.data[DOMAIN]['devices']['climate']]
     add_devices(devices, True)
 
 

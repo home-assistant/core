@@ -5,16 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tesla/
 """
 import logging
+
+from homeassistant.components.tesla import DOMAIN
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
-from homeassistant.components.tesla import TESLA_DEVICES
+
 DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Tesla tracker."""
-    TeslaDeviceTracker(hass, config, see, TESLA_DEVICES['devices_tracker'])
+    TeslaDeviceTracker(hass, config, see,
+                       hass.data[DOMAIN]['devices']['devices_tracker'])
     return True
 
 

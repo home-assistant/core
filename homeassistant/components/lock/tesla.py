@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.tesla/
 """
 import logging
+
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
+from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
-from homeassistant.components.tesla import (
-    TESLA_CONTROLLER, TESLA_DEVICES, TeslaDevice)
 
 DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [TeslaLock(device, TESLA_CONTROLLER)
-               for device in TESLA_DEVICES['lock']]
+    devices = [TeslaLock(device, hass.data[DOMAIN]['controller'])
+               for device in hass.data[DOMAIN]['devices']['lock']]
     add_devices(devices, True)
 
 

@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.tesla/
 """
 import logging
+
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
     ENTITY_ID_FORMAT
-from homeassistant.components.tesla import (
-    TESLA_CONTROLLER, TESLA_DEVICES, TeslaDevice)
+from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
 
 DEPENDENCIES = ['tesla']
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla binary sensor."""
-    devices = [TeslaBinarySensor(device, TESLA_CONTROLLER, 'connectivity')
-               for device in TESLA_DEVICES['binary_sensor']]
+
+    devices = [TeslaBinarySensor(device,
+                                 hass.data[DOMAIN]['controller'], 'connectivity')
+               for device in hass.data[DOMAIN]['devices']['binary_sensor']]
     add_devices(devices, True)
 
 

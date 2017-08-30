@@ -4,14 +4,14 @@ Allows the creation of a sensor that breaks out state_attributes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tesla/
 """
-import logging
 from datetime import timedelta
+import logging
+
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tesla import (
-    TESLA_CONTROLLER, TESLA_DEVICES, TeslaDevice)
+from homeassistant.components.tesla import (DOMAIN, TeslaDevice)
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['tesla']
 
@@ -21,13 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting up."""
+    controller = hass.data[DOMAIN]['devices']['controller']
     devices = []
-    for device in TESLA_DEVICES['sensor']:
-        if device.type == 'temperature sensor.':
-            devices.append(TeslaSensor(device, TESLA_CONTROLLER, 'inside'))
-            devices.append(TeslaSensor(device, TESLA_CONTROLLER, 'outside'))
+
+    for device in hass.data[DOMAIN]['devices']['sensor']:
+        if device.bin_type == 0x4:
+            devices.append(TeslaSensor(device, controller, 'inside'))
+            devices.append(TeslaSensor(device, controller, 'outside'))
         else:
-            devices.append(TeslaSensor(device, TESLA_CONTROLLER))
+            devices.append(TeslaSensor(device, controller))
     add_devices(devices, True)
 
 
@@ -65,7 +67,7 @@ class TeslaSensor(TeslaDevice, Entity):
         """Update the state from the sensor."""
         _LOGGER.debug('Updating sensor: %s', self._name)
         self.tesla_device.update()
-        if self.tesla_device.type == 'temperature sensor.':
+        if self.tesla_device.bin_type == 0x4:
             if self.type == 'outside':
                 self.current_value = self.tesla_device.get_outside_temp()
             else:
