@@ -25,7 +25,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 class TeslaDeviceTracker(object):
     """A class representing a Tesla device."""
 
-    def __init__(self, hass, config, see, tesla_devices, ):
+    def __init__(self, hass, config, see, tesla_devices):
         """Initialize the Tesla device scanner."""
         self.hass = hass
         self.see = see
@@ -41,20 +41,16 @@ class TeslaDeviceTracker(object):
             device.update()
             name = device.name
             _LOGGER.debug('Updating device position: %s', name)
-            tesla_id = slugify(device.uniq_name)
-            dev_id = slugify(name)
-
-            if dev_id is None:
-                dev_id = tesla_id
+            dev_id = slugify(device.uniq_name)
             location = device.get_location()
             lat = location['latitude']
             lon = location['longitude']
             attrs = {
-                'trackr_id': tesla_id,
-                'id': tesla_id,
+                'trackr_id': dev_id,
+                'id': dev_id,
                 'name': name
             }
             self.see(
-                dev_id=tesla_id, host_name=name,
+                dev_id=dev_id, host_name=name,
                 gps=(lat, lon), attributes=attrs
             )

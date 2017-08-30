@@ -44,7 +44,7 @@ class TeslaSensor(TeslaDevice, Entity):
         super().__init__(tesla_device, controller)
 
         if self.type:
-            self._name = self.tesla_device.name + ' ({})'.format(self.type)
+            self._name = '{} ({})'.format(self.tesla_device.name, self.type)
             self.entity_id = ENTITY_ID_FORMAT.format(
                 '{}_{}'.format(self.tesla_id, self.type))
         else:
@@ -59,7 +59,7 @@ class TeslaSensor(TeslaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self.tesla_device.measurement
+        return self._temperature_units
 
     def update(self):
         """Update the state from the sensor."""
