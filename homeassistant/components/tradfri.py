@@ -120,6 +120,7 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
         return False
 
     gateway = Gateway()
+    # pylint: disable=no-member
     gateway_id = api(gateway.get_gateway_info()).id
     hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
