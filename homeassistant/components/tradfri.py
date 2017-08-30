@@ -116,7 +116,6 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     try:
         api = api_factory(host, key)
     except RequestError:
-        _LOGGER.error("Tradfri setup failed")
         return False
 
     gateway = Gateway()
