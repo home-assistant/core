@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if (http_error.response.status_code ==
                 requests.codes.unauthorized):  # pylint: disable=no-member
             _LOGGER.error("Invalid credentials")
-            return False
+            return
 
     all_sensors = []
     for device in devices:
