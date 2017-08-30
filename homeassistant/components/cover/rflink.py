@@ -84,6 +84,36 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class RflinkCover(CoverableRflinkDevice, CoverDevice):
-    """Representation of a Rflink cover."""
+    """Rflink entity which can switch on/stop/off (eg: cover)."""
 
-    pass
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
+
+    @property
+    def should_poll(self):
+        """No polling available in RFXtrx cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
+    def async_close_cover(self, **kwargs):
+        """Turn the device close."""
+        return self._async_handle_command("close_cover")
+
+    def async_open_cover(self, **kwargs):
+        """Turn the device open."""
+        return self._async_handle_command("open_cover")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device stop."""
+        return self._async_handle_command("stop_cover")
