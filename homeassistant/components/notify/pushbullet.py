@@ -147,6 +147,10 @@ class PushBulletNotificationService(BaseNotificationService):
                         return
                     pusher.push_file(title=title, body=message, **filedata)
             elif file_url:
+                if not (file_url[:7] == 'http://' or
+                        file_url[:8] == 'https://'):
+                    _LOGGER.error("Url should start with http or https.")
+                    return
                 pusher.push_file(title=title, body=message, file_name=file_url,
                                  file_url=file_url,
                                  file_type=mimetypes.guess_type(file_url)[0])
