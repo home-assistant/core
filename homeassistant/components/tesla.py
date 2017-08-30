@@ -43,7 +43,8 @@ def setup(hass, base_config):
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     update_interval = config.get(CONF_SCAN_INTERVAL)
-    hass.data[DOMAIN]['controller'] = teslaApi(email, password, update_interval)
+    hass.data[DOMAIN]['controller'] = \
+        teslaApi(email, password, update_interval)
     hass.data[DOMAIN]['devices'] = defaultdict(list)
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
 
