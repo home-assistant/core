@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tesla/
 """
 from collections import defaultdict
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -26,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=300):
-            vol.All(cv.positive_int, vol.Clamp(min=300))
+            vol.All(cv.positive_int, vol.Clamp(min=300)),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -36,7 +37,7 @@ TESLA_COMPONENTS = [
 
 
 def setup(hass, base_config):
-    """Setup of Tesla platform."""
+    """Set up of Tesla platform."""
     from teslajsonpy.controller import Controller as teslaApi
 
     config = base_config.get(DOMAIN)
@@ -65,10 +66,10 @@ def setup(hass, base_config):
 
 
 class TeslaDevice(Entity):
-    """Representation of Tesla device."""
+    """Representation of a Tesla device."""
 
     def __init__(self, tesla_device, controller):
-        """Initialisation of class."""
+        """Initialisation of the Tesla device."""
         self.tesla_device = tesla_device
         self.controller = controller
         self._name = self.tesla_device.name
