@@ -28,7 +28,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-
     gateway_id = discovery_info['gateway']
     api = hass.data[KEY_API][gateway_id]
     gateway = hass.data[KEY_GATEWAY][gateway_id]
