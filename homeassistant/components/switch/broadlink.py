@@ -17,7 +17,8 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util import Throttle
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_SLOTS, CONF_COMMAND_OFF, CONF_COMMAND_ON,
+    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_SLOTS,
+    CONF_COMMAND_OFF, CONF_COMMAND_ON,
     CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
@@ -157,8 +158,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif switch_type in MP1_TYPES:
         broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
         parent_device = BroadlinkMP1Switch(broadlink_device)
-        switches = [BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 1), broadlink_device, 1, parent_device), BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 2), broadlink_device, 2, parent_device), 
-            BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 3), broadlink_device, 3, parent_device), BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 4), broadlink_device, 4, parent_device)]
+        switches = [BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 1), broadlink_device, 1, parent_device),
+            BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 2), broadlink_device, 2, parent_device),
+            BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 3), broadlink_device, 3, parent_device),
+            BroadlinkMP1Slot(_get_mp1_slot_name(friendly_name, 4), broadlink_device, 4, parent_device)]
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -302,7 +305,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._command_on = 1
         self._command_off = 0
         self._slot = slot
-        self._parent_device = parent_device;
+        self._parent_device = parent_device
 
     @property
     def assumed_state(self):
@@ -334,7 +337,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
 
 class BroadlinkMP1Switch(object):
-    """Representation of a slot of Broadlink switch - Using for fetch states of all slots"""
+    """Representation of a Broadlink switch - To fetch states of all slots"""
 
     def __init__(self, device):
         """Initialize the switch."""
@@ -348,7 +351,7 @@ class BroadlinkMP1Switch(object):
     @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for this device."""
-        self._update();
+        self._update()
 
     def _update(self, retry=2):
         try:
