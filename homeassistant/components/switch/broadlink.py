@@ -36,8 +36,9 @@ RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_pro_plus_bl', 'rm_mini_shate']
 SP1_TYPES = ['sp1']
 SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
+MP1_TYPES = ["mp1-1","mp1-2","mp1-3","mp1-4"]
 
-SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES
+SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
@@ -136,6 +137,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
+    elif switch_type in MP1_TYPES:
+        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
+        if switch_type == "mp1-1":
+            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 1)]
+        if switch_type == "mp1-2":
+            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 2)]
+        if switch_type == "mp1-3":
+            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 3)]
+        if switch_type == "mp1-4":
+            switches = [BroadlinkMP1Switch(friendly_name, broadlink_device, 4)] 
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -267,4 +278,57 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
             return self._update(retry-1)
         if state is None and retry > 0:
             return self._update(retry-1)
+        self._state = state
+
+
+class BroadlinkMP1Switch(BroadlinkRMSwitch):
+    """Representation of an Broadlink switch."""
+ 
+    def __init__(self, friendly_name, device, slot):
+        """Initialize the switch."""
+        super().__init__(friendly_name, device, None, None)
+        self._command_on = 1
+        self._command_off = 0      
+        self._slot = slot
+ 
+    @property
+    def assumed_state(self):
+        """Return true if unable to access real state of entity."""
+        return False
+       
+    def _sendpacket(self, packet, retry=2):
+        """Send packet to device."""
+        try:
+            self._device.set_power(self._slot, packet)
+        except (socket.timeout, ValueError) as error:
+            if retry < 1:
+                _LOGGER.error(error)
+                return False
+            if not self._auth():
+                return False
+            return self._sendpacket(packet, max(0, retry-1))
+        return True
+ 
+    @property
+    def should_poll(self):
+        """Polling needed."""
+        return True
+ 
+    def update(self):
+        """Synchronize state with switch."""
+        self._update()
+ 
+    def _update(self, retry=2):
+        try:
+            states = self._device.check_power()
+            state = states['s' + str(self._slot)]
+        except (socket.timeout, ValueError) as error:
+            if retry < 1:
+                _LOGGER.error(error)
+                return
+            if not self._auth():
+                return
+            return self._update(max(0, retry-1))
+        if state is None and retry > 0:
+            return self._update(max(0, retry-1))
         self._state = state
