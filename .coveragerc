@@ -170,6 +170,9 @@ omit =
     homeassistant/components/tellstick.py
     homeassistant/components/*/tellstick.py
 
+    homeassistant/components/tesla.py
+    homeassistant/components/*/tesla.py
+
     homeassistant/components/*/thinkingcleaner.py
 
     homeassistant/components/tradfri.py
@@ -243,7 +246,6 @@ omit =
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
-    homeassistant/components/binary_sensor/tesla.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
@@ -261,7 +263,6 @@ omit =
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
-    homeassistant/components/climate/tesla.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
@@ -295,7 +296,6 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tado.py
-    homeassistant/components/device_tracker/tesla.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
@@ -339,7 +339,6 @@ omit =
     homeassistant/components/lock/nello.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/lockitron.py
-    homeassistant/components/lock/tesla.py
     homeassistant/components/lock/sesame.py
     homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
@@ -526,7 +525,6 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
-    homeassistant/components/sensor/tesla.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
@@ -565,7 +563,6 @@ omit =
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/telegram_bot/*
-    homeassistant/components/tesla.py
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
