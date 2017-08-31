@@ -27,7 +27,7 @@ DOMAIN = 'mopar'
 DATA_MOPAR = DOMAIN
 ATTR_VEHICLE_INDEX = 'vehicle_index'
 SERVICE_REMOTE_COMMAND = 'remote_command'
-COOKIE = 'mopar_cookies.pickle'
+COOKIE_FILE = 'mopar_cookies.pickle'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -45,7 +45,7 @@ REMOTE_COMMAND_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Mopar platform."""
     import motorparts
-    cookie = hass.config.path(COOKIE)
+    cookie = hass.config.path(COOKIE_FILE)
     try:
         session = motorparts.get_session(config.get(CONF_USERNAME),
                                          config.get(CONF_PASSWORD),
@@ -113,19 +113,24 @@ class MoparSensor(Entity):
 
     def __init__(self, hass, index):
         """Initialize the sensor."""
-        self._hass = hass
+        self.hass = hass
         self._index = index
         self._vehicle = {}
         self._vhr = {}
         self._tow_guide = {}
+        self._odometer = None
+        self._data = self.hass.data[DATA_MOPAR]
 
     def update(self):
         """Update device state."""
-        data = self._hass.data[DATA_MOPAR]
-        data.update()
-        self._vehicle = data.vehicles[self._index]
-        self._vhr = data.vhrs.get(self._index, {})
-        self._tow_guide = data.tow_guides.get(self._index, {})
+        self._data.update()
+        self._vehicle = self._data.vehicles[self._index]
+        self._vhr = self._data.vhrs.get(self._index, {})
+        self._tow_guide = self._data.tow_guides.get(self._index, {})
+        if 'odometer' in self._vhr:
+            odo = float(self._vhr['odometer'])
+            self._odometer = int(self.hass.config.units.length(
+                odo, LENGTH_KILOMETERS))
 
     @property
     def name(self):
@@ -137,10 +142,7 @@ class MoparSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if 'odometer' not in self._vhr:
-            return
-        return int(self._hass.config.units.length(float(self._vhr['odometer']),
-                                                  LENGTH_KILOMETERS))
+        return self._odometer
 
     @property
     def device_state_attributes(self):
@@ -158,7 +160,7 @@ class MoparSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._hass.config.units.length_unit
+        return self.hass.config.units.length_unit
 
     @property
     def icon(self):
