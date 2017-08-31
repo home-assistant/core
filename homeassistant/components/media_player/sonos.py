@@ -897,7 +897,8 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 self._source_name = src['title']
 
-                if 'object.container.playlistContainer' in src['meta']:
+                if ('object.container.playlistContainer' in src['meta'] or
+                        'object.container.album.musicAlbum' in src['meta']):
                     self._replace_queue_with_playlist(src)
                     self._player.play_from_queue(0)
                 else:

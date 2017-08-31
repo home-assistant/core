@@ -25,9 +25,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-ALLOWED_TEMPERATURES = {
-    IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
-}
+ALLOWED_TEMPERATURES = {IKEA}
 
 
 @asyncio.coroutine
@@ -37,6 +35,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     gateway_id = discovery_info['gateway']
+    api = hass.data[KEY_API][gateway_id]
     gateway = hass.data[KEY_GATEWAY][gateway_id]
     api = hass.data[KEY_API]
 
@@ -154,9 +153,22 @@ class TradfriLight(Light):
         self._name = None
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
-        self._ok_temps = None
+        self._ok_temps = \
+            self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
 
         self._refresh(light)
+
+    @property
+    def min_mireds(self):
+    """Return the coldest color_temp that this light supports."""
+        from pytradfri.color import MAX_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+
+    @property
+    def max_mireds(self):
+    """Return the warmest color_temp that this light supports."""
+        from pytradfri.color import MIN_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -191,20 +203,13 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if (self._light_data.hex_color is None or
+        if (self._light_data.kelvin_color is None or
                 self.supported_features & SUPPORT_COLOR_TEMP == 0 or
                 not self._ok_temps):
             return None
-
-        kelvin = next((
-            kelvin for kelvin, hex_color in self._ok_temps.items()
-            if hex_color == self._light_data.hex_color), None)
-        if kelvin is None:
-            _LOGGER.error(
-                "Unexpected color temperature found for %s: %s",
-                self.name, self._light_data.hex_color)
-            return
-        return color_util.color_temperature_kelvin_to_mired(kelvin)
+        return color_util.color_temperature_kelvin_to_mired(
+            self._light_data.kelvin_color
+        )
 
     @property
     def rgb_color(self):

@@ -22,6 +22,8 @@ from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
 from homeassistant.components.config.automation import (
     CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
+from homeassistant.components.config.script import (
+    CONFIG_PATH as SCRIPTS_CONFIG_PATH)
 from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
@@ -33,6 +35,7 @@ YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
+SCRIPTS_PATH = os.path.join(CONFIG_DIR, SCRIPTS_CONFIG_PATH)
 CUSTOMIZE_PATH = os.path.join(CONFIG_DIR, CUSTOMIZE_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -67,6 +70,9 @@ class TestConfig(unittest.TestCase):
 
         if os.path.isfile(AUTOMATIONS_PATH):
             os.remove(AUTOMATIONS_PATH)
+
+        if os.path.isfile(SCRIPTS_PATH):
+            os.remove(SCRIPTS_PATH)
 
         if os.path.isfile(CUSTOMIZE_PATH):
             os.remove(CUSTOMIZE_PATH)
