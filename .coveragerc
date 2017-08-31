@@ -170,6 +170,9 @@ omit =
     homeassistant/components/tellstick.py
     homeassistant/components/*/tellstick.py
 
+    homeassistant/components/tesla.py
+    homeassistant/components/*/tesla.py
+
     homeassistant/components/*/thinkingcleaner.py
 
     homeassistant/components/tradfri.py
