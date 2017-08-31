@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = MoparData(session)
     add_devices([MoparSensor(data, index)
-                 for index, _ in enumerate(hass.data[DATA_MOPAR].vehicles)],
+                 for index, _ in enumerate(data.vehicles)],
                 True)
     return True
 
@@ -86,7 +86,6 @@ class MoparData(object):
         self.vehicles = []
         self.vhrs = {}
         self.tow_guides = {}
-        self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
