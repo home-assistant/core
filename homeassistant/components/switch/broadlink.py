@@ -158,16 +158,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif switch_type in MP1_TYPES:
         broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
         parent_device = BroadlinkMP1Switch(broadlink_device)
-        switches = [
-            BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, 1), broadlink_device, 1, parent_device),
-            BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, 2), broadlink_device, 2, parent_device),
-            BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, 3), broadlink_device, 3, parent_device),
-            BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, 4), broadlink_device, 4, parent_device)
-        ]
+        for i in range(1, 5):
+            slot = BroadlinkMP1Slot(
+                _get_mp1_slot_name(friendly_name, i),
+                broadlink_device, i, parent_device)
+            switches.append(slot)
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
