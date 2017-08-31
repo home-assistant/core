@@ -803,7 +803,7 @@ pythonegardia==1.0.19
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==1.1
+pytradfri==2.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
