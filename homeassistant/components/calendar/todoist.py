@@ -1,5 +1,6 @@
 import requests
 import logging
+import copy
 from datetime import datetime
 from datetime import timedelta
 
@@ -15,6 +16,8 @@ CONF_API_TOKEN = 'token'
 CONF_EXTRA_PROJECTS = 'extra_projects'
 CONF_PROJECT_NAME = 'name'
 CONF_PROJECT_DUE_DATE = 'due_date_days'
+CONF_PROJECT_WHITELIST = 'include_projects'
+CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -37,7 +40,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
     if extra_projects is not None:
         for project in extra_projects:
-            project_devices.append(TodoistProjectDevice(hass, project, labels, token, project.get(CONF_PROJECT_DUE_DATE)))
+            # Special filter: By date
+            project_due_date = project.get(CONF_PROJECT_DUE_DATE)
+
+            # Special filter: By label
+            project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
+
+            # Special filter: By name
+            # Names must be converted into IDs
+            project_name_filter = project.get(CONF_PROJECT_WHITELIST)
+            if project_name_filter is not None and len(project_name_filter) > 0:
+                project_id_filter = []
+                while len(project_name_filter) > 0:
+                    project_name = project_name_filter[0]
+                    # Iterate over all projects we fetched earlier
+                    for cached_project in projects:
+                        # If the user-specified name matches, add it to the ID whitelist
+                        if cached_project['name'].upper() == project_name_filter[0].upper():
+                            project_id_filter.append(cached_project['id'])
+                            break
+                    del project_name_filter[0]
+            else:
+                project_id_filter = None
+
+            # Create the custom project and add it to the devices array
+            project_devices.append(TodoistProjectDevice(hass, project, labels, token, project_due_date, project_label_filter, project_id_filter))
 
     add_devices(project_devices)
 
@@ -45,10 +72,10 @@ class TodoistProjectDevice(CalendarEventDevice):
     """
     A device for getting the next Task from a Todoist Project.
     """
-    def __init__(self, hass, data, labels, token, latest_task_due_date=None):
+    def __init__(self, hass, data, labels, token, latest_task_due_date=None, whitelisted_labels=None, whitelisted_projects=None):
         """Create the Todoist Calendar Event Device."""
 
-        self.data = TodoistProjectData(data, labels, token, latest_task_due_date)
+        self.data = TodoistProjectData(data, labels, token, latest_task_due_date, whitelisted_labels, whitelisted_projects)
 
         # Set up the calendar side of things
         calendar_format = {}
@@ -101,7 +128,7 @@ class TodoistProjectData(object):
     from now a task can be due (7 means everything due in the next week, 0 means
     today, etc.).
     """
-    def __init__(self, project_data, labels, token, latest_task_due_date=None):
+    def __init__(self, project_data, labels, token, latest_task_due_date=None, whitelisted_labels=None, whitelisted_projects=None):
         self.event = None
 
         if token is None or not isinstance(token, str):
@@ -121,12 +148,25 @@ class TodoistProjectData(object):
         # Not tracked: order, indent, comment_count
 
         self.all_project_tasks = []
+
         # The latest date a task can be due (for making lists of everything
         # due today, or everything due in the next week, for example)
         if latest_task_due_date is not None:
             self._latest_due_date = datetime.now() + timedelta(days=latest_task_due_date)
         else:
             self._latest_due_date = None
+
+        # Only tasks with one of these labels will be included
+        if whitelisted_labels is not None:
+            self._label_whitelist = whitelisted_labels
+        else:
+            self._label_whitelist = None
+
+        # This project includes only projects with these names
+        if whitelisted_projects is not None:
+            self._project_id_whitelist = whitelisted_projects
+        else:
+            self._project_id_whitelist = None
 
     def create_todoist_task(self, data):
         task = {}
@@ -135,6 +175,29 @@ class TodoistProjectData(object):
         task['completed'] = data['completed']
         task['priority'] = data['priority']
         task['description'] = data['url']
+
+        # Labels (optional parameter)
+        task['labels'] = []
+        if 'label_ids' in data and len(data['label_ids']) > 0:
+            for label_id in data['label_ids']:
+                # Check each label we have cached and see if the ID matches
+                for label in self._labels:
+                    if label['id'] == label_id:
+                        # It does; add it to the list and move on
+                        task['labels'].append(label['name'])
+                        break
+
+        # If we have a label whitelist defined, check to see if we're on the whitelist
+        if self._label_whitelist is not None:
+            found_label = False
+            for label in self._label_whitelist:
+                # Check to see if the task has this label (in any case)
+                found_label = label.upper() in (task_label.upper() for task_label in task['labels'])
+                if found_label:
+                    break
+            # Return invalid task if it's not on the whitelist
+            if not found_label:
+                return None
 
         # Due dates (optional parameter)
         # The due date is the END date -- the task cannot be completed past this time
@@ -185,17 +248,6 @@ class TodoistProjectData(object):
                     task['comments'].append(comment['attachment']['file_url'])
                 else:
                     task['comments'].append(comment['content'])
-
-        # Labels (optional parameter)
-        task['labels'] = []
-        if 'label_ids' in data and len(data['label_ids']) > 0:
-            for label_id in data['label_ids']:
-                # Check each label we have cached and see if the ID matches
-                for label in self._labels:
-                    if label['id'] == label_id:
-                        # It does; add it to the list and move on
-                        task['labels'].append(label['name'])
-                        break
 
         # Not tracked: id, project_id order, indent, recurring
         return task
@@ -269,12 +321,21 @@ class TodoistProjectData(object):
         self.all_project_tasks = []
 
         if self._id is None:
-            # Grab all tasks
-            project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
-                params={"token": self._token}
-            ).json()
+            # Custom-defined task
+            if self._project_id_whitelist is None or len(self._project_id_whitelist) == 0:
+                # No whitelist; grab all the projects
+                project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
+                    params={"token": self._token}
+                ).json()
+            else:
+                # Grab each project from the whitelist
+                project_task_json_data = []
+                for project_id in self._project_id_whitelist:
+                    project_task_json_data.extend(requests.get("https://beta.todoist.com/API/v8/tasks",
+                            params={"token": self._token, "project_id": project_id}
+                        ).json())
         else:
-            # Grab tasks just for this project
+            # Todoist-defined task; grab tasks just for this project
             project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
                 params={"token": self._token, "project_id": self._id}
             ).json()
