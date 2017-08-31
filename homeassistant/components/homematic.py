@@ -682,7 +682,6 @@ class HMDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Load data init callbacks."""
-        self._homematic = self.hass.data[DATA_HOMEMATIC]
         yield from self.hass.async_add_job(self.link_homematic)
 
     @property
@@ -733,6 +732,7 @@ class HMDevice(Entity):
             return True
 
         # Initialize
+        self._homematic = self.hass.data[DATA_HOMEMATIC]
         self._hmdevice = self._homematic.devices[self._proxy][self._address]
         self._connected = True
 
