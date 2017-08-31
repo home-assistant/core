@@ -156,6 +156,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
     elif switch_type in MP1_TYPES:
+        switches = []
         broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
         parent_device = BroadlinkMP1Switch(broadlink_device)
         for i in range(1, 5):
