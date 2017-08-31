@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 # Your Todoist API token, found at https://todoist.com/Users/viewPrefs?page=authorizations
 CONF_API_TOKEN = 'token'
-CONF_EXTRA_PROJECTS = 'extra_projects'
+CONF_EXTRA_PROJECTS = 'custom_projects'
 CONF_PROJECT_NAME = 'name'
 CONF_PROJECT_DUE_DATE = 'due_date_days'
 CONF_PROJECT_WHITELIST = 'include_projects'
