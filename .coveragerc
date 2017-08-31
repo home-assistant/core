@@ -247,6 +247,7 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
+    homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
