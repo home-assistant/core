@@ -129,16 +129,21 @@ class PushBulletNotificationService(BaseNotificationService):
 
     def _push_data(self, title, message, data, pusher, tname=None):
         from pushbullet import PushError
+        if data is None:
+            data = {}
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
             if url:
-                if email:
+                if tname:
                     pusher.push_link(title, url, body=message, email=tname)
                 else:
                     pusher.push_link(title, url, body=message)
-            elif filepath and self.hass.config.is_allowed_path(filepath):
+            elif filepath:
+                if not self.hass.config.is_allowed_path(filepath):
+                    _LOGGER.error("Filepath is not valid or allowed.")
+                    return
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
                     if filedata.get('file_type') == 'application/x-empty':
@@ -153,7 +158,7 @@ class PushBulletNotificationService(BaseNotificationService):
                                  file_url=file_url,
                                  file_type=mimetypes.guess_type(file_url)[0])
             else:
-                if email:
+                if tname:
                     pusher.push_note(title, message, email=tname)
                 else:
                     pusher.push_note(title, message)
