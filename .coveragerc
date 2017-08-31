@@ -486,6 +486,7 @@ omit =
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/modem_callerid.py
+    homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/mvglive.py
     homeassistant/components/sensor/netdata.py
