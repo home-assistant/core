@@ -946,6 +946,9 @@ tellduslive==0.3.4
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
 
+# homeassistant.components.tesla
+teslajsonpy==0.0.11
+
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
 
