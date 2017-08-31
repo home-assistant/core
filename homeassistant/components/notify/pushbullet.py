@@ -127,7 +127,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, title, message, data, pusher, tname=None):
+    def _push_data(self, message, title, data, pusher, tname=None):
         from pushbullet import PushError
         if data is None:
             data = {}
