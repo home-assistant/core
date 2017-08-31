@@ -485,12 +485,14 @@ def gw_callback_factory(hass):
         validated = validate_child(msg.gateway, msg.node_id, child)
         for platform, dev_ids in validated.items():
             devices = get_mysensors_devices(hass, platform)
-            for idx, dev_id in enumerate(list(dev_ids)):
+            new_dev_ids = []
+            for dev_id in dev_ids:
                 if dev_id in devices:
-                    dev_ids.pop(idx)
                     signals.append(SIGNAL_CALLBACK.format(*dev_id))
-            if dev_ids:
-                discover_mysensors_platform(hass, platform, dev_ids)
+                else:
+                    new_dev_ids.append(dev_id)
+            if new_dev_ids:
+                discover_mysensors_platform(hass, platform, new_dev_ids)
         for signal in set(signals):
             # Only one signal per device is needed.
             # A device can have multiple platforms, ie multiple schemas.
