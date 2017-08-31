@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
-    DOMAIN, ATTR_THEMES, ATTR_EXTRA_HTML_URL)
+    DOMAIN, ATTR_THEMES, ATTR_EXTRA_HTML_URL, DATA_PANELS, register_panel)
 
 
 @pytest.fixture
@@ -163,3 +163,20 @@ def test_extra_urls(mock_http_client_with_urls):
     assert resp.status == 200
     text = yield from resp.text()
     assert text.find('href=\'https://domain.com/my_extra_url.html\'') >= 0
+
+
+@asyncio.coroutine
+def test_panel_without_path(hass):
+    """Test panel registration without file path."""
+    register_panel(hass, 'test_component', 'nonexistant_file')
+    assert hass.data[DATA_PANELS] == {}
+
+
+@asyncio.coroutine
+def test_panel_with_url(hass):
+    """Test panel registration without file path."""
+    register_panel(hass, 'test_component', None, url='some_url')
+    assert hass.data[DATA_PANELS] == {
+        'test_component': {'component_name': 'test_component',
+                           'url': 'some_url',
+                           'url_path': 'test_component'}}
