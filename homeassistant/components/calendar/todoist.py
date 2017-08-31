@@ -84,6 +84,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         attributes = super().device_state_attributes
         # Add additional attributes
         attributes['due_today'] = self.data.event['due_today']
+        attributes['overdue'] = self.data.event['overdue']
         attributes['all_tasks'] = self._cal_data['all_tasks']
         attributes['priority'] = self.data.event['priority']
         attributes['task_comments'] = self.data.event['comments']
@@ -152,6 +153,15 @@ class TodoistProjectData(object):
                 return None
 
             task['due_today'] = task['end'].date() == datetime.today().date()
+
+            # Special case: Task is overdue
+            if task['end'] <= task['start']:
+                task['overdue'] = True
+                # Set end time to the current time plus 1 hour
+                # We're pretty much guaranteed to update within that 1 hour, so it should be fine
+                task['end'] = task['start'] + timedelta(hours=1)
+            else:
+                task['overdue'] = False
         else:
             # If we ask for everything due before a certain date, don't count things
             # which have no due dates
@@ -160,6 +170,7 @@ class TodoistProjectData(object):
             task['end'] = None
             task['all_day'] = True
             task['due_today'] = False
+            task['overdue'] = False
 
         # Comments (optional parameter)
         task['comments'] = []
