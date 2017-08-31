@@ -388,11 +388,6 @@ class SonosDevice(MediaPlayerDevice):
         return self._coordinator
 
     @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
