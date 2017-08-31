@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
 DOMAIN = 'mopar'
-DATA_MOPAR = DOMAIN
 ATTR_VEHICLE_INDEX = 'vehicle_index'
 SERVICE_REMOTE_COMMAND = 'remote_command'
 COOKIE_FILE = 'mopar_cookies.pickle'
@@ -67,8 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(DOMAIN, SERVICE_REMOTE_COMMAND, _handle_service,
                            schema=REMOTE_COMMAND_SCHEMA)
 
-    hass.data[DATA_MOPAR] = MoparData(session)
-    add_devices([MoparSensor(hass, index)
+    data = MoparData(session)
+    add_devices([MoparSensor(data, index)
                  for index, _ in enumerate(hass.data[DATA_MOPAR].vehicles)],
                 True)
     return True
@@ -111,15 +110,14 @@ class MoparData(object):
 class MoparSensor(Entity):
     """Mopar vehicle sensor."""
 
-    def __init__(self, hass, index):
+    def __init__(self, data, index):
         """Initialize the sensor."""
-        self.hass = hass
         self._index = index
         self._vehicle = {}
         self._vhr = {}
         self._tow_guide = {}
         self._odometer = None
-        self._data = self.hass.data[DATA_MOPAR]
+        self._data = data
 
     def update(self):
         """Update device state."""
