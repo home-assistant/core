@@ -109,14 +109,13 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     component_name: name of the web component
     path: path to the HTML of the web component
+          (required unless url is provided)
     md5: the md5 hash of the web component (for versioning, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
     url_path: name to use in the url (defaults to component_name)
-    url: for the web component (for dev environment, optional)
+    url: for the web component (optional)
     config: config to be passed into the web component
-
-    Warning: this API will probably change. Use at own risk.
     """
     panels = hass.data.get(DATA_PANELS)
     if panels is None:
@@ -127,14 +126,16 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     if url_path in panels:
         _LOGGER.warning("Overwriting component %s", url_path)
-    if not os.path.isfile(path):
-        _LOGGER.error(
-            "Panel %s component does not exist: %s", component_name, path)
-        return
 
-    if md5 is None:
-        with open(path) as fil:
-            md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
+    if url is None:
+        if not os.path.isfile(path):
+            _LOGGER.error(
+                "Panel %s component does not exist: %s", component_name, path)
+            return
+
+        if md5 is None:
+            with open(path) as fil:
+                md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
     data = {
         'url_path': url_path,
