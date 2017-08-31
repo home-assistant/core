@@ -152,8 +152,7 @@ class TradfriLight(Light):
         self._name = None
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
-        self._ok_temps = \
-            self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
+        self._temp_supported = False
 
         self._refresh(light)
 
@@ -204,7 +203,7 @@ class TradfriLight(Light):
         """Return the CT color value in mireds."""
         if (self._light_data.kelvin_color is None or
                 self.supported_features & SUPPORT_COLOR_TEMP == 0 or
-                not self._ok_temps):
+                not self._temp_supported):
             return None
         return color_util.color_temperature_kelvin_to_mired(
             self._light_data.kelvin_color
@@ -235,7 +234,8 @@ class TradfriLight(Light):
                     color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))))
 
         elif ATTR_COLOR_TEMP in kwargs and \
-                self._light_data.hex_color is not None and self._ok_temps:
+                self._light_data.hex_color is not None and \
+                self._temp_supported:
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
             self.hass.async_add_job(self._api(
@@ -287,8 +287,8 @@ class TradfriLight(Light):
             else:
                 self._features |= SUPPORT_RGB_COLOR
 
-        self._ok_temps = ALLOWED_TEMPERATURES.get(
-            self._light.device_info.manufacturer)
+        self._temp_supported = self._light.device_info.manufacturer \
+                                    in ALLOWED_TEMPERATURES
 
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
