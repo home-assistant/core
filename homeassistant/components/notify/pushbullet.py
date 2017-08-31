@@ -128,13 +128,13 @@ class PushBulletNotificationService(BaseNotificationService):
                 continue
 
     def _push_data(self, title, message, data, pusher, tname=None):
-        from pushbullet import PushError, Pushbullet
+        from pushbullet import PushError
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
             if url:
-                if isinstance(pusher, Pushbullet) :
+                if email:
                     pusher.push_link(title, url, body=message, email=tname)
                 else:
                     pusher.push_link(title, url, body=message)
@@ -153,7 +153,7 @@ class PushBulletNotificationService(BaseNotificationService):
                                  file_url=file_url,
                                  file_type=mimetypes.guess_type(file_url)[0])
             else:
-                if isinstance(pusher, Pushbullet):
+                if email:
                     pusher.push_note(title, message, email=tname)
                 else:
                     pusher.push_note(title, message)
