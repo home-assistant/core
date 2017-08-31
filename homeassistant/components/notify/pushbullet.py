@@ -128,17 +128,16 @@ class PushBulletNotificationService(BaseNotificationService):
                 continue
 
     def _push_data(self, title, message, data, pusher, tname=None):
-        from pushbullet import PushError
-        from pushbullet import Device
+        from pushbullet import PushError, Pushbullet
         url = data.get(ATTR_URL)
         filepath = data.get(ATTR_FILE)
         file_url = data.get(ATTR_FILE_URL)
         try:
             if url:
-                if isinstance(pusher, Device):
-                    pusher.push_link(title, url, body=message)
-                else:
+                if isinstance(pusher, Pushbullet) :
                     pusher.push_link(title, url, body=message, email=tname)
+                else:
+                    pusher.push_link(title, url, body=message)
             elif filepath and self.hass.config.is_allowed_path(filepath):
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
@@ -154,9 +153,9 @@ class PushBulletNotificationService(BaseNotificationService):
                                  file_url=file_url,
                                  file_type=mimetypes.guess_type(file_url)[0])
             else:
-                if isinstance(pusher, Device):
-                    pusher.push_note(title, message)
-                else:
+                if isinstance(pusher, Pushbullet):
                     pusher.push_note(title, message, email=tname)
+                else:
+                    pusher.push_note(title, message)
         except PushError as err:
             _LOGGER.error("Notify failed: %s", err)
