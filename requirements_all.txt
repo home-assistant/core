@@ -545,10 +545,10 @@ pyalarmdotcom==0.3.0
 pyarlo==0.0.4
 
 # homeassistant.components.notify.xmpp
-pyasn1-modules==0.0.11
+pyasn1-modules==0.1.1
 
 # homeassistant.components.notify.xmpp
-pyasn1==0.3.2
+pyasn1==0.3.3
 
 # homeassistant.components.apple_tv
 pyatv==0.3.4
@@ -797,13 +797,13 @@ python-wink==1.5.1
 python_openzwave==0.4.0.31
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.18
+pythonegardia==1.0.19
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==1.1
+pytradfri==2.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -878,7 +878,7 @@ schiene==0.18
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==5.0.0
+sendgrid==5.0.1
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
@@ -888,7 +888,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.7.4
+shodan==1.7.5
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5
@@ -930,6 +930,9 @@ steamodd==4.21
 # homeassistant.components.camera.onvif
 suds-py3==1.3.3.0
 
+# homeassistant.components.sensor.tank_utility
+tank_utility==1.4.0
+
 # homeassistant.components.binary_sensor.tapsaff
 tapsaff==0.1.3
 
@@ -942,6 +945,9 @@ tellduslive==0.3.4
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.3
+
+# homeassistant.components.tesla
+teslajsonpy==0.0.11
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
