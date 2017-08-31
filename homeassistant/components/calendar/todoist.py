@@ -82,6 +82,7 @@ class TodoistProjectDevice(CalendarEventDevice):
             return {}
 
         attributes = super().device_state_attributes
+
         # Add additional attributes
         attributes['due_today'] = self.data.event['due_today']
         attributes['overdue'] = self.data.event['overdue']
@@ -89,6 +90,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         attributes['priority'] = self.data.event['priority']
         attributes['task_comments'] = self.data.event['comments']
         attributes['task_labels'] = self.data.event['labels']
+
         return attributes
 
 class TodoistProjectData(object):
@@ -104,6 +106,8 @@ class TodoistProjectData(object):
 
         if token is None or not isinstance(token, str):
             raise ValueError("Invalid Todoist token! Did you add it to your configuration?")
+
+        _LOGGER.info("Creating Todoist Project " + str(project_data))
 
         self._token = token
         self._name = project_data['name']
@@ -126,7 +130,6 @@ class TodoistProjectData(object):
 
     def create_todoist_task(self, data):
         task = {}
-        _LOGGER.warning("Creating task from " + str(data))
         # Fields are required to be in all returned task objects
         task['summary'] = data['content']
         task['completed'] = data['completed']
@@ -185,14 +188,15 @@ class TodoistProjectData(object):
 
         # Labels (optional parameter)
         task['labels'] = []
-        if 'label_ids' in data and data['label_ids'] > 0:
+        if 'label_ids' in data and len(data['label_ids']) > 0:
             for label_id in data['label_ids']:
                 # Check each label we have cached and see if the ID matches
                 for label in self._labels:
                     if label['id'] == label_id:
                         # It does; add it to the list and move on
-                        task['labels'].append(self._labels[label_id])
+                        task['labels'].append(label['name'])
                         break
+
         # Not tracked: id, project_id order, indent, recurring
         return task
 
@@ -271,7 +275,6 @@ class TodoistProjectData(object):
             ).json()
         else:
             # Grab tasks just for this project
-            _LOGGER.info("Updating Todoist project " + str(self._id) + " using token " + self._token)
             project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
                 params={"token": self._token, "project_id": self._id}
             ).json()
