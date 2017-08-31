@@ -51,10 +51,10 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
-    vol.Optional('slot_1', default=None): cv.string,
-    vol.Optional('slot_2', default=None): cv.string,
-    vol.Optional('slot_3', default=None): cv.string,
-    vol.Optional('slot_4', default=None): cv.string
+    vol.Optional('slot_1'): cv.string,
+    vol.Optional('slot_2'): cv.string,
+    vol.Optional('slot_3'): cv.string,
+    vol.Optional('slot_4'): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
