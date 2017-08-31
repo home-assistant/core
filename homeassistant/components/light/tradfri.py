@@ -37,7 +37,6 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     gateway_id = discovery_info['gateway']
     api = hass.data[KEY_API][gateway_id]
     gateway = hass.data[KEY_GATEWAY][gateway_id]
-    api = hass.data[KEY_API]
 
     devices_command = gateway.get_devices()
     devices_commands = yield from api(devices_command)
