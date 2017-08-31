@@ -239,10 +239,8 @@ class TradfriLight(Light):
                 self._light_data.hex_color is not None and self._ok_temps:
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
-            # find closest allowed kelvin temp from user input
-            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
             self.hass.async_add_job(self._api(
-                self._light_control.set_hex_color(self._ok_temps[kelvin])))
+                self._light_control.set_kelvin_color(kelvin)))
 
         keys = {}
         if ATTR_TRANSITION in kwargs:
