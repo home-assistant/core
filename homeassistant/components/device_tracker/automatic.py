@@ -6,28 +6,32 @@ https://home-assistant.io/components/device_tracker.automatic/
 """
 import asyncio
 from datetime import timedelta
+import json
 import logging
+import os
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, ATTR_ATTRIBUTES, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_MAC,
     ATTR_GPS, ATTR_GPS_ACCURACY)
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.4.0']
+REQUIREMENTS = ['aioautomatic==0.6.2']
+DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_SECRET = 'secret'
 CONF_DEVICES = 'devices'
+CONF_CURRENT_LOCATION = 'current_location'
 
 DEFAULT_TIMEOUT = 5
 
@@ -38,14 +42,47 @@ ATTR_FUEL_LEVEL = 'fuel_level'
 
 EVENT_AUTOMATIC_UPDATE = 'automatic_update'
 
+AUTOMATIC_CONFIG_FILE = '.automatic/session-{}.json'
+
+DATA_CONFIGURING = 'automatic_configurator_clients'
+DATA_REFRESH_TOKEN = 'refresh_token'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
     vol.Optional(CONF_DEVICES, default=None): vol.All(
         cv.ensure_list, [cv.string])
 })
+
+
+def _get_refresh_token_from_file(hass, filename):
+    """Attempt to load session data from file."""
+    path = hass.config.path(filename)
+
+    if not os.path.isfile(path):
+        return None
+
+    try:
+        with open(path) as data_file:
+            data = json.load(data_file)
+            if data is None:
+                return None
+
+            return data.get(DATA_REFRESH_TOKEN)
+    except ValueError:
+        return None
+
+
+def _write_refresh_token_to_file(hass, filename, refresh_token):
+    """Attempt to store session data to file."""
+    path = hass.config.path(filename)
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w+') as data_file:
+        json.dump({
+            DATA_REFRESH_TOKEN: refresh_token
+        }, data_file)
 
 
 @asyncio.coroutine
@@ -53,23 +90,26 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return an Automatic scanner."""
     import aioautomatic
 
+    hass.http.register_view(AutomaticAuthCallbackView())
+
+    scope = FULL_SCOPE if config.get(CONF_CURRENT_LOCATION) else DEFAULT_SCOPE
+
     client = aioautomatic.Client(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_SECRET],
         client_session=async_get_clientsession(hass),
         request_kwargs={'timeout': DEFAULT_TIMEOUT})
-    try:
-        try:
-            session = yield from client.create_session_from_password(
-                FULL_SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
-        except aioautomatic.exceptions.ForbiddenError as exc:
-            if not str(exc).startswith("invalid_scope"):
-                raise exc
-            _LOGGER.info("Client not authorized for current_location scope. "
-                         "location:updated events will not be received.")
-            session = yield from client.create_session_from_password(
-                DEFAULT_SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
 
+    filename = AUTOMATIC_CONFIG_FILE.format(config[CONF_CLIENT_ID])
+    refresh_token = yield from hass.async_add_job(
+        _get_refresh_token_from_file, hass, filename)
+
+    @asyncio.coroutine
+    def initialize_data(session):
+        """Initialize the AutomaticData object from the created session."""
+        hass.async_add_job(
+            _write_refresh_token_to_file, hass, filename,
+            session.refresh_token)
         data = AutomaticData(
             hass, client, session, config[CONF_DEVICES], async_see)
 
@@ -77,24 +117,84 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         vehicles = yield from session.get_vehicles()
         for vehicle in vehicles:
             hass.async_add_job(data.load_vehicle(vehicle))
-    except aioautomatic.exceptions.AutomaticError as err:
-        _LOGGER.error(str(err))
-        return False
 
-    @callback
-    def ws_connect(event):
-        """Open the websocket connection."""
-        hass.async_add_job(data.ws_connect())
+        # Create a task instead of adding a tracking job, since this task will
+        # run until the websocket connection is closed.
+        hass.loop.create_task(data.ws_connect())
 
-    @callback
-    def ws_close(event):
-        """Close the websocket connection."""
-        hass.async_add_job(data.ws_close())
+    if refresh_token is not None:
+        try:
+            session = yield from client.create_session_from_refresh_token(
+                refresh_token)
+            yield from initialize_data(session)
+            return True
+        except aioautomatic.exceptions.AutomaticError as err:
+            _LOGGER.error(str(err))
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, ws_connect)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, ws_close)
+    configurator = hass.components.configurator
+    request_id = configurator.async_request_config(
+        "Automatic", description=(
+            "Authorization required for Automatic device tracker."),
+        link_name="Click here to authorize Home Assistant.",
+        link_url=client.generate_oauth_url(scope),
+        entity_picture="/static/images/logo_automatic.png",
+    )
 
+    @asyncio.coroutine
+    def initialize_callback(code, state):
+        """Callback after OAuth2 response is returned."""
+        try:
+            session = yield from client.create_session_from_oauth_code(
+                code, state)
+            yield from initialize_data(session)
+            configurator.async_request_done(request_id)
+        except aioautomatic.exceptions.AutomaticError as err:
+            _LOGGER.error(str(err))
+            configurator.async_notify_errors(request_id, str(err))
+            return False
+
+    if DATA_CONFIGURING not in hass.data:
+        hass.data[DATA_CONFIGURING] = {}
+
+    hass.data[DATA_CONFIGURING][client.state] = initialize_callback
     return True
+
+
+class AutomaticAuthCallbackView(HomeAssistantView):
+    """Handle OAuth finish callback requests."""
+
+    requires_auth = False
+    url = '/api/automatic/callback'
+    name = 'api:automatic:callback'
+
+    @callback
+    def get(self, request):  # pylint: disable=no-self-use
+        """Finish OAuth callback request."""
+        hass = request.app['hass']
+        params = request.query
+        response = web.HTTPFound('/states')
+
+        if 'state' not in params or 'code' not in params:
+            if 'error' in params:
+                _LOGGER.error(
+                    "Error authorizing Automatic: %s", params['error'])
+                return response
+            else:
+                _LOGGER.error(
+                    "Error authorizing Automatic. Invalid response returned.")
+                return response
+
+        if DATA_CONFIGURING not in hass.data or \
+                params['state'] not in hass.data[DATA_CONFIGURING]:
+            _LOGGER.error("Automatic configuration request not found.")
+            return response
+
+        code = params['code']
+        state = params['state']
+        initialize_callback = hass.data[DATA_CONFIGURING][state]
+        hass.async_add_job(initialize_callback(code, state))
+
+        return response
 
 
 class AutomaticData(object):
@@ -114,6 +214,8 @@ class AutomaticData(object):
         self.client.on_app_event(
             lambda name, event: self.hass.async_add_job(
                 self.handle_event(name, event)))
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.ws_close())
 
     @asyncio.coroutine
     def handle_event(self, name, event):

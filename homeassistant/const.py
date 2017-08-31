@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 51
+MINOR_VERSION = 53
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -56,6 +56,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
@@ -108,6 +109,7 @@ CONF_ICON = 'icon'
 CONF_ICON_TEMPLATE = 'icon_template'
 CONF_INCLUDE = 'include'
 CONF_ID = 'id'
+CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MAC = 'mac'
@@ -197,7 +199,10 @@ STATE_STANDBY = 'standby'
 STATE_ALARM_DISARMED = 'disarmed'
 STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
+STATE_ALARM_ARMED_NIGHT = 'armed_night'
 STATE_ALARM_PENDING = 'pending'
+STATE_ALARM_ARMING = 'arming'
+STATE_ALARM_DISARMING = 'disarming'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
@@ -282,6 +287,9 @@ ATTR_WAKEUP = 'wake_up_interval'
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
 
+# For calling a device specific command
+ATTR_COMMAND = 'command'
+
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'
 
@@ -342,6 +350,7 @@ SERVICE_SHUFFLE_SET = 'shuffle_set'
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
+SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
 
 SERVICE_LOCK = 'lock'

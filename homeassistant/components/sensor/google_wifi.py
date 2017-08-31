@@ -186,7 +186,7 @@ class GoogleWifiAPI(object):
                             sensor_value == '0.0.0.0'):
                         sensor_value = 'Latest'
                     elif attr_key == ATTR_UPTIME:
-                        sensor_value /= 3600 * 24
+                        sensor_value = round(sensor_value / (3600 * 24), 2)
                     elif attr_key == ATTR_LAST_RESTART:
                         last_restart = (
                             dt.now() - timedelta(seconds=sensor_value))

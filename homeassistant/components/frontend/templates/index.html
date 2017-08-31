@@ -21,7 +21,7 @@
     <meta name="msapplication-TileColor" content="#3fbbf4ff"/>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='viewport' content='width=device-width, user-scalable=no'>
-    <meta name='theme-color' content='#03a9f4'>
+    <meta name='theme-color' content='{{ theme_color }}'>
     <style>
       body {
         font-family: 'Roboto', 'Noto', sans-serif;
@@ -89,11 +89,18 @@
       }
     </script>
     <script src='{{ core_url }}'></script>
+    {% if not dev_mode %}
+    <script src='/static/custom-elements-es5-adapter.js'></script>
+    {% endif %}
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
     {% endif -%}
     <link rel='import' href='{{ icons_url }}' async>
+    {% for extra_url in extra_urls -%}
+      <link rel='import' href='{{ extra_url }}' async>
+    {% endfor -%}
+
     <script>
       var webComponentsSupported = (
         'registerElement' in document &&
@@ -103,7 +110,7 @@
         var e = document.createElement('script');
         e.async = true;
         e.onerror = initError;
-        e.src = '/static/webcomponents-lite.min.js';
+        e.src = '/static/webcomponents-lite.js';
         document.head.appendChild(e);
       }
     </script>

@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_callback_devices([NetatmoThermostat(data, module_name)])
+            add_devices([NetatmoThermostat(data, module_name)], True)
     except lnetatmo.NoDevice:
         return None
 
@@ -64,7 +64,6 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
-        self.update()
 
     @property
     def name(self):
