@@ -62,7 +62,9 @@ calendar:
       # Everything is optional except for 'name'.
 """
 
+import json
 import logging
+import uuid
 from datetime import datetime
 from datetime import timedelta
 import os
@@ -86,7 +88,8 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('content'): cv.string,
     vol.Optional('project'): cv.string,
     vol.Optional('labels'): cv.string,
-    vol.Optional('priority'): cv.string,
+    vol.Optional('priority'): vol.All(vol.Coerce(int),
+                                      vol.Range(min=1, max=4)),
     vol.Exclusive('due_date', 'todoist_due'): cv.string,
     vol.Exclusive('due_datetime', 'todoist_due'): cv.datetime,
 })
@@ -114,8 +117,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-# Look up project IDs based on (lowercase) names.
-project_id_lookup = {} # pylint: disable=C0103
+# Look up IDs based on (lowercase) names.
+project_id_lookup = {}  # pylint: disable=C0103
+label_id_lookup = {}  # pylint: disable=C0103
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -148,6 +152,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project['name'].lower()] = project['id']
+
+    # Cache all label names
+    for label in labels:
+        label_id_lookup[label['name'].lower()] = label['id']
 
     # Check config for more projects.
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
@@ -188,7 +196,48 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def handle_new_task(call):
         """Called when a user creates a new Todoist Task from HASS."""
-        _LOGGER.warning(str(call))
+        task_data = {}
+        try:
+            task_data['content'] = call.data['content']
+
+            if 'project' in call.data:
+                project_name = call.data['project'].lower()
+                task_data['project_id'] = project_id_lookup[project_name]
+
+            if 'labels' in call.data:
+                task_labels = call.data['labels'].split(',')
+                task_data['label_ids'] = []
+                for label in task_labels:
+                    task_data['label_ids'].append(
+                        label_id_lookup[label.lower()])
+
+            if 'priority' in call.data:
+                task_data['priority'] = call.data['priority']
+
+            if 'due_datetime' in call.data:
+                task_data['due_datetime'] = call.data['due_datetime']
+            elif 'due_date' in call.data:
+                task_data['due_date'] = call.data['due_date']
+        except KeyError:
+            _LOGGER.critical("Invalid Todoist task call data!")
+            return
+
+        task_json = json.dumps(task_data)
+
+        # Post it to Todoist
+        output = requests.post("https://beta.todoist.com/API/v8/tasks",
+                               params={"token": token},
+                               data=task_json,
+                               headers={
+                                   "Content-Type": "application/json",
+                                   "X-Request-Id": str(uuid.uuid4()),
+                               })
+        if output.status_code == 200:
+            _LOGGER.info("Successfully posted task to Todoist.")
+        else:
+            error = "Could not post task to Todoist! "
+            error += "Status code: " + str(output.status_code)
+            _LOGGER.critical(error)
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
                            descriptions[DOMAIN][SERVICE_NEW_TASK],
                            schema=NEW_TASK_SERVICE_SCHEMA)
@@ -551,4 +600,5 @@ class TodoistProjectData(object):
                         timedelta(days=1)
                     ).strftime(DATE_STR_FORMAT)
                 }
+        _LOGGER.info("Updated " + self._name + ".")
         return True
