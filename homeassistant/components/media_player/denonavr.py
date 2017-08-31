@@ -17,15 +17,16 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PLAY)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    CONF_NAME, STATE_ON, CONF_ZONE)
+    CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.5.2']
+REQUIREMENTS = ['denonavr==0.5.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
 DEFAULT_SHOW_SOURCES = False
+DEFAULT_TIMEOUT = 2
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 CONF_ZONES = 'zones'
 CONF_VALID_ZONES = ['Zone2', 'Zone3']
@@ -51,10 +52,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
     vol.Optional(CONF_ZONES):
-        vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA])
+        vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
-NewHost = namedtuple('NewHost', ['host', 'name'])
+NewHost = namedtuple('NewHost', ['host', 'name', 'timeout'])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -69,8 +71,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if cache is None:
         cache = hass.data[KEY_DENON_CACHE] = set()
 
-    # Get config option for show_all_sources
+    # Get config option for show_all_sources and timeout
     show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
+    timeout = config.get(CONF_TIMEOUT)
 
     # Get config option for additional zones
     zones = config.get(CONF_ZONES)
@@ -87,13 +90,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        new_hosts.append(NewHost(host=host, name=name))
+        new_hosts.append(NewHost(host=host, name=name, timeout=timeout))
 
     # 2. option: discovery using netdisco
     if discovery_info is not None:
         host = discovery_info.get('host')
         name = discovery_info.get('name')
-        new_hosts.append(NewHost(host=host, name=name))
+        new_hosts.append(NewHost(host=host, name=name, timeout=timeout))
 
     # 3. option: discovery using denonavr library
     if config.get(CONF_HOST) is None and discovery_info is None:
@@ -103,7 +106,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for d_receiver in d_receivers:
                 host = d_receiver["host"]
                 name = d_receiver["friendlyName"]
-                new_hosts.append(NewHost(host=host, name=name))
+                new_hosts.append(
+                    NewHost(host=host, name=name, timeout=timeout))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later
