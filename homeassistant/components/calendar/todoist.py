@@ -23,19 +23,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     token = config.get(CONF_API_TOKEN)
 
     # Grab all projects
-    projects = requests.get('https://beta.todoist.com/API/v8/projects',
-        params={'token': token}
-    ).json()
+    projects = requests.get('https://beta.todoist.com/API/v8/projects', params={'token': token}).json()
 
+    # Grab all labels
+    labels = requests.get("https://beta.todoist.com/API/v8/labels", params={"token": token}).json()
+
+    # Add all Todoist-defined projects
     project_devices = []
     for project in projects:
-        project_devices.append(TodoistProjectDevice(hass, project, token))
+        project_devices.append(TodoistProjectDevice(hass, project, labels, token))
 
     # Check config for more projects
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
     if extra_projects is not None:
         for project in extra_projects:
-            project_devices.append(TodoistProjectDevice(hass, project, token, project.get(CONF_PROJECT_DUE_DATE)))
+            project_devices.append(TodoistProjectDevice(hass, project, labels, token, project.get(CONF_PROJECT_DUE_DATE)))
 
     add_devices(project_devices)
 
@@ -43,10 +45,10 @@ class TodoistProjectDevice(CalendarEventDevice):
     """
     A device for getting the next Task from a Todoist Project.
     """
-    def __init__(self, hass, data, token, latest_task_due_date=None):
+    def __init__(self, hass, data, labels, token, latest_task_due_date=None):
         """Create the Todoist Calendar Event Device."""
 
-        self.data = TodoistProjectData(data, token, latest_task_due_date)
+        self.data = TodoistProjectData(data, labels, token, latest_task_due_date)
 
         # Set up the calendar side of things
         calendar_format = {}
@@ -56,8 +58,10 @@ class TodoistProjectDevice(CalendarEventDevice):
         super().__init__(hass, calendar_format)
 
     def update(self):
+        # Set basic calendar data
         super().update()
 
+        # Set Todoist-specific data that can't easily be grabbed
         if self.data.event is not None and 'all_day' in self.data.event:
             # This event doesn't have an end time, so we mark it as all day
             self._cal_data['all_day'] = True
@@ -74,6 +78,7 @@ class TodoistProjectDevice(CalendarEventDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.data.event is None:
+            # No tasks, we don't REALLY need to show anything
             return {}
 
         attributes = super().device_state_attributes
@@ -81,6 +86,8 @@ class TodoistProjectDevice(CalendarEventDevice):
         attributes['due_today'] = self.data.event['due_today']
         attributes['all_tasks'] = self._cal_data['all_tasks']
         attributes['priority'] = self.data.event['priority']
+        attributes['task_comments'] = self.data.event['comments']
+        attributes['task_labels'] = self.data.event['labels']
         return attributes
 
 class TodoistProjectData(object):
@@ -91,8 +98,11 @@ class TodoistProjectData(object):
     from now a task can be due (7 means everything due in the next week, 0 means
     today, etc.).
     """
-    def __init__(self, project_data, token, latest_task_due_date=None):
+    def __init__(self, project_data, labels, token, latest_task_due_date=None):
         self.event = None
+
+        if token is None or not isinstance(token, str):
+            raise ValueError("Invalid Todoist token! Did you add it to your configuration?")
 
         self._token = token
         self._name = project_data['name']
@@ -101,6 +111,8 @@ class TodoistProjectData(object):
             self._id = project_data['id']
         else:
             self._id = None
+        # All labels the user has defined, for easy lookup
+        self._labels = labels
         # Not tracked: order, indent, comment_count
 
         self.all_project_tasks = []
@@ -113,6 +125,7 @@ class TodoistProjectData(object):
 
     def create_todoist_task(self, data):
         task = {}
+        _LOGGER.warning("Creating task from " + str(data))
         # Fields are required to be in all returned task objects
         task['summary'] = data['content']
         task['completed'] = data['completed']
@@ -147,14 +160,38 @@ class TodoistProjectData(object):
             task['end'] = None
             task['all_day'] = True
             task['due_today'] = False
-        # Not tracked: id, project_id order, indent, comment_count, label_ids, recurring
+
+        # Comments (optional parameter)
+        task['comments'] = []
+        if 'comment_count' in data and data['comment_count'] > 0:
+            task_comments = requests.get("https://beta.todoist.com/API/v8/comments", params={"token": self._token, "task_id": data['id']}).json()
+            for comment in task_comments:
+                if 'attachment' in comment and 'file_url' in comment['attachment']:
+                    # Use the URL, if present
+                    task['comments'].append(comment['attachment']['file_url'])
+                else:
+                    task['comments'].append(comment['content'])
+
+        # Labels (optional parameter)
+        task['labels'] = []
+        if 'label_ids' in data and data['label_ids'] > 0:
+            for label_id in data['label_ids']:
+                # Check each label we have cached and see if the ID matches
+                for label in self._labels:
+                    if label['id'] == label_id:
+                        # It does; add it to the list and move on
+                        task['labels'].append(self._labels[label_id])
+                        break
+        # Not tracked: id, project_id order, indent, recurring
         return task
 
     def select_best_task(self, project_tasks):
         if len(project_tasks) > 0:
             # Start at the end of the list, so if tasks don't have a due date
             # the newest ones are the most important
+
             event = project_tasks[len(project_tasks) - 1]
+
             """
             Search through all our events for the "best" event to select
             The "best" event is determined by the following criteria:
@@ -223,6 +260,7 @@ class TodoistProjectData(object):
             ).json()
         else:
             # Grab tasks just for this project
+            _LOGGER.info("Updating Todoist project " + str(self._id) + " using token " + self._token)
             project_task_json_data = requests.get("https://beta.todoist.com/API/v8/tasks",
                 params={"token": self._token, "project_id": self._id}
             ).json()
