@@ -24,7 +24,6 @@ KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
 KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
-KEY_API = 'tradfri_api'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
 
@@ -120,14 +119,12 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
 
     try:
         api = yield from api_factory(host, key, loop=hass.loop)
-        hass.data[KEY_API] = api
     except RequestError:
         _LOGGER.exception("Tradfri setup failed.")
         return False
 
     gateway = Gateway()
-    gateway_info_cmd = gateway.get_gateway_info()
-    gateway_info_result = yield from api(gateway_info_cmd)
+    gateway_info_result = yield from api(gateway.get_gateway_info())
     gateway_id = gateway_info_result.id
     hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
