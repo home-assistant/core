@@ -288,7 +288,7 @@ class TradfriLight(Light):
                 self._features |= SUPPORT_RGB_COLOR
 
         self._temp_supported = self._light.device_info.manufacturer \
-                                    in ALLOWED_TEMPERATURES
+            in ALLOWED_TEMPERATURES
 
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
