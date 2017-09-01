@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = ['pyW215==0.5.1']
+REQUIREMENTS = ['pyW215==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
