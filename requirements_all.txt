@@ -539,7 +539,7 @@ pyHS100==0.2.4.2
 pyRFXtrx==0.20.0
 
 # homeassistant.components.switch.dlink
-pyW215==0.5.1
+pyW215==0.6.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
