@@ -57,13 +57,10 @@ class GeofencyView(HomeAssistantView):
 
     @asyncio.coroutine
     def post(self, request):
-        """Geofency message received."""
-        data = yield from request.post()
-        return (yield from self._handle(request.app['hass'], data))
-
-    @asyncio.coroutine
-    def _handle(self, hass, data):
         """Handle Geofency requests."""
+        data = yield from request.post()
+        hass = request.app['hass']
+
         data = self._validate_data(data)
         if not data:
             return ("Invalid data", HTTP_UNPROCESSABLE_ENTITY)
