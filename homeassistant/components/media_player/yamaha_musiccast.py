@@ -1,5 +1,4 @@
-"""
-Example for configuration.yaml
+""" Example for configuration.yaml.
 
 media_player:
   - platform: yamaha_musiccast
@@ -47,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-
+    """Set up the Yamaha MusicCast platform."""
     import pymusiccast
 
     _LOGGER.debug("config: {} ({})".format(config, type(config)))
@@ -63,8 +62,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class YamahaDevice(MediaPlayerDevice):
+    """Representation of a Yamaha MusicCast device."""
 
     def __init__(self, mcDevice, name):
+        """Initialize the Yamaha MusicCast device."""
         self._mcDevice = mcDevice
         self._name = name
         self._power = STATE_UNKNOWN
@@ -79,10 +80,12 @@ class YamahaDevice(MediaPlayerDevice):
 
     @property
     def name(self):
+        """Return the name of the device."""
         return self._name
 
     @property
     def state(self):
+        """Return the state of the device."""
         if self._power == STATE_ON and self._status is not STATE_UNKNOWN:
             return self._status
         else:
@@ -120,6 +123,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
+        """Return the media content type."""
         if self._media_status is None:
             return None
         else:
@@ -127,31 +131,38 @@ class YamahaDevice(MediaPlayerDevice):
 
     @property
     def media_duration(self):
+        """Duration of current playing media in seconds."""
         return self._media_status.media_duration \
             if self._media_status else None
 
     @property
     def media_image_url(self):
+        """Image url of current playing media."""
         return self._media_status.media_image_url \
             if self._media_status else None
 
     @property
     def media_artist(self):
+        """Artist of current playing media, music track only."""
         return self._media_status.media_artist if self._media_status else None
 
     @property
     def media_album(self):
+        """Album of current playing media, music track only."""
         return self._media_status.media_album if self._media_status else None
 
     @property
     def media_track(self):
+        """Track number of current playing media, music track only."""
         return self._media_status.media_track if self._media_status else None
 
     @property
     def media_title(self):
+        """Title of current playing media."""
         return self._media_status.media_title if self._media_status else None
 
     def update(self):
+        """Get the latest details from the device."""
         _LOGGER.debug("update: {}".format(self.entity_id))
 
         # call from constructor setup_platform()
@@ -170,30 +181,37 @@ class YamahaDevice(MediaPlayerDevice):
                     self._mcDevice.updateStatus()
 
     def turn_on(self):
+        """Turn on specified media player or all."""
         _LOGGER.debug("Turn device: on")
         self._mcDevice.setPower(True)
 
     def turn_off(self):
+        """Turn off specified media player or all."""
         _LOGGER.debug("Turn device: off")
         self._mcDevice.setPower(False)
 
     def media_play(self):
+        """Send the media player the command for play/pause."""
         _LOGGER.debug("Play")
         self._mcDevice.setPlayback("play")
 
     def media_pause(self):
+        """Send the media player the command for pause."""
         _LOGGER.debug("Pause")
         self._mcDevice.setPlayback("pause")
 
     def media_stop(self):
+        """Send the media player the stop command."""
         _LOGGER.debug("Stop")
         self._mcDevice.setPlayback("stop")
 
     def media_previous_track(self):
+        """Send the media player the command for prev track."""
         _LOGGER.debug("Previous")
         self._mcDevice.setPlayback("previous")
 
     def media_next_track(self):
+        """Send the media player the command for next track."""
         _LOGGER.debug("Next")
         self._mcDevice.setPlayback("next")
 
@@ -209,6 +227,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._mcDevice.setVolume(volume * self._volumeMax)
 
     def select_source(self, source):
+        """Send the media player the command to select input source."""
         _LOGGER.debug("select_source: {}".format(source))
         self._status = STATE_UNKNOWN
         self._mcDevice.setInput(source)
