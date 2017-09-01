@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
-NewHost = namedtuple('NewHost', ['host', 'name', 'timeout'])
+NewHost = namedtuple('NewHost', ['host', 'name'])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -90,13 +90,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        new_hosts.append(NewHost(host=host, name=name, timeout=timeout))
+        new_hosts.append(NewHost(host=host, name=name))
 
     # 2. option: discovery using netdisco
     if discovery_info is not None:
         host = discovery_info.get('host')
         name = discovery_info.get('name')
-        new_hosts.append(NewHost(host=host, name=name, timeout=timeout))
+        new_hosts.append(NewHost(host=host, name=name))
 
     # 3. option: discovery using denonavr library
     if config.get(CONF_HOST) is None and discovery_info is None:
@@ -107,14 +107,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 host = d_receiver["host"]
                 name = d_receiver["friendlyName"]
                 new_hosts.append(
-                    NewHost(host=host, name=name, timeout=timeout))
+                    NewHost(host=host, name=name))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later
         # starting
         if entry.host not in cache:
             new_device = denonavr.DenonAVR(
-                entry.host, entry.name, show_all_sources, add_zones)
+                host=entry.host, name=entry.name,
+                show_all_inputs=show_all_sources, timeout=timeout,
+                add_zones=add_zones)
             for new_zone in new_device.zones.values():
                 receivers.append(DenonDevice(new_zone))
             cache.add(host)
