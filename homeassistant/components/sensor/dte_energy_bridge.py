@@ -91,4 +91,9 @@ class DteEnergyBridgeSensor(Entity):
                 response.text, self._name)
             return
 
-        self._state = float(response_split[0])
+        val = float(response_split[0])
+
+        # A workaround for a bug in the DTE energy bridge.
+        # The returned value can randomly be in W or kW.  Checking for a
+        # a decimal seems to be a reliable way to determine the units.
+        self._state = val if '.' in response_split[0] else val / 1000
