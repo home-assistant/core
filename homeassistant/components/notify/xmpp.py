@@ -96,7 +96,8 @@ def send_message(sender, password, recipient, use_tls,
             """Disconnect from the server if credentials are invalid."""
             self.disconnect()
 
-        def discard_ssl_invalid_cert(self, event):
+        @staticmethod
+        def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
             _LOGGER.info('Ignoring invalid ssl certificate as requested.')
             return
