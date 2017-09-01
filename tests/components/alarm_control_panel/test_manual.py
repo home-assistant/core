@@ -364,6 +364,97 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
+    def test_trigger_with_no_disarm_after_trigger(self):
+        """Test disarm after trigger."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'trigger_time': 5,
+                'pending_time': 0,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+    def test_back_to_back_trigger_with_no_disarm_after_trigger(self):
+        """Test disarm after trigger."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'trigger_time': 5,
+                'pending_time': 0,
+                'disarm_after_trigger': False
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_arm_away(self.hass, CODE, entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_AWAY,
+                         self.hass.states.get(entity_id).state)
+
     def test_disarm_while_pending_trigger(self):
         """Test disarming while pending state."""
         self.assertTrue(setup_component(
