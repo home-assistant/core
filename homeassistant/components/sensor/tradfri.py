@@ -10,9 +10,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.core import callback
-from homeassistant.components.tradfri import (
-    KEY_GATEWAY, KEY_TRADFRI_GROUPS, KEY_API)
-from homeassistant.util import color as color_util
+from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
