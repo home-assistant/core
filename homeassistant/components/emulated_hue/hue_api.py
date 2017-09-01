@@ -7,8 +7,9 @@ from aiohttp import web
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_SET,
-    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON, STATE_OFF,
-    HTTP_BAD_REQUEST, HTTP_NOT_FOUND, ATTR_SUPPORTED_FEATURES,
+    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_LOCK, SERVICE_UNLOCK,
+    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    ATTR_SUPPORTED_FEATURES,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
@@ -208,6 +209,14 @@ class HueOneLightChangeView(HomeAssistantView):
                 service = SERVICE_OPEN_COVER
             else:
                 service = SERVICE_CLOSE_COVER
+
+        # If the requested entity is a lock, convert to lock/unlock
+        elif entity.domain == "lock":
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_LOCK
+            else:
+                service = SERVICE_UNLOCK
 
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
