@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tradfri/
 """
 import asyncio
-from datetime import timedelta
 import logging
+
+from datetime import timedelta
 
 from homeassistant.core import callback
 from homeassistant.components.tradfri import (
@@ -33,12 +34,13 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices_command = gateway.get_devices()
     devices_commands = yield from api(devices_command)
-    devices = yield from api(*devices_commands)
+    all_devices = yield from api(*devices_commands)
+    devices = [dev for dev in all_devices if not dev.has_light_control]
     add_devices(TradfriDevice(device, api) for device in devices)
 
 
 class TradfriDevice(Entity):
-    """The platform class required by Home Asisstant."""
+    """The platform class required by Home Assistant."""
 
     def __init__(self, device, api):
         """Initialize the device."""
