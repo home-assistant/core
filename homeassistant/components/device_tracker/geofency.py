@@ -59,9 +59,7 @@ class GeofencyView(HomeAssistantView):
     def post(self, request):
         """Geofency message received."""
         data = yield from request.post()
-        _LOGGER.info("Received message: %s", format(data))
-        res = yield from self._handle(request.app['hass'], data)
-        return res
+        return (yield from self._handle(request.app['hass'], data))
 
     @asyncio.coroutine
     def _handle(self, hass, data):
@@ -71,14 +69,14 @@ class GeofencyView(HomeAssistantView):
             return ("Invalid data", HTTP_UNPROCESSABLE_ENTITY)
 
         if self._is_mobile_beacon(data):
-            return self._set_location(hass, data, None)
+            return (yield from self._set_location(hass, data, None))
         else:
             if data['entry'] == LOCATION_ENTRY:
                 location_name = data['name']
             else:
                 location_name = STATE_NOT_HOME
 
-            return self._set_location(hass, data, location_name)
+            return (yield from self._set_location(hass, data, location_name))
 
     @staticmethod
     def _validate_data(data):
