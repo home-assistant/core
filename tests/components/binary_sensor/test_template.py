@@ -1,6 +1,7 @@
 """The tests for the Template Binary sensor platform."""
 import asyncio
 import unittest
+from datetime import datetime, timedelta
 from unittest import mock
 
 from homeassistant.core import CoreState, State
@@ -11,9 +12,11 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 from homeassistant.util.async import run_callback_threadsafe
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+    get_test_home_assistant, assert_setup_component, mock_component,
+    fire_time_changed)
 
 
 class TestBinarySensorTemplate(unittest.TestCase):
@@ -103,7 +106,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), None, MATCH_ALL
         ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.device_class)
@@ -149,13 +152,70 @@ class TestBinarySensorTemplate(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
         assert state.state == 'on'
 
+    def test_timed_update(self):
+        """"Test the update after a timeout."""
+        config = {
+            'binary_sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'friendly_name': 'virtual thingy',
+                        'value_template':
+                            "{{ as_timestamp(" +
+                            "states.sensor.test_state.last_changed)" +
+                            " - as_timestamp('2017-08-02T12:22+00:00')" +
+                            " > 10 }}",
+                        'entity_id': ['sensor.test_state'],
+                        'update_interval': {'seconds': 10}
+                    },
+                },
+            },
+        }
+
+        mock_data = {
+            'return_time': datetime(2017, 8, 2, 12, 22, tzinfo=dt_util.UTC),
+        }
+
+        def mock_now():
+            return mock_data['return_time']
+
+        with mock.patch('homeassistant.core.dt_util.utcnow',
+                        new=mock_now):
+            with assert_setup_component(1):
+                assert setup.setup_component(
+                    self.hass, 'binary_sensor', config)
+
+            self.hass.start()
+            self.hass.block_till_done()
+
+            self.hass.states.set('sensor.test_state', 'on')
+            self.hass.block_till_done()
+            test_state = self.hass.states.get('sensor.test_state')
+            assert test_state.last_changed == mock_data['return_time']
+
+            state = self.hass.states.get('binary_sensor.test')
+            assert state.state == 'off'
+
+            # Fast forward 15 seconds
+            mock_data['return_time'] += timedelta(seconds=15)
+            self.hass.states.set('sensor.test_state', 'off')
+            self.hass.block_till_done()
+            fire_time_changed(self.hass, mock_data['return_time'])
+            self.hass.block_till_done()
+
+            test_state = self.hass.states.get('sensor.test_state')
+            assert test_state.last_changed == mock_data['return_time']
+
+            state = self.hass.states.get('binary_sensor.test')
+            assert state.state == 'on'
+
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
         """"Test the template update error."""
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), None, MATCH_ALL
         ).result()
         mock_render.side_effect = TemplateError('foo')
         vs.update()
