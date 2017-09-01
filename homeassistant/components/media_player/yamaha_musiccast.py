@@ -127,13 +127,11 @@ class YamahaDevice(MediaPlayerDevice):
 
     @property
     def media_duration(self):
-        return self._media_status.media_duration \
-            if self._media_status else None
+        return self._media_status.media_duration if self._media_status else None
 
     @property
     def media_image_url(self):
-        return self._media_status.media_image_url \
-            if self._media_status else None
+        return self._media_status.media_image_url if self._media_status else None
 
     @property
     def media_artist(self):
@@ -154,16 +152,14 @@ class YamahaDevice(MediaPlayerDevice):
     def update(self):
         _LOGGER.debug("update: {}".format(self.entity_id))
 
-        # call from constructor setup_platform()
-        if not self.entity_id:
+        if not self.entity_id:                      # call from constructor setup_platform()
             _LOGGER.debug("First run")
             self._mcDevice.updateStatus(push=False)
         else:                                       # call from regular polling
             # updateStatus_timer was set before
             if self._mcDevice.updateStatus_timer:
-                _LOGGER.debug("is_alive: {}".format(
-                    self._mcDevice.updateStatus_timer.is_alive()))
-                # e.g. computer was suspended, while hass was running
+                _LOGGER.debug("is_alive: {}".format(self._mcDevice.updateStatus_timer.is_alive()))
+                # can happen if e.g. computer was suspended, while hass was running
                 if not self._mcDevice.updateStatus_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
                     self._mcDevice.updateStatus()
@@ -203,8 +199,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        _LOGGER.debug("Volume level: {} / {}".format(
-            volume, volume * self._volumeMax))
+        _LOGGER.debug("Volume level: {} / {}".format(volume, volume * self._volumeMax))
         self._mcDevice.setVolume(volume * self._volumeMax)
 
     def select_source(self, source):
