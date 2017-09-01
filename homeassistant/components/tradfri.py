@@ -142,8 +142,6 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     gateways[gateway_id] = gateway
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
 
 

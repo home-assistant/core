@@ -168,6 +168,20 @@ class TradfriLight(Light):
         from pytradfri.color import MIN_KELVIN_WS
         return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
+    @property
+    def device_state_attributes(self):
+        """Return the devices' state attributes."""
+        info = self._light.device_info
+        attrs = {
+            'manufacturer': info.manufacturer,
+            'model_number': info.model_number,
+            'serial': info.serial,
+            'firmware_version': info.firmware_version,
+            'power_source': info.power_source_str,
+            'battery_level': info.battery_level
+        }
+        return attrs
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start thread when added to hass."""

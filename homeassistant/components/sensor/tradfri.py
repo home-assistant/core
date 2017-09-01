@@ -71,7 +71,16 @@ class TradfriDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the devices' state attributes."""
-        return dir(self._device.device_info)
+        info = self._device.device_info
+        attrs = {
+            'manufacturer': info.manufacturer,
+            'model_number': info.model_number,
+            'serial': info.serial,
+            'firmware_version': info.firmware_version,
+            'power_source': info.power_source_str,
+            'battery_level': info.battery_level
+        }
+        return attrs
 
     @property
     def state(self):
