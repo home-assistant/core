@@ -1,4 +1,4 @@
-""" Example for configuration.yaml.
+"""Example for configuration.yaml.
 
 media_player:
   - platform: yamaha_musiccast
