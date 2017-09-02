@@ -918,6 +918,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             const.ATTR_NODE_ID: self.node_id,
             const.ATTR_VALUE_INDEX: self.values.primary.index,
             const.ATTR_VALUE_INSTANCE: self.values.primary.instance,
+            const.ATTR_VALUE_ID: str(self.values.primary.value_id),
             'old_entity_id': self.old_entity_id,
             'new_entity_id': self.new_entity_id,
         }

@@ -964,7 +964,6 @@ class TestZWaveServices(unittest.TestCase):
         assert value.disable_poll.called
         assert len(disable_poll.mock_calls) == 1
 
-
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""
         self.hass.services.call('zwave', 'remove_failed_node', {
