@@ -93,7 +93,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             self._state = state.state == STATE_ON
 
         @callback
-        def template_bsensor_update_listener(now):
+        def template_bsensor_time_listener(now):
             """Handle periodic updates."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
@@ -109,7 +109,7 @@ class BinarySensorTemplate(BinarySensorDevice):
                 self.hass, self._entities, template_bsensor_state_listener)
             if self._update_interval is not None:
                 async_track_time_interval(
-                    self.hass, template_bsensor_update_listener,
+                    self.hass, template_bsensor_time_listener,
                     self._update_interval)
 
             self.hass.async_add_job(self.async_update_ha_state(True))
