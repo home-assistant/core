@@ -200,8 +200,8 @@ class DwdWeatherWarningsAPI(object):
                     'advance': 'vorabInformation'
             }.items():
 
-                _LOGGER.debug("Found {} {} global DWD warnings".format(
-                    len(json_obj[myvalue]), mykey))
+                _LOGGER.debug("Found %d %s global DWD warnings",
+                    len(json_obj[myvalue]), mykey)
 
                 data['{}_warning_level'.format(mykey)] = 0
                 my_warnings = []
@@ -233,8 +233,8 @@ class DwdWeatherWarningsAPI(object):
                 data['{}_warning_count'.format(mykey)] = len(my_warnings)
                 data['{}_warnings'.format(mykey)] = my_warnings
 
-                _LOGGER.debug("Found {} {} local DWD warnings".format(
-                    len(my_warnings), mykey))
+                _LOGGER.debug("Found %d %s local DWD warnings",
+                    len(my_warnings), mykey)
 
             self.data = data
             self.available = True
