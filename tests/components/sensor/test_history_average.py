@@ -147,8 +147,8 @@ class TestHistoryAverageSensor(unittest.TestCase):
             self.hass, 'binary_sensor.test_id', start, end, None, 'Test', '')
 
         with patch(
-            'homeassistant.components.sensor.history_average.dt_util.utcnow',
-            return_value=now):
+             'homeassistant.components.sensor.history_average.dt_util.utcnow',
+             return_value=now):
             sensor1.update()
             sensor2.update()
             sensor3.update()
