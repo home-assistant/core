@@ -1,5 +1,6 @@
 """
-Support for Satel Integra alarm, using ETHM module. Satel: https://www.satel.pl/en/
+Support for Satel Integra alarm, using ETHM module. Satel:
+https://www.satel.pl/en/
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_satel_integra/
@@ -18,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 
 from homeassistant.components.satel_integra import (DATA_AD,
-                                                   SIGNAL_PANEL_MESSAGE)
+                                                    SIGNAL_PANEL_MESSAGE)
 
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
@@ -60,32 +61,15 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     @callback
     def _message_callback(self, message):
-        _LOGGER.info("Got message")
+        _LOGGER.info("Got message: %s", message)
         if "alarm_status" in message:
             _LOGGER.info("Got alarm status message!!!")
 
-            if message["alarm_status"] in ("alarm","fire"):
-                if self._state != STATE_ALARM_TRIGGERED:
-                    self._state = STATE_ALARM_TRIGGERED
-                    self.hass.async_add_job(self.async_update_ha_state())
-
-            if message["alarm_status"] == "armed_away":
-                if self._state != STATE_ALARM_ARMED_AWAY:
-                    self._state = STATE_ALARM_ARMED_AWAY
-                    self.hass.async_add_job(self.async_update_ha_state())
-
-            if message["alarm_status"] == "armed_home":
-                if self._state != STATE_ALARM_ARMED_HOME:
-                    self._state = STATE_ALARM_ARMED_HOME
-                    self.hass.async_add_job(self.async_update_ha_state())
-
-            if message["alarm_status"] == "disarmed":
-                if self._state != STATE_ALARM_DISARMED:
-                    self._state = STATE_ALARM_DISARMED
-                    self.hass.async_add_job(self.async_update_ha_state())
-
+            if message["alarm_status"] != self._state:
+                self._state = message["alarm_status"]
+                self.hass.async_add_job(self.async_update_ha_state())
         else:
-            _LOGGER.info("DAFUQQQQQQ")
+            _LOGGER.warning("Ignoring alarm status message")
 
     @property
     def name(self):
