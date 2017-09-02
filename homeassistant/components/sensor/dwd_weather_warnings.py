@@ -196,8 +196,8 @@ class DwdWeatherWarningsAPI(object):
             data['time'] = json_obj['time']
 
             for mykey, myvalue in {
-                'current': 'warnings',
-                'advance': 'vorabInformation'
+                    'current': 'warnings',
+                    'advance': 'vorabInformation'
             }.items():
 
                 _LOGGER.debug("Found {} {} global DWD warnings".format(
@@ -225,9 +225,9 @@ class DwdWeatherWarningsAPI(object):
                         break
 
                 # Get max warning level
+                maxlevel = data['{}_warning_level'.format(mykey)]
                 for event in my_warnings:
-                    if(event['level'] >=
-                            data['{}_warning_level'.format(mykey)]):
+                    if(event['level'] >= maxlevel):
                         data['{}_warning_level'.format(mykey)] = event['level']
 
                 data['{}_warning_count'.format(mykey)] = len(my_warnings)
