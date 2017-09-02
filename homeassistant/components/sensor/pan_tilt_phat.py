@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'pan_tilt_phat'
 SCAN_INTERVAL = timedelta(seconds=1)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         import pantilthat
