@@ -19,16 +19,20 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_time_interval)
 from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_UPDATE_INTERVAL = "update_interval"
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_UPDATE_INTERVAL): cv.time_period
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -47,6 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                       value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
+        update_interval = device_config.get(CONF_UPDATE_INTERVAL)
 
         if value_template is not None:
             value_template.hass = hass
@@ -54,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors.append(
             BinarySensorTemplate(
                 hass, device, friendly_name, device_class, value_template,
-                entity_ids)
+                entity_ids, update_interval)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -68,7 +73,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(self, hass, device, friendly_name, device_class,
-                 value_template, entity_ids):
+                 value_template, entity_ids, update_interval):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -78,6 +83,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._template = value_template
         self._state = None
         self._entities = entity_ids
+        self._update_interval = update_interval
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -85,6 +91,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if state:
             self._state = state.state == STATE_ON
+
+        @callback
+        def template_bsensor_time_listener(now):
+            """Handle periodic updates."""
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
@@ -96,6 +107,10 @@ class BinarySensorTemplate(BinarySensorDevice):
             """Update template on startup."""
             async_track_state_change(
                 self.hass, self._entities, template_bsensor_state_listener)
+            if self._update_interval is not None:
+                async_track_time_interval(
+                    self.hass, template_bsensor_time_listener,
+                    self._update_interval)
 
             self.hass.async_add_job(self.async_update_ha_state(True))
 
