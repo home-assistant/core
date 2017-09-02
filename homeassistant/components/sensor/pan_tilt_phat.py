@@ -17,6 +17,7 @@ SCAN_INTERVAL = timedelta(seconds=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the pan-tilt sensor."""
     try:
         import pantilthat
     except OSError:
@@ -56,6 +57,8 @@ class PanTiltPhat(Entity):
         self._name = DOMAIN
         self._state = None       # json obj with pan and tilt
         self._pantilthat = pantilthat
+        self._pan = self._pantilthat.get_pan()
+        self._tilt = self._pantilthat.get_tilt()
 
     @property
     def name(self):
@@ -73,8 +76,7 @@ class PanTiltPhat(Entity):
         return self.ICON
 
     def update(self):
-        """Get the latest data from the stage.
-        Issue with tilt"""
+        """Get the latest data from the stage."""
         self._pan = self._pantilthat.get_pan()
         self._tilt = self._pantilthat.get_tilt()
         self._state = "Pan:{}".format(self._pan)
