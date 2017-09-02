@@ -33,7 +33,7 @@ SUPPORTED_FEATURES = (
     SUPPORT_SELECT_SOURCE
 )
 
-REQUIREMENTS = ['pymusiccast==0.0.6']
+REQUIREMENTS = ['pymusiccast==0.0.9']
 
 DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
@@ -49,34 +49,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yamaha MusicCast platform."""
     import pymusiccast
 
-    _LOGGER.debug("config: {} ({})".format(config, type(config)))
+    # _LOGGER.debug("config: {} ({})".format(config, type(config)))
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    mcDevice = pymusiccast.mcDevice(host, udp_port=port)
-    _LOGGER.debug("mcDevice: {} / UDP Port: {}".format(mcDevice, port))
+    receiver = pymusiccast.mcDevice(host, udp_port=port)
+    _LOGGER.debug("receiver: %s / Port: %d", receiver, port)
 
-    add_devices([YamahaDevice(mcDevice, name)], True)
+    add_devices([YamahaDevice(receiver, name)], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha MusicCast device."""
 
-    def __init__(self, mcDevice, name):
+    def __init__(self, receiver, name):
         """Initialize the Yamaha MusicCast device."""
-        self._mcDevice = mcDevice
+        self._receiver = receiver
         self._name = name
         self._power = STATE_UNKNOWN
         self._volume = 0
-        self._volumeMax = 0
+        self._volume_max = 0
         self._mute = False
         self._source = None
         self._source_list = []
         self._status = STATE_UNKNOWN
         self._media_status = None
-        self._mcDevice.setYamahaDevice(self)
+        self._receiver.setYamahaDevice(self)
 
     @property
     def name(self):
@@ -86,10 +86,12 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        result = None
         if self._power == STATE_ON and self._status is not STATE_UNKNOWN:
-            return self._status
+            result = self._status
         else:
-            return self._power
+            result = self._power
+        return result
 
     @property
     def should_poll(self):
@@ -124,10 +126,10 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return the media content type."""
-        if self._media_status is None:
-            return None
-        else:
-            return MEDIA_TYPE_MUSIC
+        result = None
+        if self._media_status is not None:
+            result = MEDIA_TYPE_MUSIC
+        return result
 
     @property
     def media_duration(self):
@@ -163,71 +165,72 @@ class YamahaDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        _LOGGER.debug("update: {}".format(self.entity_id))
+        _LOGGER.debug("update: %s", self.entity_id)
 
         # call from constructor setup_platform()
         if not self.entity_id:
             _LOGGER.debug("First run")
-            self._mcDevice.updateStatus(push=False)
+            self._receiver.updateStatus(push=False)
         # call from regular polling
         else:
             # updateStatus_timer was set before
-            if self._mcDevice.updateStatus_timer:
-                _LOGGER.debug("is_alive: {}".format(
-                    self._mcDevice.updateStatus_timer.is_alive()))
+            if self._receiver.updateStatus_timer:
+                _LOGGER.debug(
+                    "is_alive: %d",
+                    self._receiver.updateStatus_timer.is_alive())
                 # e.g. computer was suspended, while hass was running
-                if not self._mcDevice.updateStatus_timer.is_alive():
+                if not self._receiver.updateStatus_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
-                    self._mcDevice.updateStatus()
+                    self._receiver.updateStatus()
 
     def turn_on(self):
         """Turn on specified media player or all."""
         _LOGGER.debug("Turn device: on")
-        self._mcDevice.setPower(True)
+        self._receiver.setPower(True)
 
     def turn_off(self):
         """Turn off specified media player or all."""
         _LOGGER.debug("Turn device: off")
-        self._mcDevice.setPower(False)
+        self._receiver.setPower(False)
 
     def media_play(self):
         """Send the media player the command for play/pause."""
         _LOGGER.debug("Play")
-        self._mcDevice.setPlayback("play")
+        self._receiver.setPlayback("play")
 
     def media_pause(self):
         """Send the media player the command for pause."""
         _LOGGER.debug("Pause")
-        self._mcDevice.setPlayback("pause")
+        self._receiver.setPlayback("pause")
 
     def media_stop(self):
         """Send the media player the stop command."""
         _LOGGER.debug("Stop")
-        self._mcDevice.setPlayback("stop")
+        self._receiver.setPlayback("stop")
 
     def media_previous_track(self):
         """Send the media player the command for prev track."""
         _LOGGER.debug("Previous")
-        self._mcDevice.setPlayback("previous")
+        self._receiver.setPlayback("previous")
 
     def media_next_track(self):
         """Send the media player the command for next track."""
         _LOGGER.debug("Next")
-        self._mcDevice.setPlayback("next")
+        self._receiver.setPlayback("next")
 
     def mute_volume(self, mute):
         """Send mute command."""
-        _LOGGER.debug("Mute volume: {}".format(mute))
-        self._mcDevice.setMute(mute)
+        _LOGGER.debug("Mute volume: %s", mute)
+        self._receiver.setMute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        _LOGGER.debug("Volume level: {} / {}".format(
-            volume, volume * self._volumeMax))
-        self._mcDevice.setVolume(volume * self._volumeMax)
+        _LOGGER.debug("Volume level: %.2f / %d",
+                      volume, volume * self._volume_max)
+        self._receiver.setVolume(volume * self._volume_max)
 
     def select_source(self, source):
         """Send the media player the command to select input source."""
-        _LOGGER.debug("select_source: {}".format(source))
+        _LOGGER.debug("select_source: %s", source)
         self._status = STATE_UNKNOWN
-        self._mcDevice.setInput(source)
+        self._receiver.setInput(source)
