@@ -201,7 +201,7 @@ class DwdWeatherWarningsAPI(object):
             }.items():
 
                 _LOGGER.debug("Found %d %s global DWD warnings",
-                    len(json_obj[myvalue]), mykey)
+                              len(json_obj[myvalue]), mykey)
 
                 data['{}_warning_level'.format(mykey)] = 0
                 my_warnings = []
@@ -227,14 +227,14 @@ class DwdWeatherWarningsAPI(object):
                 # Get max warning level
                 maxlevel = data['{}_warning_level'.format(mykey)]
                 for event in my_warnings:
-                    if(event['level'] >= maxlevel):
+                    if event['level'] >= maxlevel:
                         data['{}_warning_level'.format(mykey)] = event['level']
 
                 data['{}_warning_count'.format(mykey)] = len(my_warnings)
                 data['{}_warnings'.format(mykey)] = my_warnings
 
                 _LOGGER.debug("Found %d %s local DWD warnings",
-                    len(my_warnings), mykey)
+                              len(my_warnings), mykey)
 
             self.data = data
             self.available = True
