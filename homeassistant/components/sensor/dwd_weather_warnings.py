@@ -107,9 +107,10 @@ class DwdWeatherWarningsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
-        data = {}
-        data[ATTR_ATTRIBUTION] = ATTRIBUTION
-        data['region_name'] = self._api.region_name
+        data = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            'region_name': self._api.region_name
+        }
 
         if self._api.region_id is not None:
             data['region_id'] = self._api.region_id
@@ -125,6 +126,8 @@ class DwdWeatherWarningsSensor(Entity):
             prefix = 'current'
         elif self._var_id == 'advance_warning_level':
             prefix = 'advance'
+        else:
+            raise Exception('Unknown warning type')
 
         data['warning_count'] = self._api.data[prefix + '_warning_count']
         i = 0
@@ -166,7 +169,6 @@ class DwdWeatherWarningsAPI(object):
 
     def __init__(self, region_name):
         """Initialize the data object."""
-
         resource = "{}{}{}?{}".format(
             'https://',
             'www.dwd.de',
@@ -191,9 +193,7 @@ class DwdWeatherWarningsAPI(object):
             json_string = self._rest.data[24:len(self._rest.data) - 2]
             json_obj = json.loads(json_string)
 
-            data = {}
-
-            data['time'] = json_obj['time']
+            data = {'time': json_obj['time']}
 
             for mykey, myvalue in {
                     'current': 'warnings',
