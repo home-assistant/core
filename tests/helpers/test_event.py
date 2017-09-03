@@ -339,6 +339,7 @@ class TestEventHelpers(unittest.TestCase):
     def test_track_same_state_simple_trigger_check_funct(self):
         """Test track_same_change with trigger and check funct."""
         callback_runs = []
+        check_func = []
         period = timedelta(minutes=1)
 
         @ha.callback
@@ -346,7 +347,8 @@ class TestEventHelpers(unittest.TestCase):
             callback_runs.append(1)
 
         @ha.callback
-        def async_check_func():
+        def async_check_func(entity, from_s, to_s):
+            check_func.append((entity, from_s, to_s))
             return 'on'
 
         track_same_state(
@@ -357,6 +359,8 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.states.set("light.Bowl", "on")
         self.hass.block_till_done()
         self.assertEqual(0, len(callback_runs))
+        self.assertEqual('on', check_func[-1][2].state)
+        self.assertEqual('light.bowl', check_func[-1][0])
 
         # change time to track and see if they trigger
         future = dt_util.utcnow() + period

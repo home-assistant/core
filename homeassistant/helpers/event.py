@@ -149,7 +149,7 @@ def async_track_same_state(hass, orig_value, period, action,
     def state_for_cancel_listener(entity, from_state, to_state):
         """Fire on changes and cancel for listener if changed."""
         if async_check_func:
-            value = async_check_func()
+            value = async_check_func(entity, from_state, to_state)
         else:
             value = to_state.state
 
