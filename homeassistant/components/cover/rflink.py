@@ -10,15 +10,11 @@ from homeassistant.components.rflink import (
     CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
     CONF_GROUP, CONF_GROUP_ALIASSES, CONF_NOGROUP_ALIASSES,
     CONF_SIGNAL_REPETITIONS, DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND, CoverableRflinkDevice,
-    cv, vol)
-from homeassistant.components.cover import (
-    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
+    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND,
+    cv, vol, RflinkCommand)
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
+
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
+        DEVICE_DEFAULTS_SCHEMA,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -82,7 +78,37 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices_from_config(config, hass))
 
 
-class RflinkCover(CoverableRflinkDevice, CoverDevice):
+class RflinkCover(RflinkCommand, CoverDevice):
     """Representation of a Rflink cover."""
- 
-    pass
+
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command in ['on', 'allon']:
+            self._state = True
+        elif command in ['off', 'alloff']:
+            self._state = False
+
+    @property
+    def should_poll(self):
+        """No polling available in RFXtrx cover."""
+        return False
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
+    def async_close_cover(self, **kwargs):
+        """Turn the device on."""
+        return self._async_handle_command("turn_on")
+
+    def async_open_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("turn_off")
+
+    def async_stop_cover(self, **kwargs):
+        """Turn the device off."""
+        return self._async_handle_command("stop_roll")
