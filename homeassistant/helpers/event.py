@@ -167,6 +167,9 @@ def async_track_same_state(hass, orig_value, period, action,
     return clear_listener
 
 
+tracke_same_state = threaded_listener_factory(async_track_same_state)
+
+
 @callback
 def async_track_point_in_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in time."""
