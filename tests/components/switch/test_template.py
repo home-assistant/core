@@ -256,34 +256,6 @@ class TestTemplateSwitch:
 
         assert self.hass.states.all() == []
 
-    def test_missing_template_does_not_create(self):
-        """Test missing template."""
-        with assert_setup_component(0, 'switch'):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'template',
-                    'switches': {
-                        'test_template_switch': {
-                            'not_value_template':
-                                "{{ states.switch.test_state.state }}",
-                            'turn_on': {
-                                'service': 'switch.turn_on',
-                                'entity_id': 'switch.test_state'
-                            },
-                            'turn_off': {
-                                'service': 'switch.turn_off',
-                                'entity_id': 'switch.test_state'
-                            },
-                        }
-                    }
-                }
-            })
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
     def test_missing_on_does_not_create(self):
         """Test missing on."""
         with assert_setup_component(0, 'switch'):
@@ -410,6 +382,67 @@ class TestTemplateSwitch:
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
+
+    def test_assumed_state_should_be_true_if_template_is_none(self):
+        """Test with state value."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                        }
+                    }
+                }
+            })
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('assumed_state') is True
+
+    def test_no_template_assumed_state_handling(self):
+        """Test missing template."""
+        assert setup.setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'template',
+                'switches': {
+                    'test_template_switch': {
+                        'turn_on': {
+                            'service': 'test.automation',
+                        },
+                        'turn_off': {
+                            'service': 'test.automation',
+                        },
+                    }
+                }
+            }
+        })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        core.switch.turn_on(self.hass, 'switch.test_template_switch')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.state == STATE_ON
+
+        assert len(self.calls) == 1
+
+        core.switch.turn_off(self.hass, 'switch.test_template_switch')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.state == STATE_OFF
+
+        assert len(self.calls) == 2
 
 
 @asyncio.coroutine
