@@ -151,7 +151,7 @@ def async_track_same_state(hass, orig_value, period, action,
         if async_check_func:
             value = async_check_func()
         else:
-            value = to_state
+            value = to_state.state
 
         if orig_value == value:
             return
