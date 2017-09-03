@@ -8,7 +8,6 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_same_state)
@@ -76,6 +75,6 @@ def async_trigger(hass, config, action):
         """Remove state listeners async."""
         unsub()
         if async_remove_track_same:
-            async_remove_track_same()
+            async_remove_track_same()  # pylint: disable=not-callable
 
     return async_remove

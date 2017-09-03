@@ -107,6 +107,6 @@ def async_trigger(hass, config, action):
         """Remove state listeners async."""
         unsub()
         if async_remove_track_same:
-            async_remove_track_same()
+            async_remove_track_same()  # pylint: disable=not-callable
 
     return async_remove
