@@ -29,7 +29,7 @@ ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
@@ -50,14 +50,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SWITCHES].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        state_template = device_config[CONF_VALUE_TEMPLATE]
+        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      state_template.extract_entities())
 
-        state_template.hass = hass
+        if state_template:
+            entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                          state_template.extract_entities())
+            state_template.hass = hass
+        else:
+            entity_ids = None
 
         if icon_template is not None:
             icon_template.hass = hass
@@ -113,8 +116,9 @@ class SwitchTemplate(SwitchDevice):
 
             self.hass.async_add_job(self.async_update_ha_state(True))
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_switch_startup)
+        if self._template:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, template_switch_startup)
 
     @property
     def name(self):
@@ -137,6 +141,11 @@ class SwitchTemplate(SwitchDevice):
         return self._state is not None
 
     @property
+    def assumed_state(self):
+        """Return true if we do internal state tracking."""
+        return self._template is None
+
+    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
@@ -145,27 +154,37 @@ class SwitchTemplate(SwitchDevice):
         """Fire the on action."""
         self._on_script.run()
 
+        if not self._template:
+            self._state = True
+            self.schedule_update_ha_state()
+
     def turn_off(self, **kwargs):
         """Fire the off action."""
         self._off_script.run()
 
+        if not self._template:
+            self._state = False
+            self.schedule_update_ha_state()
+
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        try:
-            state = self._template.async_render().lower()
+        if self._template is not None:
+            try:
+                state = self._template.async_render().lower()
 
-            if state in _VALID_STATES:
-                self._state = state in ('true', STATE_ON)
-            else:
-                _LOGGER.error(
-                    'Received invalid switch is_on state: %s. Expected: %s',
-                    state, ', '.join(_VALID_STATES))
+                if state in _VALID_STATES:
+                    self._state = state in ('true', STATE_ON)
+                else:
+                    _LOGGER.error(
+                        'Received invalid switch is_on state: %s.'
+                        ' Expected: %s',
+                        state, ', '.join(_VALID_STATES))
+                    self._state = None
+
+            except TemplateError as ex:
+                _LOGGER.error(ex)
                 self._state = None
-
-        except TemplateError as ex:
-            _LOGGER.error(ex)
-            self._state = None
 
         if self._icon_template is not None:
             try:
