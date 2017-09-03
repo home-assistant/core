@@ -45,7 +45,7 @@ def async_get_service_discovery(hass, discovery_info):
         notification_devices.append(device)
     return \
         KNXNotificationService(hass, notification_devices) \
-        if len(notification_devices) > 0 else \
+        if notification_devices else \
         None
 
 

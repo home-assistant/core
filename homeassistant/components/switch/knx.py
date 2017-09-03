@@ -100,11 +100,11 @@ class KNXSwitch(SwitchDevice):
         return self.device.state
 
     @asyncio.coroutine
-    def async_turn_on(self):
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
         yield from self.device.set_on()
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
         yield from self.device.set_off()
