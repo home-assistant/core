@@ -23,9 +23,9 @@ DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
 CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
 
-ATTR_CURRENT_CONSUMPTION = 'Current Consumption'
-ATTR_TOTAL_CONSUMPTION = 'Total Consumption'
-ATTR_TEMPERATURE = 'Temperature'
+ATTR_CURRENT_CONSUMPTION = 'power_consumption'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_TEMPERATURE = 'temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
