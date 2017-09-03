@@ -166,7 +166,7 @@ def async_track_same_state(hass, orig_value, period, action,
     return clear_listener
 
 
-tracke_same_state = threaded_listener_factory(async_track_same_state)
+track_same_state = threaded_listener_factory(async_track_same_state)
 
 
 @callback

@@ -17,7 +17,7 @@ from homeassistant.helpers.event import (
     track_state_change,
     track_time_interval,
     track_template,
-    tracke_same_state,
+    track_same_state,
     track_sunrise,
     track_sunset,
 )
@@ -25,7 +25,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, fire_time_changed
 from unittest.mock import patch
 
 
