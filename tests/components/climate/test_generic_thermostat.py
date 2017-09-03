@@ -97,9 +97,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    def test_setup_defaults_to_unknown(self):
+    def test_setup_default_operation(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
+        self.assertEqual('heat', self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
@@ -112,7 +112,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test that the operation list returns the correct modes."""
         state = self.hass.states.get(ENTITY)
         modes = state.attributes.get('operation_list')
-        self.assertEqual([climate.STATE_AUTO, STATE_OFF], modes)
+        self.assertEqual([climate.STATE_HEAT, STATE_OFF], modes)
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
@@ -374,6 +374,12 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self._setup_sensor(35)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
+
+    def test_get_operation_modes(self):
+        """Test that the operation list returns the correct modes."""
+        state = self.hass.states.get(ENTITY)
+        modes = state.attributes.get('operation_list')
+        self.assertEqual([climate.STATE_COOL, STATE_OFF], modes)
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""

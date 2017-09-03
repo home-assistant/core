@@ -12,8 +12,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components import switch
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO)
+    STATE_HEAT, STATE_COOL, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME)
@@ -38,7 +37,6 @@ CONF_AC_MODE = 'ac_mode'
 CONF_MIN_DUR = 'min_cycle_duration'
 CONF_TOLERANCE = 'tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
@@ -132,15 +130,10 @@ class GenericThermostat(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        if not self._enabled:
-            return STATE_OFF
-        if self.ac_mode:
-            cooling = self._active and self._is_device_active
-            return STATE_COOL if cooling else STATE_IDLE
-
-        heating = self._active and self._is_device_active
-        return STATE_HEAT if heating else STATE_IDLE
+        """Return current operation ie. heat, cool, off."""
+        if self._enabled:
+            return STATE_COOL if self.ac_mode else STATE_HEAT
+        return STATE_OFF
 
     @property
     def target_temperature(self):
@@ -150,20 +143,23 @@ class GenericThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return [STATE_AUTO, STATE_OFF]
+        return [STATE_COOL if self.ac_mode else STATE_HEAT, STATE_OFF]
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        if operation_mode == STATE_AUTO:
-            self._enabled = True
-        elif operation_mode == STATE_OFF:
+        ac_mode = self.ac_mode
+        if operation_mode == STATE_OFF:
             self._enabled = False
             if self._is_device_active:
                 switch.async_turn_off(self.hass, self.heater_entity_id)
+
+        elif (ac_mode and operation_mode == STATE_COOL
+              or not ac_mode and operation_mode == STATE_HEAT):
+            self._enabled = True
         else:
             _LOGGER.error('Unrecognized operation mode: %s', operation_mode)
             return
-        # Ensure we updae the current operation after changing the mode
+        # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -216,7 +212,7 @@ class GenericThermostat(ClimateDevice):
     @callback
     def _async_keep_alive(self, time):
         """Call at constant intervals for keep-alive purposes."""
-        if self.current_operation in [STATE_COOL, STATE_HEAT]:
+        if self._active and self._is_device_active:
             switch.async_turn_on(self.hass, self.heater_entity_id)
         else:
             switch.async_turn_off(self.hass, self.heater_entity_id)
