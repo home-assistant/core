@@ -42,10 +42,19 @@ def async_trigger(hass, config, action):
         value_template.hass = hass
 
     @callback
-    def check_numeric_state(entity_id, from_s, to_s):
+    def check_numeric_state(entity, from_s, to_s):
         """Return True if they should trigger."""
         if to_s is None:
             return False
+
+        variables = {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': entity,
+                'below': below,
+                'above': above,
+            }
+        }
 
         # If new one doesn't match, nothing to do
         if not condition.async_numeric_state(
