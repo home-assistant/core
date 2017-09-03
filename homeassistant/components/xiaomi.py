@@ -4,9 +4,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC)
-
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
                 '0.3.2.zip#PyXiaomiGateway==0.3.2']
@@ -57,9 +57,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Set up the Xiaomi component."""
-    gateways = config[DOMAIN][CONF_GATEWAYS]
-    interface = config[DOMAIN][CONF_INTERFACE]
-    discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
+    gateways = []
+    interface = 'any'
+    discovery_retry = 3
+    if DOMAIN in config:
+        gateways = config[DOMAIN][CONF_GATEWAYS]
+        interface = config[DOMAIN][CONF_INTERFACE]
+        discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
+
+    def xiaomi_gw_discovered(service, discovery_info):
+        """Called when Xiaomi Gateway device(s) has been found."""
+        # We don't need to do anything here, the purpose of HA's
+        # discovery service is to just trigger loading of this
+        # component, and then its own discovery process kicks in.
+        _LOGGER.info("Discovered: %s", discovery_info)
+
+    discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
     from PyXiaomiGateway import PyXiaomiGateway
     hass.data[PY_XIAOMI_GATEWAY] = PyXiaomiGateway(hass.add_job, gateways,
