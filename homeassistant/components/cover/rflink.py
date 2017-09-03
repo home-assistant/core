@@ -1,5 +1,6 @@
 """
 Support for Rflink switches.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rflink/
 """
@@ -102,13 +103,13 @@ class RflinkCover(RflinkCommand, CoverDevice):
         return None
 
     def async_close_cover(self, **kwargs):
-        """Turn the device on."""
+        """Close the cover."""
         return self._async_handle_command("turn_on")
 
     def async_open_cover(self, **kwargs):
-        """Turn the device off."""
+        """Open the cover."""
         return self._async_handle_command("turn_off")
 
     def async_stop_cover(self, **kwargs):
-        """Turn the device off."""
+        """Stop the cover movement."""
         return self._async_handle_command("stop_roll")
