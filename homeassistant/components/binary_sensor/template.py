@@ -56,7 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         delay_on = device_config.get(CONF_DELAY_ON)
-        delay_off = device_config.get(CONF_DELAY_Off)
+        delay_off = device_config.get(CONF_DELAY_OFF)
 
         if value_template is not None:
             value_template.hass = hass
@@ -151,7 +151,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        state = self.async_render()
+        state = self._async_render()
 
         # return if the state don't change or is invalid
         if state is None or state == self.state:
@@ -164,11 +164,12 @@ class BinarySensorTemplate(BinarySensorDevice):
             self.hass.async_add_job(self.async_update_ha_state())
 
         # state without delay
-        if (state and not self._delay_on) or (not state and self._delay_off):
+        if (state and not self._delay_on) or \
+                (not state and not self._delay_off):
             set_state()
             return
 
-        period = self._delay_on if state or self._delay_off
+        period = self._delay_on if state else self._delay_off
         async_track_same_state(
-            self.hass, state, period, entity_ids=self._entities,
+            self.hass, state, period, set_state, entity_ids=self._entities,
             async_check_func=self._async_render)

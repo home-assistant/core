@@ -103,7 +103,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL,
+            None, None
         ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.device_class)
@@ -155,7 +156,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL,
+            None, None
         ).result()
         mock_render.side_effect = TemplateError('foo')
         vs.update()
