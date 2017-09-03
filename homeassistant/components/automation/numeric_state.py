@@ -13,7 +13,8 @@ from homeassistant.core import callback
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE, CONF_FOR)
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_same_state)
 from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
