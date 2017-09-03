@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
-from homeassistant.const import MATCH_ALL, CONF_PLATFORM
+from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_same_state)
 import homeassistant.helpers.config_validation as cv
@@ -17,19 +17,15 @@ import homeassistant.helpers.config_validation as cv
 CONF_ENTITY_ID = 'entity_id'
 CONF_FROM = 'from'
 CONF_TO = 'to'
-CONF_FOR = 'for'
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema({
-        vol.Required(CONF_PLATFORM): 'state',
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-        # These are str on purpose. Want to catch YAML conversions
-        vol.Optional(CONF_FROM): str,
-        vol.Optional(CONF_TO): str,
-        vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
-    }),
-    cv.key_dependency(CONF_FOR, CONF_TO),
-)
+TRIGGER_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_PLATFORM): 'state',
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+    # These are str on purpose. Want to catch YAML conversions
+    vol.Optional(CONF_FROM): str,
+    vol.Optional(CONF_TO): str,
+    vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
+}), cv.key_dependency(CONF_FOR, CONF_TO))
 
 
 @asyncio.coroutine
@@ -65,7 +61,7 @@ def async_trigger(hass, config, action):
                 from_s.last_changed == to_s.last_changed):
             return
 
-        if time_delta is None:
+        if not time_delta:
             call_action()
             return
 
