@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    receiver = pymusiccast.mcDevice(host, udp_port=port)
+    receiver = pymusiccast.McDevice(host, udp_port=port)
     _LOGGER.debug("receiver: %s / Port: %d", receiver, port)
 
     add_devices([YamahaDevice(receiver, name)], True)
