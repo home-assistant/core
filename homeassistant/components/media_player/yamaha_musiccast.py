@@ -76,7 +76,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._source_list = []
         self._status = STATE_UNKNOWN
         self._media_status = None
-        self._receiver.setYamahaDevice(self)
+        self._receiver.set_yamaha_device(self)
 
     @property
     def name(self):
@@ -170,7 +170,7 @@ class YamahaDevice(MediaPlayerDevice):
         # call from constructor setup_platform()
         if not self.entity_id:
             _LOGGER.debug("First run")
-            self._receiver.updateStatus(push=False)
+            self._receiver.update_status(push=False)
         # call from regular polling
         else:
             # updateStatus_timer was set before
@@ -181,56 +181,56 @@ class YamahaDevice(MediaPlayerDevice):
                 # e.g. computer was suspended, while hass was running
                 if not self._receiver.updateStatus_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
-                    self._receiver.updateStatus()
+                    self._receiver.update_status()
 
     def turn_on(self):
         """Turn on specified media player or all."""
         _LOGGER.debug("Turn device: on")
-        self._receiver.setPower(True)
+        self._receiver.set_power(True)
 
     def turn_off(self):
         """Turn off specified media player or all."""
         _LOGGER.debug("Turn device: off")
-        self._receiver.setPower(False)
+        self._receiver.set_power(False)
 
     def media_play(self):
         """Send the media player the command for play/pause."""
         _LOGGER.debug("Play")
-        self._receiver.setPlayback("play")
+        self._receiver.set_playback("play")
 
     def media_pause(self):
         """Send the media player the command for pause."""
         _LOGGER.debug("Pause")
-        self._receiver.setPlayback("pause")
+        self._receiver.set_playback("pause")
 
     def media_stop(self):
         """Send the media player the stop command."""
         _LOGGER.debug("Stop")
-        self._receiver.setPlayback("stop")
+        self._receiver.set_playback("stop")
 
     def media_previous_track(self):
         """Send the media player the command for prev track."""
         _LOGGER.debug("Previous")
-        self._receiver.setPlayback("previous")
+        self._receiver.set_playback("previous")
 
     def media_next_track(self):
         """Send the media player the command for next track."""
         _LOGGER.debug("Next")
-        self._receiver.setPlayback("next")
+        self._receiver.set_playback("next")
 
     def mute_volume(self, mute):
         """Send mute command."""
         _LOGGER.debug("Mute volume: %s", mute)
-        self._receiver.setMute(mute)
+        self._receiver.set_mute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         _LOGGER.debug("Volume level: %.2f / %d",
                       volume, volume * self._volume_max)
-        self._receiver.setVolume(volume * self._volume_max)
+        self._receiver.set_volume(volume * self._volume_max)
 
     def select_source(self, source):
         """Send the media player the command to select input source."""
         _LOGGER.debug("select_source: %s", source)
         self._status = STATE_UNKNOWN
-        self._receiver.setInput(source)
+        self._receiver.set_input(source)
