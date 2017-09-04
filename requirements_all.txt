@@ -422,7 +422,7 @@ motorparts==1.0.0
 mutagen==1.38
 
 # homeassistant.components.mycroft
-mycroftapi==0.1.2
+mycroftapi==2.0
 
 # homeassistant.components.usps
 myusps==1.1.3
