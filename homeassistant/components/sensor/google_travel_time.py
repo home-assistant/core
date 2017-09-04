@@ -142,7 +142,7 @@ class GoogleTravelTimeSensor(Entity):
         else:
             self._destination = destination
 
-        import googlemaps
+        import googlemaps.exceptions
         self._client = googlemaps.Client(api_key, timeout=10)
         try:
             self.update()
