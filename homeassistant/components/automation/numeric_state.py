@@ -72,6 +72,17 @@ def async_trigger(hass, config, action):
         if not check_numeric_state(entity, from_s, to_s):
             return
 
+        variables = {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': entity,
+                'below': below,
+                'above': above,
+                'from_state': from_s,
+                'to_state': to_s,
+            }
+        }
+
         # Only match if old didn't exist or existed but didn't match
         # Written as: skip if old one did exist and matched
         if from_s is not None and condition.async_numeric_state(
@@ -81,16 +92,7 @@ def async_trigger(hass, config, action):
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(action, {
-                'trigger': {
-                    'platform': 'numeric_state',
-                    'entity_id': entity,
-                    'below': below,
-                    'above': above,
-                    'from_state': from_s,
-                    'to_state': to_s,
-                }
-            })
+            hass.async_run_job(action, variables)
 
         if not time_delta:
             call_action()
