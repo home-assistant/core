@@ -800,11 +800,7 @@ python-wink==1.5.1
 python_openzwave==0.4.0.31
 
 # homeassistant.components.alarm_control_panel.egardia
-<<<<<<< HEAD
-pythonegardia==1.0.18
-=======
-pythonegardia==1.0.19
->>>>>>> e6207684bf3fb0fbe94bc2455a5c7b6f53e3ff8e
+pythonegardia==1.0.20
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
