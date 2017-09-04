@@ -101,7 +101,9 @@ class ManualAlarm(alarm.AlarmControlPanel):
                   self._trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
-                return self._pre_trigger_state
+                else:
+                    self._state = self._pre_trigger_state
+                    return self._state
 
         return self._state
 

@@ -16,12 +16,13 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==1.1']
+REQUIREMENTS = ['pytradfri==2.2']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
+KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
@@ -109,17 +110,21 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import cli_api_factory, Gateway, RequestError, retry_timeout
+    from pytradfri import Gateway, RequestError
+    from pytradfri.api.libcoap_api import api_factory
 
     try:
-        api = retry_timeout(cli_api_factory(host, key))
+        api = api_factory(host, key)
     except RequestError:
         return False
 
-    gateway = Gateway(api)
-    gateway_id = gateway.get_gateway_info().id
+    gateway = Gateway()
+    # pylint: disable=no-member
+    gateway_id = api(gateway.get_gateway_info()).id
+    hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
+    hass.data[KEY_API][gateway_id] = api
 
     hass.data.setdefault(KEY_TRADFRI_GROUPS, {})
     tradfri_groups = hass.data[KEY_TRADFRI_GROUPS]
