@@ -173,13 +173,13 @@ class YamahaDevice(MediaPlayerDevice):
             self._receiver.update_status(push=False)
         # call from regular polling
         else:
-            # updateStatus_timer was set before
-            if self._receiver.updateStatus_timer:
+            # update_status_timer was set before
+            if self._receiver.update_status_timer:
                 _LOGGER.debug(
                     "is_alive: %d",
-                    self._receiver.updateStatus_timer.is_alive())
+                    self._receiver.update_status_timer.is_alive())
                 # e.g. computer was suspended, while hass was running
-                if not self._receiver.updateStatus_timer.is_alive():
+                if not self._receiver.update_status_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
                     self._receiver.update_status()
 
