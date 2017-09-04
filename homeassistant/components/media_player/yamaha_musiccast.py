@@ -68,14 +68,14 @@ class YamahaDevice(MediaPlayerDevice):
         """Initialize the Yamaha MusicCast device."""
         self._receiver = receiver
         self._name = name
-        self._power = STATE_UNKNOWN
-        self._volume = 0
-        self._volume_max = 0
-        self._mute = False
+        self.power = STATE_UNKNOWN
+        self.volume = 0
+        self.volume_max = 0
+        self.mute = False
         self._source = None
-        self._source_list = []
-        self._status = STATE_UNKNOWN
-        self._media_status = None
+        self.source_list = []
+        self.status = STATE_UNKNOWN
+        self.media_status = None
         self._receiver.set_yamaha_device(self)
 
     @property
@@ -87,10 +87,10 @@ class YamahaDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         result = None
-        if self._power == STATE_ON and self._status is not STATE_UNKNOWN:
-            result = self._status
+        if self.power == STATE_ON and self.status is not STATE_UNKNOWN:
+            result = self.status
         else:
-            result = self._power
+            result = self.power
         return result
 
     @property
@@ -101,12 +101,12 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._mute
+        return self.mute
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume
+        return self.volume
 
     @property
     def supported_features(self):
@@ -121,47 +121,47 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_list
+        return self.source_list
 
     @property
     def media_content_type(self):
         """Return the media content type."""
         result = None
-        if self._media_status is not None:
+        if self.media_status is not None:
             result = MEDIA_TYPE_MUSIC
         return result
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self._media_status.media_duration \
-            if self._media_status else None
+        return self.media_status.media_duration \
+            if self.media_status else None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._media_status.media_image_url \
-            if self._media_status else None
+        return self.media_status.media_image_url \
+            if self.media_status else None
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._media_status.media_artist if self._media_status else None
+        return self.media_status.media_artist if self.media_status else None
 
     @property
     def media_album(self):
         """Album of current playing media, music track only."""
-        return self._media_status.media_album if self._media_status else None
+        return self.media_status.media_album if self.media_status else None
 
     @property
     def media_track(self):
         """Track number of current playing media, music track only."""
-        return self._media_status.media_track if self._media_status else None
+        return self.media_status.media_track if self.media_status else None
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._media_status.media_title if self._media_status else None
+        return self.media_status.media_title if self.media_status else None
 
     def update(self):
         """Get the latest details from the device."""
@@ -226,11 +226,11 @@ class YamahaDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         _LOGGER.debug("Volume level: %.2f / %d",
-                      volume, volume * self._volume_max)
-        self._receiver.set_volume(volume * self._volume_max)
+                      volume, volume * self.volume_max)
+        self._receiver.set_volume(volume * self.volume_max)
 
     def select_source(self, source):
         """Send the media player the command to select input source."""
         _LOGGER.debug("select_source: %s", source)
-        self._status = STATE_UNKNOWN
+        self.status = STATE_UNKNOWN
         self._receiver.set_input(source)
