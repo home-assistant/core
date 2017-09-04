@@ -52,5 +52,4 @@ def async_setup(hass, config):
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, _event_publisher)
 
-    hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True
