@@ -33,7 +33,7 @@ SUPPORTED_FEATURES = (
     SUPPORT_SELECT_SOURCE
 )
 
-REQUIREMENTS = ['pymusiccast==0.0.9']
+REQUIREMENTS = ['pymusiccast==0.1.0']
 
 DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
