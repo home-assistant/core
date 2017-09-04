@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 
-REQUIREMENTS = ['python-lyric==1.1.2']
+REQUIREMENTS = ['python-lyric==1.1.3']
 
 DOMAIN = 'lyric'
 
