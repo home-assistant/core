@@ -49,8 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yamaha MusicCast platform."""
     import pymusiccast
 
-    # _LOGGER.debug("config: {} ({})".format(config, type(config)))
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
