@@ -5,7 +5,6 @@ For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/docs/automation/trigger/#numeric-state-trigger
 """
 import asyncio
-from copy import deepcopy
 import logging
 
 import voluptuous as vol
@@ -43,26 +42,24 @@ def async_trigger(hass, config, action):
     if value_template is not None:
         value_template.hass = hass
 
-    variables = {
-        'trigger': {
-            'platform': 'numeric_state',
-            'below': below,
-            'above': above,
-        }
-    }
-
     @callback
     def check_numeric_state(entity, from_s, to_s):
         """Return True if they should trigger."""
         if to_s is None:
             return False
 
-        var = deepcopy(variables)
-        var['trigger']['entity_id'] = entity
+        variables = {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': entity,
+                'below': below,
+                'above': above,
+            }
+        }
 
         # If new one doesn't match, nothing to do
         if not condition.async_numeric_state(
-                hass, to_s, below, above, value_template, var):
+                hass, to_s, below, above, value_template, variables):
             return False
 
         return True
@@ -84,12 +81,16 @@ def async_trigger(hass, config, action):
         @callback
         def call_action():
             """Call action with right context."""
-            var = deepcopy(variables)
-            var['trigger']['entity_id'] = entity
-            var['trigger']['from_state'] = from_s
-            var['trigger']['to_state'] = to_s
-
-            hass.async_run_job(action, var)
+            hass.async_run_job(action, {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': entity,
+                    'below': below,
+                    'above': above,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                }
+            })
 
         if not time_delta:
             call_action()

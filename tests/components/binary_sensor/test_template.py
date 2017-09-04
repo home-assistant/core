@@ -113,13 +113,13 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertEqual('motion', vs.device_class)
         self.assertEqual('Parent', vs.name)
 
-        vs.update()
+        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         self.assertFalse(vs.is_on)
 
         # pylint: disable=protected-access
         vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
 
-        vs.update()
+        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         self.assertTrue(vs.is_on)
 
     def test_event(self):
@@ -163,10 +163,10 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None, None
         ).result()
         mock_render.side_effect = TemplateError('foo')
-        vs.update()
+        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         mock_render.side_effect = TemplateError(
             "UndefinedError: 'None' has no attribute")
-        vs.update()
+        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
 
 
 @asyncio.coroutine

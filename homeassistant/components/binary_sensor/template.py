@@ -70,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No sensors added")
         return False
 
-    async_add_devices(sensors, True)
+    async_add_devices(sensors)
     return True
 
 
@@ -101,7 +101,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
             """Handle the target device state changes."""
-            self.hass.async_add_job(self.async_update())
+            self.async_check_state()
 
         @callback
         def template_bsensor_startup(event):
@@ -109,7 +109,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             async_track_state_change(
                 self.hass, self._entities, template_bsensor_state_listener)
 
-            self.hass.async_add_job(self.async_update())
+            self.hass.async_add_job(self.async_check_state)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_bsensor_startup)
@@ -148,8 +148,8 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-    @asyncio.coroutine
-    def async_update(self):
+    @callback
+    def async_check_state(self):
         """Update the state from the template."""
         state = self._async_render()
 
