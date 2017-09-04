@@ -9,7 +9,7 @@ from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
 
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
-                '0.3.1.zip#PyXiaomiGateway==0.3.1']
+                '0.3.2.zip#PyXiaomiGateway==0.3.2']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'

@@ -9,9 +9,10 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
-from homeassistant.components.light import \
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS
+from homeassistant.components.light import (
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA)
+from homeassistant.components.tradfri import (
+    KEY_GATEWAY, KEY_TRADFRI_GROUPS, KEY_API)
 from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,9 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
-ALLOWED_TEMPERATURES = {
-    IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
-}
+ALLOWED_TEMPERATURES = {IKEA}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,24 +29,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     gateway_id = discovery_info['gateway']
+    api = hass.data[KEY_API][gateway_id]
     gateway = hass.data[KEY_GATEWAY][gateway_id]
-    devices = gateway.get_devices()
-    lights = [dev for dev in devices if dev.has_light_control]
-    add_devices(Tradfri(light) for light in lights)
+    devices = api(gateway.get_devices())
+    lights = [dev for dev in devices if api(dev).has_light_control]
+    add_devices(Tradfri(light, api) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
-        groups = gateway.get_groups()
-        add_devices(TradfriGroup(group) for group in groups)
+        groups = api(gateway.get_groups())
+        add_devices(TradfriGroup(group, api) for group in groups)
 
 
 class TradfriGroup(Light):
     """The platform class required by hass."""
 
-    def __init__(self, light):
+    def __init__(self, light, api):
         """Initialize a Group."""
-        self._group = light
-        self._name = light.name
+        self._group = api(light)
+        self._api = api
+        self._name = self._group.name
 
     @property
     def supported_features(self):
@@ -71,20 +72,20 @@ class TradfriGroup(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        self._group.set_state(0)
+        self._api(self._group.set_state(0))
 
     def turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+            self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
         else:
-            self._group.set_state(1)
+            self._api(self._group.set_state(1))
 
     def update(self):
         """Fetch new state data for this group."""
         from pytradfri import RequestTimeout
         try:
-            self._group.update()
+            self._api(self._group.update())
         except RequestTimeout:
             _LOGGER.warning("Tradfri update request timed out")
 
@@ -92,14 +93,15 @@ class TradfriGroup(Light):
 class Tradfri(Light):
     """The platform class required by Home Asisstant."""
 
-    def __init__(self, light):
+    def __init__(self, light, api):
         """Initialize a Light."""
-        self._light = light
+        self._light = api(light)
+        self._api = api
 
         # Caching of LightControl and light object
-        self._light_control = light.light_control
-        self._light_data = light.light_control.lights[0]
-        self._name = light.name
+        self._light_control = self._light.light_control
+        self._light_data = self._light_control.lights[0]
+        self._name = self._light.name
         self._rgb_color = None
         self._features = SUPPORT_BRIGHTNESS
 
@@ -109,8 +111,20 @@ class Tradfri(Light):
             else:
                 self._features |= SUPPORT_RGB_COLOR
 
-        self._ok_temps = ALLOWED_TEMPERATURES.get(
-            self._light.device_info.manufacturer)
+        self._ok_temps = \
+            self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        from pytradfri.color import MAX_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        from pytradfri.color import MIN_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
     @property
     def supported_features(self):
@@ -135,20 +149,13 @@ class Tradfri(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if (self._light_data.hex_color is None or
+        if (self._light_data.kelvin_color is None or
                 self.supported_features & SUPPORT_COLOR_TEMP == 0 or
                 not self._ok_temps):
             return None
-
-        kelvin = next((
-            kelvin for kelvin, hex_color in self._ok_temps.items()
-            if hex_color == self._light_data.hex_color), None)
-        if kelvin is None:
-            _LOGGER.error(
-                "Unexpected color temperature found for %s: %s",
-                self.name, self._light_data.hex_color)
-            return
-        return color_util.color_temperature_kelvin_to_mired(kelvin)
+        return color_util.color_temperature_kelvin_to_mired(
+            self._light_data.kelvin_color
+        )
 
     @property
     def rgb_color(self):
@@ -157,7 +164,7 @@ class Tradfri(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light_control.set_state(False)
+        self._api(self._light_control.set_state(False))
 
     def turn_on(self, **kwargs):
         """
@@ -167,29 +174,27 @@ class Tradfri(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_BRIGHTNESS in kwargs:
-            self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+            self._api(self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
         else:
-            self._light_control.set_state(True)
+            self._api(self._light_control.set_state(True))
 
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            self._light.light_control.set_hex_color(
-                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
+            self._api(self._light.light_control.set_hex_color(
+                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and self._ok_temps:
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
-            # find closest allowed kelvin temp from user input
-            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
-            self._light_control.set_hex_color(self._ok_temps[kelvin])
+            self._api(self._light_control.set_kelvin_color(kelvin))
 
     def update(self):
         """Fetch new state data for this light."""
         from pytradfri import RequestTimeout
         try:
-            self._light.update()
-        except RequestTimeout:
-            _LOGGER.warning("Tradfri update request timed out")
+            self._api(self._light.update())
+        except RequestTimeout as exception:
+            _LOGGER.warning("Tradfri update request timed out: %s", exception)
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
