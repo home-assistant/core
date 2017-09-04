@@ -39,13 +39,16 @@ def async_setup(hass, config):
         if event.event_type == EVENT_STATE_CHANGED:
             try:
                 new_state = event.data['new_state']
+            except AttributeError:
+                return
+
+            try:
                 payload = new_state.state
             except NameError:
-                payload = None
+                return
 
-            if payload is not None:
-                topic = base_topic + new_state.entity_id.replace('.', '/')
-                mqtt.async_publish(hass, topic, payload, 1, True)
+            topic = base_topic + new_state.entity_id.replace('.', '/')
+            mqtt.async_publish(hass, topic, payload, 1, True)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, _event_publisher)
 
