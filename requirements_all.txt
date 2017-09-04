@@ -536,7 +536,7 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.20.0
+pyRFXtrx==0.20.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -782,7 +782,7 @@ python-synology==0.1.0
 python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==7.0.1
+python-telegram-bot==8.0.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -800,7 +800,7 @@ python-wink==1.5.1
 python_openzwave==0.4.0.31
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.19
+pythonegardia==1.0.20
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -1029,7 +1029,7 @@ yeelight==0.3.2
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.8.18
+youtube_dl==2017.9.2
 
 # homeassistant.components.light.zengge
 zengge==0.2
