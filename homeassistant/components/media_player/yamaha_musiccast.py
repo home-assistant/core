@@ -73,7 +73,7 @@ class YamahaDevice(MediaPlayerDevice):
         self.volume_max = 0
         self.mute = False
         self._source = None
-        self.source_list = []
+        self._source_list = []
         self.status = STATE_UNKNOWN
         self.media_status = None
         self._receiver.set_yamaha_device(self)
@@ -121,7 +121,12 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self.source_list
+        return self._source_list
+
+    @source_list.setter
+    def source_list(self, value):
+        """Set source_list attribute"""
+        self._source_list = value
 
     @property
     def media_content_type(self):
