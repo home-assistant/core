@@ -125,7 +125,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     @source_list.setter
     def source_list(self, value):
-        """Set source_list attribute"""
+        """Set source_list attribute."""
         self._source_list = value
 
     @property
