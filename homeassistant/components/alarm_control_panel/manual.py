@@ -189,7 +189,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         return check
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         state_attr = super().state_attributes
 
