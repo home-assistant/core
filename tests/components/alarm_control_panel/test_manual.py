@@ -340,8 +340,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 10,
-                'pending_times': {
-                    'armed_home': 2
+                'armed_home': {
+                    'pending_time': 2
                 }
             }}))
 
@@ -370,8 +370,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 10,
-                'pending_times': {
-                    'armed_away': 2
+                'armed_away': {
+                    'pending_time': 2
                 }
             }}))
 
@@ -400,8 +400,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 10,
-                'pending_times': {
-                    'armed_night': 2
+                'armed_night': {
+                    'pending_time': 2
                 }
             }}))
 
@@ -430,8 +430,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 10,
-                'pending_times': {
-                    'triggered': 2
+                'triggered': {
+                    'pending_time': 2
                 },
                 'trigger_time': 3,
                 'disarm_after_trigger': False

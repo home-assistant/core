@@ -28,21 +28,26 @@ PENDINGABLE_STATES = [STATE_ALARM_ARMED_AWAY,
                       STATE_ALARM_ARMED_HOME,
                       STATE_ALARM_ARMED_NIGHT,
                       STATE_ALARM_TRIGGERED]
-CONF_PENDING_TIMES = 'pending_times'
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'manual',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(CONF_PENDING_TIMES): {
-        vol.Optional(STATE_ALARM_ARMED_AWAY):
-            vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(STATE_ALARM_ARMED_HOME):
-            vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(STATE_ALARM_ARMED_NIGHT):
-            vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(STATE_ALARM_TRIGGERED):
+    vol.Optional(STATE_ALARM_ARMED_AWAY): {
+        vol.Optional(CONF_PENDING_TIME):
+            vol.All(vol.Coerce(int), vol.Range(min=0))
+    },
+    vol.Optional(STATE_ALARM_ARMED_HOME): {
+        vol.Optional(CONF_PENDING_TIME):
+            vol.All(vol.Coerce(int), vol.Range(min=0))
+    },
+    vol.Optional(STATE_ALARM_ARMED_NIGHT): {
+        vol.Optional(CONF_PENDING_TIME):
+            vol.All(vol.Coerce(int), vol.Range(min=0))
+    },
+    vol.Optional(STATE_ALARM_TRIGGERED): {
+        vol.Optional(CONF_PENDING_TIME):
             vol.All(vol.Coerce(int), vol.Range(min=0))
     },
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
@@ -61,10 +66,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_NAME],
         config.get(CONF_CODE),
         config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
-        config.get(CONF_PENDING_TIMES, {}),
         config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
-        config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER)
+        config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
+        _state_settings_from_config(config),
         )])
+
+
+def _state_settings_from_config(config):
+    state_settings = {}
+    for state in PENDINGABLE_STATES:
+        state_setting = config.get(state, {})
+        state_settings[state] = state_setting
+
+    return state_settings
 
 
 class ManualAlarm(alarm.AlarmControlPanel):
@@ -77,8 +91,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
     or disarm if `disarm_after_trigger` is true.
     """
 
-    def __init__(self, hass, name, code, pending_time, pending_time_by_state,
-                 trigger_time, disarm_after_trigger):
+    def __init__(self, hass, name, code, pending_time, trigger_time,
+                 disarm_after_trigger, state_settings):
         """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -91,9 +105,12 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._pending_time_by_state = {}
         for state in PENDINGABLE_STATES:
-            if state in pending_time_by_state:
+            state_setting = state_settings[state] if state in state_settings \
+                else {}
+
+            if CONF_PENDING_TIME in state_setting:
                 self._pending_time_by_state[state] = datetime.timedelta(
-                    seconds=pending_time_by_state[state])
+                    seconds=state_setting[CONF_PENDING_TIME])
             else:
                 self._pending_time_by_state[state] = datetime.timedelta(
                     seconds=pending_time)
