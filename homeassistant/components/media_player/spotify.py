@@ -162,7 +162,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def update(self):
         """Update state and attributes."""
         self.refresh_spotify_instance()
-        
+
         # Don't true update when token is expired
         if self._oauth.is_token_expired(self._token_info):
             _LOGGER.warning("Spotify failed to update, token expired.")
