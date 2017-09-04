@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 
-REQUIREMENTS = ['pythonegardia==1.0.19']
+REQUIREMENTS = ['pythonegardia==1.0.20']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,8 +154,9 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Update the alarm status."""
-        status = self._egardiasystem.getstate()
-        self.parsestatus(status)
+        if not self._rs_enabled:
+            status = self._egardiasystem.getstate()
+            self.parsestatus(status)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
