@@ -181,7 +181,7 @@ class YamahaDevice(MediaPlayerDevice):
             # update_status_timer was set before
             if self._receiver.update_status_timer:
                 _LOGGER.debug(
-                    "is_alive: %d",
+                    "is_alive: %s",
                     self._receiver.update_status_timer.is_alive())
                 # e.g. computer was suspended, while hass was running
                 if not self._receiver.update_status_timer.is_alive():
