@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['axis==8']
+REQUIREMENTS = ['axis==10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
+HTTP_PORT = 'http_port'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
@@ -51,6 +52,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
+    vol.Optional(HTTP_PORT, default=80): cv.positive_int,
     vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 
@@ -236,7 +238,9 @@ def setup_device(hass, config):
             if not enable_metadatastream:
                 enable_metadatastream = True
         else:
-            discovery.load_platform(hass, component, DOMAIN, config)
+            clean_config = config.copy()
+            del clean_config['hass']
+            discovery.load_platform(hass, component, DOMAIN, clean_config)
 
     if enable_metadatastream:
         device.initialize_new_event = event_initialized
