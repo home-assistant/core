@@ -38,7 +38,7 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID,
-    CONF_ICON, ATTR_ICON)
+    CONF_ICON, ATTR_ICON, ATTR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ DEFAULT_AWAY_HIDE = False
 EVENT_NEW_DEVICE = 'device_tracker_new_device'
 
 SERVICE_SEE = 'see'
+SERVICE_GUEST_MODE = 'guest_mode'
 
 ATTR_ATTRIBUTES = 'attributes'
 ATTR_BATTERY = 'battery'
@@ -131,6 +132,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
+    devices.append(Device(hass, 60, 1, 'internal_guest', '',
+                          name='Internal Guest Tracker'))
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     @asyncio.coroutine
@@ -208,12 +211,23 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
         yield from tracker.async_see(**args)
 
+    @asyncio.coroutine
+    def async_guest_mode_service(call):
+        """Service to set guestmode state for all devices."""
+        location_state = call.data.get(ATTR_STATE, STATE_HOME)
+        yield from tracker.async_guest(location_state)
+
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml')
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, descriptions.get(SERVICE_SEE))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_GUEST_MODE, async_guest_mode_service,
+        descriptions.get(SERVICE_GUEST_MODE))
+
 
     # restore
     yield from tracker.async_setup_tracked_device()
@@ -252,6 +266,16 @@ class DeviceTracker(object):
                            gps_accuracy, battery, attributes, source_type,
                            picture, icon)
         )
+
+    @asyncio.coroutine
+    def async_guest(self, location_state):
+        """ Update the internal guest device with the location state """
+        device = self.devices.get('internal_guest')
+        if device:
+            yield from device.async_seen(location_name=location_state)
+            if device.track:
+                yield from device.async_update_ha_state()
+            return
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
