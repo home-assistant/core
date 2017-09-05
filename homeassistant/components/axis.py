@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_HOST, CONF_INCLUDE, CONF_NAME,
-                                 CONF_PASSWORD, CONF_TRIGGER_TIME,
+                                 CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME,
                                  CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.helpers import config_validation as cv
@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['axis==10']
+REQUIREMENTS = ['axis==11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,6 @@ AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
-HTTP_PORT = 'http_port'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
@@ -52,7 +51,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
-    vol.Optional(HTTP_PORT, default=80): cv.positive_int,
+    vol.Optional(CONF_PORT, default=80): cv.positive_int,
     vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 
