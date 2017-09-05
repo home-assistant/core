@@ -114,6 +114,62 @@ track_template = threaded_listener_factory(async_track_template)
 
 
 @callback
+def async_track_same_state(hass, orig_value, period, action,
+                           async_check_func=None, entity_ids=MATCH_ALL):
+    """Track the state of entities for a period and run a action.
+
+    If async_check_func is None it use the state of orig_value.
+    Without entity_ids we track all state changes.
+    """
+    async_remove_state_for_cancel = None
+    async_remove_state_for_listener = None
+
+    @callback
+    def clear_listener():
+        """Clear all unsub listener."""
+        nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
+
+        # pylint: disable=not-callable
+        if async_remove_state_for_listener is not None:
+            async_remove_state_for_listener()
+            async_remove_state_for_listener = None
+        if async_remove_state_for_cancel is not None:
+            async_remove_state_for_cancel()
+            async_remove_state_for_cancel = None
+
+    @callback
+    def state_for_listener(now):
+        """Fire on state changes after a delay and calls action."""
+        nonlocal async_remove_state_for_listener
+        async_remove_state_for_listener = None
+        clear_listener()
+        hass.async_run_job(action)
+
+    @callback
+    def state_for_cancel_listener(entity, from_state, to_state):
+        """Fire on changes and cancel for listener if changed."""
+        if async_check_func:
+            value = async_check_func(entity, from_state, to_state)
+        else:
+            value = to_state.state
+
+        if orig_value == value:
+            return
+        clear_listener()
+
+    async_remove_state_for_listener = async_track_point_in_utc_time(
+        hass, state_for_listener, dt_util.utcnow() + period)
+
+    async_remove_state_for_cancel = async_track_state_change(
+        hass, entity_ids, state_for_cancel_listener)
+
+    return clear_listener
+
+
+track_same_state = threaded_listener_factory(async_track_same_state)
+
+
+@callback
 def async_track_point_in_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
