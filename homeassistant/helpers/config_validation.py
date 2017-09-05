@@ -1,5 +1,5 @@
 """Helpers for config validation using voluptuous."""
-from datetime import timedelta, datetime as datetime_sys
+from datetime import timedelta, datetime as datetime_sys, time as time_sys, date as date_sys
 import os
 import re
 from urllib.parse import urlparse
@@ -143,6 +143,29 @@ time_period_dict = vol.All(
                          'seconds', 'milliseconds'),
     lambda value: timedelta(**value))
 
+def time_str(value: str) -> time_sys:
+    """Validate and transform a time."""
+    time = dt_util.parse_time(value)
+    if time is None:
+        raise vol.Invalid("Could not parse time")
+    return time
+
+def time_time(time: time_sys) -> time_sys:
+    return time
+
+time = vol.Any(time_str, time_time)
+
+def date_str(value: str) -> date_sys:
+    """Validate and transform a date."""
+    date = dt_util.parse_date(value)
+    if date is None:
+        raise vol.Invalid("Could not parse date")
+    return date
+
+def date_date(date: date_sys) -> date_sys:
+    return date
+
+date = vol.Any(date_str, date_date)
 
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
