@@ -201,11 +201,14 @@ def setup_hass_events(hass):
     """Home assistant start and stop callbacks."""
     def startup(event):
         """Listen for push events."""
-        hass.data[DOMAIN].abode.events.start()
+        if not hass.data[DOMAIN].polling:
+            hass.data[DOMAIN].abode.events.start()
 
     def logout(event):
         """Logout of Abode."""
-        hass.data[DOMAIN].abode.events.stop()
+        if not hass.data[DOMAIN].polling:
+            hass.data[DOMAIN].abode.events.stop()
+
         hass.data[DOMAIN].abode.logout()
         _LOGGER.info("Logged out of Abode")
 
