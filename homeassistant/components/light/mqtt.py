@@ -400,14 +400,14 @@ class MqttLight(Light):
         if ATTR_RGB_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
-            rgb_color_str = '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR])
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl is not None:
                 colors = {'red', 'green', 'blue'}
-                env = {}
-                for key, val in zip(colors, kwargs[ATTR_RGB_COLOR]):
-                    env[key] = val
-                rgb_color_str = tpl.async_render(env)
+                variables = {key: val for key, val in
+                             zip(colors, kwargs[ATTR_RGB_COLOR])}
+                rgb_color_str = tpl.async_render(variables)
+            else:
+                rgb_color_str = '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR])
             mqtt.async_publish(
                 self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
                 rgb_color_str, self._qos, self._retain)
