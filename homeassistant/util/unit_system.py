@@ -149,7 +149,6 @@ class UnitSystem(object):
     def convert(self, value, unit):
         """Generic conversion method."""
         converted = None
-        prec = len(value) - value.index('.') - 1 if '.' in value else 0
         if (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                 unit != self.temperature_unit):
             # Convert temperature if we detect one
@@ -158,8 +157,8 @@ class UnitSystem(object):
             except ValueError:
                 return None
             converted = {
-                value: temp,
-                units: self.temperature_unit
+                'value': temp,
+                'units': self.temperature_unit
             }
         elif (unit in LENGTH_UNITS and
               unit != self.length_unit):
