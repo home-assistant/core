@@ -401,7 +401,7 @@ class MqttLight(Light):
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
-            if tpl is not None:
+            if tpl:
                 colors = {'red', 'green', 'blue'}
                 variables = {key: val for key, val in
                              zip(colors, kwargs[ATTR_RGB_COLOR])}
