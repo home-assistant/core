@@ -23,11 +23,13 @@ DEFAULT_PORT = 62910
 DOMAIN = 'maxcube'
 
 MAXCUBE_HANDLE = 'maxcube'
+CONF_TRV_ON_OFF = 'trv_on_off'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TRV_ON_OFF, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -39,6 +41,7 @@ def setup(hass, config):
 
     host = config.get(DOMAIN).get(CONF_HOST)
     port = config.get(DOMAIN).get(CONF_PORT)
+    trv_on_off = config.get(DOMAIN).get(CONF_TRV_ON_OFF)
 
     try:
         cube = MaxCube(MaxCubeConnection(host, port))
@@ -48,6 +51,7 @@ def setup(hass, config):
         return False
 
     hass.data[MAXCUBE_HANDLE] = MaxCubeHandle(cube)
+    hass.data["maxcube_trv_on_off"] = trv_on_off
 
     load_platform(hass, 'climate', DOMAIN)
     load_platform(hass, 'binary_sensor', DOMAIN)

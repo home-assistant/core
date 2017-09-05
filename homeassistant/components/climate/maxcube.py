@@ -7,7 +7,8 @@ https://home-assistant.io/components/maxcube/
 import socket
 import logging
 
-from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import STATE_AUTO, STATE_ON, STATE_OFF
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
@@ -19,6 +20,8 @@ STATE_VACATION = 'vacation'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Get config."""
+    trv_on_off = hass.data["maxcube_trv_on_off"]
     """Iterate through all MAX! Devices and add thermostats."""
     cube = hass.data[MAXCUBE_HANDLE].cube
 
@@ -29,7 +32,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             cube.room_by_id(device.room_id).name, device.name)
 
         if cube.is_thermostat(device) or cube.is_wallthermostat(device):
-            devices.append(MaxCubeClimate(hass, name, device.rf_address))
+            devices.append(
+                MaxCubeClimate(hass, name, device.rf_address, trv_on_off)
+            )
 
     if devices:
         add_devices(devices)
@@ -38,13 +43,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MaxCubeClimate(ClimateDevice):
     """MAX! Cube ClimateDevice."""
 
-    def __init__(self, hass, name, rf_address):
+    def __init__(self, hass, name, rf_address, trv_on_off):
         """Initialize MAX! Cube ClimateDevice."""
         self._name = name
         self._unit_of_measurement = TEMP_CELSIUS
         self._operation_list = [STATE_AUTO, STATE_MANUAL, STATE_BOOST,
                                 STATE_VACATION]
         self._rf_address = rf_address
+        self._trv_on_off = trv_on_off
         self._cubehandle = hass.data[MAXCUBE_HANDLE]
 
     @property
@@ -84,8 +90,15 @@ class MaxCubeClimate(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation (auto, manual, boost, vacation)."""
+        """Return the current operation."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        """If we are only interested in whether the TRV is off or on."""
+        if self._trv_on_off and hasattr(device, 'valve_position'):
+            if device.valve_position is 0:
+                return STATE_OFF
+
+            return STATE_ON
+        """Return current operation (auto, manual, boost, vacation)."""
         return self.map_mode_max_hass(device.mode)
 
     @property
