@@ -84,12 +84,9 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        result = None
         if self.power == STATE_ON and self.status is not STATE_UNKNOWN:
-            result = self.status
-        else:
-            result = self.power
-        return result
+            return self.status
+        return self.power
 
     @property
     def should_poll(self):
@@ -129,10 +126,7 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return the media content type."""
-        result = None
-        if self.media_status is not None:
-            result = MEDIA_TYPE_MUSIC
-        return result
+        return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
