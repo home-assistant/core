@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['mycroftapi==0.1.2']
+REQUIREMENTS = ['mycroftapi==2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
