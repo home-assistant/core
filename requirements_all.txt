@@ -646,7 +646,7 @@ pylitejet==0.1
 pyloopenergy==0.0.17
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.2.7
+pylutron-caseta==0.2.8
 
 # homeassistant.components.lutron
 pylutron==0.1.0
