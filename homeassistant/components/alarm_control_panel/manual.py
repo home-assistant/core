@@ -191,7 +191,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state_attr = super().state_attributes
+        state_attr = {}
 
         if self.state == STATE_ALARM_PENDING:
             state_attr[ATTR_POST_PENDING_STATE] = self._state

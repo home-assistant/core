@@ -72,10 +72,10 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        self.assertTrue(self.hass.states.
-                        is_state_attr(entity_id,
-                                      'post_pending_state',
-                                      STATE_ALARM_ARMED_HOME))
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_HOME))
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -155,10 +155,10 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        self.assertTrue(self.hass.states.
-                        is_state_attr(entity_id,
-                                      'post_pending_state',
-                                      STATE_ALARM_ARMED_AWAY))
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_AWAY))
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -238,10 +238,10 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        self.assertTrue(self.hass.states.
-                        is_state_attr(entity_id,
-                                      'post_pending_state',
-                                      STATE_ALARM_ARMED_NIGHT))
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_NIGHT))
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
@@ -329,10 +329,10 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        self.assertTrue(self.hass.states.
-                        is_state_attr(entity_id,
-                                      'post_pending_state',
-                                      STATE_ALARM_TRIGGERED))
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_TRIGGERED))
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual.'
