@@ -294,6 +294,11 @@ class Entity(object):
                     attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
                 if converted["value"] is not None:
                     state = converted["value"]
+                    prec = (
+                        len(state) - state.index('.') - 1 
+                        if '.' in state else 0)
+                    state = (
+                        str(round(temp) if prec == 0 else round(temp, prec)))
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
