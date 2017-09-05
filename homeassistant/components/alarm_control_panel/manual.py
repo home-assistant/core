@@ -24,6 +24,8 @@ DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
+ATTR_POST_PENDING_STATE = 'post_pending_state'
+
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'manual',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
@@ -185,3 +187,13 @@ class ManualAlarm(alarm.AlarmControlPanel):
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state_attr = {}
+
+        if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_POST_PENDING_STATE] = self._state
+
+        return state_attr
