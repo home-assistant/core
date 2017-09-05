@@ -18,8 +18,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
 
-from satel_integra.satel_integra import AsyncSatel, AlarmState
-
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
 DEFAULT_CONF_ARM_HOME_MODE = 1
@@ -84,6 +82,7 @@ def async_setup(hass, config):
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
 
+    from satel_integra.satel_integra import AsyncSatel
     controller = AsyncSatel(host, port, zones, hass.loop, partition)
 
     hass.data[DATA_AD] = controller
@@ -110,6 +109,8 @@ def async_setup(hass, config):
     def alarm_status_update_callback(status):
         _LOGGER.debug("Alarm status callback, status: %s", status)
         hass_alarm_status = STATE_ALARM_DISARMED
+
+        from satel_integra.satel_integra import AlarmState
 
         if status == AlarmState.ARMED_MODE0:
             hass_alarm_status = STATE_ALARM_ARMED_AWAY
