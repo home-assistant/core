@@ -37,6 +37,7 @@ SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TIME): cv.time,
 })
 
+
 # TODO bring this into easier form?
 def _cv_input_datetime(cfg):
     """Configure validation helper for input datetime (voluptuous)."""
@@ -46,6 +47,7 @@ def _cv_input_datetime(cfg):
     if not has_date and not has_time:
         raise vol.Invalid("Input Datetime must have at least date or time!")
     return cfg
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -57,15 +59,16 @@ CONFIG_SCHEMA = vol.Schema({
         }, _cv_input_datetime)})
 }, required=True, extra=vol.ALLOW_EXTRA)
 
+
 @bind_hass
 def select_datetime(hass, entity_id, dt_value):
     """Set date and / or time of input_datetime."""
-
     hass.services.call(DOMAIN, SERVICE_SET_DATETIME, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_DATE: dt_value.date(),
         ATTR_TIME: dt_value.time()
     })
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -79,7 +82,8 @@ def async_setup(hass, config):
         has_time = cfg.get(CONF_HAS_TIME)
         has_date = cfg.get(CONF_HAS_DATE)
         icon = cfg.get(CONF_ICON)
-        entities.append(DatetimeSelect(object_id, name, has_date, has_time, icon))
+        entities.append(DatetimeSelect(object_id, name,
+                                       has_date, has_time, icon))
 
     if not entities:
         return False
@@ -129,7 +133,8 @@ class DatetimeSelect(Entity):
         if old_state is not None:
             self._current_datetime = dt_util.parse_datetime(old_state.state)
         else:
-            self._current_datetime = dt_util.now() # TODO is this a sane default value?
+            # TODO is this a sane default value?
+            self._current_datetime = dt_util.now()
 
     @property
     def should_poll(self):
@@ -175,18 +180,19 @@ class DatetimeSelect(Entity):
 
     @asyncio.coroutine
     def async_set_datetime(self, date_val, time_val):
-        """Set a new date / time"""
-
+        """Set a new date / time."""
         if not self._has_date:
             if time_val is None:
                 _LOGGER.warning('"None" passed as time.')
                 return
-            self._current_datetime = time_val # TODO cast to datetime?
+            # TODO cast to datetime?
+            self._current_datetime = time_val
         elif not self._has_time:
             if date_val is None:
                 _LOGGER.warning('"None" passed as date.')
                 return
-            self._current_datetime = date_val # TODO cast to datetime?
+            # TODO cast to datetime?
+            self._current_datetime = date_val
         else:
             if time_val is None:
                 _LOGGER.warning('"None" passed as time.')
@@ -194,6 +200,7 @@ class DatetimeSelect(Entity):
             if date_val is None:
                 _LOGGER.warning('"None" passed as date.')
                 return
-            self._current_datetime = datetime.datetime.combine(date_val, time_val)
+            self._current_datetime = datetime.datetime.combine(date_val,
+                                                               time_val)
 
         yield from self.async_update_ha_state()
