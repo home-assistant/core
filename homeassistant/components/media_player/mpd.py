@@ -11,12 +11,13 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
     SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
-    SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     CONF_PORT, CONF_PASSWORD, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -30,8 +31,8 @@ DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
-SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
     SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK | \
     SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
@@ -139,7 +140,7 @@ class MpdDevice(MediaPlayerDevice):
     def state(self):
         """Return the media state."""
         if self._status is None:
-            self.update()
+            return STATE_OFF
         elif self._status['state'] == 'play':
             return STATE_PLAYING
         elif self._status['state'] == 'pause':
@@ -265,7 +266,7 @@ class MpdDevice(MediaPlayerDevice):
         self._client.previous()
 
     def mute_volume(self, mute):
-        """Mute. Emulated with set_volume_level"""
+        """Mute. Emulated with set_volume_level."""
         if mute is True:
             self._muted_volume = self.volume_level
             self.set_volume_level(0)
