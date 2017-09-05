@@ -101,7 +101,9 @@ class UnitSystem(object):
 
     def length(self: object, length: float, from_unit: str) -> float:
         """Convert the given length to this unit system return a float.
-            Disable auto-ranging for backward-compatibility."""
+
+        Disable auto-ranging for backward-compatibility.
+        """
         converted = self.length_and_unit(length, from_unit, False)
         return converted["value"]
 
@@ -109,10 +111,12 @@ class UnitSystem(object):
             self: object, length: float, from_unit: str,
             auto_range: bool) -> dict:
         """Convert the given length to this unit system return a dict.
-            If auto_range is true the method will attempt to auto-range the
-            value into the appropriate unit. If auto_range is false the
-            method will convert into the base length unit of this system.
-            This may lead to a zero result due to rounding."""
+
+        If auto_range is true the method will attempt to auto-range the
+        value into the appropriate unit. If auto_range is false the
+        method will convert into the base length unit of this system.
+        This may lead to a zero result due to rounding.
+        """
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
