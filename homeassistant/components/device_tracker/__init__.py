@@ -80,6 +80,7 @@ ATTR_SOURCE_TYPE = 'source_type'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
+SOURCE_TYPE_OTHER = 'other'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,

@@ -86,6 +86,9 @@ omit =
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
 
+    homeassistant/components/irc.py
+    homeassistant/components/*/irc.py
+
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
