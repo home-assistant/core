@@ -77,7 +77,7 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def request_configuration(hass, name, host, serialnumber):
+def request_configuration(hass, config, name, host, serialnumber):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
@@ -92,15 +92,15 @@ def request_configuration(hass, name, host, serialnumber):
         if CONF_NAME not in callback_data:
             callback_data[CONF_NAME] = name
         try:
-            config = DEVICE_SCHEMA(callback_data)
+            device_config = DEVICE_SCHEMA(callback_data)
         except vol.Invalid:
             configurator.notify_errors(request_id,
                                        "Bad input, please check spelling.")
             return False
 
-        if setup_device(hass, config):
+        if setup_device(hass, config, device_config):
             config_file = _read_config(hass)
-            config_file[serialnumber] = dict(config)
+            config_file[serialnumber] = dict(device_config)
             del config_file[serialnumber]['hass']
             _write_config(hass, config_file)
             configurator.request_done(request_id)
@@ -140,7 +140,7 @@ def request_configuration(hass, name, host, serialnumber):
     )
 
 
-def setup(hass, base_config):
+def setup(hass, config):
     """Common setup for Axis devices."""
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
@@ -161,16 +161,17 @@ def setup(hass, base_config):
             if serialnumber in config_file:
                 # Device config saved to file
                 try:
-                    config = DEVICE_SCHEMA(config_file[serialnumber])
-                    config[CONF_HOST] = host
+                    device_config = DEVICE_SCHEMA(config_file[serialnumber])
+                    device_config[CONF_HOST] = host
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
-                if not setup_device(hass, config):
-                    _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
+                if not setup_device(hass, device_config):
+                    _LOGGER.error("Couldn\'t set up %s",
+                                  device_config[CONF_NAME])
             else:
                 # New device, create configuration request for UI
-                request_configuration(hass, name, host, serialnumber)
+                request_configuration(hass, config, name, host, serialnumber)
         else:
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
@@ -182,13 +183,12 @@ def setup(hass, base_config):
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
-    if DOMAIN in base_config:
-        for device in base_config[DOMAIN]:
-            config = base_config[DOMAIN][device]
-            if CONF_NAME not in config:
-                config[CONF_NAME] = device
-            if not setup_device(hass, config):
-                _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
+    for device in config[DOMAIN]:
+        device_config = config[DOMAIN][device]
+        if CONF_NAME not in device_config:
+            device_config[CONF_NAME] = device
+        if not setup_device(hass, config, device_config):
+            _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
 
     # Services to communicate with device.
     descriptions = load_yaml_config_file(
@@ -216,20 +216,20 @@ def setup(hass, base_config):
     return True
 
 
-def setup_device(hass, config):
+def setup_device(hass, config, device_config):
     """Set up device."""
     from axis import AxisDevice
 
-    config['hass'] = hass
-    device = AxisDevice(config)  # Initialize device
+    device_config['hass'] = hass
+    device = AxisDevice(device_config)  # Initialize device
     enable_metadatastream = False
 
     if device.serial_number is None:
         # If there is no serial number a connection could not be made
-        _LOGGER.error("Couldn\'t connect to %s", config[CONF_HOST])
+        _LOGGER.error("Couldn\'t connect to %s", device_config[CONF_HOST])
         return False
 
-    for component in config[CONF_INCLUDE]:
+    for component in device_config[CONF_INCLUDE]:
         if component in EVENT_TYPES:
             # Sensors are created by device calling event_initialized
             # when receiving initialize messages on metadatastream
@@ -237,9 +237,18 @@ def setup_device(hass, config):
             if not enable_metadatastream:
                 enable_metadatastream = True
         else:
-            clean_config = config.copy()
-            del clean_config['hass']
-            discovery.load_platform(hass, component, DOMAIN, clean_config)
+            camera_config = {
+                CONF_HOST: device_config[CONF_HOST],
+                CONF_NAME: device_config[CONF_NAME],
+                CONF_PORT: device_config[CONF_PORT],
+                CONF_USERNAME: device_config[CONF_USERNAME],
+                CONF_PASSWORD: device_config[CONF_PASSWORD]
+            }
+            discovery.load_platform(hass,
+                                    component,
+                                    DOMAIN,
+                                    camera_config,
+                                    config)
 
     if enable_metadatastream:
         device.initialize_new_event = event_initialized

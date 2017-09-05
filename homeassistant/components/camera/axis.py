@@ -28,7 +28,7 @@ def _get_image_url(host, port, mode):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Axis camera."""
-    config = {
+    camera_config = {
         CONF_NAME: discovery_info[CONF_NAME],
         CONF_USERNAME: discovery_info[CONF_USERNAME],
         CONF_PASSWORD: discovery_info[CONF_PASSWORD],
@@ -40,7 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              'single'),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
-    add_devices([AxisCamera(hass, config, str(discovery_info[CONF_PORT]))])
+    add_devices([AxisCamera(hass,
+                            camera_config,
+                            str(discovery_info[CONF_PORT]))])
 
 
 class AxisCamera(MjpegCamera):
