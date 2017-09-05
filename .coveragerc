@@ -384,6 +384,7 @@ omit =
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
     homeassistant/components/media_player/yamaha.py
+    homeassistant/components/media_player/yamaha_musiccast.py
     homeassistant/components/mycroft.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
