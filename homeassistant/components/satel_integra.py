@@ -18,11 +18,11 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
 
+REQUIREMENTS = ['satel_integra==0.1.0']
+
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
 DEFAULT_CONF_ARM_HOME_MODE = 1
-
-REQUIREMENTS = ['satel_integra==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,9 +95,10 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                lambda s: controller.close())
 
-    _LOGGER.debug("------------ Loading platform! control panel --")
-    _LOGGER.debug("## Arm home config: %s, mode: %s ", conf, conf.get(
-        CONF_ARM_HOME_MODE))
+    _LOGGER.debug("Arm home config: %s, mode: %s ",
+                  conf,
+                  conf.get(CONF_ARM_HOME_MODE)
+                  )
 
     yield from async_load_platform(hass, 'alarm_control_panel',
                                    DOMAIN, conf, config)
@@ -107,7 +108,7 @@ def async_setup(hass, config):
 
     @callback
     def alarm_status_update_callback(status):
-        _LOGGER.debug("Alarm status callback, status: %s", status)
+        _LOGGER.info("Alarm status callback, status: %s", status)
         hass_alarm_status = STATE_ALARM_DISARMED
 
         from satel_integra.satel_integra import AlarmState
@@ -129,7 +130,7 @@ def async_setup(hass, config):
         elif status == AlarmState.DISARMED:
             hass_alarm_status = STATE_ALARM_DISARMED
 
-        _LOGGER.debug("Sending hass_alarm_status: %s...", hass_alarm_status)
+        _LOGGER.info("Sending hass_alarm_status: %s...", hass_alarm_status)
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, hass_alarm_status)
 
     @callback

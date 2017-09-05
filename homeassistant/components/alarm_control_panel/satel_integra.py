@@ -1,15 +1,8 @@
 """
-Support for Satel Integra alarm, using ETHM module. Satel:
-https://www.satel.pl/en/
+Support for Satel Integra alarm, using ETHM module: https://www.satel.pl/en/ .
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_satel_integra/
-"""
-"""
-Support for AlarmDecoder-based alarm control panels (Honeywell/DSC).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 """
 import asyncio
 import logging
@@ -19,7 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 
 from homeassistant.components.satel_integra import (DATA_AD,
-                                                    DOMAIN,
                                                     SIGNAL_PANEL_MESSAGE,
                                                     CONF_ARM_HOME_MODE)
 
@@ -33,8 +25,6 @@ DEPENDENCIES = ['satel_integra']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-
-
     device = SatelIntegraAlarmPanel("Alarm Panel",
                                     hass,
                                     discovery_info.get(CONF_ARM_HOME_MODE))
@@ -94,22 +84,20 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        _LOGGER.debug("alarm_disarm: %s", code)
+        _LOGGER.info("alarm_disarm: %s", code)
         if code:
             yield from self.hass.data[DATA_AD].disarm(str(code))
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        _LOGGER.debug("alarm_arm_away: %s", code)
+        _LOGGER.info("alarm_arm_away: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_away: sending %s", code)
             yield from self.hass.data[DATA_AD].arm(code)
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        _LOGGER.debug("alarm_arm_home: %s", code)
+        _LOGGER.info("alarm_arm_home: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_home: sending %s", code)
             yield from self.hass.data[DATA_AD].arm(code, self._arm_home_mode)
