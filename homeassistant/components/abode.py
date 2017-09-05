@@ -52,7 +52,8 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        hass.data[DATA_ABODE] = abode = abodepy.Abode(username, password)
+        hass.data[DATA_ABODE] = abode = abodepy.Abode(
+            username, password, auto_login=True, get_devices=True)
 
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
