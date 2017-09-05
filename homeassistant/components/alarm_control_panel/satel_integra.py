@@ -19,11 +19,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 
 from homeassistant.components.satel_integra import (DATA_AD,
-                                                    SIGNAL_PANEL_MESSAGE)
+                                                    DOMAIN,
+                                                    SIGNAL_PANEL_MESSAGE,
+                                                    CONF_ARM_HOME_MODE)
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +33,11 @@ DEPENDENCIES = ['satel_integra']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    _LOGGER.debug("SatelIntegraAlarmPanel: setup")
 
-    device = SatelIntegraAlarmPanel("Alarm Panel", hass)
 
+    device = SatelIntegraAlarmPanel("Alarm Panel",
+                                    hass,
+                                    discovery_info.get(CONF_ARM_HOME_MODE))
     async_add_devices([device])
 
     return True
@@ -45,11 +46,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, name, hass):
+    def __init__(self, name, hass, arm_home_mode):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = name
         self._state = STATE_UNKNOWN
+        self._arm_home_mode = arm_home_mode
 
         _LOGGER.debug("Setting up panel")
 
@@ -62,14 +64,12 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @callback
     def _message_callback(self, message):
         _LOGGER.info("Got message: %s", message)
-        if "alarm_status" in message:
-            _LOGGER.info("Got alarm status message!!!")
 
-            if message["alarm_status"] != self._state:
-                self._state = message["alarm_status"]
-                self.hass.async_add_job(self.async_update_ha_state())
+        if message != self._state:
+            self._state = message
+            self.hass.async_add_job(self.async_update_ha_state())
         else:
-            _LOGGER.warning("Ignoring alarm status message")
+            _LOGGER.warning("Ignoring alarm status message, same state")
 
     @property
     def name(self):
@@ -96,21 +96,20 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         """Send disarm command."""
         _LOGGER.debug("alarm_disarm: %s", code)
         if code:
-            _LOGGER.debug("alarm_disarm: sending %s1", str(code))
-            yield from self.hass.data[DATA_AD].disarm("{!s}1".format(code))
+            yield from self.hass.data[DATA_AD].disarm(str(code))
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         _LOGGER.debug("alarm_arm_away: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_away: sending %s2", str(code))
-            yield from self.hass.data[DATA_AD].arm_away("{!s}2".format(code))
+            _LOGGER.debug("alarm_arm_away: sending %s", code)
+            yield from self.hass.data[DATA_AD].arm(code)
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         _LOGGER.debug("alarm_arm_home: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
-            yield from self.hass.data[DATA_AD].arm_home("{!s}3".format(code))
+            _LOGGER.debug("alarm_arm_home: sending %s", code)
+            yield from self.hass.data[DATA_AD].arm(code, self._arm_home_mode)
