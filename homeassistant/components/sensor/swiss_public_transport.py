@@ -74,13 +74,13 @@ class SwissPublicTransportSensor(Entity):
         """Initialize the sensor."""
         from opendata_transport import OpendataTransport
 
-        self._hass = hass
+        self.hass = hass
         self._name = name
         self._from = start
         self._to = destination
-        self._websession = async_get_clientsession(self._hass)
+        self._websession = async_get_clientsession(self.hass)
         self._opendata = OpendataTransport(
-            self._from, self._to, self._hass.loop, self._websession)
+            self._from, self._to, self.hass.loop, self._websession)
 
     @property
     def name(self):
