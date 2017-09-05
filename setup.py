@@ -19,7 +19,7 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'pytz>=2017.02',
     'pip>=8.0.3',
-    'jinja2>=2.9.5',
+    'jinja2>=2.9.6',
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.2.5',
