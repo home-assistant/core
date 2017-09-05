@@ -96,8 +96,10 @@ def async_setup(hass, config):
         tasks = []
         for input_datetime in target_inputs:
             tasks.append(
-                input_datetime.async_set_datetime(call.data.get(ATTR_DATE, None),
-                                                  call.data.get(ATTR_TIME, None))
+                input_datetime.async_set_datetime(
+                    call.data.get(ATTR_DATE, None),
+                    call.data.get(ATTR_TIME, None)
+                )
             )
 
         if tasks:
