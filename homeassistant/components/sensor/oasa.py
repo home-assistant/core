@@ -5,7 +5,6 @@ from datetime import timedelta, datetime
 
 import requests
 import voluptuous as vol
-import ast
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -134,7 +133,6 @@ class PublicTransportData(object):
 
     def __init__(self, bus, lat, lon, direction):
         """Initialize the data object."""
-        bus = ast.literal_eval(bus)
         if type(bus) == str or type(bus) == int:
             self.bus = [str(bus)]
         else:
