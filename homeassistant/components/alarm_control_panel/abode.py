@@ -7,7 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, DATA_ABODE, DEFAULT_NAME, CONF_ATTRIBUTION)
+    AbodeDevice, DOMAIN, DEFAULT_NAME, CONF_ATTRIBUTION)
 from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
 from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
@@ -22,17 +22,21 @@ ICON = 'mdi:security'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    abode = hass.data[DATA_ABODE]
+    data = hass.data[DOMAIN]
 
-    add_devices([AbodeAlarm(abode, abode.get_alarm())])
+    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm())]
+
+    data.devices.extend(alarm_devices)
+
+    add_devices(alarm_devices)
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
-    def __init__(self, controller, device):
+    def __init__(self, data, device):
         """Initialize the alarm control panel."""
-        AbodeDevice.__init__(self, controller, device)
+        AbodeDevice.__init__(self, data, device)
         self._name = "{0}".format(DEFAULT_NAME)
 
     @property

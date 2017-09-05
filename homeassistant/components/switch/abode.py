@@ -6,7 +6,7 @@ https://home-assistant.io/components/switch.abode/
 """
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DATA_ABODE
+from homeassistant.components.abode import AbodeDevice, AbodeAutomation, DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
 
@@ -18,26 +18,35 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode switch devices."""
     import abodepy.helpers.constants as CONST
+    import abodepy.helpers.timeline as TIMELINE
 
-    abode = hass.data[DATA_ABODE]
+    data = hass.data[DOMAIN]
 
-    device_types = [
-        CONST.DEVICE_POWER_SWITCH_SENSOR,
-        CONST.DEVICE_POWER_SWITCH_METER]
+    devices = []
 
-    sensors = []
-    for sensor in abode.get_devices(type_filter=device_types):
-        sensors.append(AbodeSwitch(abode, sensor))
+    # Get all regular switches that are not excluded or marked as lights
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
+        if (device.device_id not in data.exclude
+                and device.device_id not in data.lights):
+            devices.append(AbodeSwitch(data, device))
 
-    add_devices(sensors)
+    # Get all Abode automations that can be enabled/disabled
+    for automation in data.abode.get_automations(
+            generic_type=CONST.TYPE_AUTOMATION):
+        devices.append(AbodeAutomationSwitch(
+            data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
+
+    data.devices.extend(devices)
+
+    add_devices(devices)
 
 
 class AbodeSwitch(AbodeDevice, SwitchDevice):
     """Representation of an Abode switch."""
 
-    def __init__(self, controller, device):
+    def __init__(self, data, device):
         """Initialize the Abode device."""
-        AbodeDevice.__init__(self, controller, device)
+        AbodeDevice.__init__(self, data, device)
 
     def turn_on(self, **kwargs):
         """Turn on the device."""
@@ -51,3 +60,24 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._device.is_on
+
+
+class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
+    """A switch implementation for Abode automations."""
+
+    def __init__(self, data, automation, event):
+        """Initialize the automation switch."""
+        AbodeAutomation.__init__(self, data, automation, event)
+
+    def turn_on(self, **kwargs):
+        """Turn on the device."""
+        self._automation.set_active(True)
+
+    def turn_off(self, **kwargs):
+        """Turn off the device."""
+        self._automation.set_active(False)
+
+    @property
+    def is_on(self):
+        """Return True if the binary sensor is on."""
+        return self._automation.is_active
