@@ -285,10 +285,9 @@ class Entity(object):
             attr.pop(ATTR_HIDDEN)
 
         unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-        units = self.hass.config.units
 
         if unit_of_measure is not None:
-            converted = units.convert(state, unit_of_measure)
+            converted = self.hass.config.units.convert(state, unit_of_measure)
             if converted is not None:
                 if converted["unit"] is not None:
                     attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
