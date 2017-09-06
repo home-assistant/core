@@ -274,7 +274,7 @@ class AirVisualData(object):
     @property
     def pollution_info(self):
         """Define a property to access the pollution information."""
-        return self._pollution_info
+        return self._pollution_info # pylint: disable=syntax-error
 
     @property
     def state(self):
