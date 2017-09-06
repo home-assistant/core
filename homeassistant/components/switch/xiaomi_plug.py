@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo==0.1.4']
+REQUIREMENTS = ['python-mirobo==0.2.0']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
