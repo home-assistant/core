@@ -370,6 +370,10 @@ class RflinkCommand(RflinkDevice):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
+        elif command == 'stop_roll':
+            cmd = 'stop'
+            self._state = True
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
