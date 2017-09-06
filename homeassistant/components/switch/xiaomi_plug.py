@@ -25,11 +25,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo==0.2.0']
+REQUIREMENTS = ['python-mirobo>=0.1.5']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
-ATTR_CURRENT = 'current'
+ATTR_LOAD_POWER = 'load_power'
 SUCCESS = ['ok']
 
 
@@ -70,7 +70,7 @@ class XiaomiPlugSwitch(SwitchDevice):
         self._state = None
         self._state_attrs = {
             ATTR_TEMPERATURE: None,
-            ATTR_CURRENT: None
+            ATTR_LOAD_POWER: None
         }
         self._skip_update = False
 
@@ -156,7 +156,7 @@ class XiaomiPlugSwitch(SwitchDevice):
             self._state = state.is_on
             self._state_attrs = {
                 ATTR_TEMPERATURE: state.temperature,
-                ATTR_CURRENT: state.current,
+                ATTR_LOAD_POWER: state.load_power,
             }
 
         except DeviceException as ex:
