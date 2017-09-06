@@ -157,6 +157,9 @@ def time_str(value: str) -> time_sys:
 
 def time_time(time_val: time_sys) -> time_sys:
     """Validate a string representing a time."""
+    if not isinstance(time_val, time_sys):
+        raise vol.Invalid('Not of "time" type')
+
     return time_val
 
 
@@ -173,6 +176,9 @@ def date_str(value: str) -> date_sys:
 
 def date_date(date_val: date_sys) -> date_sys:
     """Validate date objects by passing them through."""
+    if not isinstance(date_val, date_sys):
+        raise vol.Invalid('Not of "date" type')
+
     return date_val
 
 
