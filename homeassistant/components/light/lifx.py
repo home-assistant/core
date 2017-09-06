@@ -325,29 +325,33 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
-            yield from entity.async_update()
-            yield from entity.async_update_ha_state()
+            yield from entity.update_hass()
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
-            device.timeout = MESSAGE_TIMEOUT
-            device.retry_count = MESSAGE_RETRIES
-            device.unregister_timeout = UNAVAILABLE_GRACE
 
+            # Read initial state
             ack = AwaitAioLIFX().wait
-            yield from ack(device.get_version)
-            yield from ack(device.get_color)
+            version_resp = yield from ack(device.get_version)
+            if version_resp:
+                color_resp = yield from ack(device.get_color)
 
-            if lifxwhite(device):
-                entity = LIFXWhite(device, self.effects_conductor)
-            elif lifxmultizone(device):
-                yield from ack(partial(device.get_color_zones, start_index=0))
-                entity = LIFXStrip(device, self.effects_conductor)
+            if version_resp is None or color_resp is None:
+                _LOGGER.error("Failed to initialize %s", device.ip_addr)
             else:
-                entity = LIFXColor(device, self.effects_conductor)
+                device.timeout = MESSAGE_TIMEOUT
+                device.retry_count = MESSAGE_RETRIES
+                device.unregister_timeout = UNAVAILABLE_GRACE
 
-            _LOGGER.debug("%s register READY", entity.who)
-            self.entities[device.mac_addr] = entity
-            self.async_add_devices([entity])
+                if lifxwhite(device):
+                    entity = LIFXWhite(device, self.effects_conductor)
+                elif lifxmultizone(device):
+                    entity = LIFXStrip(device, self.effects_conductor)
+                else:
+                    entity = LIFXColor(device, self.effects_conductor)
+
+                _LOGGER.debug("%s register READY", entity.who)
+                self.entities[device.mac_addr] = entity
+                self.async_add_devices([entity], True)
 
     @callback
     def unregister(self, device):
@@ -674,9 +678,14 @@ class LIFXStrip(LIFXColor):
     @asyncio.coroutine
     def update_color_zones(self):
         """Get updated color information for each zone."""
-        ack = AwaitAioLIFX().wait
-        bulb = self.device
-
-        # Each get_color_zones returns the next 8 zones
-        for zone in range(0, len(bulb.color_zones), 8):
-            yield from ack(partial(bulb.get_color_zones, start_index=zone))
+        zone = 0
+        top = 1
+        while self.available and zone < top:
+            # Each get_color_zones can update 8 zones at once
+            resp = yield from AwaitAioLIFX().wait(partial(
+                self.device.get_color_zones,
+                start_index=zone,
+                end_index=zone+7))
+            if resp:
+                zone += 8
+                top = resp.count

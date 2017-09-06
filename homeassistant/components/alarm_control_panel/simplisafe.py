@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['simplisafe-python==1.0.4']
+REQUIREMENTS = ['simplisafe-python==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,11 +89,11 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         status = self.simplisafe.state()
-        if status == 'Off':
+        if status == 'off':
             state = STATE_ALARM_DISARMED
-        elif status == 'Home':
+        elif status == 'home':
             state = STATE_ALARM_ARMED_HOME
-        elif status == 'Away':
+        elif status == 'away':
             state = STATE_ALARM_ARMED_AWAY
         else:
             state = STATE_UNKNOWN
