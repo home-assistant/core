@@ -98,7 +98,7 @@ class RflinkCover(CoverableRflinkDevice, CoverDevice):
 
     @property
     def should_poll(self):
-        """No polling available in RFXtrx cover."""
+        """No polling available in RFlink cover."""
         return False
 
     @property

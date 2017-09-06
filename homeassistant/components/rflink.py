@@ -338,7 +338,7 @@ class RflinkCommand(RflinkDevice):
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
 
-        # Cover options for RTS
+        # Cover options for RFlink
         elif command == 'close_cover':
             cmd = 'DOWN'
 
