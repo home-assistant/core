@@ -3,7 +3,7 @@ requests==2.14.2
 pyyaml>=3.11,<4
 pytz>=2017.02
 pip>=8.0.3
-jinja2>=2.9.5
+jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.2.5
@@ -422,7 +422,7 @@ motorparts==1.0.0
 mutagen==1.38
 
 # homeassistant.components.mycroft
-mycroftapi==0.1.2
+mycroftapi==2.0
 
 # homeassistant.components.usps
 myusps==1.1.3
@@ -510,7 +510,7 @@ proliphix==0.4.1
 prometheus_client==0.0.19
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.2.2
+psutil==5.3.0
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
@@ -536,10 +536,10 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.20.0
+pyRFXtrx==0.20.1
 
 # homeassistant.components.switch.dlink
-pyW215==0.5.1
+pyW215==0.6.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
@@ -646,7 +646,7 @@ pylitejet==0.1
 pyloopenergy==0.0.17
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.2.7
+pylutron-caseta==0.2.8
 
 # homeassistant.components.lutron
 pylutron==0.1.0
@@ -659,6 +659,9 @@ pymochad==0.1.1
 
 # homeassistant.components.modbus
 pymodbus==1.3.1
+
+# homeassistant.components.media_player.yamaha_musiccast
+pymusiccast==0.1.0
 
 # homeassistant.components.cover.myq
 pymyq==0.0.8
@@ -782,7 +785,7 @@ python-synology==0.1.0
 python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==7.0.1
+python-telegram-bot==8.0.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -800,7 +803,7 @@ python-wink==1.5.1
 python_openzwave==0.4.0.31
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.19
+pythonegardia==1.0.20
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -827,7 +830,7 @@ pyvlx==0.1.3
 pywebpush==1.0.6
 
 # homeassistant.components.wemo
-pywemo==0.4.19
+pywemo==0.4.20
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -881,7 +884,7 @@ schiene==0.18
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==5.0.1
+sendgrid==5.2.0
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
@@ -1029,7 +1032,7 @@ yeelight==0.3.2
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.8.18
+youtube_dl==2017.9.2
 
 # homeassistant.components.light.zengge
 zengge==0.2
