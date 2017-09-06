@@ -298,12 +298,3 @@ class AirVisualData(object):
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update sensor data')
             _LOGGER.debug(exc_info)
-
-
-# class AirVisualSensor(Entity):
-#     """Define an object to represent the actual sensor."""
-
-#     @property
-#     def unit_of_measurement(self):
-#         """Return the unit the value is expressed in."""
-#         return getattr(self._data, 'main{0}_unit'.format(self._locale))
