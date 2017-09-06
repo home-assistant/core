@@ -17,6 +17,9 @@ CONF_SETPOINT_ADDRESS = 'setpoint_address'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
 CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
+CONF_OPERATION_MODE_STATE_ADDRESS = 'operation_mode_state_address'
+CONF_CONTROLLER_STATUS_ADDRESS = 'controller_status_address'
+CONF_CONTROLLER_STATUS_STATE_ADDRESS = 'controller_status_state_address'
 CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = \
     'operation_mode_frost_protection_address'
 CONF_OPERATION_MODE_NIGHT_ADDRESS = 'operation_mode_night_address'
@@ -31,6 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
+    vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
+    vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
@@ -78,6 +84,12 @@ def async_add_devices_config(hass, config, add_devices):
             CONF_SETPOINT_ADDRESS),
         group_address_operation_mode=config.get(
             CONF_OPERATION_MODE_ADDRESS),
+        group_address_operation_mode_state=config.get(
+            CONF_OPERATION_MODE_STATE_ADDRESS),
+        group_address_controller_status=config.get(
+            CONF_CONTROLLER_STATUS_ADDRESS),
+        group_address_controller_status_state=config.get(
+            CONF_CONTROLLER_STATUS_STATE_ADDRESS),
         group_address_operation_mode_protection=config.get(
             CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS),
         group_address_operation_mode_night=config.get(
@@ -164,6 +176,6 @@ class KNXClimate(ClimateDevice):
     def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.device.supports_operation_mode:
-            from xknx.devices import ClimateOperationMode
-            knx_operation_mode = ClimateOperationMode(operation_mode)
+            from xknx.knx import HVACOperationMode
+            knx_operation_mode = HVACOperationMode(operation_mode)
             yield from self.device.set_operation_mode(knx_operation_mode)
