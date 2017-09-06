@@ -74,7 +74,8 @@ def setup(hass, base_config):
                     "".format(ex.code, ex.reason),
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID)
-            _LOGGER.error("Unable to communicate with Tesla API: %s", ex.reason)
+            _LOGGER.error("Unable to communicate with Tesla API: %s",
+                          ex.reason)
 
             return False
 
