@@ -68,7 +68,7 @@ def setup(hass, base_config):
                     notification_id=NOTIFICATION_ID)
             else:
                 hass.components.persistent_notification.create(
-                    "Error:<br />Can't communitcate with Tesla API.<br />"
+                    "Error:<br />Can't communicate with Tesla API.<br />"
                     "Error code: {} Reason: {}"
                     "You will need to restart Home Assistant after fixing."
                     "".format(ex.code, ex.reason),
