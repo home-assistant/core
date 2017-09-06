@@ -38,7 +38,6 @@ SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
 })
 
 
-# TODO bring this into easier form?
 def _cv_input_datetime(cfg):
     """Configure validation helper for input datetime (voluptuous)."""
     has_date = cfg[CONF_HAS_DATE]
@@ -135,7 +134,6 @@ class DatetimeSelect(Entity):
         if old_state is not None:
             self._current_datetime = dt_util.parse_datetime(old_state.state)
         else:
-            # TODO is this a sane default value?
             self._current_datetime = dt_util.now()
 
     @property
@@ -187,13 +185,11 @@ class DatetimeSelect(Entity):
             if time_val is None:
                 _LOGGER.warning('"None" passed as time.')
                 return
-            # TODO cast to datetime?
             self._current_datetime = time_val
         elif not self._has_time:
             if date_val is None:
                 _LOGGER.warning('"None" passed as date.')
                 return
-            # TODO cast to datetime?
             self._current_datetime = date_val
         else:
             if time_val is None:
