@@ -94,7 +94,7 @@ class OASAPublicTransportSensor(Entity):
         return ICON
 
     def update(self):
-        """Get the latest data from opendata.ch and update the states."""
+        """Get the latest data from oasa api."""
         self.data.update()
         self._times = self.data.info
         try:
@@ -145,12 +145,12 @@ class PublicTransportData(object):
                       ATTR_STOP: 'n/a',
                       ATTR_ARRIVAL: 'n/a',
                       ATTR_DIRECTION: 'n/a'}]
+
     def update(self):
-        """Get the latest data from opendata.ch."""
+        """Get the info of the bus and bus stop."""
         findlines = self.bus
         findlat = self.lat
         findlon = self.lon
-        filterdirection = self.direction
 
         bussesFound = []
 
@@ -158,19 +158,23 @@ class PublicTransportData(object):
         lines = requests.post(myrequest, timeout=10).json()
         for line in lines:
             if line["line_id"] in findlines:
-                myrequest = "http://telematics.oasa.gr/api/?act=getRoutesForLine&p1={linecode}".format(linecode=line['line_code'])
+                myrequest = "http://telematics.oasa.gr/api/?act=getRoutesForLine&p1={linecode}".format(
+                    linecode=line['line_code'])
                 routes = requests.post(myrequest, timeout=10).json()
                 for route in routes:
-                    myrequest = "http://telematics.oasa.gr/api/?act=webGetStops&p1={routecode}".format(routecode=route['route_code'])
+                    myrequest = "http://telematics.oasa.gr/api/?act=webGetStops&p1={routecode}".format(
+                        routecode=route['route_code'])
                     stops = requests.post(myrequest, timeout=10).json()
                     minDist = 10000
                     closest = None
                     for stop in stops:
-                        distance = abs(float(findlat) - float(stop['StopLat']) + float(findlon) - float(stop['StopLng']))
+                        distance = abs(float(
+                            findlat) - float(stop['StopLat']) + float(findlon) - float(stop['StopLng']))
                         if distance < minDist:
                             minDist = distance
                             closest = stop
-                    myrequest = "http://telematics.oasa.gr/api/?act=getStopArrivals&p1={stopcode}".format(stopcode=closest['StopCode'])
+                    myrequest = "http://telematics.oasa.gr/api/?act=getStopArrivals&p1={stopcode}".format(
+                        stopcode=closest['StopCode'])
                     arrivals = requests.post(myrequest, timeout=10).json()
                     if arrivals is not None:
                         for arrival in arrivals:
@@ -184,12 +188,7 @@ class PublicTransportData(object):
                                 })
 
         bussesFound = sorted(bussesFound, key=lambda k: int(k[ATTR_ARRIVAL]))
-        # for bus in bussesFound:
-        #     direction = getCompassDirection(bus['heading'])
-        #     if filterdirection is None or filterdirection == "" or filterdirection in direction:
-        # if filterdirection is None or filterdirection == "" or filterdirection in 
         self.info = bussesFound
-
 
         if not self.info:
             self.info = [{ATTR_BUS: 'n/a',
@@ -197,4 +196,3 @@ class PublicTransportData(object):
                           ATTR_STOP: 'n/a',
                           ATTR_ARRIVAL: 'n/a',
                           ATTR_DIRECTION: 'n/a'}]
-
