@@ -1,4 +1,4 @@
-"""Define sensors for AirVisual air quality data."""
+"""Define sensors for AirVisual air quality information."""
 
 import asyncio
 from logging import getLogger
