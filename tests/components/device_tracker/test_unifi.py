@@ -34,6 +34,7 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
             CONF_PLATFORM: unifi.DOMAIN,
             CONF_USERNAME: 'foo',
             CONF_PASSWORD: 'password',
+            CONF_CONSIDER_HOME: '600',
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -58,6 +59,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: False,
             'port': 123,
             'site_id': 'abcdef01',
+            CONF_CONSIDER_HOME: '600',
         })
     }
     result = unifi.get_scanner(hass, config)
