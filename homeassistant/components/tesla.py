@@ -60,12 +60,22 @@ def setup(hass, base_config):
             }
             _LOGGER.debug("Connected to the Tesla API.")
         except HTTPError as ex:
-            hass.components.persistent_notification.create(
-                'Error:<br />Please check username and password.'
-                'You will need to restart hass after fixing.',
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-            _LOGGER.error("Unable to communicate with Tesla API: %s", str(ex))
+            if ex.code == 401:
+                hass.components.persistent_notification.create(
+                    "Error:<br />Please check username and password."
+                    "You will need to restart Home Assistant after fixing.",
+                    title=NOTIFICATION_TITLE,
+                    notification_id=NOTIFICATION_ID)
+            else:
+                hass.components.persistent_notification.create(
+                    "Error:<br />Can't communitcate with Tesla API.<br />"
+                    "Error code: {} Reason: {}"
+                    "You will need to restart Home Assistant after fixing."
+                    "".format(ex.code, ex.reason),
+                    title=NOTIFICATION_TITLE,
+                    notification_id=NOTIFICATION_ID)
+            _LOGGER.error("Unable to communicate with Tesla API: %s", ex.reason)
+
             return False
 
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
