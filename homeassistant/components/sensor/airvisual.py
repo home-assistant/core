@@ -134,6 +134,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(sensors, True)
 
 
+def merge_two_dicts(dict1, dict2):
+    """Merge two dicts into a new dict as a shallow copy."""
+    final = dict1.copy()
+    final.update(dict2)
+    return final
+
+
 class AirVisualBaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
@@ -223,13 +230,10 @@ class MainPollutantSensor(AirVisualBaseSensor):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._data:
-            return {
-                **super().device_state_attributes,
-                **{
-                    ATTR_POLLUTANT_SYMBOL: self._symbol,
-                    ATTR_POLLUTANT_UNIT: self._unit
-                }
-            }
+            return merge_two_dicts(super().device_state_attributes, {
+                ATTR_POLLUTANT_SYMBOL: self._symbol,
+                ATTR_POLLUTANT_UNIT: self._unit
+            })
 
     @asyncio.coroutine
     def async_update(self):
@@ -274,7 +278,7 @@ class AirVisualData(object):
     @property
     def pollution_info(self):
         """Define a property to access the pollution information."""
-        return self._pollution_info # pylint: disable=syntax-error
+        return self._pollution_info  # pylint: disable=syntax-error
 
     @property
     def state(self):
