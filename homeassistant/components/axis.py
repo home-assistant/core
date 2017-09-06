@@ -166,7 +166,7 @@ def setup(hass, config):
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
-                if not setup_device(hass, device_config):
+                if not setup_device(hass, config, device_config):
                     _LOGGER.error("Couldn\'t set up %s",
                                   device_config[CONF_NAME])
             else:
