@@ -60,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def select_datetime(hass, entity_id, dt_value):
+def set_datetime(hass, entity_id, dt_value):
     """Set date and / or time of input_datetime."""
     hass.services.call(DOMAIN, SERVICE_SET_DATETIME, {
         ATTR_ENTITY_ID: entity_id,
@@ -94,6 +94,7 @@ def async_setup(hass, config):
 
         tasks = []
         for input_datetime in target_inputs:
+            print("Setting dt for " + str(input_datetime))
             tasks.append(
                 input_datetime.async_set_datetime(
                     call.data.get(ATTR_DATE, None),
@@ -132,9 +133,17 @@ class DatetimeSelect(Entity):
 
         old_state = yield from async_get_last_state(self.hass, self.entity_id)
         if old_state is not None:
-            self._current_datetime = dt_util.parse_datetime(old_state.state)
+            restore_val = dt_util.parse_datetime(old_state.state)
         else:
-            self._current_datetime = dt_util.now()
+            restore_val = dt_util.now()
+
+        print("Type is: " + str(type(restore_val)))
+        if not self._has_date:
+            self._current_datetime = restore_val.time()
+        elif not self._has_time:
+            self._current_datetime = restore_val.date()
+        else:
+            self._current_datetime = restore_val
 
     @property
     def should_poll(self):
@@ -157,6 +166,7 @@ class DatetimeSelect(Entity):
         if self._current_datetime is None:
             return None
 
+        print("Returning type: " + str(type(self._current_datetime)))
         return self._current_datetime
 
     @property

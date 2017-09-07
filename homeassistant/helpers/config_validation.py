@@ -147,7 +147,10 @@ time_period_dict = vol.All(
 
 def time_str(value: str) -> time_sys:
     """Validate and transform a time."""
-    time_val = dt_util.parse_time(value)
+    try:
+        time_val = dt_util.parse_time(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
 
     if time_val is None:
         raise vol.Invalid('Invalid time specified: {}'.format(value))
@@ -168,7 +171,11 @@ time = vol.Any(time_str, time_time)
 
 def date_str(value: str) -> date_sys:
     """Validate and transform a date."""
-    date_val = dt_util.parse_date(value)
+    try:
+        date_val = dt_util.parse_date(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
     if date_val is None:
         raise vol.Invalid("Could not parse date")
     return date_val
