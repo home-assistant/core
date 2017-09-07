@@ -35,6 +35,7 @@ CCT_MIN = 1
 CCT_MAX = 100
 
 SUCCESS = ['ok']
+ATTR_MODEL = 'model'
 
 
 # pylint: disable=unused-argument
@@ -53,8 +54,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         light = Ceil(host, token)
+        device_info = light.info()
+        _LOGGER.info("%s %s %s initialized",
+                     device_info.raw['model'],
+                     device_info.raw['fw_ver'],
+                     device_info.raw['hw_ver'])
 
-        philips_light = XiaomiPhilipsLight(name, light)
+        philips_light = XiaomiPhilipsLight(name, light, device_info)
         hass.data[PLATFORM][host] = philips_light
     except DeviceException:
         raise PlatformNotReady
@@ -65,15 +71,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class XiaomiPhilipsLight(Light):
     """Representation of a Xiaomi Philips Light."""
 
-    def __init__(self, name, light):
+    def __init__(self, name, light, device_info):
         """Initialize the light device."""
         self._name = name
+        self._device_info = device_info
 
         self._brightness = None
         self._color_temp = None
 
         self._light = light
         self._state = None
+        self._state_attrs = {
+            ATTR_MODEL: self._device_info.raw['model'],
+        }
 
     @property
     def should_poll(self):
@@ -89,6 +99,11 @@ class XiaomiPhilipsLight(Light):
     def available(self):
         """Return true when state is known."""
         return self._state is not None
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._state_attrs
 
     @property
     def is_on(self):
