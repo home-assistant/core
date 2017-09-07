@@ -5,9 +5,7 @@ from pyunifi.controller import APIError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (DOMAIN,
-                                                     CONF_CONSIDER_HOME,
-                                                     unifi as unifi)
+from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
 
@@ -113,7 +111,7 @@ def test_scanner_update():
         {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl, consider_home)
+    unifi.UnifiScanner(ctrl)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -123,7 +121,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl, consider_home)
+    unifi.UnifiScanner(ctrl)
 
 
 def test_scan_devices():
@@ -134,7 +132,7 @@ def test_scan_devices():
         {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, consider_home)
+    scanner = unifi.UnifiScanner(ctrl)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -147,7 +145,7 @@ def test_get_device_name():
         {'mac': '456'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, consider_home)
+    scanner = unifi.UnifiScanner(ctrl)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
