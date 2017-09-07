@@ -66,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVICE_PARTITION,
                      default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
         vol.Optional(CONF_ARM_HOME_MODE,
-                     default=DEFAULT_CONF_ARM_HOME_MODE): vol.In([0, 1, 2, 3]),
+                     default=DEFAULT_CONF_ARM_HOME_MODE): vol.In([1, 2, 3]),
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
     }),
 }, extra=vol.ALLOW_EXTRA)
