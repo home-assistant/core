@@ -47,7 +47,6 @@ def get_scanner(hass, config):
     site_id = config[DOMAIN].get(CONF_SITE_ID)
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
-    consider_home = config[DOMAIN].get(CONF_CONSIDER_HOME)
 
     try:
         ctrl = Controller(host, username, password, port, version='v4',
@@ -63,7 +62,7 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, consider_home)
+    return UnifiScanner(ctrl, config[DOMAIN].get(CONF_CONSIDER_HOME))
 
 
 class UnifiScanner(DeviceScanner):
@@ -72,7 +71,8 @@ class UnifiScanner(DeviceScanner):
     def __init__(self, controller, consider_home):
         """Initialize the scanner."""
         self._controller = controller
-        self.consider_home = consider_home
+        self.consider_home = consider_home if consider_home \
+            else None
         self._update()
 
     def _update(self):
