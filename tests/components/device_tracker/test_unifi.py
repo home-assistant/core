@@ -34,7 +34,6 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
             CONF_PLATFORM: unifi.DOMAIN,
             CONF_USERNAME: 'foo',
             CONF_PASSWORD: 'password',
-            CONF_CONSIDER_HOME: '600',
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -59,7 +58,6 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: False,
             'port': 123,
             'site_id': 'abcdef01',
-            CONF_CONSIDER_HOME: '600',
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -115,7 +113,7 @@ def test_scanner_update():
         {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, consider_home)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -125,7 +123,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, consider_home)
 
 
 def test_scan_devices():
@@ -136,7 +134,7 @@ def test_scan_devices():
         {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, consider_home)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -149,7 +147,7 @@ def test_get_device_name():
         {'mac': '456'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, consider_home)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
