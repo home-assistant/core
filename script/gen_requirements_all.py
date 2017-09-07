@@ -70,6 +70,8 @@ TEST_REQUIREMENTS = (
     'restrictedpython',
     'pyunifi',
     'prometheus_client',
+    'feedparser',
+    'haversine',
     'ephem'
 )
 
