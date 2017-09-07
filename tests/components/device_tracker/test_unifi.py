@@ -107,8 +107,8 @@ def test_scanner_update():
     """Test the scanner update."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123'},
-        {'mac': '234'},
+        {'mac': '123', 'last_seen': '3000'},
+        {'mac': '234', 'last_seen': '3000'},
     ]
     ctrl.get_clients.return_value = fake_clients
     unifi.UnifiScanner(ctrl)
@@ -128,8 +128,8 @@ def test_scan_devices():
     """Test the scanning for devices."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123'},
-        {'mac': '234'},
+        {'mac': '123', 'last_seen': '3000'},
+        {'mac': '234', 'last_seen': '3000'},
     ]
     ctrl.get_clients.return_value = fake_clients
     scanner = unifi.UnifiScanner(ctrl)
