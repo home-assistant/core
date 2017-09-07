@@ -362,9 +362,6 @@ jsonrpc-websocket==0.5
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
 
-# homeassistant.components.knx
-knxip==0.5
-
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.2
 
@@ -1011,6 +1008,9 @@ xbee-helper==0.0.7
 
 # homeassistant.components.sensor.xbox_live
 xboxapi==0.1.1
+
+# homeassistant.components.knx
+xknx==0.7.13
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.swiss_hydrological_data
