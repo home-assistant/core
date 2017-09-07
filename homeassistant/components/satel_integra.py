@@ -42,7 +42,6 @@ CONF_ZONES = 'zones'
 
 ZONES = 'zones'
 
-DEFAULT_DEVICE_HOST = 'localhost'
 DEFAULT_DEVICE_PORT = 7094
 DEFAULT_DEVICE_PARTITION = 1
 
@@ -61,7 +60,7 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
+        vol.Required(CONF_DEVICE_HOST): cv.string,
         vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
         vol.Optional(CONF_DEVICE_PARTITION,
                      default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
