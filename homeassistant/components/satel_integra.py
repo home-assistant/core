@@ -94,8 +94,7 @@ def async_setup(hass, config):
 
     _LOGGER.debug("Arm home config: %s, mode: %s ",
                   conf,
-                  conf.get(CONF_ARM_HOME_MODE)
-                  )
+                  conf.get(CONF_ARM_HOME_MODE))
 
     yield from async_load_platform(hass, 'alarm_control_panel',
                                    DOMAIN, conf, config)
@@ -137,13 +136,18 @@ def async_setup(hass, config):
         _LOGGER.debug("Zones callback , status: %s", status)
         async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
 
-    hass.async_add_job(asyncio.ensure_future(controller.keep_alive()))
-    hass.async_add_job(
-        asyncio.ensure_future(
-            controller.monitor_status(
-                alarm_status_update_callback,
-                zones_update_callback)
-        )
+    try:
+        from asyncio import ensure_future as asyncio_ensure_future
+    except ImportError:
+        from asyncio import async as asyncio_ensure_future
+    # pylint: disable=deprecated-method
+
+    hass.async_add_job(asyncio_ensure_future(controller.keep_alive()))
+    hass.async_add_job(asyncio_ensure_future(
+        controller.monitor_status(
+            alarm_status_update_callback,
+            zones_update_callback)
     )
+                      )
 
     return True
