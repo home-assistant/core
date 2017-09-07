@@ -197,30 +197,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def handle_new_task(call):
         """Called when a user creates a new Todoist Task from HASS."""
         task_data = {}
-        try:
-            task_data['content'] = call.data['content']
+        task_data['content'] = call.data['content']
 
-            if 'project' in call.data:
-                project_name = call.data['project'].lower()
-                task_data['project_id'] = project_id_lookup[project_name]
+        if 'project' in call.data:
+            project_name = call.data['project'].lower()
+            task_data['project_id'] = project_id_lookup[project_name]
 
-            if 'labels' in call.data:
-                task_labels = call.data['labels'].split(',')
-                task_data['label_ids'] = []
-                for label in task_labels:
-                    task_data['label_ids'].append(
-                        label_id_lookup[label.lower()])
+        if 'labels' in call.data:
+            task_labels = call.data['labels'].split(',')
+            task_data['label_ids'] = []
+            for label in task_labels:
+                task_data['label_ids'].append(
+                    label_id_lookup[label.lower()])
 
-            if 'priority' in call.data:
-                task_data['priority'] = call.data['priority']
+        if 'priority' in call.data:
+            task_data['priority'] = call.data['priority']
 
-            if 'due_datetime' in call.data:
-                task_data['due_datetime'] = call.data['due_datetime']
-            elif 'due_date' in call.data:
-                task_data['due_date'] = call.data['due_date']
-        except KeyError:
-            _LOGGER.critical("Invalid Todoist task call data!")
-            return
+        if 'due_datetime' in call.data:
+            task_data['due_datetime'] = call.data['due_datetime']
+        elif 'due_date' in call.data:
+            task_data['due_date'] = call.data['due_date']
 
         task_json = json.dumps(task_data)
 
