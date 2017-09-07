@@ -4,6 +4,8 @@ Support for Satel Integra devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alarmdecoder/
 """
+# pylint: disable=invalid-name
+
 import asyncio
 import logging
 
@@ -73,7 +75,6 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up for the Satel Integra devices."""
-
     conf = config.get(DOMAIN)
 
     zones = conf.get(CONF_ZONES)
@@ -108,6 +109,7 @@ def async_setup(hass, config):
 
     @callback
     def alarm_status_update_callback(status):
+        """Send status update received from alarm to home assistant."""
         _LOGGER.info("Alarm status callback, status: %s", status)
         hass_alarm_status = STATE_ALARM_DISARMED
 
@@ -117,10 +119,10 @@ def async_setup(hass, config):
             hass_alarm_status = STATE_ALARM_ARMED_AWAY
 
         elif status in [
-            AlarmState.ARMED_MODE0,
-            AlarmState.ARMED_MODE1,
-            AlarmState.ARMED_MODE2,
-            AlarmState.ARMED_MODE3
+                AlarmState.ARMED_MODE0,
+                AlarmState.ARMED_MODE1,
+                AlarmState.ARMED_MODE2,
+                AlarmState.ARMED_MODE3
         ]:
             hass_alarm_status = STATE_ALARM_ARMED_HOME
 
@@ -135,16 +137,17 @@ def async_setup(hass, config):
 
     @callback
     def zones_update_callback(status):
+        """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback , status: %s", status)
         async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
 
     hass.async_add_job(asyncio.ensure_future(controller.keep_alive()))
-    hass.async_add_job(asyncio.ensure_future(
-        controller.monitor_status(
-            lambda status:
-            alarm_status_update_callback(status),
-            zones_update_callback)
-    )
+    hass.async_add_job(
+        asyncio.ensure_future(
+            controller.monitor_status(
+                alarm_status_update_callback,
+                zones_update_callback)
+        )
     )
 
     return True

@@ -96,7 +96,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     @callback
     def _zones_updated(self, zones):
         """Update the zone's state, if needed."""
-        if self._zone_number in zones and \
-                        self._state != zones[self._zone_number]:
+        if self._zone_number in zones \
+                and self._state != zones[self._zone_number]:
             self._state = zones[self._zone_number]
             self.hass.async_add_job(self.async_update_ha_state())
