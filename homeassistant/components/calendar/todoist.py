@@ -137,17 +137,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Setup devices:
     # Grab all projects.
-#    projects = requests.get(
-#        'https://beta.todoist.com/API/v8/projects',
-#        params={'token': token}
-#    ).json()
     projects = api.state['projects']
 
-    # Grab all labels.
-#    labels = requests.get(
-#        "https://beta.todoist.com/API/v8/labels",
-#        params={"token": token}
-#    ).json()
+    # Grab all labels
     labels = api.state['labels']
 
     # Add all Todoist-defined projects.
@@ -434,20 +426,8 @@ class TodoistProjectData(object):
 
         # Comments (optional parameter):
         task['comments'] = []
-#        if 'comment_count' in data and data['comment_count'] > 0:
-#            task_comments = requests.get(
-#                "https://beta.todoist.com/API/v8/comments",
-#                params={"token": self._token, "task_id": data['id']}
-#            ).json()
-#            for comment in task_comments:
-#                if 'attachment' in comment and (
-#                        'file_url' in comment['attachment']):
-#                    # Use the URL, if present
-#                    task['comments'].append(comment['attachment']['file_url'])
-#                else:
-#                    task['comments'].append(comment['content'])
 
-        # Not tracked: id, project_id order, indent, recurring.
+        # Not tracked: id, comments, project_id order, indent, recurring.
         return task
 
     @staticmethod
