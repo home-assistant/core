@@ -25,6 +25,8 @@ REQUIREMENTS = ['satel_integra==0.1.0']
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
 DEFAULT_CONF_ARM_HOME_MODE = 1
+DEFAULT_DEVICE_PARTITION = 1
+DEFAULT_ZONE_TYPE = 'motion'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +44,6 @@ CONF_ZONES = 'zones'
 
 ZONES = 'zones'
 
-DEFAULT_DEVICE_PORT = 7094
-DEFAULT_DEVICE_PARTITION = 1
-
-DEFAULT_ZONE_TYPE = 'opening'
-
 SIGNAL_PANEL_MESSAGE = 'satel_integra.panel_message'
 SIGNAL_PANEL_ARM_AWAY = 'satel_integra.panel_arm_away'
 SIGNAL_PANEL_ARM_HOME = 'satel_integra.panel_arm_home'
@@ -61,7 +58,7 @@ ZONE_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE_HOST): cv.string,
-        vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
+        vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_DEVICE_PARTITION,
                      default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
         vol.Optional(CONF_ARM_HOME_MODE,
