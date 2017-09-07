@@ -84,9 +84,9 @@ class UnifiScanner(DeviceScanner):
             clients = []
 
         self._clients = {
-        client['mac']: client
-        for client in clients
-        if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
+            client['mac']: client
+            for client in clients
+            if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
                 client['last_seen']))) < datetime.timedelta(minutes=1)
                 }
 
