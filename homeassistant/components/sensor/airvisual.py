@@ -209,6 +209,11 @@ class AirPollutionLevelSensor(AirVisualBaseSensor):
 class AirQualityIndexSensor(AirVisualBaseSensor):
     """Define a sensor to measure AQI."""
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return None
+
     @asyncio.coroutine
     def async_update(self):
         """Update the status of the sensor."""
