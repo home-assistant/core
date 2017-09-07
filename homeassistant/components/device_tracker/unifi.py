@@ -47,9 +47,10 @@ def get_scanner(hass, config):
     site_id = config[DOMAIN].get(CONF_SITE_ID)
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
+    consider_home = config[DOMAIN].get(CONF_CONSIDER_HOME)
 
     try:
-        ctrl = Controller(host, username, password, port, version='v4',
+        ctrl = Controller(host, username, password, port, version='v5',
                           site_id=site_id, ssl_verify=verify_ssl)
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
@@ -62,7 +63,7 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, config[DOMAIN].get(CONF_CONSIDER_HOME))
+    return UnifiScanner(ctrl, consider_home)
 
 
 class UnifiScanner(DeviceScanner):
@@ -71,8 +72,7 @@ class UnifiScanner(DeviceScanner):
     def __init__(self, controller, consider_home):
         """Initialize the scanner."""
         self._controller = controller
-        self.consider_home = consider_home if consider_home \
-            else None
+        self._consider_home = consider_home
         self._update()
 
     def _update(self):
@@ -88,7 +88,7 @@ class UnifiScanner(DeviceScanner):
             client['mac']: client
             for client in clients
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self.consider_home
+                client['last_seen']))) < self._consider_home
                 }
 
     def scan_devices(self):
