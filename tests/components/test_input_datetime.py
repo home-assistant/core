@@ -101,6 +101,7 @@ class TestInputDatetime(unittest.TestCase):
         self.assertFalse(state.attributes['has_time'])
         self.assertTrue(state.attributes['has_date'])
 
+
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
