@@ -85,11 +85,11 @@ class UnifiScanner(DeviceScanner):
 
         self._clients = {
         client['mac']: client
-        for client in clients        
+        for client in clients
         if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < datetime.timedelta(minutes=1)               
+                client['last_seen']))) < datetime.timedelta(minutes=1)
                 }
-                                
+
     def scan_devices(self):
         """Scan for devices."""
         self._update()
@@ -105,4 +105,3 @@ class UnifiScanner(DeviceScanner):
         name = client.get('name') or client.get('hostname')
         _LOGGER.debug("Device %s name %s", mac, name)
         return name
-    
