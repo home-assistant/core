@@ -30,6 +30,7 @@ REQUIREMENTS = ['python-mirobo==0.2.0']
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
 ATTR_LOAD_POWER = 'load_power'
+ATTR_MODEL = 'model'
 SUCCESS = ['ok']
 
 
@@ -49,8 +50,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         plug = Plug(host, token)
+        device_info = plug.info()
+        _LOGGER.info("%s %s %s initialized",
+                     device_info.raw['model'],
+                     device_info.raw['fw_ver'],
+                     device_info.raw['hw_ver'])
 
-        xiaomi_plug_switch = XiaomiPlugSwitch(name, plug)
+        xiaomi_plug_switch = XiaomiPlugSwitch(name, plug, device_info)
         hass.data[PLATFORM][host] = xiaomi_plug_switch
     except DeviceException:
         raise PlatformNotReady
@@ -61,16 +67,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class XiaomiPlugSwitch(SwitchDevice):
     """Representation of a Xiaomi Plug."""
 
-    def __init__(self, name, plug):
+    def __init__(self, name, plug, device_info):
         """Initialize the plug switch."""
         self._name = name
         self._icon = 'mdi:power-socket'
+        self._device_info = device_info
 
         self._plug = plug
         self._state = None
         self._state_attrs = {
             ATTR_TEMPERATURE: None,
-            ATTR_LOAD_POWER: None
+            ATTR_LOAD_POWER: None,
+            ATTR_MODEL: self._device_info.raw['model'],
         }
         self._skip_update = False
 
@@ -154,10 +162,10 @@ class XiaomiPlugSwitch(SwitchDevice):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._state_attrs = {
+            self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature,
                 ATTR_LOAD_POWER: state.load_power,
-            }
+            })
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
