@@ -62,14 +62,11 @@ calendar:
       # Everything is optional except for 'name'.
 """
 
-import json
 import logging
-import uuid
 from datetime import datetime
 from datetime import timedelta
 import os
 
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -79,7 +76,10 @@ from homeassistant.components.google import (
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.components.calendar import CalendarEventDevice
 from homeassistant.util import Throttle
+from homeassistant.util import dt
 from homeassistant.config import load_yaml_config_file
+
+REQUIREMENTS = ['todoist-python==7.0.17']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'todoist'
@@ -91,8 +91,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional('labels'): cv.string,
     vol.Optional('priority'): vol.All(vol.Coerce(int),
                                       vol.Range(min=1, max=4)),
-    vol.Exclusive('due_date', 'todoist_due'): cv.string,
-    vol.Exclusive('due_datetime', 'todoist_due'): cv.datetime,
+    vol.Optional('due_date'): cv.string
 })
 
 # Your Todoist API token.
@@ -132,18 +131,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Invalid Todoist token! Did you add it to your configuration?"
         )
 
+    from todoist.api import TodoistAPI
+    api = TodoistAPI(token)
+    api.sync()
+
     # Setup devices:
     # Grab all projects.
-    projects = requests.get(
-        'https://beta.todoist.com/API/v8/projects',
-        params={'token': token}
-    ).json()
+#    projects = requests.get(
+#        'https://beta.todoist.com/API/v8/projects',
+#        params={'token': token}
+#    ).json()
+    projects = api.state['projects']
 
     # Grab all labels.
-    labels = requests.get(
-        "https://beta.todoist.com/API/v8/labels",
-        params={"token": token}
-    ).json()
+#    labels = requests.get(
+#        "https://beta.todoist.com/API/v8/labels",
+#        params={"token": token}
+#    ).json()
+    labels = api.state['labels']
 
     # Add all Todoist-defined projects.
     project_devices = []
@@ -181,6 +186,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             else:
                 project_id_filter = None
 
+            project['id'] = None
+
             # Create the custom project and add it to the devices array.
             project_devices.append(
                 TodoistProjectDevice(
@@ -197,44 +204,40 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def handle_new_task(call):
         """Called when a user creates a new Todoist Task from HASS."""
-        task_data = {}
-        task_data['content'] = call.data['content']
+        if 'project' not in call.data:
+            # Set default to the Inbox project
+            # Todoist is supposed to do this itself, but it doesn't
+            call.data['project'] = 'Inbox'
+        project_name = call.data['project'].lower()
+        project_id = project_id_lookup[project_name]
 
-        if 'project' in call.data:
-            project_name = call.data['project'].lower()
-            task_data['project_id'] = project_id_lookup[project_name]
+        # Create the task
+        item = api.items.add(call.data['content'], project_id)
 
         if 'labels' in call.data:
             task_labels = call.data['labels'].split(',')
-            task_data['label_ids'] = []
+            label_ids = []
             for label in task_labels:
-                task_data['label_ids'].append(
-                    label_id_lookup[label.lower()])
+                label_ids.append(label_id_lookup[label.lower()])
+            item.update(labels=label_ids)
 
         if 'priority' in call.data:
-            task_data['priority'] = call.data['priority']
+            item.update(priority=call.data['priority'])
 
-        if 'due_datetime' in call.data:
-            task_data['due_datetime'] = call.data['due_datetime']
-        elif 'due_date' in call.data:
-            task_data['due_date'] = call.data['due_date']
-
-        task_json = json.dumps(task_data)
-
-        # Post it to Todoist
-        output = requests.post("https://beta.todoist.com/API/v8/tasks",
-                               params={"token": token},
-                               data=task_json,
-                               headers={
-                                   "Content-Type": "application/json",
-                                   "X-Request-Id": str(uuid.uuid4()),
-                               })
-        if output.status_code == 200:
-            _LOGGER.info("Successfully posted task to Todoist.")
-        else:
-            error = "Could not post task to Todoist! "
-            error += "Status code: " + str(output.status_code)
-            _LOGGER.critical(error)
+        if 'due_date' in call.data:
+            due_date = dt.parse_datetime(call.data['due_date'])
+            if due_date is None:
+                d = dt.parse_date(call.data['due_date'])
+                due_date = datetime(d.year, d.month, d.day)
+            # Format it in the manner Todoist expects
+            due_date = dt.as_utc(due_date)
+            format = '%Y-%m-%dT%H:%M'
+            due_date = datetime.strftime(due_date, format)
+            _LOGGER.info(due_date)
+            item.update(due_date_utc=due_date)
+        # Commit changes
+        api.commit()
+        _LOGGER.info("Created Todoist task: " + str(item))
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
                            descriptions[DOMAIN][SERVICE_NEW_TASK],
                            schema=NEW_TASK_SERVICE_SCHEMA)
@@ -314,12 +317,10 @@ class TodoistProjectData(object):
         """Initialize a Todoist Project."""
         self.event = None
 
-        _LOGGER.info("Creating Todoist Project " + str(project_data))
-
         self._token = token
         self._name = project_data['name']
         # If no ID is defined, fetch all tasks.
-        if 'id' in project_data:
+        if project_data['id'] is not None:
             self._id = project_data['id']
         else:
             self._id = None
@@ -358,14 +359,15 @@ class TodoistProjectData(object):
         task = {}
         # Fields are required to be in all returned task objects.
         task['summary'] = data['content']
-        task['completed'] = data['completed']
+        task['completed'] = data['checked'] == 1
         task['priority'] = data['priority']
-        task['description'] = data['url']
+        task_url = 'https://todoist.com/showTask?id='
+        task['description'] = task_url + str(data['id'])
 
         # All task Labels (optional parameter).
         task['labels'] = []
-        if 'label_ids' in data and len(data['label_ids']) > 0:
-            for label_id in data['label_ids']:
+        if len(data['labels']) > 0:
+            for label_id in data['labels']:
                 # Check each label we have cached and see if the ID matches.
                 for label in self._labels:
                     if label['id'] == label_id:
@@ -394,17 +396,14 @@ class TodoistProjectData(object):
         # complete the task.
         # Generally speaking, that means right now.
         task['start'] = datetime.utcnow()
-        if 'due' in data:
-            due_date = data['due']
+        if 'due_date_utc' in task and task['due_date_utc'] is not None:
+            due_date = data['due_date_utc']
 
             # Due dates are represented in RFC3339 format, in UTC.
             # Home Assistant exclusively uses UTC, so it'll
             # handle the conversion.
-            if 'datetime' in due_date:
-                task['end'] = datetime.strptime(
-                    due_date['datetime'], '%Y-%m-%dT%H:%M:%SZ')
-            else:
-                task['end'] = datetime.strptime(due_date['date'], '%Y-%m-%d')
+            time_format = '%a %d %b %Y %H:%M:%S'
+            task['end'] = datetime.strptime(due_date['date'], time_format)
 
             if self._latest_due_date is not None and (
                     task['end'] > self._latest_due_date):
@@ -435,18 +434,18 @@ class TodoistProjectData(object):
 
         # Comments (optional parameter):
         task['comments'] = []
-        if 'comment_count' in data and data['comment_count'] > 0:
-            task_comments = requests.get(
-                "https://beta.todoist.com/API/v8/comments",
-                params={"token": self._token, "task_id": data['id']}
-            ).json()
-            for comment in task_comments:
-                if 'attachment' in comment and (
-                        'file_url' in comment['attachment']):
-                    # Use the URL, if present
-                    task['comments'].append(comment['attachment']['file_url'])
-                else:
-                    task['comments'].append(comment['content'])
+#        if 'comment_count' in data and data['comment_count'] > 0:
+#            task_comments = requests.get(
+#                "https://beta.todoist.com/API/v8/comments",
+#                params={"token": self._token, "task_id": data['id']}
+#            ).json()
+#            for comment in task_comments:
+#                if 'attachment' in comment and (
+#                        'file_url' in comment['attachment']):
+#                    # Use the URL, if present
+#                    task['comments'].append(comment['attachment']['file_url'])
+#                else:
+#                    task['comments'].append(comment['content'])
 
         # Not tracked: id, project_id order, indent, recurring.
         return task
@@ -523,42 +522,36 @@ class TodoistProjectData(object):
         """Get the latest data."""
         self.all_project_tasks = []
 
+        from todoist.api import TodoistAPI
+        api = TodoistAPI(self._token)
+        api.sync()
+
         if self._id is None:
             # Custom-defined task.
             if self._project_id_whitelist is None or (
                     len(self._project_id_whitelist) == 0):
                 # No whitelist; grab all the projects.
-                project_task_json_data = requests.get(
-                    "https://beta.todoist.com/API/v8/tasks",
-                    params={"token": self._token}
-                ).json()
+                project_task_data = api.state['items']
             else:
                 # Grab each project from the whitelist.
-                project_task_json_data = []
+                project_task_data = []
                 for project_id in self._project_id_whitelist:
-                    project_task_json_data.extend(requests.get(
-                        "https://beta.todoist.com/API/v8/tasks",
-                        params={
-                            "token": self._token,
-                            "project_id": project_id
-                        }
-                    ).json())
+                    for task in api.state['items']:
+                        if task['project_id'] == project_id:
+                            project_task_data.append(task)
         else:
             # Todoist-defined task; grab tasks just for this project.
-            project_task_json_data = requests.get(
-                "https://beta.todoist.com/API/v8/tasks",
-                params={"token": self._token, "project_id": self._id}
-            ).json()
+            project_task_data = api.state['items']
 
         # If we have no data, we can just return right away.
-        if len(project_task_json_data) == 0:
+        if len(project_task_data) == 0:
             self.event = None
             return True
 
         # Keep an updated list of all tasks in this project.
         project_tasks = []
 
-        for task in project_task_json_data:
+        for task in project_task_data:
             todoist_task = self.create_todoist_task(task)
             if todoist_task is not None:
                 # A None task means it is invalid for this project
