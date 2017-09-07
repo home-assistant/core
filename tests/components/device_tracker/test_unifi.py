@@ -5,11 +5,9 @@ from pyunifi.controller import APIError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (DOMAIN,
-    CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, unifi as unifi)
+from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
-import homeassistant.util.dt as dt_util
 
 
 @pytest.fixture
@@ -41,10 +39,10 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
     assert mock_ctrl.call_count == 1
     assert mock_ctrl.mock_calls[0] == \
         mock.call('localhost', 'foo', 'password', 8443,
-                  version='v5', site_id='default', ssl_verify=True)
+                  version='v4', site_id='default', ssl_verify=True)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value, DEFAULT_CONSIDER_HOME)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
 
 
 def test_config_full(hass, mock_scanner, mock_ctrl):
@@ -58,7 +56,6 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: False,
             'port': 123,
             'site_id': 'abcdef01',
-	    CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -66,10 +63,10 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
     assert mock_ctrl.call_count == 1
     assert mock_ctrl.call_args == \
         mock.call('myhost', 'foo', 'password', 123,
-                  version='v5', site_id='abcdef01', ssl_verify=False)
+                  version='v4', site_id='abcdef01', ssl_verify=False)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value, DEFAULT_CONSIDER_HOME)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
 
 
 def test_config_error():
@@ -110,11 +107,11 @@ def test_scanner_update():
     """Test the scanner update."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '123'},
+        {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl, DEFAULT_CONSIDER_HOME)
+    unifi.UnifiScanner(ctrl)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -124,21 +121,18 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl, 180)
+    unifi.UnifiScanner(ctrl)
 
 
 def test_scan_devices():
     """Test the scanning for devices."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '123'},
+        {'mac': '234'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_CONSIDER_HOME)
-    devices = scanner.scan_devices()
-    for k in devices:
-        print(k)
+    scanner = unifi.UnifiScanner(ctrl)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -146,12 +140,12 @@ def test_get_device_name():
     """Test the getting of device names."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123', 'hostname': 'foobar', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'name': 'Nice Name', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '456', 'last_seen': '1504786810'},
+        {'mac': '123', 'hostname': 'foobar'},
+        {'mac': '234', 'name': 'Nice Name'},
+        {'mac': '456'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_CONSIDER_HOME)
+    scanner = unifi.UnifiScanner(ctrl)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
