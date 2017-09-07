@@ -73,6 +73,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.components.google import (
     CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -103,7 +104,7 @@ CONF_PROJECT_DUE_DATE = 'due_date_days'
 CONF_PROJECT_WHITELIST = 'include_projects'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
-CONFIG_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_TOKEN): cv.string,
         vol.Optional(CONF_EXTRA_PROJECTS): vol.Schema({
@@ -113,7 +114,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PROJECT_LABEL_WHITELIST): cv.ensure_list
         })
     })
-}, extra=vol.ALLOW_EXTRA)
+})
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
