@@ -260,10 +260,6 @@ class TodoistProjectDevice(CalendarEventDevice):
         super().update()
 
         # Set Todoist-specific data that can't easily be grabbed
-        if self.data.event is not None and 'all_day' in self.data.event:
-            # This event doesn't have an end time, so we mark it as all day.
-            self._cal_data['all_day'] = True
-
         self._cal_data['all_tasks'] = []
         for task in self.data.all_project_tasks:
             self._cal_data['all_tasks'].append(task['summary'])
@@ -287,7 +283,6 @@ class TodoistProjectDevice(CalendarEventDevice):
         attributes['overdue'] = self.data.event['overdue']
         attributes['all_tasks'] = self._cal_data['all_tasks']
         attributes['priority'] = self.data.event['priority']
-        attributes['task_comments'] = self.data.event['comments']
         attributes['task_labels'] = self.data.event['labels']
 
         return attributes
@@ -296,11 +291,34 @@ class TodoistProjectDevice(CalendarEventDevice):
 class TodoistProjectData(object):
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
+    This is analagous to the GoogleCalendarData found in the Google Calendar
+    component.
 
-    Takes a JSON representation of the project data (returned from the
-    Todoist API), a Todoist API token, and an optional integer specifying the
-    latest number of days from now a task can be due (7 means everything due in
-    the next week, 0 means today, etc.).
+    Takes an object with a 'name' field and optionally an 'id' field (either
+    user-defined or from the Todoist API), a Todoist API token, and an optional
+    integer specifying the latest number of days from now a task can be due (7
+    means everything due in the next week, 0 means today, etc.).
+
+    This object has an exposed 'event' property (used by the Calendar platform
+    to determine the next calendar event) and an exposed 'update' method (used
+    by the Calendar platform to poll for new calendar events).
+
+    The 'event' is a representation of a Todoist Task, with defined parameters
+    of 'due_today' (is the task due today?), 'all_day' (does the task have a
+    due date?), 'task_labels' (all labels assigned to the task), 'message'
+    (the content of the task, e.g. 'Fetch Mail'), 'description' (a URL pointing
+    to the task on the Todoist website), 'end_time' (what time the event is
+    due), 'start_time' (what time this event was last updated), 'overdue' (is
+    the task past its due date?), 'priority' (1-4, how important the task is,
+    with 1 being the most important), and 'all_tasks' (all tasks in this
+    project, sorted by how important they are).
+
+    'offset_reached', 'location', and 'friendly_name' are defined by the
+    platform itself, but are not used by this component at all.
+
+    The 'update' method polls the Todoist API for new projects/tasks, as well
+    as any updates to current projects/tasks. This is throttled to every
+    MIN_TIME_BETWEEN_UPDATES minutes.
     """
 
     def __init__(self, project_data, labels, token,
@@ -344,7 +362,7 @@ class TodoistProjectData(object):
 
     def create_todoist_task(self, data):
         """
-        Create a Todoist Task from a given JSON object.
+        Create a dictionary based on a Task passed from the Todoist API.
 
         Will return 'None' if the task is to be filtered out.
         """
@@ -419,13 +437,12 @@ class TodoistProjectData(object):
             # things which have no due dates.
             if self._latest_due_date is not None:
                 return None
+
+            # Define values for tasks without due dates
             task['end'] = None
             task['all_day'] = True
             task['due_today'] = False
             task['overdue'] = False
-
-        # Comments (optional parameter):
-        task['comments'] = []
 
         # Not tracked: id, comments, project_id order, indent, recurring.
         return task
