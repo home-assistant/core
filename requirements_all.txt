@@ -536,7 +536,7 @@ pyW215==0.5.1
 pyalarmdotcom==0.3.0
 
 # homeassistant.components.arlo
-pyarlo==0.0.4
+pyarlo==0.0.6
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.11
