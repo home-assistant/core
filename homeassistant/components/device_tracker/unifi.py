@@ -68,7 +68,6 @@ class UnifiScanner(DeviceScanner):
 
     def __init__(self, config, ectrl=None):
         """Initialize the scanner."""
-        print(config)
         """Set up the Unifi device_tracker."""
         from pyunifi.controller import Controller, APIError
         _LOGGER.debug("pyunifi loaded")
