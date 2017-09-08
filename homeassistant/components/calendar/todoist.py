@@ -219,12 +219,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if 'due_date' in call.data:
             due_date = dt.parse_datetime(call.data['due_date'])
             if due_date is None:
-                d = dt.parse_date(call.data['due_date'])
-                due_date = datetime(d.year, d.month, d.day)
+                due = dt.parse_date(call.data['due_date'])
+                due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            format = '%Y-%m-%dT%H:%M'
-            due_date = datetime.strftime(due_date, format)
+            date_format = '%Y-%m-%dT%H:%M'
+            due_date = datetime.strftime(due_date, date_format)
             _LOGGER.info(due_date)
             item.update(due_date_utc=due_date)
         # Commit changes
