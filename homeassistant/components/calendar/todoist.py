@@ -410,8 +410,6 @@ class TodoistProjectData(object):
         if data['due_date_utc'] is not None:
             due_date = data['due_date_utc']
 
-            _LOGGER.warning(due_date)
-
             # Due dates are represented in RFC3339 format, in UTC.
             # Home Assistant exclusively uses UTC, so it'll
             # handle the conversion.
