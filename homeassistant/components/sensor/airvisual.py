@@ -270,11 +270,6 @@ class AirVisualData(object):
         self.radius = radius
         self.state = None
 
-    @property
-    def client(self):
-        """Define a property to access the pyairvisual client."""
-        return self._client
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update with new AirVisual data."""
