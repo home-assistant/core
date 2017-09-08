@@ -47,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_scanner(hass, config, ectrl=None):
     """Set up the Unifi device_tracker."""
     config = config[DOMAIN]
-    print(config)
     result = None
     if ectrl is not None:
         _LOGGER.debug("ectrl found")
