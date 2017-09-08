@@ -13,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 import homeassistant.util.dt as dt_util
 from datetime import timedelta
-from enum import Enum
 
 REQUIREMENTS = ['pyunifi==2.13']
 
