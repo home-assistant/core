@@ -310,7 +310,7 @@ class TodoistProjectData(object):
     to the task on the Todoist website), 'end_time' (what time the event is
     due), 'start_time' (what time this event was last updated), 'overdue' (is
     the task past its due date?), 'priority' (1-4, how important the task is,
-    with 1 being the most important), and 'all_tasks' (all tasks in this
+    with 4 being the most important), and 'all_tasks' (all tasks in this
     project, sorted by how important they are).
 
     'offset_reached', 'location', and 'friendly_name' are defined by the
@@ -538,7 +538,8 @@ class TodoistProjectData(object):
                             project_task_data.append(task)
         else:
             # Todoist-defined task; grab tasks just for this project.
-            project_task_data = api.state['items']
+            project_data = api.projects.get_data(self._id)
+            project_task_data = project_data['items']
 
         # If we have no data, we can just return right away.
         if len(project_task_data) == 0:
