@@ -1,4 +1,9 @@
-"""Define sensors for AirVisual air quality information."""
+"""
+Support for AirVisual air quality sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.airvisual/
+"""
 
 import asyncio
 from logging import getLogger
@@ -8,8 +13,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE,
-                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_STATE, CONF_API_KEY,
+                                 CONF_LATITUDE, CONF_LONGITUDE,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -20,7 +26,6 @@ ATTR_CITY = 'city'
 ATTR_COUNTRY = 'country'
 ATTR_POLLUTANT_SYMBOL = 'pollutant_symbol'
 ATTR_POLLUTANT_UNIT = 'pollutant_unit'
-ATTR_STATE = 'state'
 ATTR_TIMESTAMP = 'timestamp'
 
 CONF_RADIUS = 'radius'
@@ -212,7 +217,7 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return None
+        return ''
 
     @asyncio.coroutine
     def async_update(self):
@@ -256,39 +261,19 @@ class AirVisualData(object):
 
     def __init__(self, client, latitude, longitude, radius):
         """Initialize."""
-        self._city = None
+        self.city = None
         self._client = client
-        self._country = None
-        self._latitude = latitude
-        self._longitude = longitude
-        self._pollution_info = None
-        self._radius = radius
-        self._state = None
+        self.country = None
+        self.latitude = latitude
+        self.longitude = longitude
+        self.pollution_info = None
+        self.radius = radius
+        self.state = None
 
     @property
     def client(self):
         """Define a property to access the pyairvisual client."""
         return self._client
-
-    @property
-    def city(self):
-        """Define a property to access the city."""
-        return self._city
-
-    @property
-    def country(self):
-        """Define a property to access the country."""
-        return self._country
-
-    @property
-    def pollution_info(self):
-        """Define a property to access the pollution information."""
-        return self._pollution_info  # pylint: disable=syntax-error
-
-    @property
-    def state(self):
-        """Define a property to access the state."""
-        return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -296,14 +281,14 @@ class AirVisualData(object):
         import pyairvisual.exceptions as exceptions
 
         try:
-            resp = self._client.nearest_city(self._latitude, self._longitude,
-                                             self._radius).get('data')
+            resp = self._client.nearest_city(self.latitude, self.longitude,
+                                             self.radius).get('data')
             _LOGGER.debug('New data retrieved: %s', resp)
 
-            self._city = resp.get('city')
-            self._state = resp.get('state')
-            self._country = resp.get('country')
-            self._pollution_info = resp.get('current').get('pollution')
+            self.city = resp.get('city')
+            self.state = resp.get('state')
+            self.country = resp.get('country')
+            self.pollution_info = resp.get('current').get('pollution')
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update sensor data')
             _LOGGER.debug(exc_info)
