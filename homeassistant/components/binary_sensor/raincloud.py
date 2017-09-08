@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import CONF_ATTRIBUTION
+from homeassistant.components.raincloud import CONF_ATTRIBUTION, DATA_RAINCLOUD
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -32,24 +32,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a raincloud device."""
-    raincloud = hass.data.get('raincloud').data
+    raincloud = hass.data[DATA_RAINCLOUD].data
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         if sensor_type == 'status':
             sensors.append(
-                RainCloudBinarySensor(hass,
-                                      raincloud.controller,
+                RainCloudBinarySensor(raincloud.controller,
                                       sensor_type))
             sensors.append(
-                RainCloudBinarySensor(hass,
-                                      raincloud.controller.faucet,
+                RainCloudBinarySensor(raincloud.controller.faucet,
                                       sensor_type))
 
         else:
             # create an sensor for each zone managed by faucet
             for zone in raincloud.controller.faucet.zones:
-                sensors.append(RainCloudBinarySensor(hass, zone, sensor_type))
+                sensors.append(RainCloudBinarySensor(zone, sensor_type))
 
     add_devices(sensors, True)
     return True
@@ -58,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainCloudBinarySensor(BinarySensorDevice):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, hass, data, sensor_type):
+    def __init__(self, data, sensor_type):
         """Initialize a sensor for raincloud device."""
         super().__init__()
         self._sensor_type = sensor_type
@@ -94,9 +92,8 @@ class RainCloudBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs['current_time'] = self._data.current_time
-        attrs['identifier'] = self._data.serial
-        return attrs
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'current_time': self._data.current_time,
+            'identifier': self._data.serial
+        }

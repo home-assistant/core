@@ -9,11 +9,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import CONF_ATTRIBUTION
+from homeassistant.components.raincloud import CONF_ATTRIBUTION, DATA_RAINCLOUD
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.icon import icon_for_battery_level
 
 DEPENDENCIES = ['raincloud']
 
@@ -35,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a raincloud device."""
-    raincloud = hass.data.get('raincloud').data
+    raincloud = hass.data[DATA_RAINCLOUD].data
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -83,13 +84,8 @@ class RainCloudSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if self._sensor_type == 'battery' and self._state is not STATE_UNKNOWN:
-            rounded_level = round(int(self._state), -1)
-            if rounded_level < 10:
-                self._icon = 'mdi:battery-outline'
-            elif self._state == 100:
-                self._icon = 'mdi:battery'
-            else:
-                self._icon = 'mdi:battery-{}'.format(str(rounded_level))
+            return icon_for_battery_level(battery_level=int(self._state),
+                                          charging=False)
         return self._icon
 
     @property
@@ -100,9 +96,8 @@ class RainCloudSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs['identifier'] = self._data.serial
-        attrs['current_time'] = self._data.current_time
-        return attrs
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'identifier': self._data.serial,
+            'current_time': self._data.current_time
+        }

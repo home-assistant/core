@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import CONF_ATTRIBUTION
+from homeassistant.components.raincloud import CONF_ATTRIBUTION, DATA_RAINCLOUD
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a raincloud device."""
-    raincloud_hub = hass.data.get('raincloud')
+    raincloud_hub = hass.data[DATA_RAINCLOUD]
     raincloud = raincloud_hub.data
     default_watering_timer = raincloud_hub.default_watering_timer
 
@@ -102,10 +102,9 @@ class RainCloudSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs['current_time'] = self._data.current_time
-        attrs['default_manual_timer'] = self._default_watering_timer
-        attrs['identifier'] = self._data.serial
-        return attrs
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'current_time': self._data.current_time,
+            'default_manual_timer': self._default_watering_timer,
+            'identifier': self._data.serial
+        }

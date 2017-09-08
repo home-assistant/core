@@ -4,15 +4,18 @@ Support for Melnor RainCloud sprinkler water timer.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
@@ -28,16 +31,19 @@ CONF_WATERING_TIME = 'watering_minutes'
 NOTIFICATION_ID = 'raincloud_notification'
 NOTIFICATION_TITLE = 'Rain Cloud Setup'
 
+DATA_RAINCLOUD = 'raincloud'
 DOMAIN = 'raincloud'
 DEFAULT_ENTITY_NAMESPACE = 'raincloud'
 DEFAULT_WATERING_TIME = 15
 
-SCAN_INTERVAL_HUB = timedelta(seconds=20)
+SCAN_INTERVAL = timedelta(seconds=20)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            cv.time_period,
         vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
             vol.All(vol.In(ALLOWED_WATERING_TIME)),
     }),
@@ -57,9 +63,9 @@ def setup(hass, config):
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             return False
-        hass.data['raincloud'] = RainCloudHub(hass,
-                                              raincloud,
-                                              default_watering_timer)
+        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass,
+                                                 raincloud,
+                                                 default_watering_timer)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
@@ -69,10 +75,11 @@ def setup(hass, config):
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
+
     return True
 
 
-class RainCloudHub(Entity):
+class RainCloudHub:
     """Base class for all Raincloud entities."""
 
     def __init__(self, hass, data, default_watering_timer):
@@ -80,14 +87,9 @@ class RainCloudHub(Entity):
         self.data = data
         self.default_watering_timer = default_watering_timer
 
-        # Load data
-        track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
-        self._update_hub(SCAN_INTERVAL_HUB)
-
-    @property
-    def should_poll(self):
-        """Return false. RainCloud Hub object updates variables."""
-        return False
+        # needs change
+        track_time_interval(hass, self._update_hub, SCAN_INTERVAL)
+        self._update_hub(SCAN_INTERVAL)
 
     def _update_hub(self, now):
         """Refresh data from for all child objects."""
