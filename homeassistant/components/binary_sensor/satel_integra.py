@@ -15,8 +15,7 @@ from homeassistant.components.satel_integra import (ZONE_SCHEMA,
                                                     CONF_ZONES,
                                                     CONF_ZONE_NAME,
                                                     CONF_ZONE_TYPE,
-                                                    SIGNAL_ZONES_UPDATED,
-                                                    )
+                                                    SIGNAL_ZONES_UPDATED)
 
 DEPENDENCIES = ['satel_integra']
 
