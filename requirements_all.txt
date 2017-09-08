@@ -542,7 +542,7 @@ pyW215==0.6.0
 pyalarmdotcom==0.3.0
 
 # homeassistant.components.arlo
-pyarlo==0.0.4
+pyarlo==0.0.6
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.1
@@ -694,6 +694,9 @@ pyowm==2.7.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
+
+# homeassistant.components.switch.rainbird
+pyrainbird==0.0.9
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1

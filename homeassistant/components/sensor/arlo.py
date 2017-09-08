@@ -27,6 +27,8 @@ SENSOR_TYPES = {
     'last_capture': ['Last', None, 'run-fast'],
     'total_cameras': ['Arlo Cameras', None, 'video'],
     'captured_today': ['Captured Today', None, 'file-video'],
+    'battery_level': ['Battery', None, 'battery'],
+    'signal_strength': ['Signal Strength', None, 'signal'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -110,6 +112,15 @@ class ArloSensor(Entity):
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
                 self._state = STATE_UNKNOWN
+
+        elif self._sensor_type == 'battery_level':
+            try:
+                self._state = self._data.get_battery_level
+            except:
+                self._state = STATE_UNKNOWN
+
+        elif self._sensor_type == 'signal_strength':
+            self._state = self._data.get_signal_strength
 
     @property
     def device_state_attributes(self):
