@@ -229,7 +229,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             item.update(due_date_utc=due_date)
         # Commit changes
         api.commit()
-        _LOGGER.info("Created Todoist task: " + str(item))
+        _LOGGER.info("Created Todoist task: " + call.data['content'])
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
                            descriptions[DOMAIN][SERVICE_NEW_TASK],
                            schema=NEW_TASK_SERVICE_SCHEMA)
@@ -291,6 +291,7 @@ class TodoistProjectDevice(CalendarEventDevice):
 class TodoistProjectData(object):
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
+
     This is analagous to the GoogleCalendarData found in the Google Calendar
     component.
 
@@ -343,7 +344,7 @@ class TodoistProjectData(object):
         # The latest date a task can be due (for making lists of everything
         # due today, or everything due in the next week, for example).
         if latest_task_due_date is not None:
-            self._latest_due_date = datetime.now() + timedelta(
+            self._latest_due_date = dt.utcnow() + timedelta(
                 days=latest_task_due_date)
         else:
             self._latest_due_date = None
@@ -405,15 +406,19 @@ class TodoistProjectData(object):
         # That means that the START date is the earliest time one can
         # complete the task.
         # Generally speaking, that means right now.
-        task['start'] = datetime.utcnow()
-        if 'due_date_utc' in task and task['due_date_utc'] is not None:
+        task['start'] = dt.utcnow()
+        if data['due_date_utc'] is not None:
             due_date = data['due_date_utc']
+
+            _LOGGER.warning(due_date)
 
             # Due dates are represented in RFC3339 format, in UTC.
             # Home Assistant exclusively uses UTC, so it'll
             # handle the conversion.
-            time_format = '%a %d %b %Y %H:%M:%S'
-            task['end'] = datetime.strptime(due_date['date'], time_format)
+            time_format = '%a %d %b %Y %H:%M:%S %z'
+            # HASS' built-in parse time function doesn't like
+            # Todoist's time format; strptime has to be used.
+            task['end'] = datetime.strptime(due_date, time_format)
 
             if self._latest_due_date is not None and (
                     task['end'] > self._latest_due_date):
@@ -563,7 +568,7 @@ class TodoistProjectData(object):
         # they have, organized)
         while len(project_tasks) > 0:
             best_task = self.select_best_task(project_tasks)
-            _LOGGER.info("Found Todoist Task: " + str(best_task))
+            _LOGGER.info("Found Todoist Task: " + best_task['summary'])
             project_tasks.remove(best_task)
             self.all_project_tasks.append(best_task)
 
