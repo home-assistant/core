@@ -6,8 +6,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (DOMAIN,
-                                                     CONF_CONSIDER_HOME,
-                                                     DEFAULT_CONSIDER_HOME,
                                                      unifi as unifi)
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
