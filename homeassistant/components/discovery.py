@@ -100,6 +100,7 @@ def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
+            logger.info("Unknown service discovered: %s %s", service, info)
             return
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
