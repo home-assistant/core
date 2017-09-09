@@ -7,10 +7,12 @@ from unittest.mock import patch
 import homeassistant.components.tts as tts
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, ATTR_MEDIA_CONTENT_ID, DOMAIN as DOMAIN_MP)
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_service)
+
+from .test_init import mutagen_mock  # noqa
 
 
 class TestTTSGooglePlatform(object):
@@ -23,10 +25,11 @@ class TestTTSGooglePlatform(object):
         self.url = "http://translate.google.com/translate_tts"
         self.url_param = {
             'tl': 'en',
-            'q': 'I%20person%20is%20on%20front%20of%20your%20door.',
+            'q':
+            '90%25%20of%20I%20person%20is%20on%20front%20of%20your%20door.',
             'tk': 5,
             'client': 'tw-ob',
-            'textlen': 34,
+            'textlen': 41,
             'total': 1,
             'idx': 0,
             'ie': 'UTF-8',
@@ -70,7 +73,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 
@@ -80,8 +83,8 @@ class TestTTSGooglePlatform(object):
 
     @patch('gtts_token.gtts_token.Token.calculate_token', autospec=True,
            return_value=5)
-    def test_service_say_german(self, mock_calculate, aioclient_mock):
-        """Test service call say with german code."""
+    def test_service_say_german_config(self, mock_calculate, aioclient_mock):
+        """Test service call say with german code in the config."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.url_param['tl'] = 'de'
@@ -99,7 +102,35 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert len(aioclient_mock.mock_calls) == 1
+
+    @patch('gtts_token.gtts_token.Token.calculate_token', autospec=True,
+           return_value=5)
+    def test_service_say_german_service(self, mock_calculate, aioclient_mock):
+        """Test service call say with german code in the service."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        self.url_param['tl'] = 'de'
+        aioclient_mock.get(
+            self.url, params=self.url_param, status=200, content=b'test')
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'google',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'google_say', {
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de"
         })
         self.hass.block_till_done()
 
@@ -125,7 +156,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 
@@ -151,7 +182,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 

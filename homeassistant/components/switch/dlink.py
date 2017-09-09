@@ -14,8 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.3.7.zip#pyW215==0.3.7']
+REQUIREMENTS = ['pyW215==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +23,9 @@ DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
 CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
 
-ATTR_CURRENT_CONSUMPTION = 'Current Consumption'
-ATTR_TOTAL_CONSUMPTION = 'Total Consumption'
-ATTR_TEMPERATURE = 'Temperature'
+ATTR_CURRENT_CONSUMPTION = 'power_consumption'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_TEMPERATURE = 'temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -39,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a D-Link Smart Plug."""
+    """Set up a D-Link Smart Plug."""
     from pyW215.pyW215 import SmartPlug
 
     host = config.get(CONF_HOST)

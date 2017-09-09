@@ -12,14 +12,18 @@ import itertools as it
 import logging
 
 import homeassistant.core as ha
+import homeassistant.config as conf_util
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.loader import get_component
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
+    RESTART_EXIT_CODE)
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
+SERVICE_CHECK_CONFIG = 'check_config'
 
 
 def is_on(hass, entity_id=None):
@@ -28,25 +32,27 @@ def is_on(hass, entity_id=None):
     If there is no entity id given we will check all.
     """
     if entity_id:
-        group = get_component('group')
-
-        entity_ids = group.expand_entity_ids(hass, [entity_id])
+        entity_ids = hass.components.group.expand_entity_ids([entity_id])
     else:
         entity_ids = hass.states.entity_ids()
 
-    for entity_id in entity_ids:
-        domain = ha.split_entity_id(entity_id)[0]
-
-        module = get_component(domain)
+    for ent_id in entity_ids:
+        domain = ha.split_entity_id(ent_id)[0]
 
         try:
-            if module.is_on(hass, entity_id):
-                return True
+            component = getattr(hass.components, domain)
 
-        except AttributeError:
-            # module is None or method is_on does not exist
-            _LOGGER.exception("Failed to call %s.is_on for %s",
-                              module, entity_id)
+        except ImportError:
+            _LOGGER.error('Failed to call %s.is_on: component not found',
+                          domain)
+            continue
+
+        if not hasattr(component, 'is_on'):
+            _LOGGER.warning("Component %s has no is_on method.", domain)
+            continue
+
+        if component.is_on(ent_id):
+            return True
 
     return False
 
@@ -75,17 +81,38 @@ def toggle(hass, entity_id=None, **service_data):
     hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
 
 
+def stop(hass):
+    """Stop Home Assistant."""
+    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP)
+
+
+def restart(hass):
+    """Stop Home Assistant."""
+    hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+
+
+def check_config(hass):
+    """Check the config files."""
+    hass.services.call(ha.DOMAIN, SERVICE_CHECK_CONFIG)
+
+
 def reload_core_config(hass):
     """Reload the core config."""
     hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
 
 @asyncio.coroutine
+def async_reload_core_config(hass):
+    """Reload the core config."""
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+
+
+@asyncio.coroutine
 def async_setup(hass, config):
-    """Setup general services related to Home Assistant."""
+    """Set up general services related to Home Assistant."""
     @asyncio.coroutine
-    def handle_turn_service(service):
-        """Method to handle calls to homeassistant.turn_on/off."""
+    def async_handle_turn_service(service):
+        """Handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id
@@ -122,18 +149,44 @@ def async_setup(hass, config):
         yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TOGGLE, handle_turn_service)
+        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
 
     @asyncio.coroutine
-    def handle_reload_config(call):
-        """Service handler for reloading core config."""
-        from homeassistant.exceptions import HomeAssistantError
-        from homeassistant import config as conf_util
+    def async_handle_core_service(call):
+        """Service handler for handling core services."""
+        if call.service == SERVICE_HOMEASSISTANT_STOP:
+            hass.async_add_job(hass.async_stop())
+            return
 
+        try:
+            errors = yield from conf_util.async_check_ha_config_file(hass)
+        except HomeAssistantError:
+            return
+
+        if errors:
+            _LOGGER.error(errors)
+            hass.components.persistent_notification.async_create(
+                "Config error. See dev-info panel for details.",
+                "Config validating", "{0}.check_config".format(ha.DOMAIN))
+            return
+
+        if call.service == SERVICE_HOMEASSISTANT_RESTART:
+            hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
+
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service)
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
+
+    @asyncio.coroutine
+    def async_handle_reload_config(call):
+        """Service handler for reloading core config."""
         try:
             conf = yield from conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
@@ -144,6 +197,6 @@ def async_setup(hass, config):
             hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, handle_reload_config)
+        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config)
 
     return True

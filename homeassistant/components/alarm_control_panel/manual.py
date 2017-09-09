@@ -12,9 +12,10 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_PLATFORM, CONF_NAME,
-    CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
+    CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
+    CONF_DISARM_AFTER_TRIGGER)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 
@@ -22,6 +23,8 @@ DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
+
+ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'manual',
@@ -39,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the manual alarm platform."""
+    """Set up the manual alarm platform."""
     add_devices([ManualAlarm(
         hass,
         config[CONF_NAME],
@@ -52,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ManualAlarm(alarm.AlarmControlPanel):
     """
-    Represents an alarm status.
+    Representation of an alarm status.
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
@@ -62,7 +65,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, hass, name, code, pending_time,
                  trigger_time, disarm_after_trigger):
-        """Initalize the manual alarm panel."""
+        """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._name = name
@@ -75,7 +78,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the plling state."""
         return False
 
     @property
@@ -87,7 +90,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         if self._state in (STATE_ALARM_ARMED_HOME,
-                           STATE_ALARM_ARMED_AWAY) and \
+                           STATE_ALARM_ARMED_AWAY,
+                           STATE_ALARM_ARMED_NIGHT) and \
            self._pending_time and self._state_ts + self._pending_time > \
            dt_util.utcnow():
             return STATE_ALARM_PENDING
@@ -100,7 +104,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
                 else:
-                    return self._pre_trigger_state
+                    self._state = self._pre_trigger_state
+                    return self._state
 
         return self._state
 
@@ -146,6 +151,20 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
+            return
+
+        self._state = STATE_ALARM_ARMED_NIGHT
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._pending_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
         self._pre_trigger_state = self._state
@@ -166,5 +185,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Invalid code given for %s', state)
+            _LOGGER.warning("Invalid code given for %s", state)
         return check
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state_attr = {}
+
+        if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_POST_PENDING_STATE] = self._state
+
+        return state_attr

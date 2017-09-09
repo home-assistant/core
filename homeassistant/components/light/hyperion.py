@@ -28,13 +28,15 @@ SUPPORT_HYPERION = SUPPORT_RGB_COLOR
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): cv.string,
+    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
+    vol.All(list, vol.Length(min=3, max=3),
+            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Hyperion server remote."""
+    """Set up a Hyperion server remote."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     default_color = config.get(CONF_DEFAULT_COLOR)
@@ -60,7 +62,7 @@ class Hyperion(Light):
 
     @property
     def name(self):
-        """Return the hostname of the server."""
+        """Return the name of the light."""
         return self._name
 
     @property
@@ -112,7 +114,8 @@ class Hyperion(Light):
         """Get the hostname of the remote."""
         response = self.json_request({'command': 'serverinfo'})
         if response:
-            self._name = response['info']['hostname']
+            if self._name == self._host:
+                self._name = response['info']['hostname']
             return True
         return False
 

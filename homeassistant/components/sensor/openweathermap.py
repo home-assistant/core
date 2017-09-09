@@ -17,12 +17,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.5.0']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_FORECAST = 'forecast'
+CONF_LANGUAGE = 'language'
 
 DEFAULT_NAME = 'OWM'
 
@@ -32,11 +33,12 @@ SENSOR_TYPES = {
     'weather': ['Condition', None],
     'temperature': ['Temperature', None],
     'wind_speed': ['Wind speed', 'm/s'],
+    'wind_bearing': ['Wind bearing', '°'],
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mbar'],
     'clouds': ['Cloud coverage', '%'],
     'rain': ['Rain', 'mm'],
-    'snow': ['Snow', 'mm']
+    'snow': ['Snow', 'mm'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -44,12 +46,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=False): cv.boolean
+    vol.Optional(CONF_FORECAST, default=False): cv.boolean,
+    vol.Optional(CONF_LANGUAGE, default=None): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OpenWeatherMap sensor."""
+    """Set up the OpenWeatherMap sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -60,13 +63,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
     forecast = config.get(CONF_FORECAST)
+    language = config.get(CONF_LANGUAGE)
+    if isinstance(language, str):
+        language = language.lower()[:2]
 
-    owm = OWM(config.get(CONF_API_KEY))
+    owm = OWM(API_key=config.get(CONF_API_KEY), language=language)
 
     if not owm:
-        _LOGGER.error(
-            "Connection error "
-            "Please check your settings for OpenWeatherMap")
+        _LOGGER.error("Unable to connect to OpenWeatherMap")
         return False
 
     data = WeatherData(owm, forecast, hass.config.latitude,
@@ -81,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(OpenWeatherMapSensor(
             name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class OpenWeatherMapSensor(Entity):
@@ -96,7 +100,6 @@ class OpenWeatherMapSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -126,12 +129,14 @@ class OpenWeatherMapSensor(Entity):
         data = self.owa_client.data
         fc_data = self.owa_client.fc_data
 
+        if data is None or fc_data is None:
+            return
+
         if self.type == 'weather':
             self._state = data.get_detailed_status()
         elif self.type == 'temperature':
             if self.temp_unit == TEMP_CELSIUS:
-                self._state = round(data.get_temperature('celsius')['temp'],
-                                    1)
+                self._state = round(data.get_temperature('celsius')['temp'], 1)
             elif self.temp_unit == TEMP_FAHRENHEIT:
                 self._state = round(data.get_temperature('fahrenheit')['temp'],
                                     1)
@@ -139,6 +144,8 @@ class OpenWeatherMapSensor(Entity):
                 self._state = round(data.get_temperature()['temp'], 1)
         elif self.type == 'wind_speed':
             self._state = round(data.get_wind()['speed'], 1)
+        elif self.type == 'wind_bearing':
+            self._state = round(data.get_wind()['deg'], 1)
         elif self.type == 'humidity':
             self._state = round(data.get_humidity(), 1)
         elif self.type == 'pressure':
@@ -178,14 +185,20 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OpenWeatherMap."""
-        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        try:
+            obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        except TypeError:
+            obs = None
         if obs is None:
-            _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
+            _LOGGER.warning("Failed to fetch data")
             return
 
         self.data = obs.get_weather()
 
         if self.forecast == 1:
-            obs = self.owm.three_hours_forecast_at_coords(
-                self.latitude, self.longitude)
-            self.fc_data = obs.get_forecast()
+            try:
+                obs = self.owm.three_hours_forecast_at_coords(
+                    self.latitude, self.longitude)
+                self.fc_data = obs.get_forecast()
+            except TypeError:
+                _LOGGER.warning("Failed to fetch forecast")

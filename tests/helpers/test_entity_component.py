@@ -4,19 +4,25 @@ import asyncio
 from collections import OrderedDict
 import logging
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
+from datetime import timedelta
 
 import homeassistant.core as ha
 import homeassistant.loader as loader
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import (
+    EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
+from homeassistant.helpers import entity_component
+from homeassistant.setup import setup_component
+
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, MockModule, fire_time_changed,
-    mock_coro)
+    mock_coro, async_fire_time_changed)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -47,6 +53,11 @@ class EntityTest(Entity):
         """Return the unique ID of the entity."""
         return self._handle('unique_id')
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle('available')
+
     def _handle(self, attr):
         """Helper for the attributes."""
         if attr in self._values:
@@ -67,13 +78,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_setting_up_group(self):
         """Setup the setting of a group."""
+        setup_component(self.hass, 'group', {'group': {}})
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')
 
         # No group after setup
         assert len(self.hass.states.entity_ids()) == 0
 
-        component.add_entities([EntityTest(name='hello')])
+        component.add_entities([EntityTest()])
 
         # group exists
         assert len(self.hass.states.entity_ids()) == 2
@@ -81,20 +93,23 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         group = self.hass.states.get('group.everyone')
 
-        assert group.attributes.get('entity_id') == ('test_domain.hello',)
+        assert group.attributes.get('entity_id') == \
+            ('test_domain.unnamed_device',)
 
         # group extended
-        component.add_entities([EntityTest(name='hello2')])
+        component.add_entities([EntityTest(name='goodbye')])
 
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        assert sorted(group.attributes.get('entity_id')) == \
-            ['test_domain.hello', 'test_domain.hello2']
+        # Ordered in order of added to the group
+        assert group.attributes.get('entity_id') == \
+            ('test_domain.goodbye', 'test_domain.unnamed_device')
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
         no_poll_ent = EntityTest(should_poll=False)
         no_poll_ent.async_update = Mock()
@@ -106,11 +121,48 @@ class TestHelpersEntityComponent(unittest.TestCase):
         no_poll_ent.async_update.reset_mock()
         poll_ent.async_update.reset_mock()
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
         self.hass.block_till_done()
 
         assert not no_poll_ent.async_update.called
         assert poll_ent.async_update.called
+
+    def test_polling_updates_entities_with_exception(self):
+        """Test the updated entities that not brake with a exception."""
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
+
+        update_ok = []
+        update_err = []
+
+        def update_mock():
+            """Mock normal update."""
+            update_ok.append(None)
+
+        def update_mock_err():
+            """Mock error update."""
+            update_err.append(None)
+            raise AssertionError("Fake error update")
+
+        ent1 = EntityTest(should_poll=True)
+        ent1.update = update_mock_err
+        ent2 = EntityTest(should_poll=True)
+        ent2.update = update_mock
+        ent3 = EntityTest(should_poll=True)
+        ent3.update = update_mock
+        ent4 = EntityTest(should_poll=True)
+        ent4.update = update_mock
+
+        component.add_entities([ent1, ent2, ent3, ent4])
+
+        update_ok.clear()
+        update_err.clear()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
+        self.hass.block_till_done()
+
+        assert len(update_ok) == 3
+        assert len(update_err) == 1
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -123,7 +175,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
         ent2.update = lambda *_: component.add_entities([ent1])
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        fire_time_changed(
+            self.hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL
+        )
         self.hass.block_till_done()
 
         assert 2 == len(self.hass.states.entity_ids())
@@ -266,6 +320,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert component_setup.called
         assert platform_setup.called
 
@@ -288,13 +343,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
             ("{} 3".format(DOMAIN), {'platform': 'mod2'}),
         ]))
 
+        self.hass.block_till_done()
         assert platform1_setup.called
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._async_setup_platform', return_value=mock_coro()())
-    @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           '._async_setup_platform', return_value=mock_coro())
+    @patch('homeassistant.setup.async_setup_component',
+           return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -311,7 +367,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             mock_setup.call_args[0]
 
     @patch('homeassistant.helpers.entity_component.'
-           'async_track_utc_time_change')
+           'async_track_time_interval')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
@@ -326,15 +382,16 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({
             DOMAIN: {
                 'platform': 'platform',
-                'scan_interval': 30,
+                'scan_interval': timedelta(seconds=30),
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
-        assert [0, 30] == list(mock_track.call_args[1]['second'])
+        assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
     @patch('homeassistant.helpers.entity_component.'
-           'async_track_utc_time_change')
+           'async_track_time_interval')
     def test_set_scan_interval_via_platform(self, mock_track):
         """Test the setting of the scan interval via platform."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
@@ -342,7 +399,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             add_devices([EntityTest(should_poll=True)])
 
         platform = MockPlatform(platform_setup)
-        platform.SCAN_INTERVAL = 30
+        platform.SCAN_INTERVAL = timedelta(seconds=30)
 
         loader.set_component('test_domain.platform', platform)
 
@@ -354,8 +411,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
-        assert [0, 30] == list(mock_track.call_args[1]['second'])
+        assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
     def test_set_entity_namespace_via_config(self):
         """Test setting an entity namespace."""
@@ -379,6 +437,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
+
         assert sorted(self.hass.states.entity_ids()) == \
             ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']
 
@@ -398,3 +458,123 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
+
+
+@asyncio.coroutine
+def test_platform_warn_slow_setup(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+        assert mock_call.called
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == SLOW_SETUP_WARNING
+        assert logger_method == _LOGGER.warning
+
+        assert mock_call().cancel.called
+
+
+@asyncio.coroutine
+def test_platform_error_slow_setup(hass, caplog):
+    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+    with patch.object(entity_component, 'SLOW_SETUP_MAX_WAIT', 0):
+        called = []
+
+        @asyncio.coroutine
+        def setup_platform(*args):
+            called.append(1)
+            yield from asyncio.sleep(1, loop=hass.loop)
+
+        platform = MockPlatform(async_setup_platform=setup_platform)
+        component = EntityComponent(_LOGGER, DOMAIN, hass)
+        loader.set_component('test_domain.test_platform', platform)
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'test_platform',
+            }
+        })
+        assert len(called) == 1
+        assert 'test_domain.test_platform' not in hass.config.components
+        assert 'test_platform is taking longer than 0 seconds' in caplog.text
+
+
+@asyncio.coroutine
+def test_extract_from_service_available_device(hass):
+    """Test the extraction of entity from service and device is available."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(name='test_1'),
+        EntityTest(name='test_2', available=False),
+        EntityTest(name='test_3'),
+        EntityTest(name='test_4', available=False),
+    ])
+
+    call_1 = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_1))
+
+    call_2 = ha.ServiceCall('test', 'service', data={
+        'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
+    })
+
+    assert ['test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_2))
+
+
+@asyncio.coroutine
+def test_platform_not_ready(hass):
+    """Test that we retry when platform not ready."""
+    platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady,
+                                        None])
+    loader.set_component('test_domain.mod1', MockPlatform(platform1_setup))
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'mod1'
+        }
+    })
+
+    assert len(platform1_setup.mock_calls) == 1
+    assert 'test_domain.mod1' not in hass.config.components
+
+    utcnow = dt_util.utcnow()
+
+    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+        # Should not trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 1
+
+        # Should trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 2
+        assert 'test_domain.mod1' not in hass.config.components
+
+        # This should not trigger attempt 3
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 2
+
+        # Trigger attempt 3, which succeeds
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        yield from hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 3
+        assert 'test_domain.mod1' in hass.config.components

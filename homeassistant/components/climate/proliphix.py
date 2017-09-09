@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Proliphix thermostats."""
+    """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
@@ -43,13 +43,12 @@ class ProliphixThermostat(ClimateDevice):
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        # initial data
         self._pdp.update()
         self._name = self._pdp.name
 
     @property
     def should_poll(self):
-        """Polling needed for thermostat."""
+        """Set up polling needed for thermostat."""
         return True
 
     def update(self):

@@ -5,21 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.fritz/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['https://github.com/deisi/fritzconnection/archive/'
-                'b5c14515e1c8e2652b06b6316a7f3913df942841.zip'
-                '#fritzconnection==0.4.6']
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+REQUIREMENTS = ['fritzconnection==0.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +32,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class FritzBoxScanner(object):
+class FritzBoxScanner(DeviceScanner):
     """This class queries a FRITZ!Box router."""
 
     def __init__(self, config):
@@ -54,9 +48,8 @@ class FritzBoxScanner(object):
 
         # Establish a connection to the FRITZ!Box.
         try:
-            self.fritz_box = fc.FritzHosts(address=self.host,
-                                           user=self.username,
-                                           password=self.password)
+            self.fritz_box = fc.FritzHosts(
+                address=self.host, user=self.username, password=self.password)
         except (ValueError, TypeError):
             self.fritz_box = None
 
@@ -66,12 +59,12 @@ class FritzBoxScanner(object):
             self.success_init = False
 
         if self.success_init:
-            _LOGGER.info('Successfully connected to %s',
+            _LOGGER.info("Successfully connected to %s",
                          self.fritz_box.modelname)
             self._update_info()
         else:
-            _LOGGER.error('Failed to establish connection to FRITZ!Box '
-                          'with IP: %s', self.host)
+            _LOGGER.error("Failed to establish connection to FRITZ!Box "
+                          "with IP: %s", self.host)
 
     def scan_devices(self):
         """Scan for new devices and return a list of found device ids."""
@@ -91,12 +84,11 @@ class FritzBoxScanner(object):
             return None
         return ret
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
         if not self.success_init:
             return False
 
-        _LOGGER.info('Scanning')
+        _LOGGER.info("Scanning")
         self.last_results = self.fritz_box.get_hosts_info()
         return True

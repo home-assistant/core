@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from astral import Astral
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
@@ -15,13 +15,18 @@ from homeassistant.helpers.event import (
     track_utc_time_change,
     track_time_change,
     track_state_change,
+    track_time_interval,
+    track_template,
+    track_same_state,
     track_sunrise,
     track_sunset,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, fire_time_changed
+from unittest.mock import patch
 
 
 class TestEventHelpers(unittest.TestCase):
@@ -187,6 +192,210 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(5, len(wildcard_runs))
         self.assertEqual(6, len(wildercard_runs))
 
+    def test_track_template(self):
+        """Test tracking template."""
+        specific_runs = []
+        wildcard_runs = []
+        wildercard_runs = []
+
+        template_condition = Template(
+            "{{states.switch.test.state == 'on'}}",
+            self.hass
+        )
+        template_condition_var = Template(
+            "{{states.switch.test.state == 'on' and test == 5}}",
+            self.hass
+        )
+
+        self.hass.states.set('switch.test', 'off')
+
+        def specific_run_callback(entity_id, old_state, new_state):
+            specific_runs.append(1)
+
+        track_template(self.hass, template_condition, specific_run_callback)
+
+        @ha.callback
+        def wildcard_run_callback(entity_id, old_state, new_state):
+            wildcard_runs.append((old_state, new_state))
+
+        track_template(self.hass, template_condition, wildcard_run_callback)
+
+        @asyncio.coroutine
+        def wildercard_run_callback(entity_id, old_state, new_state):
+            wildercard_runs.append((old_state, new_state))
+
+        track_template(
+            self.hass, template_condition_var, wildercard_run_callback,
+            {'test': 5})
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+        self.assertEqual(2, len(wildercard_runs))
+
+    def test_track_same_state_simple_trigger(self):
+        """Test track_same_change with trigger simple."""
+        thread_runs = []
+        callback_runs = []
+        coroutine_runs = []
+        period = timedelta(minutes=1)
+
+        def thread_run_callback():
+            thread_runs.append(1)
+
+        track_same_state(
+            self.hass, 'on', period, thread_run_callback,
+            entity_ids='light.Bowl')
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        track_same_state(
+            self.hass, 'on', period, callback_run_callback,
+            entity_ids='light.Bowl')
+
+        @asyncio.coroutine
+        def coroutine_run_callback():
+            coroutine_runs.append(1)
+
+        track_same_state(
+            self.hass, 'on', period, coroutine_run_callback)
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(thread_runs))
+        self.assertEqual(0, len(callback_runs))
+        self.assertEqual(0, len(coroutine_runs))
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(thread_runs))
+        self.assertEqual(1, len(callback_runs))
+        self.assertEqual(1, len(coroutine_runs))
+
+    def test_track_same_state_simple_no_trigger(self):
+        """Test track_same_change with no trigger."""
+        callback_runs = []
+        period = timedelta(minutes=1)
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        track_same_state(
+            self.hass, 'on', period, callback_run_callback,
+            entity_ids='light.Bowl')
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+        # Change state on state machine
+        self.hass.states.set("light.Bowl", "off")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+    def test_track_same_state_simple_trigger_check_funct(self):
+        """Test track_same_change with trigger and check funct."""
+        callback_runs = []
+        check_func = []
+        period = timedelta(minutes=1)
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        @ha.callback
+        def async_check_func(entity, from_s, to_s):
+            check_func.append((entity, from_s, to_s))
+            return 'on'
+
+        track_same_state(
+            self.hass, 'on', period, callback_run_callback,
+            entity_ids='light.Bowl', async_check_func=async_check_func)
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+        self.assertEqual('on', check_func[-1][2].state)
+        self.assertEqual('light.bowl', check_func[-1][0])
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(callback_runs))
+
+    def test_track_time_interval(self):
+        """Test tracking time interval."""
+        specific_runs = []
+
+        utc_now = dt_util.utcnow()
+        unsub = track_time_interval(
+            self.hass, lambda x: specific_runs.append(1),
+            timedelta(seconds=10)
+        )
+
+        self._send_time_changed(utc_now + timedelta(seconds=5))
+        self.hass.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+
+        self._send_time_changed(utc_now + timedelta(seconds=13))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(utc_now + timedelta(minutes=20))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
+
+        self._send_time_changed(utc_now + timedelta(seconds=30))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
     def test_track_sunrise(self):
         """Test track the sunrise."""
         latitude = 32.87336
@@ -200,24 +409,27 @@ class TestEventHelpers(unittest.TestCase):
 
         # Get next sunrise/sunset
         astral = Astral()
-        utc_now = dt_util.utcnow()
+        utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
+        utc_today = utc_now.date()
 
         mod = -1
         while True:
-            next_rising = (astral.sunrise_utc(utc_now +
-                           timedelta(days=mod), latitude, longitude))
+            next_rising = (astral.sunrise_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
                 break
             mod += 1
 
         # Track sunrise
         runs = []
-        unsub = track_sunrise(self.hass, lambda: runs.append(1))
+        with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+            unsub = track_sunrise(self.hass, lambda: runs.append(1))
 
         offset_runs = []
         offset = timedelta(minutes=30)
-        unsub2 = track_sunrise(self.hass, lambda: offset_runs.append(1),
-                               offset)
+        with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+            unsub2 = track_sunrise(self.hass, lambda: offset_runs.append(1),
+                                   offset)
 
         # run tests
         self._send_time_changed(next_rising - offset)
@@ -232,7 +444,7 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(next_rising + offset)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(runs))
         self.assertEqual(1, len(offset_runs))
 
         unsub()
@@ -240,7 +452,7 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(next_rising + offset)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(runs))
         self.assertEqual(1, len(offset_runs))
 
     def test_track_sunset(self):
@@ -256,23 +468,27 @@ class TestEventHelpers(unittest.TestCase):
 
         # Get next sunrise/sunset
         astral = Astral()
-        utc_now = dt_util.utcnow()
+        utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
+        utc_today = utc_now.date()
 
         mod = -1
         while True:
-            next_setting = (astral.sunset_utc(utc_now +
-                            timedelta(days=mod), latitude, longitude))
+            next_setting = (astral.sunset_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_setting > utc_now:
                 break
             mod += 1
 
         # Track sunset
         runs = []
-        unsub = track_sunset(self.hass, lambda: runs.append(1))
+        with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+            unsub = track_sunset(self.hass, lambda: runs.append(1))
 
         offset_runs = []
         offset = timedelta(minutes=30)
-        unsub2 = track_sunset(self.hass, lambda: offset_runs.append(1), offset)
+        with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+            unsub2 = track_sunset(
+                self.hass, lambda: offset_runs.append(1), offset)
 
         # Run tests
         self._send_time_changed(next_setting - offset)
@@ -287,7 +503,7 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(next_setting + offset)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(runs))
         self.assertEqual(1, len(offset_runs))
 
         unsub()
@@ -295,7 +511,7 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(next_setting + offset)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(runs))
         self.assertEqual(1, len(offset_runs))
 
     def _send_time_changed(self, now):

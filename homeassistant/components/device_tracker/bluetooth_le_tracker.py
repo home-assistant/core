@@ -1,19 +1,17 @@
-"""Tracking for bluetooth low energy devices."""
+"""
+Tracking for bluetooth low energy devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
+"""
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
-    YAML_DEVICES,
-    CONF_TRACK_NEW,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA,
-    load_config,
-    DEFAULT_TRACK_NEW
+    YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
+    PLATFORM_SCHEMA, load_config
 )
-import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
@@ -23,15 +21,17 @@ REQUIREMENTS = ['gattlib==0.20150805']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
-CONF_SCAN_DURATION = "scan_duration"
+CONF_SCAN_DURATION = 'scan_duration'
+CONF_BLUETOOTH_DEVICE = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int
+    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
+    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
 })
 
 
-def setup_scanner(hass, config, see):
-    """Setup the Bluetooth LE Scanner."""
+def setup_scanner(hass, config, see, discovery_info=None):
+    """Set up the Bluetooth LE Scanner."""
     # pylint: disable=import-error
     from gattlib import DiscoveryService
 
@@ -41,8 +41,8 @@ def setup_scanner(hass, config, see):
         """Mark a device as seen."""
         if new_device:
             if address in new_devices:
-                _LOGGER.debug("Seen %s %s times", address,
-                              new_devices[address])
+                _LOGGER.debug(
+                    "Seen %s %s times", address, new_devices[address])
                 new_devices[address] += 1
                 if new_devices[address] >= MIN_SEEN_NEW:
                     _LOGGER.debug("Adding %s to tracked devices", address)
@@ -60,7 +60,7 @@ def setup_scanner(hass, config, see):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
-            service = DiscoveryService()
+            service = DiscoveryService(ble_dev_id)
             devices = service.discover(duration)
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
         except RuntimeError as error:
@@ -70,6 +70,7 @@ def setup_scanner(hass, config, see):
 
     yaml_path = hass.config.path(YAML_DEVICES)
     duration = config.get(CONF_SCAN_DURATION)
+    ble_dev_id = config.get(CONF_BLUETOOTH_DEVICE)
     devs_to_track = []
     devs_donot_track = []
 
@@ -88,14 +89,13 @@ def setup_scanner(hass, config, see):
 
     # if track new devices is true discover new devices
     # on every scan.
-    track_new = util.convert(config.get(CONF_TRACK_NEW), bool,
-                             DEFAULT_TRACK_NEW)
+    track_new = config.get(CONF_TRACK_NEW)
+
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
         return False
 
-    interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
-                            DEFAULT_SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_ble(now):
         """Lookup Bluetooth LE devices and update status."""
@@ -115,8 +115,7 @@ def setup_scanner(hass, config, see):
                     _LOGGER.info("Discovered Bluetooth LE device %s", address)
                     see_device(address, devs[address], new_device=True)
 
-        track_point_in_utc_time(hass, update_ble,
-                                now + timedelta(seconds=interval))
+        track_point_in_utc_time(hass, update_ble, dt_util.utcnow() + interval)
 
     update_ble(dt_util.utcnow())
 

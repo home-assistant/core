@@ -9,7 +9,6 @@ import json
 import logging
 import ssl
 from ipaddress import ip_network
-from pathlib import Path
 
 import os
 import voluptuous as vol
@@ -19,7 +18,6 @@ from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
-from homeassistant.components import persistent_notification
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
@@ -27,16 +25,18 @@ from homeassistant.core import is_callback
 from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import auth_middleware
-from .ban import ban_middleware, process_wrong_login
+from .ban import ban_middleware
 from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
+from .static import (
+    staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
 
+REQUIREMENTS = ['aiohttp_cors==0.5.3']
+
 DOMAIN = 'http'
-REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -51,9 +51,7 @@ CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
-NOTIFICATION_ID_LOGIN = 'http-login'
-
-# TLS configuation follows the best-practice guidelines specified here:
+# TLS configuration follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
@@ -83,14 +81,13 @@ DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
-    vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(cv.ensure_list,
-                                                         [cv.string]),
+    vol.Optional(CONF_CORS_ORIGINS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
@@ -145,12 +142,12 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def stop_server(event):
-        """Callback to stop the server."""
+        """Stop the server."""
         yield from server.stop()
 
     @asyncio.coroutine
     def start_server(event):
-        """Callback to start the server."""
+        """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         yield from server.start()
 
@@ -190,7 +187,7 @@ class HomeAssistantWSGI(object):
         if is_ban_enabled:
             middlewares.insert(0, ban_middleware)
 
-        self.app = web.Application(middlewares=middlewares, loop=hass.loop)
+        self.app = web.Application(middlewares=middlewares)
         self.app['hass'] = hass
         self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
         self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
@@ -258,37 +255,45 @@ class HomeAssistantWSGI(object):
 
         self.app.router.add_route('GET', url, redirect)
 
-    def register_static_path(self, url_root, path, cache_length=31):
-        """Register a folder to serve as a static path.
-
-        Specify optional cache length of asset in days.
-        """
+    def register_static_path(self, url_path, path, cache_headers=True):
+        """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
-            self.app.router.add_static(url_root, path)
+            if cache_headers:
+                resource = CachingStaticResource
+            else:
+                resource = web.StaticResource
+
+            self.app.router.register_resource(resource(url_path, path))
             return
 
-        filepath = Path(path)
-
-        @asyncio.coroutine
-        def serve_file(request):
-            """Serve file from disk."""
-            res = yield from GZIP_FILE_SENDER.send(request, filepath)
-            return res
+        if cache_headers:
+            @asyncio.coroutine
+            def serve_file(request):
+                """Serve file from disk."""
+                return CachingFileResponse(path)
+        else:
+            @asyncio.coroutine
+            def serve_file(request):
+                """Serve file from disk."""
+                return web.FileResponse(path)
 
         # aiohttp supports regex matching for variables. Using that as temp
         # to work around cache busting MD5.
         # Turns something like /static/dev-panel.html into
         # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = url_root.rsplit('.', 1)
-        base, file = base.rsplit('/', 1)
-        regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
-        url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        base, ext = os.path.splitext(url_path)
+        if ext:
+            base, file = base.rsplit('/', 1)
+            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
+            url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        else:
+            url_pattern = url_path
 
         self.app.router.add_route('GET', url_pattern, serve_file)
 
     @asyncio.coroutine
     def start(self):
-        """Start the wsgi server."""
+        """Start the WSGI server."""
         cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
@@ -321,7 +326,7 @@ class HomeAssistantWSGI(object):
         # re-register all redirects, views, static paths.
         self.app._frozen = True  # pylint: disable=protected-access
 
-        self._handler = self.app.make_handler()
+        self._handler = self.app.make_handler(loop=self.hass.loop)
 
         try:
             self.server = yield from self.hass.loop.create_server(
@@ -334,7 +339,7 @@ class HomeAssistantWSGI(object):
 
     @asyncio.coroutine
     def stop(self):
-        """Stop the wsgi server."""
+        """Stop the WSGI server."""
         if self.server:
             self.server.close()
             yield from self.server.wait_closed()
@@ -368,8 +373,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from FILE_SENDER.send(request, Path(fil))
-        return response
+        return web.FileResponse(fil)
 
     def register(self, router):
         """Register the view with a router."""
@@ -395,7 +399,7 @@ class HomeAssistantView(object):
 
 
 def request_handler_factory(view, handler):
-    """Factory to wrap our handler classes."""
+    """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
         "Handler should be a coroutine or a callback."
 
@@ -409,13 +413,6 @@ def request_handler_factory(view, handler):
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            yield from process_wrong_login(request)
-            _LOGGER.warning('Login attempt or request with an invalid '
-                            'password from %s', remote_addr)
-            persistent_notification.async_create(
-                request.app['hass'],
-                'Invalid password used from {}'.format(remote_addr),
-                'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',

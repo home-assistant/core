@@ -2,7 +2,7 @@
 Support for the voicerss speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/voicerss/
+https://home-assistant.io/components/tts.voicerss/
 """
 import asyncio
 import logging
@@ -16,10 +16,21 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 VOICERSS_API_URL = "https://api.voicerss.org/"
+
+ERROR_MSG = [
+    b'Error description',
+    b'The subscription is expired or requests count limitation is exceeded!',
+    b'The request content length is too large!',
+    b'The language does not support!',
+    b'The language is not specified!',
+    b'The text is not specified!',
+    b'The API key is not available!',
+    b'The API key is not specified!',
+    b'The subscription does not support SSML!',
+]
 
 SUPPORT_LANGUAGES = [
     'ca-es', 'zh-cn', 'zh-hk', 'zh-tw', 'da-dk', 'nl-nl', 'en-au', 'en-ca',
@@ -71,50 +82,65 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup VoiceRSS speech component."""
+    """Set up VoiceRSS TTS component."""
     return VoiceRSSProvider(hass, config)
 
 
 class VoiceRSSProvider(Provider):
-    """VoiceRSS speech api provider."""
+    """The VoiceRSS speech API provider."""
 
     def __init__(self, hass, conf):
         """Init VoiceRSS TTS service."""
         self.hass = hass
-        self.extension = conf.get(CONF_CODEC)
+        self._extension = conf[CONF_CODEC]
+        self._lang = conf[CONF_LANG]
+        self.name = 'VoiceRSS'
 
-        self.params = {
-            'key': conf.get(CONF_API_KEY),
-            'hl': conf.get(CONF_LANG),
-            'c': (conf.get(CONF_CODEC)).upper(),
-            'f': conf.get(CONF_FORMAT),
+        self._form_data = {
+            'key': conf[CONF_API_KEY],
+            'hl': conf[CONF_LANG],
+            'c': (conf[CONF_CODEC]).upper(),
+            'f': conf[CONF_FORMAT],
         }
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message):
-        """Load TTS from voicerss."""
-        websession = async_get_clientsession(self.hass)
+    @property
+    def default_language(self):
+        """Return the default language."""
+        return self._lang
 
-        request = None
+    @property
+    def supported_languages(self):
+        """Return list of supported languages."""
+        return SUPPORT_LANGUAGES
+
+    @asyncio.coroutine
+    def async_get_tts_audio(self, message, language, options=None):
+        """Load TTS from VoiceRSS."""
+        websession = async_get_clientsession(self.hass)
+        form_data = self._form_data.copy()
+
+        form_data['src'] = message
+        form_data['hl'] = language
+
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.post(
-                    VOICERSS_API_URL, params=self.params,
-                    data=bytes(message, 'utf-8')
+                    VOICERSS_API_URL, data=form_data
                 )
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s",
+                    _LOGGER.error("Error %d on load url %s.",
                                   request.status, request.url)
                     return (None, None)
                 data = yield from request.read()
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout for voicerss api.")
+                if data in ERROR_MSG:
+                    _LOGGER.error(
+                        "Error receive %s from VoiceRSS", str(data, 'utf-8'))
+                    return (None, None)
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 
-        finally:
-            if request is not None:
-                yield from request.release()
-
-        return (self.extension, data)
+        return (self._extension, data)

@@ -8,14 +8,19 @@ import os
 import time
 import logging
 from glob import glob
+
 import voluptuous as vol
-from homeassistant.helpers.entity import Entity
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
+
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
 DEVICE_FAMILIES = ('10', '22', '28', '3B', '42')
 
@@ -24,49 +29,55 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the one wire Sensors."""
+    """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)
     sensor_ids = []
     device_files = []
-    for device_family in DEVICE_FAMILIES:
-        for device_folder in glob(os.path.join(base_dir, device_family +
-                                               '[.-]*')):
-            sensor_ids.append(os.path.split(device_folder)[1])
-            if base_dir == DEFAULT_MOUNT_DIR:
+    if base_dir == DEFAULT_MOUNT_DIR:
+        for device_family in DEVICE_FAMILIES:
+            for device_folder in glob(os.path.join(base_dir, device_family +
+                                                   '[.-]*')):
+                sensor_ids.append(os.path.split(device_folder)[1])
                 device_files.append(os.path.join(device_folder, 'w1_slave'))
-            else:
-                device_files.append(os.path.join(device_folder, 'temperature'))
+    else:
+        for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
+            family_file = open(family_file_path, "r")
+            family = family_file.read()
+            if family in DEVICE_FAMILIES:
+                sensor_id = os.path.split(
+                    os.path.split(family_file_path)[0])[1]
+                sensor_ids.append(sensor_id)
+                device_files.append(os.path.join(
+                    os.path.split(family_file_path)[0], 'temperature'))
 
     if device_files == []:
-        _LOGGER.error('No onewire sensor found. Check if '
-                      'dtoverlay=w1-gpio is in your /boot/config.txt. '
-                      'Check the mount_dir parameter if it\'s defined.')
+        _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
+                      "is in your /boot/config.txt. "
+                      "Check the mount_dir parameter if it's defined")
         return
 
     devs = []
     names = sensor_ids
 
     for key in config.keys():
-        if key == "names":
-            # only one name given
+        if key == 'names':
+            # Only one name given
             if isinstance(config['names'], str):
                 names = [config['names']]
-            # map names and sensors in given order
+            # Map names and sensors in given order
             elif isinstance(config['names'], list):
                 names = config['names']
-            # map names to ids.
+            # Map names to ids.
             elif isinstance(config['names'], dict):
                 names = []
                 for sensor_id in sensor_ids:
                     names.append(config['names'].get(sensor_id, sensor_id))
     for device_file, name in zip(device_files, names):
         devs.append(OneWire(name, device_file))
-    add_devices(devs)
+    add_devices(devs, True)
 
 
 class OneWire(Entity):
@@ -76,8 +87,7 @@ class OneWire(Entity):
         """Initialize the sensor."""
         self._name = name
         self._device_file = device_file
-        self._state = STATE_UNKNOWN
-        self.update()
+        self._state = None
 
     def _read_temp_raw(self):
         """Read the temperature as it is returned by the sensor."""
@@ -121,11 +131,11 @@ class OneWire(Entity):
                 if len(temp_read) == 1:
                     temp = round(float(temp_read[0]), 1)
             except ValueError:
-                _LOGGER.warning('Invalid temperature value read from ' +
+                _LOGGER.warning("Invalid temperature value read from %s",
                                 self._device_file)
             except FileNotFoundError:
-                _LOGGER.warning('Cannot read from sensor: ' +
-                                self._device_file)
+                _LOGGER.warning(
+                    "Cannot read from sensor: %s", self._device_file)
 
         if temp < -55 or temp > 125:
             return

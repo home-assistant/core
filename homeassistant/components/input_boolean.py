@@ -12,9 +12,11 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON)
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 
 DOMAIN = 'input_boolean'
 
@@ -29,34 +31,36 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-DEFAULT_CONFIG = {CONF_INITIAL: DEFAULT_INITIAL}
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.Any({
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
+            vol.Optional(CONF_INITIAL): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
         }, None)
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
+@bind_hass
 def is_on(hass, entity_id):
     """Test if input_boolean is True."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, entity_id):
     """Set input_boolean to True."""
     hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
 
 
+@bind_hass
 def turn_off(hass, entity_id):
     """Set input_boolean to False."""
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
 
+@bind_hass
 def toggle(hass, entity_id):
     """Set input_boolean to False."""
     hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
@@ -64,20 +68,20 @@ def toggle(hass, entity_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up input boolean."""
+    """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
-            cfg = DEFAULT_CONFIG
+            cfg = {}
 
         name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL)
+        initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
 
-        entities.append(InputBoolean(object_id, name, state, icon))
+        entities.append(InputBoolean(object_id, name, initial, icon))
 
     if not entities:
         return False
@@ -112,11 +116,11 @@ def async_setup(hass, config):
 class InputBoolean(ToggleEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, object_id, name, state, icon):
+    def __init__(self, object_id, name, initial, icon):
         """Initialize a boolean input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
-        self._state = state
+        self._state = initial
         self._icon = icon
 
     @property
@@ -138,6 +142,16 @@ class InputBoolean(ToggleEntity):
     def is_on(self):
         """Return true if entity is on."""
         return self._state
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        # If not None, we got an initial value.
+        if self._state is not None:
+            return
+
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        self._state = state and state.state == STATE_ON
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

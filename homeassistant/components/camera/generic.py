@@ -17,13 +17,15 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 
@@ -37,14 +39,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
 })
 
 
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a generic IP Camera."""
-    yield from async_add_devices([GenericCamera(hass, config)])
+    """Set up a generic IP Camera."""
+    async_add_devices([GenericCamera(hass, config)])
 
 
 class GenericCamera(Camera):
@@ -59,6 +62,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
+        self.content_type = device_info[CONF_CONTENT_TYPE]
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
@@ -85,8 +89,8 @@ class GenericCamera(Camera):
         try:
             url = self._still_image_url.async_render()
         except TemplateError as err:
-            _LOGGER.error('Error parsing template %s: %s',
-                          self._still_image_url, err)
+            _LOGGER.error(
+                "Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
         if url == self._last_url and self._limit_refetch:
@@ -100,14 +104,13 @@ class GenericCamera(Camera):
                     response = requests.get(url, timeout=10, auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
-                    _LOGGER.error('Error getting camera image: %s', error)
+                    _LOGGER.error("Error getting camera image: %s", error)
                     return self._last_image
 
-            self._last_image = yield from self.hass.loop.run_in_executor(
-                None, fetch)
+            self._last_image = yield from self.hass.async_add_job(
+                fetch)
         # async
         else:
-            response = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
@@ -115,15 +118,11 @@ class GenericCamera(Camera):
                         url, auth=self._auth)
                 self._last_image = yield from response.read()
             except asyncio.TimeoutError:
-                _LOGGER.error('Timeout getting camera image')
+                _LOGGER.error("Timeout getting camera image")
                 return self._last_image
-            except (aiohttp.errors.ClientError,
-                    aiohttp.errors.ClientDisconnectedError) as err:
-                _LOGGER.error('Error getting new camera image: %s', err)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error getting new camera image: %s", err)
                 return self._last_image
-            finally:
-                if response is not None:
-                    self.hass.async_add_job(response.release())
 
         self._last_url = url
         return self._last_image

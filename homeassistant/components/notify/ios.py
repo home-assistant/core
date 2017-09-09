@@ -39,17 +39,17 @@ def log_rate_limits(target, resp, level=20):
                 str(resetsAtTime).split(".")[0])
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.append("notify.ios")
+        hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push():
-        _LOGGER.error(("The notify.ios platform was loaded but no "
-                       "devices exist! Please check the documentation at "
-                       "https://home-assistant.io/ecosystem/ios/notifications"
-                       "/ for more information"))
+        _LOGGER.error("The notify.ios platform was loaded but no "
+                      "devices exist! Please check the documentation at "
+                      "https://home-assistant.io/ecosystem/ios/notifications"
+                      "/ for more information")
         return None
 
     return iOSNotificationService()
@@ -84,6 +84,11 @@ class iOSNotificationService(BaseNotificationService):
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
         for target in targets:
+            if target not in ios.enabled_push_ids():
+                _LOGGER.error("The target (%s) does not exist in .ios.conf.",
+                              targets)
+                return
+
             data[ATTR_TARGET] = target
 
             req = requests.post(PUSH_URL, json=data, timeout=10)

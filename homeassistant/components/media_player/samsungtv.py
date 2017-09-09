@@ -12,12 +12,13 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
+    CONF_MAC)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['samsungctl==0.5.1']
+REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF
+    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -43,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Samsung TV platform."""
+    """Set up the Samsung TV platform."""
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
         known_devices = set()
@@ -54,15 +55,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
         name = config.get(CONF_NAME)
+        mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
-        tv_name, model, host = discovery_info
+        tv_name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        host = discovery_info.get('host')
         name = "{} ({})".format(tv_name, model)
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
+        mac = None
     else:
-        _LOGGER.warning(
-            'Internal error on samsungtv component. Cannot determine device')
+        _LOGGER.warning("Cannot determine device")
         return
 
     # Only add a device once, so discovered devices do not override manual
@@ -70,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_devices([SamsungTVDevice(host, port, name, timeout)])
+        add_devices([SamsungTVDevice(host, port, name, timeout, mac)])
         _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
         _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
@@ -79,12 +83,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout):
+    def __init__(self, host, port, name, timeout, mac):
         """Initialize the Samsung device."""
+        from samsungctl import exceptions
         from samsungctl import Remote
-        # Save a reference to the imported class
+        from wakeonlan import wol
+        # Save a reference to the imported classes
+        self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
+        self._mac = mac
+        self._wol = wol
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -100,6 +109,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             'host': host,
             'timeout': timeout,
         }
+
+        if self._config['port'] == 8001:
+            self._config['method'] = 'websocket'
+        else:
+            self._config['method'] = 'legacy'
 
     def update(self):
         """Retrieve the latest data."""
@@ -119,14 +133,14 @@ class SamsungTVDevice(MediaPlayerDevice):
         try:
             self.get_remote().control(key)
             self._state = STATE_ON
-        except (self._remote_class.UnhandledResponse,
-                self._remote_class.AccessDenied, BrokenPipeError):
+        except (self._exceptions_class.UnhandledResponse,
+                self._exceptions_class.AccessDenied, BrokenPipeError):
             # We got a response so it's on.
             # BrokenPipe can occur when the commands is sent to fast
             self._state = STATE_ON
             self._remote = None
             return False
-        except (self._remote_class.ConnectionClosed, OSError):
+        except (self._exceptions_class.ConnectionClosed, OSError):
             self._state = STATE_OFF
             self._remote = None
             return False
@@ -149,13 +163,18 @@ class SamsungTVDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        if self._mac:
+            return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_key('KEY_POWEROFF')
+        if self._config['method'] == 'websocket':
+            self.send_key('KEY_POWER')
+        else:
+            self.send_key('KEY_POWEROFF')
         # Force closing of remote session to provide instant UI feedback
         self.get_remote().close()
 
@@ -198,4 +217,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
-        self.send_key('KEY_POWERON')
+        if self._mac:
+            self._wol.send_magic_packet(self._mac)
+        else:
+            self.send_key('KEY_POWERON')

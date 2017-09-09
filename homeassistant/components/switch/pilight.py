@@ -4,6 +4,7 @@ Support for switching devices via Pilight to on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pilight/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
-                                 CONF_PROTOCOL)
+                                 CONF_PROTOCOL, STATE_ON)
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ CONF_ON_CODE_RECIEVE = 'on_code_receive'
 CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
+CONF_ECHO = 'echo'
 
 DEPENDENCIES = ['pilight']
 
@@ -32,10 +35,14 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Optional('off'): cv.positive_int,
     vol.Optional(CONF_UNIT): cv.positive_int,
     vol.Optional(CONF_UNITCODE): cv.positive_int,
-    vol.Optional(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
     vol.Optional(CONF_STATE): cv.string,
     vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
 }, extra=vol.ALLOW_EXTRA)
+
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({
+    vol.Optional(CONF_ECHO): cv.boolean
+})
 
 SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
@@ -73,6 +80,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
+class _ReceiveHandle(object):
+    def __init__(self, config, echo):
+        """Initialize the handle."""
+        self.config_items = config.items()
+        self.echo = echo
+
+    def match(self, code):
+        """Test if the received code matches the configured values.
+
+        The received values have to be a subset of the configured options.
+        """
+        return self.config_items <= code.items()
+
+    def run(self, switch, turn_on):
+        """Change the state of the switch."""
+        switch.set_state(turn_on=turn_on, send_code=self.echo)
+
+
 class PilightSwitch(SwitchDevice):
     """Representation of a Pilight switch."""
 
@@ -84,11 +109,25 @@ class PilightSwitch(SwitchDevice):
         self._state = False
         self._code_on = code_on
         self._code_off = code_off
-        self._code_on_receive = code_on_receive
-        self._code_off_receive = code_off_receive
+
+        self._code_on_receive = []
+        self._code_off_receive = []
+
+        for code_list, conf in ((self._code_on_receive, code_on_receive),
+                                (self._code_off_receive, code_off_receive)):
+            for code in conf:
+                echo = code.pop(CONF_ECHO, True)
+                code_list.append(_ReceiveHandle(code, echo))
 
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        state = yield from async_get_last_state(self._hass, self.entity_id)
+        if state:
+            self._state = state.state == STATE_ON
 
     @property
     def name(self):
@@ -99,6 +138,11 @@ class PilightSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed, state set when correct code is received."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return True
 
     @property
     def is_on(self):
@@ -116,26 +160,38 @@ class PilightSwitch(SwitchDevice):
         # - Call turn on/off only once, even if more than one code is received
         if any(self._code_on_receive):
             for on_code in self._code_on_receive:
-                if on_code.items() <= call.data.items():
-                    self.turn_on()
+                if on_code.match(call.data):
+                    on_code.run(switch=self, turn_on=True)
                     break
 
         if any(self._code_off_receive):
             for off_code in self._code_off_receive:
-                if off_code.items() <= call.data.items():
-                    self.turn_off()
+                if off_code.match(call.data):
+                    off_code.run(switch=self, turn_on=False)
                     break
+
+    def set_state(self, turn_on, send_code=True):
+        """Set the state of the switch.
+
+        This sets the state of the switch. If send_code is set to True, then
+        it will call the pilight.send service to actually send the codes
+        to the pilight daemon.
+        """
+        if send_code:
+            if turn_on:
+                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                         self._code_on, blocking=True)
+            else:
+                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                         self._code_off, blocking=True)
+
+        self._state = turn_on
+        self.schedule_update_ha_state()
 
     def turn_on(self):
         """Turn the switch on by calling pilight.send service with on code."""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                 self._code_on, blocking=True)
-        self._state = True
-        self.schedule_update_ha_state()
+        self.set_state(turn_on=True)
 
     def turn_off(self):
         """Turn the switch on by calling pilight.send service with off code."""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                 self._code_off, blocking=True)
-        self._state = False
-        self.schedule_update_ha_state()
+        self.set_state(turn_on=False)

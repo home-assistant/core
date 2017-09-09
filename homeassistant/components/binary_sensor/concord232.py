@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES)
+    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -27,10 +27,10 @@ DEFAULT_NAME = 'Alarm'
 DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
-SCAN_INTERVAL = 1
+SCAN_INTERVAL = datetime.timedelta(seconds=1)
 
 ZONE_TYPES_SCHEMA = vol.Schema({
-    cv.positive_int: vol.In(SENSOR_CLASSES),
+    cv.positive_int: vol.In(DEVICE_CLASSES),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -67,17 +67,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if zone['number'] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(
-                    hass, client, zone, zone_types.get(zone['number'],
-                                                       get_opening_type(zone)))
+                    hass, client, zone, zone_types.get(
+                        zone['number'], get_opening_type(zone))
+                )
             )
 
-        add_devices(sensors)
-
-    return True
+        add_devices(sensors, True)
 
 
 def get_opening_type(zone):
-    """Helper function to try to guess sensor type from name."""
+    """Return the result of the type guessing from name."""
     if 'MOTION' in zone['name']:
         return 'motion'
     if 'KEY' in zone['name']:
@@ -99,11 +98,10 @@ class Concord232ZoneSensor(BinarySensorDevice):
         self._zone = zone
         self._number = zone['number']
         self._zone_type = zone_type
-        self.update()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     @property
@@ -123,13 +121,13 @@ class Concord232ZoneSensor(BinarySensorDevice):
         return bool(self._zone['state'] == 'Normal')
 
     def update(self):
-        """"Get updated stats from API."""
+        """Get updated stats from API."""
         last_update = datetime.datetime.now() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)
         if last_update > datetime.timedelta(seconds=1):
             self._client.zones = self._client.list_zones()
             self._client.last_zone_update = datetime.datetime.now()
-            _LOGGER.debug("Updated from Zone: %s", self._zone['name'])
+            _LOGGER.debug("Updated from zone: %s", self._zone['name'])
 
         if hasattr(self._client, 'zones'):
             self._zone = next((x for x in self._client.zones

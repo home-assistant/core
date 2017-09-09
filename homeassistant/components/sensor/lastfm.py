@@ -13,7 +13,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylast==1.6.0']
+REQUIREMENTS = ['pylast==1.9.0']
+
+ATTR_LAST_PLAYED = 'last_played'
+ATTR_PLAY_COUNT = 'play_count'
+ATTR_TOP_PLAYED = 'top_played'
 
 CONF_USERS = 'users'
 
@@ -21,20 +25,19 @@ ICON = 'mdi:lastfm'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_USERS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Last.fm platform."""
+    """Set up the Last.fm platform."""
     import pylast as lastfm
     network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
 
     add_devices(
-        [LastfmSensor(username,
-                      network) for username in config.get(CONF_USERS)])
+        [LastfmSensor(
+            username, network) for username in config.get(CONF_USERS)], True)
 
 
 class LastfmSensor(Entity):
@@ -50,7 +53,6 @@ class LastfmSensor(Entity):
         self._lastplayed = None
         self._topplayed = None
         self._cover = None
-        self.update()
 
     @property
     def name(self):
@@ -73,13 +75,13 @@ class LastfmSensor(Entity):
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = "{} - {}".format(last.track.artist,
-                                            last.track.title)
+        self._lastplayed = "{} - {}".format(
+            last.track.artist, last.track.title)
         top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = "{} - {}".format(topartist.group(1),
-                                           toptitle.group(1))
+        self._topplayed = "{} - {}".format(
+            topartist.group(1), toptitle.group(1))
         if self._user.get_now_playing() is None:
             self._state = "Not Scrobbling"
             return
@@ -89,8 +91,11 @@ class LastfmSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'Play Count': self._playcount, 'Last Played':
-                self._lastplayed, 'Top Played': self._topplayed}
+        return {
+            ATTR_LAST_PLAYED: self._lastplayed,
+            ATTR_PLAY_COUNT: self._playcount,
+            ATTR_TOP_PLAYED: self._topplayed,
+        }
 
     @property
     def entity_picture(self):

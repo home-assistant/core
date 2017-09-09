@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
 import datetime
+from datetime import timedelta
 import logging
 
 import requests
@@ -25,7 +26,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = 1
+SCAN_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -50,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Concord232Alarm(alarm.AlarmControlPanel):
-    """Represents the Concord232-based alarm panel."""
+    """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, hass, url, name):
         """Initialize the Concord232 alarm panel."""
@@ -78,7 +79,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """The characters if code is defined."""
+        """Return the characters if code is defined."""
         return '[0-9]{4}([0-9]{2})?'
 
     @property
@@ -116,7 +117,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('home')
+        self._alarm.arm('stay')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""

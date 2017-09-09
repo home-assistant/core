@@ -1,4 +1,5 @@
-# Pushes a new version to PyPi
+#!/bin/sh
+# Pushes a new version to PyPi.
 
 cd "$(dirname "$0")/.."
 

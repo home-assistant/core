@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.2']
+REQUIREMENTS = ['radiotherm==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Radio Thermostat."""
+    """Set up the Radio Thermostat."""
     import radiotherm
 
     hosts = []
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats)
+    add_devices(tstats, True)
 
 
 class RadioThermostat(ClimateDevice):
@@ -84,11 +84,11 @@ class RadioThermostat(ClimateDevice):
         self._name = None
         self._fmode = None
         self._tmode = None
+        self._tstate = None
         self._hold_temp = hold_temp
         self._away = False
         self._away_temps = away_temps
         self._prev_temp = None
-        self.update()
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property
@@ -135,18 +135,54 @@ class RadioThermostat(ClimateDevice):
         return self._away
 
     def update(self):
-        """Update the data from the thermostat."""
-        self._current_temperature = self.device.temp['raw']
+        """Update and validate the data from the thermostat."""
+        current_temp = self.device.temp['raw']
+        if current_temp == -1:
+            _LOGGER.error("Couldn't get valid temperature reading")
+            return
+        self._current_temperature = current_temp
         self._name = self.device.name['raw']
-        self._fmode = self.device.fmode['human']
-        self._tmode = self.device.tmode['human']
+        try:
+            self._fmode = self.device.fmode['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid fan mode reading")
+        try:
+            self._tmode = self.device.tmode['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid thermostat mode reading")
+        try:
+            self._tstate = self.device.tstate['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid thermostat state reading")
 
         if self._tmode == 'Cool':
-            self._target_temperature = self.device.t_cool['raw']
+            target_temp = self.device.t_cool['raw']
+            if target_temp == -1:
+                _LOGGER.error("Couldn't get target reading")
+                return
+            self._target_temperature = target_temp
             self._current_operation = STATE_COOL
         elif self._tmode == 'Heat':
-            self._target_temperature = self.device.t_heat['raw']
+            target_temp = self.device.t_heat['raw']
+            if target_temp == -1:
+                _LOGGER.error("Couldn't get valid target reading")
+                return
+            self._target_temperature = target_temp
             self._current_operation = STATE_HEAT
+        elif self._tmode == 'Auto':
+            if self._tstate == 'Cool':
+                target_temp = self.device.t_cool['raw']
+                if target_temp == -1:
+                    _LOGGER.error("Couldn't get valid target reading")
+                    return
+                self._target_temperature = target_temp
+            elif self._tstate == 'Heat':
+                target_temp = self.device.t_heat['raw']
+                if target_temp == -1:
+                    _LOGGER.error("Couldn't get valid target reading")
+                    return
+                self._target_temperature = target_temp
+            self._current_operation = STATE_AUTO
         else:
             self._current_operation = STATE_IDLE
 
@@ -159,6 +195,12 @@ class RadioThermostat(ClimateDevice):
             self.device.t_cool = round(temperature * 2.0) / 2.0
         elif self._current_operation == STATE_HEAT:
             self.device.t_heat = round(temperature * 2.0) / 2.0
+        elif self._current_operation == STATE_AUTO:
+            if self._tstate == 'Cool':
+                self.device.t_cool = round(temperature * 2.0) / 2.0
+            elif self._tstate == 'Heat':
+                self.device.t_heat = round(temperature * 2.0) / 2.0
+
         if self._hold_temp or self._away:
             self.device.hold = 1
         else:

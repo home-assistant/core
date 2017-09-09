@@ -36,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the NetAtmo Thermostat."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_callback_devices([NetatmoThermostat(data, module_name)])
+            add_devices([NetatmoThermostat(data, module_name)], True)
     except lnetatmo.NoDevice:
         return None
 
@@ -64,7 +64,6 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
-        self.update()
 
     @property
     def name(self):
@@ -111,7 +110,6 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
-        self.update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -119,19 +117,17 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
-        self.update_ha_state()
 
-    def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         mode = "manual"
         self._data.thermostatdata.setthermpoint(
-            mode, temperature, endTimeOffset)
+            mode, temperature, DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature
         self._away = False
-        self.update_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -153,7 +149,6 @@ class ThermostatData(object):
         self.current_temperature = None
         self.target_temperature = None
         self.setpoint_mode = None
-        # self.operation =
 
     def get_module_names(self):
         """Return all module available on the API as a list."""

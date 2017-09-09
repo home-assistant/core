@@ -1,16 +1,17 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access
+import asyncio
 from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE, STATE_NOT_HOME, )
+    ATTR_ASSUMED_STATE, STATE_NOT_HOME)
 import homeassistant.components.group as group
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestComponentsGroup(unittest.TestCase):
@@ -149,6 +150,20 @@ class TestComponentsGroup(unittest.TestCase):
             sorted(group.expand_entity_ids(
                 self.hass, ['light.bowl', test_group.entity_id])))
 
+    def test_expand_entity_ids_recursive(self):
+        """Test expand_entity_ids method with a group that contains itself."""
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group.create_group(
+            self.hass,
+            'init_group',
+            ['light.Bowl', 'light.Ceiling', 'group.init_group'],
+            False)
+
+        self.assertEqual(sorted(['light.ceiling', 'light.bowl']),
+                         sorted(group.expand_entity_ids(
+                             self.hass, [test_group.entity_id])))
+
     def test_expand_entity_ids_ignores_non_strings(self):
         """Test that non string elements in lists are ignored."""
         self.assertEqual([], group.expand_entity_ids(self.hass, [5, True]))
@@ -225,11 +240,11 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_conf = OrderedDict()
         group_conf['second_group'] = {
-                        'entities': 'light.Bowl, ' + test_group.entity_id,
-                        'icon': 'mdi:work',
-                        'view': True,
-                        'control': 'hidden',
-                    }
+            'entities': 'light.Bowl, ' + test_group.entity_id,
+            'icon': 'mdi:work',
+            'view': True,
+            'control': 'hidden',
+        }
         group_conf['test_group'] = 'hello.world,sensor.happy'
         group_conf['empty_group'] = {'name': 'Empty Group', 'entities': None}
 
@@ -274,8 +289,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass, 'light', ['light.test_1', 'light.test_2'])
         group.Group.create_group(
             self.hass, 'switch', ['switch.test_1', 'switch.test_2'])
-        group.Group.create_group(self.hass, 'group_of_groups', ['group.light',
-                                 'group.switch'])
+        group.Group.create_group(
+            self.hass, 'group_of_groups', ['group.light', 'group.switch'])
 
         self.assertEqual(
             ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
@@ -291,7 +306,7 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'light.Ceiling', 'sensor.no_exist'])
 
         state = self.hass.states.get(test_group.entity_id)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         self.hass.states.set('light.Bowl', STATE_ON, {
             ATTR_ASSUMED_STATE: True
@@ -305,7 +320,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(test_group.entity_id)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
     def test_group_updated_after_device_tracker_zone_change(self):
         """Test group state when device tracker in group changes zone."""
@@ -324,27 +339,26 @@ class TestComponentsGroup(unittest.TestCase):
     def test_reloading_groups(self):
         """Test reloading the group config."""
         assert setup_component(self.hass, 'group', {'group': {
-                    'second_group': {
-                        'entities': 'light.Bowl',
-                        'icon': 'mdi:work',
-                        'view': True,
-                    },
-                    'test_group': 'hello.world,sensor.happy',
-                    'empty_group': {'name': 'Empty Group', 'entities': None},
-                }
-            })
+            'second_group': {
+                'entities': 'light.Bowl',
+                'icon': 'mdi:work',
+                'view': True,
+            },
+            'test_group': 'hello.world,sensor.happy',
+            'empty_group': {'name': 'Empty Group', 'entities': None},
+        }})
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['group.empty_group', 'group.second_group', 'group.test_group']
         assert self.hass.bus.listeners['state_changed'] == 3
 
         with patch('homeassistant.config.load_yaml_config_file', return_value={
-                'group': {
-                    'hello': {
-                        'entities': 'light.Bowl',
-                        'icon': 'mdi:work',
-                        'view': True,
-                    }}}):
+            'group': {
+                'hello': {
+                    'entities': 'light.Bowl',
+                    'icon': 'mdi:work',
+                    'view': True,
+                }}}):
             group.reload(self.hass)
             self.hass.block_till_done()
 
@@ -380,3 +394,68 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
+
+
+@asyncio.coroutine
+def test_service_group_services(hass):
+    """Check if service are available."""
+    with assert_setup_component(0, 'group'):
+        yield from async_setup_component(hass, 'group', {
+            'group': {}
+        })
+
+    assert hass.services.has_service('group', group.SERVICE_SET)
+    assert hass.services.has_service('group', group.SERVICE_REMOVE)
+
+
+# pylint: disable=invalid-name
+@asyncio.coroutine
+def test_service_group_set_group_remove_group(hass):
+    """Check if service are available."""
+    with assert_setup_component(0, 'group'):
+        yield from async_setup_component(hass, 'group', {
+            'group': {}
+        })
+
+    group.async_set_group(hass, 'user_test_group', name="Test")
+    yield from hass.async_block_till_done()
+
+    group_state = hass.states.get('group.user_test_group')
+    assert group_state
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert group_state.attributes['friendly_name'] == "Test"
+
+    group.async_set_group(
+        hass, 'user_test_group', view=True, visible=False,
+        entity_ids=['test.entity_bla1'])
+    yield from hass.async_block_till_done()
+
+    group_state = hass.states.get('group.user_test_group')
+    assert group_state
+    assert group_state.attributes[group.ATTR_VIEW]
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert group_state.attributes['hidden']
+    assert group_state.attributes['friendly_name'] == "Test"
+    assert list(group_state.attributes['entity_id']) == ['test.entity_bla1']
+
+    group.async_set_group(
+        hass, 'user_test_group', icon="mdi:camera", name="Test2",
+        control="hidden", add=['test.entity_id2'])
+    yield from hass.async_block_till_done()
+
+    group_state = hass.states.get('group.user_test_group')
+    assert group_state
+    assert group_state.attributes[group.ATTR_VIEW]
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert group_state.attributes['hidden']
+    assert group_state.attributes['friendly_name'] == "Test2"
+    assert group_state.attributes['icon'] == "mdi:camera"
+    assert group_state.attributes[group.ATTR_CONTROL] == "hidden"
+    assert sorted(list(group_state.attributes['entity_id'])) == sorted([
+        'test.entity_bla1', 'test.entity_id2'])
+
+    group.async_remove(hass, 'user_test_group')
+    yield from hass.async_block_till_done()
+
+    group_state = hass.states.get('group.user_test_group')
+    assert group_state is None

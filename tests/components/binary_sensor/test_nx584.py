@@ -6,7 +6,7 @@ from unittest import mock
 from nx584 import client as nx584_client
 
 from homeassistant.components.binary_sensor import nx584
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -104,6 +104,12 @@ class TestNX584SensorSetup(unittest.TestCase):
         """Test the setup with connection failure."""
         nx584_client.Client.return_value.list_zones.side_effect = \
             requests.exceptions.ConnectionError
+        self._test_assert_graceful_fail({})
+
+    def test_setup_no_partitions(self):
+        """Test the setup with connection failure."""
+        nx584_client.Client.return_value.list_zones.side_effect = \
+            IndexError
         self._test_assert_graceful_fail({})
 
     def test_setup_version_too_old(self):

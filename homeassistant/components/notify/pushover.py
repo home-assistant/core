@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-pushover==0.2']
+REQUIREMENTS = ['python-pushover==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -27,16 +27,15 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-variable
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Pushover notification service."""
     from pushover import InitError
 
     try:
-        return PushoverNotificationService(config[CONF_USER_KEY],
-                                           config[CONF_API_KEY])
+        return PushoverNotificationService(
+            config[CONF_USER_KEY], config[CONF_API_KEY])
     except InitError:
-        _LOGGER.error(
-            'Wrong API key supplied. Get it at https://pushover.net')
+        _LOGGER.error("Wrong API key supplied")
         return None
 
 
@@ -74,4 +73,4 @@ class PushoverNotificationService(BaseNotificationService):
             except ValueError as val_err:
                 _LOGGER.error(str(val_err))
             except RequestError:
-                _LOGGER.exception('Could not send pushover notification')
+                _LOGGER.exception("Could not send pushover notification")

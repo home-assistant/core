@@ -2,7 +2,6 @@
 import threading
 import socket
 import logging
-import os
 import select
 
 from aiohttp import web
@@ -50,7 +49,7 @@ class DescriptionXmlView(HomeAssistantView):
 """
 
         resp_text = xml_template.format(
-            self.config.host_ip_addr, self.config.listen_port)
+            self.config.advertise_ip, self.config.advertise_port)
 
         return web.Response(text=resp_text, content_type='text/xml')
 
@@ -60,12 +59,14 @@ class UPNPResponderThread(threading.Thread):
 
     _interrupted = False
 
-    def __init__(self, host_ip_addr, listen_port):
+    def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast,
+                 advertise_ip, advertise_port):
         """Initialize the class."""
         threading.Thread.__init__(self)
 
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
+        self.upnp_bind_multicast = upnp_bind_multicast
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
@@ -80,21 +81,9 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
 """
 
-        self.upnp_response = resp_template.format(host_ip_addr, listen_port) \
-                                          .replace("\n", "\r\n") \
-                                          .encode('utf-8')
-
-        # Set up a pipe for signaling to the receiver that it's time to
-        # shutdown. Essentially, we place the SSDP socket into nonblocking
-        # mode and use select() to wait for data to arrive on either the SSDP
-        # socket or the pipe. If data arrives on either one, select() returns
-        # and tells us which filenos have data ready to read.
-        #
-        # When we want to stop the responder, we write data to the pipe, which
-        # causes the select() to return and indicate that said pipe has data
-        # ready to be read, which indicates to us that the responder needs to
-        # be shutdown.
-        self._interrupted_read_pipe, self._interrupted_write_pipe = os.pipe()
+        self.upnp_response = resp_template.format(
+            advertise_ip, advertise_port).replace("\n", "\r\n") \
+                                         .encode('utf-8')
 
     def run(self):
         """Run the server."""
@@ -116,7 +105,10 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
             socket.inet_aton("239.255.255.250") +
             socket.inet_aton(self.host_ip_addr))
 
-        ssdp_socket.bind(("239.255.255.250", 1900))
+        if self.upnp_bind_multicast:
+            ssdp_socket.bind(("", 1900))
+        else:
+            ssdp_socket.bind((self.host_ip_addr, 1900))
 
         while True:
             if self._interrupted:
@@ -125,16 +117,13 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
             try:
                 read, _, _ = select.select(
-                    [self._interrupted_read_pipe, ssdp_socket], [],
-                    [ssdp_socket])
+                    [ssdp_socket], [],
+                    [ssdp_socket], 2)
 
-                if self._interrupted_read_pipe in read:
-                    # Implies self._interrupted is True
-                    clean_socket_close(ssdp_socket)
-                    return
-                elif ssdp_socket in read:
+                if ssdp_socket in read:
                     data, addr = ssdp_socket.recvfrom(1024)
                 else:
+                    # most likely the timeout, so check for interupt
                     continue
             except socket.error as ex:
                 if self._interrupted:
@@ -143,6 +132,9 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
                 _LOGGER.error("UPNP Responder socket exception occured: %s",
                               ex.__str__)
+                # without the following continue, a second exception occurs
+                # because the data object has not been initialized
+                continue
 
             if "M-SEARCH" in data.decode('utf-8'):
                 # SSDP M-SEARCH method received, respond to it with our info
@@ -156,7 +148,6 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
         """Stop the server."""
         # Request for server
         self._interrupted = True
-        os.write(self._interrupted_write_pipe, bytes([0]))
         self.join()
 
 

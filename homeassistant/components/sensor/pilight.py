@@ -89,7 +89,7 @@ class PilightSensor(Entity):
             try:
                 value = call.data[self._variable]
                 self._state = value
-                self.update_ha_state()
+                self.schedule_update_ha_state()
             except KeyError:
                 _LOGGER.error(
                     'No variable %s in received code data %s',

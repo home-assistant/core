@@ -1,89 +1,182 @@
 """The tests for Home Assistant frontend."""
-# pylint: disable=protected-access
+import asyncio
 import re
-import unittest
+from unittest.mock import patch
 
-import requests
+import pytest
 
-import homeassistant.bootstrap as bootstrap
-from homeassistant.components import http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
-
-from tests.common import get_test_instance_port, get_test_home_assistant
-
-API_PASSWORD = "test1234"
-SERVER_PORT = get_test_instance_port()
-HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
-
-hass = None
+from homeassistant.setup import async_setup_component
+from homeassistant.components.frontend import (
+    DOMAIN, ATTR_THEMES, ATTR_EXTRA_HTML_URL, DATA_PANELS, register_panel)
 
 
-def _url(path=""):
-    """Helper method to generate URLs."""
-    return HTTP_BASE_URL + path
+@pytest.fixture
+def mock_http_client(hass, test_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {}))
+    return hass.loop.run_until_complete(test_client(hass.http.app))
 
 
-# pylint: disable=invalid-name
-def setUpModule():
-    """Initialize a Home Assistant server."""
-    global hass
-
-    hass = get_test_home_assistant()
-
-    assert bootstrap.setup_component(
-        hass, http.DOMAIN,
-        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-                       http.CONF_SERVER_PORT: SERVER_PORT}})
-
-    assert bootstrap.setup_component(hass, 'frontend')
-
-    hass.start()
+@pytest.fixture
+def mock_http_client_with_themes(hass, test_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            ATTR_THEMES: {
+                'happy': {
+                    'primary-color': 'red'
+                }
+            }
+        }}))
+    return hass.loop.run_until_complete(test_client(hass.http.app))
 
 
-# pylint: disable=invalid-name
-def tearDownModule():
-    """Stop everything that was started."""
-    hass.stop()
+@pytest.fixture
+def mock_http_client_with_urls(hass, test_client):
+    """Start the Hass HTTP component."""
+    hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
+        DOMAIN: {
+            ATTR_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"]
+        }}))
+    return hass.loop.run_until_complete(test_client(hass.http.app))
 
 
-class TestFrontend(unittest.TestCase):
-    """Test the frontend."""
+@asyncio.coroutine
+def test_frontend_and_static(mock_http_client):
+    """Test if we can get the frontend."""
+    resp = yield from mock_http_client.get('')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        hass.block_till_done()
+    text = yield from resp.text()
 
-    def test_frontend_and_static(self):
-        """Test if we can get the frontend."""
-        req = requests.get(_url(""))
-        self.assertEqual(200, req.status_code)
+    # Test we can retrieve frontend.js
+    frontendjs = re.search(
+        r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)', text)
 
-        # Test we can retrieve frontend.js
-        frontendjs = re.search(
-            r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)',
-            req.text)
+    assert frontendjs is not None
+    resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
+    assert resp.status == 200
+    assert 'public' in resp.headers.get('cache-control')
 
-        self.assertIsNotNone(frontendjs)
-        req = requests.get(_url(frontendjs.groups(0)[0]))
-        self.assertEqual(200, req.status_code)
 
-    def test_404(self):
-        """Test for HTTP 404 error."""
-        self.assertEqual(404, requests.get(_url("/not-existing")).status_code)
+@asyncio.coroutine
+def test_dont_cache_service_worker(mock_http_client):
+    """Test that we don't cache the service worker."""
+    resp = yield from mock_http_client.get('/service_worker.js')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
 
-    def test_we_cannot_POST_to_root(self):
-        """Test that POST is not allow to root."""
-        self.assertEqual(405, requests.post(_url("")).status_code)
 
-    def test_states_routes(self):
-        """All served by index."""
-        req = requests.get(_url("/states"))
-        self.assertEqual(200, req.status_code)
+@asyncio.coroutine
+def test_404(mock_http_client):
+    """Test for HTTP 404 error."""
+    resp = yield from mock_http_client.get('/not-existing')
+    assert resp.status == 404
 
-        req = requests.get(_url("/states/group.non_existing"))
-        self.assertEqual(404, req.status_code)
 
-        hass.states.set('group.existing', 'on', {'view': True})
-        req = requests.get(_url("/states/group.existing"))
-        self.assertEqual(200, req.status_code)
+@asyncio.coroutine
+def test_we_cannot_POST_to_root(mock_http_client):
+    """Test that POST is not allow to root."""
+    resp = yield from mock_http_client.post('/')
+    assert resp.status == 405
+
+
+@asyncio.coroutine
+def test_states_routes(mock_http_client):
+    """All served by index."""
+    resp = yield from mock_http_client.get('/states')
+    assert resp.status == 200
+
+    resp = yield from mock_http_client.get('/states/group.existing')
+    assert resp.status == 200
+
+
+@asyncio.coroutine
+def test_themes_api(mock_http_client_with_themes):
+    """Test that /api/themes returns correct data."""
+    resp = yield from mock_http_client_with_themes.get('/api/themes')
+    json = yield from resp.json()
+    assert json['default_theme'] == 'default'
+    assert json['themes'] == {'happy': {'primary-color': 'red'}}
+
+
+@asyncio.coroutine
+def test_themes_set_theme(hass, mock_http_client_with_themes):
+    """Test frontend.set_theme service."""
+    yield from hass.services.async_call(DOMAIN, 'set_theme', {'name': 'happy'})
+    yield from hass.async_block_till_done()
+    resp = yield from mock_http_client_with_themes.get('/api/themes')
+    json = yield from resp.json()
+    assert json['default_theme'] == 'happy'
+
+    yield from hass.services.async_call(
+        DOMAIN, 'set_theme', {'name': 'default'})
+    yield from hass.async_block_till_done()
+    resp = yield from mock_http_client_with_themes.get('/api/themes')
+    json = yield from resp.json()
+    assert json['default_theme'] == 'default'
+
+
+@asyncio.coroutine
+def test_themes_set_theme_wrong_name(hass, mock_http_client_with_themes):
+    """Test frontend.set_theme service called with wrong name."""
+    yield from hass.services.async_call(DOMAIN, 'set_theme', {'name': 'wrong'})
+    yield from hass.async_block_till_done()
+    resp = yield from mock_http_client_with_themes.get('/api/themes')
+    json = yield from resp.json()
+    assert json['default_theme'] == 'default'
+
+
+@asyncio.coroutine
+def test_themes_reload_themes(hass, mock_http_client_with_themes):
+    """Test frontend.reload_themes service."""
+    with patch('homeassistant.components.frontend.load_yaml_config_file',
+               return_value={DOMAIN: {
+                   ATTR_THEMES: {
+                       'sad': {'primary-color': 'blue'}
+                   }}}):
+        yield from hass.services.async_call(DOMAIN, 'set_theme',
+                                            {'name': 'happy'})
+        yield from hass.services.async_call(DOMAIN, 'reload_themes')
+        yield from hass.async_block_till_done()
+        resp = yield from mock_http_client_with_themes.get('/api/themes')
+        json = yield from resp.json()
+        assert json['themes'] == {'sad': {'primary-color': 'blue'}}
+        assert json['default_theme'] == 'default'
+
+
+@asyncio.coroutine
+def test_missing_themes(mock_http_client):
+    """Test that themes API works when themes are not defined."""
+    resp = yield from mock_http_client.get('/api/themes')
+    assert resp.status == 200
+    json = yield from resp.json()
+    assert json['default_theme'] == 'default'
+    assert json['themes'] == {}
+
+
+@asyncio.coroutine
+def test_extra_urls(mock_http_client_with_urls):
+    """Test that extra urls are loaded."""
+    resp = yield from mock_http_client_with_urls.get('/states')
+    assert resp.status == 200
+    text = yield from resp.text()
+    assert text.find('href=\'https://domain.com/my_extra_url.html\'') >= 0
+
+
+@asyncio.coroutine
+def test_panel_without_path(hass):
+    """Test panel registration without file path."""
+    register_panel(hass, 'test_component', 'nonexistant_file')
+    assert hass.data[DATA_PANELS] == {}
+
+
+@asyncio.coroutine
+def test_panel_with_url(hass):
+    """Test panel registration without file path."""
+    register_panel(hass, 'test_component', None, url='some_url')
+    assert hass.data[DATA_PANELS] == {
+        'test_component': {'component_name': 'test_component',
+                           'url': 'some_url',
+                           'url_path': 'test_component'}}

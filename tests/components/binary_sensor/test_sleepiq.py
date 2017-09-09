@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import requests_mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.binary_sensor import sleepiq
 
 from tests.components.test_sleepiq import mock_responses
@@ -30,6 +30,10 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
             'username': self.username,
             'password': self.password,
         }
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
 
     @requests_mock.Mocker()
     def test_setup(self, mock):

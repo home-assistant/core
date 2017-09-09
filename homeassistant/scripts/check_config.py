@@ -9,13 +9,11 @@ from unittest.mock import patch
 
 from typing import Dict, List, Sequence
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.config as config_util
-import homeassistant.loader as loader
+from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog>2.1,<3',)
+REQUIREMENTS = ('colorlog==3.0.1',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -26,11 +24,16 @@ MOCKS = {
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.bootstrap.async_log_exception",
-               bootstrap.async_log_exception)
+    'except': ("homeassistant.config.async_log_exception",
+               config_util.async_log_exception),
+    'package_error': ("homeassistant.config._log_pkg_error",
+                      config_util._log_pkg_error),
+    'logger_exception': ("homeassistant.setup._LOGGER.error",
+                         setup._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
+    'homeassistant.bootstrap.async_register_signal_handling',
     'homeassistant.core._LOGGER.info',
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
@@ -47,7 +50,7 @@ def color(the_color, *args, reset=None):
     """Color helper."""
     from colorlog.escape_codes import escape_codes, parse_colors
     try:
-        if len(args) == 0:
+        if not args:
             assert reset is None, "You cannot reset if nothing being printed"
             return parse_colors(the_color)
         return parse_colors(the_color) + ' '.join(args) + \
@@ -94,7 +97,6 @@ def run(script_args: List) -> int:
         domain_info = args.info.split(',')
 
     res = check(config_path)
-
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
@@ -104,7 +106,7 @@ def run(script_args: List) -> int:
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
-    if len(res['except']) > 0:
+    if res['except']:
         print(color('bold_white', 'Failed config'))
         for domain, config in res['except'].items():
             domain_info.append(domain)
@@ -146,7 +148,7 @@ def run(script_args: List) -> int:
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
-    return 0
+    return len(res['except'])
 
 
 def check(config_path):
@@ -178,9 +180,9 @@ def check(config_path):
 
         if module is None:
             # Ensure list
-            res['except'][ERROR_STR] = res['except'].get(ERROR_STR, [])
-            res['except'][ERROR_STR].append('{} not found: {}'.format(
-                'Platform' if '.' in comp_name else 'Component', comp_name))
+            msg = '{} not found: {}'.format(
+                'Platform' if '.' in comp_name else 'Component', comp_name)
+            res['except'].setdefault(ERROR_STR, []).append(msg)
             return None
 
         # Test if platform/component and overwrite setup
@@ -209,9 +211,23 @@ def check(config_path):
 
     def mock_except(ex, domain, config,  # pylint: disable=unused-variable
                     hass=None):
-        """Mock bootstrap.log_exception."""
+        """Mock config.log_exception."""
         MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
+
+    def mock_package_error(  # pylint: disable=unused-variable
+            package, component, config, message):
+        """Mock config_util._log_pkg_error."""
+        MOCKS['package_error'][1](package, component, config, message)
+
+        pkg_key = 'homeassistant.packages.{}'.format(package)
+        res['except'][pkg_key] = config.get('homeassistant', {}) \
+            .get('packages', {}).get(package)
+
+    def mock_logger_exception(msg, *params):
+        """Log logger.exceptions."""
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception'][1](msg, *params)
 
     # Patches to skip functions
     for sil in SILENCE:
@@ -236,6 +252,7 @@ def check(config_path):
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
+        res['except'].setdefault(ERROR_STR, []).append(err)
     finally:
         # Stop all patches
         for pat in PATCHES.values():
@@ -247,33 +264,32 @@ def check(config_path):
     return res
 
 
+def line_info(obj, **kwargs):
+    """Display line config source."""
+    if hasattr(obj, '__config_file__'):
+        return color('cyan', "[source {}:{}]"
+                     .format(obj.__config_file__, obj.__line__ or '?'),
+                     **kwargs)
+    return '?'
+
+
 def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """Display a dict.
 
     A friendly version of print yaml.yaml.dump(config).
     """
-    def line_src(this):
-        """Display line config source."""
-        if hasattr(this, '__config_file__'):
-            return color('cyan', "[source {}:{}]"
-                         .format(this.__config_file__, this.__line__ or '?'),
-                         **kwargs)
-        return ''
-
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        skey = str.lower(val[0])
-        if str(skey) == 'platform':
-            skey = '0'
-        return skey
+        key = str.lower(val[0])
+        return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
     if listi or isinstance(layer, list):
         indent_str = indent_str[:-1] + '-'
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
-            if isinstance(value, dict) or isinstance(value, list):
-                print(indent_str, key + ':', line_src(value))
+            if isinstance(value, (dict, list)):
+                print(indent_str, key + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:
                 print(indent_str, key + ':', value)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Home Assistant setup script."""
 import os
 from setuptools import setup, find_packages
 from homeassistant.const import (__version__, PROJECT_PACKAGE_NAME,
@@ -14,15 +15,17 @@ DOWNLOAD_URL = ('{}/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests>=2,<3',
+    'requests==2.14.2',
     'pyyaml>=3.11,<4',
-    'pytz>=2016.7',
-    'pip>=7.0.0',
-    'jinja2>=2.8',
-    'voluptuous==0.9.2',
+    'pytz>=2017.02',
+    'pip>=8.0.3',
+    'jinja2>=2.9.6',
+    'voluptuous==0.10.5',
     'typing>=3,<4',
-    'aiohttp==1.1.6',
-    'async_timeout==1.1.0',
+    'aiohttp==2.2.5',
+    'async_timeout==1.3.0',
+    'chardet==3.0.4',
+    'astral==1.4',
 ]
 
 setup(

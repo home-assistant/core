@@ -7,14 +7,18 @@ from aiohttp import web
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_SET,
-    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON, STATE_OFF,
+    HTTP_BAD_REQUEST, HTTP_NOT_FOUND, ATTR_SUPPORTED_FEATURES,
 )
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
 )
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_SUPPORTED_MEDIA_COMMANDS,
-    SUPPORT_VOLUME_SET,
+    ATTR_MEDIA_VOLUME_LEVEL, SUPPORT_VOLUME_SET,
+)
+from homeassistant.components.fan import (
+    ATTR_SPEED, SUPPORT_SET_SPEED, SPEED_OFF, SPEED_LOW,
+    SPEED_MEDIUM, SPEED_HIGH
 )
 from homeassistant.components.http import HomeAssistantView
 
@@ -90,7 +94,7 @@ class HueOneLightStateView(HomeAssistantView):
         self.config = config
 
     @core.callback
-    def get(self, request, username, entity_id=None):
+    def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
         hass = request.app['hass']
         entity_id = self.config.number_to_entity_id(entity_id)
@@ -161,6 +165,9 @@ class HueOneLightChangeView(HomeAssistantView):
         # Choose general HA domain
         domain = core.DOMAIN
 
+        # Entity needs separate call to turn on
+        turn_on_needed = False
+
         # Convert the resulting "on" status into the service we need to call
         service = SERVICE_TURN_ON if result else SERVICE_TURN_OFF
 
@@ -170,9 +177,10 @@ class HueOneLightChangeView(HomeAssistantView):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
-            if brightness is not None:
-                data[ATTR_BRIGHTNESS] = brightness
+        if entity.domain == "light":
+            if entity_features & SUPPORT_BRIGHTNESS:
+                if brightness is not None:
+                    data[ATTR_BRIGHTNESS] = brightness
 
         # If the requested entity is a script add some variables
         elif entity.domain == "script":
@@ -185,14 +193,36 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == "media_player":
-            media_commands = entity.attributes.get(
-                ATTR_SUPPORTED_MEDIA_COMMANDS, 0)
-            if media_commands & SUPPORT_VOLUME_SET == SUPPORT_VOLUME_SET:
+            if entity_features & SUPPORT_VOLUME_SET:
                 if brightness is not None:
+                    turn_on_needed = True
                     domain = entity.domain
                     service = SERVICE_VOLUME_SET
                     # Convert 0-100 to 0.0-1.0
                     data[ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100.0
+
+        # If the requested entity is a cover, convert to open_cover/close_cover
+        elif entity.domain == "cover":
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_OPEN_COVER
+            else:
+                service = SERVICE_CLOSE_COVER
+
+        # If the requested entity is a fan, convert to speed
+        elif entity.domain == "fan":
+            if entity_features & SUPPORT_SET_SPEED:
+                if brightness is not None:
+                    domain = entity.domain
+                    # Convert 0-100 to a fan speed
+                    if brightness == 0:
+                        data[ATTR_SPEED] = SPEED_OFF
+                    elif brightness <= 33.3 and brightness > 0:
+                        data[ATTR_SPEED] = SPEED_LOW
+                    elif brightness <= 66.6 and brightness > 33.3:
+                        data[ATTR_SPEED] = SPEED_MEDIUM
+                    elif brightness <= 100 and brightness > 66.6:
+                        data[ATTR_SPEED] = SPEED_HIGH
 
         if entity.domain in config.off_maps_to_on_domains:
             # Map the off command to on
@@ -206,7 +236,7 @@ class HueOneLightChangeView(HomeAssistantView):
             config.cached_states[entity_id] = (result, brightness)
 
         # Separate call to turn on needed
-        if domain != core.DOMAIN:
+        if turn_on_needed:
             hass.async_add_job(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
@@ -252,11 +282,14 @@ def parse_hue_api_put_light_body(request_json, entity):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
-            report_brightness = True
-            result = (brightness > 0)
+        if entity.domain == "light":
+            if entity_features & SUPPORT_BRIGHTNESS:
+                report_brightness = True
+                result = (brightness > 0)
 
-        elif entity.domain == "script" or entity.domain == "media_player":
+        elif (entity.domain == "script" or
+              entity.domain == "media_player" or
+              entity.domain == "fan"):
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
@@ -278,16 +311,30 @@ def get_entity_state(config, entity):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
-            pass
+        if entity.domain == "light":
+            if entity_features & SUPPORT_BRIGHTNESS:
+                pass
 
         elif entity.domain == "media_player":
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if final_state else 0.0)
             # Convert 0.0-1.0 to 0-255
             final_brightness = round(min(1.0, level) * 255)
+        elif entity.domain == "fan":
+            speed = entity.attributes.get(ATTR_SPEED, 0)
+            # Convert 0.0-1.0 to 0-255
+            final_brightness = 0
+            if speed == SPEED_LOW:
+                final_brightness = 85
+            elif speed == SPEED_MEDIUM:
+                final_brightness = 170
+            elif speed == SPEED_HIGH:
+                final_brightness = 255
     else:
         final_state, final_brightness = cached_state
+        # Make sure brightness is valid
+        if final_brightness is None:
+            final_brightness = 255 if final_state else 0
 
     return (final_state, final_brightness)
 

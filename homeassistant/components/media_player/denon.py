@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, MediaPlayerDevice)
+    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +26,7 @@ SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
 
 SUPPORT_MEDIA_MODES = SUPPORT_PAUSE | SUPPORT_STOP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -50,14 +50,11 @@ MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Denon platform."""
+    """Set up the Denon platform."""
     denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
 
     if denon.update():
         add_devices([denon])
-        return True
-    else:
-        return False
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -101,7 +98,7 @@ class DenonDevice(MediaPlayerDevice):
     @classmethod
     def telnet_request(cls, telnet, command, all_lines=False):
         """Execute `command` and return the response."""
-        _LOGGER.debug('Sending: "%s"', command)
+        _LOGGER.debug("Sending: %s", command)
         telnet.write(command.encode('ASCII') + b'\r')
         lines = []
         while True:
@@ -109,7 +106,7 @@ class DenonDevice(MediaPlayerDevice):
             if not line:
                 break
             lines.append(line.decode('ASCII').strip())
-            _LOGGER.debug('Recived: "%s"', line)
+            _LOGGER.debug("Recived: %s", line)
 
         if all_lines:
             return lines
@@ -118,7 +115,7 @@ class DenonDevice(MediaPlayerDevice):
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
         telnet = telnetlib.Telnet(self._host)
-        _LOGGER.debug('Sending: "%s"', command)
+        _LOGGER.debug("Sending: %s", command)
         telnet.write(command.encode('ASCII') + b'\r')
         telnet.read_very_eager()  # skip response
         telnet.close()
@@ -150,7 +147,7 @@ class DenonDevice(MediaPlayerDevice):
             answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
                             "NSE6", "NSE7", "NSE8"]
             for line in self.telnet_request(telnet, 'NSE', all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop()):] + '\n'
+                self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:
             self._mediainfo = self.source
 
@@ -179,26 +176,25 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean if volume is currently muted."""
         return self._muted
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return the list of available input sources."""
         return sorted(list(self._source_list.keys()))
 
     @property
     def media_title(self):
-        """Current media info."""
+        """Return the current media info."""
         return self._mediainfo
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._mediasource in MEDIA_MODES.values():
             return SUPPORT_DENON | SUPPORT_MEDIA_MODES
-        else:
-            return SUPPORT_DENON
+        return SUPPORT_DENON
 
     @property
     def source(self):

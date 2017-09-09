@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
@@ -41,12 +41,12 @@ SENSOR_TYPES = {
     'battery_lvl': ['Battery_lvl', '', 'mdi:battery'],
     'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
     'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'WindAngle': ['Angle', '', 'mdi:compass'],
-    'WindAngle_value': ['Angle Value', 'º', 'mdi:compass'],
-    'WindStrength': ['Strength', 'km/h', 'mdi:weather-windy'],
-    'GustAngle': ['Gust Angle', '', 'mdi:compass'],
-    'GustAngle_value': ['Gust Angle Value', 'º', 'mdi:compass'],
-    'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
+    'windangle': ['Angle', '', 'mdi:compass'],
+    'windangle_value': ['Angle Value', 'º', 'mdi:compass'],
+    'windstrength': ['Strength', 'km/h', 'mdi:weather-windy'],
+    'gustangle': ['Gust Angle', '', 'mdi:compass'],
+    'gustangle_value': ['Gust Angle Value', 'º', 'mdi:compass'],
+    'guststrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
     'rf_status': ['Radio', '', 'mdi:signal'],
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal'],
     'wifi_status': ['Wifi', '', 'mdi:wifi'],
@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available Netatmo weather sensors."""
+    """Set up the available Netatmo weather sensors."""
     netatmo = get_component('netatmo')
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
@@ -87,11 +87,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for module_name in data.get_module_names():
                 for variable in\
                         data.station_data.monitoredConditions(module_name):
-                    dev.append(NetAtmoSensor(data, module_name, variable))
+                    if variable in SENSOR_TYPES.keys():
+                        dev.append(NetAtmoSensor(data, module_name, variable))
+                    else:
+                        _LOGGER.warning("Ignoring unknown var %s for mod %s",
+                                        variable, module_name)
     except lnetatmo.NoDevice:
         return None
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class NetAtmoSensor(Entity):
@@ -109,10 +113,8 @@ class NetAtmoSensor(Entity):
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
-        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
-                                                                  module_id,
-                                                                  self.type)
-        self.update()
+        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(
+            self._name, module_id, self.type)
 
     @property
     def name(self):
@@ -142,7 +144,12 @@ class NetAtmoSensor(Entity):
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
-        data = self.netatmo_data.data[self.module_name]
+        data = self.netatmo_data.data.get(self.module_name)
+
+        if data is None:
+            _LOGGER.warning("No data found for %s", self.module_name)
+            self._state = STATE_UNKNOWN
+            return
 
         if self.type == 'temperature':
             self._state = round(data['Temperature'], 1)
@@ -210,51 +217,51 @@ class NetAtmoSensor(Entity):
             self._state = data['min_temp']
         elif self.type == 'max_temp':
             self._state = data['max_temp']
-        elif self.type == 'WindAngle_value':
+        elif self.type == 'windangle_value':
             self._state = data['WindAngle']
-        elif self.type == 'WindAngle':
+        elif self.type == 'windangle':
             if data['WindAngle'] >= 330:
-                self._state = "North (%d\xb0)" % data['WindAngle']
+                self._state = "N (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 300:
-                self._state = "North-West (%d\xb0)" % data['WindAngle']
+                self._state = "NW (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 240:
-                self._state = "West (%d\xb0)" % data['WindAngle']
+                self._state = "W (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 210:
-                self._state = "South-West (%d\xb0)" % data['WindAngle']
+                self._state = "SW (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 150:
-                self._state = "South (%d\xb0)" % data['WindAngle']
+                self._state = "S (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 120:
-                self._state = "South-East (%d\xb0)" % data['WindAngle']
+                self._state = "SE (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 60:
-                self._state = "East (%d\xb0)" % data['WindAngle']
+                self._state = "E (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 30:
-                self._state = "North-East (%d\xb0)" % data['WindAngle']
+                self._state = "NE (%d\xb0)" % data['WindAngle']
             elif data['WindAngle'] >= 0:
-                self._state = "North (%d\xb0)" % data['WindAngle']
-        elif self.type == 'WindStrength':
+                self._state = "N (%d\xb0)" % data['WindAngle']
+        elif self.type == 'windstrength':
             self._state = data['WindStrength']
-        elif self.type == 'GustAngle_value':
+        elif self.type == 'gustangle_value':
             self._state = data['GustAngle']
-        elif self.type == 'GustAngle':
+        elif self.type == 'gustangle':
             if data['GustAngle'] >= 330:
-                self._state = "North (%d\xb0)" % data['GustAngle']
+                self._state = "N (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 300:
-                self._state = "North-West (%d\xb0)" % data['GustAngle']
+                self._state = "NW (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 240:
-                self._state = "West (%d\xb0)" % data['GustAngle']
+                self._state = "W (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 210:
-                self._state = "South-West (%d\xb0)" % data['GustAngle']
+                self._state = "SW (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 150:
-                self._state = "South (%d\xb0)" % data['GustAngle']
+                self._state = "S (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 120:
-                self._state = "South-East (%d\xb0)" % data['GustAngle']
+                self._state = "SE (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 60:
-                self._state = "East (%d\xb0)" % data['GustAngle']
+                self._state = "E (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 30:
-                self._state = "North-East (%d\xb0)" % data['GustAngle']
+                self._state = "NE (%d\xb0)" % data['GustAngle']
             elif data['GustAngle'] >= 0:
-                self._state = "North (%d\xb0)" % data['GustAngle']
-        elif self.type == 'GustStrength':
+                self._state = "N (%d\xb0)" % data['GustAngle']
+        elif self.type == 'guststrength':
             self._state = data['GustStrength']
         elif self.type == 'rf_status_lvl':
             self._state = data['rf_status']
@@ -302,7 +309,7 @@ class NetAtmoData(object):
         self.station_data = lnetatmo.WeatherStationData(self.auth)
 
         if self.station is not None:
-            self.data = self.station_data.lastData(station=self.station,
-                                                   exclude=3600)
+            self.data = self.station_data.lastData(
+                station=self.station, exclude=3600)
         else:
             self.data = self.station_data.lastData(exclude=3600)

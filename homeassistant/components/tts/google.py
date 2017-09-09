@@ -2,7 +2,7 @@
 Support for the google speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/google/
+https://home-assistant.io/components/tts.google/
 """
 import asyncio
 import logging
@@ -28,11 +28,10 @@ SUPPORT_LANGUAGES = [
     'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
     'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
     'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
-    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy',
+    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk',
 ]
 
 DEFAULT_LANG = 'en'
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
@@ -41,25 +40,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup Google speech component."""
-    return GoogleProvider(hass)
+    """Set up Google speech component."""
+    return GoogleProvider(hass, config[CONF_LANG])
 
 
 class GoogleProvider(Provider):
-    """Google speech api provider."""
+    """The Google speech API provider."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, lang):
         """Init Google TTS service."""
         self.hass = hass
+        self._lang = lang
         self.headers = {
             'Referer': "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
+        self.name = 'Google'
+
+    @property
+    def default_language(self):
+        """Return the default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """Return list of supported languages."""
+        return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message):
+    def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
@@ -69,13 +80,13 @@ class GoogleProvider(Provider):
 
         data = b''
         for idx, part in enumerate(message_parts):
-            part_token = yield from self.hass.loop.run_in_executor(
-                None, token.calculate_token, part)
+            part_token = yield from self.hass.async_add_job(
+                token.calculate_token, part)
 
             url_param = {
                 'ie': 'UTF-8',
-                'tl': self.language,
-                'q': yarl.quote(part),
+                'tl': language,
+                'q': yarl.quote(part, strict=False),
                 'tk': part_token,
                 'total': len(message_parts),
                 'idx': idx,
@@ -83,7 +94,6 @@ class GoogleProvider(Provider):
                 'textlen': len(part),
             }
 
-            request = None
             try:
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     request = yield from websession.get(
@@ -97,13 +107,9 @@ class GoogleProvider(Provider):
                         return (None, None)
                     data += yield from request.read()
 
-            except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+            except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Timeout for google speech.")
                 return (None, None)
-
-            finally:
-                if request is not None:
-                    yield from request.release()
 
         return ("mp3", data)
 
@@ -123,8 +129,7 @@ class GoogleProvider(Provider):
             if len(fullstring) > MESSAGE_SIZE:
                 idx = fullstring.rfind(' ', 0, MESSAGE_SIZE)
                 return [fullstring[:idx]] + split_by_space(fullstring[idx:])
-            else:
-                return [fullstring]
+            return [fullstring]
 
         msg_parts = []
         for part in parts:

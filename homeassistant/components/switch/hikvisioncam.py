@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Hikvision camera."""
+    """Set up Hikvision camera."""
     import hikvision.api
     from hikvision.error import HikvisionError, MissingParamError
 

@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.google as google
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class TestGoogle(unittest.TestCase):
         }
 
         calendar_info = google.get_calendar_info(self.hass, calendar)
-        self.assertEquals(calendar_info, {
+        self.assertEqual(calendar_info, {
             'cal_id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
             'entities': [{
                 'device_id': 'we_are_we_are_a_test_calendar',
@@ -80,7 +80,7 @@ class TestGoogle(unittest.TestCase):
         # }
 
         # self.assertIsInstance(self.hass.data[google.DATA_INDEX], dict)
-        # self.assertEquals(self.hass.data[google.DATA_INDEX], {})
+        # self.assertEqual(self.hass.data[google.DATA_INDEX], {})
 
         calendar_service = google.GoogleCalendarService(
             self.hass.config.path(google.TOKEN_FILE))

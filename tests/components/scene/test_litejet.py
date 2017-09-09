@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest import mock
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import litejet
 from tests.common import get_test_home_assistant
 import homeassistant.components.scene as scene
@@ -35,7 +35,7 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.scenes.return_value = range(1, 3)
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
-        assert bootstrap.setup_component(
+        assert setup.setup_component(
             self.hass,
             litejet.DOMAIN,
             {
@@ -50,14 +50,15 @@ class TestLiteJetScene(unittest.TestCase):
         self.hass.stop()
 
     def scene(self):
+        """Get the current scene."""
         return self.hass.states.get(ENTITY_SCENE)
 
     def other_scene(self):
+        """Get the other scene."""
         return self.hass.states.get(ENTITY_OTHER_SCENE)
 
     def test_activate(self):
         """Test activating the scene."""
-
         scene.activate(self.hass, ENTITY_SCENE)
         self.hass.block_till_done()
         self.mock_lj.activate_scene.assert_called_once_with(

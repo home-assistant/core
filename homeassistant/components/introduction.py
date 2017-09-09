@@ -16,7 +16,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config=None):
-    """Setup the introduction component."""
+    """Set up the introduction component."""
     log = logging.getLogger(__name__)
     log.info("""
 

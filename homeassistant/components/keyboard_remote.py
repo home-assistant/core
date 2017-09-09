@@ -1,60 +1,44 @@
 """
-Recieve signals from a keyboard and use it as a remote control.
+Receive signals from a keyboard and use it as a remote control.
 
-This component allows to use a keyboard as remote control. It will
-fire ´keyboard_remote_command_received´ events witch can then be used
-in automation rules.
-
-The `evdev` package is used to interface with the keyboard and thus this
-is Linux only. It also means you can't use your normal keyboard for this,
-because `evdev` will block it.
-
-Example:
-  keyboard_remote:
-    device_descriptor: '/dev/input/by-id/foo'
-    key_value: 'key_up' # optional alternaive 'key_down' and 'key_hold'
-    # be carefull, 'key_hold' fires a lot of events
-
-  and an automation rule to bring breath live into it.
-
-  automation:
-    alias: Keyboard All light on
-    trigger:
-      platform: event
-      event_type: keyboard_remote_command_received
-      event_data:
-        key_code: 107 # inspect log to obtain desired keycode
-    action:
-      service: light.turn_on
-      entity_id: light.all
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/keyboard_remote/
 """
-
 # pylint: disable=import-error
 import threading
 import logging
 import os
+import time
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP
-)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-DOMAIN = "keyboard_remote"
 REQUIREMENTS = ['evdev==0.6.1']
+
 _LOGGER = logging.getLogger(__name__)
+
+DEVICE_DESCRIPTOR = 'device_descriptor'
+DEVICE_ID_GROUP = 'Device descriptor or name'
+DEVICE_NAME = 'device_name'
+DOMAIN = 'keyboard_remote'
+
 ICON = 'mdi:remote'
-KEYBOARD_REMOTE_COMMAND_RECEIVED = 'keyboard_remote_command_received'
+
 KEY_CODE = 'key_code'
 KEY_VALUE = {'key_up': 0, 'key_down': 1, 'key_hold': 2}
+KEYBOARD_REMOTE_COMMAND_RECEIVED = 'keyboard_remote_command_received'
+KEYBOARD_REMOTE_CONNECTED = 'keyboard_remote_connected'
+KEYBOARD_REMOTE_DISCONNECTED = 'keyboard_remote_disconnected'
+
 TYPE = 'type'
-DEVICE_DESCRIPTOR = 'device_descriptor'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(DEVICE_DESCRIPTOR): cv.string,
+        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
+        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
         vol.Optional(TYPE, default='key_up'):
         vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
     }),
@@ -62,24 +46,17 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup keyboard_remote."""
+    """Set up the keyboard_remote."""
     config = config.get(DOMAIN)
-    device_descriptor = config.get(DEVICE_DESCRIPTOR)
-    if not device_descriptor or not os.path.isfile(device_descriptor):
-        id_folder = '/dev/input/by-id/'
-        _LOGGER.error(
-            'A device_descriptor must be defined. '
-            'Possible descriptors are %s:\n%s',
-            id_folder, os.listdir(id_folder)
-        )
-        return
 
-    key_value = KEY_VALUE.get(config.get(TYPE, 'key_up'))
+    if not config.get(DEVICE_DESCRIPTOR) and\
+       not config.get(DEVICE_NAME):
+        _LOGGER.error("No device_descriptor or device_name found")
+        return
 
     keyboard_remote = KeyboardRemote(
         hass,
-        device_descriptor,
-        key_value
+        config
     )
 
     def _start_keyboard_remote(_event):
@@ -103,25 +80,93 @@ def setup(hass, config):
 class KeyboardRemote(threading.Thread):
     """This interfaces with the inputdevice using evdev."""
 
-    def __init__(self, hass, device_descriptor, key_value):
+    def __init__(self, hass, config):
         """Construct a KeyboardRemote interface object."""
-        from evdev import InputDevice
+        from evdev import InputDevice, list_devices
 
-        self.dev = InputDevice(device_descriptor)
+        self.device_descriptor = config.get(DEVICE_DESCRIPTOR)
+        self.device_name = config.get(DEVICE_NAME)
+        if self.device_descriptor:
+            self.device_id = self.device_descriptor
+        else:
+            self.device_id = self.device_name
+        self.dev = self._get_keyboard_device()
+        if self.dev is not None:
+            _LOGGER.debug("Keyboard connected, %s", self.device_id)
+        else:
+            _LOGGER.debug(
+                'Keyboard not connected, %s.\n\
+                Check /dev/input/event* permissions.',
+                self.device_id
+                )
+
+            id_folder = '/dev/input/by-id/'
+
+            if os.path.isdir(id_folder):
+                device_names = [InputDevice(file_name).name
+                                for file_name in list_devices()]
+                _LOGGER.debug(
+                    'Possible device names are:\n %s.\n \
+                    Possible device descriptors are %s:\n %s',
+                    device_names,
+                    id_folder,
+                    os.listdir(id_folder)
+                    )
+
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
         self.hass = hass
-        self.key_value = key_value
+        self.key_value = KEY_VALUE.get(config.get(TYPE, 'key_up'))
+
+    def _get_keyboard_device(self):
+        """Get the keyboard device."""
+        from evdev import InputDevice, list_devices
+        if self.device_name:
+            devices = [InputDevice(file_name) for file_name in list_devices()]
+            for device in devices:
+                if self.device_name == device.name:
+                    return device
+        elif self.device_descriptor:
+            try:
+                device = InputDevice(self.device_descriptor)
+            except OSError:
+                pass
+            else:
+                return device
+        return None
 
     def run(self):
-        """Main loop of the KeyboardRemote."""
+        """Run the loop of the KeyboardRemote."""
         from evdev import categorize, ecodes
-        _LOGGER.debug('KeyboardRemote interface started for %s', self.dev)
 
-        self.dev.grab()
+        if self.dev is not None:
+            self.dev.grab()
+            _LOGGER.debug("Interface started for %s", self.dev)
 
         while not self.stopped.isSet():
-            event = self.dev.read_one()
+            # Sleeps to ease load on processor
+            time.sleep(.1)
+
+            if self.dev is None:
+                self.dev = self._get_keyboard_device()
+                if self.dev is not None:
+                    self.dev.grab()
+                    self.hass.bus.fire(
+                        KEYBOARD_REMOTE_CONNECTED
+                    )
+                    _LOGGER.debug("Keyboard re-connected, %s", self.device_id)
+                else:
+                    continue
+
+            try:
+                event = self.dev.read_one()
+            except IOError:  # Keyboard Disconnected
+                self.dev = None
+                self.hass.bus.fire(
+                    KEYBOARD_REMOTE_DISCONNECTED
+                )
+                _LOGGER.debug("Keyboard disconnected, %s", self.device_id)
+                continue
 
             if not event:
                 continue
