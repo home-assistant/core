@@ -102,6 +102,12 @@ def reload_core_config(hass):
 
 
 @asyncio.coroutine
+def async_reload_core_config(hass):
+    """Reload the core config."""
+    yield from hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+
+
+@asyncio.coroutine
 def async_setup(hass, config):
     """Set up general services related to Home Assistant."""
     @asyncio.coroutine
