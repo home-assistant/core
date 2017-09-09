@@ -609,7 +609,7 @@ pyfttt==0.3
 pyharmony==1.0.16
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.1.3
+pyhik==0.1.4
 
 # homeassistant.components.homematic
 pyhomematic==0.1.30
