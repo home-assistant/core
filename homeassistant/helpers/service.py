@@ -138,10 +138,13 @@ def async_get_state_services(hass, domain, state):
                     for key in service_obj.schema.schema) and
                 service_name not in services):
             continue
-        service_obj.schema.extra = vol.REMOVE_EXTRA
+        # make a copy to be able to modify schema
+        schema = service_obj.schema.extend({})
+        # remove extra state attributes not in schema
+        schema.extra = vol.REMOVE_EXTRA
         try:
             # voluptuous modifies the value before returning it, so make a copy
-            valid_attrs = service_obj.schema(dict(state.attributes))
+            valid_attrs = schema(dict(state.attributes))
         except vol.Invalid:
             continue
         if valid_attrs:
