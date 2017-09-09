@@ -261,7 +261,7 @@ def test_api_get_services(hass, mock_api_client):
     """Test if we can get a dict describing current services."""
     resp = yield from mock_api_client.get(const.URL_API_SERVICES)
     data = yield from resp.json()
-    local_services = hass.services.async_services()
+    local_services = hass.services.async_services_json()
 
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])

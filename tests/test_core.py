@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
 
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -648,16 +648,9 @@ class TestServiceRegistry(unittest.TestCase):
     def test_services(self):
         """Test services."""
         expected = {
-            'test_domain': {'test_service': {'description': '', 'fields': {}}}
-        }
-        self.assertEqual(expected, self.services.services)
-
-    def test_full_services(self):
-        """Test full services."""
-        expected = {
             'test_domain': {'test_service': self.services._services[
                 'test_domain']['test_service']}}
-        self.assertEqual(expected, self.services.full_services)
+        self.assertEqual(expected, self.services.services)
 
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
@@ -967,3 +960,14 @@ def test_track_task_functions(loop):
         assert hass._track_task
     finally:
         yield from hass.async_stop()
+
+
+@asyncio.coroutine
+def test_services_json(hass):
+    """Test async_services_json."""
+    expected = {
+        'test_domain': {'test_service': {'description': '', 'fields': {}}}
+    }
+    async_mock_service(hass, 'test_domain', 'test_service')
+    services_json = hass.services.async_services_json()
+    assert services_json == expected

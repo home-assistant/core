@@ -465,7 +465,7 @@ class ActiveConnection:
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
         self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.services.async_services()))
+            msg['id'], self.hass.services.async_services_json()))
 
     def handle_get_config(self, msg):
         """Handle get config command.

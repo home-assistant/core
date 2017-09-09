@@ -118,7 +118,7 @@ def async_get_state_services(hass, domain, state):
 
     This function must be run in the event loop.
     """
-    domain_services = hass.services.async_full_services().get(domain)
+    domain_services = hass.services.async_services().get(domain)
 
     if not domain_services:
         _LOGGER.warning("No services found for domain %s", domain)

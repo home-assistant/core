@@ -825,23 +825,6 @@ class ServiceRegistry(object):
 
     @callback
     def async_services(self):
-        """Return dictionary with per domain a dict of available services.
-
-        This method must be run in the event loop.
-        """
-        return {domain: {key: value.as_dict() for key, value
-                         in self._services[domain].items()}
-                for domain in self._services}
-
-    @property
-    def full_services(self):
-        """Return dict with per domain a dict with the service instances."""
-        return run_callback_threadsafe(
-            self._hass.loop, self.async_full_services,
-        ).result()
-
-    @callback
-    def async_full_services(self):
         """Return read only dict with per domain a dict with service instances.
 
         This method must be run in the event loop.
@@ -849,6 +832,16 @@ class ServiceRegistry(object):
         return MappingProxyType({
             domain: MappingProxyType(services)
             for domain, services in self._services.items()})
+
+    @callback
+    def async_services_json(self):
+        """Return dictionary with per domain a dict of JSONified services.
+
+        This method must be run in the event loop.
+        """
+        return {domain: {key: value.as_dict() for key, value
+                         in self._services[domain].items()}
+                for domain in self._services}
 
     def has_service(self, domain, service):
         """Test if specified service exists.
