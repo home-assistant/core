@@ -102,7 +102,7 @@ def common_attributes(entity):
         'address': 'INSTEON Address',
         'description': 'Description',
         'model': 'Model',
-        'cat': 'Cagegory',
+        'cat': 'Category',
         'subcat': 'Subcategory',
         'firmware': 'Firmware',
         'product_key': 'Product Key'

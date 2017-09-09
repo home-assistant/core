@@ -148,6 +148,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             new_token = \
                 self._oauth.refresh_access_token(
                     self._token_info['refresh_token'])
+            # skip when refresh failed
+            if new_token is None:
+                return
+
             self._token_info = new_token
             token_refreshed = True
         if self._player is None or token_refreshed:
@@ -158,6 +162,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def update(self):
         """Update state and attributes."""
         self.refresh_spotify_instance()
+
+        # Don't true update when token is expired
+        if self._oauth.is_token_expired(self._token_info):
+            _LOGGER.warning("Spotify failed to update, token expired.")
+            return
+
         # Available devices
         player_devices = self._player.devices()
         if player_devices is not None:
