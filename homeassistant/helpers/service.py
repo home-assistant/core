@@ -1,14 +1,13 @@
 """Service calling related helpers."""
 import asyncio
 import logging
-from collections import defaultdict
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import callback, HomeAssistant  # NOQA
+from homeassistant.core import callback, HomeAssistant, ServiceCall  # NOQA
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -124,12 +123,12 @@ def async_get_state_services(hass, domain, state):
         _LOGGER.warning("No services found for domain %s", domain)
         return None
 
-    services = defaultdict(dict)
+    services = {}
 
     for service_name, service_obj in domain_services.items():
         if (service_obj.state is not None and
                 service_obj.state == state.state):
-            services[service_name]['state'] = state.state
+            services[service_name] = ServiceCall(domain, service_name)
         if (service_obj.schema is None or
                 # service with no state to set must require attributes
                 # to be able to change state attributes
@@ -149,6 +148,7 @@ def async_get_state_services(hass, domain, state):
             services.pop(service_name, None)
             continue
         if valid_attrs:
-            services[service_name]['attrs'] = valid_attrs
+            services[service_name] = ServiceCall(
+                domain, service_name, valid_attrs)
 
-    return dict(services)
+    return services

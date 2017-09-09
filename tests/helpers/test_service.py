@@ -155,8 +155,7 @@ def test_get_state_services(hass):
     services = service.async_get_state_services(hass, domain, state)
 
     assert SERVICE_TURN_ON in services
-    assert services[SERVICE_TURN_ON]['state'] == 'on'
-    assert services[SERVICE_TURN_ON]['attrs'] == state_attrs
+    assert services[SERVICE_TURN_ON].data == state_attrs
 
 
 @asyncio.coroutine
@@ -184,8 +183,7 @@ def test_get_state_services_no_schema(hass):
     services = service.async_get_state_services(hass, domain, state)
 
     assert SERVICE_TURN_ON in services
-    assert services[SERVICE_TURN_ON]['state'] == 'on'
-    assert 'attrs' not in services[SERVICE_TURN_ON]
+    assert not services[SERVICE_TURN_ON].data
 
 
 @asyncio.coroutine
@@ -230,5 +228,4 @@ def test_get_state_services_no_attributes(hass):
     services = service.async_get_state_services(hass, domain, state)
 
     assert SERVICE_TURN_ON in services
-    assert services[SERVICE_TURN_ON]['state'] == 'on'
-    assert 'attrs' not in services[SERVICE_TURN_ON]
+    assert not services[SERVICE_TURN_ON].data
