@@ -455,6 +455,7 @@ class CoverableRflinkDevice(RflinkCommand):
 
     pass
 
+
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
     CONF_GROUP_ALIASSES,
