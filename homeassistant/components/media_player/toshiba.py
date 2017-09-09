@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON = 'mdi:television'
 DEFAULT_NAME = 'Toshiba Cast TV'
 DEFAULT_PORT = 4430
 
@@ -49,8 +50,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     host = config.get(CONF_HOST)
 
-    add_devices([ToshibaCastTVDevice(name, host, port)])
-    return True
+    try:
+        add_devices([ToshibaCastTVDevice(name, host, port)])
+        return True
+    except OSError:
+        return False
 
 
 class ToshibaCastTVDevice(MediaPlayerDevice):
@@ -65,25 +69,36 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         self._host = host
         self._port = port
         self._volume = 0
-        # Should add the current input
+        self._uniqueid = None
         self._current_source = None
-        self._source_list = ['ANT_CABLE', 'CAST', 'HDMI_1', 'HDMI_2', 'HDMI_3', 'USB', 'AV']
+        self._source_list = ['ANT_CABLE', 'CAST', 'HDMI_1',
+                             'HDMI_2', 'HDMI_3', 'USB', 'AV']
+        self.update()
+
+
 
     def update(self):
         """Retrieve the latest data."""
         try:
-            data = requests.get('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+            data = requests.get('https://{}:{:d}/v2/remote/uniqueid'.format
+                                (self._host, self._port),
+                                verify=False).json()
+            self._uniqueid = data['uniqueid']
+
+            data = requests.get('https://{}:{:d}/v2/remote/status/power'.format
+                                (self._host, self._port),
                                 verify=False).json()
             if data['power'] == 'on':
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
 
-            data = requests.get('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
-                                verify=False).json()
+            data = requests.get('https://{}:{:d}/v2/remote/status/external_input'.format
+                                (self._host, self._port), verify=False).json()
             self._current_source = data['external_input']
 
-            data = requests.get('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
+            data = requests.get('https://{}:{:d}/v2/remote/status/volume'.format
+                                (self._host, self._port),
                                 verify=False).json()
             self._volume = data['volume']
 
@@ -95,7 +110,8 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         try:
             payload = {'key': key}
 
-            requests.post('https://%s:%s/v2/remote/remote' % (self._host, self._port),
+            requests.post('https://%s:%s/v2/remote/remote'.format
+                          (self._host, self._port),
                           data=payload, verify=False)
             self._state = STATE_ON
         except OSError:
@@ -151,14 +167,16 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on the media player."""
         payload = {'power': 'on'}
-        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+        requests.post('https://{}:{:d}/v2/remote/status/power'.format
+                      (self._host, self._port),
                       data=payload, verify=False)
         self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         payload = {'power': 'off'}
-        requests.post('https://%s:%s/v2/remote/status/power' % (self._host, self._port),
+        requests.post('https://{}:{:d}/v2/remote/status/power'.format
+                      (self._host, self._port),
                       data=payload, verify=False)
         self._state = STATE_OFF
 
@@ -185,12 +203,18 @@ class ToshibaCastTVDevice(MediaPlayerDevice):
         """Set the volume level."""
         self._volume = volume
         payload = {'volume': volume}
-        requests.post('https://%s:%s/v2/remote/status/volume' % (self._host, self._port),
+        requests.post('https://{}:{:d}/v2/remote/status/volume'.format
+                      (self._host, self._port),
                       data=payload, verify=False)
 
     def select_source(self, source):
         """Select input source."""
-        payload = {'external_input': source}
-        self._current_source = source
-        requests.post('https://%s:%s/v2/remote/status/external_input' % (self._host, self._port),
-                      data=payload, verify=False)
+        if source in self._source_list:
+            payload = {'external_input': source}
+            try:
+                requests.post('https://{}:{:d}/v2/remote/status/external_input'.format
+                             (self._host, self._port),
+                              data=payload, verify=False)
+                self._current_source = source
+            except OSError:
+                self._state = STATE_OFF
