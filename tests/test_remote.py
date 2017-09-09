@@ -6,6 +6,7 @@ from homeassistant import remote, setup, core as ha
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import (
     get_test_instance_port, get_test_home_assistant)
@@ -162,10 +163,13 @@ class TestRemoteMethods(unittest.TestCase):
 
     def test_get_services(self):
         """Test Python API get_services."""
-        local_services = hass.services.services
+        local_services = run_callback_threadsafe(
+            hass.loop, hass.services.async_services_json,
+        ).result()
+        hass.block_till_done()
 
         for serv_domain in remote.get_services(master_api):
-            local = local_services.pop(serv_domain["domain"])
+            local = local_services.get(serv_domain["domain"])
 
             self.assertEqual(local, serv_domain["services"])
 
