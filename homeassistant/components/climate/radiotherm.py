@@ -32,7 +32,10 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
-# Mappings from radiotherm json data to HASS state flags.
+# Mappings from radiotherm json data to HASS state flags.  Note that
+# the inverse mappings are also in the code below so they have to be
+# updated in two places.
+
 # Temperature mode of the thermostat.
 NAME_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
 # Active state (is it heating or cooling?)
