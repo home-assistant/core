@@ -31,6 +31,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_magnet.aq2':
                 devices.append(XiaomiDoorSensor(device, gateway))
+            elif model == 'sensor_wleak.aq1':
+                devices.append(XiaomiWaterLeakSensor(device, gateway))
             elif model == 'smoke':
                 devices.append(XiaomiSmokeSensor(device, gateway))
             elif model == 'natgas':
@@ -208,6 +210,35 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
             return True
         elif value == 'close':
             self._open_since = 0
+            if self._state:
+                self._state = False
+                return True
+            return False
+
+
+class XiaomiWaterLeakSensor(XiaomiBinarySensor):
+    """Representation of a XiaomiWaterLeakSensor."""
+
+    def __init__(self, device, xiaomi_hub):
+        """Initialize the XiaomiWaterLeakSensor."""
+        XiaomiBinarySensor.__init__(self, device, 'Water Leak Sensor',
+                                    xiaomi_hub, 'status', 'moisture')
+
+    def parse_data(self, data):
+        """Parse data sent by gateway."""
+        self._should_poll = False
+
+        value = data.get(self._data_key)
+        if value is None:
+            return False
+
+        if value == 'leak':
+            self._should_poll = True
+            if self._state:
+                return False
+            self._state = True
+            return True
+        elif value == 'no_leak':
             if self._state:
                 self._state = False
                 return True

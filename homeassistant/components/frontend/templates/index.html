@@ -21,7 +21,7 @@
     <meta name="msapplication-TileColor" content="#3fbbf4ff"/>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='viewport' content='width=device-width, user-scalable=no'>
-    <meta name='theme-color' content='#03a9f4'>
+    <meta name='theme-color' content='{{ theme_color }}'>
     <style>
       body {
         font-family: 'Roboto', 'Noto', sans-serif;
@@ -97,6 +97,10 @@
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
     {% endif -%}
     <link rel='import' href='{{ icons_url }}' async>
+    {% for extra_url in extra_urls -%}
+      <link rel='import' href='{{ extra_url }}' async>
+    {% endfor -%}
+
     <script>
       var webComponentsSupported = (
         'registerElement' in document &&

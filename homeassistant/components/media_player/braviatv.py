@@ -11,7 +11,6 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
@@ -132,7 +131,7 @@ def setup_bravia(config, pin, hass, add_devices):
         # If we came here and configuring this host, mark as done
         if host in _CONFIGURING:
             request_id = _CONFIGURING.pop(host)
-            configurator = get_component('configurator')
+            configurator = hass.components.configurator
             configurator.request_done(request_id)
             _LOGGER.info("Discovery configuration done")
 
@@ -150,7 +149,7 @@ def request_configuration(config, hass, add_devices):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -171,7 +170,7 @@ def request_configuration(config, hass, add_devices):
             request_configuration(config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, name, bravia_configuration_callback,
+        name, bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
         'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",

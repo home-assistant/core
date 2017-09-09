@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchDevice, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Lutron switch."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    switch_devices = bridge.get_devices_by_type("WallSwitch")
+    switch_devices = bridge.get_devices_by_domain(DOMAIN)
 
     for switch_device in switch_devices:
         dev = LutronCasetaLight(switch_device, bridge)

@@ -70,6 +70,7 @@ TEST_REQUIREMENTS = (
     'restrictedpython',
     'pyunifi',
     'prometheus_client',
+    'ephem'
 )
 
 IGNORE_PACKAGES = (
