@@ -452,6 +452,7 @@ class SwitchableRflinkDevice(RflinkCommand):
 
 class CoverableRflinkDevice(RflinkCommand):
     """Rflink entity which can open/close an cover (eg: Somfy, bofumotor)."""
+    
     pass
 
 DEPRECATED_CONFIG_OPTIONS = [
