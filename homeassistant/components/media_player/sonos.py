@@ -322,6 +322,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_title = None
         self._media_radio_show = None
         self._media_next_title = None
+        self._available = True
         self._support_previous_track = False
         self._support_next_track = False
         self._support_play = False
@@ -386,6 +387,11 @@ class SonosDevice(MediaPlayerDevice):
         """Return coordinator of this player."""
         return self._coordinator
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def _is_available(self):
         try:
             sock = socket.create_connection(
@@ -416,11 +422,11 @@ class SonosDevice(MediaPlayerDevice):
                 self._player.get_sonos_favorites()['favorites']
 
         if self._last_avtransport_event:
-            is_available = True
+            self._available = True
         else:
-            is_available = self._is_available()
+            self._available = self._is_available()
 
-        if not is_available:
+        if not self._available:
             self._player_volume = None
             self._player_volume_muted = None
             self._status = 'OFF'
@@ -897,7 +903,8 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 self._source_name = src['title']
 
-                if 'object.container.playlistContainer' in src['meta']:
+                if ('object.container.playlistContainer' in src['meta'] or
+                        'object.container.album.musicAlbum' in src['meta']):
                     self._replace_queue_with_playlist(src)
                     self._player.play_from_queue(0)
                 else:
