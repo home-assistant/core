@@ -66,7 +66,7 @@ def async_setup(hass, config):
             yield from intent.async_handle(
                 hass, DOMAIN, intent_type, slots, request['input'])
         except intent.IntentError:
-            _LOGGER.exception("Error while handling intent.")
+            _LOGGER.exception("Error while handling intent: %s.", intent_type)
 
     yield from hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
