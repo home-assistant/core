@@ -122,7 +122,7 @@ def async_get_state_services(hass, domain, state):
 
     if not domain_services:
         _LOGGER.warning("No services found for domain %s", domain)
-        return
+        return None
 
     services = defaultdict(dict)
 
