@@ -195,12 +195,12 @@ class RadioThermostat(ClimateDevice):
         # normally set in the radio thermostat web app.
         if self._name is None:
             data = self.url_get('sys/name')
-            if data:
+            if data is not -1:
                 self._name = data['name']
 
         # Get the current thermostat state.
         data = self.url_get('tstat')
-        if not data:
+        if data is -1:
             return
 
         # If the thermostat is busy, it may return -1 as the temp in
@@ -264,7 +264,7 @@ class RadioThermostat(ClimateDevice):
             'hour': now.hour,
             'minute': now.minute
         }
-        if self.url_post('tstat', tstat) is not None:
+        if self.url_post('tstat', tstat) is not -1:
             self._time_updated = True
 
     def set_operation_mode(self, operation_mode):
@@ -304,7 +304,8 @@ class RadioThermostat(ClimateDevice):
     def url_get(self, path, timeout=8):
         """Call the thermostat at the input path.
 
-        Return value is the results as a json dictionary or None for an error.
+        Return value is the results as a json dictionary or -1 for an
+        error which will be logged.
         """
         url = 'http://%s/%s' % (self._host, path)
         try:
@@ -312,19 +313,20 @@ class RadioThermostat(ClimateDevice):
         except Exception:
             _LOGGER.warning('%s (%s) URL %s timed out (%s sec)',
                             self._name, self._host, path, timeout)
-            return None
+            return -1
 
         if result.status_code != requests.codes.ok:
             _LOGGER.warning('%s (%s) URL %s failed with status %s',
                             self._name, self._host, path, result.status_code)
-            return None
+            return -1
 
         return result.json()
 
     def url_post(self, path, data, timeout=8):
         """Call the thermostat at the input path.
 
-        Return value is the results as a json dictionary or None for an error.
+        Return value is 0 for success or -1 for an error which will
+        be logged.
         """
         # The thermostats don't accept regular json data, it must be
         # encoded into a string first.
@@ -335,12 +337,12 @@ class RadioThermostat(ClimateDevice):
         except Exception:
             _LOGGER.warning('%s (%s) URL %s timed out (%s sec)',
                             self._name, self._host, path, timeout)
-            return None
+            return -1  # error
 
         if result.status_code != requests.codes.ok:
             _LOGGER.warning('%s (%s) URL %s failed with status %s',
                             self._name, self._host, path, result.status_code)
-            return None
+            return -1  # error
 
         return 0   # OK
 
