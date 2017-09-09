@@ -971,3 +971,14 @@ def test_services_json(hass):
     async_mock_service(hass, 'test_domain', 'test_service')
     services_json = hass.services.async_services_json()
     assert services_json == expected
+
+
+@asyncio.coroutine
+def test_get_domain_services(hass):
+    """Test get services for domain."""
+    async_mock_service(hass, 'test_domain', 'test_service')
+    expected = {'test_service': hass.services._services[
+        'test_domain']['test_service']}
+
+    services = hass.services.async_services('test_domain')
+    assert services == expected

@@ -824,14 +824,18 @@ class ServiceRegistry(object):
         ).result()
 
     @callback
-    def async_services(self):
+    def async_services(self, domain=None):
         """Return read only dict with per domain a dict with service instances.
 
         This method must be run in the event loop.
         """
-        return MappingProxyType({
+        all_services = MappingProxyType({
             domain: MappingProxyType(services)
             for domain, services in self._services.items()})
+        if domain is not None:
+            return all_services.get(domain)
+        else:
+            return all_services
 
     @callback
     def async_services_json(self):
