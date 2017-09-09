@@ -13,7 +13,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_ON, STATE_OFF,
     ClimateDevice, PRECISION_HALVES, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
@@ -33,13 +33,13 @@ DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
 # Temperature mode
-NAME_TEMP_MODE = {0: "Off", 1: "Heat", 2: "Cool", 3: "Auto"}
+NAME_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
 # Active state heating/cooling flag.
-NAME_TEMP_STATE = {0: "Off", 1: "Heat", 2: "Cool"}
+NAME_TEMP_STATE = {0: STATE_IDLE, 1: STATE_HEAT, 2: STATE_COOL}
 # Fan mode
-NAME_FAN_MODE = {0: "Auto", 1: "Circulate", 2: "On"}
-# Fan state on/off flag.
-NAME_FAN_STATE = {0: "Off", 1: "On"}
+NAME_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
+# Active fan state on/off flag.
+NAME_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
@@ -100,6 +100,7 @@ class RadioThermostat(ClimateDevice):
         self._away_temps = [self.round_temp(i) for i in away_temps]
         self._prev_temp = None
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
+        self._fan_list = [STATE_ON, STATE_AUTO]
 
     @property
     def name(self):
@@ -123,6 +124,27 @@ class RadioThermostat(ClimateDevice):
             ATTR_FAN: self._fmode,
             ATTR_MODE: self._tmode,
         }
+
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return self._fan_list
+
+    @property
+    def current_fan_mode(self):
+        """Return whether the fan is on."""
+        return self._fmode
+
+    def set_fan_mode(self, fan):
+        """Turn fan on/off."""
+        tstat = {}
+        if fan == STATE_AUTO or fan == STATE_OFF:
+            tstat["fmode"] = 0
+        elif fan == STATE_ON:
+            tstat["fmode"] = 2
+
+        if tstat:
+            self.url_post("tstat", tstat)
 
     @property
     def current_temperature(self):
@@ -189,18 +211,16 @@ class RadioThermostat(ClimateDevice):
         self._tmode = NAME_TEMP_MODE[data['tmode']]
         self._tstate = NAME_TEMP_STATE[data['tstate']]
 
-        if self._tmode == 'Cool':
+        self._current_operation = self._tmode
+        if self._tmode == STATE_COOL:
             self._target_temperature = data['t_cool']
-            self._current_operation = STATE_COOL
-        elif self._tmode == 'Heat':
+        elif self._tmode == STATE_HEAT:
             self._target_temperature = data['t_heat']
-            self._current_operation = STATE_HEAT
-        elif self._tmode == 'Auto':
-            if self._tstate == 'Cool':
+        elif self._tmode == STATE_AUTO:
+            if self._tstate == STATE_COOL:
                 self._target_temperature = data['t_cool']
-            elif self._tstate == 'Heat':
+            elif self._tstate == STATE_HEAT:
                 self._target_temperature = data['t_heat']
-                self._current_operation = STATE_AUTO
         else:
             self._current_operation = STATE_IDLE
 
@@ -220,9 +240,9 @@ class RadioThermostat(ClimateDevice):
             tstat['t_heat'] = temperature
 
         elif self._current_operation == STATE_AUTO:
-            if self._tstate == 'Cool':
+            if self._tstate == STATE_COOL:
                 tstat['t_cool'] = temperature
-            elif self._tstate == 'Heat':
+            elif self._tstate == STATE_HEAT:
                 tstat['t_heat'] = temperature
 
         if self._hold_temp or self._away:
