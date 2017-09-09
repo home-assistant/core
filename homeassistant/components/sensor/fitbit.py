@@ -260,13 +260,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     access_token = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token = config_file.get(ATTR_REFRESH_TOKEN)
+    expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
         authd_client = fitbit.Fitbit(config_file.get(ATTR_CLIENT_ID),
                                      config_file.get(ATTR_CLIENT_SECRET),
                                      access_token=access_token,
-                                     refresh_token=refresh_token)
+                                     refresh_token=refresh_token,
+                                     expires_at=expires_at,
+                                     refresh_cb=lambda x: None)
 
-        if int(time.time()) - config_file.get(ATTR_LAST_SAVED_AT, 0) > 3600:
+        if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
         authd_client.system = authd_client.user_profile_get()["user"]["locale"]
@@ -338,12 +341,14 @@ class FitbitAuthCallbackView(HomeAssistantView):
         response_message = """Fitbit has been successfully authorized!
         You can close this window now!"""
 
+        result = None
         if data.get('code') is not None:
             redirect_uri = '{}{}'.format(
                 hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH)
 
             try:
-                self.oauth.fetch_access_token(data.get('code'), redirect_uri)
+                result = self.oauth.fetch_access_token(data.get('code'),
+                                                       redirect_uri)
             except MissingTokenError as error:
                 _LOGGER.error("Missing token: %s", error)
                 response_message = """Something went wrong when
@@ -361,15 +366,23 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 An unknown error occurred. Please try again!
                 """
 
+        if result is None:
+            _LOGGER.error("Unknown error when authing")
+            response_message = """Something went wrong when
+                attempting authenticating with Fitbit.
+                An unknown error occurred. Please try again!
+                """
+
         html_response = """<html><head><title>Fitbit Auth</title></head>
         <body><h1>{}</h1></body></html>""".format(response_message)
 
-        config_contents = {
-            ATTR_ACCESS_TOKEN: self.oauth.token['access_token'],
-            ATTR_REFRESH_TOKEN: self.oauth.token['refresh_token'],
-            ATTR_CLIENT_ID: self.oauth.client_id,
-            ATTR_CLIENT_SECRET: self.oauth.client_secret
-        }
+        if result:
+            config_contents = {
+                ATTR_ACCESS_TOKEN: result.get('access_token'),
+                ATTR_REFRESH_TOKEN: result.get('refresh_token'),
+                ATTR_CLIENT_ID: self.oauth.client_id,
+                ATTR_CLIENT_SECRET: self.oauth.client_secret
+            }
         if not config_from_file(hass.config.path(FITBIT_CONFIG_FILE),
                                 config_contents):
             _LOGGER.error("Failed to save config file")
@@ -490,9 +503,11 @@ class FitbitSensor(Entity):
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \
                     get('value').get('restingHeartRate')
+
+        token = self.client.client.session.token
         config_contents = {
-            ATTR_ACCESS_TOKEN: self.client.client.token['access_token'],
-            ATTR_REFRESH_TOKEN: self.client.client.token['refresh_token'],
+            ATTR_ACCESS_TOKEN: token.get('access_token'),
+            ATTR_REFRESH_TOKEN: token.get('refresh_token'),
             ATTR_CLIENT_ID: self.client.client.client_id,
             ATTR_CLIENT_SECRET: self.client.client.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time())

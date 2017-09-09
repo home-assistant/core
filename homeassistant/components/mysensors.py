@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.setup import setup_component
 
-REQUIREMENTS = ['pymysensors==0.11.0']
+REQUIREMENTS = ['pymysensors==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,9 @@ CONF_TCP_PORT = 'tcp_port'
 CONF_TOPIC_IN_PREFIX = 'topic_in_prefix'
 CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
 CONF_VERSION = 'version'
+
+CONF_NODES = 'nodes'
+CONF_NODE_NAME = 'name'
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
@@ -132,6 +135,12 @@ def deprecated(key):
     return validator
 
 
+NODE_SCHEMA = vol.Schema({
+    cv.positive_int: {
+        vol.Required(CONF_NODE_NAME): cv.string
+    }
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(vol.All(deprecated(CONF_DEBUG), {
         vol.Required(CONF_GATEWAYS): vol.All(
@@ -151,6 +160,7 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
                 vol.Optional(
                     CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+                vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
@@ -358,6 +368,7 @@ def setup(hass, config):
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
+            ready_gateway.nodes_config = gway.get(CONF_NODES)
             gateways[id(ready_gateway)] = ready_gateway
 
     if not gateways:
@@ -474,12 +485,14 @@ def gw_callback_factory(hass):
         validated = validate_child(msg.gateway, msg.node_id, child)
         for platform, dev_ids in validated.items():
             devices = get_mysensors_devices(hass, platform)
-            for idx, dev_id in enumerate(list(dev_ids)):
+            new_dev_ids = []
+            for dev_id in dev_ids:
                 if dev_id in devices:
-                    dev_ids.pop(idx)
                     signals.append(SIGNAL_CALLBACK.format(*dev_id))
-            if dev_ids:
-                discover_mysensors_platform(hass, platform, dev_ids)
+                else:
+                    new_dev_ids.append(dev_id)
+            if new_dev_ids:
+                discover_mysensors_platform(hass, platform, new_dev_ids)
         for signal in set(signals):
             # Only one signal per device is needed.
             # A device can have multiple platforms, ie multiple schemas.
@@ -495,8 +508,13 @@ def gw_callback_factory(hass):
 
 def get_mysensors_name(gateway, node_id, child_id):
     """Return a name for a node child."""
-    return '{} {} {}'.format(
-        gateway.sensors[node_id].sketch_name, node_id, child_id)
+    node_name = '{} {}'.format(
+        gateway.sensors[node_id].sketch_name, node_id)
+    node_name = next(
+        (node[CONF_NODE_NAME] for conf_id, node in gateway.nodes_config.items()
+         if node.get(CONF_NODE_NAME) is not None and conf_id == node_id),
+        node_name)
+    return '{} {}'.format(node_name, child_id)
 
 
 def get_mysensors_gateway(hass, gateway_id):
