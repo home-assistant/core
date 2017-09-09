@@ -8,10 +8,10 @@ import asyncio
 
 import voluptuous as vol
 
-import homeassistant.loader as loader
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic
+from homeassistant.helpers.event import async_track_state_change
 
 CONF_BASE_TOPIC = 'base_topic'
 DEPENDENCIES = ['mqtt']
@@ -27,29 +27,23 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the MQTT state feed."""
-    mqtt = loader.get_component('mqtt')
     conf = config.get(DOMAIN, {})
     base_topic = conf.get(CONF_BASE_TOPIC)
     if not base_topic.endswith('/'):
         base_topic = base_topic + '/'
 
     @callback
-    def _event_publisher(event):
-        """Handle state change events and publish them to MQTT."""
-        if event.event_type == EVENT_STATE_CHANGED:
-            try:
-                new_state = event.data['new_state']
-            except AttributeError:
-                return
+    def _state_publisher(entity_id, old_state, new_state):
+        if new_state is None:
+            return
 
-            try:
-                payload = new_state.state
-            except NameError:
-                return
+        try:
+            payload = new_state.state
+        except KeyError:
+            return
 
-            topic = base_topic + new_state.entity_id.replace('.', '/')
-            mqtt.async_publish(hass, topic, payload, 1, True)
+        topic = base_topic + entity_id.replace('.', '/')
+        hass.components.mqtt.async_publish(topic, payload, 1, True)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, _event_publisher)
-
+    async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True
