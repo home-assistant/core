@@ -5,7 +5,7 @@ import unittest
 
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_text import (DOMAIN, select_value)
+from homeassistant.components.input_text import (DOMAIN, set_value)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
 
@@ -38,8 +38,8 @@ class TestInputText(unittest.TestCase):
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
-    def test_select_value(self):
-        """Test select_value method."""
+    def test_set_value(self):
+        """Test set_value method."""
         self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': {
                 'initial': 'test',
@@ -52,13 +52,13 @@ class TestInputText(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual('test', str(state.state))
 
-        select_value(self.hass, entity_id, 'testing')
+        set_value(self.hass, entity_id, 'testing')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual('testing', str(state.state))
 
-        select_value(self.hass, entity_id, 'testing too long')
+        set_value(self.hass, entity_id, 'testing too long')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
