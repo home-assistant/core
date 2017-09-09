@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
@@ -88,7 +87,7 @@ def setup_sabnzbd(base_url, apikey, name, hass, config, add_devices, sab_api):
 
 def request_configuration(host, name, hass, config, add_devices, sab_api):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
@@ -114,7 +113,6 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
             hass.async_add_job(success)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass,
         DEFAULT_NAME,
         sabnzbd_configuration_callback,
         description=('Enter the API Key'),
@@ -130,15 +128,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the SABnzbd platform."""
     from pysabnzbd import SabnzbdApi
 
-    host = config.get(CONF_HOST) or discovery_info.get(CONF_HOST)
-    port = config.get(CONF_PORT) or discovery_info.get(CONF_PORT)
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    use_ssl = DEFAULT_SSL
-
-    if config.get(CONF_SSL):
-        use_ssl = True
-    elif discovery_info.get('properties', {}).get('https', '0') == '1':
-        use_ssl = True
+    if discovery_info is not None:
+        host = discovery_info.get(CONF_HOST)
+        port = discovery_info.get(CONF_PORT)
+        name = DEFAULT_NAME
+        use_ssl = discovery_info.get('properties', {}).get('https', '0') == '1'
+    else:
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        name = config.get(CONF_NAME, DEFAULT_NAME)
+        use_ssl = config.get(CONF_SSL)
 
     uri_scheme = 'https://' if use_ssl else 'http://'
     base_url = "{}{}:{}/".format(uri_scheme, host, port)

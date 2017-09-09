@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['octoprint']
 DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
+NOTIFICATION_ID = 'octoprint_notification'
+NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 
 SENSOR_TYPES = {
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
@@ -42,12 +44,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    tools = octoprint_api.get_tools()
+    _LOGGER.error(str(tools))
+
+    if "Temperatures" in monitored_conditions:
+        if not tools:
+            hass.components.persistent_notification.create(
+                'Your printer appears to be offline.<br />'
+                'If you do not want to have your printer on <br />'
+                ' at all times, and you would like to monitor <br /> '
+                'temperatures, please add <br />'
+                'bed and/or number&#95of&#95tools to your config <br />'
+                'and restart.',
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
 
     devices = []
     types = ["actual", "target"]
     for octo_type in monitored_conditions:
         if octo_type == "Temperatures":
-            for tool in octoprint_api.get_tools():
+            for tool in tools:
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
                         octoprint_api, temp_type, temp_type, name,

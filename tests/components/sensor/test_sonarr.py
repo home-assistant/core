@@ -549,6 +549,25 @@ def mocked_requests_get(*args, **kwargs):
                 "totalSpace": 499738734592
             }
         ], 200)
+    elif 'api/system/status' in url:
+        return MockResponse({
+            "version": "2.0.0.1121",
+            "buildTime": "2014-02-08T20:49:36.5560392Z",
+            "isDebug": "false",
+            "isProduction": "true",
+            "isAdmin": "true",
+            "isUserInteractive": "false",
+            "startupPath": "C:\\ProgramData\\NzbDrone\\bin",
+            "appData": "C:\\ProgramData\\NzbDrone",
+            "osVersion": "6.2.9200.0",
+            "isMono": "false",
+            "isLinux": "false",
+            "isWindows": "true",
+            "branch": "develop",
+            "authentication": "false",
+            "startOfWeek": 0,
+            "urlBase": ""
+        }, 200)
     else:
         return MockResponse({
             "error": "Unauthorized"
@@ -793,6 +812,31 @@ class TestSonarrSetup(unittest.TestCase):
                 'S04E11',
                 device.device_state_attributes["Bob's Burgers"]
             )
+
+    @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_system_status(self, req_mock):
+        """Test getting system status."""
+        config = {
+            'platform': 'sonarr',
+            'api_key': 'foo',
+            'days': '2',
+            'unit': 'GB',
+            "include_paths": [
+                '/data'
+            ],
+            'monitored_conditions': [
+                'status'
+            ]
+        }
+        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        for device in self.DEVICES:
+            device.update()
+            self.assertEqual('2.0.0.1121', device.state)
+            self.assertEqual('mdi:information', device.icon)
+            self.assertEqual('Sonarr Status', device.name)
+            self.assertEqual(
+                '6.2.9200.0',
+                device.device_state_attributes['osVersion'])
 
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)

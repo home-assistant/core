@@ -119,7 +119,7 @@ def async_test_home_assistant(loop):
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, Mock):
-            return mock_coro(target())
+            return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
@@ -174,7 +174,7 @@ def get_test_instance_port():
 
 
 @ha.callback
-def async_mock_service(hass, domain, service):
+def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -183,7 +183,8 @@ def async_mock_service(hass, domain, service):
         """Mock service call."""
         calls.append(call)
 
-    hass.services.async_register(domain, service, mock_service_log)
+    hass.services.async_register(
+        domain, service, mock_service_log, schema=schema)
 
     return calls
 
