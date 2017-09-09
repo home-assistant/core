@@ -32,13 +32,14 @@ CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
-# Temperature mode
+# Mappings from radiotherm json data to HASS state flags.
+# Temperature mode of the thermostat.
 NAME_TEMP_MODE = {0: STATE_OFF, 1: STATE_HEAT, 2: STATE_COOL, 3: STATE_AUTO}
-# Active state heating/cooling flag.
+# Active state (is it heating or cooling?)
 NAME_TEMP_STATE = {0: STATE_IDLE, 1: STATE_HEAT, 2: STATE_COOL}
 # Fan mode
 NAME_FAN_MODE = {0: STATE_AUTO, 1: "circulate", 2: STATE_ON}
-# Active fan state on/off flag.
+# Active fan state 
 NAME_FAN_STATE = {0: STATE_OFF, 1: STATE_ON}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
