@@ -214,9 +214,7 @@ def test_get_state_services_not_valid(hass):
 
     services = service.async_get_state_services(hass, domain, state)
 
-    assert SERVICE_TURN_ON in services
-    assert services[SERVICE_TURN_ON]['state'] == 'on'
-    assert 'attrs' not in services[SERVICE_TURN_ON]
+    assert SERVICE_TURN_ON not in services
 
 
 @asyncio.coroutine

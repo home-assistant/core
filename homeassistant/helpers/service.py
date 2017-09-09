@@ -146,6 +146,7 @@ def async_get_state_services(hass, domain, state):
             # voluptuous modifies the value before returning it, so make a copy
             valid_attrs = schema(dict(state.attributes))
         except vol.Invalid:
+            services.pop(service_name, None)
             continue
         if valid_attrs:
             services[service_name]['attrs'] = valid_attrs
