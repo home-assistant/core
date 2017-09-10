@@ -13,9 +13,9 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_PLATFORM,
-    CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
+    CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME,
     CONF_DISARM_AFTER_TRIGGER)
 import homeassistant.components.mqtt as mqtt
 
@@ -28,6 +28,7 @@ from homeassistant.helpers.event import track_point_in_time
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
+CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
@@ -35,6 +36,7 @@ DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
+DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_DISARM = 'DISARM'
 
 DEPENDENCIES = ['mqtt']
@@ -53,6 +55,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
 })
 
@@ -73,7 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(mqtt.CONF_QOS),
         config.get(CONF_PAYLOAD_DISARM),
         config.get(CONF_PAYLOAD_ARM_HOME),
-        config.get(CONF_PAYLOAD_ARM_AWAY))])
+        config.get(CONF_PAYLOAD_ARM_AWAY),
+        config.get(CONF_PAYLOAD_ARM_NIGHT))])
 
 
 class ManualMQTTAlarm(alarm.AlarmControlPanel):
@@ -89,7 +93,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     def __init__(self, hass, name, code, pending_time,
                  trigger_time, disarm_after_trigger,
                  state_topic, command_topic, qos,
-                 payload_disarm, payload_arm_home, payload_arm_away):
+                 payload_disarm, payload_arm_home, payload_arm_away,
+                 payload_arm_night):
         """Init the manual MQTT alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -107,6 +112,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
+        self._payload_arm_night = payload_arm_night
 
     @property
     def should_poll(self):
@@ -122,7 +128,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         if self._state in (STATE_ALARM_ARMED_HOME,
-                           STATE_ALARM_ARMED_AWAY) and \
+                           STATE_ALARM_ARMED_AWAY,
+                           STATE_ALARM_ARMED_NIGHT) and \
            self._pending_time and self._state_ts + self._pending_time > \
            dt_util.utcnow():
             return STATE_ALARM_PENDING
@@ -180,6 +187,20 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                 self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if not self._validate_code(code, STATE_ALARM_ARMED_NIGHT):
+            return
+
+        self._state = STATE_ALARM_ARMED_NIGHT
+        self._state_ts = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+        if self._pending_time:
+            track_point_in_time(
+                self._hass, self.async_update_ha_state,
+                self._state_ts + self._pending_time)
+
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
         self._pre_trigger_state = self._state
@@ -221,6 +242,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                 self.async_alarm_arm_home(self._code)
             elif payload == self._payload_arm_away:
                 self.async_alarm_arm_away(self._code)
+            elif payload == self._payload_arm_night:
+                self.async_alarm_arm_night(self._code)
             else:
                 _LOGGER.warning("Received unexpected payload: %s", payload)
                 return
