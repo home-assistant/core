@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['axis==11']
+REQUIREMENTS = ['axis==12']
 
 _LOGGER = logging.getLogger(__name__)
 
