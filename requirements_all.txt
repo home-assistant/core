@@ -295,9 +295,6 @@ hipnotify==1.0.8
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
-# homeassistant components.binary_sensor.workalendar
-workalendar=2.3.1
-
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
@@ -1008,6 +1005,9 @@ websocket-client==0.37.0
 # homeassistant.components.spc
 # homeassistant.components.media_player.webostv
 websockets==3.2
+
+# homeassistant.components.binary_sensor.workalendar
+workalendar==2.3.1
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
