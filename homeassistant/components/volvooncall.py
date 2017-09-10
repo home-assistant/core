@@ -73,14 +73,7 @@ def setup(hass, config):
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
-    class state:  # pylint:disable=invalid-name
-        """Namespace to hold state for each vehicle."""
-
-        entities = {}
-        vehicles = {}
-        names = config[DOMAIN].get(CONF_NAME)
-
-    hass.data[DATA_KEY] = state
+    state = hass.data[DATA_KEY] = VolvoData(config)
 
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
@@ -120,6 +113,31 @@ def setup(hass, config):
     return update(utcnow())
 
 
+class VolvoData:
+    """Hold component state."""
+
+    def __init__(self, config):
+        """Initialize the component state."""
+        self.entities = {}
+        self.vehicles = {}
+        self.names = config[DOMAIN].get(CONF_NAME)
+
+    def vehicle_name(self, vehicle):
+        """Provide a friendly name for a vehicle."""
+        if (vehicle.registration_number and
+                vehicle.registration_number.lower()) in self.names:
+            return self.names[vehicle.registration_number.lower()]
+        elif (vehicle.vin and
+              vehicle.vin.lower() in self.names):
+            return self.names[vehicle.vin.lower()]
+        elif vehicle.registration_number:
+            return vehicle.registration_number
+        elif vehicle.vin:
+            return vehicle.vin
+        else:
+            return ''
+
+
 class VolvoEntity(Entity):
     """Base class for all VOC entities."""
 
@@ -140,15 +158,12 @@ class VolvoEntity(Entity):
         return self._state.vehicles[self._vin]
 
     @property
-    def _vehicle_name(self):
-        return (self._state.names.get(self._vin.lower()) or
-                self._state.names.get(
-                    self.vehicle.registration_number.lower()) or
-                self.vehicle.registration_number)
-
-    @property
     def _entity_name(self):
         return RESOURCES[self._attribute][1]
+
+    @property
+    def _vehicle_name(self):
+        return self._state.vehicle_name(self.vehicle)
 
     @property
     def name(self):
