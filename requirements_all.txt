@@ -213,7 +213,7 @@ evohomeclient==0.2.5
 
 # homeassistant.components.image_processing.dlib_face_detect
 # homeassistant.components.image_processing.dlib_face_identify
-# face_recognition==0.2.2
+# face_recognition==1.0.0
 
 # homeassistant.components.sensor.fastdotcom
 fastdotcom==0.0.1
@@ -361,9 +361,6 @@ jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
-
-# homeassistant.components.knx
-knxip==0.5
 
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.2
@@ -541,6 +538,9 @@ pyRFXtrx==0.20.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.sensor.airvisual
+pyairvisual==0.1.0
+
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
 
@@ -609,7 +609,7 @@ pyfttt==0.3
 pyharmony==1.0.16
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.1.3
+pyhik==0.1.4
 
 # homeassistant.components.homematic
 pyhomematic==0.1.30
@@ -1011,6 +1011,9 @@ xbee-helper==0.0.7
 
 # homeassistant.components.sensor.xbox_live
 xboxapi==0.1.1
+
+# homeassistant.components.knx
+xknx==0.7.13
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.swiss_hydrological_data
