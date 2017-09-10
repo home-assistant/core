@@ -154,13 +154,13 @@ def async_reproduce_state(hass, states, blocking=False):
                 "reproduce_state: Unable to reproduce state %s", state)
             continue
 
-        for service, service_info in services.items():
+        for service, service_call in services.items():
             # We group service calls for entities by service call
             # json used to create a hashable version of dict
             # with maybe lists in it
             key = (
                 service_domain, service,
-                json.dumps(service_info.get('attrs', {}), sort_keys=True))
+                json.dumps(dict(service_call.data), sort_keys=True))
             to_call[key].append(state.entity_id)
 
     domain_tasks = {}
