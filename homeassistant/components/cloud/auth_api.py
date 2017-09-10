@@ -3,10 +3,6 @@ import json
 import logging
 import os
 
-from botocore.exceptions import ClientError
-from warrant import Cognito
-from warrant.exceptions import ForceChangePasswordException
-
 from .const import AUTH_FILE, SERVERS
 from .util import get_mode
 
@@ -40,7 +36,6 @@ class InvalidCode(CloudError):
 class PasswordChangeRequired(CloudError):
     """Raised when a password change is required."""
 
-    # pylint: disable=useless-super-delegation
     def __init__(self, message='Password change required.'):
         """Initialize a password change required error."""
         super().__init__(message)
@@ -88,6 +83,8 @@ def load_auth(hass):
 
 def register(hass, email, password):
     """Register a new account."""
+    from botocore.exceptions import ClientError
+
     cognito = _cognito(hass, username=email)
     try:
         cognito.register(email, password)
@@ -97,6 +94,8 @@ def register(hass, email, password):
 
 def confirm_register(hass, confirmation_code, email):
     """Confirm confirmation code after registration."""
+    from botocore.exceptions import ClientError
+
     cognito = _cognito(hass, username=email)
     try:
         cognito.confirm_sign_up(confirmation_code, email)
@@ -106,6 +105,8 @@ def confirm_register(hass, confirmation_code, email):
 
 def forgot_password(hass, email):
     """Initiate forgotten password flow."""
+    from botocore.exceptions import ClientError
+
     cognito = _cognito(hass, username=email)
     try:
         cognito.initiate_forgot_password()
@@ -115,6 +116,8 @@ def forgot_password(hass, email):
 
 def confirm_forgot_password(hass, confirmation_code, email, new_password):
     """Confirm forgotten password code and change password."""
+    from botocore.exceptions import ClientError
+
     cognito = _cognito(hass, username=email)
     try:
         cognito.confirm_forgot_password(confirmation_code, new_password)
@@ -138,6 +141,8 @@ class Auth:
 
     def validate_auth(self):
         """Validate that the contained auth is valid."""
+        from botocore.exceptions import ClientError
+
         try:
             self._refresh_account_info()
         except ClientError as err:
@@ -156,6 +161,9 @@ class Auth:
 
     def login(self, username, password):
         """Login using a username and password."""
+        from botocore.exceptions import ClientError
+        from warrant.exceptions import ForceChangePasswordException
+
         cognito = _cognito(self.hass, username=username)
 
         try:
@@ -179,6 +187,8 @@ class Auth:
 
     def renew_access_token(self):
         """Refresh token."""
+        from botocore.exceptions import ClientError
+
         try:
             self.cognito.renew_access_token()
             _write_info(self.hass, self)
@@ -189,6 +199,8 @@ class Auth:
 
     def logout(self):
         """Invalidate token."""
+        from botocore.exceptions import ClientError
+
         try:
             self.cognito.logout()
             self.account = None
@@ -237,6 +249,8 @@ def _write_info(hass, auth):
 
 def _cognito(hass, **kwargs):
     """Get the client credentials."""
+    from warrant import Cognito
+
     mode = get_mode(hass)
 
     if mode not in SERVERS:

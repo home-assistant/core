@@ -467,6 +467,7 @@ class RequestDataValidator:
         @asyncio.coroutine
         @wraps(method)
         def wrapper(view, request, *args, **kwargs):
+            """Wrap a request handler with data validation."""
             try:
                 data = yield from request.json()
             except ValueError:
