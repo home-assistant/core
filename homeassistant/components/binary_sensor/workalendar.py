@@ -153,5 +153,8 @@ class IsWorkdaySensor(BinarySensorDevice):
         if self.is_include(day_of_week, date):
             self._state = True
 
+        _LOGGER.debug('------------- %d %s',self._state,day_of_week)
         if self.is_exclude(day_of_week, date):
             self._state = False
+
+        _LOGGER.debug('------------- %d %s',self._state,day_of_week)
