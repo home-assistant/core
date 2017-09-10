@@ -1,8 +1,10 @@
 """
 Support for Unifi WAP controllers.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
+from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -12,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 import homeassistant.util.dt as dt_util
-from datetime import timedelta
+
 
 REQUIREMENTS = ['pyunifi==2.13']
 
@@ -39,27 +41,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
-                     cv.time_period, cv.positive_timedelta),
+        cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string
 })
 
 
 def get_scanner(hass, config, ectrl=None):
     """Set up the Unifi device_tracker."""
+    from pyunifi.controller import APIError
     config = config[DOMAIN]
     result = None
     if ectrl is not None:
         _LOGGER.debug("ectrl found")
     try:
         result = UnifiScanner(config, ectrl=ectrl)
-    except Exception as ex:
+    except (ValueError, APIError) as ex:
         hass.components.persistent_notification.create(
-                'Failed to connect to Unifi. '
-                'Error: {} <br />'
-                'You will need to restart hass after fixing.'
-                .format(ex),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+            'Failed to connect to Unifi. '
+            'Error: {} <br />'
+            'You will need to restart hass after fixing.'
+            .format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
     return result
 
 
@@ -67,7 +70,6 @@ class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, config, ectrl=None):
-        """Initialize the scanner."""
         """Set up the Unifi device_tracker."""
         from pyunifi.controller import Controller, APIError
         _LOGGER.debug("pyunifi loaded")
@@ -98,7 +100,7 @@ class UnifiScanner(DeviceScanner):
             self._controller = ctrl
         except APIError as ex:
             _LOGGER.critical("Failed to connect to Unifi: %s", ex)
-            raise Exception("Failed to connect to Unifi")
+            raise ex
 
         self._detection_time = detection_time
         self._update()
@@ -118,8 +120,7 @@ class UnifiScanner(DeviceScanner):
             client['mac']: client
             for client in clients
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self._detection_time
-                }
+                client['last_seen']))) < self._detection_time}
 
     def scan_devices(self):
         """Scan for devices."""
@@ -128,6 +129,7 @@ class UnifiScanner(DeviceScanner):
 
     def get_device_name(self, mac):
         """Return the name (if known) of the device.
+
         If a name has been set in Unifi, then return that, else
         return the hostname if it has been detected.
         """
