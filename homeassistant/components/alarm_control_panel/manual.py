@@ -28,32 +28,26 @@ PENDINGABLE_STATES = [STATE_ALARM_ARMED_AWAY,
                       STATE_ALARM_ARMED_HOME,
                       STATE_ALARM_ARMED_NIGHT,
                       STATE_ALARM_TRIGGERED]
+
+STATE_SETTING_SCHEMA = vol.Schema({
+    vol.Optional(CONF_PENDING_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=0))
+})
+
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'manual',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(STATE_ALARM_ARMED_AWAY): {
-        vol.Optional(CONF_PENDING_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=0))
-    },
-    vol.Optional(STATE_ALARM_ARMED_HOME): {
-        vol.Optional(CONF_PENDING_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=0))
-    },
-    vol.Optional(STATE_ALARM_ARMED_NIGHT): {
-        vol.Optional(CONF_PENDING_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=0))
-    },
-    vol.Optional(STATE_ALARM_TRIGGERED): {
-        vol.Optional(CONF_PENDING_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=0))
-    },
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,
                  default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
+    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
+    vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,8 +99,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._pending_time_by_state = {}
         for state in PENDINGABLE_STATES:
-            state_setting = state_settings[state] if state in state_settings \
-                else {}
+            state_setting = state_settings[state]
 
             if CONF_PENDING_TIME in state_setting:
                 self._pending_time_by_state[state] = datetime.timedelta(
