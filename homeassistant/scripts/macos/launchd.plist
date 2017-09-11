@@ -8,7 +8,7 @@
     <key>EnvironmentVariables</key>
     <dict>
       <key>PATH</key>
-      <string>/usr/local/bin/:/usr/bin:$PATH</string>
+      <string>/usr/local/bin/:/usr/bin:/usr/sbin:$PATH</string>
     </dict>
 
     <key>Program</key>
