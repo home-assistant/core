@@ -63,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Todoist platform."""
     # Check token:
