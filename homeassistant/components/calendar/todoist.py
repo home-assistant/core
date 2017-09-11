@@ -13,12 +13,12 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.calendar import CalendarEventDevice
+from homeassistant.components.calendar import (
+    CalendarEventDevice, PLATFORM_SCHEMA)
 from homeassistant.components.google import (
     CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
 from homeassistant.util import Throttle
@@ -31,15 +31,14 @@ DOMAIN = 'todoist'
 SERVICE_NEW_TASK = 'new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('content'): cv.string,
-    vol.Optional('project', default='inbox'): vol.All(cv.string, vol.Lower)
+    vol.Optional('project', default='inbox'): vol.All(cv.string, vol.Lower),
     vol.Optional('labels'): cv.ensure_list_csv,
     vol.Optional('priority'): vol.All(vol.Coerce(int),
                                       vol.Range(min=1, max=4)),
     vol.Optional('due_date'): cv.string
 })
 
-# Your Todoist API token.
-# Find yours at https://todoist.com/Users/viewPrefs?page=authorizations.
+
 CONF_API_TOKEN = 'token'
 CONF_EXTRA_PROJECTS = 'custom_projects'
 CONF_PROJECT_NAME = 'name'
@@ -48,17 +47,18 @@ CONF_PROJECT_WHITELIST = 'include_projects'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_TOKEN): cv.string,
-        vol.Optional(CONF_EXTRA_PROJECTS, default={}): vol.Schema({
-            vol.Required(CONF_PROJECT_NAME): cv.string,
-            vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
-            vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
-                vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
-            vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
-                vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
-        })
-    })
+    vol.Required(CONF_API_TOKEN): cv.string,
+    vol.Optional(CONF_EXTRA_PROJECTS, default=[]):
+        vol.All(cv.ensure_list, vol.Schema([
+            vol.Schema({
+                vol.Required(CONF_PROJECT_NAME): cv.string,
+                vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
+                vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
+                    vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
+                vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
+                    vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
+            })
+        ]))
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
@@ -259,10 +259,13 @@ class TodoistProjectData(object):
         self._token = token
         self._name = project_data['name']
         # If no ID is defined, fetch all tasks.
-        if 'id' in project_data and project_data['id'] is not None:
-            self._id = project_data['id']
-        else:
+        try:
+            if project_data['id'] is not None:
+                self._id = project_data['id']
+        except KeyError:
+            # No ID defined; we're using a custom project
             self._id = None
+
         # All labels the user has defined, for easy lookup.
         self._labels = labels
         # Not tracked: order, indent, comment_count.
@@ -281,13 +284,13 @@ class TodoistProjectData(object):
         if whitelisted_labels is not None:
             self._label_whitelist = whitelisted_labels
         else:
-            self._label_whitelist = None
+            self._label_whitelist = []
 
         # This project includes only projects with these names.
         if whitelisted_projects is not None:
             self._project_id_whitelist = whitelisted_projects
         else:
-            self._project_id_whitelist = None
+            self._project_id_whitelist = []
 
     def create_todoist_task(self, data):
         """
@@ -316,7 +319,7 @@ class TodoistProjectData(object):
 
         # If we have a label whitelist defined, check to see if we're
         # on the whitelist.
-        if self._label_whitelist is not None:
+        if len(self._label_whitelist) > 0:
             found_label = False
             for label in self._label_whitelist:
                 # Check to see if the task has this label (in any case).
