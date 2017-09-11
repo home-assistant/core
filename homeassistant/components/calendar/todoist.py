@@ -1,65 +1,8 @@
 """
 Support for Todoist task management (https://todoist.com).
 
-Todoist breaks task management down into 2 structures:
-* Tasks, which are "things" you can do and can mark as being done
-* Projects, which are essentially containers for tasks.
-
-Projects are used to organize and group tasks together as being related.
-For example, for a student, one of their classes could be considered a project.
-All homework, projects, tests, etc. that are due in that class could get
-grouped up into that class' project.
-
-Additionally, you can use labels to group together tasks for easier sorting.
-You can tag a task with the "Homework" label, and then later grab all tasks
-which have the label "Homework", no matter where they are.
-
-You can additionally give tasks a priority, which in Todoist ranges from 4
-(least priority) to 1 (highest priority). Tasks default to 4, generally.
-
-In Home Assistant, each project gets its own calendar. The calendar keeps track
-of what your most "important" task in that project is. Usually, it's whatever
-task is due first -- if one task is due tomorrow and the next is due next week,
-the task due tomorrow would be considered more important.
-If two tasks are due on the same day, the task with the higher priority is
-considered to be the most important.
-
-If no tasks in a project have a due date, the task with the highest priority
-is returned. In the event of a tie, the task which was added most recently
-is considered the winner.
-
-You can view all tasks in a project in that project's entity view, meaning
-that you can use that data to create template sensors if needed.
-The tasks listed in the entity view are sorted from most important to
-least important.
-
-Example configuration:
-calendar:
-  - platform: todoist
-    # API token: https://todoist.com/Users/viewPrefs?page=authorizations
-    token: !secret todoist_token
-    # Optional, allows user to specify their own devices that aren't on
-    # the actual Todoist platform
-    custom_projects:
-      # Return all tasks the user has, no matter where they are
-      - name: 'All Projects'
-      # Return all tasks due today
-      - name: 'Due Today'
-        due_date_days: 0
-      # Return all tasks due in the next 7 days
-      - name: 'Due This Week'
-        due_date_days: 7
-      # Return all tasks which:
-      # * Have a specific label
-      # * Are in specific projects
-      - name: 'Math Homework'
-        labels:
-          - Homework
-        include_projects:
-          - Mathematical Structures II
-          - Calculus II
-      # All of the above can be mixed-and-matched
-      # Everything is optional except for 'name'.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/calendar.todoist/
 """
 
 import logging
