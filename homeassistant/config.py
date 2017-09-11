@@ -57,6 +57,7 @@ DEFAULT_CORE_CONFIG = (
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
+    (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
@@ -108,6 +109,7 @@ tts:
 
 group: !include groups.yaml
 automation: !include automations.yaml
+script: !include scripts.yaml
 """
 
 
@@ -173,11 +175,17 @@ def create_default_config(config_dir, detect_location=True):
         CONFIG_PATH as GROUP_CONFIG_PATH)
     from homeassistant.components.config.automation import (
         CONFIG_PATH as AUTOMATION_CONFIG_PATH)
+    from homeassistant.components.config.script import (
+        CONFIG_PATH as SCRIPT_CONFIG_PATH)
+    from homeassistant.components.config.customize import (
+        CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
+    script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
+    customize_yaml_path = os.path.join(config_dir, CUSTOMIZE_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -216,11 +224,17 @@ def create_default_config(config_dir, detect_location=True):
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
 
-        with open(group_yaml_path, 'w'):
+        with open(group_yaml_path, 'wt'):
             pass
 
         with open(automation_yaml_path, 'wt') as fil:
             fil.write('[]')
+
+        with open(script_yaml_path, 'wt'):
+            pass
+
+        with open(customize_yaml_path, 'wt'):
+            pass
 
         return config_path
 

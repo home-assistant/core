@@ -59,7 +59,9 @@ SERVICE_HANDLERS = {
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),
+    'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
+    'bluesound': ('media_player', 'bluesound'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -98,6 +100,7 @@ def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
+            logger.info("Unknown service discovered: %s %s", service, info)
             return
 
         discovery_hash = json.dumps([service, info], sort_keys=True)

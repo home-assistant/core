@@ -90,20 +90,20 @@ class TestConfigurator(unittest.TestCase):
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
         error = "Oh no bad bad bad"
-        configurator.notify_errors(request_id, error)
+        configurator.notify_errors(self.hass, request_id, error)
 
         state = self.hass.states.all()[0]
         self.assertEqual(error, state.attributes.get(configurator.ATTR_ERRORS))
 
     def test_notify_errors_fail_silently_on_bad_request_id(self):
         """Test if notify errors fails silently with a bad request id."""
-        configurator.notify_errors(2015, "Try this error")
+        configurator.notify_errors(self.hass, 2015, "Try this error")
 
     def test_request_done_works(self):
         """Test if calling request done works."""
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
-        configurator.request_done(request_id)
+        configurator.request_done(self.hass, request_id)
         self.assertEqual(1, len(self.hass.states.all()))
 
         self.hass.bus.fire(EVENT_TIME_CHANGED)
@@ -112,4 +112,4 @@ class TestConfigurator(unittest.TestCase):
 
     def test_request_done_fail_silently_on_bad_request_id(self):
         """Test that request_done fails silently with a bad request id."""
-        configurator.request_done(2016)
+        configurator.request_done(self.hass, 2016)
