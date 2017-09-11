@@ -35,7 +35,6 @@ def _state_validator(config):
     for state in SUPPORTED_PENDING_STATES:
         if CONF_PENDING_TIME not in config[state]:
             config = copy.deepcopy(config)
-            """Default to main pending_time if state specific is undefined"""
             config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
 
     return config
