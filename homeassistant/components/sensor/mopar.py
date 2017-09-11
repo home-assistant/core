@@ -86,7 +86,7 @@ class MoparData(object):
         self.vehicles = []
         self.vhrs = {}
         self.tow_guides = {}
-        seld.update()
+        self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
