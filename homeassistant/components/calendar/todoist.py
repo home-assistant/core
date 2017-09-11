@@ -31,7 +31,7 @@ DOMAIN = 'todoist'
 SERVICE_NEW_TASK = 'new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('content'): cv.string,
-    vol.Optional('project'): cv.string,
+    vol.Optional('project', default='inbox'): vol.All(cv.string, vol.Lower)
     vol.Optional('labels'): cv.ensure_list_csv,
     vol.Optional('priority'): vol.All(vol.Coerce(int),
                                       vol.Range(min=1, max=4)),
@@ -129,11 +129,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def handle_new_task(call):
         """Called when a user creates a new Todoist Task from HASS."""
-        if 'project' not in call.data:
-            # Set default to the Inbox project
-            # Todoist is supposed to do this itself, but it doesn't
-            call.data['project'] = 'Inbox'
-        project_name = call.data['project'].lower()
+        project_name = call.data['project']
         project_id = project_id_lookup[project_name]
 
         # Create the task
@@ -141,9 +137,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if 'labels' in call.data:
             task_labels = call.data['labels']
-            label_ids = []
-            for label in task_labels:
-                label_ids.append(label_id_lookup[label.lower()])
+            label_ids = [
+                label_id_lookup[label.lower()]
+                for label in task_labels]
             item.update(labels=label_ids)
 
         if 'priority' in call.data:
