@@ -225,10 +225,7 @@ class Config(object):
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
         explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
-        if explicit_expose is True or explicit_hidden is False:
-            expose = True
-        else:
-            expose = False
+        expose = bool(explicit_expose is True or explicit_hidden is False)
         if explicit_expose:
             _LOGGER.warning("The attribute 'emulated_hue' is deprecated and"
                             "will be removed in a future version use"
