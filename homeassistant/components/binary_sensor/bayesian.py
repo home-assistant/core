@@ -126,7 +126,6 @@ class BayesianBinarySensor(BinarySensorDevice):
             self.watchers[platform](entity_obs)
 
             prior = self.prior
-            print(self.current_obs.values())
             for obs in self.current_obs.values():
                 prior = update_probability(prior, obs['prob_true'],
                                            obs['prob_false'])
@@ -201,7 +200,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         return {
             'observations': [val for val in self.current_obs.values()],
-            'probability': self.probability,
+            'probability': round(self.probability, 2),
             'probability_threshold': self._probability_threshold
         }
 
