@@ -4,6 +4,7 @@ Support for manual alarms.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual/
 """
+import copy
 import datetime
 import logging
 
@@ -32,11 +33,10 @@ ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 def _state_validator(config):
     for state in SUPPORTED_PENDING_STATES:
-        state_setting = config[state]
-
-        if CONF_PENDING_TIME not in state_setting:
+        if CONF_PENDING_TIME not in config[state]:
+            config = copy.deepcopy(config)
             """Default to main pending_time if state specific is undefined"""
-            state_setting[CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
+            config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
 
     return config
 
