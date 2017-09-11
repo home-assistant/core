@@ -63,11 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-# Look up IDs based on (lowercase) names.
-project_id_lookup = {}  # pylint: disable=C0103
-label_id_lookup = {}  # pylint: disable=C0103
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Todoist platform."""
     # Check token:
@@ -76,6 +71,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise ValueError(
             "Invalid Todoist token! Did you add it to your configuration?"
         )
+
+    # Look up IDs based on (lowercase) names.
+    project_id_lookup = {}
+    label_id_lookup = {}
 
     from todoist.api import TodoistAPI
     api = TodoistAPI(token)
