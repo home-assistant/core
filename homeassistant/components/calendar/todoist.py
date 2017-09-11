@@ -5,22 +5,23 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar.todoist/
 """
 
-import logging
+
 from datetime import datetime
 from datetime import timedelta
+import logging
 import os
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.components.calendar import CalendarEventDevice
 from homeassistant.components.google import (
     CONF_DEVICE_ID, CONF_NAME)
-from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.util import Throttle
-from homeassistant.util import dt
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.util import dt
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['todoist-python==7.0.17']
 
