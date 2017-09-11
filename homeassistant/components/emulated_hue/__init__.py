@@ -232,7 +232,7 @@ class Config(object):
         else:
             expose = None
         if explicit_expose:
-            _LOGGER.warning("The attribute 'emulated_hue' is deprecated and" 
+            _LOGGER.warning("The attribute 'emulated_hue' is deprecated and"
                             "will be removed in a future version use"
                             "'emulated_hue_hidden' instead")
         domain_exposed_by_default = \
