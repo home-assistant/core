@@ -32,7 +32,7 @@ SERVICE_NEW_TASK = 'new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('content'): cv.string,
     vol.Optional('project'): cv.string,
-    vol.Optional('labels'): cv.string,
+    vol.Optional('labels'): cv.ensure_list_csv,
     vol.Optional('priority'): vol.All(vol.Coerce(int),
                                       vol.Range(min=1, max=4)),
     vol.Optional('due_date'): cv.string
@@ -50,11 +50,13 @@ CONF_PROJECT_LABEL_WHITELIST = 'labels'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_TOKEN): cv.string,
-        vol.Optional(CONF_EXTRA_PROJECTS): vol.Schema({
+        vol.Optional(CONF_EXTRA_PROJECTS, default={}): vol.Schema({
             vol.Required(CONF_PROJECT_NAME): cv.string,
             vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
-            vol.Optional(CONF_PROJECT_WHITELIST): cv.ensure_list,
-            vol.Optional(CONF_PROJECT_LABEL_WHITELIST): cv.ensure_list
+            vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
+                vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
+            vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
+                vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
         })
     })
 })
@@ -151,7 +153,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         item = api.items.add(call.data['content'], project_id)
 
         if 'labels' in call.data:
-            task_labels = call.data['labels'].split(',')
+            task_labels = call.data['labels']
             label_ids = []
             for label in task_labels:
                 label_ids.append(label_id_lookup[label.lower()])
