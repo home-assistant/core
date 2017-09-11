@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
                                              ENTITY_ID_FORMAT)
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE,
+    CONF_RESOURCE, CONF_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE,
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_COMMAND_STATE, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -22,12 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 23
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_RESOURCE): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_COMMAND_OFF): cv.string,
     vol.Required(CONF_COMMAND_ON): cv.string,
+    vol.Required(CONF_COMMAND_OFF): cv.string,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_RESOURCE): cv.string,
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
 })
 
@@ -40,7 +40,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return switches controlled by shell commands."""
+    """Find and return switches controlled by telnet commands."""
     devices = config.get(CONF_SWITCHES, {})
     switches = []
 
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 object_id,
                 device_config.get(CONF_RESOURCE),
                 device_config.get(CONF_PORT),
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
+                device_config.get(CONF_NAME, object_id),
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
@@ -124,8 +124,6 @@ class TelnetSwitch(SwitchDevice):
         """Update device state."""
         response = self._telnet_command(self._command_state)
         if response:
-            _LOGGER.info(
-                'Response for command %s: %s', self._command_state, response)
             rendered = self._value_template \
                 .render_with_possible_json_value(response)
             self._state = rendered == "True"
