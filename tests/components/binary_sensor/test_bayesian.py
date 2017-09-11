@@ -73,7 +73,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
             'prob_false': 0.1,
             'prob_true': 0.9
         }], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.7714285714285715,
+        self.assertAlmostEqual(0.77,
                                state.attributes.get('probability'))
 
         assert state.state == 'on'
@@ -141,7 +141,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
             'prob_true': 0.8,
             'prob_false': 0.4
         }], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.33333333, state.attributes.get('probability'))
+        self.assertAlmostEqual(0.33, state.attributes.get('probability'))
 
         assert state.state == 'on'
 
