@@ -2,23 +2,28 @@
 Support for Satel Integra devices.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/alarmdecoder/
+https://home-assistant.io/components/satel_integra/
 """
 # pylint: disable=invalid-name
+# pylint: disable=deprecated-method
 
 import asyncio
+try:
+    from asyncio import ensure_future as asyncio_ensure_future
+except ImportError:
+    from asyncio import async as asyncio_ensure_future
 import logging
+
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['satel_integra==0.1.0']
 
@@ -32,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'satel_integra'
 
-DATA_AD = 'satel_integra'
+DATA_SATEL = 'satel_integra'
 
 CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PORT = 'port'
@@ -70,19 +75,19 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up for the Satel Integra devices."""
+    """Set up the Satel Integra component."""
     conf = config.get(DOMAIN)
 
     zones = conf.get(CONF_ZONES)
-    controller = False
     host = conf.get(CONF_DEVICE_HOST)
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
 
-    from satel_integra.satel_integra import AsyncSatel
+    from satel_integra.satel_integra import AsyncSatel, AlarmState
+
     controller = AsyncSatel(host, port, zones, hass.loop, partition)
 
-    hass.data[DATA_AD] = controller
+    hass.data[DATA_SATEL] = controller
 
     result = yield from controller.connect()
 
@@ -105,10 +110,8 @@ def async_setup(hass, config):
     @callback
     def alarm_status_update_callback(status):
         """Send status update received from alarm to home assistant."""
-        _LOGGER.info("Alarm status callback, status: %s", status)
+        _LOGGER.debug("Alarm status callback, status: %s", status)
         hass_alarm_status = STATE_ALARM_DISARMED
-
-        from satel_integra.satel_integra import AlarmState
 
         if status == AlarmState.ARMED_MODE0:
             hass_alarm_status = STATE_ALARM_ARMED_AWAY
@@ -127,7 +130,7 @@ def async_setup(hass, config):
         elif status == AlarmState.DISARMED:
             hass_alarm_status = STATE_ALARM_DISARMED
 
-        _LOGGER.info("Sending hass_alarm_status: %s...", hass_alarm_status)
+        _LOGGER.debug("Sending hass_alarm_status: %s...", hass_alarm_status)
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, hass_alarm_status)
 
     @callback
@@ -135,12 +138,6 @@ def async_setup(hass, config):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback , status: %s", status)
         async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
-
-    try:
-        from asyncio import ensure_future as asyncio_ensure_future
-    except ImportError:
-        from asyncio import async as asyncio_ensure_future
-    # pylint: disable=deprecated-method
 
     hass.async_add_job(asyncio_ensure_future(controller.keep_alive()))
     hass.async_add_job(asyncio_ensure_future(
