@@ -56,6 +56,20 @@ set_config_parameter:
     size:
       description: (Optional) Set the size of the parameter value. Only needed if no parameters are available.
 
+set_poll_intensity:
+  description: Set the polling interval to a nodes value
+  fields:
+    node_id:
+      description: ID of the node to set polling to.
+      example: 10
+    value_id:
+      description: ID of the value to set polling to.
+      example: 72037594255792737
+    poll_intensity:
+      description: The intensity to poll, 0 = disabled, 1 = Every time through list, 2 = Every second time through list...
+      example: 2
+
+
 print_config_parameter:
   description: Prints a Z-Wave node config parameter value to log.
   fields:
