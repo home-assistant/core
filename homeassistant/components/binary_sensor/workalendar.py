@@ -1,10 +1,11 @@
 """
-Sensor to indicate whether the current day is a workday base on workalendar module.
-The code is based on binary_sensor.workday home-assistant component
+Sensor to indicate whether the current day is a workday based on workalendar.
+module. The code is based on binary_sensor.workday home-assistant component
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.workday/
 """
+
 import asyncio
 import importlib
 import logging
@@ -46,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Workday sensor."""
-
     sensor_name = config.get(CONF_NAME)
     country = config.get(CONF_COUNTRY)
     workdays = config.get(CONF_WORKDAYS)
@@ -57,7 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     components = country.split('.')
 
     if len(components) != 2:
-        _LOGGER.error('You must specify a continent and a country in the form continent.Country')
+        _LOGGER.error('You must specify a continent and a country in the form '
+                      'continent.Country')
         return False
 
     try:
@@ -115,7 +116,8 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the includes list."""
         if day in self._workdays:
             return True
-        elif 'holiday' in self._workdays and not self.calendar.is_working_day(now):
+        elif 'holiday' in self._workdays and \
+                not self.calendar.is_working_day(now):
             return True
 
         return False
@@ -124,7 +126,8 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        elif 'holiday' in self._excludes and not self.calendar.is_working_day(now):
+        elif 'holiday' in self._excludes and \
+                not self.calendar.is_working_day(now):
             return True
 
         return False
@@ -155,4 +158,3 @@ class IsWorkdaySensor(BinarySensorDevice):
 
         if self.is_exclude(day_of_week, date):
             self._state = False
-
