@@ -227,6 +227,8 @@ class Config(object):
         explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
         if explicit_expose is True or explicit_hidden is False:
             expose = True
+        elif explicit_expose is False or explicit_hidden is True:
+            expose = False
         else:
             expose = None
         if explicit_expose:
