@@ -68,10 +68,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Todoist platform."""
     # Check token:
     token = config.get(CONF_API_TOKEN)
-    if token is None or not isinstance(token, str):
-        raise ValueError(
-            "Invalid Todoist token! Did you add it to your configuration?"
-        )
 
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
@@ -103,36 +99,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Check config for more projects.
     extra_projects = config.get(CONF_EXTRA_PROJECTS)
-    if extra_projects is not None:
-        for project in extra_projects:
-            # Special filter: By date
-            project_due_date = project.get(CONF_PROJECT_DUE_DATE)
+    for project in extra_projects:
+        # Special filter: By date
+        project_due_date = project.get(CONF_PROJECT_DUE_DATE)
 
-            # Special filter: By label
-            project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
+        # Special filter: By label
+        project_label_filter = project.get(CONF_PROJECT_LABEL_WHITELIST)
 
-            # Special filter: By name
-            # Names must be converted into IDs.
-            project_name_filter = project.get(CONF_PROJECT_WHITELIST)
-            if project_name_filter is not None and (
-                    len(project_name_filter) > 0):
-                project_id_filter = []
-                for project_name in project_name_filter:
-                    project_id_filter.append(
-                        project_id_lookup[project_name.lower()]
-                    )
-            else:
-                project_id_filter = None
+        # Special filter: By name
+        # Names must be converted into IDs.
+        project_name_filter = project.get(CONF_PROJECT_WHITELIST)
+        project_id_filter = [
+           project_id_lookup[project_name.lower()]
+           for project_name in project_name_filter]
 
-            project['id'] = None
-
-            # Create the custom project and add it to the devices array.
-            project_devices.append(
-                TodoistProjectDevice(
-                    hass, project, labels, token, project_due_date,
-                    project_label_filter, project_id_filter
-                )
+        # Create the custom project and add it to the devices array.
+        project_devices.append(
+            TodoistProjectDevice(
+                hass, project, labels, token, project_due_date,
+                project_label_filter, project_id_filter
             )
+        )
 
     add_devices(project_devices)
 
@@ -277,7 +264,7 @@ class TodoistProjectData(object):
         self._token = token
         self._name = project_data['name']
         # If no ID is defined, fetch all tasks.
-        if project_data['id'] is not None:
+        if 'id' in project_data and project_data['id'] is not None:
             self._id = project_data['id']
         else:
             self._id = None
