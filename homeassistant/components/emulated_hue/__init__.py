@@ -66,6 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
 def setup(hass, yaml_config):
@@ -223,7 +224,14 @@ class Config(object):
 
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
+        explicit_hidden = entity.attributes.get (ATTR_EMULATED_HUE_HIDDEN, None)
+        if explicit_expose is True or explicit_hidden is False :
+          expose = True
+        else:
+          expose = False
+        if explicit_expose:
+            _LOGGER.warning("The attribute 'emulated_hue' is deprecated and will be removed in a"
+                            "future version use 'emulated_hue_hidden' instead")
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 
@@ -231,9 +239,9 @@ class Config(object):
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = \
-            domain_exposed_by_default and explicit_expose is not False
+            domain_exposed_by_default and expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or expose
 
     def _load_numbers_json(self):
         """Set up helper method to load numbers json."""
