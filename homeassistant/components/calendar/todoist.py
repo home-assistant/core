@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     project_devices = []
     for project in projects:
         project_devices.append(
-            TodoistProjectDevice(hass, project, labels, token)
+            TodoistProjectDevice(hass, project, labels, api)
         )
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project['name'].lower()] = project['id']
@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Create the custom project and add it to the devices array.
         project_devices.append(
             TodoistProjectDevice(
-                hass, project, labels, token, project_due_date,
+                hass, project, labels, api, project_due_date,
                 project_label_filter, project_id_filter
             )
         )
@@ -176,9 +176,8 @@ class TodoistProjectDevice(CalendarEventDevice):
         )
 
         # Set up the calendar side of things
-        calendar_format = {}
-        calendar_format[CONF_NAME] = data['name']
-        calendar_format[CONF_DEVICE_ID] = data['name']
+        calendar_format = {
+            CONF_NAME: data['name'], CONF_DEVICE_ID: data['name']}
 
         super().__init__(hass, calendar_format)
 
@@ -188,9 +187,8 @@ class TodoistProjectDevice(CalendarEventDevice):
         super().update()
 
         # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data['all_tasks'] = []
-        for task in self.data.all_project_tasks:
-            self._cal_data['all_tasks'].append(task['summary'])
+        self._cal_data['all_tasks'] = [
+            task['summary'] for task in self.data.all_project_tasks]
 
     def cleanup(self):
         """Clean up all calendar data."""
@@ -250,13 +248,13 @@ class TodoistProjectData(object):
     MIN_TIME_BETWEEN_UPDATES minutes.
     """
 
-    def __init__(self, project_data, labels, token,
+    def __init__(self, project_data, labels, api,
                  latest_task_due_date=None, whitelisted_labels=None,
                  whitelisted_projects=None):
         """Initialize a Todoist Project."""
         self.event = None
 
-        self._token = token
+        self._api = api
         self._name = project_data['name']
         # If no ID is defined, fetch all tasks.
         try:
@@ -453,26 +451,22 @@ class TodoistProjectData(object):
         """Get the latest data."""
         self.all_project_tasks = []
 
-        from todoist.api import TodoistAPI
-        api = TodoistAPI(self._token)
-        api.sync()
-
         if self._id is None:
             # Custom-defined task.
             if self._project_id_whitelist is None or (
                     len(self._project_id_whitelist) == 0):
                 # No whitelist; grab all the projects.
-                project_task_data = api.state['items']
+                project_task_data = self._api.state['items']
             else:
                 # Grab each project from the whitelist.
                 project_task_data = []
                 for project_id in self._project_id_whitelist:
-                    for task in api.state['items']:
+                    for task in self._api.state['items']:
                         if task['project_id'] == project_id:
                             project_task_data.append(task)
         else:
             # Todoist-defined task; grab tasks just for this project.
-            project_data = api.projects.get_data(self._id)
+            project_data = self._api.projects.get_data(self._id)
             project_task_data = project_data['items']
 
         # If we have no data, we can just return right away.
