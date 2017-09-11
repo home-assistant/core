@@ -300,33 +300,18 @@ class TodoistProjectData(object):
         task['summary'] = data['content']
         task['completed'] = data['checked'] == 1
         task['priority'] = data['priority']
-        task_url = 'https://todoist.com/showTask?id='
-        task['description'] = task_url + str(data['id'])
+        task_url = 'https://todoist.com/showTask?id={}'.format(data['id'])
+        task['description'] = task_url
 
         # All task Labels (optional parameter).
-        task['labels'] = []
-        if len(data['labels']) > 0:
-            for label_id in data['labels']:
-                # Check each label we have cached and see if the ID matches.
-                for label in self._labels:
-                    if label['id'] == label_id:
-                        # It does; add it to the list and move on.
-                        task['labels'].append(label['name'])
-                        break
+        task['labels'] = [
+            label['name'] for label in self._labels
+            if label['id'] in data['labels']]
 
-        # If we have a label whitelist defined, check to see if we're
-        # on the whitelist.
-        if len(self._label_whitelist) > 0:
-            found_label = False
-            for label in self._label_whitelist:
-                # Check to see if the task has this label (in any case).
-                found_label = label.lower() in (
-                    task_label.lower() for task_label in task['labels'])
-                if found_label:
-                    break
-            # Return invalid task if it's not on the whitelist.
-            if not found_label:
-                return None
+        whitelist = self._label_whitelist
+        if any(label in task['labels'] for label in whitelist):
+            # We're not on the whitelist, return invalid task.
+            return None
 
         # Due dates (optional parameter).
         # The due date is the END date -- the task cannot be completed
@@ -398,78 +383,62 @@ class TodoistProjectData(object):
             has the same priority as our current event, but is due earlier
             in the day, select it
         """
-        if len(project_tasks) > 0:
-            # Start at the end of the list, so if tasks don't have a due date
-            # the newest ones are the most important.
+        # Start at the end of the list, so if tasks don't have a due date
+        # the newest ones are the most important.
 
-            event = project_tasks[len(project_tasks) - 1]
+        event = project_tasks[-1]
 
-            for proposed_event in project_tasks:
-                if event == proposed_event:
-                    continue
-                if proposed_event['completed']:
-                    # Event is complete!
-                    continue
-                if proposed_event['end'] is None:
-                    # No end time:
-                    if event['end'] is None and (
-                            proposed_event['priority'] < event['priority']):
-                        # They also have no end time,
-                        # but we have a higher priority.
-                        event = proposed_event
-                        continue
-                    else:
-                        continue
-                elif event['end'] is None:
-                    # We have an end time, they do not.
-                    event = proposed_event
-                    continue
-                if proposed_event['end'].date() > event['end'].date():
-                    # Event is too late.
-                    continue
-                elif proposed_event['end'].date() < event['end'].date():
-                    # Event is earlier than current, select it.
+        for proposed_event in project_tasks:
+            if event == proposed_event:
+                continue
+            if proposed_event['completed']:
+                # Event is complete!
+                continue
+            if proposed_event['end'] is None:
+                # No end time:
+                if event['end'] is None and (
+                        proposed_event['priority'] < event['priority']):
+                    # They also have no end time,
+                    # but we have a higher priority.
                     event = proposed_event
                     continue
                 else:
-                    if proposed_event['priority'] > event['priority']:
-                        # Proposed event has a higher priority.
-                        event = proposed_event
-                        continue
-                    elif proposed_event['priority'] == event['priority'] and (
-                            proposed_event['end'] < event['end']):
-                        event = proposed_event
-                        continue
-            return event
-        else:
-            # No tasks in array.
-            return None
+                    continue
+            elif event['end'] is None:
+                # We have an end time, they do not.
+                event = proposed_event
+                continue
+            if proposed_event['end'].date() > event['end'].date():
+                # Event is too late.
+                continue
+            elif proposed_event['end'].date() < event['end'].date():
+                # Event is earlier than current, select it.
+                event = proposed_event
+                continue
+            else:
+                if proposed_event['priority'] > event['priority']:
+                    # Proposed event has a higher priority.
+                    event = proposed_event
+                    continue
+                elif proposed_event['priority'] == event['priority'] and (
+                        proposed_event['end'] < event['end']):
+                    event = proposed_event
+                    continue
+        return event
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        self.all_project_tasks = []
-
         if self._id is None:
-            # Custom-defined task.
-            if self._project_id_whitelist is None or (
-                    len(self._project_id_whitelist) == 0):
-                # No whitelist; grab all the projects.
-                project_task_data = self._api.state['items']
-            else:
-                # Grab each project from the whitelist.
-                project_task_data = []
-                for project_id in self._project_id_whitelist:
-                    for task in self._api.state['items']:
-                        if task['project_id'] == project_id:
-                            project_task_data.append(task)
+            project_task_data = [
+                task for task in self._api.state['items']
+                if not self._project_id_whitelist or
+                task['project_id'] in self._project_id_whitelist]
         else:
-            # Todoist-defined task; grab tasks just for this project.
-            project_data = self._api.projects.get_data(self._id)
-            project_task_data = project_data['items']
+            project_task_data = self._api.projects.get_data(self._id)['items']
 
         # If we have no data, we can just return right away.
-        if len(project_task_data) == 0:
+        if not project_task_data:
             self.event = None
             return True
 
@@ -482,7 +451,7 @@ class TodoistProjectData(object):
                 # A None task means it is invalid for this project
                 project_tasks.append(todoist_task)
 
-        if len(project_tasks) == 0:
+        if not project_tasks:
             # We had no valid tasks
             return True
 
