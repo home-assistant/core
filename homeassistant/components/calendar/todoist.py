@@ -87,8 +87,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Add all Todoist-defined projects.
     project_devices = []
     for project in projects:
+        # Project is an object, not a dict!
+        # Because of that, we convert what we need to a dict.
+        project_data = {
+            'name': project['name'], 'id': project['id']}
         project_devices.append(
-            TodoistProjectDevice(hass, project, labels, api)
+            TodoistProjectDevice(hass, project_data, labels, api)
         )
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project['name'].lower()] = project['id']
@@ -255,14 +259,9 @@ class TodoistProjectData(object):
         self.event = None
 
         self._api = api
-        self._name = project_data['name']
+        self._name = project_data.get('name')
         # If no ID is defined, fetch all tasks.
-        try:
-            if project_data['id'] is not None:
-                self._id = project_data['id']
-        except KeyError:
-            # No ID defined; we're using a custom project
-            self._id = None
+        self._id = project_data.get('id')
 
         # All labels the user has defined, for easy lookup.
         self._labels = labels
