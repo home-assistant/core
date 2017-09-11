@@ -36,11 +36,7 @@ def async_setup(hass, config):
     def _state_publisher(entity_id, old_state, new_state):
         if new_state is None:
             return
-
-        try:
-            payload = new_state.state
-        except KeyError:
-            return
+        payload = new_state.state
 
         topic = base_topic + entity_id.replace('.', '/')
         hass.components.mqtt.async_publish(topic, payload, 1, True)
