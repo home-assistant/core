@@ -114,8 +114,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Names must be converted into IDs.
         project_name_filter = project.get(CONF_PROJECT_WHITELIST)
         project_id_filter = [
-           project_id_lookup[project_name.lower()]
-           for project_name in project_name_filter]
+            project_id_lookup[project_name.lower()]
+            for project_name in project_name_filter]
 
         # Create the custom project and add it to the devices array.
         project_devices.append(
