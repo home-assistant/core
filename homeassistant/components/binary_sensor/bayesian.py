@@ -126,7 +126,6 @@ class BayesianBinarySensor(BinarySensorDevice):
             self.watchers[platform](entity_obs)
 
             prior = self.prior
-            print(self.current_obs.values())
             for obs in self.current_obs.values():
                 prior = update_probability(prior, obs['prob_true'],
                                            obs['prob_false'])
