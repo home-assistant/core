@@ -253,12 +253,18 @@ def _cognito(hass, **kwargs):
 
     mode = get_mode(hass)
 
-    if mode not in SERVERS:
+    info = SERVERS.get(mode)
+
+    if info is None:
         raise ValueError('Mode {} is not supported.'.format(mode))
 
-    return Cognito(
-        user_pool_id=SERVERS[mode]['identity_pool_id'],
-        client_id=SERVERS[mode]['client_id'],
-        user_pool_region=SERVERS[mode]['region'],
+    cognito = Cognito(
+        user_pool_id=info['identity_pool_id'],
+        client_id=info['client_id'],
+        user_pool_region=info['region'],
+        access_key=info['access_key_id'],
+        secret_key=info['secret_access_key'],
         **kwargs
     )
+
+    return cognito
