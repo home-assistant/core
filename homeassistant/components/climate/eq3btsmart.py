@@ -59,8 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices.append(thermostat)
 
         if (temperatureSensor is not None):
-            async_track_state_change(hass, [temperatureSensor], 
-                thermostat.temperature_state_changed)
+            async_track_state_change(hass, [temperatureSensor],
+                                     thermostat.temperature_state_changed)
 
     add_devices(devices)
 
