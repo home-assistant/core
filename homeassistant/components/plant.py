@@ -212,7 +212,7 @@ class Plant(Entity):
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
