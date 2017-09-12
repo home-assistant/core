@@ -4,10 +4,11 @@ import logging
 
 import voluptuous as vol
 
-from . import http_api, cloud_api
+from . import http_api, auth_api
 from .const import DOMAIN
 
 
+REQUIREMENTS = ['warrant==0.2.0']
 DEPENDENCIES = ['http']
 CONF_MODE = 'mode'
 MODE_DEV = 'development'
@@ -40,10 +41,7 @@ def async_setup(hass, config):
         'mode': mode
     }
 
-    cloud = yield from cloud_api.async_load_auth(hass)
-
-    if cloud is not None:
-        data['cloud'] = cloud
+    data['auth'] = yield from hass.async_add_job(auth_api.load_auth, hass)
 
     yield from http_api.async_setup(hass)
     return True
