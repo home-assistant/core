@@ -360,11 +360,12 @@ class TodoistProjectData(object):
 
         # All task Labels (optional parameter).
         task[LABELS] = [
-            label[NAME] for label in self._labels
+            label[NAME].lower() for label in self._labels
             if label[ID] in data[LABELS]]
 
-        if any(label in task[LABELS]
-               for label in self._label_whitelist):
+        if not any(label in task[LABELS]
+                   for label in self._label_whitelist) and (
+                   len(self._label_whitelist) > 0):
             # We're not on the whitelist, return invalid task.
             return None
 
