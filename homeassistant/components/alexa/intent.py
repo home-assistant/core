@@ -5,52 +5,19 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
 import asyncio
-import copy
 import enum
 import logging
-import uuid
-from datetime import datetime
-
-import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_BAD_REQUEST
-from homeassistant.helpers import intent, template, config_validation as cv
+from homeassistant.helpers import intent
 from homeassistant.components import http
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 INTENTS_API_ENDPOINT = '/api/alexa'
-FLASH_BRIEFINGS_API_ENDPOINT = '/api/alexa/flash_briefings/{briefing_id}'
 
-CONF_ACTION = 'action'
-CONF_CARD = 'card'
-CONF_INTENTS = 'intents'
-CONF_SPEECH = 'speech'
-
-CONF_TYPE = 'type'
-CONF_TITLE = 'title'
-CONF_CONTENT = 'content'
-CONF_TEXT = 'text'
-
-CONF_FLASH_BRIEFINGS = 'flash_briefings'
-CONF_UID = 'uid'
-CONF_TITLE = 'title'
-CONF_AUDIO = 'audio'
-CONF_TEXT = 'text'
-CONF_DISPLAY_URL = 'display_url'
-
-ATTR_UID = 'uid'
-ATTR_UPDATE_DATE = 'updateDate'
-ATTR_TITLE_TEXT = 'titleText'
-ATTR_STREAM_URL = 'streamUrl'
-ATTR_MAIN_TEXT = 'mainText'
-ATTR_REDIRECTION_URL = 'redirectionURL'
-
-DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
-
-DOMAIN = 'alexa'
-DEPENDENCIES = ['http']
+_LOGGER = logging.getLogger(__name__)
 
 
 class SpeechType(enum.Enum):
@@ -73,30 +40,10 @@ class CardType(enum.Enum):
     link_account = "LinkAccount"
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        CONF_FLASH_BRIEFINGS: {
-            cv.string: vol.All(cv.ensure_list, [{
-                vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
-                vol.Required(CONF_TITLE): cv.template,
-                vol.Optional(CONF_AUDIO): cv.template,
-                vol.Required(CONF_TEXT, default=""): cv.template,
-                vol.Optional(CONF_DISPLAY_URL): cv.template,
-            }]),
-        }
-    }
-}, extra=vol.ALLOW_EXTRA)
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
+@callback
+def async_setup(hass):
     """Activate Alexa component."""
-    flash_briefings = config[DOMAIN].get(CONF_FLASH_BRIEFINGS, {})
-
     hass.http.register_view(AlexaIntentsView)
-    hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefings))
-
-    return True
 
 
 class AlexaIntentsView(http.HomeAssistantView):
@@ -255,66 +202,3 @@ class AlexaResponse(object):
             'sessionAttributes': self.session_attributes,
             'response': response,
         }
-
-
-class AlexaFlashBriefingView(http.HomeAssistantView):
-    """Handle Alexa Flash Briefing skill requests."""
-
-    url = FLASH_BRIEFINGS_API_ENDPOINT
-    name = 'api:alexa:flash_briefings'
-
-    def __init__(self, hass, flash_briefings):
-        """Initialize Alexa view."""
-        super().__init__()
-        self.flash_briefings = copy.deepcopy(flash_briefings)
-        template.attach(hass, self.flash_briefings)
-
-    @callback
-    def get(self, request, briefing_id):
-        """Handle Alexa Flash Briefing request."""
-        _LOGGER.debug('Received Alexa flash briefing request for: %s',
-                      briefing_id)
-
-        if self.flash_briefings.get(briefing_id) is None:
-            err = 'No configured Alexa flash briefing was found for: %s'
-            _LOGGER.error(err, briefing_id)
-            return b'', 404
-
-        briefing = []
-
-        for item in self.flash_briefings.get(briefing_id, []):
-            output = {}
-            if item.get(CONF_TITLE) is not None:
-                if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render()
-                else:
-                    output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
-
-            if item.get(CONF_TEXT) is not None:
-                if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render()
-                else:
-                    output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
-
-            if item.get(CONF_UID) is not None:
-                output[ATTR_UID] = item.get(CONF_UID)
-
-            if item.get(CONF_AUDIO) is not None:
-                if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render()
-                else:
-                    output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
-
-            if item.get(CONF_DISPLAY_URL) is not None:
-                if isinstance(item.get(CONF_DISPLAY_URL),
-                              template.Template):
-                    output[ATTR_REDIRECTION_URL] = \
-                        item[CONF_DISPLAY_URL].async_render()
-                else:
-                    output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
-
-            output[ATTR_UPDATE_DATE] = datetime.now().strftime(DATE_FORMAT)
-
-            briefing.append(output)
-
-        return self.json(briefing)
