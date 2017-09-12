@@ -39,12 +39,14 @@ CHECKED = 'checked'
 # Attribute: Is this task complete?
 COMPLETED = 'completed'
 # Todoist API: What is this task about?
+# Service Call: What is this task about?
 CONTENT = 'content'
 # Calendar Platform: Get a calendar event's description
 DESCRIPTION = 'description'
 # Calendar Platform: Used in the '_get_date()' method
 DATETIME = 'dateTime'
 # Attribute: When is this task due?
+# Service Call: When is this task due?
 DUE_DATE = 'due_date'
 # Todoist API: Look up a task's due date
 DUE_DATE_UTC = 'due_date_utc'
@@ -55,6 +57,7 @@ END = 'end'
 # Todoist API: Look up a Project/Label/Task ID
 ID = 'id'
 # Todoist API: Fetch all labels
+# Service Call: What are the labels attached to this task?
 LABELS = 'labels'
 # Todoist API: "Name" value
 NAME = 'name'
@@ -62,6 +65,7 @@ NAME = 'name'
 OVERDUE = 'overdue'
 # Attribute: What is this task's priority?
 # Todoist API: Get a task's priority
+# Service Call: What is this task's priority?
 PRIORITY = 'priority'
 # Todoist API: Look up the Project ID a Task belongs to
 PROJECT_ID = 'project_id'
