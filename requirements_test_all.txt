@@ -100,6 +100,9 @@ pydispatcher==2.0.5
 # homeassistant.components.litejet
 pylitejet==0.1
 
+# homeassistant.components.lutron_qse
+pylutron-qse==0.1.0
+
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4

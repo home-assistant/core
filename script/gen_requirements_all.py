@@ -54,6 +54,7 @@ TEST_REQUIREMENTS = (
     'sleepyq',
     'statsd',
     'pylitejet',
+    'pylutron-qse',
     'holidays',
     'evohomeclient',
     'pexpect',
