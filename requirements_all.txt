@@ -368,6 +368,9 @@ libnacl==1.5.2
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
 
+# homeassistant.components.camera.foscam
+libpyfoscam==1.0
+
 # homeassistant.components.device_tracker.mikrotik
 librouteros==1.0.2
 
@@ -598,9 +601,6 @@ pyfido==1.0.1
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
-
-# homeassistant.components.camera.foscam
-pyfoscam==1.2
 
 # homeassistant.components.ifttt
 pyfttt==0.3
