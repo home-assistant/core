@@ -114,13 +114,13 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         This callback is triggered, when the sensor state changes.
         """
-        self._sensor_temperature = new_state.state
+        new_value = new_state.state
 
-        if self._sensor_temperature == STATE_UNKNOWN:
-            return
-
-        # Force 0.5 precision from the temperature sensor
-        self._sensor_temperature = round(float(self._sensor_temperature) * 2) / 2
+        if new_value != STATE_UNKNOWN:
+            # Force 0.5 precision from the temperature sensor
+            new_value = round(float(new_value) * 2) / 2
+            
+        self._sensor_temperature = new_value
 
     @property
     def current_temperature(self):
