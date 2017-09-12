@@ -208,7 +208,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             item.update(due_date_utc=due_date)
         # Commit changes
         api.commit()
-        _LOGGER.debug("Created Todoist task: " + call.data[CONTENT])
+        _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
                            descriptions[DOMAIN][SERVICE_NEW_TASK],
@@ -510,7 +510,7 @@ class TodoistProjectData(object):
         # they have, organized)
         while len(project_tasks) > 0:
             best_task = self.select_best_task(project_tasks)
-            _LOGGER.debug("Found Todoist Task: " + best_task[SUMMARY])
+            _LOGGER.debug("Found Todoist Task: %s", best_task[SUMMARY])
             project_tasks.remove(best_task)
             self.all_project_tasks.append(best_task)
 
@@ -535,5 +535,5 @@ class TodoistProjectData(object):
                         timedelta(days=1)
                     ).strftime(DATE_STR_FORMAT)
                 }
-        _LOGGER.debug("Updated " + self._name + ".")
+        _LOGGER.debug("Updated %s", self._name)
         return True
