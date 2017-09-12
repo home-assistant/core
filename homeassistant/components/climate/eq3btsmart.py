@@ -119,7 +119,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
         if new_value != STATE_UNKNOWN:
             # Force 0.5 precision from the temperature sensor
             new_value = round(float(new_value) * 2) / 2
-            
+
         self._sensor_temperature = new_value
 
     @property
