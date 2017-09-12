@@ -141,5 +141,8 @@ statsd==3.2.1
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
 
+# homeassistant.components.cloud
+warrant==0.2.0
+
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
