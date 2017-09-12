@@ -53,13 +53,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for name, device_cfg in config[CONF_DEVICES].items():
         mac = device_cfg[CONF_MAC]
-        temperatureSensor = device_cfg.get(CONF_TEMPERATURE_SENSOR)
+        temperature_sensor = device_cfg.get(CONF_TEMPERATURE_SENSOR)
 
-        thermostat = EQ3BTSmartThermostat(mac, name, temperatureSensor)
+        thermostat = EQ3BTSmartThermostat(mac, name, temperature_sensor)
         devices.append(thermostat)
 
-        if (temperatureSensor is not None):
-            async_track_state_change(hass, [temperatureSensor],
+        if temperature_sensor is not None:
+            async_track_state_change(hass, [temperature_sensor],
                                      thermostat.temperature_state_changed)
 
     add_devices(devices)
@@ -85,8 +85,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
-        self._temperatureSensor = _sensor
-        self._sensorTemperature = STATE_UNKNOWN
+        self._temperature_sensor = _sensor
+        self._sensor_temperature = STATE_UNKNOWN
 
     @property
     def available(self) -> bool:
@@ -114,19 +114,19 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         This callback is triggered, when the sensor state changes.
         """
-        self._sensorTemperature = new_state.state
+        self._sensor_temperature = new_state.state
 
-        if self._sensorTemperature == STATE_UNKNOWN:
+        if self._sensor_temperature == STATE_UNKNOWN:
             return
 
         # Force 0.5 precision from the temperature sensor
-        self._sensorTemperature = round(float(self._sensorTemperature) * 2) / 2
+        self._sensor_temperature = round(float(self._sensor_temperature) * 2) / 2
 
     @property
     def current_temperature(self):
         """If no sensor is specified, just return target_temperature."""
-        if self._temperatureSensor is not None:
-            return self._sensorTemperature
+        if self._temperature_sensor is not None:
+            return self._sensor_temperature
 
         return self.target_temperature
 
