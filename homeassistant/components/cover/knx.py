@@ -215,7 +215,7 @@ class KNXCover(CoverDevice):
     def auto_updater_hook(self, now):
         """Callback for autoupdater."""
         # pylint: disable=unused-argument
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
         if self.device.position_reached():
             self.stop_auto_updater()
 
