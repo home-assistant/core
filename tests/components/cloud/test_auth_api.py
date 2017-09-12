@@ -67,20 +67,17 @@ def test_load_auth_with_no_stored_auth(cloud_hass, mock_read):
     assert auth.cognito is None
 
 
-def test_load_auth_with_invalid_auth(cloud_hass, mock_read):
+def test_load_auth_with_invalid_auth(cloud_hass, mock_read, mock_cognito):
     """Test calling load_auth when auth is no longer valid."""
-    with patch('homeassistant.components.cloud.auth_api.Auth.validate_auth',
-               return_value=False):
-        auth = auth_api.load_auth(cloud_hass)
+    mock_cognito.get_user.side_effect = aws_error('SomeError')
+    auth = auth_api.load_auth(cloud_hass)
 
     assert auth.cognito is None
 
 
-def test_load_auth_with_valid_auth(cloud_hass, mock_read):
+def test_load_auth_with_valid_auth(cloud_hass, mock_read, mock_cognito):
     """Test calling load_auth when valid auth."""
-    with patch('homeassistant.components.cloud.auth_api.Auth.validate_auth',
-               return_value=True):
-        auth = auth_api.load_auth(cloud_hass)
+    auth = auth_api.load_auth(cloud_hass)
 
     assert auth.cognito is not None
 

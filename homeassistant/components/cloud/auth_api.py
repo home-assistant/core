@@ -65,7 +65,7 @@ def load_auth(hass):
     """Load authentication from disk and verify it."""
     info = _read_info(hass)
 
-    if not info:
+    if info is None:
         return Auth(hass)
 
     auth = Auth(hass, _cognito(
@@ -125,7 +125,7 @@ def confirm_forgot_password(hass, confirmation_code, email, new_password):
         raise _map_aws_exception(err)
 
 
-class Auth:
+class Auth(object):
     """Class that holds Cloud authentication."""
 
     def __init__(self, hass, cognito=None):
@@ -257,8 +257,8 @@ def _cognito(hass, **kwargs):
         raise ValueError('Mode {} is not supported.'.format(mode))
 
     return Cognito(
-        SERVERS[mode]['identity_pool_id'],
-        SERVERS[mode]['client_id'],
-        SERVERS[mode]['region'],
+        user_pool_id=SERVERS[mode]['identity_pool_id'],
+        client_id=SERVERS[mode]['client_id'],
+        user_pool_region=SERVERS[mode]['region'],
         **kwargs
     )
