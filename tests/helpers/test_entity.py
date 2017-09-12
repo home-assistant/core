@@ -212,4 +212,4 @@ def test_async_schedule_update_ha_state(hass):
     mock_entity.async_schedule_update_ha_state(True)
     yield from hass.async_block_till_done()
 
-    assert mock_call.called
+    assert update_call is True
