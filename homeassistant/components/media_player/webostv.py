@@ -19,10 +19,9 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, STATE_OFF,
+    CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
     STATE_PLAYING, STATE_PAUSED,
     STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pylgtv==0.1.7',
@@ -56,7 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
 })
 
 
@@ -79,17 +79,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     customize = config.get(CONF_CUSTOMIZE)
+    timeout = config.get(CONF_TIMEOUT)
     config = hass.config.path(config.get(CONF_FILENAME))
-    setup_tv(host, mac, name, customize, config, hass, add_devices)
+    setup_tv(host, mac, name, customize, config, timeout, hass, add_devices)
 
 
-def setup_tv(host, mac, name, customize, config, hass, add_devices):
+def setup_tv(host, mac, name, customize, config, timeout, hass, add_devices):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
 
-    client = WebOsClient(host, config)
+    client = WebOsClient(host, config, timeout)
 
     if not client.is_registered():
         if host in _CONFIGURING:
@@ -100,30 +101,30 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
                 _LOGGER.warning(
                     "Connected to LG webOS TV %s but not paired", host)
                 return
-            except (OSError, ConnectionClosed, TypeError,
-                    asyncio.TimeoutError):
+            except (OSError, ConnectionClosed, asyncio.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
             # Not registered, request configuration.
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
-                host, mac, name, customize, config, hass, add_devices)
+                host, mac, name, customize, config, timeout, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
     if client.is_registered() and host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, mac, name, customize, config)], True)
+    add_devices([LgWebOSDevice(host, mac, name, customize, config, timeout)],
+                True)
 
 
 def request_configuration(
-        host, mac, name, customize, config, hass, add_devices):
+        host, mac, name, customize, config, timeout, hass, add_devices):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -133,11 +134,12 @@ def request_configuration(
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
-        """Handle configuration changes."""
-        setup_tv(host, mac, name, customize, config, hass, add_devices)
+        """The actions to do when our configuration callback is called."""
+        setup_tv(host, mac, name, customize, config, timeout, hass,
+                 add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, name, lgtv_configuration_callback,
+        name, lgtv_configuration_callback,
         description='Click start and accept the pairing request on your TV.',
         description_image='/static/images/config_webos.png',
         submit_caption='Start pairing request'
@@ -147,11 +149,11 @@ def request_configuration(
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, host, mac, name, customize, config):
+    def __init__(self, host, mac, name, customize, config, timeout):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         from wakeonlan import wol
-        self._client = WebOsClient(host, config)
+        self._client = WebOsClient(host, config, timeout)
         self._wol = wol
         self._mac = mac
         self._customize = customize

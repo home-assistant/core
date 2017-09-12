@@ -23,7 +23,6 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
-from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
 
@@ -84,6 +83,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+GROUP_NAME_ALL_HUE_LIGHTS = "All Hue Lights"
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -164,9 +164,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-
-        configurator = get_component('configurator')
-
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
     lights = {}
@@ -205,6 +203,21 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
         if not isinstance(api_groups, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
+
+        if not skip_groups:
+            # Group ID 0 is a special group in the hub for all lights, but it
+            # is not returned by get_api() so explicity get it and include it.
+            # See https://developers.meethue.com/documentation/
+            #               groups-api#21_get_all_groups
+            _LOGGER.debug("Getting group 0 from bridge")
+            all_lights = bridge.get_group(0)
+            if not isinstance(all_lights, dict):
+                _LOGGER.error("Got unexpected result from Hue API for group 0")
+                return
+            # Hue hub returns name of group 0 as "Group 0", so rename
+            # for ease of use in HA.
+            all_lights['name'] = GROUP_NAME_ALL_HUE_LIGHTS
+            api_groups["0"] = all_lights
 
         new_lights = []
 
@@ -268,7 +281,7 @@ def request_configuration(host, hass, add_devices, filename,
                           allow_unreachable, allow_in_emulated_hue,
                           allow_hue_groups):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -284,7 +297,7 @@ def request_configuration(host, hass, add_devices, filename,
                      allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Philips Hue", hue_configuration_callback,
+        "Philips Hue", hue_configuration_callback,
         description=("Press the button on the bridge to register Philips Hue "
                      "with Home Assistant."),
         entity_picture="/static/images/logo_philips_hue.png",

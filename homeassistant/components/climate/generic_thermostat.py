@@ -211,7 +211,7 @@ class GenericThermostat(ClimateDevice):
         """Handle heater switch state changes."""
         if new_state is None:
             return
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @callback
     def _async_keep_alive(self, time):

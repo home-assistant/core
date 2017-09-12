@@ -21,13 +21,13 @@ freezegun>=0.3.8
 
 
 # homeassistant.components.notify.html5
-PyJWT==1.5.2
+PyJWT==1.5.3
 
 # homeassistant.components.media_player.sonos
 SoCo==0.12
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.4.0
+aioautomatic==0.6.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -39,6 +39,9 @@ apns2==0.1.1
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.8
 
+# homeassistant.components.sensor.season
+ephem==3.7.6.0
+
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.5
 
@@ -49,7 +52,7 @@ fuzzywuzzy==0.15.1
 gTTS-token==1.1.1
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.5
+ha-ffmpeg==1.7
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.8
@@ -108,7 +111,7 @@ python-forecastio==1.3.5
 pyunifi==2.13
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.6
+pywebpush==1.1.0
 
 # homeassistant.components.python_script
 restrictedpython==4.0a3
@@ -137,6 +140,9 @@ statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
+
+# homeassistant.components.cloud
+warrant==0.2.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
