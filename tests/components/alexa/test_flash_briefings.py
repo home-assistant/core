@@ -1,7 +1,6 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access
 import asyncio
-import json
 import datetime
 
 import pytest
@@ -9,7 +8,7 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.components import alexa
-from homeassistant.components.alexa import const, intent
+from homeassistant.components.alexa import const
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
