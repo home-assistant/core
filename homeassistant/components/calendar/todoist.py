@@ -351,16 +351,16 @@ class TodoistProjectData(object):
         task[SUMMARY] = data[CONTENT]
         task[COMPLETED] = data[CHECKED] == 1
         task[PRIORITY] = data[PRIORITY]
-        task_url = 'https://todoist.com/showTask?id={}'.format(data[ID])
-        task[DESCRIPTION] = task_url
+        task[DESCRIPTION] = 'https://todoist.com/showTask?id={}'.format(
+            data[ID])
 
         # All task Labels (optional parameter).
         task[LABELS] = [
             label[NAME] for label in self._labels
             if label[ID] in data[LABELS]]
 
-        whitelist = self._label_whitelist
-        if any(label in task[LABELS] for label in whitelist):
+        if any(label in task[LABELS]
+               for label in self._label_whitelist):
             # We're not on the whitelist, return invalid task.
             return None
 
