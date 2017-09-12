@@ -102,7 +102,13 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self.current_obs = OrderedDict({})
 
-        self.entity_obs = {obs['entity_id']: obs for obs in self._observations}
+        to_observe = set(obs['entity_id'] for obs in self._observations)
+
+        self.entity_obs = dict.fromkeys(to_observe, [])
+
+        for ind, obs in enumerate(self._observations):
+            obs["id"] = ind
+            self.entity_obs[obs['entity_id']].append(obs)
 
         self.watchers = {
             'numeric_state': self._process_numeric_state,
@@ -120,16 +126,17 @@ class BayesianBinarySensor(BinarySensorDevice):
             if new_state.state == STATE_UNKNOWN:
                 return
 
-            entity_obs = self.entity_obs[entity]
-            platform = entity_obs['platform']
+            entity_obs_list = self.entity_obs[entity]
 
-            self.watchers[platform](entity_obs)
+            for entity_obs in entity_obs_list:
+                platform = entity_obs['platform']
+
+                self.watchers[platform](entity_obs)
 
             prior = self.prior
             for obs in self.current_obs.values():
                 prior = update_probability(prior, obs['prob_true'],
                                            obs['prob_false'])
-
             self.probability = prior
 
             self.hass.async_add_job(self.async_update_ha_state, True)
@@ -140,20 +147,20 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
-        entity = entity_observation['entity_id']
+        obs_id = entity_observation['id']
 
         if should_trigger:
             prob_true = entity_observation['prob_given_true']
             prob_false = entity_observation.get(
                 'prob_given_false', 1 - prob_true)
 
-            self.current_obs[entity] = {
+            self.current_obs[obs_id] = {
                 'prob_true': prob_true,
                 'prob_false': prob_false
             }
 
         else:
-            self.current_obs.pop(entity, None)
+            self.current_obs.pop(obs_id, None)
 
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
