@@ -42,11 +42,11 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Activate Alexa component."""
     config = config.get(DOMAIN, {})
-    flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS, {})
+    flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
 
     intent.async_setup(hass)
 
-    if flash_briefings:
+    if flash_briefings_config:
         flash_briefings.async_setup(hass, flash_briefings_config)
 
     return True

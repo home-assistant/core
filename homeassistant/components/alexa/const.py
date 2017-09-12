@@ -1,5 +1,7 @@
+"""Constants for the Alexa integration."""
 DOMAIN = 'alexa'
 
+# Flash briefing constants
 CONF_UID = 'uid'
 CONF_TITLE = 'title'
 CONF_AUDIO = 'audio'
