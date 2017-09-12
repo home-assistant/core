@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['motorparts==1.0.1']
+REQUIREMENTS = ['motorparts==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
