@@ -32,9 +32,9 @@ ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 
 def _state_validator(config):
+    config = copy.deepcopy(config)
     for state in SUPPORTED_PENDING_STATES:
         if CONF_PENDING_TIME not in config[state]:
-            config = copy.deepcopy(config)
             config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
 
     return config
