@@ -22,14 +22,17 @@ CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
 
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
-DEVICE_SENSORS = {'10': {'temperature':'temperature'},
-                  '12': {'temperature':'TAI8570/temperature','pressure':'TAI8570/pressure'},
-                  '22': {'temperature':'temperature'},
-                  '26': {'temperature':'temperature', 'humidity':'humidity', 'pressure': 'B1-R1-A/pressure'},
-                  '28': {'temperature':'temperature'},
-                  '3B': {'temperature':'temperature'},
-                  '42': {'temperature':'temperature'}
-                 }
+DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
+                  '12': {'temperature': 'TAI8570/temperature',
+                         'pressure': 'TAI8570/pressure'},
+                  '22': {'temperature': 'temperature'},
+                  '26': {'temperature': 'temperature',
+                         'humidity': 'humidity',
+                         'pressure': 'B1-R1-A/pressure'},
+                  '28': {'temperature': 'temperature'},
+                  '3B': {'temperature': 'temperature'},
+                  '42': {'temperature': 'temperature'}
+                  }
 
 SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
@@ -59,7 +62,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    '[.-]*')):
                 sensor_id = os.path.split(device_folder)[1]
                 device_file = os.path.join(device_folder, 'w1_slave')
-                devs.append(OneWire(device_names.get(sensor_id, sensor_id), device_file, 'temperature'))
+                devs.append(OneWire(device_names.get(sensor_id, sensor_id),
+                                    device_file, 'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
@@ -70,14 +74,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         os.path.split(family_file_path)[0])[1]
                     device_file = os.path.join(
                         os.path.split(family_file_path)[0], sensor_value)
-                    devs.append(OneWire(device_names.get(sensor_id, sensor_id), device_file, sensor_key))
+                    devs.append(OneWire(device_names.get(sensor_id, sensor_id),
+                                        device_file, sensor_key))
 
     if devs == []:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
                       "is in your /boot/config.txt. "
                       "Check the mount_dir parameter if it's defined")
         return
-
 
     add_devices(devs, True)
 
