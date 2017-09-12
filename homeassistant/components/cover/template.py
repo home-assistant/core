@@ -197,7 +197,7 @@ class CoverTemplate(CoverDevice):
         @callback
         def template_cover_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def template_cover_startup(event):
@@ -205,7 +205,7 @@ class CoverTemplate(CoverDevice):
             async_track_state_change(
                 self.hass, self._entities, template_cover_state_listener)
 
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_cover_startup)
@@ -271,7 +271,7 @@ class CoverTemplate(CoverDevice):
             yield from self._position_script.async_run({"position": 100})
         if self._optimistic:
             self._position = 100
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
@@ -282,7 +282,7 @@ class CoverTemplate(CoverDevice):
             yield from self._position_script.async_run({"position": 0})
         if self._optimistic:
             self._position = 0
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
@@ -297,7 +297,7 @@ class CoverTemplate(CoverDevice):
         yield from self._position_script.async_run(
             {"position": self._position})
         if self._optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
@@ -305,7 +305,7 @@ class CoverTemplate(CoverDevice):
         self._tilt_value = 100
         yield from self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
@@ -314,7 +314,7 @@ class CoverTemplate(CoverDevice):
         yield from self._tilt_script.async_run(
             {"tilt": self._tilt_value})
         if self._tilt_optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
@@ -322,7 +322,7 @@ class CoverTemplate(CoverDevice):
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
         yield from self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_update(self):

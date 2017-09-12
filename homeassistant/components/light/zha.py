@@ -105,19 +105,19 @@ class Light(zha.Entity, light.Light):
                 duration
             )
             self._state = 1
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
             return
 
         yield from self._endpoint.on_off.on()
         self._state = 1
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         yield from self._endpoint.on_off.off()
         self._state = 0
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def brightness(self):

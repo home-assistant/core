@@ -141,4 +141,4 @@ class TorqueSensor(Entity):
     def async_on_update(self, value):
         """Receive an update."""
         self._state = value
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()

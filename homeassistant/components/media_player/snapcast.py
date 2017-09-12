@@ -159,19 +159,19 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         streams = self._group.streams_by_name()
         if source in streams:
             yield from self._group.set_stream(streams[source].identifier)
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_mute_volume(self, mute):
         """Send the mute command."""
         yield from self._group.set_muted(mute)
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         yield from self._group.set_volume(round(volume * 100))
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the group state."""
@@ -235,13 +235,13 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def async_mute_volume(self, mute):
         """Send the mute command."""
         yield from self._client.set_muted(mute)
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         yield from self._client.set_volume(round(volume * 100))
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     def snapshot(self):
         """Snapshot the client state."""
