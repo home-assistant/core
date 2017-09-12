@@ -8,9 +8,9 @@ import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.satel_integra import (DATA_SATEL,
-                                                    SIGNAL_PANEL_MESSAGE,
-                                                    CONF_ARM_HOME_MODE)
+from homeassistant.components.satel_integra import (CONF_ARM_HOME_MODE,
+                                                    DATA_SATEL,
+                                                    SIGNAL_PANEL_MESSAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -35,7 +35,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     def __init__(self, name, arm_home_mode):
         """Initialize the alarm panel."""
-        self._display = ""
         self._name = name
         self._state = None
         self._arm_home_mode = arm_home_mode

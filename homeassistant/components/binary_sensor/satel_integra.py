@@ -30,8 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices = []
 
-    for zone_num in configured_zones:
-        device_config_data = configured_zones[zone_num]
+    for zone_num, device_config_data in configured_zones.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(zone_num, zone_name, zone_type)
