@@ -10,6 +10,7 @@ import datetime
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
@@ -56,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
         }, _cv_input_datetime)})
-}, required=True, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -137,7 +138,6 @@ class DatetimeSelect(Entity):
         else:
             restore_val = dt_util.now()
 
-        print("Type is: " + str(type(restore_val)))
         if not self._has_date:
             self._current_datetime = restore_val.time()
         elif not self._has_time:
@@ -188,7 +188,7 @@ class DatetimeSelect(Entity):
 
         return attrs
 
-    @asyncio.coroutine
+    @callback
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
         if not self._has_date:
