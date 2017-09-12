@@ -133,13 +133,13 @@ class BayesianBinarySensor(BinarySensorDevice):
 
                 self.watchers[platform](entity_obs)
 
-                prior = self.prior
-                for obs in self.current_obs.values():
-                    prior = update_probability(prior, obs['prob_true'],
-                                               obs['prob_false'])
-                self.probability = prior
+            prior = self.prior
+            for obs in self.current_obs.values():
+                prior = update_probability(prior, obs['prob_true'],
+                                           obs['prob_false'])
+            self.probability = prior
 
-                self.hass.async_add_job(self.async_update_ha_state, True)
+            self.hass.async_add_job(self.async_update_ha_state, True)
 
         entities = [obs['entity_id'] for obs in self._observations]
         async_track_state_change(
