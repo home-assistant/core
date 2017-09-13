@@ -62,11 +62,11 @@ def async_setup_platform(hass, config, async_add_entities,
 class WorxLandroidSensor(Entity):
     """Implementation of a Worx Landroid sensor."""
 
-    def __init__(self, type, hass, config):
+    def __init__(self, sensor, hass, config):
         """Initialize a Worx Landroid sensor."""
         self._state = None
         self.hass = hass
-        self.type = type
+        self.sensor = sensor
         self.host = config.get(CONF_HOST)
         self.pin = config.get(CONF_PIN)
         self.timeout = config.get(CONF_TIMEOUT)
@@ -76,7 +76,7 @@ class WorxLandroidSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'worxlandroid-{}'.format(self.type)
+        return 'worxlandroid-{}'.format(self.sensor)
 
     @property
     def state(self):
@@ -86,7 +86,7 @@ class WorxLandroidSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        if self.type == 'battery':
+        if self.sensor == 'battery':
             return '%'
         else:
             return None
@@ -94,7 +94,7 @@ class WorxLandroidSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Update the sensor data from the mower."""
-        _LOGGER.debug("Updating mower %s from %s", self.type, self.url)
+        _LOGGER.debug("Updating mower %s from %s", self.sensor, self.url)
 
         connection_error = False
 
@@ -111,9 +111,9 @@ class WorxLandroidSensor(Entity):
 
         # connection error
         if connection_error is True and self.allow_unreachable is False:
-            if self.type == 'error':
+            if self.sensor == 'error':
                 self._state = 'yes'
-            elif self.type == 'state':
+            elif self.sensor == 'state':
                 self._state = 'connection-error'
 
         # connection success
@@ -122,23 +122,24 @@ class WorxLandroidSensor(Entity):
             # since the mover incorrectly returns it...
             data = yield from mower_response.json(content_type='text/html')
 
-            # type battery
-            if self.type == 'battery':
+            # sensor battery
+            if self.sensor == 'battery':
                 self._state = data['perc_batt']
 
-            # type error
-            elif self.type == 'error':
+            # sensor error
+            elif self.sensor == 'error':
                 self._state = 'no' if self.get_error(data) is None else 'yes'
 
-            # type state
-            elif self.type == 'state':
+            # sensor state
+            elif self.sensor == 'state':
                 self._state = self.get_state(data)
 
         else:
-            if type == 'error':
+            if self.sensor == 'error':
                 self._state = 'no'
 
-    def get_error(self, obj):
+    @staticmethod
+    def get_error(obj):
         """Get the mower error."""
         for i, err in enumerate(obj['allarmi']):
             if i != 2:  # ignore wire bounce errors
