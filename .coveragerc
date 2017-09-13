@@ -151,9 +151,6 @@ omit =
 
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
-    
-    homeassistant/components/rflink.py
-    homeassistant/components/*/rflink.py
 
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
