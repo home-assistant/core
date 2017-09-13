@@ -119,6 +119,7 @@ def test_send_no_wait(hass, monkeypatch):
     assert protocol.send_command.call_args_list[0][0][0] == 'protocol_0_0'
     assert protocol.send_command.call_args_list[0][0][1] == 'off'
 
+
 @asyncio.coroutine
 def test_cover_send_no_wait(hass, monkeypatch):
     """Test command sending to a cover device without ack."""
