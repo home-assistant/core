@@ -93,7 +93,7 @@ class AppleTvDevice(MediaPlayerDevice):
         if not self._power.turned_on:
             return STATE_OFF
 
-        if self._playing is not None:
+        if self._playing:
             from pyatv import const
             state = self._playing.play_state
             if state == const.PLAY_STATE_NO_MEDIA or \
@@ -131,7 +131,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self._playing is not None:
+        if self._playing:
             from pyatv import const
             media_type = self._playing.media_type
             if media_type == const.MEDIA_TYPE_VIDEO:
@@ -144,13 +144,13 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if self._playing is not None:
+        if self._playing:
             return self._playing.total_time
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self._playing is not None:
+        if self._playing:
             return self._playing.position
 
     @property
@@ -169,14 +169,14 @@ class AppleTvDevice(MediaPlayerDevice):
     def media_image_hash(self):
         """Hash value for media image."""
         state = self.state
-        if self._playing is not None and state not in [STATE_OFF, STATE_IDLE]:
+        if self._playing and state not in [STATE_OFF, STATE_IDLE]:
             return self._playing.hash
 
     @asyncio.coroutine
     def async_get_media_image(self):
         """Fetch media image of current playing image."""
         state = self.state
-        if self._playing is not None and state not in [STATE_OFF, STATE_IDLE]:
+        if self._playing and state not in [STATE_OFF, STATE_IDLE]:
             return (yield from self.atv.metadata.artwork()), 'image/png'
 
         return None, None
@@ -184,7 +184,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._playing is not None:
+        if self._playing:
             if self.state == STATE_IDLE:
                 return 'Nothing playing'
             title = self._playing.title
@@ -220,7 +220,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             state = self.state
             if state == STATE_PAUSED:
                 return self.atv.remote_control.play()
@@ -232,7 +232,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.play()
 
     def async_media_stop(self):
@@ -240,7 +240,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.stop()
 
     def async_media_pause(self):
@@ -248,7 +248,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.pause()
 
     def async_media_next_track(self):
@@ -256,7 +256,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.next()
 
     def async_media_previous_track(self):
@@ -264,7 +264,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.previous()
 
     def async_media_seek(self, position):
@@ -272,5 +272,5 @@ class AppleTvDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self._playing is not None:
+        if self._playing:
             return self.atv.remote_control.set_position(position)
