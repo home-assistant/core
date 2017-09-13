@@ -17,7 +17,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util import Throttle
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_SLOTS,
+    CONF_FRIENDLY_NAME, CONF_SWITCHES,
     CONF_COMMAND_OFF, CONF_COMMAND_ON,
     CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
@@ -34,6 +34,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
 SERVICE_LEARN = 'learn_command'
 SERVICE_SEND = 'send_packet'
+CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
@@ -72,7 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Broadlink switches."""
     import broadlink
-    devices = config.get(CONF_SWITCHES, {})
+    devices = config.get(CONF_SWITCHES)
     slots = config.get('slots', {})
     ip_addr = config.get(CONF_HOST)
     friendly_name = config.get(CONF_FRIENDLY_NAME)
@@ -129,9 +130,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                             _LOGGER.error("Failed to send packet to device")
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
-        if not slots['slot_' + str(slot)]:
-            return switch_friendly_name + ' slot ' + str(slot)
-        return slots['slot_' + str(slot)]
+        if not slots['slot_{}'.format(slot)]:
+            return '{} slot {}'.format(switch_friendly_name, slot)
+        return slots['slot_{}'.format(slot)]
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
@@ -348,7 +349,7 @@ class BroadlinkMP1Switch(object):
 
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
-        return self._states['s' + str(slot)]
+        return self._states['s{}'.format(slot)]
 
     @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):
