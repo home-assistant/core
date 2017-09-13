@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.switch import (PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_PIN, CONF_TYPE, CONF_TIMEOUT)
+from homeassistant.const import (CONF_HOST, CONF_PIN, CONF_TIMEOUT)
 from homeassistant.helpers.aiohttp_client import (async_get_clientsession)
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,8 @@ DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PIN): vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
+    vol.Required(CONF_PIN): 
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
     vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
@@ -42,11 +43,14 @@ ERROR_STATE = [
     'battery-error'
 ]
 
+
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, 
+                         discovery_info=None):
     async_add_entities([WorxLandroidSensor('battery', hass, config)])
     async_add_entities([WorxLandroidSensor('error', hass, config)])
     async_add_entities([WorxLandroidSensor('state', hass, config)])
+
 
 class WorxLandroidSensor(Entity):
 
@@ -84,7 +88,8 @@ class WorxLandroidSensor(Entity):
         try:
             httpsession = async_get_clientsession(self.hass)
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
-                mower_response = yield from httpsession.get(self.url, auth=aiohttp.helpers.BasicAuth('admin', self.pin))
+                auth = aiohttp.helpers.BasicAuth('admin', self.pin)
+                mower_response = yield from httpsession.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
@@ -100,7 +105,8 @@ class WorxLandroidSensor(Entity):
 
         # connection success
         elif connection_error is False:
-            # set the expected content type to be text/html since the mover incorrectly returns it...
+            # set the expected content type to be text/html 
+            # since the mover incorrectly returns it...
             data = yield from mower_response.json(content_type='text/html')
 
             # type battery
@@ -121,7 +127,7 @@ class WorxLandroidSensor(Entity):
 
     def get_error(self, obj):
         for i, err in enumerate(obj['allarmi']):
-            if i != 2: # ignore wire bounce errors
+            if i != 2:  # ignore wire bounce errors
                 if err == 1:
                     return ERROR_STATE[i]
 
