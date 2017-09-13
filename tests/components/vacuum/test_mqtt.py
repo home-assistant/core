@@ -5,7 +5,8 @@ from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, services_to_strings, ATTR_BATTERY_ICON, ATTR_STATUS,
     ATTR_FAN_SPEED)
-from homeassistant.components.vacuum.mqtt import ALL_SERVICES
+from homeassistant.components.vacuum.mqtt import ALL_SERVICES, \
+    CONF_BATTERY_LEVEL_TOPIC, CONF_BATTERY_LEVEL_TEMPLATE
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME)
 from homeassistant.setup import setup_component
@@ -139,6 +140,25 @@ class TestVacuumMQTT(unittest.TestCase):
                          'mdi:battery-charging-60')
         self.assertEqual(61, state.attributes.get(ATTR_BATTERY_LEVEL))
         self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
+
+    def test_battery_template(self):
+        """Tests that you can use non-default templates for battery_level."""
+        self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
+            vacuum.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                CONF_NAME: 'mqtttest',
+                ATTR_SUPPORTED_FEATURES: services_to_strings(ALL_SERVICES),
+                CONF_BATTERY_LEVEL_TOPIC: "retroroomba/battery_level",
+                CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
+            }
+        }))
+
+        fire_mqtt_message(self.hass, 'retroroomba/battery_level', '54')
+        self.hass.block_till_done()
+        state = self.hass.states.get('vacuum.mqtttest')
+        self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
+        self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
+                         'mdi:battery-50')
 
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""

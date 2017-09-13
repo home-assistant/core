@@ -245,7 +245,6 @@ class MqttVacuum(VacuumDevice):
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT message."""
-
             if topic == self._battery_level_topic:
                 battery_level = self._battery_level_template\
                     .async_render_with_possible_json_value(
@@ -291,8 +290,12 @@ class MqttVacuum(VacuumDevice):
 
             self.async_schedule_update_ha_state()
 
-        yield from self.hass.components.mqtt.async_subscribe(
-            self._state_topic, message_received, self._qos)
+        topics_set = {
+            self._battery_level_topic, self._charging_topic, self._state_topic,
+            self._fan_speed_topic}
+        for topic in topics_set:
+            yield from self.hass.components.mqtt.async_subscribe(
+                topic, message_received, self._qos)
 
     @property
     def name(self):
