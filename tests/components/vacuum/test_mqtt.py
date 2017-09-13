@@ -148,7 +148,7 @@ class TestVacuumMQTT(unittest.TestCase):
         self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
 
     def test_battery_template(self):
-        """Tests that you can use non-default templates for battery_level."""
+        """Test that you can use non-default templates for battery_level."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',
