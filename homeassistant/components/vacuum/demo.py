@@ -4,6 +4,7 @@ Demo platform for the vacuum component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
+import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
@@ -36,9 +37,10 @@ DEMO_VACUUM_MINIMAL = '3_Third_floor'
 DEMO_VACUUM_NONE = '4_Fourth_floor'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_devices([
+    async_add_devices([
         DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
         DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
         DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
@@ -121,7 +123,8 @@ class DemoVacuum(VacuumDevice):
         """Flag supported features."""
         return self._supported_features
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
         if self.supported_features & SUPPORT_TURN_ON == 0:
             return
@@ -130,27 +133,30 @@ class DemoVacuum(VacuumDevice):
         self._cleaned_area += 5.32
         self._battery_level -= 2
         self._status = 'Cleaning'
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the vacuum off."""
         if self.supported_features & SUPPORT_TURN_OFF == 0:
             return
 
         self._state = False
         self._status = 'Charging'
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def stop(self, **kwargs):
-        """Turn the vacuum off."""
+    @asyncio.coroutine
+    def async_stop(self, **kwargs):
+        """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
         self._state = False
         self._status = 'Stopping the current task'
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def clean_spot(self, **kwargs):
+    @asyncio.coroutine
+    def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return
@@ -159,17 +165,19 @@ class DemoVacuum(VacuumDevice):
         self._cleaned_area += 1.32
         self._battery_level -= 1
         self._status = "Cleaning spot"
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def locate(self, **kwargs):
-        """Turn the vacuum off."""
+    @asyncio.coroutine
+    def async_locate(self, **kwargs):
+        """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
             return
 
         self._status = "Hi, I'm over here!"
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def start_pause(self, **kwargs):
+    @asyncio.coroutine
+    def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
         if self.supported_features & SUPPORT_PAUSE == 0:
             return
@@ -181,18 +189,20 @@ class DemoVacuum(VacuumDevice):
             self._battery_level -= 1
         else:
             self._status = 'Pausing the current task'
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def set_fan_speed(self, fan_speed, **kwargs):
-        """Tell the vacuum to return to its dock."""
+    @asyncio.coroutine
+    def async_set_fan_speed(self, fan_speed, **kwargs):
+        """Set the vacuum's fan speed."""
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
             return
 
         if fan_speed in self.fan_speed_list:
             self._fan_speed = fan_speed
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def return_to_base(self, **kwargs):
+    @asyncio.coroutine
+    def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return
@@ -200,13 +210,14 @@ class DemoVacuum(VacuumDevice):
         self._state = False
         self._status = 'Returning home...'
         self._battery_level += 5
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def send_command(self, command, params=None, **kwargs):
+    @asyncio.coroutine
+    def async_send_command(self, command, params=None, **kwargs):
         """Send a command to the vacuum."""
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
         self._status = 'Executing {}({})'.format(command, params)
         self._state = True
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()

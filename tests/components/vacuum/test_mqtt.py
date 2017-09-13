@@ -8,8 +8,8 @@ from homeassistant.components.vacuum.mqtt import ALL_SERVICES
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME)
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, mock_mqtt_component,\
-    fire_mqtt_message
+from tests.common import (
+    fire_mqtt_message, get_test_home_assistant, mock_mqtt_component)
 
 
 class TestVacuumMQTT(unittest.TestCase):
