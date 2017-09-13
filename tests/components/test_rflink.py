@@ -151,6 +151,7 @@ def test_cover_send_no_wait(hass, monkeypatch):
     assert protocol.send_command.call_args_list[0][0][0] == 'RTS_0100F2_0'
     assert protocol.send_command.call_args_list[0][0][1] == 'STOP'
 
+
 @asyncio.coroutine
 def test_send_command(hass, monkeypatch):
     """Test send_command service."""
