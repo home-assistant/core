@@ -18,6 +18,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.util.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
                    SUPPORT_CLEAN_SPOT
 ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
                SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND
+
+BOOL_TRUE_STRINGS = {'true', '1', 'yes', 'on'}
 
 CONF_PAYLOAD_TURN_ON = 'payload_turn_on'
 CONF_PAYLOAD_TURN_OFF = 'payload_turn_off'
@@ -40,6 +43,10 @@ CONF_BATTERY_LEVEL_TOPIC = 'battery_level_topic'
 CONF_BATTERY_LEVEL_TEMPLATE = 'battery_level_template'
 CONF_CHARGING_TOPIC = 'charging_topic'
 CONF_CHARGING_TEMPLATE = 'charging_template'
+CONF_CLEANING_TOPIC = 'cleaning_topic'
+CONF_CLEANING_TEMPLATE = 'cleaning_template'
+CONF_DOCKED_TOPIC = 'docked_topic'
+CONF_DOCKED_TEMPLATE = 'docked_template'
 CONF_STATE_TOPIC = 'state_topic'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_FAN_SPEED_TOPIC = 'fan_speed_topic'
@@ -63,6 +70,10 @@ DEFAULT_BATTERY_LEVEL_TOPIC = 'vacuum/state'
 DEFAULT_BATTERY_LEVEL_TEMPLATE = cv.template('{{ value_json.battery_level }}')
 DEFAULT_CHARGING_TOPIC = 'vacuum/state'
 DEFAULT_CHARGING_TEMPLATE = cv.template('{{ value_json.charging }}')
+DEFAULT_CLEANING_TOPIC = 'vacuum/state'
+DEFAULT_CLEANING_TEMPLATE = cv.template('{{ value_json.cleaning }}')
+DEFAULT_DOCKED_TOPIC = 'vacuum/state'
+DEFAULT_DOCKED_TEMPLATE = cv.template('{{ value_json.docked }}')
 DEFAULT_STATE_TOPIC = 'vacuum/state'
 DEFAULT_STATE_TEMPLATE = cv.template('{{ value_json.state }}')
 DEFAULT_FAN_SPEED_TOPIC = 'vacuum/state'
@@ -107,6 +118,20 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
         mqtt.valid_publish_topic,
     vol.Optional(CONF_CHARGING_TEMPLATE,
                  default=DEFAULT_CHARGING_TEMPLATE):
+        cv.template,
+
+    vol.Optional(CONF_CLEANING_TOPIC,
+                 default=DEFAULT_CLEANING_TOPIC):
+        mqtt.valid_publish_topic,
+    vol.Optional(CONF_CLEANING_TEMPLATE,
+                 default=DEFAULT_CLEANING_TEMPLATE):
+        cv.template,
+
+    vol.Optional(CONF_DOCKED_TOPIC,
+                 default=DEFAULT_DOCKED_TOPIC):
+        mqtt.valid_publish_topic,
+    vol.Optional(CONF_DOCKED_TEMPLATE,
+                 default=DEFAULT_DOCKED_TEMPLATE):
         cv.template,
 
     vol.Optional(CONF_STATE_TOPIC,
@@ -162,9 +187,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     charging_template = config.get(CONF_CHARGING_TEMPLATE)
     charging_template.hass = hass
 
-    state_topic = config.get(mqtt.CONF_STATE_TOPIC)
-    state_template = config.get(CONF_STATE_TEMPLATE)
-    state_template.hass = hass
+    cleaning_topic = config.get(CONF_CLEANING_TOPIC)
+    cleaning_template = config.get(CONF_CLEANING_TEMPLATE)
+    cleaning_template.hass = hass
+
+    docked_topic = config.get(CONF_DOCKED_TOPIC)
+    docked_template = config.get(CONF_DOCKED_TEMPLATE)
+    docked_template.hass = hass
 
     fan_speed_topic = config.get(CONF_FAN_SPEED_TOPIC)
     fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
@@ -180,9 +209,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             payload_turn_on, payload_turn_off, payload_return_to_base,
             payload_stop, payload_clean_spot, payload_locate,
             payload_start_pause, battery_level_topic, battery_level_template,
-            charging_topic, charging_template, state_topic, state_template,
-            fan_speed_topic, fan_speed_template, set_fan_speed_topic,
-            fan_speed_list, send_command_topic
+            charging_topic, charging_template, cleaning_topic,
+            cleaning_template, docked_topic, docked_template, fan_speed_topic,
+            fan_speed_template, set_fan_speed_topic, fan_speed_list,
+            send_command_topic
         ),
     ])
 
@@ -196,9 +226,10 @@ class MqttVacuum(VacuumDevice):
             payload_turn_on, payload_turn_off, payload_return_to_base,
             payload_stop, payload_clean_spot, payload_locate,
             payload_start_pause, battery_level_topic, battery_level_template,
-            charging_topic, charging_template, state_topic, state_template,
-            fan_speed_topic, fan_speed_template, set_fan_speed_topic,
-            fan_speed_list, send_command_topic):
+            charging_topic, charging_template, cleaning_topic,
+            cleaning_template, docked_topic, docked_template, fan_speed_topic,
+            fan_speed_template, set_fan_speed_topic, fan_speed_list,
+            send_command_topic):
         """Initialize the vacuum."""
         self._name = name
         self._supported_features = supported_features
@@ -220,8 +251,11 @@ class MqttVacuum(VacuumDevice):
         self._charging_topic = charging_topic
         self._charging_template = charging_template
 
-        self._state_topic = state_topic
-        self._state_template = state_template
+        self._cleaning_topic = cleaning_topic
+        self._cleaning_template = cleaning_template
+
+        self._docked_topic = docked_topic
+        self._docked_template = docked_template
 
         self._fan_speed_topic = fan_speed_topic
         self._fan_speed_template = fan_speed_template
@@ -230,8 +264,9 @@ class MqttVacuum(VacuumDevice):
         self._fan_speed_list = fan_speed_list
         self._send_command_topic = send_command_topic
 
-        self._is_cleaning = False
+        self._cleaning = False
         self._charging = False
+        self._docked = False
         self._status = 'Unknown'
         self._battery_level = 0
         self._fan_speed = 'unknown'
@@ -259,26 +294,33 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if charging is not None:
-                    self._charging = charging
+                    self._charging = str(charging).lower() in BOOL_TRUE_STRINGS
 
-            if topic == self._state_topic:
-                state = self._state_template\
+            if topic == self._cleaning_topic:
+                cleaning = self._cleaning_template \
                     .async_render_with_possible_json_value(
                         payload,
                         error_value=None)
-                if state:
-                    if state == 'cleaning':
-                        self._is_cleaning = True
-                        self._status = "Cleaning"
-                    if state == 'docked':
-                        self._is_cleaning = False
-                        if self._charging:
-                            self._status = "Docked & Charging"
-                        else:
-                            self._status = "Docked"
-                    if state == 'stopped':
-                        self._is_cleaning = False
-                        self._status = "Stopped"
+                if cleaning is not None:
+                    self._cleaning = str(cleaning).lower() in BOOL_TRUE_STRINGS
+
+            if topic == self._docked_topic:
+                docked = self._cleaning_template \
+                    .async_render_with_possible_json_value(
+                        payload,
+                        error_value=None)
+                if docked is not None:
+                    self._docked = str(docked).lower() in BOOL_TRUE_STRINGS
+
+            if self._docked:
+                if self._charging:
+                    self._status = "Docked & Charging"
+                else:
+                    self._status = "Docked"
+            elif self._cleaning:
+                self._status = "Cleaning"
+            else:
+                self._status = "Stopped"
 
             if topic == self._fan_speed_topic:
                 fan_speed = self._fan_speed_template\
@@ -291,8 +333,8 @@ class MqttVacuum(VacuumDevice):
             self.async_schedule_update_ha_state()
 
         topics_set = {
-            self._battery_level_topic, self._charging_topic, self._state_topic,
-            self._fan_speed_topic}
+            self._battery_level_topic, self._charging_topic,
+            self._cleaning_topic, self._docked_topic, self._fan_speed_topic}
         for topic in topics_set:
             yield from self.hass.components.mqtt.async_subscribe(
                 topic, message_received, self._qos)
@@ -315,7 +357,7 @@ class MqttVacuum(VacuumDevice):
     @property
     def is_on(self):
         """Return true if vacuum is on."""
-        return self._is_cleaning
+        return self._cleaning
 
     @property
     def status(self):
@@ -347,6 +389,15 @@ class MqttVacuum(VacuumDevice):
             return
 
         return max(0, min(100, self._battery_level))
+
+    @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        if self.supported_features & SUPPORT_BATTERY == 0:
+            return
+
+        return icon_for_battery_level(
+            battery_level=self.battery_level, charging=self._charging)
 
     @property
     def supported_features(self):

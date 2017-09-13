@@ -112,7 +112,8 @@ class TestVacuumMQTT(unittest.TestCase):
 
         message = """{
             "battery_level": 54,
-            "state": "cleaning",
+            "cleaning": true,
+            "docked": false,
             "charging": false,
             "fan_speed": "max"
         }"""
@@ -120,14 +121,17 @@ class TestVacuumMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
-                         'mdi:battery-50')
+        self.assertEqual(
+            'mdi:battery-50',
+            state.attributes.get(ATTR_BATTERY_ICON)
+        )
         self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
         self.assertEqual('max', state.attributes.get(ATTR_FAN_SPEED))
 
         message = """{
             "battery_level": 61,
-            "state": "docked",
+            "docked": true,
+            "cleaning": false,
             "charging": true,
             "fan_speed": "min"
         }"""
@@ -136,8 +140,10 @@ class TestVacuumMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
         self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
-                         'mdi:battery-charging-60')
+        self.assertEqual(
+            'mdi:battery-charging-60',
+            state.attributes.get(ATTR_BATTERY_ICON)
+        )
         self.assertEqual(61, state.attributes.get(ATTR_BATTERY_LEVEL))
         self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
 
@@ -173,4 +179,4 @@ class TestVacuumMQTT(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
         self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual("Unknown", state.attributes.get(ATTR_STATUS))
+        self.assertEqual("Stopped", state.attributes.get(ATTR_STATUS))
