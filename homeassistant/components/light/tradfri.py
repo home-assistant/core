@@ -179,8 +179,12 @@ class Tradfri(Light):
             self._api(self._light_control.set_state(True))
 
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            self._api(self._light.light_control.set_hex_color(
-                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])))
+            #~ self._api(self._light.light_control.set_hex_color(
+            #~    color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])))
+            ## 201709013: set_hex_color() seems not to work in pytradfri api - set_rgb_color() does 
+            ## -> changed function set_hex_color() to set_rgb_color()
+            ## tested w. IKEA tradfri GW and zigbee rgb PWM module (dresden elektronik FLS-PP lp) 
+            self._api(self._light.light_control.set_rgb_color(*kwargs[ATTR_RGB_COLOR]))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and self._ok_temps:
