@@ -95,7 +95,6 @@ def async_setup(hass, config):
 
         tasks = []
         for input_datetime in target_inputs:
-            print("Setting dt for " + str(input_datetime))
             tasks.append(
                 input_datetime.async_set_datetime(
                     call.data.get(ATTR_DATE, None),
@@ -166,7 +165,6 @@ class DatetimeSelect(Entity):
         if self._current_datetime is None:
             return None
 
-        print("Returning type: " + str(type(self._current_datetime)))
         return self._current_datetime
 
     @property
