@@ -416,7 +416,7 @@ miflora==0.1.16
 miniupnpc==1.9
 
 # homeassistant.components.sensor.mopar
-motorparts==1.0.0
+motorparts==1.0.2
 
 # homeassistant.components.tts
 mutagen==1.38
