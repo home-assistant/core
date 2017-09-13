@@ -102,15 +102,11 @@ DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START_PAUSE = 'start_pause'
 DEFAULT_BATTERY_LEVEL_TOPIC = 'vacuum/state'
 DEFAULT_BATTERY_LEVEL_TEMPLATE = cv.template('{{ value_json.battery_level }}')
-DEFAULT_CHARGING_TOPIC = 'vacuum/state'
 DEFAULT_CHARGING_TEMPLATE = cv.template('{{ value_json.charging }}')
-DEFAULT_CLEANING_TOPIC = 'vacuum/state'
 DEFAULT_CLEANING_TEMPLATE = cv.template('{{ value_json.cleaning }}')
-DEFAULT_DOCKED_TOPIC = 'vacuum/state'
 DEFAULT_DOCKED_TEMPLATE = cv.template('{{ value_json.docked }}')
 DEFAULT_STATE_TOPIC = 'vacuum/state'
 DEFAULT_STATE_TEMPLATE = cv.template('{{ value_json.state }}')
-DEFAULT_FAN_SPEED_TOPIC = 'vacuum/state'
 DEFAULT_FAN_SPEED_TEMPLATE = cv.template('{{ value_json.fan_speed }}')
 DEFAULT_SET_FAN_SPEED_TOPIC = 'vacuum/set_fan_speed'
 DEFAULT_FAN_SPEED_LIST = ['min', 'medium', 'high', 'max']
@@ -148,21 +144,21 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
         cv.template,
 
     vol.Optional(CONF_CHARGING_TOPIC,
-                 default=DEFAULT_CHARGING_TOPIC):
+                 default=DEFAULT_STATE_TOPIC):
         mqtt.valid_publish_topic,
     vol.Optional(CONF_CHARGING_TEMPLATE,
                  default=DEFAULT_CHARGING_TEMPLATE):
         cv.template,
 
     vol.Optional(CONF_CLEANING_TOPIC,
-                 default=DEFAULT_CLEANING_TOPIC):
+                 default=DEFAULT_STATE_TOPIC):
         mqtt.valid_publish_topic,
     vol.Optional(CONF_CLEANING_TEMPLATE,
                  default=DEFAULT_CLEANING_TEMPLATE):
         cv.template,
 
     vol.Optional(CONF_DOCKED_TOPIC,
-                 default=DEFAULT_DOCKED_TOPIC):
+                 default=DEFAULT_STATE_TOPIC):
         mqtt.valid_publish_topic,
     vol.Optional(CONF_DOCKED_TEMPLATE,
                  default=DEFAULT_DOCKED_TEMPLATE):
@@ -176,7 +172,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
         cv.template,
 
     vol.Optional(CONF_FAN_SPEED_TOPIC,
-                 default=DEFAULT_FAN_SPEED_TOPIC):
+                 default=DEFAULT_STATE_TOPIC):
         mqtt.valid_publish_topic,
     vol.Optional(CONF_FAN_SPEED_TEMPLATE,
                  default=DEFAULT_FAN_SPEED_TEMPLATE):
