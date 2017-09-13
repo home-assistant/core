@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL, services_to_strings, ATTR_BATTERY_ICON, ATTR_STATUS)
+    ATTR_BATTERY_LEVEL, services_to_strings, ATTR_BATTERY_ICON, ATTR_STATUS,
+    ATTR_FAN_SPEED)
 from homeassistant.components.vacuum.mqtt import ALL_SERVICES
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME)
@@ -84,18 +85,36 @@ class TestVacuumMQTT(unittest.TestCase):
         self.assertEqual(('vacuum/command', 'return_to_base', 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
+        vacuum.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
+        self.hass.block_till_done()
+        self.assertEqual(
+            ('vacuum/set_fan_speed', 'high', 0, False),
+            self.mock_publish.mock_calls[-2][1]
+        )
+
+        vacuum.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
+        self.hass.block_till_done()
+        self.assertEqual(
+            ('vacuum/send_command', '44 FE 93', 0, False),
+            self.mock_publish.mock_calls[-2][1]
+        )
+
     def test_status(self):
         """Test status updates from the vacuum."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
             vacuum.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',
                 CONF_NAME: 'mqtttest',
+                ATTR_SUPPORTED_FEATURES: services_to_strings(ALL_SERVICES),
             }
         }))
 
-        message = """
-        {"battery_level": 54, "state": "cleaning", "charging": false}
-        """
+        message = """{
+            "battery_level": 54,
+            "state": "cleaning",
+            "charging": false,
+            "fan_speed": "max"
+        }"""
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
@@ -103,10 +122,15 @@ class TestVacuumMQTT(unittest.TestCase):
         self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
                          'mdi:battery-50')
         self.assertEqual(54, state.attributes.get(ATTR_BATTERY_LEVEL))
+        self.assertEqual('max', state.attributes.get(ATTR_FAN_SPEED))
 
-        message = """
-        {"battery_level": 61, "state": "docked", "charging": true}
-        """
+        message = """{
+            "battery_level": 61,
+            "state": "docked",
+            "charging": true,
+            "fan_speed": "min"
+        }"""
+
         fire_mqtt_message(self.hass, 'vacuum/state', message)
         self.hass.block_till_done()
         state = self.hass.states.get('vacuum.mqtttest')
@@ -114,6 +138,7 @@ class TestVacuumMQTT(unittest.TestCase):
         self.assertEqual(state.attributes.get(ATTR_BATTERY_ICON),
                          'mdi:battery-charging-60')
         self.assertEqual(61, state.attributes.get(ATTR_BATTERY_LEVEL))
+        self.assertEqual('min', state.attributes.get(ATTR_FAN_SPEED))
 
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""
