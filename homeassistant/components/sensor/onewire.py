@@ -31,8 +31,7 @@ DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
                          'pressure': 'B1-R1-A/pressure'},
                   '28': {'temperature': 'temperature'},
                   '3B': {'temperature': 'temperature'},
-                  '42': {'temperature': 'temperature'}
-                  }
+                  '42': {'temperature': 'temperature'}}
 
 SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
@@ -52,12 +51,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     base_dir = config.get(CONF_MOUNT_DIR)
     devs = []
     device_names = {}
-    if 'names' in config.keys():
+    if 'names' in config:
         if isinstance(config['names'], dict):
             device_names = config['names']
 
     if base_dir == DEFAULT_MOUNT_DIR:
-        for device_family in DEVICE_SENSORS.keys():
+        for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, device_family +
                                                    '[.-]*')):
                 sensor_id = os.path.split(device_folder)[1]
@@ -68,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
             family = family_file.read()
-            if family in DEVICE_SENSORS.keys():
+            if family in DEVICE_SENSORS:
                 for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
                     sensor_id = os.path.split(
                         os.path.split(family_file_path)[0])[1]
@@ -89,11 +88,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OneWire(Entity):
     """Implementation of an One wire Sensor."""
 
-    def __init__(self, name, device_file, stype):
+    def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        self._name = name+' '+stype
+        self._name = name
         self._device_file = device_file
-        self._unit_of_measurement = SENSOR_TYPES[stype][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
 
     def _read_value_raw(self):
@@ -120,7 +119,7 @@ class OneWire(Entity):
 
     def update(self):
         """Get the latest data from the device."""
-        value = -99
+        value = None
         if self._device_file.startswith(DEFAULT_MOUNT_DIR):
             lines = self._read_value_raw()
             while lines[0].strip()[-3:] != 'YES':
