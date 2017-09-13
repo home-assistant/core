@@ -105,7 +105,7 @@ class WorxLandroidSensor(Entity):
 
         # connection success
         elif connection_error is False:
-            # set the expected content type to be text/html 
+            # set the expected content type to be text/html
             # since the mover incorrectly returns it...
             data = yield from mower_response.json(content_type='text/html')
 
