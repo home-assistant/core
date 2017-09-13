@@ -42,12 +42,11 @@ class TestPythonScriptComponent(unittest.TestCase):
             },
         })
         source = '''
-        
-        a,b = (1,2)
-        ab_list = [(a,b) for a,b in [(1,2),(3,4)]]
-        data['a'] = a
-        data['b'] = b
-        data['ab_list'] = ab_list
+a,b = (1,2)
+ab_list = [(a,b) for a,b in [(1,2),(3,4)]]
+data['a'] = a
+data['b'] = b
+data['ab_list'] = ab_list
         '''
         data = {}
         python_script.execute(self.hass, 'dummy.py', source, data)
