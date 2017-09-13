@@ -21,7 +21,7 @@ DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PIN): 
+    vol.Required(CONF_PIN):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
     vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -45,7 +45,7 @@ ERROR_STATE = [
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, 
+def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     async_add_entities([WorxLandroidSensor('battery', hass, config)])
     async_add_entities([WorxLandroidSensor('error', hass, config)])
@@ -86,10 +86,10 @@ class WorxLandroidSensor(Entity):
         connection_error = False
 
         try:
-            httpsession = async_get_clientsession(self.hass)
+            session = async_get_clientsession(self.hass)
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 auth = aiohttp.helpers.BasicAuth('admin', self.pin)
-                mower_response = yield from httpsession.get(self.url, auth=auth)
+                mower_response = yield from session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
