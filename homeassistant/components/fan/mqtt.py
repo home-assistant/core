@@ -160,7 +160,7 @@ class MqttFan(FanEntity):
                 self._state = True
             elif payload == self._payload[STATE_OFF]:
                 self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -177,7 +177,7 @@ class MqttFan(FanEntity):
                 self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -193,7 +193,7 @@ class MqttFan(FanEntity):
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
                 self._oscillation = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -287,7 +287,7 @@ class MqttFan(FanEntity):
 
         if self._optimistic_speed:
             self._speed = speed
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_oscillate(self, oscillating: bool) -> None:
@@ -309,4 +309,4 @@ class MqttFan(FanEntity):
 
         if self._optimistic_oscillation:
             self._oscillation = oscillating
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

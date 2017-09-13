@@ -86,7 +86,7 @@ class MqttBinarySensor(BinarySensorDevice):
             elif payload == self._payload_off:
                 self._state = False
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)

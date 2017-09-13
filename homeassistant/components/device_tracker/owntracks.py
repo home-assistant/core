@@ -42,7 +42,7 @@ VALIDATE_WAYPOINTS = 'waypoints'
 
 WAYPOINT_LAT_KEY = 'lat'
 WAYPOINT_LON_KEY = 'lon'
-WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoints'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
