@@ -3,6 +3,10 @@ import asyncio
 import logging
 from uuid import uuid4
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN, SUPPORT_BRIGHTNESS)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_HEADER = 'header'
@@ -17,6 +21,14 @@ MAPPING_API = {
     'DiscoverAppliancesRequest': async_api_discovery,
     'TurnOnRequest': async_api_turn_on,
     'TurnOffRequest': async_api_turn_off,
+    'SetPercentageRequest': async_api_set_brightness,
+}
+
+MAPPING_COMPONENT = {
+    SWITCH_DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
+    LIGHT_DOMAIN: [
+        'LIGTH', ('turnOff', 'turnOn'), {SUPPORT_BRIGHTNESS: 'setPercentage'}
+    ],
 }
 
 
@@ -35,7 +47,7 @@ def handle_message(hass, message):
 
 
 def api_message(name, namespace, payload=None):
-    """Create a API formated message.
+    """Create a API formated response message.
 
     Async friendly.
     """
@@ -52,8 +64,15 @@ def api_message(name, namespace, payload=None):
 
 
 def api_error(request, exc='DriverInternalError'):
-    """Create a API formated error message.
+    """Create a API formated error response.
 
     Async friendly.
     """
     return api_message(exc, request[ATTR_HEADER][ATTR_NAMESPACE])
+
+
+def async_api_discovery():
+    """Create a API formated discovery response.
+
+    Async friendly.
+    """
