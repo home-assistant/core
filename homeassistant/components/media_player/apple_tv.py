@@ -168,13 +168,18 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        if self._playing is not None and self.state != STATE_IDLE:
+        state = self.state
+        if self._playing is not None and state not in [STATE_OFF, STATE_IDLE]:
             return self._playing.hash
 
     @asyncio.coroutine
     def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        return (yield from self.atv.metadata.artwork()), 'image/png'
+        state = self.state
+        if self._playing is not None and state not in [STATE_OFF, STATE_IDLE]:
+            return (yield from self.atv.metadata.artwork()), 'image/png'
+
+        return None, None
 
     @property
     def media_title(self):
