@@ -1,3 +1,9 @@
+"""
+Support for Worx Landroid mower.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.worxlandroid/
+"""
 import logging
 import asyncio
 
@@ -47,14 +53,17 @@ ERROR_STATE = [
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
+    """Set up the Worx Landroid sensors."""
     async_add_entities([WorxLandroidSensor('battery', hass, config)])
     async_add_entities([WorxLandroidSensor('error', hass, config)])
     async_add_entities([WorxLandroidSensor('state', hass, config)])
 
 
 class WorxLandroidSensor(Entity):
+    """Implementation of a Worx Landroid sensor."""
 
     def __init__(self, type, hass, config):
+        """Initialize a Worx Landroid sensor."""
         self._state = None
         self.hass = hass
         self.type = type
@@ -66,14 +75,17 @@ class WorxLandroidSensor(Entity):
 
     @property
     def name(self):
-        return 'worx-landroid-{}'.format(self.type)
+        """Return the name of the sensor."""
+        return 'worxlandroid-{}'.format(self.type)
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
         if self.type == 'battery':
             return '%'
         else:
@@ -81,6 +93,7 @@ class WorxLandroidSensor(Entity):
 
     @asyncio.coroutine
     def async_update(self):
+        """Update the sensor data from the mower."""
         _LOGGER.debug("Updating mower %s from %s", self.type, self.url)
 
         connection_error = False
@@ -126,6 +139,7 @@ class WorxLandroidSensor(Entity):
                 self._state = 'no'
 
     def get_error(self, obj):
+        """Get the mower error."""
         for i, err in enumerate(obj['allarmi']):
             if i != 2:  # ignore wire bounce errors
                 if err == 1:
@@ -134,6 +148,7 @@ class WorxLandroidSensor(Entity):
         return None
 
     def get_state(self, obj):
+        """Get the state of the mower."""
         state = self.get_error(obj)
 
         if state is None:
