@@ -34,6 +34,7 @@ SERVICE_HASSIO = 'hassio'
 SERVICE_AXIS = 'axis'
 SERVICE_APPLE_TV = 'apple_tv'
 SERVICE_WINK = 'wink'
+SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -44,6 +45,7 @@ SERVICE_HANDLERS = {
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
+    SERVICE_XIAOMI_GW: ('xiaomi', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
