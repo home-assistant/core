@@ -12,10 +12,10 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
-    DEFAULT_ICON, services_to_strings, strings_to_services, STRING_TO_SERVICE,
-    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE,
-    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
+    DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.util.icon import icon_for_battery_level
@@ -23,6 +23,40 @@ from homeassistant.util.icon import icon_for_battery_level
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
+
+SERVICE_TO_STRING = {
+    SUPPORT_TURN_ON: 'turn_on',
+    SUPPORT_TURN_OFF: 'turn_off',
+    SUPPORT_PAUSE: 'pause',
+    SUPPORT_STOP: 'stop',
+    SUPPORT_RETURN_HOME: 'return_home',
+    SUPPORT_FAN_SPEED: 'fan_speed',
+    SUPPORT_BATTERY: 'battery',
+    SUPPORT_STATUS: 'status',
+    SUPPORT_SEND_COMMAND: 'send_command',
+    SUPPORT_LOCATE: 'locate',
+    SUPPORT_CLEAN_SPOT: 'clean_spot',
+}
+
+STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
+
+
+def services_to_strings(services):
+    """Convert SUPPORT_* service bitmask to list of service strings."""
+    strings = []
+    for service in SERVICE_TO_STRING:
+        if service & services:
+            strings.append(SERVICE_TO_STRING[service])
+    return strings
+
+
+def strings_to_services(strings):
+    """Convert service strings to SUPPORT_* service bitmask."""
+    services = 0
+    for string in strings:
+        services |= STRING_TO_SERVICE[string]
+    return services
+
 
 DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
                    SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\

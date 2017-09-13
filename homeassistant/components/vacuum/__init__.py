@@ -94,41 +94,6 @@ SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
 
 
-SERVICE_TO_STRING = {
-    SUPPORT_TURN_ON: 'turn_on',
-    SUPPORT_TURN_OFF: 'turn_off',
-    SUPPORT_PAUSE: 'pause',
-    SUPPORT_STOP: 'stop',
-    SUPPORT_RETURN_HOME: 'return_home',
-    SUPPORT_FAN_SPEED: 'fan_speed',
-    SUPPORT_BATTERY: 'battery',
-    SUPPORT_STATUS: 'status',
-    SUPPORT_SEND_COMMAND: 'send_command',
-    SUPPORT_LOCATE: 'locate',
-    SUPPORT_CLEAN_SPOT: 'clean_spot',
-    SUPPORT_MAP: 'map',
-}
-
-STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
-
-
-def services_to_strings(services):
-    """Convert SUPPORT_* service bitmask to list of service strings."""
-    strings = []
-    for service in SERVICE_TO_STRING:
-        if service & services:
-            strings.append(SERVICE_TO_STRING[service])
-    return strings
-
-
-def strings_to_services(strings):
-    """Convert service strings to SUPPORT_* service bitmask."""
-    services = 0
-    for string in strings:
-        services |= STRING_TO_SERVICE[string]
-    return services
-
-
 @bind_hass
 def is_on(hass, entity_id=None):
     """Return if the vacuum is on based on the statemachine."""

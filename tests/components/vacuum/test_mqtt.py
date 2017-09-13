@@ -3,10 +3,11 @@ import unittest
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL, services_to_strings, ATTR_BATTERY_ICON, ATTR_STATUS,
+    ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON, ATTR_STATUS,
     ATTR_FAN_SPEED)
-from homeassistant.components.vacuum.mqtt import ALL_SERVICES, \
-    CONF_BATTERY_LEVEL_TOPIC, CONF_BATTERY_LEVEL_TEMPLATE
+from homeassistant.components.vacuum.mqtt import (
+    ALL_SERVICES, CONF_BATTERY_LEVEL_TOPIC, CONF_BATTERY_LEVEL_TEMPLATE,
+    services_to_strings)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME)
 from homeassistant.setup import setup_component
