@@ -9,7 +9,7 @@ from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
-class TestSensorMQTT(unittest.TestCase):
+class TestSwitchMQTT(unittest.TestCase):
     """Test the MQTT switch."""
 
     def setUp(self):  # pylint: disable=invalid-name
