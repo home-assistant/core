@@ -335,7 +335,7 @@ class MqttVacuum(VacuumDevice):
                     self._cleaning = str(cleaning).lower() in BOOL_TRUE_STRINGS
 
             if topic == self._docked_topic:
-                docked = self._cleaning_template \
+                docked = self._docked_template \
                     .async_render_with_possible_json_value(
                         payload,
                         error_value=None)
