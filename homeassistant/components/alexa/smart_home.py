@@ -3,7 +3,9 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,3 +113,59 @@ def async_api_discovery(hass, request):
     return api_message(
         'DiscoverAppliancesResponse', 'Alexa.ConnectedHome.Discovery',
         payload={'discoveredAppliances': discovered_appliances})
+
+
+def extract_entity(funct):
+    """Decorator for extract entity object from request."""
+    @asyncio.coroutine
+    def async_api_entity_wrapper(hass, request):
+        """Process a turn on request."""
+        entity_id = \
+            request[ATTR_PAYLOAD]['appliance']['applianceId'].replace('#', '.')
+
+        # extract state object
+        entity = hass.states.get(entity_id)
+        if not entity:
+            _LOGGER.error("Can't process %s for %s",
+                          request[ATTR_HEADER][ATTR_NAME], entity_id)
+            return api_error(request)
+
+        return (yield from funct(hass, request, entity))
+
+    return async_api_entity_wrapper
+
+
+@extract_entity
+@asyncio.coroutine
+def async_api_turn_on(hass, request, entity):
+    """Process a turn on request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message('TurnOnConfirmation', 'Alexa.ConnectedHome.Control')
+
+
+@extract_entity
+@asyncio.coroutine
+def async_api_turn_off(hass, request, entity):
+    """Process a turn off request."""
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
+        ATTR_ENTITY_ID: entity.entity_id
+    }, blocking=True)
+
+    return api_message('TurnOffConfirmation', 'Alexa.ConnectedHome.Control')
+
+
+@extract_entity
+@asyncio.coroutine
+def async_api_set_brightness(hass, request, entity):
+    """Process a set percentage request."""
+    brightness = request[ATTR_PAYLOAD]['percentageState']['value']
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_BRIGHTNESS: brightness,
+    }, blocking=True)
+
+    return api_message(
+        'SetPercentageConfirmation', 'Alexa.ConnectedHome.Control')
