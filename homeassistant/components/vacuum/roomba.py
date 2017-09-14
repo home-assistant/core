@@ -98,7 +98,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class RoombaVacuum(VacuumDevice):
-    """Representation of a Xiaomi Vacuum cleaner robot."""
+    """Representation of a Roomba Vacuum cleaner robot."""
 
     def __init__(self, name, roomba):
         """Initialize the Roomba handler."""
