@@ -83,7 +83,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices_from_config(config, hass))
 
 
-class RflinkCover(RflinkCommand,CoverDevice):
+class RflinkCover(RflinkCommand, CoverDevice):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
     def _handle_event(self, event):
