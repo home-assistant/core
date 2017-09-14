@@ -54,18 +54,16 @@ ERROR_STATE = [
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the Worx Landroid sensors."""
-    async_add_entities([WorxLandroidSensor('battery', hass, config)])
-    async_add_entities([WorxLandroidSensor('error', hass, config)])
-    async_add_entities([WorxLandroidSensor('state', hass, config)])
+    for typ in ('battery', 'state'):
+        async_add_entities([WorxLandroidSensor(typ, config)])
 
 
 class WorxLandroidSensor(Entity):
     """Implementation of a Worx Landroid sensor."""
 
-    def __init__(self, sensor, hass, config):
+    def __init__(self, sensor, config):
         """Initialize a Worx Landroid sensor."""
         self._state = None
-        self.hass = hass
         self.sensor = sensor
         self.host = config.get(CONF_HOST)
         self.pin = config.get(CONF_PIN)
