@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class DoorBirdBinarySensor(BinarySensorDevice):
     """A binary sensor of a DoorBird device."""
+
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor on a DoorBird device."""
         self._device = device

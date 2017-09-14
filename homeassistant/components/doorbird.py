@@ -23,22 +23,22 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the DoorBird component."""
-    ip = config[DOMAIN].get(CONF_HOST)
+    device_ip = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
     from doorbirdpy import DoorBird
-    device = DoorBird(ip, username, password)
+    device = DoorBird(device_ip, username, password)
     status = device.ready()
 
     if status[0]:
-        _LOGGER.info("Connected to DoorBird at %s as %s", ip, username)
+        _LOGGER.info("Connected to DoorBird at %s as %s", device_ip, username)
         hass.data[DOMAIN] = device
         return True
     elif status[1] == 401:
-        _LOGGER.error("Authorization rejected by DoorBird at %s", ip)
+        _LOGGER.error("Authorization rejected by DoorBird at %s", device_ip)
         return False
     else:
         _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
-                      ip, str(status[1]))
+                      device_ip, str(status[1]))
         return False

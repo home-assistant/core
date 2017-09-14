@@ -55,6 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class DoorBirdSwitch(SwitchDevice):
     """A relay in a DoorBird device."""
+
     def __init__(self, device, switch):
         """Initialize a relay in a DoorBird device."""
         if switch not in SWITCHES:
