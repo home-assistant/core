@@ -178,7 +178,7 @@ class MqttCover(CoverDevice):
 
                 level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
 
         @callback
         def message_received(topic, payload, qos):
@@ -203,7 +203,7 @@ class MqttCover(CoverDevice):
                     payload)
                 return
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._state_topic is None:
             # Force into optimistic mode.
@@ -275,7 +275,7 @@ class MqttCover(CoverDevice):
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
@@ -289,7 +289,7 @@ class MqttCover(CoverDevice):
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = True
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
@@ -309,7 +309,7 @@ class MqttCover(CoverDevice):
                            self._retain)
         if self._tilt_optimistic:
             self._tilt_value = self._tilt_open_position
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
@@ -319,7 +319,7 @@ class MqttCover(CoverDevice):
                            self._retain)
         if self._tilt_optimistic:
             self._tilt_value = self._tilt_closed_position
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):

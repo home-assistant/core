@@ -205,6 +205,7 @@ class AutomaticData(object):
         self.hass = hass
         self.devices = devices
         self.vehicle_info = {}
+        self.vehicle_seen = {}
         self.client = client
         self.session = session
         self.async_see = async_see
@@ -235,6 +236,14 @@ class AutomaticData(object):
                 _LOGGER.error(str(err))
                 return
             yield from self.get_vehicle_info(vehicle)
+
+        if event.created_at < self.vehicle_seen[event.vehicle.id]:
+            # Skip events received out of order
+            _LOGGER.debug("Skipping out of order event. Event Created %s. "
+                          "Last seen event: %s.", event.created_at,
+                          self.vehicle_seen[event.vehicle.id])
+            return
+        self.vehicle_seen[event.vehicle.id] = event.created_at
 
         kwargs = self.vehicle_info[event.vehicle.id]
         if kwargs is None:
@@ -323,15 +332,17 @@ class AutomaticData(object):
         if self.devices is not None and name not in self.devices:
             self.vehicle_info[vehicle.id] = None
             return
-        else:
-            self.vehicle_info[vehicle.id] = kwargs = {
-                ATTR_DEV_ID: vehicle.id,
-                ATTR_HOST_NAME: name,
-                ATTR_MAC: vehicle.id,
-                ATTR_ATTRIBUTES: {
-                    ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
-                }
+
+        self.vehicle_info[vehicle.id] = kwargs = {
+            ATTR_DEV_ID: vehicle.id,
+            ATTR_HOST_NAME: name,
+            ATTR_MAC: vehicle.id,
+            ATTR_ATTRIBUTES: {
+                ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
             }
+        }
+        self.vehicle_seen[vehicle.id] = \
+            vehicle.updated_at or vehicle.created_at
 
         if vehicle.latest_location is not None:
             location = vehicle.latest_location
@@ -351,5 +362,8 @@ class AutomaticData(object):
             location = trips[0].end_location
             kwargs[ATTR_GPS] = (location.lat, location.lon)
             kwargs[ATTR_GPS_ACCURACY] = location.accuracy_m
+
+            if trips[0].ended_at >= self.vehicle_seen[vehicle.id]:
+                self.vehicle_seen[vehicle.id] = trips[0].ended_at
 
         return kwargs

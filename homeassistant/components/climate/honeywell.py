@@ -196,6 +196,11 @@ class RoundThermostat(ClimateDevice):
                 if val['id'] == self._id:
                     data = val
 
+        except KeyError:
+            _LOGGER.error("Update failed from Honeywell server")
+            self.client.user_data = None
+            return
+
         except StopIteration:
             _LOGGER.error("Did not receive any temperature data from the "
                           "evohomeclient API")
