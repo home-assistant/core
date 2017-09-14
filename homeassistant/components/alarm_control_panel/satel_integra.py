@@ -39,8 +39,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._state = None
         self._arm_home_mode = arm_home_mode
 
-        _LOGGER.debug("Setting up panel")
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
@@ -49,11 +47,10 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     @callback
     def _message_callback(self, message):
-        _LOGGER.debug("Got message: %s", message)
 
         if message != self._state:
             self._state = message
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
         else:
             _LOGGER.warning("Ignoring alarm status message, same state")
 
@@ -80,21 +77,18 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        _LOGGER.debug("alarm_disarm")
         if code:
             yield from self.hass.data[DATA_SATEL].disarm(code)
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        _LOGGER.debug("alarm_arm_away:")
         if code:
             yield from self.hass.data[DATA_SATEL].arm(code)
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        _LOGGER.debug("alarm_arm_home")
         if code:
             yield from self.hass.data[DATA_SATEL].arm(code,
                                                       self._arm_home_mode)

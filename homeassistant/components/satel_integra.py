@@ -101,11 +101,17 @@ def async_setup(hass, config):
                   conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
-    yield from async_load_platform(hass, 'alarm_control_panel',
-                                   DOMAIN, conf, config)
+    hass.async_add_job(async_load_platform(hass, 'alarm_control_panel',
+                                   DOMAIN, conf, config))
+    hass.async_add_job(async_load_platform(hass, 'binary_sensor',
+                                   DOMAIN, {CONF_ZONES: zones}, config))
 
-    yield from async_load_platform(hass, 'binary_sensor',
-                                   DOMAIN, {CONF_ZONES: zones}, config)
+
+#    yield from async_load_platform(hass, 'alarm_control_panel',
+#                                   DOMAIN, conf, config)
+
+    # yield from async_load_platform(hass, 'binary_sensor',
+    #                                DOMAIN, {CONF_ZONES: zones}, config)
 
     @callback
     def alarm_status_update_callback(status):

@@ -49,8 +49,6 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         self._zone_type = zone_type
         self._state = 0
 
-        _LOGGER.debug("Setup up zone: %s", self._name)
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
@@ -89,4 +87,4 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         if self._zone_number in zones \
                 and self._state != zones[self._zone_number]:
             self._state = zones[self._zone_number]
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
