@@ -201,6 +201,6 @@ hass.states.set('ab_list', '{}'.format(ab_list))
     assert hass.states.is_state('a', 1)
     assert hass.states.is_state('b', 2)
     assert hass.states.is_state('ab_list', '[(1, 2), (3, 4)]')
-    
+
     # No errors logged = good
     assert caplog.text == ''
