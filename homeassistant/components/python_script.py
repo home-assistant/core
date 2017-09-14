@@ -2,6 +2,7 @@
 import glob
 import os
 import logging
+import datetime
 
 import voluptuous as vol
 
@@ -63,7 +64,8 @@ def execute_script(hass, name, data=None):
 def execute(hass, filename, source, data=None):
     """Execute Python source."""
     from RestrictedPython import compile_restricted_exec
-    from RestrictedPython.Guards import safe_builtins, full_write_guard
+    from RestrictedPython.Guards import safe_builtins, full_write_guard, \
+        guarded_iter_unpack_sequence, guarded_unpack_sequence
     from RestrictedPython.Utilities import utility_builtins
     from RestrictedPython.Eval import default_guarded_getitem
 
@@ -94,13 +96,16 @@ def execute(hass, filename, source, data=None):
 
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
+    builtins['datetime'] = datetime
     restricted_globals = {
         '__builtins__': builtins,
         '_print_': StubPrinter,
         '_getattr_': protected_getattr,
         '_write_': full_write_guard,
         '_getiter_': iter,
-        '_getitem_': default_guarded_getitem
+        '_getitem_': default_guarded_getitem,
+        '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
+        '_unpack_sequence_': guarded_unpack_sequence,
     }
     logger = logging.getLogger('{}.{}'.format(__name__, filename))
     local = {
