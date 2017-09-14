@@ -11,6 +11,8 @@ import logging
 import os
 
 import async_timeout
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
@@ -18,9 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
+from homeassistant.helpers.deprecation import get_deprecated
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -98,7 +99,8 @@ def identify_event_type(event):
         return EVENT_KEY_COMMAND
     elif EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
-    return 'unknown'
+    else:
+        return 'unknown'
 
 
 @asyncio.coroutine
@@ -369,6 +371,17 @@ class RflinkCommand(RflinkDevice):
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
+
+        # Cover options for RFlink
+        elif command == 'close_cover':
+            cmd = 'DOWN'
+
+        elif command == 'open_cover':
+            cmd = 'UP'
+
+        elif command == 'stop_cover':
+            cmd = 'STOP'
+            self._state = True
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
