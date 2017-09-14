@@ -189,18 +189,17 @@ def test_unpacking_sequence(hass, caplog):
     source = """
 a,b = (1,2)
 ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
-hass.states.set('a', a)
-hass.states.set('b', b)
-hass.states.set('ab_list', '{}'.format(ab_list))
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.ab_list', '{}'.format(ab_list))
 """
 
-    data = {}
-    hass.async_add_job(execute, hass, 'test.py', source, data)
+    hass.async_add_job(execute, hass, 'test.py', source, {})
     yield from hass.async_block_till_done()
 
-    assert hass.states.is_state('a', 1)
-    assert hass.states.is_state('b', 2)
-    assert hass.states.is_state('ab_list', '[(1, 2), (3, 4)]')
+    assert hass.states.is_state('hello.a', 1)
+    assert hass.states.is_state('hello.b', 2)
+    assert hass.states.is_state('hello.ab_list', '[(1, 2), (3, 4)]')
 
     # No errors logged = good
     assert caplog.text == ''
