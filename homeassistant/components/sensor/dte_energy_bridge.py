@@ -26,7 +26,8 @@ ICON = 'mdi:flash'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.All(vol.Coerce(int), vol.Any(1, 2))
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
+        vol.All(vol.Coerce(int), vol.Any(1, 2))
 })
 
 
@@ -47,11 +48,13 @@ class DteEnergyBridgeSensor(Entity):
         self._version = version
 
         if self._version == 1:
-            self._url = "http://{}/instantaneousdemand".format(ip_address)
+            url_template = "http://{}/instantaneousdemand"
         elif self._version == 2:
-            self._url = "http://{}:8888/zigbee/se/instantaneousdemand".format(ip_address)
+            url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
         else:
             raise ValueError('Invalid sensor version')
+
+        self._url = url_template.format(ip_address)
 
         self._name = name
         self._unit_of_measurement = "kW"
