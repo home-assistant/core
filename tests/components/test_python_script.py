@@ -187,17 +187,16 @@ def test_unpacking_sequence(hass):
     """Test compile error logs error."""
     source = """
 a,b = (1,2)
-ab_list = [(a,b) for a,b in [(1,2), (3,4)]]
+ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
 data['a'] = a
 data['b'] = b
 data['ab_list'] = ab_list
 """
-    
+
     data = {}
     hass.async_add_job(execute, hass, 'test.py', source, data)
     yield from hass.async_block_till_done()
-    
+
     assert data['a'] == 1
     assert data['b'] == 2
-    assert data['ab_list'] == [(1,2),(3,4)]
-
+    assert data['ab_list'] == [(1, 2), (3, 4)]
