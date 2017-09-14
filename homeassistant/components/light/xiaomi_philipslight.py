@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo==0.1.3']
+REQUIREMENTS = ['python-mirobo==0.2.0']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -163,7 +163,7 @@ class XiaomiPhilipsLight(Light):
 
             result = yield from self._try_command(
                 "Setting brightness failed: %s",
-                self._light.set_bright, percent_brightness)
+                self._light.set_brightness, percent_brightness)
 
             if result:
                 self._brightness = brightness
@@ -181,7 +181,7 @@ class XiaomiPhilipsLight(Light):
 
             result = yield from self._try_command(
                 "Setting color temperature failed: %s cct",
-                self._light.set_cct, percent_color_temp)
+                self._light.set_color_temperature, percent_color_temp)
 
             if result:
                 self._color_temp = color_temp
@@ -207,13 +207,13 @@ class XiaomiPhilipsLight(Light):
         from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state.data)
+            _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._brightness = int(255 * 0.01 * state.bright)
-            self._color_temp = self.translate(state.cct, CCT_MIN, CCT_MAX,
-                                              self.max_mireds,
-                                              self.min_mireds)
+            self._brightness = int(255 * 0.01 * state.brightness)
+            self._color_temp = self.translate(state.color_temperature,
+                                              CCT_MIN, CCT_MAX,
+                                              self.max_mireds, self.min_mireds)
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
