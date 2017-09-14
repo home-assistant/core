@@ -203,26 +203,24 @@ class MiroboVacuum(VacuumDevice):
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                ATTR_CLEANING_TIME: str(int(
+                ATTR_CLEANING_TIME: int(
                     self.vacuum_state.clean_time.total_seconds()
-                    / 60)) + ' min',
-                ATTR_CLEANED_AREA: str(int(
-                    self.vacuum_state.clean_area)) + ' m²',
+                    / 60),
+                ATTR_CLEANED_AREA: int(self.vacuum_state.clean_area),
                 ATTR_CLEANING_COUNT: int(self.clean_history.count),
-                ATTR_CLEANED_TOTAL_AREA: str(int(
-                    self.clean_history.total_area)) + ' m²',
-                ATTR_CLEANING_TOTAL_TIME: str(int(
+                ATTR_CLEANED_TOTAL_AREA: int(self.clean_history.total_area),
+                ATTR_CLEANING_TOTAL_TIME: int(
                     self.clean_history.total_duration.total_seconds()
-                    / 60)) + ' min',
-                ATTR_MAIN_BRUSH_LEFT: str(int(
+                    / 60),
+                ATTR_MAIN_BRUSH_LEFT: int(
                     self.consumable_state.main_brush_left.total_seconds()
-                    / 3600)) + ' h',
-                ATTR_SIDE_BRUSH_LEFT: str(int(
+                    / 3600),
+                ATTR_SIDE_BRUSH_LEFT: int(
                     self.consumable_state.side_brush_left.total_seconds()
-                    / 3600)) + ' h',
-                ATTR_FILTER_LEFT: str(int(
+                    / 3600),
+                ATTR_FILTER_LEFT: int(
                     self.consumable_state.filter_left.total_seconds()
-                    / 3600)) + ' h'})
+                    / 3600)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
 
@@ -371,12 +369,19 @@ class MiroboVacuum(VacuumDevice):
         from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
+            consumable = yield from self.hass.async_add_job(self._vacuum.consumable_status)
+            cleanhis = yield from self.hass.async_add_job(self._vacuum.clean_history)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
+<<<<<<< 948b16c1ad5f6baea7f7264209a35bb75c255eda
             self.consumable_state = yield from self.hass.async_add_job(
                 self._vacuum.consumable_status)
             self.clean_history = yield from self.hass.async_add_job(
                 self._vacuum.clean_history)
+=======
+            self.consumable_state = consumable
+            self.clean_history = cleanhis
+>>>>>>> Added new statistic attributes
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:
