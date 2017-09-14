@@ -128,6 +128,11 @@ class LightTemplate(Light):
         return self._brightness
 
     @property
+    def name(self):
+        """Return the display name of this light."""
+        return self._name
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         if self._level_script is not None:
