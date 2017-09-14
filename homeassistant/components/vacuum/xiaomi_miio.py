@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
 ICON = 'mdi:google-circles-group'
-PLATFORM = 'xiaomi_miiio'
+PLATFORM = 'xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
