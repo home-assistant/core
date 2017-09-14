@@ -3,9 +3,8 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.light import (
-    DOMAIN as LIGHT_DOMAIN, SUPPORT_BRIGHTNESS)
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES
+from homeassistant.components import switch, light
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +24,11 @@ MAPPING_API = {
 }
 
 MAPPING_COMPONENT = {
-    SWITCH_DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
-    LIGHT_DOMAIN: [
-        'LIGTH', ('turnOff', 'turnOn'), {SUPPORT_BRIGHTNESS: 'setPercentage'}
+    switch.DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
+    light.DOMAIN: [
+        'LIGTH', ('turnOff', 'turnOn'), {
+            light.SUPPORT_BRIGHTNESS: 'setPercentage'
+        }
     ],
 }
 
@@ -71,8 +72,42 @@ def api_error(request, exc='DriverInternalError'):
     return api_message(exc, request[ATTR_HEADER][ATTR_NAMESPACE])
 
 
-def async_api_discovery():
+@asyncio.coroutine
+def async_api_discovery(hass, request):
     """Create a API formated discovery response.
 
     Async friendly.
     """
+    discovered_appliances = []
+
+    for domain, class_data in MAPPING_COMPONENT.items():
+        for entity in async_hass.states.entity_ids(domain_filter=domain):
+            appliance = {
+                'actions': [],
+                'applianceTypes': [class_data[0]],
+                'additionalApplianceDetails': {},
+                'applianceId': entity.entity_id.replace('.', '#'),
+                'friendlyDescription': '',
+                'friendlyName': entity.attributes.get(ATTR_FRIENDLY_NAME, ''),
+                'isReachable': True,
+                'manufacturerName': 'Unknown',
+                'modelName': 'Unknown',
+                'version': 'Unknown',
+            }
+
+            # static actions
+            if class_data[1]:
+                appliance['actions'].extend(list(class_data[1]))
+
+            # dynamic actions
+            if class_data[2]:
+                supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                for feature, action_name in class_data[2].items():
+                    if feature & supported > 0:
+                        appliance['actions'].append(action_name)
+
+            discovered_appliances.append(appliance)
+
+    return api_message(
+        'DiscoverAppliancesResponse', 'Alexa.ConnectedHome.Discovery',
+        payload={'discoveredAppliances': discovered_appliances})
