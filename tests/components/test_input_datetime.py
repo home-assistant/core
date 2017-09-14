@@ -6,7 +6,8 @@ import datetime
 
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.components.input_datetime import (DOMAIN, set_datetime)
+from homeassistant.components.input_datetime import (
+    DOMAIN, async_set_datetime)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
 
@@ -39,67 +40,80 @@ class TestInputDatetime(unittest.TestCase):
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
-    def test_set_datetime(self):
-        """Test set_datetime method."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+
+@asyncio.coroutine
+def test_set_datetime(hass):
+    """Test set_datetime method."""
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
             'test_datetime': {
-                'has_date': True,
                 'has_time': True,
+                'has_date': True
             },
-        }}))
-        entity_id = 'input_datetime.test_datetime'
+        }})
 
-        dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    entity_id = 'input_datetime.test_datetime'
 
-        set_datetime(self.hass, entity_id, dt_obj)
-        self.hass.block_till_done()
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(state.state, str(dt_obj))
-        self.assertTrue(state.attributes['has_time'])
-        self.assertTrue(state.attributes['has_date'])
+    yield from async_set_datetime(hass, entity_id, dt_obj)
+    yield from hass.async_block_till_done()
 
-    def test_set_datetime_time(self):
-        """Test set_datetime method with only time."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+    state = hass.states.get(entity_id)
+    assert state.state == str(dt_obj)
+    assert state.attributes['has_time']
+    assert state.attributes['has_date']
+
+
+@asyncio.coroutine
+def test_set_datetime_time(hass):
+    """Test set_datetime method with only time."""
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
             'test_time': {
-                'has_date': False,
                 'has_time': True,
-            },
-        }}))
-        entity_id = 'input_datetime.test_time'
+                'has_date': False
+            }
+        }})
 
-        dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
-        time_portion = dt_obj.time()
+    entity_id = 'input_datetime.test_time'
 
-        set_datetime(self.hass, entity_id, dt_obj)
-        self.hass.block_till_done()
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    time_portion = dt_obj.time()
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(state.state, str(time_portion))
-        self.assertTrue(state.attributes['has_time'])
-        self.assertFalse(state.attributes['has_date'])
+    yield from async_set_datetime(hass, entity_id, dt_obj)
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
 
-    def test_set_datetime_date(self):
-        """Test set_datetime method with only date."""
-        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+    state = hass.states.get(entity_id)
+    assert state.state == str(time_portion)
+    assert state.attributes['has_time']
+    assert not state.attributes['has_date']
+
+
+@asyncio.coroutine
+def test_set_datetime_date(hass):
+    """Test set_datetime method with only date."""
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
             'test_date': {
-                'has_date': True,
                 'has_time': False,
-            },
-        }}))
-        entity_id = 'input_datetime.test_date'
+                'has_date': True
+            }
+        }})
 
-        dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
-        date_portion = dt_obj.date()
+    entity_id = 'input_datetime.test_date'
 
-        set_datetime(self.hass, entity_id, dt_obj)
-        self.hass.block_till_done()
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    date_portion = dt_obj.date()
 
-        state = self.hass.states.get(entity_id)
-        self.assertEqual(state.state, str(date_portion))
-        self.assertFalse(state.attributes['has_time'])
-        self.assertTrue(state.attributes['has_date'])
+    yield from async_set_datetime(hass, entity_id, dt_obj)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == str(date_portion)
+    assert not state.attributes['has_time']
+    assert state.attributes['has_date']
 
 
 @asyncio.coroutine

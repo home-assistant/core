@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -60,10 +59,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@bind_hass
-def set_datetime(hass, entity_id, dt_value):
+@asyncio.coroutine
+def async_set_datetime(hass, entity_id, dt_value):
     """Set date and / or time of input_datetime."""
-    hass.services.call(DOMAIN, SERVICE_SET_DATETIME, {
+    yield from hass.services.async_call(DOMAIN, SERVICE_SET_DATETIME, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_DATE: dt_value.date(),
         ATTR_TIME: dt_value.time()
