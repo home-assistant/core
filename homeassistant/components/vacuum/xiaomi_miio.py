@@ -203,11 +203,15 @@ class MiroboVacuum(VacuumDevice):
                 ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
                 ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2),
                 ATTR_CLEANING_COUNT: str(self.clean_history.count),
-                ATTR_CLEANED_TOTAL_AREA: round(self.clean_history.total_area,2),
-                ATTR_CLEANING_TOTAL_TIME: str(self.clean_history.total_duration),
-                ATTR_MAIN_BRUSH_LEFT: str(self.consumable_state.main_brush_left),
-                ATTR_SIDE_BRUSH_LEFT: str(self.consumable_state.side_brush_left),
-                ATTR_FILTER_LEFT: str(self.consumable_state.filter_left) })
+                ATTR_CLEANED_TOTAL_AREA: round(
+                             self.clean_history.total_area, 2),
+                ATTR_CLEANING_TOTAL_TIME: str(
+                             self.clean_history.total_duration),
+                ATTR_MAIN_BRUSH_LEFT: str(
+                             self.consumable_state.main_brush_left),
+                ATTR_SIDE_BRUSH_LEFT: str(
+                             self.consumable_state.side_brush_left),
+                ATTR_FILTER_LEFT: str(self.consumable_state.filter_left)})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
 
@@ -356,8 +360,10 @@ class MiroboVacuum(VacuumDevice):
         from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
-            consumable = yield from self.hass.async_add_job(self._vacuum.consumable_status)
-            cleanhis = yield from self.hass.async_add_job(self._vacuum.clean_history)
+            consumable = yield from self.hass.async_add_job(
+                             self._vacuum.consumable_status)
+            cleanhis = yield from self.hass.async_add_job(
+                             self._vacuum.clean_history)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
             self.consumable_state = consumable
