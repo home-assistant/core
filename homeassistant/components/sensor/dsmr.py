@@ -40,7 +40,7 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dsmr_parser==0.9']
+REQUIREMENTS = ['dsmr_parser==0.10']
 
 
 CONF_DSMR_VERSION = 'dsmr_version'
