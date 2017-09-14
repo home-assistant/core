@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.rflink import (
     DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, CoverableRflinkDevice)
+    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, RflinkCommand)
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -83,7 +83,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices_from_config(config, hass))
 
 
-class RflinkCover(CoverableRflinkDevice, CoverDevice):
+class RflinkCover(RflinkCommand,CoverDevice):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
     def _handle_event(self, event):
