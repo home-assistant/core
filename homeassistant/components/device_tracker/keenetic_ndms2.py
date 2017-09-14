@@ -11,7 +11,6 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
@@ -43,7 +42,7 @@ def get_scanner(_hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
+Device = namedtuple('Device', ['mac', 'name'])
 
 
 class KeeneticNDMS2DeviceScanner(DeviceScanner):
@@ -105,18 +104,16 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
             return False
 
         # parsing response
-        now = dt_util.now()
         for info in result:
             if info.get('interface') != self._interface:
                 continue
             mac = info.get('mac')
-            ipv4 = info.get('ip')
+            name = info.get('name')
             # No address = no item :)
-            if mac is None or ipv4 is None:
+            if mac is None:
                 continue
 
-            name = info.get('name')
-            last_results.append(Device(mac.upper(), name, ipv4, now))
+            last_results.append(Device(mac.upper(), name))
 
         self.last_results = last_results
 
