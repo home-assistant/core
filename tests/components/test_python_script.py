@@ -197,8 +197,8 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
     hass.async_add_job(execute, hass, 'test.py', source, {})
     yield from hass.async_block_till_done()
 
-    assert hass.states.is_state('hello.a', 1)
-    assert hass.states.is_state('hello.b', 2)
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
     assert hass.states.is_state('hello.ab_list', '[(1, 2), (3, 4)]')
 
     # No errors logged = good
