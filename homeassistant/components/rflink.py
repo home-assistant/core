@@ -450,12 +450,6 @@ class SwitchableRflinkDevice(RflinkCommand):
         return self._async_handle_command("turn_off")
 
 
-class CoverableRflinkDevice(RflinkCommand):
-    """Rflink entity which can open/close an cover (eg: Somfy, bofumotor)."""
-
-    pass
-
-
 DEPRECATED_CONFIG_OPTIONS = [
     CONF_ALIASSES,
     CONF_GROUP_ALIASSES,
