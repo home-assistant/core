@@ -2,7 +2,7 @@
 Support for the Xiaomi vacuum cleaner robot.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.xiaomi/
+https://home-assistant.io/components/vacuum.xiaomi_miio/
 """
 import asyncio
 from functools import partial
