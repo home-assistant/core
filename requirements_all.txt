@@ -978,7 +978,7 @@ uber_rides==0.5.2
 upsmychoice==1.0.6
 
 # homeassistant.components.camera.uvc
-uvcclient==0.10.0
+uvcclient==0.10.1
 
 # homeassistant.components.volvooncall
 volvooncall==0.3.3
