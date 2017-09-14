@@ -180,18 +180,17 @@ for i in [1, 2]:
 
     assert hass.states.is_state('hello.1', 'world')
     assert hass.states.is_state('hello.2', 'world')
-    
+
+
 @asyncio.coroutine
 def test_unpacking_sequence(hass):
     """Test compile error logs error."""
     source = """
 a,b = (1,2)
-ab_list = [(a,b) for a,b in [(1,2),(3,4)]]
+ab_list = [(a,b) for a,b in [(1,2), (3,4)]]
 data['a'] = a
 data['b'] = b
 data['ab_list'] = ab_list
-for i in [1, 2]:
-    hass.states.set('hello.{}'.format(i), 'world')
     """
     
     data = {}
