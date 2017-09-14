@@ -17,6 +17,6 @@ cd cython
 python3 setup.py install
 
 cd ../..
-git clone --depth 1 -b tinydtls https://github.com/chrysn/aiocoap/
+git clone --depth 1 https://github.com/chrysn/aiocoap/
 cd aiocoap
 python3 -m pip install .

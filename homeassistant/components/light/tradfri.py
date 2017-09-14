@@ -244,8 +244,8 @@ class TradfriLight(Light):
         """
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
             self.hass.async_add_job(self._api(
-                self._light.light_control.set_hex_color(
-                    color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))))
+                self._light.light_control.set_rgb_color(
+                    *kwargs[ATTR_RGB_COLOR])))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and \
