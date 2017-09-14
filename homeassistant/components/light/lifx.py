@@ -33,7 +33,7 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.5.4', 'aiolifx_effects==0.1.1']
+REQUIREMENTS = ['aiolifx==0.6.0', 'aiolifx_effects==0.1.2']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -684,8 +684,7 @@ class LIFXStrip(LIFXColor):
             # Each get_color_zones can update 8 zones at once
             resp = yield from AwaitAioLIFX().wait(partial(
                 self.device.get_color_zones,
-                start_index=zone,
-                end_index=zone+7))
+                start_index=zone))
             if resp:
                 zone += 8
                 top = resp.count
