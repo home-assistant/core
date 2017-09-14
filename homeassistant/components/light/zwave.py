@@ -85,6 +85,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._refresh_value = refresh
         self._zw098 = None
 
+        if self._refresh_value:
+            _LOGGER.warning("The device_config option: refresh_value and "
+                            "delay will be deprecated, please remove from "
+                            " configuration.")
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
         if (self.node.manufacturer_id.strip() and
@@ -102,6 +106,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
         self.value_added()
+        self.values.primary.set_change_verified(True)
         self.update_properties()
 
     def update_properties(self):

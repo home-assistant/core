@@ -32,6 +32,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveDimmer)
     assert device.supported_features == SUPPORT_BRIGHTNESS
+    assert values.primary.set_change_verified.called
 
 
 def test_get_device_detects_colorlight(mock_openzwave):
@@ -43,6 +44,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
     assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+    assert values.primary.set_change_verified.called
 
 
 def test_get_device_detects_zw098(mock_openzwave):
@@ -55,6 +57,7 @@ def test_get_device_detects_zw098(mock_openzwave):
     assert isinstance(device, zwave.ZwaveColorLight)
     assert device.supported_features == (
         SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_COLOR_TEMP)
+    assert values.primary.set_change_verified.called
 
 
 def test_dimmer_turn_on(mock_openzwave):
