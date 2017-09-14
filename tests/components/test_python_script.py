@@ -183,20 +183,24 @@ for i in [1, 2]:
 
 
 @asyncio.coroutine
-def test_unpacking_sequence(hass):
+def test_unpacking_sequence(hass, caplog):
     """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
     source = """
 a,b = (1,2)
 ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
-data['a'] = a
-data['b'] = b
-data['ab_list'] = ab_list
+hass.states.set('a', a)
+hass.states.set('b', b)
+hass.states.set('ab_list', '{}'.format(ab_list))
 """
 
     data = {}
     hass.async_add_job(execute, hass, 'test.py', source, data)
     yield from hass.async_block_till_done()
 
-    assert data['a'] == 1
-    assert data['b'] == 2
-    assert data['ab_list'] == [(1, 2), (3, 4)]
+    assert hass.states.is_state('a', 1)
+    assert hass.states.is_state('b', 2)
+    assert hass.states.is_state('ab_list', '[(1, 2), (3, 4)]')
+    
+    # No errors logged = good
+    assert caplog.text == ''
