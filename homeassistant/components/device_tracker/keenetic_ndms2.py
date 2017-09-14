@@ -20,7 +20,6 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE = 'exclude'
 # Interface name to track devices for. Most likely one will not need to
 # change it from default 'Home'. This is needed not to track Guest WI-FI-
 # clients and router itself
@@ -34,8 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-    vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1)),
 })
 
 
@@ -58,7 +55,6 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
         self._url = 'http://%s/rci/show/ip/arp' % config[CONF_HOST]
         self._interface = config[CONF_INTERFACE]
-        self._exclude = config[CONF_EXCLUDE]
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
@@ -86,7 +82,6 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
         _LOGGER.info("Fetching...")
 
         last_results = []
-        exclude_hosts = self._exclude
 
         # doing a request
         try:
@@ -118,9 +113,6 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
             ipv4 = info.get('ip')
             # No address = no item :)
             if mac is None or ipv4 is None:
-                continue
-            # exclusions
-            if ipv4 in exclude_hosts:
                 continue
 
             name = info.get('name')
