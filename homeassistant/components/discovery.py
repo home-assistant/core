@@ -45,7 +45,7 @@ SERVICE_HANDLERS = {
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
-    SERVICE_XIAOMI_GW: ('xiaomi', None),
+    SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),

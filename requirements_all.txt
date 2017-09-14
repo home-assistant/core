@@ -298,7 +298,7 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
-# homeassistant.components.xiaomi
+# homeassistant.components.xiaomi_aqara
 https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.2.zip#PyXiaomiGateway==0.3.2
 
 # homeassistant.components.sensor.dht
@@ -752,8 +752,8 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.light.xiaomi_philipslight
-# homeassistant.components.vacuum.xiaomi
+# homeassistant.components.light.xiaomi_miio
+# homeassistant.components.vacuum.xiaomi_miio
 python-mirobo==0.2.0
 
 # homeassistant.components.media_player.mpd
