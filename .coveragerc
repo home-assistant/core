@@ -208,12 +208,12 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
-    homeassistant/components/xiaomi.py
-    homeassistant/components/binary_sensor/xiaomi.py
-    homeassistant/components/cover/xiaomi.py
-    homeassistant/components/light/xiaomi.py
-    homeassistant/components/sensor/xiaomi.py
-    homeassistant/components/switch/xiaomi.py
+    homeassistant/components/xiaomi_aqara.py
+    homeassistant/components/binary_sensor/xiaomi_aqara.py
+    homeassistant/components/cover/xiaomi_aqara.py
+    homeassistant/components/light/xiaomi_aqara.py
+    homeassistant/components/sensor/xiaomi_aqara.py
+    homeassistant/components/switch/xiaomi_aqara.py
 
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
@@ -332,7 +332,7 @@ omit =
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
-    homeassistant/components/light/xiaomi_philipslight.py
+    homeassistant/components/light/xiaomi_miio.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
