@@ -8,7 +8,6 @@ import logging
 
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
@@ -85,8 +84,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._refresh_value = refresh
         self._zw098 = None
 
-        if self._refresh_value:
-            _LOGGER.warning("The device_config option: refresh_value and "
+        if self._delay:
+            _LOGGER.warning("The device_config option: "
                             "delay will be deprecated, please remove from "
                             " configuration.")
         # Enable appropriate workaround flags for our device
@@ -101,12 +100,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     self._zw098 = 1
 
         # Used for value change event handling
-        self._refreshing = False
-        self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
         self.value_added()
-        self.values.primary.set_change_verified(True)
+        self.values.primary.set_change_verified(refresh)
         self.update_properties()
 
     def update_properties(self):
@@ -122,21 +119,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def value_changed(self):
         """Call when a value for this entity's node has changed."""
-        if self._refresh_value:
-            if self._refreshing:
-                self._refreshing = False
-            else:
-                def _refresh_value():
-                    """Use timer callback for delayed value refresh."""
-                    self._refreshing = True
-                    self.values.primary.refresh()
-
-                if self._timer is not None and self._timer.isAlive():
-                    self._timer.cancel()
-
-                self._timer = Timer(self._delay, _refresh_value)
-                self._timer.start()
-                return
         super().value_changed()
 
     @property
