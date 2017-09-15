@@ -57,11 +57,6 @@ class AbodeCamera(AbodeDevice, Camera):
         yield from super().async_added_to_hass()
 
         self.hass.async_add_job(
-            self._data.abode.events.add_device_callback,
-            self._device.device_id, self._update_callback
-        )
-
-        self.hass.async_add_job(
             self._data.abode.events.add_timeline_callback,
             self._event, self._capture_callback
         )
