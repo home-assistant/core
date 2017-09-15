@@ -44,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_DATE): cv.boolean,
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
+            # FIXME: initial value
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
                                          (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
@@ -85,9 +86,10 @@ def async_setup(hass, config):
         tasks = []
         for input_datetime in target_inputs:
             tasks.append(
+                # FIXME: validate
                 input_datetime.async_set_datetime(
-                    call.data.get(ATTR_DATE, None),
-                    call.data.get(ATTR_TIME, None)
+                    call.data.get(ATTR_DATE),
+                    call.data.get(ATTR_TIME)
                 )
             )
 
@@ -190,27 +192,12 @@ class DatetimeSelect(Entity):
 
         return attrs
 
-    @callback
+    @asyncio.coroutine
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
-        if not self._has_date:
-            if time_val is None:
-                _LOGGER.warning('"None" passed as time.')
-                return
+        if self._has_date and date_val:
             self._current_datetime = time_val
-        elif not self._has_time:
-            if date_val is None:
-                _LOGGER.warning('"None" passed as date.')
-                return
+        if self._has_time and time_val:
             self._current_datetime = date_val
-        else:
-            if time_val is None:
-                _LOGGER.warning('"None" passed as time.')
-                return
-            if date_val is None:
-                _LOGGER.warning('"None" passed as date.')
-                return
-            self._current_datetime = datetime.datetime.combine(date_val,
-                                                               time_val)
-
+        
         yield from self.async_update_ha_state()
