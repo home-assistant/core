@@ -37,17 +37,6 @@ SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TIME): cv.time,
 })
 
-
-def _cv_input_datetime(cfg):
-    """Configure validation helper for input datetime (voluptuous)."""
-    has_date = cfg[CONF_HAS_DATE]
-    has_time = cfg[CONF_HAS_TIME]
-
-    if not has_date and not has_time:
-        raise vol.Invalid("Input Datetime must have at least date or time!")
-    return cfg
-
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.All({
@@ -55,7 +44,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_DATE): cv.boolean,
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
-        }, _cv_input_datetime)})
+        }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
+                                         (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
 
 
