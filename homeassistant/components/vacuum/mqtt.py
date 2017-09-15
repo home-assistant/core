@@ -100,7 +100,6 @@ DEFAULT_PAYLOAD_STOP = 'stop'
 DEFAULT_PAYLOAD_CLEAN_SPOT = 'clean_spot'
 DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START_PAUSE = 'start_pause'
-DEFAULT_FAN_SPEED_LIST = ['min', 'medium', 'high', 'max']
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -135,7 +134,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
     vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_LIST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
 })
 
@@ -161,23 +161,29 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     battery_level_topic = config.get(CONF_BATTERY_LEVEL_TOPIC)
     battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
-    battery_level_template.hass = hass
+    if battery_level_template:
+        battery_level_template.hass = hass
 
     charging_topic = config.get(CONF_CHARGING_TOPIC)
     charging_template = config.get(CONF_CHARGING_TEMPLATE)
-    charging_template.hass = hass
+    if charging_template:
+        charging_template.hass = hass
 
     cleaning_topic = config.get(CONF_CLEANING_TOPIC)
     cleaning_template = config.get(CONF_CLEANING_TEMPLATE)
-    cleaning_template.hass = hass
+    if cleaning_template:
+        cleaning_template.hass = hass
 
     docked_topic = config.get(CONF_DOCKED_TOPIC)
     docked_template = config.get(CONF_DOCKED_TEMPLATE)
-    docked_template.hass = hass
+    if docked_template:
+        docked_template.hass = hass
 
     fan_speed_topic = config.get(CONF_FAN_SPEED_TOPIC)
     fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-    fan_speed_template.hass = hass
+    if fan_speed_template:
+        fan_speed_template.hass = hass
+
     set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
     fan_speed_list = config.get(CONF_FAN_SPEED_LIST)
 
@@ -260,7 +266,8 @@ class MqttVacuum(VacuumDevice):
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT message."""
-            if topic == self._battery_level_topic:
+            if topic == self._battery_level_topic and \
+                    self._battery_level_template:
                 battery_level = self._battery_level_template\
                     .async_render_with_possible_json_value(
                         payload,
@@ -268,7 +275,7 @@ class MqttVacuum(VacuumDevice):
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
-            if topic == self._charging_topic:
+            if topic == self._charging_topic and self._charging_template:
                 charging = self._charging_template\
                     .async_render_with_possible_json_value(
                         payload,
@@ -276,7 +283,7 @@ class MqttVacuum(VacuumDevice):
                 if charging is not None:
                     self._charging = str(charging).lower() in BOOL_TRUE_STRINGS
 
-            if topic == self._cleaning_topic:
+            if topic == self._cleaning_topic and self._cleaning_template:
                 cleaning = self._cleaning_template \
                     .async_render_with_possible_json_value(
                         payload,
@@ -284,7 +291,7 @@ class MqttVacuum(VacuumDevice):
                 if cleaning is not None:
                     self._cleaning = str(cleaning).lower() in BOOL_TRUE_STRINGS
 
-            if topic == self._docked_topic:
+            if topic == self._docked_topic and self._docked_template:
                 docked = self._docked_template \
                     .async_render_with_possible_json_value(
                         payload,
@@ -302,7 +309,7 @@ class MqttVacuum(VacuumDevice):
             else:
                 self._status = "Stopped"
 
-            if topic == self._fan_speed_topic:
+            if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\
                     .async_render_with_possible_json_value(
                         payload,
