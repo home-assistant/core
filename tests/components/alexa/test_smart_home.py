@@ -69,14 +69,19 @@ def test_discovery_request(hass):
             assert appliance['applianceTypes'][0] == "SWITCH"
             assert appliance['friendlyName'] == "Test switch"
             assert appliance['actions'] == ['turnOff', 'turnOn']
+            continue
 
         if appliance['applianceId'] == 'light#test_1':
             assert appliance['applianceTypes'][0] == "LIGHT"
             assert appliance['friendlyName'] == "Test light 1"
             assert appliance['actions'] == ['turnOff', 'turnOn']
+            continue
 
         if appliance['applianceId'] == 'light#test_2':
             assert appliance['applianceTypes'][0] == "LIGHT"
             assert appliance['friendlyName'] == "Test light 2"
             assert appliance['actions'] == \
                 ['turnOff', 'turnOn', 'setPercentage']
+            continue
+
+        raise AssertionError("Unknown appliance!")
