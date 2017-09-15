@@ -28,7 +28,7 @@ MAPPING_API = {
 MAPPING_COMPONENT = {
     switch.DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
     light.DOMAIN: [
-        'LIGTH', ('turnOff', 'turnOn'), {
+        'LIGHT', ('turnOff', 'turnOn'), {
             light.SUPPORT_BRIGHTNESS: 'setPercentage'
         }
     ],
