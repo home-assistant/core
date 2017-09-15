@@ -13,9 +13,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_STATE, CONF_API_KEY,
-                                 CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE,
+                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+                                 CONF_STATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -26,8 +26,11 @@ ATTR_CITY = 'city'
 ATTR_COUNTRY = 'country'
 ATTR_POLLUTANT_SYMBOL = 'pollutant_symbol'
 ATTR_POLLUTANT_UNIT = 'pollutant_unit'
+ATTR_STATE = 'region'
 ATTR_TIMESTAMP = 'timestamp'
 
+CONF_CITY = 'city'
+CONF_COUNTRY = 'country'
 CONF_RADIUS = 'radius'
 
 MASS_PARTS_PER_MILLION = 'ppm'
@@ -106,6 +109,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.longitude,
     vol.Optional(CONF_RADIUS, default=1000):
     cv.positive_int,
+    vol.Optional(CONF_CITY):
+    cv.string,
+    vol.Optional(CONF_STATE):
+    cv.string,
+    vol.Optional(CONF_COUNTRY):
+    cv.string
 })
 
 
@@ -114,22 +123,28 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     import pyairvisual as pav
 
+    _LOGGER.debug('Received configuration: %s', config)
+
     api_key = config.get(CONF_API_KEY)
-    _LOGGER.debug('AirVisual API Key: %s', api_key)
-
     monitored_locales = config.get(CONF_MONITORED_CONDITIONS)
-    _LOGGER.debug('Monitored Conditions: %s', monitored_locales)
-
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    _LOGGER.debug('AirVisual Latitude: %s', latitude)
-
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    _LOGGER.debug('AirVisual Longitude: %s', longitude)
-
     radius = config.get(CONF_RADIUS)
-    _LOGGER.debug('AirVisual Radius: %s', radius)
+    city = config.get(CONF_CITY)
+    state = config.get(CONF_STATE)
+    country = config.get(CONF_COUNTRY)
 
-    data = AirVisualData(pav.Client(api_key), latitude, longitude, radius)
+    if city and state and country:
+        _LOGGER.debug('Constructing sensors based on city, state, and country')
+        data = AirVisualData(
+            pav.Client(api_key), city=city, state=state, country=country)
+    else:
+        _LOGGER.debug('Constructing sensors based on latitude and longitude')
+        data = AirVisualData(
+            pav.Client(api_key),
+            latitude=latitude,
+            longitude=longitude,
+            radius=radius)
 
     sensors = []
     for locale in monitored_locales:
@@ -161,7 +176,7 @@ class AirVisualBaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._data:
+        if self._data.pollution_info:
             return {
                 ATTR_ATTRIBUTION: 'AirVisual©',
                 ATTR_CITY: self._data.city,
@@ -188,7 +203,7 @@ class AirVisualBaseSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Update the status of the sensor."""
-        _LOGGER.debug('updating sensor: %s', self._name)
+        _LOGGER.debug('Updating sensor: %s', self._name)
         self._data.update()
 
 
@@ -199,16 +214,17 @@ class AirPollutionLevelSensor(AirVisualBaseSensor):
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
-        aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
 
-        try:
-            [level] = [
-                i for i in POLLUTANT_LEVEL_MAPPING
-                if i['minimum'] <= aqi <= i['maximum']
-            ]
-            self._state = level.get('label')
-        except ValueError:
-            self._state = None
+        if self._data.pollution_info:
+            aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
+            try:
+                [level] = [
+                    i for i in POLLUTANT_LEVEL_MAPPING
+                    if i['minimum'] <= aqi <= i['maximum']
+                ]
+                self._state = level.get('label')
+            except ValueError:
+                self._state = None
 
 
 class AirQualityIndexSensor(AirVisualBaseSensor):
@@ -217,14 +233,16 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return ''
+        return 'unit' if self.state == '1' else 'units'
 
     @asyncio.coroutine
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
-        self._state = self._data.pollution_info.get(
-            'aqi{0}'.format(self._locale))
+
+        if self._data.pollution_info:
+            self._state = self._data.pollution_info.get(
+                'aqi{0}'.format(self._locale))
 
 
 class MainPollutantSensor(AirVisualBaseSensor):
@@ -239,7 +257,7 @@ class MainPollutantSensor(AirVisualBaseSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._data:
+        if self._data.pollution_info:
             return merge_two_dicts(super().device_state_attributes, {
                 ATTR_POLLUTANT_SYMBOL: self._symbol,
                 ATTR_POLLUTANT_UNIT: self._unit
@@ -249,26 +267,31 @@ class MainPollutantSensor(AirVisualBaseSensor):
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
-        symbol = self._data.pollution_info.get('main{0}'.format(self._locale))
-        pollution_info = POLLUTANT_MAPPING.get(symbol, {})
-        self._state = pollution_info.get('label')
-        self._unit = pollution_info.get('unit')
-        self._symbol = symbol
+
+        if self._data.pollution_info:
+            symbol = self._data.pollution_info.get(
+                'main{0}'.format(self._locale))
+            pollution_info = POLLUTANT_MAPPING.get(symbol, {})
+            self._state = pollution_info.get('label')
+            self._unit = pollution_info.get('unit')
+            self._symbol = symbol
 
 
 class AirVisualData(object):
     """Define an object to hold sensor data."""
 
-    def __init__(self, client, latitude, longitude, radius):
+    def __init__(self, client, **kwargs):
         """Initialize."""
-        self.city = None
         self._client = client
-        self.country = None
-        self.latitude = latitude
-        self.longitude = longitude
         self.pollution_info = None
-        self.radius = radius
-        self.state = None
+
+        self.city = kwargs.get(CONF_CITY)
+        self.state = kwargs.get(CONF_STATE)
+        self.country = kwargs.get(CONF_COUNTRY)
+
+        self.latitude = kwargs.get(CONF_LATITUDE)
+        self.longitude = kwargs.get(CONF_LONGITUDE)
+        self.radius = kwargs.get(CONF_RADIUS)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -276,14 +299,15 @@ class AirVisualData(object):
         import pyairvisual.exceptions as exceptions
 
         try:
-            resp = self._client.nearest_city(self.latitude, self.longitude,
-                                             self.radius).get('data')
+            if self.city and self.state and self.country:
+                resp = self._client.city(self.city, self.state,
+                                         self.country).get('data')
+            else:
+                resp = self._client.nearest_city(self.latitude, self.longitude,
+                                                 self.radius).get('data')
             _LOGGER.debug('New data retrieved: %s', resp)
-
-            self.city = resp.get('city')
-            self.state = resp.get('state')
-            self.country = resp.get('country')
-            self.pollution_info = resp.get('current').get('pollution')
+            self.pollution_info = resp['current']['pollution']
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update sensor data')
             _LOGGER.debug(exc_info)
+            self.pollution_info = None
