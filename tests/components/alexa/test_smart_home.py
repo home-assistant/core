@@ -179,3 +179,29 @@ def test_api_turn_off(hass):
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
     assert resp['header']['name'] == 'TurnOffConfirmation'
+
+
+@asyncio.coroutine
+def test_api_set_brightness(hass):
+    """Test api set brightness process."""
+    msg_light = smart_home.api_message(
+        'SetPercentageRequest', 'Alexa.ConnectedHome.Control', {
+            'appliance': {
+                'applianceId': 'light#test'
+            },
+            'percentageState': {
+                'value': '50'
+            }
+        })
+
+    # settup test devices
+    hass.states.async_set(
+        'light.test', 'off', {'friendly_name': "Test light"})
+
+    call_light = async_mock_service(hass, 'light', 'turn_on')
+
+    resp = yield from smart_home.async_api_set_brightness(hass, msg_light)
+    assert len(call_light) == 1
+    assert call_light[0].data['entity_id'] == 'light.test'
+    assert call_light[0].data['brightness'] == '50'
+    assert resp['header']['name'] == 'SetPercentageConfirmation'
