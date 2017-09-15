@@ -4,12 +4,8 @@ import unittest
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON, ATTR_STATUS,
-    ATTR_FAN_SPEED)
-from homeassistant.components.vacuum.mqtt import (
-    ALL_SERVICES, CONF_BATTERY_LEVEL_TOPIC, CONF_BATTERY_LEVEL_TEMPLATE,
-    services_to_strings)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME)
+    ATTR_FAN_SPEED, mqtt)
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, CONF_NAME
 from homeassistant.setup import setup_component
 from tests.common import (
     fire_mqtt_message, get_test_home_assistant, mock_mqtt_component)
@@ -23,6 +19,22 @@ class TestVacuumMQTT(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
+        self.default_config = {
+            CONF_PLATFORM: 'mqtt',
+            CONF_NAME: 'mqtttest',
+            mqtt.CONF_COMMAND_TOPIC = 'vacuum/command'
+            mqtt.CONF_SEND_COMMAND_TOPIC = 'vacuum/send_command'
+            mqtt.CONF_BATTERY_LEVEL_TOPIC = 'vacuum/state'
+            mqtt.CONF_BATTERY_LEVEL_TEMPLATE = '{{ value_json.battery_level }}'
+            mqtt.CONF_CHARGING_TEMPLATE = '{{ value_json.charging }}'
+            mqtt.CONF_CLEANING_TEMPLATE = '{{ value_json.cleaning }}'
+            mqtt.CONF_DOCKED_TEMPLATE = '{{ value_json.docked }}'
+            mqtt.CONF_STATE_TOPIC = 'vacuum/state'
+            mqtt.CONF_STATE_TEMPLATE = '{{ value_json.state }}'
+            mqtt.CONF_FAN_SPEED_TEMPLATE = '{{ value_json.fan_speed }}'
+            mqtt.CONF_SET_FAN_SPEED_TOPIC = 'vacuum/set_fan_speed'
+        }
+
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
         self.hass.stop()
@@ -30,14 +42,12 @@ class TestVacuumMQTT(unittest.TestCase):
     def test_default_supported_features(self):
         """Test that the correct supported features."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
-            vacuum.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                CONF_NAME: 'mqtttest',
-            }
+            vacuum.DOMAIN: self.default_config,
         }))
         entity = self.hass.states.get('vacuum.mqtttest')
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self.assertListEqual(sorted(services_to_strings(entity_features)),
+        entity_features = \
+            entity.attributes.get(mqtt.CONF_SUPPORTED_FEATURES, 0)
+        self.assertListEqual(sorted(mqtt.services_to_strings(entity_features)),
                              sorted(['turn_on', 'turn_off', 'stop',
                                      'return_home', 'battery', 'status',
                                      'clean_spot']))
@@ -45,11 +55,10 @@ class TestVacuumMQTT(unittest.TestCase):
     def test_all_commands(self):
         """Test simple commands to the vacuum."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
-            vacuum.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                CONF_NAME: 'mqtttest',
-                ATTR_SUPPORTED_FEATURES: services_to_strings(ALL_SERVICES),
-            }
+            vacuum.DOMAIN: self.default_config.update({
+                mqtt.CONF_SUPPORTED_FEATURES:
+                    mqtt.services_to_strings(mqtt.ALL_SERVICES),
+            })
         }))
 
         vacuum.turn_on(self.hass, 'vacuum.mqtttest')
@@ -104,11 +113,10 @@ class TestVacuumMQTT(unittest.TestCase):
     def test_status(self):
         """Test status updates from the vacuum."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
-            vacuum.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                CONF_NAME: 'mqtttest',
-                ATTR_SUPPORTED_FEATURES: services_to_strings(ALL_SERVICES),
-            }
+            vacuum.DOMAIN: self.default_config.update({
+                mqtt.CONF_SUPPORTED_FEATURES:
+                    mqtt.services_to_strings(mqtt.ALL_SERVICES),
+            })
         }))
 
         message = """{
@@ -151,13 +159,12 @@ class TestVacuumMQTT(unittest.TestCase):
     def test_battery_template(self):
         """Test that you can use non-default templates for battery_level."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
-            vacuum.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                CONF_NAME: 'mqtttest',
-                ATTR_SUPPORTED_FEATURES: services_to_strings(ALL_SERVICES),
-                CONF_BATTERY_LEVEL_TOPIC: "retroroomba/battery_level",
-                CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
-            }
+            vacuum.DOMAIN: self.default_config.update({
+                mqtt.CONF_SUPPORTED_FEATURES:
+                    mqtt.services_to_strings(mqtt.ALL_SERVICES),
+                mqtt.CONF_BATTERY_LEVEL_TOPIC: "retroroomba/battery_level",
+                mqtt.CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
+            })
         }))
 
         fire_mqtt_message(self.hass, 'retroroomba/battery_level', '54')
@@ -170,10 +177,7 @@ class TestVacuumMQTT(unittest.TestCase):
     def test_status_invalid_json(self):
         """Test to make sure nothing breaks if the vacuum sends bad JSON."""
         self.assertTrue(setup_component(self.hass, vacuum.DOMAIN, {
-            vacuum.DOMAIN: {
-                CONF_PLATFORM: 'mqtt',
-                CONF_NAME: 'mqtttest',
-            }
+            vacuum.DOMAIN: self.default_config,
         }))
 
         fire_mqtt_message(self.hass, 'vacuum/state', '{"asdfasas false}')
