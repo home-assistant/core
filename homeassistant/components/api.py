@@ -13,7 +13,7 @@ import async_timeout
 
 import homeassistant.core as ha
 import homeassistant.remote as rem
-from homeassistant.bootstrap import ERROR_LOG_FILENAME
+from homeassistant.bootstrap import ERROR_LOG_PATH
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
@@ -51,8 +51,7 @@ def setup(hass, config):
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
 
-    hass.http.register_static_path(
-        URL_API_ERROR_LOG, hass.config.path(ERROR_LOG_FILENAME), False)
+    hass.http.register_static_path(URL_API_ERROR_LOG, ERROR_LOG_PATH, False)
 
     return True
 
