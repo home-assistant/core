@@ -26,11 +26,10 @@ from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
 
-# After the logging is initialized, ERROR_LOG_PATH will be the full
-# path to the log file.  This is needed because components/api needs
-# to access the log file location.
-DEFAULT_LOG_FILENAME = 'home-assistant.log'
-ERROR_LOG_PATH = None
+ERROR_LOG_FILENAME = 'home-assistant.log'
+
+# hass.data key for logging information.
+DATA_LOGGING = 'logging'
 
 FIRST_INIT_COMPONENT = set((
     'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
@@ -248,26 +247,25 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         pass
 
     # Log errors to a file if we have write access to file or config dir
-    global ERROR_LOG_PATH
     if log_file is None:
-        ERROR_LOG_PATH = hass.config.path(DEFAULT_LOG_FILENAME)
+        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     else:
-        ERROR_LOG_PATH = os.path.abspath(log_file)
+        err_log_path = os.path.abspath(log_file)
 
-    err_path_exists = os.path.isfile(ERROR_LOG_PATH)
-    err_dir = os.path.dirname(ERROR_LOG_PATH)
+    err_path_exists = os.path.isfile(err_log_path)
+    err_dir = os.path.dirname(err_log_path)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(ERROR_LOG_PATH, os.W_OK)) or \
+    if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
        (not err_path_exists and os.access(err_dir, os.W_OK)):
 
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
-                ERROR_LOG_PATH, when='midnight', backupCount=log_rotate_days)
+                err_log_path, when='midnight', backupCount=log_rotate_days)
         else:
             err_handler = logging.FileHandler(
-                ERROR_LOG_PATH, mode='w', delay=True)
+                err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
@@ -287,9 +285,11 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
+        # Save the log file location for access by other components.
+        hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", ERROR_LOG_PATH)
+            "Unable to setup error log %s (access denied)", err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:
