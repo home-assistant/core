@@ -2,7 +2,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
+from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN,\
+    STATE_UNAVAILABLE
 import homeassistant.components.cover as cover
 from homeassistant.components.cover.mqtt import MqttCover
 
@@ -638,3 +639,73 @@ class TestCoverMQTT(unittest.TestCase):
             180, 80, 80, 180, False, True, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(60))
+
+    def test_availability_without_topic(self):
+        """Test availability without defined availability topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_defaults(self):
+        """Test availability by defaults with defined topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_custom_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
