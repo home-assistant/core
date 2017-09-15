@@ -168,10 +168,23 @@ class DatetimeSelect(Entity):
             attrs['year'] = self._current_datetime.year
             attrs['month'] = self._current_datetime.month
             attrs['day'] = self._current_datetime.day
+
         if self._has_time and self._current_datetime is not None:
             attrs['hour'] = self._current_datetime.hour
             attrs['minute'] = self._current_datetime.minute
             attrs['second'] = self._current_datetime.second
+
+        if self._current_datetime is not None:
+            if not self._has_date:
+                attrs['timestamp'] = self._current_datetime.hour * 3600 + \
+                                     self._current_datetime.minute * 60 + \
+                                     self._current_datetime.second
+            elif not self._has_time:
+                extended = datetime.datetime.combine(self._current_datetime,
+                                                     datetime.time(0, 0))
+                attrs['timestamp'] = extended.timestamp()
+            else:
+                attrs['timestamp'] = self._current_datetime.timestamp()
 
         return attrs
 

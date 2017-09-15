@@ -64,6 +64,13 @@ def test_set_datetime(hass):
     assert state.attributes['has_time']
     assert state.attributes['has_date']
 
+    assert state.attributes['year'] == 2017
+    assert state.attributes['month'] == 9
+    assert state.attributes['day'] == 7
+    assert state.attributes['hour'] == 19
+    assert state.attributes['minute'] == 46
+    assert state.attributes['timestamp'] == dt_obj.timestamp()
+
 
 @asyncio.coroutine
 def test_set_datetime_time(hass):
@@ -90,6 +97,8 @@ def test_set_datetime_time(hass):
     assert state.attributes['has_time']
     assert not state.attributes['has_date']
 
+    assert state.attributes['timestamp'] == (19 * 3600) + (46 * 60)
+
 
 @asyncio.coroutine
 def test_set_datetime_date(hass):
@@ -114,6 +123,9 @@ def test_set_datetime_date(hass):
     assert state.state == str(date_portion)
     assert not state.attributes['has_time']
     assert state.attributes['has_date']
+
+    date_dt_obj = datetime.datetime(2017, 9, 7)
+    assert state.attributes['timestamp'] == date_dt_obj.timestamp()
 
 
 @asyncio.coroutine
