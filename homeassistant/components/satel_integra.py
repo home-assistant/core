@@ -5,13 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/satel_integra/
 """
 # pylint: disable=invalid-name
-# pylint: disable=deprecated-method
 
 import asyncio
-try:
-    from asyncio import ensure_future as asyncio_ensure_future
-except ImportError:
-    from asyncio import async as asyncio_ensure_future
 import logging
 
 
@@ -94,24 +89,24 @@ def async_setup(hass, config):
     if not result:
         return False
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               lambda s: controller.close())
+    @asyncio.coroutine
+    def _close():
+        controller.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
 
     _LOGGER.debug("Arm home config: %s, mode: %s ",
                   conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
-    hass.async_add_job(async_load_platform(hass, 'alarm_control_panel',
-                                   DOMAIN, conf, config))
-    hass.async_add_job(async_load_platform(hass, 'binary_sensor',
-                                   DOMAIN, {CONF_ZONES: zones}, config))
+    task_control_panel = hass.async_add_job(
+        async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config))
 
+    task_zones = hass.async_add_job(
+        async_load_platform(hass, 'binary_sensor', DOMAIN,
+                            {CONF_ZONES: zones}, config))
 
-#    yield from async_load_platform(hass, 'alarm_control_panel',
-#                                   DOMAIN, conf, config)
-
-    # yield from async_load_platform(hass, 'binary_sensor',
-    #                                DOMAIN, {CONF_ZONES: zones}, config)
+    yield from asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
 
     @callback
     def alarm_status_update_callback(status):
@@ -145,12 +140,13 @@ def async_setup(hass, config):
         _LOGGER.debug("Zones callback , status: %s", status)
         async_dispatcher_send(hass, SIGNAL_ZONES_UPDATED, status[ZONES])
 
-    hass.async_add_job(asyncio_ensure_future(controller.keep_alive()))
-    hass.async_add_job(asyncio_ensure_future(
+    # Create a task instead of adding a tracking job, since this task will
+    # run until the connection to satel_integra is closed.
+    hass.loop.create_task(controller.keep_alive())
+    hass.loop.create_task(
         controller.monitor_status(
             alarm_status_update_callback,
             zones_update_callback)
     )
-                      )
 
     return True
