@@ -64,8 +64,6 @@ DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
 ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
                SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND
 
-BOOL_TRUE_STRINGS = {'true', '1', 'yes', 'on'}
-
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = 'payload_turn_on'
 CONF_PAYLOAD_TURN_OFF = 'payload_turn_off'
@@ -281,7 +279,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if charging is not None:
-                    self._charging = str(charging).lower() in BOOL_TRUE_STRINGS
+                    self._charging = cv.boolean(charging)
 
             if topic == self._cleaning_topic and self._cleaning_template:
                 cleaning = self._cleaning_template \
@@ -289,7 +287,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if cleaning is not None:
-                    self._cleaning = str(cleaning).lower() in BOOL_TRUE_STRINGS
+                    self._cleaning = cv.boolean(cleaning)
 
             if topic == self._docked_topic and self._docked_template:
                 docked = self._docked_template \
@@ -297,7 +295,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if docked is not None:
-                    self._docked = str(docked).lower() in BOOL_TRUE_STRINGS
+                    self._docked = cv.boolean(docked)
 
             if self._docked:
                 if self._charging:
@@ -319,12 +317,12 @@ class MqttVacuum(VacuumDevice):
 
             self.async_schedule_update_ha_state()
 
-        topics_set = [topic for topic in (self._battery_level_topic,
-                                          self._charging_topic,
-                                          self._cleaning_topic,
-                                          self._docked_topic,
-                                          self._fan_speed_topic) if topic]
-        for topic in topics_set:
+        topics_list = [topic for topic in (self._battery_level_topic,
+                                           self._charging_topic,
+                                           self._cleaning_topic,
+                                           self._docked_topic,
+                                           self._fan_speed_topic) if topic]
+        for topic in set(topics_list):
             yield from self.hass.components.mqtt.async_subscribe(
                 topic, message_received, self._qos)
 
