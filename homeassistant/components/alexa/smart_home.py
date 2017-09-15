@@ -36,9 +36,9 @@ MAPPING_COMPONENT = {
 
 
 @asyncio.coroutine
-def handle_message(hass, message):
+def async_handle_message(hass, message):
     """Handle incomming API messages."""
-    assert message[ATTR_HEADER][ATTR_PAYLOAD_VERSION] == 2
+    assert int(message[ATTR_HEADER][ATTR_PAYLOAD_VERSION]) == 2
 
     # Do we support this API request?
     funct_name = message[ATTR_HEADER][ATTR_NAME]
