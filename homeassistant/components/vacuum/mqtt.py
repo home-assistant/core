@@ -318,10 +318,10 @@ class MqttVacuum(VacuumDevice):
             self.async_schedule_update_ha_state()
 
         topics_list = [topic for topic in (self._battery_level_topic,
-                                          self._charging_topic,
-                                          self._cleaning_topic,
-                                          self._docked_topic,
-                                          self._fan_speed_topic) if topic]
+                                           self._charging_topic,
+                                           self._cleaning_topic,
+                                           self._docked_topic,
+                                           self._fan_speed_topic) if topic]
         for topic in set(topics_list):
             yield from self.hass.components.mqtt.async_subscribe(
                 topic, message_received, self._qos)
