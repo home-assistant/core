@@ -279,7 +279,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if charging is not None:
-                    self._charging = cv.bool(charging)
+                    self._charging = cv.boolean(charging)
 
             if topic == self._cleaning_topic and self._cleaning_template:
                 cleaning = self._cleaning_template \
@@ -287,7 +287,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if cleaning is not None:
-                    self._cleaning = cv.bool(cleaning)
+                    self._cleaning = cv.boolean(cleaning)
 
             if topic == self._docked_topic and self._docked_template:
                 docked = self._docked_template \
@@ -295,7 +295,7 @@ class MqttVacuum(VacuumDevice):
                         payload,
                         error_value=None)
                 if docked is not None:
-                    self._docked = cv.bool(docked)
+                    self._docked = cv.boolean(docked)
 
             if self._docked:
                 if self._charging:
