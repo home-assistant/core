@@ -6,7 +6,8 @@ https://home-assistant.io/components/switch.abode/
 """
 import logging
 
-from homeassistant.components.abode import AbodeDevice, AbodeAutomation, DOMAIN
+from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
+                                            DOMAIN as ABODE_DOMAIN)
 from homeassistant.components.switch import SwitchDevice
 
 
@@ -20,19 +21,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import abodepy.helpers.constants as CONST
     import abodepy.helpers.timeline as TIMELINE
 
-    data = hass.data[DOMAIN]
+    data = hass.data[ABODE_DOMAIN]
 
     devices = []
 
     # Get all regular switches that are not excluded or marked as lights
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        if (device.device_id not in data.exclude
-                and device.device_id not in data.lights):
-            devices.append(AbodeSwitch(data, device))
+        if data.is_excluded(device) or not data.is_light(device):
+            continue
+
+        devices.append(AbodeSwitch(data, device))
 
     # Get all Abode automations that can be enabled/disabled
     for automation in data.abode.get_automations(
             generic_type=CONST.TYPE_AUTOMATION):
+        if data.is_automation_excluded(automation):
+            continue
+
         devices.append(AbodeAutomationSwitch(
             data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
 
@@ -43,10 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class AbodeSwitch(AbodeDevice, SwitchDevice):
     """Representation of an Abode switch."""
-
-    def __init__(self, data, device):
-        """Initialize the Abode device."""
-        AbodeDevice.__init__(self, data, device)
 
     def turn_on(self, **kwargs):
         """Turn on the device."""
@@ -64,10 +65,6 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
 
 class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
     """A switch implementation for Abode automations."""
-
-    def __init__(self, data, automation, event):
-        """Initialize the automation switch."""
-        AbodeAutomation.__init__(self, data, automation, event)
 
     def turn_on(self, **kwargs):
         """Turn on the device."""

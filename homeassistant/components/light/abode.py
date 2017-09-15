@@ -6,7 +6,7 @@ https://home-assistant.io/components/light.abode/
 """
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN
+from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode light devices."""
     import abodepy.helpers.constants as CONST
 
-    data = hass.data[DOMAIN]
+    data = hass.data[ABODE_DOMAIN]
 
     device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
 
@@ -29,11 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get all regular lights that are not excluded or switches marked as lights
     for device in data.abode.get_devices(generic_type=device_types):
-        if device.device_id in data.exclude:
-            continue
-
-        if (device.generic_type == CONST.TYPE_SWITCH and
-                device.device_id not in data.lights):
+        if data.is_excluded(device) or not data.is_light(device):
             continue
 
         devices.append(AbodeLight(data, device))
@@ -45,10 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class AbodeLight(AbodeDevice, Light):
     """Representation of an Abode light."""
-
-    def __init__(self, data, device):
-        """Initialize the Abode device."""
-        AbodeDevice.__init__(self, data, device)
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
@@ -75,15 +67,11 @@ class AbodeLight(AbodeDevice, Light):
         if self._device.is_dimmable and self._device.has_brightness:
             return self._device.brightness
 
-        return None
-
     @property
     def rgb_color(self):
         """Return the color of the light."""
         if self._device.is_dimmable and self._device.has_color:
             return self._device.color
-
-        return None
 
     @property
     def supported_features(self):

@@ -10,7 +10,7 @@ import logging
 from datetime import timedelta
 import requests
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN
+from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
@@ -27,12 +27,14 @@ def setup_platform(hass, config, add_devices, discoveryy_info=None):
     import abodepy.helpers.constants as CONST
     import abodepy.helpers.timeline as TIMELINE
 
-    data = hass.data[DOMAIN]
+    data = hass.data[ABODE_DOMAIN]
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        if device.device_id not in data.exclude:
-            devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
+        if data.is_excluded(device):
+            continue
+
+        devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
 
     data.devices.extend(devices)
 
@@ -42,7 +44,7 @@ def setup_platform(hass, config, add_devices, discoveryy_info=None):
 class AbodeCamera(AbodeDevice, Camera):
     """Representation of an Abode camera."""
 
-    def __init__(self, data, device, event=None):
+    def __init__(self, data, device, event):
         """Initialize the Abode device."""
         AbodeDevice.__init__(self, data, device)
         Camera.__init__(self)
@@ -52,16 +54,17 @@ class AbodeCamera(AbodeDevice, Camera):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe Abode events."""
+        yield from super().async_added_to_hass()
+
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
             self._device.device_id, self._update_callback
         )
 
-        if self._event:
-            self.hass.async_add_job(
-                self._data.abode.events.add_timeline_callback,
-                self._event, self._capture_callback
-            )
+        self.hass.async_add_job(
+            self._data.abode.events.add_timeline_callback,
+            self._event, self._capture_callback
+        )
 
     def capture(self):
         """Request a new image capture."""
@@ -91,7 +94,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Get a camera image."""
         self.refresh_image()
 
-        if self._response and self._response.status_code == 200:
+        if self._response:
             return self._response.content
 
         return None
