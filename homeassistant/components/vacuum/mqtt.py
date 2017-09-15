@@ -66,6 +66,7 @@ ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
 
 BOOL_TRUE_STRINGS = {'true', '1', 'yes', 'on'}
 
+CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = 'payload_turn_on'
 CONF_PAYLOAD_TURN_OFF = 'payload_turn_off'
 CONF_PAYLOAD_RETURN_TO_BASE = 'payload_return_to_base'
@@ -92,7 +93,6 @@ CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
 DEFAULT_NAME = 'MQTT Vacuum'
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
-DEFAULT_COMMAND_TOPIC = 'vacuum/command'
 DEFAULT_PAYLOAD_TURN_ON = 'turn_on'
 DEFAULT_PAYLOAD_TURN_OFF = 'turn_off'
 DEFAULT_PAYLOAD_RETURN_TO_BASE = 'return_to_base'
@@ -100,27 +100,14 @@ DEFAULT_PAYLOAD_STOP = 'stop'
 DEFAULT_PAYLOAD_CLEAN_SPOT = 'clean_spot'
 DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START_PAUSE = 'start_pause'
-DEFAULT_BATTERY_LEVEL_TOPIC = 'vacuum/state'
-DEFAULT_BATTERY_LEVEL_TEMPLATE = cv.template('{{ value_json.battery_level }}')
-DEFAULT_CHARGING_TEMPLATE = cv.template('{{ value_json.charging }}')
-DEFAULT_CLEANING_TEMPLATE = cv.template('{{ value_json.cleaning }}')
-DEFAULT_DOCKED_TEMPLATE = cv.template('{{ value_json.docked }}')
-DEFAULT_STATE_TOPIC = 'vacuum/state'
-DEFAULT_STATE_TEMPLATE = cv.template('{{ value_json.state }}')
-DEFAULT_FAN_SPEED_TEMPLATE = cv.template('{{ value_json.fan_speed }}')
-DEFAULT_SET_FAN_SPEED_TOPIC = 'vacuum/set_fan_speed'
 DEFAULT_FAN_SPEED_LIST = ['min', 'medium', 'high', 'max']
-DEFAULT_SEND_COMMAND_TOPIC = 'vacuum/send_command'
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(ATTR_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS):
+    vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS):
         vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-
     vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-
-    vol.Optional(mqtt.CONF_COMMAND_TOPIC, default=DEFAULT_COMMAND_TOPIC):
-        mqtt.valid_publish_topic,
+    vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_PAYLOAD_TURN_ON,
                  default=DEFAULT_PAYLOAD_TURN_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_TURN_OFF,
@@ -135,58 +122,21 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_PAYLOAD_LOCATE): cv.string,
     vol.Optional(CONF_PAYLOAD_START_PAUSE,
                  default=DEFAULT_PAYLOAD_START_PAUSE): cv.string,
-
-    vol.Optional(CONF_BATTERY_LEVEL_TOPIC,
-                 default=DEFAULT_BATTERY_LEVEL_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE,
-                 default=DEFAULT_BATTERY_LEVEL_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_CHARGING_TOPIC,
-                 default=DEFAULT_STATE_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_CHARGING_TEMPLATE,
-                 default=DEFAULT_CHARGING_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_CLEANING_TOPIC,
-                 default=DEFAULT_STATE_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_CLEANING_TEMPLATE,
-                 default=DEFAULT_CLEANING_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_DOCKED_TOPIC,
-                 default=DEFAULT_STATE_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_DOCKED_TEMPLATE,
-                 default=DEFAULT_DOCKED_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_STATE_TOPIC,
-                 default=DEFAULT_STATE_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_STATE_TEMPLATE,
-                 default=DEFAULT_STATE_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_FAN_SPEED_TOPIC,
-                 default=DEFAULT_STATE_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_TEMPLATE,
-                 default=DEFAULT_FAN_SPEED_TEMPLATE):
-        cv.template,
-
-    vol.Optional(CONF_SET_FAN_SPEED_TOPIC,
-                 default=DEFAULT_SET_FAN_SPEED_TOPIC):
-        mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_LIST, default=DEFAULT_FAN_SPEED_LIST):
-        cv.ensure_list,
-
-    vol.Optional(CONF_SEND_COMMAND_TOPIC,
-                 default=DEFAULT_SEND_COMMAND_TOPIC):
-        mqtt.valid_publish_topic,
+    vol.Optional(CONF_BATTERY_LEVEL_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+    vol.Optional(CONF_CHARGING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CHARGING_TEMPLATE): cv.template,
+    vol.Optional(CONF_CLEANING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CLEANING_TEMPLATE): cv.template,
+    vol.Optional(CONF_DOCKED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_DOCKED_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+    vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_SPEED_LIST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
 })
 
 
@@ -194,7 +144,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the vacuum."""
     name = config.get(CONF_NAME)
-    supported_feature_strings = config.get(ATTR_SUPPORTED_FEATURES)
+    supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
     supported_features = strings_to_services(supported_feature_strings)
 
     qos = config.get(mqtt.CONF_QOS)
