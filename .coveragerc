@@ -582,6 +582,7 @@ omit =
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
+    homeassistant/components/vacuum/mqtt.py
 
 
 [report]
