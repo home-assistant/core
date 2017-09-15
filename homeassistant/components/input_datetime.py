@@ -123,6 +123,8 @@ class DatetimeSelect(Entity):
         old_state = yield from async_get_last_state(self.hass, self.entity_id)
         if old_state is not None:
             restore_val = dt_util.parse_datetime(old_state.state)
+            if restore_val is None:
+                restore_val = dt_util.now()
         else:
             restore_val = dt_util.now()
 

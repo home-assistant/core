@@ -135,6 +135,7 @@ def test_restore_state(hass):
         State('input_datetime.test_time', '2017-09-07 19:46:00'),
         State('input_datetime.test_date', '2017-09-07 19:46:00'),
         State('input_datetime.test_datetime', '2017-09-07 19:46:00'),
+        State('input_datetime.test_bogus_data', 'this is not a date'),
     ))
 
     hass.state = CoreState.starting
@@ -153,10 +154,13 @@ def test_restore_state(hass):
                 'has_time': True,
                 'has_date': True
             },
+            'test_bogus_data': {
+                'has_time': True,
+                'has_date': True
+            },
         }})
 
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
-
     state_time = hass.states.get('input_datetime.test_time')
     assert state_time.state == str(dt_obj.time())
 
@@ -165,3 +169,10 @@ def test_restore_state(hass):
 
     state_datetime = hass.states.get('input_datetime.test_datetime')
     assert state_datetime.state == str(dt_obj)
+
+    # Unfortunately, we don't know what exactly dt_util.now() returned, and
+    # mocking is not possible with coroutines. Thus, we only check that the
+    # status is not 'unknown', i.e., no exception occurred when restoring
+    # state
+    state_bogus = hass.states.get('input_datetime.test_bogus_data')
+    assert state_bogus.state != 'unknown'
