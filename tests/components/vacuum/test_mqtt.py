@@ -22,17 +22,18 @@ class TestVacuumMQTT(unittest.TestCase):
         self.default_config = {
             CONF_PLATFORM: 'mqtt',
             CONF_NAME: 'mqtttest',
-            mqtt.CONF_COMMAND_TOPIC = 'vacuum/command'
-            mqtt.CONF_SEND_COMMAND_TOPIC = 'vacuum/send_command'
-            mqtt.CONF_BATTERY_LEVEL_TOPIC = 'vacuum/state'
-            mqtt.CONF_BATTERY_LEVEL_TEMPLATE = '{{ value_json.battery_level }}'
-            mqtt.CONF_CHARGING_TEMPLATE = '{{ value_json.charging }}'
-            mqtt.CONF_CLEANING_TEMPLATE = '{{ value_json.cleaning }}'
-            mqtt.CONF_DOCKED_TEMPLATE = '{{ value_json.docked }}'
-            mqtt.CONF_STATE_TOPIC = 'vacuum/state'
-            mqtt.CONF_STATE_TEMPLATE = '{{ value_json.state }}'
-            mqtt.CONF_FAN_SPEED_TEMPLATE = '{{ value_json.fan_speed }}'
-            mqtt.CONF_SET_FAN_SPEED_TOPIC = 'vacuum/set_fan_speed'
+            mqtt.CONF_COMMAND_TOPIC: 'vacuum/command',
+            mqtt.CONF_SEND_COMMAND_TOPIC: 'vacuum/send_command',
+            mqtt.CONF_BATTERY_LEVEL_TOPIC: 'vacuum/state',
+            mqtt.CONF_BATTERY_LEVEL_TEMPLATE:
+                '{{ value_json.battery_level }}',
+            mqtt.CONF_CHARGING_TEMPLATE: '{{ value_json.charging }}',
+            mqtt.CONF_CLEANING_TEMPLATE: '{{ value_json.cleaning }}',
+            mqtt.CONF_DOCKED_TEMPLATE: '{{ value_json.docked }}',
+            mqtt.CONF_STATE_TOPIC: 'vacuum/state',
+            mqtt.CONF_STATE_TEMPLATE: '{{ value_json.state }}',
+            mqtt.CONF_FAN_SPEED_TEMPLATE: '{{ value_json.fan_speed }}',
+            mqtt.CONF_SET_FAN_SPEED_TOPIC: 'vacuum/set_fan_speed',
         }
 
     def tearDown(self):  # pylint: disable=invalid-name
