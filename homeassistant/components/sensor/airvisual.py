@@ -308,6 +308,7 @@ class AirVisualData(object):
             _LOGGER.debug('New data retrieved: %s', resp)
             self.pollution_info = resp['current']['pollution']
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to update sensor data')
+            _LOGGER('Unable to retrieve data from the API')
+            _LOGGER.error("There is likely no data on this location")
             _LOGGER.debug(exc_info)
             self.pollution_info = None
