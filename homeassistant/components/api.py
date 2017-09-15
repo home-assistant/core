@@ -51,7 +51,9 @@ def setup(hass, config):
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
 
-    hass.http.register_static_path(URL_API_ERROR_LOG, ERROR_LOG_PATH, False)
+    if ERROR_LOG_PATH is not None:
+        hass.http.register_static_path(URL_API_ERROR_LOG, ERROR_LOG_PATH,
+                                       False)
 
     return True
 
