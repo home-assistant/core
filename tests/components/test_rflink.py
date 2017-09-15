@@ -146,8 +146,7 @@ def test_cover_send_no_wait(hass, monkeypatch):
 
     hass.async_add_job(
         hass.services.async_call(domain, SERVICE_STOP_COVER,
-                                 {'device_id': 'RTS_0100F2_0',
-                                  'command': 'STOP'}))
+                                 {ATTR_ENTITY_ID: 'cover.test'}))
     yield from hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == 'RTS_0100F2_0'
     assert protocol.send_command.call_args_list[0][0][1] == 'STOP'
