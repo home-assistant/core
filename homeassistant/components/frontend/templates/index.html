@@ -68,6 +68,19 @@
         suppressBindingNotifications: true,
       };
     </script>
+    <script>
+      var webComponentsSupported = (
+        'customElements' in window &&
+        'import' in document.createElement('link') &&
+        'content' in document.createElement('template'));
+      if (!webComponentsSupported) {
+        var e = document.createElement('script');
+        e.async = true;
+        e.onerror = initError;
+        e.src = '/static/webcomponents-lite.js';
+        document.head.appendChild(e);
+      }
+    </script>
   </head>
   <body>
     <div id='ha-init-skeleton'>
@@ -100,19 +113,5 @@
     {% for extra_url in extra_urls -%}
       <link rel='import' href='{{ extra_url }}' async>
     {% endfor -%}
-
-    <script>
-      var webComponentsSupported = (
-        'registerElement' in document &&
-        'import' in document.createElement('link') &&
-        'content' in document.createElement('template'));
-      if (!webComponentsSupported) {
-        var e = document.createElement('script');
-        e.async = true;
-        e.onerror = initError;
-        e.src = '/static/webcomponents-lite.js';
-        document.head.appendChild(e);
-      }
-    </script>
   </body>
 </html>
