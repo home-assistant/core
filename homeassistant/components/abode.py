@@ -30,7 +30,6 @@ CONF_LIGHTS = "lights"
 CONF_POLLING = "polling"
 
 DOMAIN = 'abode'
-DEFAULT_NAME = 'Abode'
 
 NOTIFICATION_ID = 'abode_notification'
 NOTIFICATION_TITLE = 'Abode Security Setup'
@@ -62,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_POLLING, default=False): cv.boolean,
         vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
         vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA
@@ -91,13 +90,14 @@ ABODE_PLATFORMS = [
 class AbodeSystem(object):
     """Abode System class."""
 
-    def __init__(self, username, password, polling, exclude, lights):
+    def __init__(self, username, password, name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
         self.abode = abodepy.Abode(username, password,
                                    auto_login=True,
                                    get_devices=True,
                                    get_automations=True)
+        self.name = name
         self.polling = polling
         self.exclude = exclude
         self.lights = lights
@@ -127,13 +127,14 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    name = conf.get(CONF_NAME)
     polling = conf.get(CONF_POLLING)
     exclude = conf.get(CONF_EXCLUDE)
     lights = conf.get(CONF_LIGHTS)
 
     try:
         hass.data[DOMAIN] = AbodeSystem(
-            username, password, polling, exclude, lights)
+            username, password, name, polling, exclude, lights)
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
 

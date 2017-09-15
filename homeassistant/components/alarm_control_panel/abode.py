@@ -7,7 +7,7 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 import logging
 
 from homeassistant.components.abode import (
-    AbodeDevice, DOMAIN as ABODE_DOMAIN, DEFAULT_NAME, CONF_ATTRIBUTION)
+    AbodeDevice, DOMAIN as ABODE_DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
 from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
     data = hass.data[ABODE_DOMAIN]
 
-    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm())]
+    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
 
     data.devices.extend(alarm_devices)
 
@@ -34,10 +34,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
-    def __init__(self, data, device):
+    def __init__(self, data, device, name):
         """Initialize the alarm control panel."""
         super().__init__(data, device)
-        self._name = "{0}".format(DEFAULT_NAME)
+        self._name = name
 
     @property
     def icon(self):
@@ -68,6 +68,11 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_away()
+
+    @property
+    def name(self):
+        """Return the name of the alarm."""
+        return self._name or super().name
 
     @property
     def device_state_attributes(self):
