@@ -50,7 +50,8 @@ def async_handle_message(hass, message):
     # Do we support this API request?
     funct_ref = mapping_api_function(message[ATTR_HEADER][ATTR_NAME])
     if not funct_ref:
-        _LOGGER.warning("Unsupported API request %s", funct_name)
+        _LOGGER.warning(
+            "Unsupported API request %s", message[ATTR_HEADER][ATTR_NAME])
         return api_error(message)
 
     return (yield from funct_ref(hass, message))
