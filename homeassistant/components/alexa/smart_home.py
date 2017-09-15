@@ -90,7 +90,11 @@ def async_api_discovery(hass, request):
     discovered_appliances = []
 
     for domain, class_data in MAPPING_COMPONENT.items():
-        for entity in async_hass.states.entity_ids(domain_filter=domain):
+        for entity in hass.states.async_all():
+            # filter domain
+            if entity.domain != domain:
+                continue
+
             appliance = {
                 'actions': [],
                 'applianceTypes': [class_data[0]],
