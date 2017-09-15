@@ -18,13 +18,6 @@ ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_VERSION = 'payloadVersion'
 
 
-MAPPING_API = {
-    'DiscoverAppliancesRequest': async_api_discovery,
-    'TurnOnRequest': async_api_turn_on,
-    'TurnOffRequest': async_api_turn_off,
-    'SetPercentageRequest': async_api_set_brightness,
-}
-
 MAPPING_COMPONENT = {
     switch.DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
     light.DOMAIN: [
@@ -35,18 +28,32 @@ MAPPING_COMPONENT = {
 }
 
 
+def mapping_api_function(name):
+    """Return function pointer to api function for name.
+
+    Async friendly.
+    """
+    mapping = {
+        'DiscoverAppliancesRequest': async_api_discovery,
+        'TurnOnRequest': async_api_turn_on,
+        'TurnOffRequest': async_api_turn_off,
+        'SetPercentageRequest': async_api_set_brightness,
+    }
+    return mapping.get(name, None)
+
+
 @asyncio.coroutine
 def async_handle_message(hass, message):
     """Handle incomming API messages."""
     assert int(message[ATTR_HEADER][ATTR_PAYLOAD_VERSION]) == 2
 
     # Do we support this API request?
-    funct_name = message[ATTR_HEADER][ATTR_NAME]
-    if funct_name not in MAPPING_API:
+    funct_ref = mapping_api_function(message[ATTR_HEADER][ATTR_NAME])
+    if not funct_ref:
         _LOGGER.warning("Unsupported API request %s", funct_name)
         return api_error(message)
 
-    return (yield from MAPPING_API[funct_name](hass, message))
+    return (yield from funct_ref(hass, message))
 
 
 def api_message(name, namespace, payload=None):

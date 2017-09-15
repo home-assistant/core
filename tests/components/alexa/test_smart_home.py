@@ -13,7 +13,7 @@ def test_create_api_message():
     assert msg['header']['messageId'] is not None
     assert msg['header']['name'] == 'testName'
     assert msg['header']['namespace'] == 'testNameSpace'
-    assert msg['header']['payloadVersion'] == 2
+    assert msg['header']['payloadVersion'] == '2'
     assert msg['payload'] == {}
 
 
@@ -21,7 +21,7 @@ def test_create_api_message():
 def test_wrong_version(hass):
     """Test with wrong version."""
     msg = smart_home.api_message('testName', 'testNameSpace')
-    msg['header']['payloadVersion'] = "3"
+    msg['header']['payloadVersion'] = '3'
 
     with pytest.raises(AssertionError):
         yield from smart_home.async_handle_message(hass, msg)
