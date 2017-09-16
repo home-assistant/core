@@ -26,7 +26,7 @@ ATTR_CITY = 'city'
 ATTR_COUNTRY = 'country'
 ATTR_POLLUTANT_SYMBOL = 'pollutant_symbol'
 ATTR_POLLUTANT_UNIT = 'pollutant_unit'
-ATTR_STATE = 'region'
+ATTR_REGION = 'region'
 ATTR_TIMESTAMP = 'timestamp'
 
 CONF_CITY = 'city'
@@ -176,14 +176,13 @@ class AirVisualBaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._data.pollution_info:
-            return {
-                ATTR_ATTRIBUTION: 'AirVisual©',
-                ATTR_CITY: self._data.city,
-                ATTR_COUNTRY: self._data.country,
-                ATTR_STATE: self._data.state,
-                ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
-            }
+        return {
+            ATTR_ATTRIBUTION: 'AirVisual©',
+            ATTR_CITY: self._data.city,
+            ATTR_COUNTRY: self._data.country,
+            ATTR_REGION: self._data.state,
+            ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
+        }
 
     @property
     def icon(self):
@@ -214,17 +213,17 @@ class AirPollutionLevelSensor(AirVisualBaseSensor):
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
-
-        if self._data.pollution_info:
-            aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
-            try:
-                [level] = [
-                    i for i in POLLUTANT_LEVEL_MAPPING
-                    if i['minimum'] <= aqi <= i['maximum']
-                ]
-                self._state = level.get('label')
-            except ValueError:
-                self._state = None
+        aqi = self._data.pollution_info.get('aqi{0}'.format(self._locale))
+        try:
+            [level] = [
+                i for i in POLLUTANT_LEVEL_MAPPING
+                if i['minimum'] <= aqi <= i['maximum']
+            ]
+            self._state = level.get('label')
+        except TypeError:
+            self._state = None
+        except ValueError:
+            self._state = None
 
 
 class AirQualityIndexSensor(AirVisualBaseSensor):
@@ -233,16 +232,15 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return 'unit' if self.state == '1' else 'units'
+        return 'PSI'
 
     @asyncio.coroutine
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
 
-        if self._data.pollution_info:
-            self._state = self._data.pollution_info.get(
-                'aqi{0}'.format(self._locale))
+        self._state = self._data.pollution_info.get(
+            'aqi{0}'.format(self._locale))
 
 
 class MainPollutantSensor(AirVisualBaseSensor):
@@ -257,24 +255,20 @@ class MainPollutantSensor(AirVisualBaseSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._data.pollution_info:
-            return merge_two_dicts(super().device_state_attributes, {
-                ATTR_POLLUTANT_SYMBOL: self._symbol,
-                ATTR_POLLUTANT_UNIT: self._unit
-            })
+        return merge_two_dicts(super().device_state_attributes, {
+            ATTR_POLLUTANT_SYMBOL: self._symbol,
+            ATTR_POLLUTANT_UNIT: self._unit
+        })
 
     @asyncio.coroutine
     def async_update(self):
         """Update the status of the sensor."""
         yield from super().async_update()
-
-        if self._data.pollution_info:
-            symbol = self._data.pollution_info.get(
-                'main{0}'.format(self._locale))
-            pollution_info = POLLUTANT_MAPPING.get(symbol, {})
-            self._state = pollution_info.get('label')
-            self._unit = pollution_info.get('unit')
-            self._symbol = symbol
+        symbol = self._data.pollution_info.get('main{0}'.format(self._locale))
+        pollution_info = POLLUTANT_MAPPING.get(symbol, {})
+        self._state = pollution_info.get('label')
+        self._unit = pollution_info.get('unit')
+        self._symbol = symbol
 
 
 class AirVisualData(object):
@@ -306,9 +300,9 @@ class AirVisualData(object):
                 resp = self._client.nearest_city(self.latitude, self.longitude,
                                                  self.radius).get('data')
             _LOGGER.debug('New data retrieved: %s', resp)
-            self.pollution_info = resp['current']['pollution']
+            self.pollution_info = resp.get('current', {}).get('pollution', {})
         except exceptions.HTTPError as exc_info:
             _LOGGER('Unable to retrieve data from the API')
             _LOGGER.error("There is likely no data on this location")
             _LOGGER.debug(exc_info)
-            self.pollution_info = None
+            self.pollution_info = {}
