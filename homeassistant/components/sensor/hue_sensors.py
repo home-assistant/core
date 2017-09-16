@@ -21,11 +21,11 @@ SCAN_INTERVAL = timedelta(seconds=1)
 
 def load_conf(filepath):
     """Return the URL for API requests."""
-    with open(filepath, 'r') as fp:
-        data = json.load(fp)
-        ip = list(data.keys())[0]
-        username = data[ip]['username']
-        url = 'http://' + ip + '/api/' + username + '/sensors'
+    with open(filepath, 'r') as file_path:
+        data = json.load(file_path)
+        ip_add = list(data.keys())[0]
+        username = data[ip_add]['username']
+        url = 'http://' + ip_add + '/api/' + username + '/sensors'
     return url
 
 
@@ -121,19 +121,19 @@ def parse_hue_api_response(response):
             _key = sensor['uniqueid'].split(':')[-1][0:5]
 
             if sensor['modelid'] == 'RWL021':
-                data_dict[_key] = parse_RWL021(sensor)
+                data_dict[_key] = parse_rwl(sensor)
             else:
                 if _key not in data_dict.keys():
-                    data_dict[_key] = parse_SML001(sensor)
+                    data_dict[_key] = parse_sml(sensor)
                 else:
-                    data_dict[_key].update(parse_SML001(sensor))
+                    data_dict[_key].update(parse_sml(sensor))
 
         elif sensor['modelid'] == 'HA_GEOFENCE':
-            data_dict['Geofence'] = parse_GEOFENCE(sensor)
+            data_dict['Geofence'] = parse_geofence(sensor)
     return data_dict
 
 
-def parse_SML001(response):
+def parse_sml(response):
     """Parse the json for a SML001 Hue motion sensor and return the data."""
     if 'ambient light' in response['name']:
         data = {'light_level': response['state']['lightlevel']}
@@ -153,7 +153,7 @@ def parse_SML001(response):
     return data
 
 
-def parse_RWL021(response):
+def parse_rwl(response):
     """Parse the json response for a RWL021 Hue remote."""
     press = str(response['state']['buttonevent'])
 
@@ -169,7 +169,7 @@ def parse_RWL021(response):
     return data
 
 
-def parse_GEOFENCE(response):
+def parse_geofence(response):
     """Parse the json response for a GEOFENCE and return the data."""
     data = {'name': response['name'],
             'model': 'Geofence',
