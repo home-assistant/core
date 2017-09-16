@@ -23,7 +23,7 @@ def load_conf(filepath):
     """Return the URL for API requests."""
     with open(filepath, 'r') as file_path:
         data = json.load(file_path)
-        ip_add = list(data.keys())[0]
+        ip_add = next(data.keys().__iter__())
         username = data[ip_add]['username']
         url = 'http://' + ip_add + '/api/' + username + '/sensors'
     return url
