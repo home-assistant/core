@@ -142,7 +142,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def stop(self, **kwargs):
-        """Stop the vacuum."""
+        """Turn the vacuum off."""
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
@@ -162,7 +162,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def locate(self, **kwargs):
-        """Locate the vacuum (usually by playing a song)."""
+        """Turn the vacuum off."""
         if self.supported_features & SUPPORT_LOCATE == 0:
             return
 
@@ -184,7 +184,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed, **kwargs):
-        """Set the vacuum's fan speed."""
+        """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
             return
 

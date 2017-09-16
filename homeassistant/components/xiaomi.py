@@ -17,7 +17,7 @@ ATTR_RINGTONE_VOL = 'ringtone_vol'
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
-DOMAIN = 'xiaomi_aqara'
+DOMAIN = 'xiaomi'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 
 

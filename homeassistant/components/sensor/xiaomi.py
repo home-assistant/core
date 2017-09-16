@@ -1,8 +1,7 @@
-"""Support for Xiaomi aqara sensors."""
+"""Support for Xiaomi sensors."""
 import logging
 
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
 from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
