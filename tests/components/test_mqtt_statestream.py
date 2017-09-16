@@ -59,7 +59,7 @@ class TestMqttStateStream(object):
         mock_state_change_event(self.hass, State(e_id, 'on'))
         self.hass.block_till_done()
 
-        # Make sure 'on' was published to pub/fake/entity
-        mock_pub.assert_called_with(self.hass, 'pub/fake/entity', 'on', 1,
-                                    True)
+        # Make sure 'on' was published to pub/fake/entity/state
+        mock_pub.assert_called_with(self.hass, 'pub/fake/entity/state',
+                                    'on', 1, True)
         assert mock_pub.called
