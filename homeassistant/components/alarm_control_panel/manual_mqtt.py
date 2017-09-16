@@ -39,6 +39,8 @@ DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_DISARM = 'DISARM'
 
+ATTR_POST_PENDING_STATE = 'post_pending_state'
+
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
@@ -223,6 +225,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state_attr = {}
+
+        if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_POST_PENDING_STATE] = self._state
+
+        return state_attr
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.

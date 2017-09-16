@@ -100,6 +100,11 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_HOME))
+
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
@@ -184,6 +189,11 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_AWAY))
+
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
@@ -267,6 +277,11 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
+
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_ARMED_NIGHT))
 
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
@@ -359,6 +374,11 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
+
+        self.assertTrue(
+            self.hass.states.is_state_attr(entity_id,
+                                           'post_pending_state',
+                                           STATE_ALARM_TRIGGERED))
 
         future = dt_util.utcnow() + timedelta(seconds=2)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
