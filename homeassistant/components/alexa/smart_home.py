@@ -4,8 +4,7 @@ import logging
 from uuid import uuid4
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
 
 _LOGGER = logging.getLogger(__name__)
