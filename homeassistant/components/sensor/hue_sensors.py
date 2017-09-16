@@ -1,5 +1,8 @@
 """
 Sensor for checking the status of Hue sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.hue_sensors/
 """
 import json
 import logging
@@ -43,14 +46,14 @@ class HueSensorData(object):
     """Get the latest sensor data."""
 
     def __init__(self, url):
-        """Initialize the object."""
+        """Initialize the data object."""
         self.url = url
         self.data = None
 
     # Update only once in scan interval.
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Get the latest data"""
+        """Get the latest data."""
         response = requests.get(self.url)
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
@@ -64,6 +67,7 @@ class HueSensor(Entity):
     ICON = 'mdi:run-fast'
 
     def __init__(self, hue_id, data):
+        """Initialize the sensor object."""
         self._hue_id = hue_id
         self._data = data    # data is in .data
         self._name = self._data.data[self._hue_id]['name']
@@ -130,7 +134,7 @@ def parse_hue_api_response(response):
 
 
 def parse_SML001(response):
-    '''Parse the json for a SML001 Hue motion sensor and return the data.'''
+    """Parse the json for a SML001 Hue motion sensor and return the data."""
     if 'ambient light' in response['name']:
         data = {'light_level': response['state']['lightlevel']}
 
@@ -138,7 +142,6 @@ def parse_SML001(response):
         data = {'temperature': response['state']['temperature']/100.0}
 
     else:
-        # Some logic to conver 'Hall Sensor' to 'Hall Motion Sensor'
         name_raw = response['name']
         arr = name_raw.split()
         arr.insert(-1, 'motion')
@@ -151,12 +154,10 @@ def parse_SML001(response):
 
 
 def parse_RWL021(response):
-    '''Parse the json response for a RWL021 Hue remote and return the data.
-       If button held for 2 seconds then a hold.'''
-    # check if long or short hold
+    """Parse the json response for a RWL021 Hue remote."""
     press = str(response['state']['buttonevent'])
 
-    if press[-1] in ['0', '2']:    # 1002, 4001 etc, check if even
+    if press[-1] in ['0', '2']:
         button = str(press)[0] + '_click'
     else:
         button = str(press)[0] + '_hold'
@@ -169,7 +170,7 @@ def parse_RWL021(response):
 
 
 def parse_GEOFENCE(response):
-    '''Parse the json response for a GEOFENCE and return the data'''
+    """Parse the json response for a GEOFENCE and return the data."""
     data = {'name': response['name'],
             'model': 'Geofence',
             'state': response['state']['presence']}
