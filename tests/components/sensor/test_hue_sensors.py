@@ -1,5 +1,4 @@
 """The tests for the hue_sensors platform."""
-import re
 
 import requests_mock
 import unittest
