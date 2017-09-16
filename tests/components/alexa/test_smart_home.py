@@ -30,7 +30,7 @@ def test_mapping_api_funct():
     assert smart_home.mapping_api_function('TurnOffRequest') == \
         smart_home.async_api_turn_off
     assert smart_home.mapping_api_function('SetPercentageRequest') == \
-        smart_home.async_api_set_brightness
+        smart_home.async_api_set_percentage
 
 
 @asyncio.coroutine
@@ -108,81 +108,57 @@ def test_api_entity_not_exists(hass):
 
 
 @asyncio.coroutine
-def test_api_turn_on(hass):
+@pytest.mark.parametrize("domain", ['light', 'switch'])
+def test_api_turn_on(hass, domain):
     """Test api turn on process."""
-    msg_switch = smart_home.api_message(
+    msg = smart_home.api_message(
         'TurnOnRequest', 'Alexa.ConnectedHome.Control', {
             'appliance': {
-                'applianceId': 'switch#test'
-            }
-        })
-    msg_light = smart_home.api_message(
-        'TurnOnRequest', 'Alexa.ConnectedHome.Control', {
-            'appliance': {
-                'applianceId': 'light#test'
+                'applianceId': '{}#test'.format(domain)
             }
         })
 
     # settup test devices
     hass.states.async_set(
-        'switch.test', 'off', {'friendly_name': "Test switch"})
+        '{}.test'.format(domain), 'off', {
+            'friendly_name': "Test {}".format(domain)
+        })
 
-    hass.states.async_set(
-        'light.test', 'off', {'friendly_name': "Test light"})
+    call = async_mock_service(hass, domain, 'turn_on')
 
-    call_switch = async_mock_service(hass, 'switch', 'turn_on')
-    call_light = async_mock_service(hass, 'light', 'turn_on')
-
-    resp = yield from smart_home.async_api_turn_on(hass, msg_switch)
-    assert len(call_switch) == 1
-    assert call_switch[0].data['entity_id'] == 'switch.test'
-    assert resp['header']['name'] == 'TurnOnConfirmation'
-
-    resp = yield from smart_home.async_api_turn_on(hass, msg_light)
-    assert len(call_light) == 1
-    assert call_light[0].data['entity_id'] == 'light.test'
+    resp = yield from smart_home.async_api_turn_on(hass, msg)
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert resp['header']['name'] == 'TurnOnConfirmation'
 
 
 @asyncio.coroutine
-def test_api_turn_off(hass):
-    """Test api turn off process."""
-    msg_switch = smart_home.api_message(
+@pytest.mark.parametrize("domain", ['light', 'switch'])
+def test_api_turn_off(hass, domain):
+    """Test api turn on process."""
+    msg = smart_home.api_message(
         'TurnOffRequest', 'Alexa.ConnectedHome.Control', {
             'appliance': {
-                'applianceId': 'switch#test'
-            }
-        })
-    msg_light = smart_home.api_message(
-        'TurnOffRequest', 'Alexa.ConnectedHome.Control', {
-            'appliance': {
-                'applianceId': 'light#test'
+                'applianceId': '{}#test'.format(domain)
             }
         })
 
     # settup test devices
     hass.states.async_set(
-        'switch.test', 'on', {'friendly_name': "Test switch"})
+        '{}.test'.format(domain), 'on', {
+            'friendly_name': "Test {}".format(domain)
+        })
 
-    hass.states.async_set(
-        'light.test', 'on', {'friendly_name': "Test light"})
+    call = async_mock_service(hass, domain, 'turn_off')
 
-    call_switch = async_mock_service(hass, 'switch', 'turn_off')
-    call_light = async_mock_service(hass, 'light', 'turn_off')
-
-    resp = yield from smart_home.async_api_turn_off(hass, msg_switch)
-    assert len(call_switch) == 1
-    assert call_switch[0].data['entity_id'] == 'switch.test'
-    assert resp['header']['name'] == 'TurnOffConfirmation'
-
-    resp = yield from smart_home.async_api_turn_off(hass, msg_light)
-    assert len(call_light) == 1
-    assert call_light[0].data['entity_id'] == 'light.test'
+    resp = yield from smart_home.async_api_turn_off(hass, msg)
+    assert len(call) == 1
+    assert call[0].data['entity_id'] == '{}.test'.format(domain)
     assert resp['header']['name'] == 'TurnOffConfirmation'
 
 
 @asyncio.coroutine
-def test_api_set_brightness(hass):
+def test_api_set_percentage_light(hass):
     """Test api set brightness process."""
     msg_light = smart_home.api_message(
         'SetPercentageRequest', 'Alexa.ConnectedHome.Control', {
@@ -200,7 +176,7 @@ def test_api_set_brightness(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    resp = yield from smart_home.async_api_set_brightness(hass, msg_light)
+    resp = yield from smart_home.async_api_set_percentage(hass, msg_light)
     assert len(call_light) == 1
     assert call_light[0].data['entity_id'] == 'light.test'
     assert call_light[0].data['brightness'] == '50'

@@ -37,7 +37,7 @@ def mapping_api_function(name):
         'DiscoverAppliancesRequest': async_api_discovery,
         'TurnOnRequest': async_api_turn_on,
         'TurnOffRequest': async_api_turn_off,
-        'SetPercentageRequest': async_api_set_brightness,
+        'SetPercentageRequest': async_api_set_percentage,
     }
     return mapping.get(name, None)
 
@@ -102,7 +102,7 @@ def async_api_discovery(hass, request):
                 'additionalApplianceDetails': {},
                 'applianceId': entity.entity_id.replace('.', '#'),
                 'friendlyDescription': '',
-                'friendlyName': entity.attributes.get(ATTR_FRIENDLY_NAME, ''),
+                'friendlyName': entity.name,
                 'isReachable': True,
                 'manufacturerName': 'Unknown',
                 'modelName': 'Unknown',
@@ -171,13 +171,16 @@ def async_api_turn_off(hass, request, entity):
 
 @extract_entity
 @asyncio.coroutine
-def async_api_set_brightness(hass, request, entity):
+def async_api_set_percentage(hass, request, entity):
     """Process a set percentage request."""
-    brightness = request[ATTR_PAYLOAD]['percentageState']['value']
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-        ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_BRIGHTNESS: brightness,
-    }, blocking=True)
+    if entity.domain == light.DOMAIN:
+        brightness = request[ATTR_PAYLOAD]['percentageState']['value']
+        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_BRIGHTNESS: brightness,
+        }, blocking=True)
+    else:
+        return api_error()
 
     return api_message(
         'SetPercentageConfirmation', 'Alexa.ConnectedHome.Control')
