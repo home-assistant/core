@@ -27,6 +27,10 @@ from homeassistant.helpers.signal import async_register_signal_handling
 _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
+
+# hass.data key for logging information.
+DATA_LOGGING = 'logging'
+
 FIRST_INIT_COMPONENT = set((
     'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
     'frontend', 'history'))
@@ -281,6 +285,8 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
+        # Save the log file location for access by other components.
+        hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
             "Unable to setup error log %s (access denied)", err_log_path)
