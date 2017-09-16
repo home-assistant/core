@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(switches)
     _LOGGER.info("Added DoorBird switches")
-    return True
 
 
 class DoorBirdSwitch(SwitchDevice):
@@ -58,10 +57,6 @@ class DoorBirdSwitch(SwitchDevice):
 
     def __init__(self, device, switch):
         """Initialize a relay in a DoorBird device."""
-        if switch not in SWITCHES:
-            msg = switch + " is not a valid DoorBird switch"
-            raise NotImplementedError(msg)
-
         self._device = device
         self._switch = switch
         self._state = False
@@ -91,11 +86,11 @@ class DoorBirdSwitch(SwitchDevice):
 
         now = datetime.datetime.now()
         self._assume_off = now + SWITCHES[self._switch]["time"]
-        return True
 
     def turn_off(self, **kwargs):
-        """The relays are time-based and cannot be turned off."""
-        return False
+        """The relays are time-based."""
+        raise NotImplementedError("DoorBird relays cannot be manually turned "
+                                  "off.")
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""

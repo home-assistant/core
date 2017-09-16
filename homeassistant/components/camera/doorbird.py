@@ -36,12 +36,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = hass.data.get(DOMAIN)
 
     _LOGGER.debug("Adding DoorBird camera " + _CAMERA_LIVE)
-    entities = [DoorBirdCamera(hass, device.live_image_url, _CAMERA_LIVE,
+    entities = [DoorBirdCamera(device.live_image_url, _CAMERA_LIVE,
                                _LIVE_INTERVAL)]
 
     if config.get(CONF_SHOW_LAST_VISITOR):
         _LOGGER.debug("Adding DoorBird camera " + _CAMERA_LAST_VISITOR)
-        entities.append(DoorBirdCamera(hass, device.history_image_url(1),
+        entities.append(DoorBirdCamera(device.history_image_url(1),
                                        _CAMERA_LAST_VISITOR,
                                        _LAST_VISITOR_INTERVAL))
 
@@ -53,9 +53,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class DoorBirdCamera(Camera):
     """The camera on a DoorBird device."""
 
-    def __init__(self, hass, url, name, interval=None):
+    def __init__(self, url, name, interval=None):
         """Initialize the camera on a DoorBird device."""
-        self._hass = hass
         self._url = url
         self._name = name
         self._last_image = None
@@ -71,7 +70,7 @@ class DoorBirdCamera(Camera):
     def camera_image(self):
         """Get the bytes of a camera image."""
         return run_coroutine_threadsafe(
-            self.async_camera_image(), self._hass.loop).result()
+            self.async_camera_image(), self.hass.loop).result()
 
     @asyncio.coroutine
     def async_camera_image(self):
@@ -82,9 +81,9 @@ class DoorBirdCamera(Camera):
             return self._last_image
 
         try:
-            websession = async_get_clientsession(self._hass)
+            websession = async_get_clientsession(self.hass)
 
-            with async_timeout.timeout(_TIMEOUT, loop=self._hass.loop):
+            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.get(self._url)
 
             self._last_image = yield from response.read()
