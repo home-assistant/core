@@ -179,7 +179,7 @@ def async_api_set_percentage(hass, request, entity):
             light.ATTR_BRIGHTNESS: brightness,
         }, blocking=True)
     else:
-        return api_error()
+        return api_error(request)
 
     return api_message(
         'SetPercentageConfirmation', 'Alexa.ConnectedHome.Control')

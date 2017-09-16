@@ -21,7 +21,6 @@ def test_create_api_message():
 
 def test_mapping_api_funct():
     """Test function ref from mapping function."""
-
     assert smart_home.mapping_api_function('notExists') is None
     assert smart_home.mapping_api_function('DiscoverAppliancesRequest') == \
         smart_home.async_api_discovery
