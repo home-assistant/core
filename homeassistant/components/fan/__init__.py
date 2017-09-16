@@ -16,7 +16,7 @@ from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-                                 STATE_UNKNOWN)
+                                 STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -64,12 +64,12 @@ PROP_TO_ATTR = {
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_SPEED): cv.string
 })  # type: dict
 
 FAN_TURN_ON_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_SPEED): cv.string
 })  # type: dict
 
@@ -78,27 +78,29 @@ FAN_TURN_OFF_SCHEMA = vol.Schema({
 })  # type: dict
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OSCILLATING): cv.boolean
 })  # type: dict
 
 FAN_TOGGLE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 FAN_SET_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DIRECTION): cv.string
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_DIRECTION): cv.string
 })  # type: dict
 
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {
         'method': 'async_turn_on',
         'schema': FAN_TURN_ON_SCHEMA,
+        'state': STATE_ON,
     },
     SERVICE_TURN_OFF: {
         'method': 'async_turn_off',
         'schema': FAN_TURN_OFF_SCHEMA,
+        'state': STATE_OFF,
     },
     SERVICE_TOGGLE: {
         'method': 'async_toggle',
@@ -242,7 +244,8 @@ def async_setup(hass, config: dict):
         schema = SERVICE_TO_METHOD[service_name].get('schema')
         hass.services.async_register(
             DOMAIN, service_name, async_handle_fan_service,
-            descriptions.get(service_name), schema=schema)
+            descriptions.get(service_name), schema=schema,
+            state=SERVICE_TO_METHOD[service_name].get('state'))
 
     return True
 

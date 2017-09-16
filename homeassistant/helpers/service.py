@@ -7,7 +7,7 @@ from typing import Optional  # NOQA
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.core import callback, HomeAssistant, ServiceCall  # NOQA
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -109,3 +109,46 @@ def extract_entity_ids(hass, service_call, expand_group=True):
             return [service_ent_id]
 
         return service_ent_id
+
+
+@callback
+def async_get_state_services(hass, domain, state):
+    """Return a dict of services for domain that can be used to set state.
+
+    This function must be run in the event loop.
+    """
+    domain_services = hass.services.async_services(domain)
+
+    if not domain_services:
+        _LOGGER.warning("No services found for domain %s", domain)
+        return None
+
+    services = {}
+
+    for service_name, service_obj in domain_services.items():
+        if (service_obj.state is not None and
+                service_obj.state == state.state):
+            services[service_name] = ServiceCall(domain, service_name)
+        if (service_obj.schema is None or
+                # service with no state to set must require attributes
+                # to be able to change state attributes
+                not any(
+                    isinstance(key, vol.Required)
+                    for key in service_obj.schema.schema) and
+                service_name not in services):
+            continue
+        # make a copy to be able to modify schema
+        schema = service_obj.schema.extend({})
+        # remove extra state attributes not in schema
+        schema.extra = vol.REMOVE_EXTRA
+        try:
+            # voluptuous modifies the value before returning it, so make a copy
+            valid_attrs = schema(dict(state.attributes))
+        except vol.Invalid:
+            services.pop(service_name, None)
+            continue
+        if valid_attrs:
+            services[service_name] = ServiceCall(
+                domain, service_name, valid_attrs)
+
+    return services

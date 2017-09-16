@@ -72,8 +72,9 @@ COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_OPEN_COVER: {'method': 'async_open_cover'},
-    SERVICE_CLOSE_COVER: {'method': 'async_close_cover'},
+    SERVICE_OPEN_COVER: {'method': 'async_open_cover', 'state': STATE_OPEN},
+    SERVICE_CLOSE_COVER: {
+        'method': 'async_close_cover', 'state': STATE_CLOSED},
     SERVICE_SET_COVER_POSITION: {
         'method': 'async_set_cover_position',
         'schema': COVER_SET_COVER_POSITION_SCHEMA},
@@ -197,7 +198,8 @@ def async_setup(hass, config):
             'schema', COVER_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, service_name, async_handle_cover_service,
-            descriptions.get(service_name), schema=schema)
+            descriptions.get(service_name), schema=schema,
+            state=SERVICE_TO_METHOD[service_name].get('state'))
 
     return True
 

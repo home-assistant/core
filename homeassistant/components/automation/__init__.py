@@ -17,7 +17,8 @@ from homeassistant.loader import bind_hass
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
+    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
+    STATE_OFF)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
@@ -226,10 +227,12 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
         descriptions.get(SERVICE_TOGGLE), schema=SERVICE_SCHEMA)
 
-    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
+    for service, state in [
+            (SERVICE_TURN_ON, STATE_ON), (SERVICE_TURN_OFF, STATE_OFF)]:
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
-            descriptions.get(service), schema=SERVICE_SCHEMA)
+            descriptions.get(service), schema=SERVICE_SCHEMA,
+            state=state)
 
     return True
 

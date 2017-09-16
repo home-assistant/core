@@ -260,7 +260,7 @@ def test_get_services(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == hass.services.async_services()
+    assert msg['result'] == hass.services.async_services_json()
 
 
 @asyncio.coroutine

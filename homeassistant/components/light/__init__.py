@@ -17,7 +17,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -305,11 +305,13 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_ON), schema=LIGHT_TURN_ON_SCHEMA)
+        descriptions.get(SERVICE_TURN_ON), schema=LIGHT_TURN_ON_SCHEMA,
+        state=STATE_ON)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=LIGHT_TURN_OFF_SCHEMA)
+        descriptions.get(SERVICE_TURN_OFF), schema=LIGHT_TURN_OFF_SCHEMA,
+        state=STATE_OFF)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
