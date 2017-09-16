@@ -89,37 +89,37 @@ def async_api_discovery(hass, request):
     """
     discovered_appliances = []
 
-    for domain, class_data in MAPPING_COMPONENT.items():
-        for entity in hass.states.async_all():
-            # filter domain
-            if entity.domain != domain:
-                continue
+    for entity in hass.states.async_all():
+        class_data = MAPPING_COMPONENT.get(entity.domain)
 
-            appliance = {
-                'actions': [],
-                'applianceTypes': [class_data[0]],
-                'additionalApplianceDetails': {},
-                'applianceId': entity.entity_id.replace('.', '#'),
-                'friendlyDescription': '',
-                'friendlyName': entity.name,
-                'isReachable': True,
-                'manufacturerName': 'Unknown',
-                'modelName': 'Unknown',
-                'version': 'Unknown',
-            }
+        if not class_data:
+            continue
 
-            # static actions
-            if class_data[1]:
-                appliance['actions'].extend(list(class_data[1]))
+        appliance = {
+            'actions': [],
+            'applianceTypes': [class_data[0]],
+            'additionalApplianceDetails': {},
+            'applianceId': entity.entity_id.replace('.', '#'),
+            'friendlyDescription': '',
+            'friendlyName': entity.name,
+            'isReachable': True,
+            'manufacturerName': 'Unknown',
+            'modelName': 'Unknown',
+            'version': 'Unknown',
+        }
 
-            # dynamic actions
-            if class_data[2]:
-                supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                for feature, action_name in class_data[2].items():
-                    if feature & supported > 0:
-                        appliance['actions'].append(action_name)
+        # static actions
+        if class_data[1]:
+            appliance['actions'].extend(list(class_data[1]))
 
-            discovered_appliances.append(appliance)
+        # dynamic actions
+        if class_data[2]:
+            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            for feature, action_name in class_data[2].items():
+                if feature & supported > 0:
+                    appliance['actions'].append(action_name)
+
+        discovered_appliances.append(appliance)
 
     return api_message(
         'DiscoverAppliancesResponse', 'Alexa.ConnectedHome.Discovery',
