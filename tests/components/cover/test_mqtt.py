@@ -709,3 +709,4 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+        
