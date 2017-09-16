@@ -1,8 +1,9 @@
-"""Support for Xiaomi binary sensors."""
+"""Support for Xiaomi aqara binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
+from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
+                                                   XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

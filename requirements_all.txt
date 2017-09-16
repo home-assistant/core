@@ -21,7 +21,7 @@ astral==1.4
 PyISY==1.0.8
 
 # homeassistant.components.notify.html5
-PyJWT==1.5.2
+PyJWT==1.5.3
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
@@ -42,7 +42,7 @@ TwitterAPI==2.4.6
 abodepy==0.9.0
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.2
+aioautomatic==0.6.3
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -298,7 +298,7 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
-# homeassistant.components.xiaomi
+# homeassistant.components.xiaomi_aqara
 https://github.com/Danielhiversen/PyXiaomiGateway/archive/0.3.2.zip#PyXiaomiGateway==0.3.2
 
 # homeassistant.components.sensor.dht
@@ -368,6 +368,9 @@ libnacl==1.5.2
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
 
+# homeassistant.components.camera.foscam
+libpyfoscam==1.0
+
 # homeassistant.components.device_tracker.mikrotik
 librouteros==1.0.2
 
@@ -413,7 +416,7 @@ miflora==0.1.16
 miniupnpc==1.9
 
 # homeassistant.components.sensor.mopar
-motorparts==1.0.0
+motorparts==1.0.2
 
 # homeassistant.components.tts
 mutagen==1.38
@@ -429,7 +432,7 @@ myusps==1.1.3
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.1.0
+netdisco==1.2.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -507,7 +510,7 @@ proliphix==0.4.1
 prometheus_client==0.0.19
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.3.0
+psutil==5.3.1
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
@@ -598,9 +601,6 @@ pyfido==1.0.1
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
-
-# homeassistant.components.camera.foscam
-pyfoscam==1.2
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -752,9 +752,9 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.light.xiaomi_philipslight
-# homeassistant.components.vacuum.xiaomi
-python-mirobo==0.1.3
+# homeassistant.components.light.xiaomi_miio
+# homeassistant.components.vacuum.xiaomi_miio
+python-mirobo==0.2.0
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -799,6 +799,9 @@ python-vlc==1.1.2
 # homeassistant.components.wink
 python-wink==1.5.1
 
+# homeassistant.components.sensor.swiss_public_transport
+python_opendata_transport==0.0.2
+
 # homeassistant.components.zwave
 python_openzwave==0.4.0.31
 
@@ -827,7 +830,7 @@ pyvizio==0.0.2
 pyvlx==0.1.3
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.6
+pywebpush==1.1.0
 
 # homeassistant.components.wemo
 pywemo==0.4.20
@@ -869,7 +872,7 @@ roombapy==1.3.1
 russound==0.1.7
 
 # homeassistant.components.media_player.russound_rio
-russound_rio==0.1.3
+russound_rio==0.1.4
 
 # homeassistant.components.media_player.yamaha
 rxv==0.4.0
@@ -961,6 +964,9 @@ thingspeak==0.4.1
 # homeassistant.components.light.tikteck
 tikteck==0.4
 
+# homeassistant.components.calendar.todoist
+todoist-python==7.0.17
+
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.11
 
@@ -978,7 +984,7 @@ uber_rides==0.5.2
 upsmychoice==1.0.6
 
 # homeassistant.components.camera.uvc
-uvcclient==0.10.0
+uvcclient==0.10.1
 
 # homeassistant.components.volvooncall
 volvooncall==0.3.3
@@ -998,6 +1004,9 @@ wakeonlan==0.2.2
 
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
+
+# homeassistant.components.cloud
+warrant==0.2.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0

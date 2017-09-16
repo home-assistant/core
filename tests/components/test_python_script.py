@@ -180,3 +180,26 @@ for i in [1, 2]:
 
     assert hass.states.is_state('hello.1', 'world')
     assert hass.states.is_state('hello.2', 'world')
+
+
+@asyncio.coroutine
+def test_unpacking_sequence(hass, caplog):
+    """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a,b = (1,2)
+ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.ab_list', '{}'.format(ab_list))
+"""
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
+    assert hass.states.is_state('hello.ab_list', '[(1, 2), (3, 4)]')
+
+    # No errors logged = good
+    assert caplog.text == ''

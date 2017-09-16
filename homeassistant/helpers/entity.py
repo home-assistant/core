@@ -297,9 +297,13 @@ class Entity(object):
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
 
-        That is only needed on executor to not block.
+        That avoid executor dead looks.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
+
+    def async_schedule_update_ha_state(self, force_refresh=False):
+        """Schedule a update ha state change task."""
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
         """Remove entity from HASS."""

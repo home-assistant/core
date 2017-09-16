@@ -116,6 +116,9 @@ class TwitterNotificationService(BaseNotificationService):
                 self.log_error_resp(resp)
                 return None
 
+            if resp.json().get('processing_info') is None:
+                return callback(media_id)
+
             self.check_status_until_done(media_id, callback)
 
     def media_info(self, media_path):

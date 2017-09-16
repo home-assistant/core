@@ -11,12 +11,13 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
     SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
-    SUPPORT_SEEK, MediaPlayerDevice)
+    SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     CONF_PORT, CONF_PASSWORD, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -30,11 +31,11 @@ DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
-SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
     SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK | \
-    SUPPORT_STOP
+    SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -74,6 +75,8 @@ class MpdDevice(MediaPlayerDevice):
         self._playlists = []
         self._currentplaylist = None
         self._is_connected = False
+        self._muted = False
+        self._muted_volume = 0
 
         # set up MPD client
         self._client = mpd.MPDClient()
@@ -142,8 +145,15 @@ class MpdDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif self._status['state'] == 'pause':
             return STATE_PAUSED
+        elif self._status['state'] == 'stop':
+            return STATE_OFF
 
-        return STATE_ON
+        return STATE_OFF
+
+    @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._muted
 
     @property
     def media_content_id(self):
@@ -255,6 +265,15 @@ class MpdDevice(MediaPlayerDevice):
         """Service to send the MPD the command for previous track."""
         self._client.previous()
 
+    def mute_volume(self, mute):
+        """Mute. Emulated with set_volume_level."""
+        if mute is True:
+            self._muted_volume = self.volume_level
+            self.set_volume_level(0)
+        elif mute is False:
+            self.set_volume_level(self._muted_volume)
+        self._muted = mute
+
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.debug(str.format("Playing playlist: {0}", media_id))
@@ -281,6 +300,15 @@ class MpdDevice(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._client.random(int(shuffle))
+
+    def turn_off(self):
+        """Service to send the MPD the command to stop playing."""
+        self._client.stop()
+
+    def turn_on(self):
+        """Service to send the MPD the command to start playing."""
+        self._client.play()
+        self._update_playlists(no_throttle=True)
 
     def clear_playlist(self):
         """Clear players playlist."""
