@@ -100,7 +100,6 @@ class GeoRssServiceSensor(Entity):
         self._data = data
         self._state = STATE_UNKNOWN
         self._state_attributes = None
-        self._name = name
         self._unit_of_measurement = unit_of_measurement
         id_base = 'any' if category is None else category
         if name is not None:
