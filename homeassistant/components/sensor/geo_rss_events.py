@@ -72,8 +72,7 @@ def setup_platform(hass, config, add_devices,
                   home_latitude, home_longitude, url, radius_in_km)
 
     # Initialise update service.
-    data = GeoRssServiceData(hass, home_latitude, home_longitude, url,
-                             radius_in_km)
+    data = GeoRssServiceData(home_latitude, home_longitude, url, radius_in_km)
     data.update()
 
     # Create all sensors based on categories.
@@ -151,19 +150,17 @@ class GeoRssServiceSensor(Entity):
         self._state = len(my_events)
         # And now compute the attributes from the filtered events.
         matrix = {}
-        if my_events:
-            for event in my_events:
-                matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
-                    event[ATTR_DISTANCE])
+        for event in my_events:
+            matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
+                event[ATTR_DISTANCE])
         self._state_attributes = matrix
 
 
 class GeoRssServiceData(object):
     """Provides access to GeoRSS feed and stores the latest data."""
 
-    def __init__(self, hass, home_latitude, home_longitude, url, radius_in_km):
+    def __init__(self, home_latitude, home_longitude, url, radius_in_km):
         """Initialize the update service."""
-        self._hass = hass
         self._home_coordinates = [home_latitude, home_longitude]
         self._url = url
         self._radius_in_km = radius_in_km
