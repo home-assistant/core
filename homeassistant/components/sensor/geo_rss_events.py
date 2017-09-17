@@ -180,8 +180,8 @@ class GeoRssServiceData(object):
     def filter_entries(self, feed_data):
         """Filter entries by distance from home coordinates."""
         events = []
-        _LOGGER.info("%s entri(es) available in feed %s",
-                     len(feed_data.entries), self._url)
+        _LOGGER.debug("%s entri(es) available in feed %s",
+                      len(feed_data.entries), self._url)
         for entry in feed_data.entries:
             geometry = None
             if hasattr(entry, 'where'):
@@ -213,7 +213,7 @@ class GeoRssServiceData(object):
             distance = self.calculate_distance_to_polygon(
                 geometry.coordinates[0])
         else:
-            _LOGGER.info("Not yet implemented: %s", geometry.type)
+            _LOGGER.warning("Not yet implemented: %s", geometry.type)
         return distance
 
     def calculate_distance_to_point(self, point):
