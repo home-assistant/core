@@ -12,7 +12,9 @@ from homeassistant.components.vacuum import (
     SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED, SERVICE_START_PAUSE,
     SERVICE_STOP, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.components.vacuum.xiaomi_miio import (
-    ATTR_CLEANED_AREA, ATTR_CLEANING_TIME, ATTR_DO_NOT_DISTURB, ATTR_ERROR,
+    ATTR_CLEANED_AREA, ATTR_CLEANING_TIME, ATTR_DO_NOT_DISTURB, ATTR_ERROR, 
+    ATTR_MAIN_BRUSH_LEFT, ATTR_SIDE_BRUSH_LEFT, ATTR_FILTER_LEFT,
+    ATTR_CLEANING_COUNT, ATTR_CLEANED_TOTAL_AREA, ATTR_CLEANING_TOTAL_TIME,
     CONF_HOST, CONF_NAME, CONF_TOKEN, PLATFORM,
     SERVICE_MOVE_REMOTE_CONTROL, SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL, SERVICE_STOP_REMOTE_CONTROL)
@@ -36,6 +38,16 @@ def mock_mirobo_is_off():
     mock_vacuum.Vacuum().status().clean_area = 123.43218
     mock_vacuum.Vacuum().status().clean_time = timedelta(
         hours=2, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().main_brush_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().side_brush_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().filter_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().cleaning_count = 35
+    mock_vacuum.Vacuum().status().total_cleaned_area = 123.43218
+    mock_vacuum.Vacuum().status().total_cleaning_time = timedelta(
+        hours=11, minutes=35, seconds=34)
     mock_vacuum.Vacuum().status().state = 'Test Xiaomi Charging'
 
     with mock.patch.dict('sys.modules', {
@@ -57,6 +69,16 @@ def mock_mirobo_is_on():
     mock_vacuum.Vacuum().status().clean_area = 133.43218
     mock_vacuum.Vacuum().status().clean_time = timedelta(
         hours=2, minutes=55, seconds=34)
+    mock_vacuum.Vacuum().status().main_brush_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().side_brush_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().filter_left = timedelta(
+        hours=11, minutes=35, seconds=34)
+    mock_vacuum.Vacuum().status().cleaning_count = 35
+    mock_vacuum.Vacuum().status().total_cleaned_area = 123.43218
+    mock_vacuum.Vacuum().status().total_cleaning_time = timedelta(
+        hours=11, minutes=35, seconds=34)
     mock_vacuum.Vacuum().status().state = 'Test Xiaomi Cleaning'
 
     with mock.patch.dict('sys.modules', {
@@ -122,6 +144,12 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
     assert state.attributes.get(ATTR_FAN_SPEED) == 'Quiet'
     assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
             == ['Quiet', 'Balanced', 'Turbo', 'Max'])
+    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_FILTER_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
+    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123.43218
+    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '11:35:34'
 
     # Call services
     yield from hass.services.async_call(
@@ -225,6 +253,12 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_FAN_SPEED) == 99
     assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
             == ['Quiet', 'Balanced', 'Turbo', 'Max'])
+    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_FILTER_LEFT) == '11:35:34'
+    assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
+    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123.43218
+    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '11:35:34'
 
     # Check setting pause
     yield from hass.services.async_call(
