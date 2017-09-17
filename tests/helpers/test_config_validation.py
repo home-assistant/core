@@ -405,6 +405,31 @@ def test_time_zone():
     schema('UTC')
 
 
+def test_date():
+    """Test date validation."""
+    schema = vol.Schema(cv.date)
+
+    for value in ['Not a date', '23:42', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().date())
+    schema('2016-11-23')
+
+
+def test_time():
+    """Test date validation."""
+    schema = vol.Schema(cv.time)
+
+    for value in ['Not a time', '2016-11-23', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().time())
+    schema('23:42:00')
+    schema('23:42')
+
+
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)

@@ -160,8 +160,11 @@ time_period_dict = vol.All(
     lambda value: timedelta(**value))
 
 
-def time_str(value: str) -> time_sys:
+def time(value) -> time_sys:
     """Validate and transform a time."""
+    if isinstance(value, time_sys):
+        return value
+
     try:
         time_val = dt_util.parse_time(value)
     except TypeError:
@@ -173,19 +176,11 @@ def time_str(value: str) -> time_sys:
     return time_val
 
 
-def time_time(time_val: time_sys) -> time_sys:
-    """Validate a string representing a time."""
-    if not isinstance(time_val, time_sys):
-        raise vol.Invalid('Not of "time" type')
-
-    return time_val
-
-
-time = vol.Any(time_str, time_time)
-
-
-def date_str(value: str) -> date_sys:
+def date(value) -> date_sys:
     """Validate and transform a date."""
+    if isinstance(value, date_sys):
+        return value
+
     try:
         date_val = dt_util.parse_date(value)
     except TypeError:
@@ -193,18 +188,8 @@ def date_str(value: str) -> date_sys:
 
     if date_val is None:
         raise vol.Invalid("Could not parse date")
-    return date_val
-
-
-def date_date(date_val: date_sys) -> date_sys:
-    """Validate date objects by passing them through."""
-    if not isinstance(date_val, date_sys):
-        raise vol.Invalid('Not of "date" type')
 
     return date_val
-
-
-date = vol.Any(date_str, date_date)
 
 
 def time_period_str(value: str) -> timedelta:
