@@ -233,7 +233,7 @@ def setup_abode_events(hass):
     """Event callbacks."""
     import abodepy.helpers.timeline as TIMELINE
 
-    def event_callback(event_json, event=None):
+    def event_callback(event, event_json):
         """Handle an event callback from Abode."""
         data = {
             ATTR_DEVICE_ID: event_json.get(ATTR_DEVICE_ID, ''),
@@ -257,7 +257,7 @@ def setup_abode_events(hass):
     for event in events:
         hass.data[DOMAIN].abode.events.add_event_callback(
             event,
-            partial(event_callback, event=event))
+            partial(event_callback, event))
 
 
 class AbodeDevice(Entity):
