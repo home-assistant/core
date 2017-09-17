@@ -10,15 +10,16 @@ https://home-assistant.io/components/sensor.geo_rss_events/
 """
 
 import logging
+from collections import namedtuple
 from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
-from homeassistant.const import (STATE_UNKNOWN, CONF_SCAN_INTERVAL,
-                                 CONF_UNIT_OF_MEASUREMENT, CONF_NAME)
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT,
+                                 CONF_NAME)
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
@@ -181,8 +182,8 @@ class GeoRssServiceData(object):
                 geometry = entry.where
             elif hasattr(entry, 'geo_lat') and hasattr(entry, 'geo_long'):
                 coordinates = (float(entry.geo_long), float(entry.geo_lat))
-                geometry = type('obj', (object,),
-                                {'type': 'Point', 'coordinates': coordinates})
+                Point = namedtuple('Point', ['type', 'coordinates'])
+                geometry = Point('Point', coordinates)
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
