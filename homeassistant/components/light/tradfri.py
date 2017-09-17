@@ -73,8 +73,10 @@ class TradfriGroup(Light):
     def turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
         if ATTR_TRANSITION in kwargs:
-            self._api(self._group.set_dimmer(0,
-                transition_time=int(kwargs[ATTR_TRANSITION] * 10)))
+            self._api(self._group.set_dimmer(
+                0,
+                transition_time=int(kwargs[ATTR_TRANSITION] * 10)
+            ))
         else:
             self._api(self._group.set_state(0))
 
@@ -88,8 +90,10 @@ class TradfriGroup(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
-            self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                transition_time=command['transitiontime']))
+            self._api(self._group.set_dimmer(
+                kwargs[ATTR_BRIGHTNESS],
+                transition_time=command['transitiontime']
+            ))
         else:
             self._api(self._group.set_state(1))
 
@@ -177,8 +181,10 @@ class Tradfri(Light):
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         if ATTR_TRANSITION in kwargs:
-            self._api(self._light_control.set_dimmer(0,
-                transition_time=int(kwargs[ATTR_TRANSITION] * 10)))
+            self._api(self._light_control.set_dimmer(
+                0,
+                transition_time=int(kwargs[ATTR_TRANSITION] * 10)
+            ))
         else:
             self._api(self._light_control.set_state(False))
 
@@ -197,8 +203,10 @@ class Tradfri(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
-            self._api(self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                transition_time=command['transitiontime']))
+            self._api(self._light_control.set_dimmer(
+                kwargs[ATTR_BRIGHTNESS],
+                transition_time=command['transitiontime']
+            ))
         else:
             self._api(self._light_control.set_state(True))
 
