@@ -25,17 +25,15 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
-CONF_DISABLED = 'disabled'
 
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_PATTERN = 'pattern'
-ATTR_DISABLED = 'disabled'
 
-SERVICE_SELECT_VALUE = 'select_value'
+SERVICE_SET_VALUE = 'set_value'
 
-SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
+SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): cv.string,
 })
@@ -65,16 +63,15 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(ATTR_PATTERN): cv.string,
-            vol.Optional(CONF_DISABLED, default=False): cv.boolean,
         }, _cv_input_text)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-def select_value(hass, entity_id, value):
+def set_value(hass, entity_id, value):
     """Set input_text to value."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_VALUE, {
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
     })
@@ -95,28 +92,27 @@ def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         pattern = cfg.get(ATTR_PATTERN)
-        disabled = cfg.get(CONF_DISABLED)
 
         entities.append(InputText(
             object_id, name, initial, minimum, maximum, icon, unit,
-            pattern, disabled))
+            pattern))
 
     if not entities:
         return False
 
     @asyncio.coroutine
-    def async_select_value_service(call):
+    def async_set_value_service(call):
         """Handle a calls to the input box services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_text.async_select_value(call.data[ATTR_VALUE])
+        tasks = [input_text.async_set_value(call.data[ATTR_VALUE])
                  for input_text in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
-        schema=SERVICE_SELECT_VALUE_SCHEMA)
+        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
+        schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
@@ -126,8 +122,8 @@ class InputText(Entity):
     """Represent a text box."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, icon,
-                 unit, pattern, disabled):
-        """Initialize a select input."""
+                 unit, pattern):
+        """Initialize a text input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
@@ -136,7 +132,6 @@ class InputText(Entity):
         self._icon = icon
         self._unit = unit
         self._pattern = pattern
-        self._disabled = disabled
 
     @property
     def should_poll(self):
@@ -145,7 +140,7 @@ class InputText(Entity):
 
     @property
     def name(self):
-        """Return the name of the select input box."""
+        """Return the name of the text input entity."""
         return self._name
 
     @property
@@ -164,18 +159,12 @@ class InputText(Entity):
         return self._unit
 
     @property
-    def disabled(self):
-        """Return the disabled flag."""
-        return self._disabled
-
-    @property
     def state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_PATTERN: self._pattern,
-            ATTR_DISABLED: self._disabled,
         }
 
     @asyncio.coroutine
@@ -192,7 +181,7 @@ class InputText(Entity):
             self._current_value = value
 
     @asyncio.coroutine
-    def async_select_value(self, value):
+    def async_set_value(self, value):
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
             _LOGGER.warning("Invalid value: %s (length range %s - %s)",

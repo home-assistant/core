@@ -708,7 +708,7 @@ class WUndergroundSensor(Entity):
     def entity_picture(self):
         """Return the entity picture."""
         url = self._cfg_expand("entity_picture")
-        if url is not None:
+        if isinstance(url, str):
             return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
     @property
