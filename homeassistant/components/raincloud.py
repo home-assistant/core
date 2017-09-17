@@ -4,7 +4,6 @@ Support for Melnor RainCloud sprinkler water timer.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -13,9 +12,8 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
@@ -33,10 +31,11 @@ NOTIFICATION_TITLE = 'Rain Cloud Setup'
 
 DATA_RAINCLOUD = 'raincloud'
 DOMAIN = 'raincloud'
-DEFAULT_ENTITY_NAMESPACE = 'raincloud'
 DEFAULT_WATERING_TIME = 15
 
 SCAN_INTERVAL = timedelta(seconds=20)
+
+SIGNAL_UPDATE_RAINCLOUD = "raincloud_update"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -62,9 +61,8 @@ def setup(hass, config):
 
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
-            return False
-        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass,
-                                                 raincloud,
+            raise HTTPError
+        hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud,
                                                  default_watering_timer)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
@@ -76,22 +74,24 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
+    def hub_refresh(event_time):
+        """Call Raincloud hub to refresh information."""
+        _LOGGER.debug("Updating RainCloud Hub component.")
+        raincloud = hass.data[DATA_RAINCLOUD]
+        raincloud.data.update()
+
+        dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD, raincloud)
+
+    # Call the Raincloud API to refresh updates
+    track_time_interval(hass, hub_refresh, SCAN_INTERVAL)
+
     return True
 
 
-class RainCloudHub:
+class RainCloudHub(object):
     """Base class for all Raincloud entities."""
 
-    def __init__(self, hass, data, default_watering_timer):
+    def __init__(self, data, default_watering_timer):
         """Initialize the entity."""
         self.data = data
         self.default_watering_timer = default_watering_timer
-
-        # needs change
-        track_time_interval(hass, self._update_hub, SCAN_INTERVAL)
-        self._update_hub(SCAN_INTERVAL)
-
-    def _update_hub(self, now):
-        """Refresh data from for all child objects."""
-        _LOGGER.debug("Updating RainCloud Hub component.")
-        self.data.update()
