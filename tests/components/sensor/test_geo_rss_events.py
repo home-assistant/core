@@ -45,7 +45,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         home_longitude = 151.209444
         radius_in_km = 500
         url = 'url'
-        data = geo_rss_events.GeoRssServiceData(self.hass, home_latitude,
+        data = geo_rss_events.GeoRssServiceData(home_latitude,
                                                 home_longitude, url,
                                                 radius_in_km)
         return data
@@ -56,17 +56,17 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         data1 = self.setup_data()
         name1 = "Name 1"
         unit_of_measurement1 = "Unit 1"
-        sensor1 = geo_rss_events.GeoRssServiceSensor(self.hass, category1,
+        sensor1 = geo_rss_events.GeoRssServiceSensor(category1,
                                                      data1, name1,
                                                      unit_of_measurement1)
-        assert sensor1.name == "Category 1"
+        assert sensor1.name == "Name 1 - Category 1"
         assert sensor1.unit_of_measurement == "Unit 1"
         assert sensor1.icon == "mdi:alert"
 
         data2 = self.setup_data()
         name2 = "Name 2"
         unit_of_measurement2 = "Unit 2"
-        sensor2 = geo_rss_events.GeoRssServiceSensor(self.hass, None, data2,
+        sensor2 = geo_rss_events.GeoRssServiceSensor(None, data2,
                                                      name2,
                                                      unit_of_measurement2)
         event1 = type('obj', (object,), {'title': 'Title 1', 'distance': 10.0})
@@ -74,7 +74,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         matrix = {'Title 1': "10km", 'Title 2': "20km"}
         sensor2._state = [event1, event2]
         sensor2._state_attributes = matrix
-        assert sensor2.name == "Any"
+        assert sensor2.name == "Name 2 - Any"
         device_state_attributes2 = sensor2.device_state_attributes
         assert device_state_attributes2["Title 1"] == matrix["Title 1"]
         assert device_state_attributes2["Title 2"] == matrix["Title 2"]
