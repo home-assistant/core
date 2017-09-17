@@ -43,10 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches = []
     for switch in SWITCHES:
-        if switch in config.get(CONF_SWITCHES):
-            _LOGGER.debug("Adding DoorBird switch " +
-                          SWITCHES[switch]["name"])
-            switches.append(DoorBirdSwitch(device, switch))
+        _LOGGER.debug("Adding DoorBird switch %s", SWITCHES[switch]["name"])
+        switches.append(DoorBirdSwitch(device, switch))
 
     add_devices(switches)
     _LOGGER.info("Added DoorBird switches")
