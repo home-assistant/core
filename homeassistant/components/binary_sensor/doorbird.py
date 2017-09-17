@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.doorbird import DOMAIN
+from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['doorbird']
@@ -17,7 +17,7 @@ SENSOR_TYPES = {
         "icon": {
             True: "bell-ring",
             False: "bell",
-            "None": "bell-outline"
+            None: "bell-outline"
         }
     }
 }
@@ -25,7 +25,7 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird binary sensor component."""
-    device = hass.data.get(DOMAIN)
+    device = hass.data.get(DOORBIRD_DOMAIN)
     add_devices([DoorBirdBinarySensor(device, "doorbell")], True)
     return True
 
@@ -38,7 +38,6 @@ class DoorBirdBinarySensor(BinarySensorDevice):
         self._device = device
         self._sensor_type = sensor_type
         self._state = None
-        super(DoorBirdBinarySensor, self).__init__()
 
     @property
     def name(self):
@@ -48,11 +47,8 @@ class DoorBirdBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Get an icon to display."""
-        if self._state is None:
-            icon = SENSOR_TYPES[self._sensor_type]["icon"]["None"]
-        else:
-            icon = SENSOR_TYPES[self._sensor_type]["icon"][self._state]
-        return "mdi:{}".format(icon)
+        state_icon = SENSOR_TYPES[self._sensor_type]["icon"][self._state]
+        return "mdi:{}".format(state_icon)
 
     @property
     def is_on(self):

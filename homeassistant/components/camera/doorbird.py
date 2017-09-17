@@ -9,10 +9,9 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.doorbird import DOMAIN
+from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.async import run_coroutine_threadsafe
 
 DEPENDENCIES = ['doorbird']
 
@@ -33,21 +32,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DoorBird camera platform."""
-    device = hass.data.get(DOMAIN)
+    device = hass.data.get(DOORBIRD_DOMAIN)
 
-    _LOGGER.debug("Adding DoorBird camera " + _CAMERA_LIVE)
+    _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LIVE)
     entities = [DoorBirdCamera(device.live_image_url, _CAMERA_LIVE,
                                _LIVE_INTERVAL)]
 
     if config.get(CONF_SHOW_LAST_VISITOR):
-        _LOGGER.debug("Adding DoorBird camera " + _CAMERA_LAST_VISITOR)
+        _LOGGER.debug("Adding DoorBird camera %s", _CAMERA_LAST_VISITOR)
         entities.append(DoorBirdCamera(device.history_image_url(1),
                                        _CAMERA_LAST_VISITOR,
                                        _LAST_VISITOR_INTERVAL))
 
     async_add_devices(entities)
     _LOGGER.info("Added DoorBird camera(s)")
-    return True
 
 
 class DoorBirdCamera(Camera):
@@ -66,11 +64,6 @@ class DoorBirdCamera(Camera):
     def name(self):
         """Get the name of the camera."""
         return self._name
-
-    def camera_image(self):
-        """Get the bytes of a camera image."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
 
     @asyncio.coroutine
     def async_camera_image(self):
@@ -95,11 +88,3 @@ class DoorBirdCamera(Camera):
         except aiohttp.ClientError as error:
             _LOGGER.error("Error getting camera image: %s", error)
             return self._last_image
-
-    def enable_motion_detection(self):
-        """Network callbacks are not supported by HA yet."""
-        pass
-
-    def disable_motion_detection(self):
-        """Network callbacks are not supported by HA yet."""
-        pass

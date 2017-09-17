@@ -3,7 +3,7 @@ import datetime
 import logging
 import voluptuous as vol
 
-from homeassistant.components.doorbird import DOMAIN
+from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird switch platform."""
-    device = hass.data.get(DOMAIN)
+    device = hass.data.get(DOORBIRD_DOMAIN)
 
     switches = []
     for switch in SWITCHES:
@@ -70,7 +70,7 @@ class DoorBirdSwitch(SwitchDevice):
     @property
     def icon(self):
         """Get an icon to display."""
-        return "mdi:" + SWITCHES[self._switch]["icon"][self._state]
+        return "mdi:{}".format(SWITCHES[self._switch]["icon"][self._state])
 
     @property
     def is_on(self):
