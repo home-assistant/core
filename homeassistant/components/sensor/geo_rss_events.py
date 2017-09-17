@@ -78,12 +78,11 @@ def setup_platform(hass, config, add_devices,
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor(hass, None, data, name,
-                                     unit_of_measurement)
+        device = GeoRssServiceSensor(None, data, name, unit_of_measurement)
         devices.append(device)
     else:
         for category in categories:
-            device = GeoRssServiceSensor(hass, category, data, name,
+            device = GeoRssServiceSensor(category, data, name,
                                          unit_of_measurement)
             devices.append(device)
     add_devices(devices, True)
@@ -92,27 +91,21 @@ def setup_platform(hass, config, add_devices,
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, hass, category, data, name, unit_of_measurement):
+    def __init__(self, category, data, service_name, unit_of_measurement):
         """Initialize the sensor."""
-        self.hass = hass
         self._category = category
         self._data = data
+        self._service_name = service_name
         self._state = STATE_UNKNOWN
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
-        id_base = 'any' if category is None else category
-        if name is not None:
-            id_base = '{}_{}'.format(name, id_base)
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, id_base,
-                                            hass=hass)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._category is not None:
-            return self._category
-        else:
-            return 'Any'
+        return '{} - {}'.format(self._service_name,
+                                'Any' if self._category is None
+                                else self._category)
 
     @property
     def state(self):
