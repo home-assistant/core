@@ -821,7 +821,7 @@ pyunifi==2.13
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.35
+pyvera==0.2.37
 
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.2
