@@ -36,13 +36,14 @@ CONF_URL = 'url'
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DEFAULT_UNIT_OF_MEASUREMENT = 'Events'
 
 DOMAIN = 'geo_rss_events'
 
 # Minimum time between updates from the source.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
