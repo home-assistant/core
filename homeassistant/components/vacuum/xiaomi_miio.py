@@ -370,9 +370,9 @@ class MiroboVacuum(VacuumDevice):
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
             consumable = yield from self.hass.async_add_job(
-                             self._vacuum.consumable_status)
+                self._vacuum.consumable_status)
             cleanhis = yield from self.hass.async_add_job(
-                             self._vacuum.clean_history)
+                self._vacuum.clean_history)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
 <<<<<<< 948b16c1ad5f6baea7f7264209a35bb75c255eda
