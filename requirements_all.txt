@@ -17,6 +17,9 @@ astral==1.4
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
+# homeassistant.components.doorbird
+DoorBirdPy==0.0.4
+
 # homeassistant.components.isy994
 PyISY==1.0.8
 
