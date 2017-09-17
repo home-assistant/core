@@ -90,7 +90,6 @@ def test_set_datetime_time(hass):
 
     yield from async_set_datetime(hass, entity_id, dt_obj)
     yield from hass.async_block_till_done()
-    yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == str(time_portion)
@@ -98,6 +97,34 @@ def test_set_datetime_time(hass):
     assert not state.attributes['has_date']
 
     assert state.attributes['timestamp'] == (19 * 3600) + (46 * 60)
+
+
+@asyncio.coroutine
+def test_set_invalid(hass):
+    """Test set_datetime method with only time."""
+    initial = datetime.datetime(2017, 1, 1, 0, 0)
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'test_date': {
+                'has_time': False,
+                'has_date': True,
+                'initial': initial
+            }
+        }})
+
+    entity_id = 'input_datetime.test_date'
+
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    time_portion = dt_obj.time()
+
+    yield from hass.services.async_call('input_datetime', 'set_datetime', {
+        'entity_id': 'test_date',
+        'time': time_portion
+    })
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == str(initial.date())
 
 
 @asyncio.coroutine
@@ -140,6 +167,8 @@ def test_restore_state(hass):
 
     hass.state = CoreState.starting
 
+    initial = datetime.datetime(2017, 1, 1, 23, 42)
+
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {
             'test_time': {
@@ -156,7 +185,8 @@ def test_restore_state(hass):
             },
             'test_bogus_data': {
                 'has_time': True,
-                'has_date': True
+                'has_date': True,
+                'initial': str(initial)
             },
         }})
 
@@ -170,9 +200,5 @@ def test_restore_state(hass):
     state_datetime = hass.states.get('input_datetime.test_datetime')
     assert state_datetime.state == str(dt_obj)
 
-    # Unfortunately, we don't know what exactly dt_util.now() returned, and
-    # mocking is not possible with coroutines. Thus, we only check that the
-    # status is not 'unknown', i.e., no exception occurred when restoring
-    # state
     state_bogus = hass.states.get('input_datetime.test_bogus_data')
-    assert state_bogus.state != 'unknown'
+    assert state_bogus.state == str(initial)

@@ -9,8 +9,8 @@ import logging
 import datetime
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
-from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -25,6 +25,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_HAS_DATE = 'has_date'
 CONF_HAS_TIME = 'has_time'
+CONF_INITIAL = 'initial'
 
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
@@ -37,6 +38,14 @@ SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TIME): cv.time,
 })
 
+SERVICE_WITH_DATE_SUBSCHEMA = {
+    vol.Required(ATTR_DATE): cv.date
+}
+
+SERVICE_WITH_TIME_SUBSCHEMA = {
+    vol.Required(ATTR_TIME): cv.time
+}
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.All({
@@ -44,7 +53,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_DATE): cv.boolean,
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
-            # FIXME: initial value
+            vol.Optional(CONF_INITIAL,
+                         default=datetime.datetime(1970, 1, 1)): cv.datetime,
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
                                          (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
@@ -72,8 +82,9 @@ def async_setup(hass, config):
         has_time = cfg.get(CONF_HAS_TIME)
         has_date = cfg.get(CONF_HAS_DATE)
         icon = cfg.get(CONF_ICON)
-        entities.append(DatetimeSelect(object_id, name,
-                                       has_date, has_time, icon))
+        initial = cfg.get(CONF_INITIAL)
+        entities.append(InputDatetime(object_id, name,
+                                      has_date, has_time, icon, initial))
 
     if not entities:
         return False
@@ -85,13 +96,24 @@ def async_setup(hass, config):
 
         tasks = []
         for input_datetime in target_inputs:
-            tasks.append(
-                # FIXME: validate
-                input_datetime.async_set_datetime(
-                    call.data.get(ATTR_DATE),
-                    call.data.get(ATTR_TIME)
+            schema = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+            if input_datetime.has_date():
+                schema = schema.extend(SERVICE_WITH_DATE_SUBSCHEMA)
+            if input_datetime.has_time():
+                schema = schema.extend(SERVICE_WITH_TIME_SUBSCHEMA)
+
+            try:
+                schema(dict(call.data))
+                tasks.append(
+                    input_datetime.async_set_datetime(
+                        call.data.get(ATTR_DATE),
+                        call.data.get(ATTR_TIME)
+                    )
                 )
-            )
+            except vol.Invalid as ex:
+                _LOGGER.error("Invalid service data for "
+                              "input_datetime.set_datetime: %s",
+                              humanize_error(call.data, ex))
 
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -104,16 +126,17 @@ def async_setup(hass, config):
     return True
 
 
-class DatetimeSelect(Entity):
-    """Representation of a select datetime."""
+class InputDatetime(Entity):
+    """Representation of a datetime input."""
 
-    def __init__(self, object_id, name, has_date, has_time, icon):
+    def __init__(self, object_id, name, has_date, has_time, icon, initial):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._has_date = has_date
         self._has_time = has_time
         self._icon = icon
+        self._initial = initial
         self._current_datetime = None
 
     @asyncio.coroutine
@@ -126,9 +149,9 @@ class DatetimeSelect(Entity):
         if old_state is not None:
             restore_val = dt_util.parse_datetime(old_state.state)
             if restore_val is None:
-                restore_val = dt_util.now()
+                restore_val = self._initial
         else:
-            restore_val = dt_util.now()
+            restore_val = self._initial
 
         if not self._has_date:
             self._current_datetime = restore_val.time()
@@ -136,6 +159,14 @@ class DatetimeSelect(Entity):
             self._current_datetime = restore_val.date()
         else:
             self._current_datetime = restore_val
+
+    def has_date(self):
+        """Return whether the input datetime carries a date."""
+        return self._has_date
+
+    def has_time(self):
+        """Return whether the input datetime carries a time."""
+        return self._has_time
 
     @property
     def should_poll(self):
