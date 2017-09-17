@@ -158,6 +158,18 @@ class TestComponentHistory(unittest.TestCase):
             filters=history.Filters())
         assert states == hist
 
+    def test_get_significant_states_multiple_entity_ids(self):
+        """Test that only significant states are returned for one entity."""
+        zero, four, states = self.record_states()
+        del states['media_player.test2']
+        del states['thermostat.test2']
+        del states['script.can_cancel_this_one']
+
+        hist = history.get_significant_states(
+            self.hass, zero, four, 'media_player.test,thermostat.test',
+            filters=history.Filters())
+        assert states == hist
+
     def test_get_significant_states_exclude_domain(self):
         """Test if significant states are returned when excluding domains.
 

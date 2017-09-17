@@ -59,8 +59,8 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     """
     timer_start = time.perf_counter()
     from homeassistant.components.recorder.models import States
-
-    entity_ids = (entity_id.lower(), ) if entity_id is not None else None
+    entity_ids = entity_id.lower().split(
+        ',') if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -86,7 +86,7 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
         _LOGGER.debug(
             'get_significant_states took %fs', elapsed)
 
-    return states_to_json(hass, states, start_time, entity_id, filters)
+    return states_to_json(hass, states, start_time, entity_ids, filters)
 
 
 def state_changes_during_period(hass, start_time, end_time=None,
@@ -105,10 +105,12 @@ def state_changes_during_period(hass, start_time, end_time=None,
         if entity_id is not None:
             query = query.filter_by(entity_id=entity_id.lower())
 
+        entity_ids = [entity_id] if entity_id is not None else None
+
         states = execute(
             query.order_by(States.last_updated))
 
-    return states_to_json(hass, states, start_time, entity_id)
+    return states_to_json(hass, states, start_time, entity_ids)
 
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
@@ -185,7 +187,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 if not state.attributes.get(ATTR_HIDDEN, False)]
 
 
-def states_to_json(hass, states, start_time, entity_id, filters=None):
+def states_to_json(hass, states, start_time, entity_ids, filters=None):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -196,8 +198,6 @@ def states_to_json(hass, states, start_time, entity_id, filters=None):
     axis correctly.
     """
     result = defaultdict(list)
-
-    entity_ids = [entity_id] if entity_id is not None else None
 
     # Get the states at the start time
     timer_start = time.perf_counter()
