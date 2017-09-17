@@ -7,8 +7,8 @@ https://home-assistant.io/components/light.tradfri/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA)
 from homeassistant.components.tradfri import (
@@ -164,7 +164,12 @@ class Tradfri(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._api(self._light_control.set_state(False))
+
+        if ATTR_TRANSITION in kwargs:
+            self._api(self._light_control.set_dimmer(0,
+                transition_time=int(kwargs[ATTR_TRANSITION] * 10)))
+        else:
+            self._api(self._light_control.set_state(False))
 
     def turn_on(self, **kwargs):
         """
@@ -173,8 +178,16 @@ class Tradfri(Light):
         After adding "self._light_data.hexcolor is not None"
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
+        command = {
+            'transitiontime': None
+        }
+
+        if ATTR_TRANSITION in kwargs:
+            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
+
         if ATTR_BRIGHTNESS in kwargs:
-            self._api(self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
+            self._api(self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                transition_time=command['transitiontime']))
         else:
             self._api(self._light_control.set_state(True))
 
