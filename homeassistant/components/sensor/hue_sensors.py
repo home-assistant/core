@@ -105,8 +105,11 @@ class HueSensor(Entity):
             self._attributes['temperature'] = self._data.data[
                 self._hue_id]['temperature']
         elif self._model == 'RWL021':
+            self.ICON = 'mdi:remote'
             self._attributes['last updated'] = self._data.data[
                 self._hue_id]['last_updated']
+        elif self._model == 'Geofence':
+            self.ICON = 'mdi:cellphone'
 
 
 def parse_hue_api_response(response):
