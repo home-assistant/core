@@ -36,6 +36,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'AWSIoTPythonSDK',
     'dsmr_parser',
     'ephem',
     'evohomeclient',

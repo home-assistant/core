@@ -20,6 +20,9 @@ asynctest>=0.8.0
 freezegun>=0.3.8
 
 
+# homeassistant.components.cloud
+AWSIoTPythonSDK==1.2.0
+
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
 
