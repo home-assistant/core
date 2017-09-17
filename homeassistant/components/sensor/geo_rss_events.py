@@ -53,8 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                                                        [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL,
-                 default=DEFAULT_SCAN_INTERVAL): cv.time_period
 })
 
 
