@@ -72,12 +72,24 @@ class TradfriGroup(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        self._api(self._group.set_state(0))
+        if ATTR_TRANSITION in kwargs:
+            self._api(self._group.set_dimmer(0,
+                transition_time=int(kwargs[ATTR_TRANSITION] * 10)))
+        else:
+            self._api(self._group.set_state(0))
 
     def turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
+        command = {
+            'transitiontime': None
+        }
+
+        if ATTR_TRANSITION in kwargs:
+            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
+
         if ATTR_BRIGHTNESS in kwargs:
-            self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
+            self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                transition_time=command['transitiontime']))
         else:
             self._api(self._group.set_state(1))
 
@@ -164,7 +176,6 @@ class Tradfri(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-
         if ATTR_TRANSITION in kwargs:
             self._api(self._light_control.set_dimmer(0,
                 transition_time=int(kwargs[ATTR_TRANSITION] * 10)))
