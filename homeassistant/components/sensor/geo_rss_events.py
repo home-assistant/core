@@ -230,9 +230,7 @@ class GeoRssServiceData(object):
         # Calculate distance from polygon by calculating the distance
         # to each point of the polygon but not to each edge of the
         # polygon; should be good enough
-        number_of_points = len(polygon)
-        for i in range(number_of_points):
-            polygon_point = polygon[i]
+        for polygon_point in polygon:
             coordinates = (polygon_point[1], polygon_point[0])
             distance = min(distance,
                            self.calculate_distance_to_coords(coordinates))
