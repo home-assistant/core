@@ -27,7 +27,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird binary sensor component."""
     device = hass.data.get(DOORBIRD_DOMAIN)
     add_devices([DoorBirdBinarySensor(device, "doorbell")], True)
-    return True
 
 
 class DoorBirdBinarySensor(BinarySensorDevice):
