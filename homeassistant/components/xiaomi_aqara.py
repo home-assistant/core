@@ -44,13 +44,12 @@ def _validate_conf(config):
         if host is not None:
             res_gw_conf['host'] = host
             port = gw_conf.get('port')
-            if port is not None:
-                res_gw_conf['port'] = port
-            else:
-                res_gw_conf['port'] = 9898
+            if port is None:
+                port = 9898
+            res_gw_conf['port'] = port
 
             _LOGGER.warning(
-                'Static address (%s:%s) of the gateway provided.'
+                'Static address (%s:%s) of the gateway provided. '
                 'Discovery of this host will be skipped.', host, port)
 
         res_config.append(res_gw_conf)
