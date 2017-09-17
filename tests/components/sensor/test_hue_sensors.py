@@ -35,7 +35,7 @@ class TestHueSensor(unittest.TestCase):
             assert len(sensors) == 6
             for sensor in sensors:
                 if sensor.name == 'Living room motion sensor':
-                    assert sensor.state is False
+                    assert sensor.state is 'off'
                     assert sensor.device_state_attributes[
                         'light_level'] == 0
                     assert sensor.device_state_attributes[
@@ -45,7 +45,7 @@ class TestHueSensor(unittest.TestCase):
                     assert sensor.device_state_attributes[
                         'last updated'] == ['2017-09-15', '16:35:00']
                 elif sensor.name == 'Robins iPhone':
-                    assert sensor.state is True
+                    assert sensor.state is 'on'
                 else:
                     assert sensor.name in [
                         'Bedroom motion sensor',

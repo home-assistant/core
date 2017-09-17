@@ -146,9 +146,14 @@ def parse_sml(response):
         arr = name_raw.split()
         arr.insert(-1, 'motion')
         name = ' '.join(arr)
+        hue_state = response['state']['presence']
+        if hue_state is True:
+            state = 'on'
+        else:
+            state = 'off'
 
         data = {'model': response['modelid'],
-                'state': response['state']['presence'],
+                'state': state,
                 'name': name}
     return data
 
@@ -171,7 +176,12 @@ def parse_rwl(response):
 
 def parse_geofence(response):
     """Parse the json response for a GEOFENCE and return the data."""
+    hue_state = response['state']['presence']
+    if hue_state is True:
+        state = 'on'
+    else:
+        state = 'off'
     data = {'name': response['name'],
             'model': 'Geofence',
-            'state': response['state']['presence']}
+            'state': state}
     return data
