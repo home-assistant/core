@@ -195,9 +195,12 @@ class DatetimeSelect(Entity):
     @asyncio.coroutine
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
-        if self._has_date and date_val:
-            self._current_datetime = time_val
-        if self._has_time and time_val:
+        if self._has_date and self._has_time and date_val and time_val:
+            self._current_datetime = datetime.datetime.combine(date_val,
+                                                               time_val)
+        elif self._has_date and not self._has_time and date_val:
             self._current_datetime = date_val
-        
+        if self._has_time and not self._has_date and time_val:
+            self._current_datetime = time_val
+
         yield from self.async_update_ha_state()
