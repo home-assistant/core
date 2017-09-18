@@ -51,8 +51,6 @@ class DteEnergyBridgeSensor(Entity):
             url_template = "http://{}/instantaneousdemand"
         elif self._version == 2:
             url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
-        else:
-            raise ValueError('Invalid sensor version')
 
         self._url = url_template.format(ip_address)
 
