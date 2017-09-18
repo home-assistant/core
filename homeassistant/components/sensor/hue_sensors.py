@@ -176,6 +176,7 @@ def parse_zpg(response):
             'last_updated': response['state']['lastupdated'].split('T')}
     return data
 
+
 def parse_rwl(response):
     """Parse the json response for a RWL021 Hue remote."""
     press = str(response['state']['buttonevent'])
