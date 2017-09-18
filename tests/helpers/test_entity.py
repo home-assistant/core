@@ -191,3 +191,25 @@ def test_warn_slow_update_with_exception(hass):
         assert mock_call().cancel.called
 
         assert update_call
+
+
+@asyncio.coroutine
+def test_async_schedule_update_ha_state(hass):
+    """Warn we log when entity update takes a long time and trow exception."""
+    update_call = False
+
+    @asyncio.coroutine
+    def async_update():
+        """Mock async update."""
+        nonlocal update_call
+        update_call = True
+
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.async_update = async_update
+
+    mock_entity.async_schedule_update_ha_state(True)
+    yield from hass.async_block_till_done()
+
+    assert update_call is True

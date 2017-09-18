@@ -33,10 +33,6 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://discord.gg/c5DvZ4e
-.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://img.shields.io/badge/gitter-general-blue.svg
-   :target: https://gitter.im/home-assistant/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs| image:: https://img.shields.io/badge/gitter-development-yellowgreen.svg
-   :target: https://gitter.im/home-assistant/home-assistant/devs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png

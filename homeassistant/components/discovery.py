@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.1.0']
+REQUIREMENTS = ['netdisco==1.2.0']
 
 DOMAIN = 'discovery'
 
@@ -34,6 +34,7 @@ SERVICE_HASSIO = 'hassio'
 SERVICE_AXIS = 'axis'
 SERVICE_APPLE_TV = 'apple_tv'
 SERVICE_WINK = 'wink'
+SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -44,6 +45,7 @@ SERVICE_HANDLERS = {
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
+    SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
@@ -100,6 +102,7 @@ def async_setup(hass, config):
 
         # We do not know how to handle this service.
         if not comp_plat:
+            logger.info("Unknown service discovered: %s %s", service, info)
             return
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
