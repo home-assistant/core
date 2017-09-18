@@ -6,7 +6,7 @@ This provides controlls for the z-wave smart plugs Toon can control.
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-import custom_components.toon as toon_main
+import homeassistant.components.toon as toon_main
 
 _LOGGER = logging.getLogger(__name__)
 

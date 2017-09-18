@@ -5,15 +5,10 @@ This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
 """
 
-from homeassistant.components.climate import (ClimateDevice,
-                                              ATTR_TEMPERATURE,
-                                              STATE_HEAT,
-                                              STATE_COOL)
-from homeassistant.const import (TEMP_CELSIUS,
-                                 STATE_HOME,
-                                 STATE_NOT_HOME,
-                                 STATE_UNKNOWN)
-import custom_components.toon as toon_main
+from homeassistant.components.climate import (ClimateDevice, ATTR_TEMPERATURE)
+from homeassistant.const import TEMP_CELSIUS
+
+import homeassistant.components.toon as toon_main
 
 STATE_HEAT = 'Comfort'
 STATE_HOME = 'Home'

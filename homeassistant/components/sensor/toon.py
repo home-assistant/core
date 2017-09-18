@@ -5,10 +5,10 @@ This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
 """
 import logging
+import datetime as datetime
 
 from homeassistant.helpers.entity import Entity
-import custom_components.toon as toon_main
-import datetime as datetime
+import homeassistant.components.toon as toon_main
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                     'Power_current',
                                     'power-plug',
                                     'Watt'),
-                        ToonSensor(hass,
+                         ToonSensor(hass,
                                     'Power_today',
                                     'power-plug',
                                     'kWh')])
@@ -35,10 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                         'Gas_current',
                                         'gas-cylinder',
                                         'CM3'),
-                            ToonSensor(hass,
-                                       'Gas_today',
-                                       'gas-cylinder',
-                                       'M3')])
+                             ToonSensor(hass,
+                                        'Gas_today',
+                                        'gas-cylinder',
+                                        'M3')])
 
     for plug in _toon_main.toon.smartplugs:
         sensor_items.extend([
@@ -88,7 +88,7 @@ class ToonSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling required"""
+        """Polling required."""
         return True
 
     @property
@@ -130,14 +130,14 @@ class FibaroSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling required"""
+        """Polling required."""
         return True
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-        
+
     @property
     def icon(self):
         """Return the mdi icon of the sensor."""
@@ -162,7 +162,7 @@ class FibaroSensor(Entity):
 class SolarSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, hass, name, icon, unit_of_measurement):
+    def __init__(self, hass, name, unit_of_measurement):
         """Initialize the sensor."""
         self._name = name
         self._state = None
@@ -172,7 +172,7 @@ class SolarSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling required"""
+        """Polling required."""
         return True
 
     @property
@@ -214,7 +214,7 @@ class FibaroSmokeDetector(Entity):
 
     @property
     def should_poll(self):
-        """Polling required"""
+        """Polling required."""
         return True
 
     @property
@@ -231,8 +231,8 @@ class FibaroSmokeDetector(Entity):
     def state_attributes(self):
         """Return the state attributes of the smoke detectors."""
         value = datetime.datetime.fromtimestamp(
-                    int(self.toon.get_data('last_connected_change', self.name))
-                ).strftime('%Y-%m-%d %H:%M:%S')
+            int(self.toon.get_data('last_connected_change', self.name))
+        ).strftime('%Y-%m-%d %H:%M:%S')
 
         return {
             STATE_ATTR_DEVICE_TYPE: self.toon.get_data('device_type',
