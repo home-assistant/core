@@ -37,14 +37,16 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         self.config = VALID_CONFIG_WITH_CATEGORIES
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'sensor': self.config}))
-        state1 = self.hass.states.get('sensor.event_service_category_1')
-        state2 = self.hass.states.get('sensor.event_service_category_2')
+        self.assertIsNotNone(
+            self.hass.states.get('sensor.event_service_category_1'))
+        self.assertIsNotNone(
+            self.hass.states.get('sensor.event_service_category_2'))
 
     def test_setup_without_categories(self):
         """Test the general setup of this sensor."""
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'sensor': self.config}))
-        state = self.hass.states.get('sensor.event_service_any')
+        self.assertIsNotNone(self.hass.states.get('sensor.event_service_any'))
 
     def test_filter_entries(self):
         """Test filtering entries."""
@@ -84,8 +86,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 1"
         unit_of_measurement = "Unit 1"
         sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                     data, name,
-                                                     unit_of_measurement)
+                                                    data, name,
+                                                    unit_of_measurement)
 
         sensor.update()
         assert sensor.name == "Name 1 Category 1"
@@ -106,8 +108,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 2"
         unit_of_measurement = "Unit 2"
         sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                     data, name,
-                                                     unit_of_measurement)
+                                                    data, name,
+                                                    unit_of_measurement)
 
         sensor.update()
         assert sensor.name == "Name 2 Any"
@@ -128,8 +130,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         name = "Name 3"
         unit_of_measurement = "Unit 3"
         sensor = geo_rss_events.GeoRssServiceSensor(category,
-                                                     data, name,
-                                                     unit_of_measurement)
+                                                    data, name,
+                                                    unit_of_measurement)
 
         sensor.update()
         assert sensor.name == "Name 3 Any"
