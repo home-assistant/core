@@ -17,6 +17,7 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 PHUE_CONFIG_FILE = 'phue.conf'
 SCAN_INTERVAL = timedelta(seconds=1)
+TAP_BUTTON_NAMES = {34: '1_click', 16: '2_click', 17: '3_click', 18: '4_click'}
 
 
 def load_conf(filepath):
@@ -104,7 +105,7 @@ class HueSensor(Entity):
                 self._hue_id]['light_level']
             self._attributes['temperature'] = self._data.data[
                 self._hue_id]['temperature']
-        elif self._model == 'RWL021':
+        elif self._model in ['RWL021', 'ZGPSWITCH']:
             self.ICON = 'mdi:remote'
             self._attributes['last updated'] = self._data.data[
                 self._hue_id]['last_updated']
@@ -120,11 +121,13 @@ def parse_hue_api_response(response):
     for key in response.keys():
         sensor = response[key]
 
-        if sensor['modelid'] in ['RWL021', 'SML001']:
+        if sensor['modelid'] in ['RWL021', 'SML001', 'ZGPSWITCH']:
             _key = sensor['uniqueid'].split(':')[-1][0:5]
 
             if sensor['modelid'] == 'RWL021':
                 data_dict[_key] = parse_rwl(sensor)
+            elif sensor['modelid'] == 'ZGPSWITCH':
+                data_dict[_key] = parse_zpg(sensor)
             else:
                 if _key not in data_dict.keys():
                     data_dict[_key] = parse_sml(sensor)
@@ -160,6 +163,18 @@ def parse_sml(response):
                 'name': name}
     return data
 
+
+def parse_zpg(response):
+    """Parse the json response for a ZGPSWITCH Hue Tap."""
+    press = response['state']['buttonevent']
+
+    button = TAP_BUTTON_NAMES[press]
+
+    data = {'model': 'ZGPSWITCH',
+            'name': response['name'],
+            'state': button,
+            'last_updated': response['state']['lastupdated'].split('T')}
+    return data
 
 def parse_rwl(response):
     """Parse the json response for a RWL021 Hue remote."""
