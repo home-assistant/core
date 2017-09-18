@@ -59,7 +59,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         sensor1 = geo_rss_events.GeoRssServiceSensor(category1,
                                                      data1, name1,
                                                      unit_of_measurement1)
-        assert sensor1.name == "Name 1 - Category 1"
+        assert sensor1.name == "Name 1 Category 1"
         assert sensor1.unit_of_measurement == "Unit 1"
         assert sensor1.icon == "mdi:alert"
 
@@ -74,7 +74,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         matrix = {'Title 1': "10km", 'Title 2': "20km"}
         sensor2._state = [event1, event2]
         sensor2._state_attributes = matrix
-        assert sensor2.name == "Name 2 - Any"
+        assert sensor2.name == "Name 2 Any"
         device_state_attributes2 = sensor2.device_state_attributes
         assert device_state_attributes2["Title 1"] == matrix["Title 1"]
         assert device_state_attributes2["Title 2"] == matrix["Title 2"]

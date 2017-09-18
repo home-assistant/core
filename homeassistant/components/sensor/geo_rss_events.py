@@ -104,7 +104,7 @@ class GeoRssServiceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} - {}'.format(self._service_name,
+        return '{} {}'.format(self._service_name,
                                 'Any' if self._category is None
                                 else self._category)
 
