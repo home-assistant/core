@@ -57,8 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices,
-                   discovery_info=None):  # pragma: no cover
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the GeoRSS component."""
     # Grab location from config
     home_latitude = hass.config.latitude
@@ -105,8 +104,8 @@ class GeoRssServiceSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return '{} {}'.format(self._service_name,
-                                'Any' if self._category is None
-                                else self._category)
+                              'Any' if self._category is None
+                              else self._category)
 
     @property
     def state(self):
@@ -128,7 +127,7 @@ class GeoRssServiceSensor(Entity):
         """Return the state attributes."""
         return self._state_attributes
 
-    def update(self):  # pragma: no cover
+    def update(self):
         """Update this sensor from the GeoRSS service."""
         _LOGGER.debug("About to update sensor %s", self.entity_id)
         self._data.update()
@@ -161,7 +160,7 @@ class GeoRssServiceData(object):
         self.events = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):  # pragma: no cover
+    def update(self):
         """Retrieve data from GeoRSS feed and store events."""
         import feedparser
         feed_data = feedparser.parse(self._url)

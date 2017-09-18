@@ -1,12 +1,22 @@
 """The test for the geo rss events sensor platform."""
 import unittest
 
+from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 import homeassistant.components.sensor.geo_rss_events as geo_rss_events
 
-VALID_CONFIG = {
+URL = 'http://geo.rss.local/geo_rss_events.xml'
+VALID_CONFIG_WITH_CATEGORIES = {
     'platform': 'geo_rss_events',
-    geo_rss_events.CONF_URL: 'url'
+    geo_rss_events.CONF_URL: URL,
+    geo_rss_events.CONF_CATEGORIES: [
+        'Category 1',
+        'Category 2'
+    ]
+}
+VALID_CONFIG_WITHOUT_CATEGORIES = {
+    'platform': 'geo_rss_events',
+    geo_rss_events.CONF_URL: URL
 }
 
 
@@ -16,11 +26,25 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
+        self.config = VALID_CONFIG_WITHOUT_CATEGORIES
 
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def test_setup_with_categories(self):
+        """Test the general setup of this sensor."""
+        self.config = VALID_CONFIG_WITH_CATEGORIES
+        self.assertTrue(
+            setup_component(self.hass, 'sensor', {'sensor': self.config}))
+        state1 = self.hass.states.get('sensor.event_service_category_1')
+        state2 = self.hass.states.get('sensor.event_service_category_2')
+
+    def test_setup_without_categories(self):
+        """Test the general setup of this sensor."""
+        self.assertTrue(
+            setup_component(self.hass, 'sensor', {'sensor': self.config}))
+        state = self.hass.states.get('sensor.event_service_any')
 
     def test_filter_entries(self):
         """Test filtering entries."""
@@ -39,43 +63,77 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         self.assertAlmostEqual(filtered_entries[0][
                                    geo_rss_events.ATTR_DISTANCE], distance0, 0)
 
-    def setup_data(self):
+    def setup_data(self, url='url'):
         """Set up data object for use by sensors."""
         home_latitude = -33.865
         home_longitude = 151.209444
         radius_in_km = 500
-        url = 'url'
         data = geo_rss_events.GeoRssServiceData(home_latitude,
                                                 home_longitude, url,
                                                 radius_in_km)
         return data
 
-    def test_sensors(self):
-        """Test sensor object."""
-        category1 = "Category 1"
-        data1 = self.setup_data()
-        name1 = "Name 1"
-        unit_of_measurement1 = "Unit 1"
-        sensor1 = geo_rss_events.GeoRssServiceSensor(category1,
-                                                     data1, name1,
-                                                     unit_of_measurement1)
-        assert sensor1.name == "Name 1 Category 1"
-        assert sensor1.unit_of_measurement == "Unit 1"
-        assert sensor1.icon == "mdi:alert"
+    def test_update_sensor_with_category(self):
+        """Test updating sensor object."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        # Loading raw data from fixture and plug in to data object as URL
+        # works since the third-party feedparser library accepts a URL
+        # as well as the actual data.
+        data = self.setup_data(raw_data)
+        category = "Category 1"
+        name = "Name 1"
+        unit_of_measurement = "Unit 1"
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                     data, name,
+                                                     unit_of_measurement)
 
-        data2 = self.setup_data()
-        name2 = "Name 2"
-        unit_of_measurement2 = "Unit 2"
-        sensor2 = geo_rss_events.GeoRssServiceSensor(None, data2,
-                                                     name2,
-                                                     unit_of_measurement2)
-        event1 = type('obj', (object,), {'title': 'Title 1', 'distance': 10.0})
-        event2 = type('obj', (object,), {'title': 'Title 2', 'distance': 20.0})
-        matrix = {'Title 1': "10km", 'Title 2': "20km"}
-        sensor2._state = [event1, event2]
-        sensor2._state_attributes = matrix
-        assert sensor2.name == "Name 2 Any"
-        device_state_attributes2 = sensor2.device_state_attributes
-        assert device_state_attributes2["Title 1"] == matrix["Title 1"]
-        assert device_state_attributes2["Title 2"] == matrix["Title 2"]
-        assert device_state_attributes2 == matrix
+        sensor.update()
+        assert sensor.name == "Name 1 Category 1"
+        assert sensor.unit_of_measurement == "Unit 1"
+        assert sensor.icon == "mdi:alert"
+        assert len(sensor._data.events) == 4
+        assert sensor.state == 1
+
+        matrix = {'Title 1': "117km"}
+        device_state_attributes = sensor.device_state_attributes
+        assert device_state_attributes == matrix
+
+    def test_update_sensor_without_category(self):
+        """Test updating sensor object."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        data = self.setup_data(raw_data)
+        category = None
+        name = "Name 2"
+        unit_of_measurement = "Unit 2"
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                     data, name,
+                                                     unit_of_measurement)
+
+        sensor.update()
+        assert sensor.name == "Name 2 Any"
+        assert sensor.unit_of_measurement == "Unit 2"
+        assert sensor.icon == "mdi:alert"
+        assert len(sensor._data.events) == 4
+        assert sensor.state == 4
+
+        matrix = {'Title 1': "117km", 'Title 2': "302km", 'Title 3': "204km",
+                  'Title 6': "48km"}
+        device_state_attributes = sensor.device_state_attributes
+        assert device_state_attributes == matrix
+
+    def test_update_sensor_without_data(self):
+        """Test updating sensor object."""
+        data = self.setup_data()
+        category = None
+        name = "Name 3"
+        unit_of_measurement = "Unit 3"
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                     data, name,
+                                                     unit_of_measurement)
+
+        sensor.update()
+        assert sensor.name == "Name 3 Any"
+        assert sensor.unit_of_measurement == "Unit 3"
+        assert sensor.icon == "mdi:alert"
+        assert len(sensor._data.events) == 0
+        assert sensor.state == 0
