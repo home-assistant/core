@@ -1028,7 +1028,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.knx
-xknx==0.7.13
+xknx==0.7.14
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.swiss_hydrological_data
