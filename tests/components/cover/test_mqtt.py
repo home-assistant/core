@@ -571,72 +571,80 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_defaults(self):
         """Test find percentage in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, False, None, None)
 
         self.assertEqual(44, mqtt_cover.find_percentage_in_range(44))
 
     def test_find_percentage_in_range_altered(self):
         """Test find percentage in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, False, None, None)
 
         self.assertEqual(40, mqtt_cover.find_percentage_in_range(120))
 
     def test_find_percentage_in_range_defaults_inverted(self):
         """Test find percentage in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, True, None, None)
 
         self.assertEqual(56, mqtt_cover.find_percentage_in_range(44))
 
     def test_find_percentage_in_range_altered_inverted(self):
         """Test find percentage in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, True, None, None)
 
         self.assertEqual(60, mqtt_cover.find_percentage_in_range(120))
 
     def test_find_in_range_defaults(self):
         """Test find in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, False, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(44))
 
     def test_find_in_range_altered(self):
         """Test find in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, False, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(40))
 
     def test_find_in_range_defaults_inverted(self):
         """Test find in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, True, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(56))
 
     def test_find_in_range_altered_inverted(self):
         """Test find in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, True, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(60))
 
