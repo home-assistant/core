@@ -152,7 +152,7 @@ class MiroboVacuum(VacuumDevice):
         self.vacuum_state = None
         self._is_on = False
         self._available = False
-        
+
         self.consumable_state = None
         self.clean_history = None
 
