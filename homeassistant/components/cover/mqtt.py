@@ -222,6 +222,7 @@ class MqttCover(CoverDevice):
 
             self.async_schedule_update_ha_state()
 
+        @callback
         def availability_message_received(topic, payload, qos):
             """Handle new MQTT availability messages."""
             if payload == self._payload_available:
