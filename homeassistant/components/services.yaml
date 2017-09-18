@@ -154,7 +154,7 @@ homematic:
         example: 'homematic.ccu2'
 
       name:
-        description: Name of the varaible to set
+        description: Name of the variable to set
         example: 'testvariable'
 
       value:
