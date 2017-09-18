@@ -82,17 +82,15 @@ class TradfriGroup(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
-        command = {
-            'transitiontime': None
-        }
+        transition_time = None
 
         if ATTR_TRANSITION in kwargs:
-            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._api(self._group.set_dimmer(
                 kwargs[ATTR_BRIGHTNESS],
-                transition_time=command['transitiontime']
+                transition_time=transition_time
             ))
         else:
             self._api(self._group.set_state(1))
@@ -195,17 +193,15 @@ class Tradfri(Light):
         After adding "self._light_data.hexcolor is not None"
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
-        command = {
-            'transitiontime': None
-        }
+        transition_time = None
 
         if ATTR_TRANSITION in kwargs:
-            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._api(self._light_control.set_dimmer(
                 kwargs[ATTR_BRIGHTNESS],
-                transition_time=command['transitiontime']
+                transition_time=transition_time
             ))
         else:
             self._api(self._light_control.set_state(True))
