@@ -5,6 +5,7 @@ This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
 """
 import logging
+from datetime import datetime, timedelta
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
@@ -49,15 +50,9 @@ def setup(hass, config):
     except InvalidCredentials:
         return False
 
-    if hass.data[TOON_HANDLE]:
-        # Load climate (for Thermostat)
-        load_platform(hass, 'climate', DOMAIN)
-
-        # Load sensor (for Gas and Power, Solar and Smoke Detectors)
-        load_platform(hass, 'sensor', DOMAIN)
-
-        # Load switch (for Slimme Stekkers)
-        load_platform(hass, 'switch', DOMAIN)
+    # Load all platforms
+    for platform in ('climate', 'sensor', 'switch'):
+        load_platform(hass, platform, DOMAIN, {}, config)
 
     # Initialization successfull
     return True
@@ -80,10 +75,19 @@ class ToonDataStore:
         self.solar = solar
         self.data = {}
 
+        self.last_update = datetime.min
         self.update()
 
     def update(self):
         """Update toon data."""
+
+        # Only update every 5 seconds
+        now = datetime.now()
+        if (now - self.last_update < timedelta(seconds=5)):
+            return
+
+        self.last_update = now
+
         self.data['power_current'] = self.toon.power.value
         self.data['power_today'] = round(
             (float(self.toon.power.daily_usage) +
@@ -107,6 +111,7 @@ class ToonDataStore:
                                         float(plug.daily_usage) / 1000, 2),
                                     'current_state': plug.current_state,
                                     'is_connected': plug.is_connected}
+
         self.data['solar_maximum'] = self.toon.solar.maximum
         self.data['solar_produced'] = self.toon.solar.produced
         self.data['solar_value'] = self.toon.solar.value
@@ -117,6 +122,7 @@ class ToonDataStore:
             self.toon.solar.meter_reading_produced
         self.data['solar_daily_cost_produced'] = \
             self.toon.solar.daily_cost_produced
+
         for detector in self.toon.smokedetectors:
             value = '{}_smoke_detector'.format(detector.name)
             self.data[value] = {'smoke_detector': detector.battery_level,
