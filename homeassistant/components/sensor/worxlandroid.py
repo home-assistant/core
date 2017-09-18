@@ -92,8 +92,6 @@ class WorxLandroidSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Update the sensor data from the mower."""
-        _LOGGER.debug("Updating mower %s from %s", self.sensor, self.url)
-
         connection_error = False
 
         try:
