@@ -161,6 +161,9 @@ omit =
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
+    homeassistant/components/satel_integra.py
+    homeassistant/components/*/satel_integra.py
+
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
