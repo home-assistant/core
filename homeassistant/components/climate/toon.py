@@ -1,5 +1,6 @@
 """
 Toon van Eneco Thermostat Support.
+
 This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
 """

@@ -1,5 +1,6 @@
 """
 Toon van Eneco Utility Gages.
+
 This provides a component for the rebranded Quby thermostat as provided by
 Eneco.
 """
@@ -20,12 +21,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _toon_main = hass.data[toon_main.TOON_HANDLE]
 
     sensor_items = []
-    sensor_items.extend([ToonSensor(hass, 'Power_current', 'power-plug', 'Watt'),
-                        ToonSensor(hass, 'Power_today', 'power-plug', 'kWh')])
+    sensor_items.extend([ToonSensor(hass,
+                                    'Power_current',
+                                    'power-plug',
+                                    'Watt'),
+                        ToonSensor(hass,
+                                    'Power_today',
+                                    'power-plug',
+                                    'kWh')])
 
     if _toon_main.gas:
-        sensor_items.extend([ToonSensor(hass, 'Gas_current', 'gas-cylinder', 'CM3'),
-                            ToonSensor(hass, 'Gas_today', 'gas-cylinder', 'M3')])
+        sensor_items.extend([ToonSensor(hass,
+                                        'Gas_current',
+                                        'gas-cylinder',
+                                        'CM3'),
+                            ToonSensor(hass,
+                                       'Gas_today',
+                                       'gas-cylinder',
+                                       'M3')])
 
     for plug in _toon_main.toon.smartplugs:
         sensor_items.extend([
@@ -42,13 +55,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if _toon_main.toon.solar.produced or _toon_main.solar:
         sensor_items.extend([
-            SolarSensor(hass, 'Solar_maximum', 'weather-sunny', 'kWh'),
-            SolarSensor(hass, 'Solar_produced', 'weather-sunny', 'kWh'),
-            SolarSensor(hass, 'Solar_value', 'weather-sunny', 'Watt'),
-            SolarSensor(hass, 'Solar_average_produced', 'weather-sunny', 'kWh'),
-            SolarSensor(hass, 'Solar_meter_reading_low_produced', 'weather-sunny', 'kWh'),
-            SolarSensor(hass, 'Solar_meter_reading_produced', 'weather-sunny', 'kWh'),
-            SolarSensor(hass, 'Solar_daily_cost_produced', 'weather-sunny', 'Euro')
+            SolarSensor(hass, 'Solar_maximum', 'kWh'),
+            SolarSensor(hass, 'Solar_produced', 'kWh'),
+            SolarSensor(hass, 'Solar_value', 'Watt'),
+            SolarSensor(hass, 'Solar_average_produced', 'kWh'),
+            SolarSensor(hass, 'Solar_meter_reading_low_produced', 'kWh'),
+            SolarSensor(hass, 'Solar_meter_reading_produced', 'kWh'),
+            SolarSensor(hass, 'Solar_daily_cost_produced', 'Euro')
         ])
 
     for smokedetector in _toon_main.toon.smokedetectors:
@@ -124,6 +137,7 @@ class FibaroSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+        
     @property
     def icon(self):
         """Return the mdi icon of the sensor."""
@@ -152,7 +166,7 @@ class SolarSensor(Entity):
         """Initialize the sensor."""
         self._name = name
         self._state = None
-        self._icon = "mdi:" + icon
+        self._icon = "mdi:weather-sunny"
         self._unit_of_measurement = unit_of_measurement
         self.toon = hass.data[toon_main.TOON_HANDLE]
 
