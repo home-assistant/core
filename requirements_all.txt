@@ -883,6 +883,9 @@ rxv==0.4.0
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.6.0
 
+# homeassistant.components.satel_integra
+satel_integra==0.1.0
+
 # homeassistant.components.sensor.deutsche_bahn
 schiene==0.18
 
