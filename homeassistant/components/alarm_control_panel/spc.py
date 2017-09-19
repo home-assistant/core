@@ -27,20 +27,20 @@ def _get_alarm_state(spc_mode):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
+def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the SPC alarm control panel platform."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_AREAS] is None):
         return
 
-    devices = [SpcAlarm(hass=hass,
-                        area_id=area['id'],
-                        name=area['name'],
-                        state=_get_alarm_state(area['mode']))
-               for area in discovery_info[ATTR_DISCOVER_AREAS]]
+    entities = [SpcAlarm(hass=hass,
+                         area_id=area['id'],
+                         name=area['name'],
+                         state=_get_alarm_state(area['mode']))
+                for area in discovery_info[ATTR_DISCOVER_AREAS]]
 
-    async_add_devices(devices)
+    async_add_entities(entities)
 
 
 class SpcAlarm(alarm.AlarmControlPanel):

@@ -129,7 +129,7 @@ def async_citybikes_request(hass, uri, schema):
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
+def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the CityBikes platform."""
     if DOMAIN not in hass.data:
@@ -159,7 +159,7 @@ def async_setup_platform(hass, config, async_add_devices,
 
     yield from network.ready.wait()
 
-    devices = []
+    entities = []
     for station in network.stations:
         dist = location.distance(latitude, longitude,
                                  station[ATTR_LATITUDE],
@@ -169,9 +169,9 @@ def async_setup_platform(hass, config, async_add_devices,
 
         if radius > dist or stations_list.intersection((station_id,
                                                         station_uid)):
-            devices.append(CityBikesStation(network, station_id, name))
+            entities.append(CityBikesStation(network, station_id, name))
 
-    async_add_devices(devices, True)
+    async_add_entities(entities, True)
 
 
 class CityBikesNetwork:
