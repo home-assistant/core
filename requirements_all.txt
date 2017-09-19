@@ -140,7 +140,7 @@ buienradar==0.9
 ciscosparkapi==0.4.2
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==3.0.1
+coinmarketcap==4.1.1
 
 # homeassistant.scripts.check_config
 colorlog==3.0.1
