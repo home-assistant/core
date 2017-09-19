@@ -1,8 +1,8 @@
 """
-Component to offer a way to select a value from a slider.
+Component to offer a way to select a numeric value from a slider or text box.
 
 For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_slider/
+at https://home-assistant.io/components/input_number/
 """
 import asyncio
 import logging
@@ -19,18 +19,25 @@ from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'input_slider'
+DOMAIN = 'input_number'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
+CONF_MODE = 'mode'
 CONF_STEP = 'step'
+
+MODE_BOTH = 'both'
+MODE_SLIDER = 'slider'
+MODE_BOX = 'box'
 
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_STEP = 'step'
+ATTR_HIDDEN_SLIDER = 'hiddenslider'
+ATTR_HIDDEN_BOX = 'hiddenbox'
 
 SERVICE_SELECT_VALUE = 'select_value'
 
@@ -40,8 +47,8 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
 })
 
 
-def _cv_input_slider(cfg):
-    """Configure validation helper for input slider (voluptuous)."""
+def _cv_input_number(cfg):
+    """Configure validation helper for input number (voluptuous)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
@@ -51,6 +58,9 @@ def _cv_input_slider(cfg):
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid('Initial value {} not in range {}-{}'
                           .format(state, minimum, maximum))
+    mode = cfg.get(CONF_MODE)
+    if mode not in [MODE_BOTH, MODE_BOX, MODE_SLIDER]:
+        raise vol.Invalid('Mode must be one of both, box, or slider')
     return cfg
 
 
@@ -64,15 +74,16 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_STEP, default=1):
                 vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-        }, _cv_input_slider)
+            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_MODE, default=MODE_SLIDER): cv.string,
+        }, _cv_input_number)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
 def select_value(hass, entity_id, value):
-    """Set input_slider to value."""
+    """Set input_number to value."""
     hass.services.call(DOMAIN, SERVICE_SELECT_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
@@ -94,9 +105,11 @@ def async_setup(hass, config):
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
+        mode = cfg.get(CONF_MODE)
 
-        entities.append(InputSlider(
-            object_id, name, initial, minimum, maximum, step, icon, unit))
+        entities.append(InputNumber(
+            object_id, name, initial, minimum, maximum, step, icon, unit,
+            mode))
 
     if not entities:
         return False
@@ -106,8 +119,8 @@ def async_setup(hass, config):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
-                 for input_slider in target_inputs]
+        tasks = [input_number.async_select_value(call.data[ATTR_VALUE])
+                 for input_number in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
@@ -119,11 +132,11 @@ def async_setup(hass, config):
     return True
 
 
-class InputSlider(Entity):
+class InputNumber(Entity):
     """Represent an slider."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
-                 unit):
+                 unit, mode):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -133,6 +146,12 @@ class InputSlider(Entity):
         self._step = step
         self._icon = icon
         self._unit = unit
+        self._hidden_slider = True
+        self._hidden_box = True
+        if mode == MODE_BOTH or mode == MODE_BOX:
+            self._hidden_box = False
+        if mode == MODE_BOTH or mode == MODE_SLIDER:
+            self._hidden_slider = False
 
     @property
     def should_poll(self):
@@ -165,7 +184,9 @@ class InputSlider(Entity):
         return {
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
-            ATTR_STEP: self._step
+            ATTR_STEP: self._step,
+            ATTR_HIDDEN_SLIDER: self._hidden_slider,
+            ATTR_HIDDEN_BOX: self._hidden_box,
         }
 
     @asyncio.coroutine
