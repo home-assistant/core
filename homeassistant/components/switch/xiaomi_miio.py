@@ -2,7 +2,7 @@
 Support for Xiaomi Smart WiFi Socket and Smart Power Strip.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.xiaomi_plug/
+https://home-assistant.io/components/switch.xiaomi_miio/
 """
 import asyncio
 from functools import partial
@@ -17,8 +17,8 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Plug'
-PLATFORM = 'xiaomi_plug'
+DEFAULT_NAME = 'Xiaomi Miio Switch'
+PLATFORM = 'xiaomi_miio'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
@@ -37,7 +37,7 @@ SUCCESS = ['ok']
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the plug from config."""
+    """Set up the switch from config."""
     from mirobo import Plug, DeviceException
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
