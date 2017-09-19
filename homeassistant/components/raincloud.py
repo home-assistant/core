@@ -4,6 +4,7 @@ Support for Melnor RainCloud sprinkler water timer.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -13,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
@@ -55,6 +57,7 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     default_watering_timer = conf.get(CONF_WATERING_TIME)
+    scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
         from raincloudy.core import RainCloudy
@@ -62,7 +65,8 @@ def setup(hass, config):
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             raise HTTPError
-        hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud,
+        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass,
+                                                 raincloud,
                                                  default_watering_timer)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
@@ -80,10 +84,10 @@ def setup(hass, config):
         raincloud = hass.data[DATA_RAINCLOUD]
         raincloud.data.update()
 
-        dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD, raincloud)
+        dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD)
 
     # Call the Raincloud API to refresh updates
-    track_time_interval(hass, hub_refresh, SCAN_INTERVAL)
+    track_time_interval(hass, hub_refresh, scan_interval)
 
     return True
 
@@ -91,7 +95,18 @@ def setup(hass, config):
 class RainCloudHub(object):
     """Base class for all Raincloud entities."""
 
-    def __init__(self, data, default_watering_timer):
+    def __init__(self, hass, data, default_watering_timer):
         """Initialize the entity."""
+        self.hass = hass
         self.data = data
         self.default_watering_timer = default_watering_timer
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
+
+    def _update_callback(self):
+        """Callback update method."""
+        self.data.update()
