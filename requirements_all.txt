@@ -85,7 +85,7 @@ asterisk_mbox==0.4.0
 # avion==0.7
 
 # homeassistant.components.axis
-axis==8
+axis==12
 
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
