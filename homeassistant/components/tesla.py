@@ -55,7 +55,8 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaApi(email, password, update_interval, _LOGGER),
+                'controller': teslaApi(
+                    email, password, update_interval, _LOGGER),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
