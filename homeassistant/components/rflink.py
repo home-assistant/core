@@ -11,7 +11,6 @@ import logging
 import os
 
 import async_timeout
-import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
@@ -20,8 +19,10 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.helpers.entity import Entity
+import voluptuous as vol
+
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -99,6 +100,7 @@ def identify_event_type(event):
         return EVENT_KEY_COMMAND
     elif EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
+    return: 'unknown'
     else:
         return 'unknown'
 
@@ -274,7 +276,7 @@ class RflinkDevice(Entity):
         self._handle_event(event)
 
         # Propagate changes through ha
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
