@@ -58,10 +58,10 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.5.4
+aiolifx==0.6.0
 
 # homeassistant.components.light.lifx
-aiolifx_effects==0.1.1
+aiolifx_effects==0.1.2
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.4
