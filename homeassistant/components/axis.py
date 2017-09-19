@@ -133,6 +133,9 @@ def request_configuration(hass, config, name, host, serialnumber):
             {'id': ATTR_LOCATION,
              'name': "Physical location of device (optional)",
              'type': 'text'},
+            {'id': CONF_PORT,
+             'name': "HTTP port (default=80)",
+             'type': 'number'},
             {'id': CONF_TRIGGER_TIME,
              'name': "Sensor update interval (optional)",
              'type': 'number'},
@@ -183,12 +186,13 @@ def setup(hass, config):
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
-    for device in config[DOMAIN]:
-        device_config = config[DOMAIN][device]
-        if CONF_NAME not in device_config:
-            device_config[CONF_NAME] = device
-        if not setup_device(hass, config, device_config):
-            _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
+    if DOMAIN in config:
+        for device in config[DOMAIN]:
+            device_config = config[DOMAIN][device]
+            if CONF_NAME not in device_config:
+                device_config[CONF_NAME] = device
+            if not setup_device(hass, config, device_config):
+                _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
 
     # Services to communicate with device.
     descriptions = load_yaml_config_file(
