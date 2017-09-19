@@ -114,7 +114,7 @@ blinkstick==1.1.8
 # blinkt==0.1.0
 
 # homeassistant.components.sensor.bitcoin
-blockchain==1.3.3
+blockchain==1.4.0
 
 # homeassistant.components.light.decora
 # bluepy==1.1.1
