@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
+    CONF_HOST, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
     STATE_PLAYING, STATE_PAUSED,
     STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
 import homeassistant.helpers.config_validation as cv
@@ -55,7 +55,6 @@ CUSTOMIZE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
     vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
@@ -79,7 +78,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     customize = config.get(CONF_CUSTOMIZE)
     timeout = config.get(CONF_TIMEOUT)
@@ -87,12 +85,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     config = hass.config.path(config.get(CONF_FILENAME))
 
-    setup_tv(host, mac, name, customize, config, timeout, hass,
+    setup_tv(host, name, customize, config, timeout, hass,
     add_devices, turn_on_action)
 
 
 def setup_tv(
-    host, mac, name, customize, config, timeout, hass,
+    host, name, customize, config, timeout, hass,
         add_devices, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
@@ -117,7 +115,7 @@ def setup_tv(
             # Not registered, request configuration.
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
-                host, mac, name, customize, config, timeout, hass,
+                host, name, customize, config, timeout, hass,
                 add_devices, turn_on_action)
             return
 
@@ -128,12 +126,12 @@ def setup_tv(
         configurator.request_done(request_id)
 
     add_devices(
-        [LgWebOSDevice(host, mac, name, customize, config, timeout,
+        [LgWebOSDevice(host, name, customize, config, timeout,
             hass, turn_on_action)], True)
 
 
 def request_configuration(
-        host, mac, name, customize, config, timeout, hass,
+        host, name, customize, config, timeout, hass,
         add_devices, turn_on_action):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
@@ -147,7 +145,7 @@ def request_configuration(
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, mac, name, customize, config, timeout, hass,
+        setup_tv(host, name, customize, config, timeout, hass,
                  add_devices, turn_on_action)
 
     _CONFIGURING[host] = configurator.request_config(
@@ -162,14 +160,11 @@ class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
     def __init__(
-        self, host, mac, name, customize, config, timeout,
+        self, host, name, customize, config, timeout,
             hass, on_action):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
-        from wakeonlan import wol
         self._client = WebOsClient(host, config, timeout)
-        self._wol = wol
-        self._mac = mac
         self._on_script = Script(hass, on_action) if on_action else None
         self._customize = customize
 
@@ -288,7 +283,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac or self._on_script:
+        if self._on_script:
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
@@ -304,9 +299,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the media player."""
-        if self._mac:
-            self._wol.send_magic_packet(self._mac)
-        elif self._on_script:
+        if self._on_script:
             self._on_script.run()
 
     def volume_up(self):
