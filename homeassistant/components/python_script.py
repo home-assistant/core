@@ -68,7 +68,7 @@ def load_scripts(hass):
         if existing_service == SERVICE_RELOAD:
             continue
         hass.services.remove(DOMAIN, existing_service)
-            
+
     for fil in glob.iglob(os.path.join(path, '*.py')):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
