@@ -222,7 +222,7 @@ def test_reload(hass):
     assert hass.services.has_service('python_script', 'hello')
     assert hass.services.has_service('python_script', 'world_beer')
     assert hass.services.has_service('python_script', 'reload')
-    
+
     scripts = [
         '/some/config/dir/python_scripts/hello2.py',
         '/some/config/dir/python_scripts/world_beer.py'
