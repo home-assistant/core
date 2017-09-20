@@ -49,7 +49,7 @@ def last_recorder_run(hass):
 
 
 def get_significant_states(hass, start_time, end_time=None, entity_id=None,
-                           filters=None):
+                           filters=None, get_initial_state=True):
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -86,7 +86,8 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
         _LOGGER.debug(
             'get_significant_states took %fs', elapsed)
 
-    return states_to_json(hass, states, start_time, entity_ids, filters)
+    return states_to_json(
+        hass, states, start_time, entity_ids, filters, get_initial_state)
 
 
 def state_changes_during_period(hass, start_time, end_time=None,
@@ -187,7 +188,13 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 if not state.attributes.get(ATTR_HIDDEN, False)]
 
 
-def states_to_json(hass, states, start_time, entity_ids, filters=None):
+def states_to_json(
+        hass,
+        states,
+        start_time,
+        entity_ids,
+        filters=None,
+        get_initial_state=True):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -201,10 +208,11 @@ def states_to_json(hass, states, start_time, entity_ids, filters=None):
 
     # Get the states at the start time
     timer_start = time.perf_counter()
-    for state in get_states(hass, start_time, entity_ids, filters=filters):
-        state.last_changed = start_time
-        state.last_updated = start_time
-        result[state.entity_id].append(state)
+    if get_initial_state:
+        for state in get_states(hass, start_time, entity_ids, filters=filters):
+            state.last_changed = start_time
+            state.last_updated = start_time
+            result[state.entity_id].append(state)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -250,7 +258,7 @@ class HistoryPeriodView(HomeAssistantView):
     extra_urls = ['/api/history/period/{datetime}']
 
     def __init__(self, filters):
-        """Initilalize the history period view."""
+        """Initialize the history period view."""
         self.filters = filters
 
     @asyncio.coroutine
@@ -283,10 +291,11 @@ class HistoryPeriodView(HomeAssistantView):
         else:
             end_time = start_time + one_day
         entity_id = request.query.get('filter_entity_id')
+        get_initial_state = 'skip_initial_state' not in request.query
 
         result = yield from request.app['hass'].async_add_job(
             get_significant_states, request.app['hass'], start_time, end_time,
-            entity_id, self.filters)
+            entity_id, self.filters, get_initial_state)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start

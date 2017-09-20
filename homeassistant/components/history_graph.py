@@ -2,7 +2,7 @@
 Support to graphs card in the UI.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/graph/
+https://home-assistant.io/components/history_graph/
 """
 import asyncio
 import logging
@@ -18,7 +18,7 @@ DEPENDENCIES = ['frontend', 'history']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'graph'
+DOMAIN = 'history_graph'
 
 CONF_HOURS_TO_SHOW = 'hours_to_show'
 CONF_REFRESH = 'refresh'
@@ -48,7 +48,7 @@ def async_setup(hass, config):
 
     for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME, object_id)
-        graph = GraphEntity(name, cfg)
+        graph = HistoryGraphEntity(name, cfg)
         graphs.append(graph)
 
     yield from component.async_add_entities(graphs)
@@ -56,7 +56,7 @@ def async_setup(hass, config):
     return True
 
 
-class GraphEntity(Entity):
+class HistoryGraphEntity(Entity):
     """Representation of a graph entity."""
 
     def __init__(self, name, cfg):
