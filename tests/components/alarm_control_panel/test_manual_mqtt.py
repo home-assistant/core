@@ -681,6 +681,21 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
+        alarm_control_panel.alarm_arm_home(self.hass)
+        self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=10)
+        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        self.assertEqual(STATE_ALARM_ARMED_HOME,
+                         self.hass.states.get(entity_id).state)
+
         alarm_control_panel.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
@@ -702,7 +717,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        self.assertEqual(STATE_ALARM_DISARMED,
+        self.assertEqual(STATE_ALARM_ARMED_HOME,
                          self.hass.states.get(entity_id).state)
 
     def test_arm_home_via_command_topic(self):
