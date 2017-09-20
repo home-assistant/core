@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/axis/
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -143,7 +144,10 @@ def request_configuration(hass, config, name, host, serialnumber):
     )
 
 
-def setup(hass, config):
+#def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
+    print('ASYNC SETUP')
     """Common setup for Axis devices."""
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
@@ -151,7 +155,7 @@ def setup(hass, config):
             _LOGGER.info("Stopping metadatastream for %s.", serialnumber)
             device.stop_metadatastream()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    #hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
@@ -184,9 +188,10 @@ def setup(hass, config):
                                   host)
 
     # Register discovery service
-    discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
+    #discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
     if DOMAIN in config:
+        print(DOMAIN)
         for device in config[DOMAIN]:
             device_config = config[DOMAIN][device]
             if CONF_NAME not in device_config:
@@ -211,21 +216,27 @@ def setup(hass, config):
         return False
 
     # Register service with Home Assistant.
-    hass.services.register(DOMAIN,
-                           SERVICE_VAPIX_CALL,
-                           vapix_service,
-                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
-                           schema=SERVICE_SCHEMA)
+    # hass.services.register(DOMAIN,
+    #                        SERVICE_VAPIX_CALL,
+    #                        vapix_service,
+    #                        descriptions[DOMAIN][SERVICE_VAPIX_CALL],
+    #                        schema=SERVICE_SCHEMA)
 
+    print('ASYNC SETUP DONE')
     return True
 
-
+from homeassistant.core import callback
+@callback
+#@asyncio.coroutine
 def setup_device(hass, config, device_config):
+    print('setup device')
     """Set up device."""
     from axis import AxisDevice
 
     device_config['hass'] = hass
-    device = AxisDevice(device_config)  # Initialize device
+    #device = AxisDevice(device_config)  # Initialize device
+    device = AxisDevice(hass.loop, '10.0.1.51', 'root', 'pass')
+    print('DEVICE CREATED')
     enable_metadatastream = False
 
     if device.serial_number is None:
@@ -234,6 +245,7 @@ def setup_device(hass, config, device_config):
         return False
 
     for component in device_config[CONF_INCLUDE]:
+        break
         if component in EVENT_TYPES:
             # Sensors are created by device calling event_initialized
             # when receiving initialize messages on metadatastream
