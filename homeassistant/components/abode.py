@@ -297,7 +297,8 @@ class AbodeDevice(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._device.device_id,
             'battery_low': self._device.battery_low,
-            'no_response': self._device.no_response
+            'no_response': self._device.no_response,
+            'device_type': self._device.type
         }
 
     def _update_callback(self, device):
