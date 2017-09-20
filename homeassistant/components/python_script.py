@@ -64,7 +64,7 @@ def reload_scripts(hass):
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 
-    scripts = ['reload']
+    scripts = [SERVICE_RELOAD]
     for fil in glob.iglob(os.path.join(path, '*.py')):
         name = os.path.splitext(os.path.basename(fil))[0]
         scripts.append(name)
