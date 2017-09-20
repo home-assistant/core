@@ -39,11 +39,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'recorder'
 
+SERVICE_PURGE = 'purge'
+
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_PURGE_DISABLE_TIMER = 'purge_disable_timer'
 CONF_EVENT_TYPES = 'event_types'
 
 CONNECT_RETRY_WAIT = 3
@@ -67,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_PURGE_DISABLE_TIMER, default=False): cv.boolean,
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -107,6 +111,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     purge_days = conf.get(CONF_PURGE_DAYS)
+    purge_disable_timer = conf.get(CONF_PURGE_DISABLE_TIMER)
 
     db_url = conf.get(CONF_DB_URL, None)
     if not db_url:
@@ -116,8 +121,8 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass, purge_days=purge_days, uri=db_url, include=include,
-        exclude=exclude)
+        hass, purge_days=purge_days, purge_disable_timer=purge_disable_timer,
+        uri=db_url, include=include, exclude=exclude)
     instance.async_initialize()
     instance.start()
 
@@ -127,13 +132,15 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
+    def __init__(self, hass: HomeAssistant, purge_days: int,
+                 purge_disable_timer: bool, uri: str,
                  include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
         self.hass = hass
         self.purge_days = purge_days
+        self.purge_disable_timer = purge_disable_timer
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -226,8 +233,12 @@ class Recorder(threading.Thread):
                     """Event listener for purging data."""
                     self.queue.put(purge_task)
 
-                async_track_time_interval(self.hass, do_purge,
-                                          timedelta(days=2))
+                if not self.purge_disable_timer:
+                    async_track_time_interval(self.hass, do_purge,
+                                              timedelta(days=2))
+
+                self.hass.services.async_register(DOMAIN, SERVICE_PURGE,
+                                                  do_purge)
 
         self.hass.add_job(register)
         result = hass_started.result()
