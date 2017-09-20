@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     config = hass.config.path(config.get(CONF_FILENAME))
 
     setup_tv(host, name, customize, config, timeout, hass,
-    add_devices, turn_on_action)
+        add_devices, turn_on_action)
 
 
 def setup_tv(
@@ -125,9 +125,8 @@ def setup_tv(
         configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices(
-        [LgWebOSDevice(host, name, customize, config, timeout,
-            hass, turn_on_action)], True)
+    add_devices([LgWebOSDevice(host, name, customize, config, timeout,
+        hass, turn_on_action)], True)
 
 
 def request_configuration(
