@@ -54,7 +54,7 @@ def test_setup_platform(hass):
 
     yield from spc.async_setup_platform(hass=hass,
                                         config={},
-                                        async_add_entities=add_entities,
+                                        async_add_devices=add_entities,
                                         discovery_info=areas)
 
     assert len(added_entities) == 2
