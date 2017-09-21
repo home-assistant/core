@@ -192,7 +192,7 @@ class MiroboVacuum(VacuumDevice):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return list(sorted(FAN_SPEEDS.keys(), key=lambda s: FAN_SPEEDS[s]))
-
+    
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
@@ -203,18 +203,26 @@ class MiroboVacuum(VacuumDevice):
                     STATE_ON if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                ATTR_CLEANING_TIME: str(self.vacuum_state.clean_time),
-                ATTR_CLEANED_AREA: round(self.vacuum_state.clean_area, 2),
-                ATTR_CLEANING_COUNT: str(self.clean_history.count),
-                ATTR_CLEANED_TOTAL_AREA: round(
-                    self.clean_history.total_area, 2),
-                ATTR_CLEANING_TOTAL_TIME: str(
-                    self.clean_history.total_duration),
-                ATTR_MAIN_BRUSH_LEFT: str(
-                    self.consumable_state.main_brush_left),
-                ATTR_SIDE_BRUSH_LEFT: str(
-                    self.consumable_state.side_brush_left),
-                ATTR_FILTER_LEFT: str(self.consumable_state.filter_left)})
+                ATTR_CLEANING_TIME: str(int(
+                    self.vacuum_state.clean_time.total_seconds() / 60)) 
+                    + ' min',
+                ATTR_CLEANED_AREA: str(int(self.vacuum_state.clean_area))
+                    + ' m²',
+                ATTR_CLEANING_COUNT: int(self.clean_history.count),
+                ATTR_CLEANED_TOTAL_AREA: str(int(
+                    self.clean_history.total_area)) + ' m²',
+                ATTR_CLEANING_TOTAL_TIME: str(int(
+                    self.clean_history.total_duration.total_seconds() / 60))
+                    + ' min',
+                ATTR_MAIN_BRUSH_LEFT: str(int(
+                    self.consumable_state.main_brush_left.total_seconds() 
+                    / 3600)) + ' h',
+                ATTR_SIDE_BRUSH_LEFT: str(int(
+                    self.consumable_state.side_brush_left.total_seconds() 
+                    / 3600)) + ' h',
+                ATTR_FILTER_LEFT: str(int(
+                    self.consumable_state.filter_left.total_seconds() / 3600))
+                    + ' h'})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
 
@@ -363,14 +371,12 @@ class MiroboVacuum(VacuumDevice):
         from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
-            consumable = yield from self.hass.async_add_job(
-                self._vacuum.consumable_status)
-            cleanhis = yield from self.hass.async_add_job(
-                self._vacuum.clean_history)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
-            self.consumable_state = consumable
-            self.clean_history = cleanhis
+            self.consumable_state = yield from self.hass.async_add_job(
+                self._vacuum.consumable_status)
+            self.clean_history = yield from self.hass.async_add_job(
+                self._vacuum.clean_history)
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:

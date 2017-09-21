@@ -39,11 +39,11 @@ def mock_mirobo_is_off():
     mock_vacuum.Vacuum().status().clean_time = timedelta(
         hours=2, minutes=35, seconds=34)
     mock_vacuum.Vacuum().consumable_status().main_brush_left = timedelta(
-        hours=11, minutes=35, seconds=34)
+        hours=12, minutes=35, seconds=34)
     mock_vacuum.Vacuum().consumable_status().side_brush_left = timedelta(
-        hours=11, minutes=35, seconds=34)
+        hours=12, minutes=35, seconds=34)
     mock_vacuum.Vacuum().consumable_status().filter_left = timedelta(
-        hours=11, minutes=35, seconds=34)
+        hours=12, minutes=35, seconds=34)
     mock_vacuum.Vacuum().clean_history().count = '35'
     mock_vacuum.Vacuum().clean_history().total_area = 123.43218
     mock_vacuum.Vacuum().clean_history().total_duration = timedelta(
@@ -75,10 +75,10 @@ def mock_mirobo_is_on():
         hours=11, minutes=35, seconds=34)
     mock_vacuum.Vacuum().consumable_status().filter_left = timedelta(
         hours=11, minutes=35, seconds=34)
-    mock_vacuum.Vacuum().clean_history().count = '35'
-    mock_vacuum.Vacuum().clean_history().total_area = 123.43218
+    mock_vacuum.Vacuum().clean_history().count = '41'
+    mock_vacuum.Vacuum().clean_history().total_area = 323.43218
     mock_vacuum.Vacuum().clean_history().total_duration = timedelta(
-        hours=11, minutes=35, seconds=34)
+        hours=11, minutes=15, seconds=34)
     mock_vacuum.Vacuum().status().state = 'Test Xiaomi Cleaning'
 
     with mock.patch.dict('sys.modules', {
@@ -139,17 +139,17 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
     assert state.attributes.get(ATTR_ERROR) == 'Error message'
     assert (state.attributes.get(ATTR_BATTERY_ICON)
             == 'mdi:battery-charging-80')
-    assert state.attributes.get(ATTR_CLEANING_TIME) == '2:35:34'
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 123.43
+    assert state.attributes.get(ATTR_CLEANING_TIME) == '155 min'
+    assert state.attributes.get(ATTR_CLEANED_AREA) == '123 m²'
     assert state.attributes.get(ATTR_FAN_SPEED) == 'Quiet'
     assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
             == ['Quiet', 'Balanced', 'Turbo', 'Max'])
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_FILTER_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == '35'
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123.43
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '11:35:34'
+    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '12 h'
+    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '12 h'
+    assert state.attributes.get(ATTR_FILTER_LEFT) == '12 h'
+    assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
+    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == '123 m²'
+    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '695 min'
 
     # Call services
     yield from hass.services.async_call(
@@ -296,17 +296,17 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_ERROR) is None
     assert (state.attributes.get(ATTR_BATTERY_ICON)
             == 'mdi:battery-30')
-    assert state.attributes.get(ATTR_CLEANING_TIME) == '2:55:34'
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 133.43
+    assert state.attributes.get(ATTR_CLEANING_TIME) == '175 min'
+    assert state.attributes.get(ATTR_CLEANED_AREA) == '133 m²'
     assert state.attributes.get(ATTR_FAN_SPEED) == 99
     assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
             == ['Quiet', 'Balanced', 'Turbo', 'Max'])
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_FILTER_LEFT) == '11:35:34'
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == '35'
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123.43
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '11:35:34'
+    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == '11 h'
+    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == '11 h'
+    assert state.attributes.get(ATTR_FILTER_LEFT) == '11 h'
+    assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
+    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == '323 m²'
+    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == '675 min'
 
     # Check setting pause
     yield from hass.services.async_call(
