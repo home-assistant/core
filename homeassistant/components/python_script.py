@@ -6,6 +6,7 @@ import datetime
 
 import voluptuous as vol
 
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
@@ -40,15 +41,37 @@ def setup(hass, config):
         _LOGGER.warning('Folder %s not found in config folder', FOLDER)
         return False
 
+    discover_scripts(hass)
+
+    def reload_scripts_handler(call):
+        """Handle reload service calls."""
+        discover_scripts(hass)
+    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
+
+    return True
+
+
+def discover_scripts(hass):
+    """Discover python scripts in folder."""
+    path = hass.config.path(FOLDER)
+
+    if not os.path.isdir(path):
+        _LOGGER.warning('Folder %s not found in config folder', FOLDER)
+        return False
+
     def python_script_service_handler(call):
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 
+    existing = hass.services.services.get(DOMAIN, {}).keys()
+    for existing_service in existing:
+        if existing_service == SERVICE_RELOAD:
+            continue
+        hass.services.remove(DOMAIN, existing_service)
+
     for fil in glob.iglob(os.path.join(path, '*.py')):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
-
-    return True
 
 
 @bind_hass

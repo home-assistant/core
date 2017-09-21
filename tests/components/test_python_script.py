@@ -203,3 +203,38 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
 
     # No errors logged = good
     assert caplog.text == ''
+
+
+@asyncio.coroutine
+def test_reload(hass):
+    """Test we can re-discover scripts."""
+    scripts = [
+        '/some/config/dir/python_scripts/hello.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        res = yield from async_setup_component(hass, 'python_script', {})
+
+    assert res
+    assert hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')
+
+    scripts = [
+        '/some/config/dir/python_scripts/hello2.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        yield from hass.services.async_call(
+            'python_script', 'reload', {}, blocking=True)
+
+    assert not hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'hello2')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')
