@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['googlemaps==2.4.4']
+REQUIREMENTS = ['googlemaps==2.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,16 +73,15 @@ TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
-    combined = datetime.combine(dt_util.start_of_local_day(),
-                                dt_util.parse_time(timestr))
+    combined = datetime.combine(
+        dt_util.start_of_local_day(), dt_util.parse_time(timestr))
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return dt_util.as_timestamp(combined)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Google travel time platform."""
-    # pylint: disable=too-many-locals
+    """Set up the Google travel time platform."""
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized.
 
@@ -110,8 +109,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         origin = config.get(CONF_ORIGIN)
         destination = config.get(CONF_DESTINATION)
 
-        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
-                                        destination, options)
+        sensor = GoogleTravelTimeSensor(
+            hass, name, api_key, origin, destination, options)
 
         if sensor.valid_api_connection:
             add_devices_callback([sensor])
@@ -120,11 +119,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-# pylint: disable=too-many-instance-attributes
 class GoogleTravelTimeSensor(Entity):
     """Representation of a Google travel time sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, api_key, origin, destination, options):
         """Initialize the sensor."""
         self._hass = hass
@@ -228,9 +225,8 @@ class GoogleTravelTimeSensor(Entity):
         self._origin = self._resolve_zone(self._origin)
 
         if self._destination is not None and self._origin is not None:
-            self._matrix = self._client.distance_matrix(self._origin,
-                                                        self._destination,
-                                                        **options_copy)
+            self._matrix = self._client.distance_matrix(
+                self._origin, self._destination, **options_copy)
 
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
@@ -249,7 +245,7 @@ class GoogleTravelTimeSensor(Entity):
         zone_entity = self._hass.states.get("zone.%s" % entity.state)
         if location.has_location(zone_entity):
             _LOGGER.debug(
-                "%s is in %s, getting zone location.",
+                "%s is in %s, getting zone location",
                 entity_id, zone_entity.entity_id
             )
             return self._get_location_from_attributes(zone_entity)

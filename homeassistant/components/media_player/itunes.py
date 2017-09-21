@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, PLATFORM_SCHEMA,
-    MediaPlayerDevice)
+    SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, CONF_NAME,
     CONF_HOST, CONF_PORT, CONF_SSL)
@@ -29,7 +29,7 @@ DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -60,8 +60,8 @@ class Itunes(object):
 
         if self.port:
             return '{}{}:{}'.format(uri_scheme, self.host, self.port)
-        else:
-            return '{}{}'.format(uri_scheme, self.host)
+
+        return '{}{}'.format(uri_scheme, self.host)
 
     def _request(self, method, path, params=None):
         """Make the actual request and return the parsed response."""
@@ -124,7 +124,7 @@ class Itunes(object):
             [playlist for playlist in playlists if
              (playlist_id_or_name in [playlist["name"], playlist["id"]])]
 
-        if len(found_playlists) > 0:
+        if found_playlists:
             playlist = found_playlists[0]
             path = '/playlists/' + playlist['id'] + '/play'
             return self._request('PUT', path)
@@ -153,10 +153,8 @@ class Itunes(object):
         return self._request('PUT', path, {'level': level})
 
 
-# pylint: disable=unused-argument, abstract-method
-# pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the iTunes platform."""
+    """Set up the iTunes platform."""
     add_devices([
         ItunesDevice(
             config.get(CONF_NAME),
@@ -172,7 +170,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ItunesDevice(MediaPlayerDevice):
     """Representation of an iTunes API instance."""
 
-    # pylint: disable=too-many-public-methods, too-many-arguments
     def __init__(self, name, host, port, use_ssl, add_devices):
         """Initialize the iTunes device."""
         self._name = name
@@ -228,8 +225,8 @@ class ItunesDevice(MediaPlayerDevice):
 
         if self.player_state == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_PLAYING
+
+        return STATE_PLAYING
 
     def update(self):
         """Retrieve latest state."""
@@ -284,9 +281,9 @@ class ItunesDevice(MediaPlayerDevice):
         if self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED) and \
            self.current_title is not None:
             return self.client.artwork_url()
-        else:
-            return 'https://cloud.githubusercontent.com/assets/260/9829355' \
-                '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
+
+        return 'https://cloud.githubusercontent.com/assets/260/9829355' \
+            '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
 
     @property
     def media_title(self):
@@ -309,8 +306,8 @@ class ItunesDevice(MediaPlayerDevice):
         return self.current_playlist
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_ITUNES
 
     def set_volume_level(self, volume):
@@ -353,7 +350,6 @@ class ItunesDevice(MediaPlayerDevice):
 class AirPlayDevice(MediaPlayerDevice):
     """Representation an AirPlay device via an iTunes API instance."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, device_id, client):
         """Initialize the AirPlay device."""
         self._id = device_id
@@ -404,16 +400,16 @@ class AirPlayDevice(MediaPlayerDevice):
         """Return the icon to use in the frontend, if any."""
         if self.selected is True:
             return 'mdi:volume-high'
-        else:
-            return 'mdi:volume-off'
+
+        return 'mdi:volume-off'
 
     @property
     def state(self):
         """Return the state of the device."""
         if self.selected is True:
             return STATE_ON
-        else:
-            return STATE_OFF
+
+        return STATE_OFF
 
     def update(self):
         """Retrieve latest state."""
@@ -429,8 +425,8 @@ class AirPlayDevice(MediaPlayerDevice):
         return MEDIA_TYPE_MUSIC
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_AIRPLAY
 
     def set_volume_level(self, volume):
@@ -442,13 +438,13 @@ class AirPlayDevice(MediaPlayerDevice):
     def turn_on(self):
         """Select AirPlay."""
         self.update_state({"selected": True})
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
     def turn_off(self):
         """Deselect AirPlay."""
         self.update_state({"selected": False})
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, False)
         self.update_state(response)

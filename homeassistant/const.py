@@ -1,17 +1,19 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 30
+MINOR_VERSION = 54
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
+REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
+CONSTRAINT_FILE = 'package_constraints.txt'
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
-PROJECT_LICENSE = 'MIT License'
+PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2016, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013, {}'.format(PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
 PROJECT_DESCRIPTION = ('Open-source home automation platform '
@@ -24,7 +26,7 @@ PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
 PROJECT_CLASSIFIERS = [
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 3.4',
     'Topic :: Home Automation'
@@ -54,15 +56,20 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
+CONF_BASE = 'base'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
+CONF_BINARY_SENSORS = 'binary_sensors'
 CONF_BLACKLIST = 'blacklist'
 CONF_BRIGHTNESS = 'brightness'
 CONF_CODE = 'code'
+CONF_COLOR_TEMP = 'color_temp'
 CONF_COMMAND = 'command'
 CONF_COMMAND_CLOSE = 'command_close'
 CONF_COMMAND_OFF = 'command_off'
@@ -72,24 +79,38 @@ CONF_COMMAND_STATE = 'command_state'
 CONF_COMMAND_STOP = 'command_stop'
 CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
+CONF_CURRENCY = 'currency'
 CONF_CUSTOMIZE = 'customize'
+CONF_CUSTOMIZE_DOMAIN = 'customize_domain'
+CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DEVICE = 'device'
+CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
 CONF_DISPLAY_OPTIONS = 'display_options'
+CONF_DOMAIN = 'domain'
+CONF_DOMAINS = 'domains'
+CONF_EFFECT = 'effect'
 CONF_ELEVATION = 'elevation'
 CONF_EMAIL = 'email'
+CONF_ENTITIES = 'entities'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
 CONF_EVENT = 'event'
+CONF_EXCLUDE = 'exclude'
 CONF_FILE_PATH = 'file_path'
 CONF_FILENAME = 'filename'
+CONF_FOR = 'for'
 CONF_FRIENDLY_NAME = 'friendly_name'
+CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
 CONF_ICON = 'icon'
+CONF_ICON_TEMPLATE = 'icon_template'
+CONF_INCLUDE = 'include'
 CONF_ID = 'id'
+CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MAC = 'mac'
@@ -101,7 +122,9 @@ CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
 CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
+CONF_PACKAGES = 'packages'
 CONF_PASSWORD = 'password'
+CONF_PATH = 'path'
 CONF_PAYLOAD = 'payload'
 CONF_PAYLOAD_OFF = 'payload_off'
 CONF_PAYLOAD_ON = 'payload_on'
@@ -110,14 +133,18 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROTOCOL = 'protocol'
+CONF_PROXY_SSL = 'proxy_ssl'
+CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
 CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
-CONF_SENSOR_CLASS = 'sensor_class'
+CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
+CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STRUCTURE = 'structure'
@@ -136,11 +163,15 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
+CONF_WHITE_VALUE = 'white_value'
+CONF_XY = 'xy'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
@@ -148,6 +179,9 @@ EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
+EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
+EVENT_THEMES_UPDATED = 'themes_updated'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -156,7 +190,9 @@ STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = 'unknown'
 STATE_OPEN = 'open'
+STATE_OPENING = 'opening'
 STATE_CLOSED = 'closed'
+STATE_CLOSING = 'closing'
 STATE_PLAYING = 'playing'
 STATE_PAUSED = 'paused'
 STATE_IDLE = 'idle'
@@ -164,15 +200,25 @@ STATE_STANDBY = 'standby'
 STATE_ALARM_DISARMED = 'disarmed'
 STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
+STATE_ALARM_ARMED_NIGHT = 'armed_night'
 STATE_ALARM_PENDING = 'pending'
+STATE_ALARM_ARMING = 'arming'
+STATE_ALARM_DISARMING = 'disarming'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_OK = 'ok'
+STATE_PROBLEM = 'problem'
 
 # #### STATE AND EVENT ATTRIBUTES ####
-# Contains current time for a TIME_CHANGED event
+# Attribution
+ATTR_ATTRIBUTION = 'attribution'
+
+# Contains time-related attributes
 ATTR_NOW = 'now'
+ATTR_DATE = 'date'
+ATTR_TIME = 'time'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
@@ -236,10 +282,14 @@ ATTR_DISCOVERED = 'discovered'
 ATTR_LOCATION = 'location'
 
 ATTR_BATTERY_LEVEL = 'battery_level'
+ATTR_WAKEUP = 'wake_up_interval'
 
 # For devices which support a code attribute
 ATTR_CODE = 'code'
 ATTR_CODE_FORMAT = 'code_format'
+
+# For calling a device specific command
+ATTR_COMMAND = 'command'
 
 # For devices which support an armed state
 ATTR_ARMED = 'device_armed'
@@ -268,6 +318,14 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_ASSUMED_STATE = 'assumed_state'
 ATTR_STATE = 'state'
 
+ATTR_OPTION = 'option'
+
+# Bitfield of supported component features for the entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
+
+# Class of device within its domain
+ATTR_DEVICE_CLASS = 'device_class'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
@@ -275,6 +333,7 @@ SERVICE_HOMEASSISTANT_RESTART = 'restart'
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
+SERVICE_RELOAD = 'reload'
 
 SERVICE_VOLUME_UP = 'volume_up'
 SERVICE_VOLUME_DOWN = 'volume_down'
@@ -287,10 +346,12 @@ SERVICE_MEDIA_STOP = 'media_stop'
 SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
+SERVICE_SHUFFLE_SET = 'shuffle_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
+SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
 
 SERVICE_LOCK = 'lock'
@@ -308,10 +369,7 @@ SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
 
-SERVICE_MOVE_UP = 'move_up'
-SERVICE_MOVE_DOWN = 'move_down'
-SERVICE_MOVE_POSITION = 'move_position'
-SERVICE_STOP = 'stop'
+SERVICE_SELECT_OPTION = 'select_option'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
@@ -327,7 +385,6 @@ URL_API_EVENTS = '/api/events'
 URL_API_EVENTS_EVENT = '/api/events/{}'
 URL_API_SERVICES = '/api/services'
 URL_API_SERVICES_SERVICE = '/api/services/{}/{}'
-URL_API_EVENT_FORWARD = '/api/event_forwarding'
 URL_API_COMPONENTS = '/api/components'
 URL_API_ERROR_LOG = '/api/error_log'
 URL_API_LOG_OUT = '/api/log_out'

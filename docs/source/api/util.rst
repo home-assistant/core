@@ -4,6 +4,14 @@ homeassistant.util package
 Submodules
 ----------
 
+homeassistant.util.async module
+-------------------------------
+
+.. automodule:: homeassistant.util.async
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 homeassistant.util.color module
 -------------------------------
 

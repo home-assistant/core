@@ -9,13 +9,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['schiene==0.17']
+REQUIREMENTS = ['schiene==0.18']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ CONF_START = 'from'
 
 ICON = 'mdi:train'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
@@ -33,14 +32,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Deutsche Bahn Sensor."""
+    """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 
-    add_devices([DeutscheBahnSensor(start, destination)])
+    add_devices([DeutscheBahnSensor(start, destination)], True)
 
 
-# pylint: disable=too-few-public-methods
 class DeutscheBahnSensor(Entity):
     """Implementation of a Deutsche Bahn sensor."""
 
@@ -48,7 +46,7 @@ class DeutscheBahnSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} to {}'.format(start, goal)
         self.data = SchieneData(start, goal)
-        self.update()
+        self._state = None
 
     @property
     def name(self):
@@ -66,7 +64,7 @@ class DeutscheBahnSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         connections = self.data.connections[0]
         connections['next'] = self.data.connections[1]['departure']
@@ -81,7 +79,6 @@ class DeutscheBahnSensor(Entity):
             self._state += " + {}".format(self.data.connections[0]['delay'])
 
 
-# pylint: disable=too-few-public-methods
 class SchieneData(object):
     """Pull data from the bahn.de web page."""
 
@@ -94,7 +91,6 @@ class SchieneData(object):
         self.schiene = schiene.Schiene()
         self.connections = [{}]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(

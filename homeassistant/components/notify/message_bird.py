@@ -13,9 +13,9 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['messagebird==1.2.0']
 
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the MessageBird notification service."""
     import messagebird
 
@@ -34,13 +34,12 @@ def get_service(hass, config):
         # validates the api key
         client.balance()
     except messagebird.client.ErrorException:
-        _LOGGER.error('The specified MessageBird API key is invalid.')
+        _LOGGER.error("The specified MessageBird API key is invalid")
         return None
 
     return MessageBirdNotificationService(config.get(CONF_SENDER), client)
 
 
-# pylint: disable=too-few-public-methods
 class MessageBirdNotificationService(BaseNotificationService):
     """Implement the notification service for MessageBird."""
 
@@ -55,15 +54,13 @@ class MessageBirdNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
-            _LOGGER.error('No target specified.')
+            _LOGGER.error("No target specified")
             return
 
         for target in targets:
             try:
-                self.client.message_create(self.sender,
-                                           target,
-                                           message,
-                                           {'reference': 'HA'})
+                self.client.message_create(
+                    self.sender, target, message, {'reference': 'HA'})
             except ErrorException as exception:
-                _LOGGER.error('Failed to notify %s: %s', target, exception)
+                _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

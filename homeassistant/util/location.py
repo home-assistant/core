@@ -9,7 +9,6 @@ from typing import Any, Optional, Tuple, Dict
 
 import requests
 
-
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
 FREEGEO_API = 'https://freegeoip.io/json/'
 IP_API = 'http://ip-api.com/json'
@@ -51,7 +50,10 @@ def detect_location_info():
 
 
 def distance(lat1, lon1, lat2, lon2):
-    """Calculate the distance in meters between two points."""
+    """Calculate the distance in meters between two points.
+
+    Async friendly.
+    """
     return vincenty((lat1, lon1), (lat2, lon2)) * 1000
 
 
@@ -73,14 +75,14 @@ def elevation(latitude, longitude):
 
     try:
         return int(float(req.json()['results'][0]['elevation']))
-    except (ValueError, KeyError):
+    except (ValueError, KeyError, IndexError):
         return 0
 
 
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=too-many-locals, invalid-name, unused-variable
+# pylint: disable=invalid-name, unused-variable, invalid-sequence-index
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
              miles: bool=False) -> Optional[float]:
     """
@@ -88,6 +90,8 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
 
     Result in kilometers or miles between two points on the surface of a
     spheroid.
+
+    Async friendly.
     """
     # short-circuit coincident points
     if point1[0] == point2[0] and point1[1] == point2[1]:

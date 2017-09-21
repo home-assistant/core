@@ -1,13 +1,17 @@
 """The tests for the Proximity component."""
-from homeassistant.components import proximity
+import unittest
 
+from homeassistant.components import proximity
+from homeassistant.components.proximity import DOMAIN
+
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 
-class TestProximity:
+class TestProximity(unittest.TestCase):
     """Test the Proximity component."""
 
-    def setup_method(self, method):
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set(
@@ -27,31 +31,34 @@ class TestProximity:
                 'radius': 10
             })
 
-    def teardown_method(self, method):
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     def test_proximities(self):
         """Test a list of proximities."""
-        assert proximity.setup(self.hass, {
-            'proximity': [{
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
+        config = {
+            'proximity': {
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'tolerance': '1'
                 },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
-            }, {
-                'zone': 'work',
-                'devices': {
-                    'device_tracker.test1'
-                },
-                'tolerance': '1'
-            }]
-        })
+                'work': {
+                    'devices': [
+                        'device_tracker.test1'
+                    ],
+                    'tolerance': '1'
+                }
+            }
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         proximities = ['home', 'work']
 
@@ -66,40 +73,46 @@ class TestProximity:
             state = self.hass.states.get('proximity.' + prox)
             assert state.state == '0'
 
-    def test_proximities_missing_devices(self):
-        """Test a list of proximities with one missing devices."""
-        assert not proximity.setup(self.hass, {
-            'proximity': [{
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
+    def test_proximities_setup(self):
+        """Test a list of proximities with missing devices."""
+        config = {
+            'proximity': {
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'tolerance': '1'
                 },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
-            }, {
-                'zone': 'work',
-                'tolerance': '1'
-            }]
-        })
+                'work': {
+                    'tolerance': '1'
+                }
+            }
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
     def test_proximity(self):
         """Test the proximity."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'tolerance': '1'
+                }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         state = self.hass.states.get('proximity.home')
         assert state.state == 'not set'
@@ -111,75 +124,23 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
 
-    def test_no_devices_in_config(self):
-        """Test for missing devices in configuration."""
-        assert not proximity.setup(self.hass, {
-            'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'tolerance': '1'
-            }
-        })
-
-    def test_no_tolerance_in_config(self):
-        """Test for missing tolerance in configuration ."""
-        assert proximity.setup(self.hass, {
-            'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                }
-            }
-        })
-
-    def test_no_ignored_zones_in_config(self):
-        """Test for ignored zones in configuration."""
-        assert proximity.setup(self.hass, {
-            'proximity': {
-                'zone': 'home',
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
-            }
-        })
-
-    def test_no_zone_in_config(self):
-        """Test for missing zone in configuration."""
-        assert proximity.setup(self.hass, {
-            'proximity': {
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
-            }
-        })
-
     def test_device_tracker_test1_in_zone(self):
         """Test for tracker in zone."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
-                },
-                'tolerance': '1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1'
+                    ],
+                    'tolerance': '1'
+                }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'home',
@@ -196,19 +157,22 @@ class TestProximity:
 
     def test_device_trackers_in_zone(self):
         """Test for trackers in zone."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
-                },
-                'tolerance': '1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'tolerance': '1'
+                }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'home',
@@ -234,18 +198,21 @@ class TestProximity:
 
     def test_device_tracker_test1_away(self):
         """Test for tracker state away."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
-                },
-                'tolerance': '1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                    ],
+                    'tolerance': '1'
+                }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -254,6 +221,7 @@ class TestProximity:
                 'latitude': 20.1,
                 'longitude': 10.1
             })
+
         self.hass.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
@@ -261,17 +229,21 @@ class TestProximity:
 
     def test_device_tracker_test1_awayfurther(self):
         """Test for tracker state away further."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                    ],
+                    'tolerance': '1'
                 }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -284,31 +256,6 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
-        self.hass.states.set(
-            'device_tracker.test1', 'not_home',
-            {
-                'friendly_name': 'test1',
-                'latitude': 40.1,
-                'longitude': 20.1
-            })
-        self.hass.block_till_done()
-        state = self.hass.states.get('proximity.home')
-        assert state.attributes.get('nearest') == 'test1'
-        assert state.attributes.get('dir_of_travel') == 'away_from'
-
-    def test_device_tracker_test1_awaycloser(self):
-        """Test for tracker state away closer."""
-        assert proximity.setup(self.hass, {
-            'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
-                }
-            }
-        })
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -316,36 +263,71 @@ class TestProximity:
                 'friendly_name': 'test1',
                 'latitude': 40.1,
                 'longitude': 20.1
-            })
-        self.hass.block_till_done()
-        state = self.hass.states.get('proximity.home')
-        assert state.attributes.get('nearest') == 'test1'
-        assert state.attributes.get('dir_of_travel') == 'unknown'
-        self.hass.states.set(
-            'device_tracker.test1', 'not_home',
-            {
-                'friendly_name': 'test1',
-                'latitude': 20.1,
-                'longitude': 10.1
             })
         self.hass.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'towards'
 
-    def test_all_device_trackers_in_ignored_zone(self):
-        """Test for tracker in ignored zone."""
-        assert proximity.setup(self.hass, {
+    def test_device_tracker_test1_awaycloser(self):
+        """Test for tracker state away closer."""
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                    ],
+                    'tolerance': '1'
                 }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
+
+        self.hass.states.set(
+            'device_tracker.test1', 'not_home',
+            {
+                'friendly_name': 'test1',
+                'latitude': 40.1,
+                'longitude': 20.1
+            })
+        self.hass.block_till_done()
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test1'
+        assert state.attributes.get('dir_of_travel') == 'unknown'
+
+        self.hass.states.set(
+            'device_tracker.test1', 'not_home',
+            {
+                'friendly_name': 'test1',
+                'latitude': 20.1,
+                'longitude': 10.1
+            })
+        self.hass.block_till_done()
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test1'
+        assert state.attributes.get('dir_of_travel') == 'away_from'
+
+    def test_all_device_trackers_in_ignored_zone(self):
+        """Test for tracker in ignored zone."""
+        config = {
+            'proximity': {
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                    ],
+                    'tolerance': '1'
+                }
+            }
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'work',
@@ -360,18 +342,21 @@ class TestProximity:
 
     def test_device_tracker_test1_no_coordinates(self):
         """Test for tracker with no coordinates."""
-        assert proximity.setup(self.hass, {
+        config = {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
-                },
-                'tolerance': '1'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                    ],
+                    'tolerance': '1'
+                }
             }
-        })
+        }
+
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
 
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
@@ -397,15 +382,19 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
+
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'tolerance': '1',
+                    'zone': 'home'
                 }
             }
         })
@@ -421,6 +410,7 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
+
         self.hass.states.set(
             'device_tracker.test2', 'not_home',
             {
@@ -449,13 +439,16 @@ class TestProximity:
         self.hass.block_till_done()
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'zone': 'home'
+
                 }
             }
         })
@@ -471,6 +464,7 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test2'
         assert state.attributes.get('dir_of_travel') == 'unknown'
+
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
@@ -499,13 +493,15 @@ class TestProximity:
         self.hass.block_till_done()
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'zone': 'home'
                 }
             }
         })
@@ -536,15 +532,18 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
+
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'zone': 'home'
                 }
             }
         })
@@ -566,6 +565,7 @@ class TestProximity:
                 'longitude': 10.1
             })
         self.hass.block_till_done()
+
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
@@ -574,6 +574,7 @@ class TestProximity:
                 'longitude': 20.1
             })
         self.hass.block_till_done()
+
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
@@ -582,12 +583,14 @@ class TestProximity:
                 'longitude': 15.1
             })
         self.hass.block_till_done()
+
         self.hass.states.set(
             'device_tracker.test1', 'work',
             {
                 'friendly_name': 'test1'
             })
         self.hass.block_till_done()
+
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test2'
         assert state.attributes.get('dir_of_travel') == 'unknown'
@@ -596,14 +599,16 @@ class TestProximity:
         """Test for tracker states."""
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1'
-                },
-                'tolerance': 1000
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1'
+                    ],
+                    'tolerance': 1000,
+                    'zone': 'home'
+                }
             }
         })
 
@@ -618,6 +623,7 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
+
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
@@ -644,15 +650,18 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
+
         assert proximity.setup(self.hass, {
             'proximity': {
-                'zone': 'home',
-                'ignored_zones': {
-                    'work'
-                },
-                'devices': {
-                    'device_tracker.test1',
-                    'device_tracker.test2'
+                'home': {
+                    'ignored_zones': [
+                        'work'
+                    ],
+                    'devices': [
+                        'device_tracker.test1',
+                        'device_tracker.test2'
+                    ],
+                    'zone': 'home'
                 }
             }
         })

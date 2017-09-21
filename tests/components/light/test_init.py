@@ -1,9 +1,9 @@
 """The tests for the Light component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 import os
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -16,11 +16,13 @@ from tests.common import mock_service, get_test_home_assistant
 class TestLight(unittest.TestCase):
     """Test the light module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -204,10 +206,10 @@ class TestLight(unittest.TestCase):
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
-        # Specify a profile and attributes to overwrite it
+        # Specify a profile and a brightness attribute to overwrite it
         light.turn_on(
             self.hass, dev2.entity_id,
-            profile=prof_name, brightness=100, xy_color=(.4, .6))
+            profile=prof_name, brightness=100)
 
         self.hass.block_till_done()
 
@@ -220,10 +222,10 @@ class TestLight(unittest.TestCase):
         _, data = dev2.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: (.4, .6)},
+             light.ATTR_XY_COLOR: (.5119, .4147)},
             data)
 
-        # Test shitty data
+        # Test bad data
         light.turn_on(self.hass)
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
@@ -243,7 +245,10 @@ class TestLight(unittest.TestCase):
         # faulty attributes will not trigger a service call
         light.turn_on(
             self.hass, dev1.entity_id,
-            profile=prof_name, brightness='bright', rgb_color='yellowish')
+            profile=prof_name, brightness='bright')
+        light.turn_on(
+            self.hass, dev1.entity_id,
+            rgb_color='yellowish')
         light.turn_on(
             self.hass, dev2.entity_id,
             white_value='high')
@@ -269,8 +274,7 @@ class TestLight(unittest.TestCase):
             user_file.write('I,WILL,NOT,WORK\n')
 
         self.assertFalse(setup_component(
-            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-        ))
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
     def test_light_profiles(self):
         """Test light profiles."""

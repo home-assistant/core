@@ -4,7 +4,7 @@ import unittest.mock as mock
 
 import requests
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELSIUS
@@ -38,29 +38,31 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_missing_config(self):
+    @mock.patch('mficlient.client.MFiClient')
+    def test_setup_missing_config(self, mock_client):
         """Test setup with missing configuration."""
         config = {
             'sensor': {
                 'platform': 'mfi',
             }
         }
-        self.assertFalse(self.PLATFORM.setup_platform(self.hass, config, None))
+        assert setup_component(self.hass, 'sensor', config)
+        assert not mock_client.called
 
-    @mock.patch('mficlient.client')
+    @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_login(self, mock_client):
         """Test setup with login failure."""
-        mock_client.FailedToLogin = Exception()
-        mock_client.MFiClient.side_effect = mock_client.FailedToLogin
+        from mficlient.client import FailedToLogin
+
+        mock_client.side_effect = FailedToLogin
         self.assertFalse(
             self.PLATFORM.setup_platform(
                 self.hass, dict(self.GOOD_CONFIG), None))
 
-    @mock.patch('mficlient.client')
+    @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_connect(self, mock_client):
         """Test setup with conection failure."""
-        mock_client.FailedToLogin = Exception()
-        mock_client.MFiClient.side_effect = requests.exceptions.ConnectionError
+        mock_client.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
             self.PLATFORM.setup_platform(
                 self.hass, dict(self.GOOD_CONFIG), None))
@@ -71,8 +73,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6443, use_tls=True, verify=True)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6443, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_port(self, mock_client):
@@ -80,8 +87,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6123, use_tls=True, verify=True)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6123, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_tls_disabled(self, mock_client):
@@ -91,8 +103,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]['ssl'] = False
         config[self.THING]['verify_ssl'] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6080, use_tls=False, verify=False)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6080, use_tls=False, verify=False
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
@@ -101,7 +118,6 @@ class TestMfiSensorSetup(unittest.TestCase):
         ports = {i: mock.MagicMock(model=model)
                  for i, model in enumerate(mfi.SENSOR_MODELS)}
         ports['bad'] = mock.MagicMock(model='notasensor')
-        print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
         assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
@@ -180,4 +196,5 @@ class TestMfiSensor(unittest.TestCase):
     def test_update(self):
         """Test the update."""
         self.sensor.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())

@@ -3,13 +3,23 @@
 import unittest
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.logentries as logentries
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+
+from tests.common import get_test_home_assistant
 
 
 class TestLogentries(unittest.TestCase):
     """Test the Logentries component."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
 
     def test_setup_config_full(self):
         """Test setup with all data."""
@@ -18,12 +28,11 @@ class TestLogentries(unittest.TestCase):
                 'token': 'secret',
             }
         }
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, logentries.DOMAIN, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, logentries.DOMAIN, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
     def test_setup_config_defaults(self):
         """Test setup with defaults."""
@@ -32,12 +41,11 @@ class TestLogentries(unittest.TestCase):
                 'token': 'token',
             }
         }
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, logentries.DOMAIN, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, logentries.DOMAIN, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
     def _setup(self, mock_requests):
         """Test the setup."""
@@ -49,8 +57,7 @@ class TestLogentries(unittest.TestCase):
                 'token': 'token'
             }
         }
-        self.hass = mock.MagicMock()
-        self.hass.pool.worker_count = 2
+        self.hass.bus.listen = mock.MagicMock()
         setup_component(self.hass, logentries.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
@@ -84,6 +91,9 @@ class TestLogentries(unittest.TestCase):
                        'logs/token',
                        'event': body}
             self.handler_method(event)
-            self.mock_post.assert_called_once_with(
-                payload['host'], data=payload, timeout=10)
+            self.assertEqual(self.mock_post.call_count, 1)
+            self.assertEqual(
+                self.mock_post.call_args,
+                mock.call(payload['host'], data=payload, timeout=10)
+            )
             self.mock_post.reset_mock()

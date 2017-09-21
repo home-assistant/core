@@ -4,7 +4,7 @@ Support for an exposed aREST RESTful API of a device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.arest/
 """
-# pylint: disable=abstract-method
+
 import logging
 
 import requests
@@ -36,19 +36,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the aREST switches."""
+    """Set up the aREST switches."""
     resource = config.get(CONF_RESOURCE)
 
     try:
         response = requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
+                      "Add http:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device at %s. "
-                      "Please check the IP address in the configuration file.",
-                      resource)
+        _LOGGER.error("No route to device at %s", resource)
         return False
 
     dev = []
@@ -75,6 +73,7 @@ class ArestSwitchBase(SwitchDevice):
         self._resource = resource
         self._name = '{} {}'.format(location.title(), name.title())
         self._state = None
+        self._available = True
 
     @property
     def name(self):
@@ -85,6 +84,11 @@ class ArestSwitchBase(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._available
 
 
 class ArestSwitchFunction(ArestSwitchBase):
@@ -98,17 +102,16 @@ class ArestSwitchFunction(ArestSwitchBase):
         request = requests.get(
             '{}/{}'.format(self._resource, self._func), timeout=10)
 
-        if request.status_code is not 200:
-            _LOGGER.error("Can't find function. Is device offline?")
+        if request.status_code != 200:
+            _LOGGER.error("Can't find function")
             return
 
         try:
             request.json()['return_value']
         except KeyError:
-            _LOGGER.error("No return_value received. "
-                          "Is the function name correct.")
+            _LOGGER.error("No return_value received")
         except ValueError:
-            _LOGGER.error("Response invalid. Is the function name correct?")
+            _LOGGER.error("Response invalid")
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -119,8 +122,8 @@ class ArestSwitchFunction(ArestSwitchBase):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error("Can't turn on function %s at %s. "
-                          "Is device offline?", self._func, self._resource)
+            _LOGGER.error(
+                "Can't turn on function %s at %s", self._func, self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -131,14 +134,19 @@ class ArestSwitchFunction(ArestSwitchBase):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error("Can't turn off function %s at %s. "
-                          "Is device offline?", self._func, self._resource)
+            _LOGGER.error(
+                "Can't turn off function %s at %s", self._func, self._resource)
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
-        request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10)
-        self._state = request.json()['return_value'] != 0
+        try:
+            request = requests.get(
+                '{}/{}'.format(self._resource, self._func), timeout=10)
+            self._state = request.json()['return_value'] != 0
+            self._available = True
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("No route to device %s", self._resource)
+            self._available = False
 
 
 class ArestSwitchPin(ArestSwitchBase):
@@ -151,8 +159,9 @@ class ArestSwitchPin(ArestSwitchBase):
 
         request = requests.get(
             '{}/mode/{}/o'.format(self._resource, self._pin), timeout=10)
-        if request.status_code is not 200:
-            _LOGGER.error("Can't set mode. Is device offline?")
+        if request.status_code != 200:
+            _LOGGER.error("Can't set mode")
+            self._available = False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -161,8 +170,8 @@ class ArestSwitchPin(ArestSwitchBase):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error("Can't turn on pin %s at %s. Is device offline?",
-                          self._pin, self._resource)
+            _LOGGER.error(
+                "Can't turn on pin %s at %s", self._pin, self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -171,11 +180,16 @@ class ArestSwitchPin(ArestSwitchBase):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error("Can't turn off pin %s at %s. Is device offline?",
-                          self._pin, self._resource)
+            _LOGGER.error(
+                "Can't turn off pin %s at %s", self._pin, self._resource)
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
-        request = requests.get(
-            '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
-        self._state = request.json()['return_value'] != 0
+        try:
+            request = requests.get(
+                '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
+            self._state = request.json()['return_value'] != 0
+            self._available = True
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("No route to device %s", self._resource)
+            self._available = False

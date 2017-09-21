@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate switches."""
+    """Set up the SCSGate switches."""
     logger = logging.getLogger(__name__)
 
     _setup_traditional_switches(
@@ -119,7 +119,7 @@ class SCSGateSwitch(SwitchDevice):
             ToggleStatusTask(target=self._scs_id, toggled=True))
 
         self._toggled = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -129,7 +129,7 @@ class SCSGateSwitch(SwitchDevice):
             ToggleStatusTask(target=self._scs_id, toggled=False))
 
         self._toggled = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def process_event(self, message):
         """Handle a SCSGate message related with this switch."""
@@ -141,7 +141,7 @@ class SCSGateSwitch(SwitchDevice):
             return
 
         self._toggled = message.toggled
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         command = "off"
         if self._toggled:

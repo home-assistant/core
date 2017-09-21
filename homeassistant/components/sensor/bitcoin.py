@@ -10,22 +10,22 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION, CONF_CURRENCY)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['blockchain==1.3.3']
+REQUIREMENTS = ['blockchain==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CURRENCY = 'currency'
+CONF_ATTRIBUTION = "Data provided by blockchain.info"
 
 DEFAULT_CURRENCY = 'USD'
 
 ICON = 'mdi:currency-btc'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 OPTION_TYPES = {
     'exchangerate': ['Exchange rate (1 BTC)', None],
@@ -59,14 +59,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Bitcoin sensors."""
+    """Set up the Bitcoin sensors."""
     from blockchain import exchangerates
 
     currency = config.get(CONF_CURRENCY)
 
     if currency not in exchangerates.get_ticker():
-        _LOGGER.warning('Currency "%s" is not available. Using "USD"',
-                        currency)
+        _LOGGER.warning("Currency %s is not available. Using USD", currency)
         currency = DEFAULT_CURRENCY
 
     data = BitcoinData()
@@ -74,10 +73,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(BitcoinSensor(data, variable, currency))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
-# pylint: disable=too-few-public-methods
 class BitcoinSensor(Entity):
     """Representation of a Bitcoin sensor."""
 
@@ -89,7 +87,6 @@ class BitcoinSensor(Entity):
         self._currency = currency
         self.type = option_type
         self._state = None
-        self.update()
 
     @property
     def name(self):
@@ -111,7 +108,13 @@ class BitcoinSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
@@ -149,8 +152,8 @@ class BitcoinSensor(Entity):
         elif self.type == 'total_btc_sent':
             self._state = '{0:.2f}'.format(stats.total_btc_sent * 0.00000001)
         elif self.type == 'estimated_btc_sent':
-            self._state = '{0:.2f}'.format(stats.estimated_btc_sent *
-                                           0.00000001)
+            self._state = '{0:.2f}'.format(
+                stats.estimated_btc_sent * 0.00000001)
         elif self.type == 'total_btc':
             self._state = '{0:.2f}'.format(stats.total_btc * 0.00000001)
         elif self.type == 'total_blocks':
@@ -161,8 +164,8 @@ class BitcoinSensor(Entity):
             self._state = '{0:.2f}'.format(
                 stats.estimated_transaction_volume_usd)
         elif self.type == 'miners_revenue_btc':
-            self._state = '{0:.1f}'.format(stats.miners_revenue_btc *
-                                           0.00000001)
+            self._state = '{0:.1f}'.format(
+                stats.miners_revenue_btc * 0.00000001)
         elif self.type == 'market_price_usd':
             self._state = '{0:.2f}'.format(stats.market_price_usd)
 
@@ -175,7 +178,6 @@ class BitcoinData(object):
         self.stats = None
         self.ticker = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from blockchain.info."""
         from blockchain import statistics, exchangerates

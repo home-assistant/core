@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTR = 'log_attributes'
 CONF_RATE = 'rate'
+CONF_VALUE_MAP = 'value_mapping'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8125
@@ -34,12 +35,13 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
         vol.Optional(CONF_RATE, default=DEFAULT_RATE):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_VALUE_MAP, default=None): dict,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Setup the StatsD component."""
+    """Set up the StatsD component."""
     import statsd
 
     conf = config[DOMAIN]
@@ -47,6 +49,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     sample_rate = conf.get(CONF_RATE)
     prefix = conf.get(CONF_PREFIX)
+    value_mapping = conf.get(CONF_VALUE_MAP)
     show_attribute_flag = conf.get(CONF_ATTR)
 
     statsd_client = statsd.StatsClient(host=host, port=port, prefix=prefix)
@@ -59,20 +62,25 @@ def setup(hass, config):
             return
 
         try:
-            _state = state_helper.state_as_number(state)
+            if value_mapping and state.state in value_mapping:
+                _state = float(value_mapping[state.state])
+            else:
+                _state = state_helper.state_as_number(state)
         except ValueError:
-            return
+            # Set the state to none and continue for any numeric attributes.
+            _state = None
 
         states = dict(state.attributes)
 
-        _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
+        _LOGGER.debug('Sending %s', state.entity_id)
 
         if show_attribute_flag is True:
-            statsd_client.gauge(
-                "%s.state" % state.entity_id,
-                _state,
-                sample_rate
-            )
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(
+                    "%s.state" % state.entity_id,
+                    _state,
+                    sample_rate
+                )
 
             # Send attribute values
             for key, value in states.items():
@@ -81,7 +89,8 @@ def setup(hass, config):
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:
-            statsd_client.gauge(state.entity_id, _state, sample_rate)
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)

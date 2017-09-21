@@ -8,33 +8,45 @@ import logging
 import socket
 import select
 
-from homeassistant.const import CONF_NAME, CONF_HOST
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_PAYLOAD, CONF_TIMEOUT,
+    CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import Template
-
-CONF_PORT = "port"
-CONF_TIMEOUT = "timeout"
-CONF_PAYLOAD = "payload"
-CONF_UNIT = "unit"
-CONF_VALUE_TEMPLATE = "value_template"
-CONF_VALUE_ON = "value_on"
-CONF_BUFFER_SIZE = "buffer_size"
-
-DEFAULT_TIMEOUT = 10
-DEFAULT_BUFFER_SIZE = 1024
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_BUFFER_SIZE = 'buffer_size'
+CONF_VALUE_ON = 'value_on'
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the TCP Sensor."""
-    if not Sensor.validate_config(config):
-        return False
-    add_entities((Sensor(hass, config),))
+DEFAULT_BUFFER_SIZE = 1024
+DEFAULT_NAME = 'TCP Sensor'
+DEFAULT_TIMEOUT = 10
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_PAYLOAD): cv.string,
+    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
+        cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_ON): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
 
 
-class Sensor(Entity):
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the TCP Sensor."""
+    add_devices([TcpSensor(hass, config)])
+
+
+class TcpSensor(Entity):
     """Implementation of a TCP socket based sensor."""
 
     required = tuple()
@@ -44,34 +56,22 @@ class Sensor(Entity):
         value_template = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
-            value_template = Template(value_template, hass)
+            value_template.hass = hass
 
         self._hass = hass
         self._config = {
             CONF_NAME: config.get(CONF_NAME),
-            CONF_HOST: config[CONF_HOST],
-            CONF_PORT: config[CONF_PORT],
-            CONF_TIMEOUT: config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            CONF_PAYLOAD: config[CONF_PAYLOAD],
-            CONF_UNIT: config.get(CONF_UNIT),
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT),
+            CONF_TIMEOUT: config.get(CONF_TIMEOUT),
+            CONF_PAYLOAD: config.get(CONF_PAYLOAD),
+            CONF_UNIT_OF_MEASUREMENT: config.get(CONF_UNIT_OF_MEASUREMENT),
             CONF_VALUE_TEMPLATE: value_template,
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
-            CONF_BUFFER_SIZE: config.get(
-                CONF_BUFFER_SIZE, DEFAULT_BUFFER_SIZE),
+            CONF_BUFFER_SIZE: config.get(CONF_BUFFER_SIZE),
         }
         self._state = None
         self.update()
-
-    @classmethod
-    def validate_config(cls, config):
-        """Ensure the configuration has all of the necessary values."""
-        always_required = (CONF_HOST, CONF_PORT, CONF_PAYLOAD)
-        for key in always_required + tuple(cls.required):
-            if key not in config:
-                _LOGGER.error(
-                    "You must provide %r to create any TCP entity.", key)
-                return False
-        return True
 
     @property
     def name(self):
@@ -79,7 +79,7 @@ class Sensor(Entity):
         name = self._config[CONF_NAME]
         if name is not None:
             return name
-        return super(Sensor, self).name
+        return super(TcpSensor, self).name
 
     @property
     def state(self):
@@ -89,7 +89,7 @@ class Sensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return self._config[CONF_UNIT]
+        return self._config[CONF_UNIT_OF_MEASUREMENT]
 
     def update(self):
         """Get the latest value for this sensor."""

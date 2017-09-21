@@ -1,45 +1,37 @@
 """
-mysensors platform that offers a Climate(MySensors-HVAC) component.
+MySensors platform that offers a Climate (MySensors-HVAC) component.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.mysensors
+https://home-assistant.io/components/climate.mysensors/
 """
-import logging
-
 from homeassistant.components import mysensors
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_OFF, STATE_AUTO, ClimateDevice,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,
+    STATE_COOL, STATE_HEAT, STATE_OFF, ClimateDevice)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-_LOGGER = logging.getLogger(__name__)
-
-DICT_HA_TO_MYS = {STATE_COOL: "CoolOn", STATE_HEAT: "HeatOn",
-                  STATE_AUTO: "AutoChangeOver", STATE_OFF: "Off"}
-DICT_MYS_TO_HA = {"CoolOn": STATE_COOL, "HeatOn": STATE_HEAT,
-                  "AutoChangeOver": STATE_AUTO, "Off": STATE_OFF}
+DICT_HA_TO_MYS = {
+    STATE_AUTO: 'AutoChangeOver',
+    STATE_COOL: 'CoolOn',
+    STATE_HEAT: 'HeatOn',
+    STATE_OFF: 'Off',
+}
+DICT_MYS_TO_HA = {
+    'AutoChangeOver': STATE_AUTO,
+    'CoolOn': STATE_COOL,
+    'HeatOn': STATE_HEAT,
+    'Off': STATE_OFF,
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
-    if discovery_info is None:
-        return
-    for gateway in mysensors.GATEWAYS.values():
-        if float(gateway.protocol_version) < 1.5:
-            continue
-        pres = gateway.const.Presentation
-        set_req = gateway.const.SetReq
-        map_sv_types = {
-            pres.S_HVAC: [set_req.V_HVAC_FLOW_STATE],
-        }
-        devices = {}
-        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsHVAC))
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsHVAC, add_devices=add_devices)
 
 
-# pylint: disable=too-many-arguments, too-many-public-methods
-class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
-    """Representation of a MySensorsHVAC hvac."""
+class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
+    """Representation of a MySensors HVAC."""
 
     @property
     def assumed_state(self):
@@ -47,7 +39,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         return self.gateway.optimistic
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return (TEMP_CELSIUS
                 if self.gateway.metric else TEMP_FAHRENHEIT)
@@ -55,7 +47,12 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._values.get(self.gateway.const.SetReq.V_TEMP)
+        value = self._values.get(self.gateway.const.SetReq.V_TEMP)
+
+        if value is not None:
+            value = float(value)
+
+        return value
 
     @property
     def target_temperature(self):
@@ -67,26 +64,28 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         if temp is None:
             temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
-        return temp
+        return float(temp) if temp is not None else None
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SETPOINT_HEAT in self._values:
-            return self._values.get(set_req.V_HVAC_SETPOINT_COOL)
+            temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
+            return float(temp) if temp is not None else None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SETPOINT_COOL in self._values:
-            return self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
+            temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
+            return float(temp) if temp is not None else None
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._values.get(self.gateway.const.SetReq.V_HVAC_FLOW_STATE)
+        return self._values.get(self.value_type)
 
     @property
     def operation_list(self):
@@ -101,7 +100,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return ["Auto", "Min", "Normal", "Max"]
+        return ['Auto', 'Min', 'Normal', 'Max']
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -111,7 +110,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         heat = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
         cool = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-        updates = ()
+        updates = []
         if temp is not None:
             if heat is not None:
                 # Set HEAT Target temperature
@@ -129,64 +128,32 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value)
             if self.gateway.optimistic:
-                # optimistically assume that switch has changed state
+                # optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id,
-                                     set_req.V_HVAC_SPEED, fan)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan)
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
+            # optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
-        set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id,
-                                     set_req.V_HVAC_FLOW_STATE,
-                                     DICT_HA_TO_MYS[operation_mode])
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, self.value_type,
+            DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
-            # optimistically assume that switch has changed state
-            self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
-            self.update_ha_state()
+            # optimistically assume that device has changed state
+            self._values[self.value_type] = operation_mode
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        set_req = self.gateway.const.SetReq
-        node = self.gateway.sensors[self.node_id]
-        child = node.children[self.child_id]
-        for value_type, value in child.values.items():
-            _LOGGER.debug(
-                '%s: value_type %s, value = %s', self._name, value_type, value)
-            if value_type == set_req.V_HVAC_FLOW_STATE:
-                self._values[value_type] = DICT_MYS_TO_HA[value]
-            else:
-                self._values[value_type] = value
-
-    def set_humidity(self, humidity):
-        """Set new target humidity."""
-        _LOGGER.error("Service Not Implemented yet")
-
-    def set_swing_mode(self, swing_mode):
-        """Set new target swing operation."""
-        _LOGGER.error("Service Not Implemented yet")
-
-    def turn_away_mode_on(self):
-        """Turn away mode on."""
-        _LOGGER.error("Service Not Implemented yet")
-
-    def turn_away_mode_off(self):
-        """Turn away mode off."""
-        _LOGGER.error("Service Not Implemented yet")
-
-    def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
-        _LOGGER.error("Service Not Implemented yet")
-
-    def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
-        _LOGGER.error("Service Not Implemented yet")
+        super().update()
+        self._values[self.value_type] = DICT_MYS_TO_HA[
+            self._values[self.value_type]]

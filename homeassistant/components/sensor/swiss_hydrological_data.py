@@ -11,42 +11,46 @@ import voluptuous as vol
 import requests
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
 
 CONF_STATION = 'station'
+CONF_ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
+                   "Environment FOEN"
+
 DEFAULT_NAME = 'Water temperature'
+
 ICON = 'mdi:cup-water'
 
-ATTR_LOCATION = 'Location'
-ATTR_UPDATE = 'Update'
-ATTR_DISCHARGE = 'Discharge'
-ATTR_WATERLEVEL = 'Level'
-ATTR_DISCHARGE_MEAN = 'Discharge mean'
-ATTR_WATERLEVEL_MEAN = 'Level mean'
-ATTR_TEMPERATURE_MEAN = 'Temperature mean'
-ATTR_DISCHARGE_MAX = 'Discharge max'
-ATTR_WATERLEVEL_MAX = 'Level max'
-ATTR_TEMPERATURE_MAX = 'Temperature max'
+ATTR_LOCATION = 'location'
+ATTR_UPDATE = 'update'
+ATTR_DISCHARGE = 'discharge'
+ATTR_WATERLEVEL = 'level'
+ATTR_DISCHARGE_MEAN = 'discharge_mean'
+ATTR_WATERLEVEL_MEAN = 'level_mean'
+ATTR_TEMPERATURE_MEAN = 'temperature_mean'
+ATTR_DISCHARGE_MAX = 'discharge_max'
+ATTR_WATERLEVEL_MAX = 'level_max'
+ATTR_TEMPERATURE_MAX = 'temperature_max'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): vol.Coerce(int),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Swiss hydrological sensor."""
+    """Set up the Swiss hydrological sensor."""
     import xmltodict
 
     name = config.get(CONF_NAME)
@@ -56,17 +60,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(_RESOURCE, timeout=5)
         if any(str(station) == location.get('@StrNr') for location in
                xmltodict.parse(response.text)['AKT_Data']['MesPar']) is False:
-            _LOGGER.error('The given station does not exist: %s', station)
+            _LOGGER.error("The given station does not exist: %s", station)
             return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('The URL is not accessible')
+        _LOGGER.error("The URL is not accessible")
         return False
 
     data = HydrologicalData(station)
-    add_devices([SwissHydrologicalDataSensor(name, data)])
+    add_devices([SwissHydrologicalDataSensor(name, data)], True)
 
 
-# pylint: disable=too-few-public-methods
 class SwissHydrologicalDataSensor(Entity):
     """Implementation of an Swiss hydrological sensor."""
 
@@ -75,7 +78,7 @@ class SwissHydrologicalDataSensor(Entity):
         self.data = data
         self._name = name
         self._unit_of_measurement = TEMP_CELSIUS
-        self.update()
+        self._state = None
 
     @property
     def name(self):
@@ -87,8 +90,7 @@ class SwissHydrologicalDataSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not STATE_UNKNOWN:
             return self._unit_of_measurement
-        else:
-            return None
+        return None
 
     @property
     def state(self):
@@ -125,6 +127,7 @@ class SwissHydrologicalDataSensor(Entity):
 
             attributes[ATTR_LOCATION] = self.data.measurings['location']
             attributes[ATTR_UPDATE] = self.data.measurings['update_time']
+            attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
             return attributes
 
     @property
@@ -132,7 +135,6 @@ class SwissHydrologicalDataSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data and update the states."""
         self.data.update()
@@ -143,7 +145,6 @@ class SwissHydrologicalDataSensor(Entity):
                 self._state = self.data.measurings['03']['current']
 
 
-# pylint: disable=too-few-public-methods
 class HydrologicalData(object):
     """The Class for handling the data retrieval."""
 
@@ -161,7 +162,7 @@ class HydrologicalData(object):
         try:
             response = requests.get(_RESOURCE, timeout=5)
         except requests.exceptions.ConnectionError:
-            _LOGGER.error('Unable to retrieve data from %s', _RESOURCE)
+            _LOGGER.error("Unable to retrieve data from %s", _RESOURCE)
 
         try:
             stations = xmltodict.parse(response.text)['AKT_Data']['MesPar']

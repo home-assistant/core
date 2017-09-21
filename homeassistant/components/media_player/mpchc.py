@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
     CONF_PORT)
@@ -25,7 +25,8 @@ DEFAULT_NAME = 'MPC-HC'
 DEFAULT_PORT = 13579
 
 SUPPORT_MPCHC = SUPPORT_VOLUME_MUTE | SUPPORT_PAUSE | SUPPORT_STOP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_STEP
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_STEP | \
+    SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -36,14 +37,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MPC-HC platform."""
+    """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
-    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
 
-    add_devices([MpcHcDevice(name, url)])
+    url = '{}:{}'.format(host, port)
+
+    add_devices([MpcHcDevice(name, url)], True)
 
 
-# pylint: disable=abstract-method
 class MpcHcDevice(MediaPlayerDevice):
     """Representation of a MPC-HC server."""
 
@@ -51,21 +54,17 @@ class MpcHcDevice(MediaPlayerDevice):
         """Initialize the MPC-HC device."""
         self._name = name
         self._url = url
-
-        self.update()
+        self._player_variables = dict()
 
     def update(self):
         """Get the latest details."""
-        self._player_variables = dict()
-
         try:
-            response = requests.get('{}/variables.html'.format(self._url),
-                                    data=None, timeout=3)
+            response = requests.get(
+                '{}/variables.html'.format(self._url), data=None, timeout=3)
 
-            mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>',
-                                         response.text)
+            mpchc_variables = re.findall(
+                r'<p id="(.+?)">(.+?)</p>', response.text)
 
-            self._player_variables = dict()
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()
         except requests.exceptions.RequestException:
@@ -97,37 +96,37 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_PLAYING
         elif state == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_IDLE
+
+        return STATE_IDLE
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         return self._player_variables.get('file', None)
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
+        """Return the volume level of the media player (0..1)."""
         return int(self._player_variables.get('volumelevel', 0)) / 100.0
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean if volume is currently muted."""
         return self._player_variables.get('muted', '0') == '1'
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
-        duration = self._player_variables.get('durationstring',
-                                              "00:00:00").split(':')
+        """Return the duration of the current playing media in seconds."""
+        duration = self._player_variables.get(
+            'durationstring', "00:00:00").split(':')
         return \
             int(duration[0]) * 3600 + \
             int(duration[1]) * 60 + \
             int(duration[2])
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_MPCHC
 
     def volume_up(self):

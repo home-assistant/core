@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate cover."""
+    """Set up the SCSGate cover."""
     devices = config.get(CONF_DEVICES)
     covers = []
     logger = logging.getLogger(__name__)
@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(covers)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class SCSGateCover(CoverDevice):
     """Representation of SCSGate cover."""
 

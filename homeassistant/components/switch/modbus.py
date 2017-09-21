@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -18,7 +18,6 @@ DEPENDENCIES = ['modbus']
 
 CONF_COIL = "coil"
 CONF_COILS = "coils"
-CONF_SLAVE = "slave"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
@@ -43,7 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusCoilSwitch(ToggleEntity):
     """Representation of a Modbus switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, slave, coil):
         """Initialize the switch."""
         self._name = name
@@ -72,10 +70,10 @@ class ModbusCoilSwitch(ToggleEntity):
     def update(self):
         """Update the state of the switch."""
         result = modbus.HUB.read_coils(self._slave, self._coil, 1)
-        if not result:
+        try:
+            self._is_on = bool(result.bits[0])
+        except AttributeError:
             _LOGGER.error(
                 'No response from modbus slave %s coil %s',
                 self._slave,
                 self._coil)
-            return
-        self._is_on = bool(result.bits[0])

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['batinfo==0.3']
+REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Linux Battery sensor."""
+    """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
 
@@ -60,10 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No battery found")
         return False
 
-    add_devices([LinuxBatterySensor(name, battery_id)])
+    add_devices([LinuxBatterySensor(name, battery_id)], True)
 
 
-# pylint: disable=too-few-public-methods
 class LinuxBatterySensor(Entity):
     """Representation of a Linux Battery sensor."""
 
@@ -76,7 +75,6 @@ class LinuxBatterySensor(Entity):
         self._battery_stat = None
         self._battery_id = battery_id - 1
         self._unit_of_measurement = '%'
-        self.update()
 
     @property
     def name(self):
@@ -99,7 +97,7 @@ class LinuxBatterySensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_NAME: self._battery_stat.name,

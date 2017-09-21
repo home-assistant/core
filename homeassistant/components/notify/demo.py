@@ -9,12 +9,11 @@ from homeassistant.components.notify import BaseNotificationService
 EVENT_NOTIFY = "notify"
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the demo notification service."""
     return DemoNotificationService(hass)
 
 
-# pylint: disable=too-few-public-methods
 class DemoNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 

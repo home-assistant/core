@@ -1,11 +1,13 @@
 """The test for the Trend sensor platform."""
-import homeassistant.bootstrap as bootstrap
+from homeassistant import setup
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestTrendBinarySensor:
     """Test the Trend sensor."""
+
+    hass = None
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -17,7 +19,7 @@ class TestTrendBinarySensor:
 
     def test_up(self):
         """Test up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -38,7 +40,7 @@ class TestTrendBinarySensor:
 
     def test_down(self):
         """Test down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -59,7 +61,7 @@ class TestTrendBinarySensor:
 
     def test__invert_up(self):
         """Test up trend with custom message."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -81,7 +83,7 @@ class TestTrendBinarySensor:
 
     def test_invert_down(self):
         """Test down trend with custom message."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -103,7 +105,7 @@ class TestTrendBinarySensor:
 
     def test_attribute_up(self):
         """Test attribute up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -124,7 +126,7 @@ class TestTrendBinarySensor:
 
     def test_attribute_down(self):
         """Test attribute down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -147,7 +149,7 @@ class TestTrendBinarySensor:
 
     def test_non_numeric(self):
         """Test up trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -168,7 +170,7 @@ class TestTrendBinarySensor:
 
     def test_missing_attribute(self):
         """Test attribute down trend."""
-        assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+        assert setup.setup_component(self.hass, 'binary_sensor', {
             'binary_sensor': {
                 'platform': 'trend',
                 'sensors': {
@@ -189,41 +191,46 @@ class TestTrendBinarySensor:
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
-    def test_invalid_name_does_not_create(self):
+    def test_invalid_name_does_not_create(self): \
+            # pylint: disable=invalid-name
         """Test invalid name."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test INVALID sensor': {
-                        'entity_id':
-                            "sensor.test_state"
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test INVALID sensor': {
+                            'entity_id':
+                                "sensor.test_state"
+                        }
                     }
                 }
-            }
-        })
+            })
         assert self.hass.states.all() == []
 
-    def test_invalid_sensor_does_not_create(self):
+    def test_invalid_sensor_does_not_create(self): \
+            # pylint: disable=invalid-name
         """Test invalid sensor."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_trend_sensor': {
-                        'not_entity_id':
-                            "sensor.test_state"
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_trend_sensor': {
+                            'not_entity_id':
+                                "sensor.test_state"
+                        }
                     }
                 }
-            }
-        })
+            })
         assert self.hass.states.all() == []
 
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'trend'
-            }
-        })
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'trend'
+                }
+            })
         assert self.hass.states.all() == []

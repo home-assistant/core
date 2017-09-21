@@ -11,17 +11,22 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_PLAY)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME)
+    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME, CONF_PORT,
+    CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Pioneer AVR'
+DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
+DEFAULT_TIMEOUT = None
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+                  SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
@@ -29,29 +34,30 @@ MAX_SOURCE_NUMBERS = 60
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Pioneer platform."""
-    pioneer = PioneerDevice(config.get(CONF_NAME), config.get(CONF_HOST))
+    """Set up the Pioneer platform."""
+    pioneer = PioneerDevice(
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT))
 
     if pioneer.update():
         add_devices([pioneer])
-        return True
-    else:
-        return False
 
 
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, host):
+    def __init__(self, name, host, port, timeout):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
+        self._port = port
+        self._timeout = timeout
         self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
@@ -62,7 +68,11 @@ class PioneerDevice(MediaPlayerDevice):
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
         """Execute `command` and return the response."""
-        telnet.write(command.encode("ASCII") + b"\r")
+        try:
+            telnet.write(command.encode("ASCII") + b"\r")
+        except telnetlib.socket.timeout:
+            _LOGGER.debug("Pioneer command %s timed out", command)
+            return None
 
         # The receiver will randomly send state change updates, make sure
         # we get the response we are looking for
@@ -75,20 +85,32 @@ class PioneerDevice(MediaPlayerDevice):
         return None
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
-        telnet = telnetlib.Telnet(self._host)
-        telnet.write(command.encode("ASCII") + b"\r")
-        telnet.read_very_eager()  # skip response
-        telnet.close()
+        """Establish a telnet connection and sends command."""
+        try:
+            try:
+                telnet = telnetlib.Telnet(
+                    self._host, self._port, self._timeout)
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.warning("Pioneer %s refused connection", self._name)
+                return
+            telnet.write(command.encode("ASCII") + b"\r")
+            telnet.read_very_eager()  # skip response
+            telnet.close()
+        except telnetlib.socket.timeout:
+            _LOGGER.debug(
+                "Pioneer %s command %s timed out", self._name, command)
 
     def update(self):
         """Get the latest details from the device."""
         try:
-            telnet = telnetlib.Telnet(self._host)
-        except ConnectionRefusedError:
+            telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
+        except (ConnectionRefusedError, OSError):
+            _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 
-        self._pwstate = self.telnet_request(telnet, "?P", "PWR")
+        pwstate = self.telnet_request(telnet, "?P", "PWR")
+        if pwstate:
+            self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
         self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
@@ -99,9 +121,8 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet,
-                                             "?RGB" + str(i).zfill(2),
-                                             "RGB")
+                result = self.telnet_request(
+                    telnet, "?RGB" + str(i).zfill(2), "RGB")
 
                 if not result:
                     continue
@@ -149,8 +170,8 @@ class PioneerDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_PIONEER
 
     @property

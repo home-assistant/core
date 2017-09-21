@@ -33,10 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Hikvision camera."""
+    """Set up Hikvision camera."""
     import hikvision.api
     from hikvision.error import HikvisionError, MissingParamError
 

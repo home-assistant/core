@@ -24,13 +24,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Ecobee notification service."""
     index = config.get(CONF_INDEX)
     return EcobeeNotificationService(index)
 
 
-# pylint: disable=too-few-public-methods
 class EcobeeNotificationService(BaseNotificationService):
     """Implement the notification service for the Ecobee thermostat."""
 

@@ -32,13 +32,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup cover controlled by shell commands."""
+    """Set up cover controlled by shell commands."""
     devices = config.get(CONF_COVERS, {})
     covers = []
 
     for device_name, device_config in devices.items():
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
-        value_template.hass = hass
+        if value_template is not None:
+            value_template.hass = hass
 
         covers.append(
             CommandCover(
@@ -59,11 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(covers)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, command_open, command_close, command_stop,
                  command_state, value_template):
         """Initialize the cover."""
@@ -79,25 +78,25 @@ class CommandCover(CoverDevice):
     @staticmethod
     def _move_cover(command):
         """Execute the actual commands."""
-        _LOGGER.info('Running command: %s', command)
+        _LOGGER.info("Running command: %s", command)
 
         success = (subprocess.call(command, shell=True) == 0)
 
         if not success:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
         return success
 
     @staticmethod
     def _query_state_value(command):
         """Execute state command for return value."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
 
         try:
             return_value = subprocess.check_output(command, shell=True)
             return return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
     @property
     def should_poll(self):
@@ -113,10 +112,7 @@ class CommandCover(CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return self.current_cover_position == 0
 
     @property
     def current_cover_position(self):
@@ -129,7 +125,7 @@ class CommandCover(CoverDevice):
     def _query_state(self):
         """Query for the state."""
         if not self._command_state:
-            _LOGGER.error('No state command specified')
+            _LOGGER.error("No state command specified")
             return
         return self._query_state_value(self._command_state)
 

@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
     if config.get(CONF_APP_ICON) is None:
         icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",
@@ -55,11 +55,9 @@ def get_service(hass, config):
                                    config.get(CONF_PORT))
 
 
-# pylint: disable=too-few-public-methods
 class GNTPNotificationService(BaseNotificationService):
     """Implement the notification service for GNTP."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, app_name, app_icon, hostname, password, port):
         """Initialize the service."""
         import gntp.notifier
@@ -75,7 +73,7 @@ class GNTPNotificationService(BaseNotificationService):
         try:
             self.gntp.register()
         except gntp.errors.NetworkError:
-            _LOGGER.error('Unable to register with the GNTP host.')
+            _LOGGER.error("Unable to register with the GNTP host")
             return
 
     def send_message(self, message="", **kwargs):

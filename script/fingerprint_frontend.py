@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-
 """Generate a file with all md5 hashes of the assets."""
+
 from collections import OrderedDict
 import glob
 import hashlib
@@ -14,7 +14,8 @@ def fingerprint():
     """Fingerprint the frontend files."""
     files = (glob.glob(base_dir + '**/*.html') +
              glob.glob(base_dir + '*.html') +
-             glob.glob(base_dir + 'core.js'))
+             glob.glob(base_dir + 'core.js') +
+             glob.glob(base_dir + 'compatibility.js'))
 
     md5s = OrderedDict()
 
@@ -33,6 +34,7 @@ FINGERPRINTS = {}
 
     with open(fingerprint_file, 'w') as fp:
         fp.write(result)
+
 
 if __name__ == '__main__':
     fingerprint()

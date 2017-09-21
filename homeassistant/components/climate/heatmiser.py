@@ -1,56 +1,54 @@
 """
 Support for the PRT Heatmiser themostats using the V3 protocol.
 
-See https://github.com/andylockran/heatmiserV3 for more info on the
-heatmiserV3 module dependency.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.heatmiser/
 """
 import logging
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+import voluptuous as vol
 
-CONF_IPADDRESS = 'ipaddress'
-CONF_PORT = 'port'
-CONF_TSTATS = 'tstats'
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["heatmiserV3==0.9.1"]
+REQUIREMENTS = ['heatmiserV3==0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_IPADDRESS = 'ipaddress'
+CONF_TSTATS = 'tstats'
 
+TSTATS_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_IPADDRESS): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_TSTATS, default={}):
+        vol.Schema({cv.string: TSTATS_SCHEMA}),
+})
+
+
+# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the heatmiser thermostat."""
+    """Set up the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
 
-    ipaddress = str(config[CONF_IPADDRESS])
-    port = str(config[CONF_PORT])
-
-    if ipaddress is None or port is None:
-        _LOGGER.error("Missing required configuration items %s or %s",
-                      CONF_IPADDRESS, CONF_PORT)
-        return False
+    ipaddress = config.get(CONF_IPADDRESS)
+    port = str(config.get(CONF_PORT))
+    tstats = config.get(CONF_TSTATS)
 
     serport = connection.connection(ipaddress, port)
     serport.open()
 
-    tstats = []
-    if CONF_TSTATS in config:
-        tstats = config[CONF_TSTATS]
-
-    if tstats is None:
-        _LOGGER.error("No thermostats configured.")
-        return False
-
-    for tstat in tstats:
+    for thermostat, tstat in tstats.items():
         add_devices([
             HeatmiserV3Thermostat(
-                heatmiser,
-                tstat.get("id"),
-                tstat.get("name"),
-                serport)
+                heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
             ])
     return
 
@@ -58,7 +56,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
-    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, heatmiser, device, name, serport):
         """Initialize the thermostat."""
         self.heatmiser = heatmiser
@@ -69,7 +66,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self._id = device
         self.dcb = None
         self.update()
-        self._target_temperature = int(self.dcb.get("roomset"))
+        self._target_temperature = int(self.dcb.get('roomset'))
 
     @property
     def name(self):
@@ -77,7 +74,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
 
@@ -85,9 +82,9 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         if self.dcb is not None:
-            low = self.dcb.get("floortemplow ")
-            high = self.dcb.get("floortemphigh")
-            temp = (high*256 + low)/10.0
+            low = self.dcb.get('floortemplow ')
+            high = self.dcb.get('floortemphigh')
+            temp = (high * 256 + low) / 10.0
             self._current_temperature = temp
         else:
             self._current_temperature = None

@@ -1,69 +1,113 @@
 """The tests for local file camera component."""
-from tempfile import NamedTemporaryFile
-import unittest
+import asyncio
 from unittest import mock
 
-from werkzeug.test import EnvironBuilder
+# Using third party package because of a bug reading binary data in Python 3.4
+# https://bugs.python.org/issue23004
+from mock_open import MockOpen
 
-from homeassistant.bootstrap import setup_component
-from homeassistant.components.http import request_class
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
-class TestLocalCamera(unittest.TestCase):
-    """Test the local file camera component."""
+@asyncio.coroutine
+def test_loading_file(hass, test_client):
+    """Test that it loads image from disk."""
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        yield from async_setup_component(hass, 'camera', {
+            'camera': {
+                'name': 'config_test',
+                'platform': 'local_file',
+                'file_path': 'mock.file',
+            }})
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.wsgi = mock.MagicMock()
-        self.hass.config.components.append('http')
+    client = yield from test_client(hass.http.app)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    m_open = MockOpen(read_data=b'hello')
+    with mock.patch(
+            'homeassistant.components.camera.local_file.open',
+            m_open, create=True
+    ):
+        resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
-    def test_loading_file(self):
-        """Test that it loads image from disk."""
-        self.hass.wsgi = mock.MagicMock()
+    assert resp.status == 200
+    body = yield from resp.text()
+    assert body == 'hello'
 
-        with NamedTemporaryFile() as fp:
-            fp.write('hello'.encode('utf-8'))
-            fp.flush()
 
-            assert setup_component(self.hass, 'camera', {
-                'camera': {
-                    'name': 'config_test',
-                    'platform': 'local_file',
-                    'file_path': fp.name,
-                }})
+@asyncio.coroutine
+def test_file_not_readable(hass, caplog):
+    """Test a warning is shown setup when file is not readable."""
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=False)):
+        yield from async_setup_component(hass, 'camera', {
+            'camera': {
+                'name': 'config_test',
+                'platform': 'local_file',
+                'file_path': 'mock.file',
+            }})
 
-            image_view = self.hass.wsgi.mock_calls[0][1][0]
+    assert 'Could not read' in caplog.text
+    assert 'config_test' in caplog.text
+    assert 'mock.file' in caplog.text
 
-            builder = EnvironBuilder(method='GET')
-            Request = request_class()
-            request = Request(builder.get_environ())
-            request.authenticated = True
-            resp = image_view.get(request, 'camera.config_test')
 
-            assert resp.status_code == 200, resp.response
-            assert resp.response[0].decode('utf-8') == 'hello'
+@asyncio.coroutine
+def test_camera_content_type(hass, test_client):
+    """Test local_file camera content_type."""
+    cam_config_jpg = {
+        'name': 'test_jpg',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.jpg',
+    }
+    cam_config_png = {
+        'name': 'test_png',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.png',
+    }
+    cam_config_svg = {
+        'name': 'test_svg',
+        'platform': 'local_file',
+        'file_path': '/path/to/image.svg',
+    }
+    cam_config_noext = {
+        'name': 'test_no_ext',
+        'platform': 'local_file',
+        'file_path': '/path/to/image',
+    }
 
-    def test_file_not_readable(self):
-        """Test local file will not setup when file is not readable."""
-        self.hass.wsgi = mock.MagicMock()
+    yield from async_setup_component(hass, 'camera', {
+        'camera': [cam_config_jpg, cam_config_png,
+                   cam_config_svg, cam_config_noext]})
 
-        with NamedTemporaryFile() as fp:
-            fp.write('hello'.encode('utf-8'))
-            fp.flush()
+    client = yield from test_client(hass.http.app)
 
-            with mock.patch('os.access', return_value=False):
-                assert not setup_component(self.hass, 'camera', {
-                    'camera': {
-                        'name': 'config_test',
-                        'platform': 'local_file',
-                        'file_path': fp.name,
-                    }})
+    image = 'hello'
+    m_open = MockOpen(read_data=image.encode())
+    with mock.patch('homeassistant.components.camera.local_file.open',
+                    m_open, create=True):
+        resp_1 = yield from client.get('/api/camera_proxy/camera.test_jpg')
+        resp_2 = yield from client.get('/api/camera_proxy/camera.test_png')
+        resp_3 = yield from client.get('/api/camera_proxy/camera.test_svg')
+        resp_4 = yield from client.get('/api/camera_proxy/camera.test_no_ext')
 
-                assert [] == self.hass.states.all()
+    assert resp_1.status == 200
+    assert resp_1.content_type == 'image/jpeg'
+    body = yield from resp_1.text()
+    assert body == image
+
+    assert resp_2.status == 200
+    assert resp_2.content_type == 'image/png'
+    body = yield from resp_2.text()
+    assert body == image
+
+    assert resp_3.status == 200
+    assert resp_3.content_type == 'image/svg+xml'
+    body = yield from resp_3.text()
+    assert body == image
+
+    # default mime type
+    assert resp_4.status == 200
+    assert resp_4.content_type == 'image/jpeg'
+    body = yield from resp_4.text()
+    assert body == image

@@ -23,6 +23,7 @@ CONF_SERVER = 'server'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Plex'
+DEFAULT_PORT = 32400
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -30,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=32400): cv.port,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
 })
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Plex sensor."""
+    """Set up the Plex sensor."""
     name = config.get(CONF_NAME)
     plex_user = config.get(CONF_USERNAME)
     plex_password = config.get(CONF_PASSWORD)
@@ -48,13 +49,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
     add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server)])
+        name, plex_url, plex_user, plex_password, plex_server)], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, plex_url, plex_user, plex_password, plex_server):
         """Initialize the sensor."""
         from plexapi.utils import NA
@@ -72,8 +72,6 @@ class PlexSensor(Entity):
             self._server = user.resource(server).connect()
         else:
             self._server = PlexServer(plex_url)
-
-        self.update()
 
     @property
     def name(self):

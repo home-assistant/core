@@ -4,34 +4,38 @@ Support the ISY-994 controllers.
 For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994/
 """
+from collections import namedtuple
 import logging
 from urllib.parse import urlparse
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant  # noqa
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict  # noqa
 
-
-DOMAIN = "isy994"
-REQUIREMENTS = ['PyISY==1.0.7']
-
-ISY = None
-DEFAULT_SENSOR_STRING = 'sensor'
-DEFAULT_HIDDEN_STRING = '{HIDE ME}'
-CONF_TLS_VER = 'tls'
-CONF_HIDDEN_STRING = 'hidden_string'
-CONF_SENSOR_STRING = 'sensor_string'
-KEY_MY_PROGRAMS = 'My Programs'
-KEY_FOLDER = 'folder'
-KEY_ACTIONS = 'actions'
-KEY_STATUS = 'status'
+REQUIREMENTS = ['PyISY==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'isy994'
+
+CONF_HIDDEN_STRING = 'hidden_string'
+CONF_SENSOR_STRING = 'sensor_string'
+CONF_TLS_VER = 'tls'
+
+DEFAULT_HIDDEN_STRING = '{HIDE ME}'
+DEFAULT_SENSOR_STRING = 'sensor'
+
+ISY = None
+
+KEY_ACTIONS = 'actions'
+KEY_FOLDER = 'folder'
+KEY_MY_PROGRAMS = 'My Programs'
+KEY_STATUS = 'status'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -47,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_NODES = []
+WEATHER_NODES = []
 NODES = []
 GROUPS = []
 PROGRAMS = {}
@@ -57,6 +62,9 @@ HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
                      'sensor', 'switch']
+
+
+WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
@@ -93,15 +101,16 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
     NODES = []
     GROUPS = []
 
+    # pylint: disable=no-member
     for (path, node) in ISY.nodes:
         hidden = hidden_identifier in path or hidden_identifier in node.name
         if hidden:
             node.name += hidden_identifier
         if sensor_identifier in path or sensor_identifier in node.name:
             SENSOR_NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Node):  # pylint: disable=no-member
+        elif isinstance(node, PYISY.Nodes.Node):
             NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Group):  # pylint: disable=no-member
+        elif isinstance(node, PYISY.Nodes.Group):
             GROUPS.append(node)
 
 
@@ -131,7 +140,17 @@ def _categorize_programs() -> None:
                         PROGRAMS[component].append(program)
 
 
-# pylint: disable=too-many-locals
+def _categorize_weather() -> None:
+    """Categorize the ISY994 weather data."""
+    global WEATHER_NODES
+
+    climate_attrs = dir(ISY.climate)
+    WEATHER_NODES = [WeatherNode(getattr(ISY.climate, attr), attr,
+                                 getattr(ISY.climate, attr + '_units'))
+                     for attr in climate_attrs
+                     if attr + '_units' in climate_attrs]
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
     isy_config = config.get(DOMAIN)
@@ -142,10 +161,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = urlparse(isy_config.get(CONF_HOST))
     port = host.port
     addr = host.geturl()
-    hidden_identifier = isy_config.get(CONF_HIDDEN_STRING,
-                                       DEFAULT_HIDDEN_STRING)
-    sensor_identifier = isy_config.get(CONF_SENSOR_STRING,
-                                       DEFAULT_SENSOR_STRING)
+    hidden_identifier = isy_config.get(
+        CONF_HIDDEN_STRING, DEFAULT_HIDDEN_STRING)
+    sensor_identifier = isy_config.get(
+        CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 
     global HIDDEN_STRING
     HIDDEN_STRING = hidden_identifier
@@ -157,7 +176,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         addr = addr.replace('https://', '')
         https = True
     else:
-        _LOGGER.error('isy994 host value in configuration is invalid.')
+        _LOGGER.error("isy994 host value in configuration is invalid")
         return False
 
     addr = addr.replace(':{}'.format(port), '')
@@ -177,6 +196,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hidden_identifier, sensor_identifier)
 
     _categorize_programs()
+
+    if ISY.configuration.get('Weather Information'):
+        _categorize_weather()
 
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
@@ -206,17 +228,13 @@ class ISYDevice(Entity):
         """Initialize the insteon device."""
         self._node = node
 
-        self._change_handler = self._node.status.subscribe('changed',
-                                                           self.on_update)
-
-    def __del__(self) -> None:
-        """Cleanup the subscriptions."""
-        self._change_handler.unsubscribe()
+        self._change_handler = self._node.status.subscribe(
+            'changed', self.on_update)
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def domain(self) -> str:
@@ -253,7 +271,7 @@ class ISYDevice(Entity):
         return self._node.status._val
 
     @property
-    def state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
         attr = {}
         if hasattr(self._node, 'aux_properties'):

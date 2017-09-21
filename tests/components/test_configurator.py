@@ -1,5 +1,5 @@
 """The tests for the Configurator component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
 import homeassistant.components.configurator as configurator
@@ -11,11 +11,13 @@ from tests.common import get_test_home_assistant
 class TestConfigurator(unittest.TestCase):
     """Test the Configurator component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -46,10 +48,20 @@ class TestConfigurator(unittest.TestCase):
             configurator.ATTR_DESCRIPTION_IMAGE: "config image url",
             configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
             configurator.ATTR_FIELDS: [],
+            configurator.ATTR_LINK_NAME: "link name",
+            configurator.ATTR_LINK_URL: "link url",
+            configurator.ATTR_ENTITY_PICTURE: "config entity picture",
             configurator.ATTR_CONFIGURE_ID: configurator.request_config(
-                self.hass, "Test Request", lambda _: None,
-                "config description", "config image url",
-                "config submit caption"
+                self.hass,
+                name="Test Request",
+                callback=lambda _: None,
+                description="config description",
+                description_image="config image url",
+                submit_caption="config submit caption",
+                fields=None,
+                link_name="link name",
+                link_url="link url",
+                entity_picture="config entity picture",
             )
         }
 
@@ -78,20 +90,20 @@ class TestConfigurator(unittest.TestCase):
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
         error = "Oh no bad bad bad"
-        configurator.notify_errors(request_id, error)
+        configurator.notify_errors(self.hass, request_id, error)
 
         state = self.hass.states.all()[0]
         self.assertEqual(error, state.attributes.get(configurator.ATTR_ERRORS))
 
     def test_notify_errors_fail_silently_on_bad_request_id(self):
         """Test if notify errors fails silently with a bad request id."""
-        configurator.notify_errors(2015, "Try this error")
+        configurator.notify_errors(self.hass, 2015, "Try this error")
 
     def test_request_done_works(self):
         """Test if calling request done works."""
         request_id = configurator.request_config(
             self.hass, "Test Request", lambda _: None)
-        configurator.request_done(request_id)
+        configurator.request_done(self.hass, request_id)
         self.assertEqual(1, len(self.hass.states.all()))
 
         self.hass.bus.fire(EVENT_TIME_CHANGED)
@@ -100,4 +112,4 @@ class TestConfigurator(unittest.TestCase):
 
     def test_request_done_fail_silently_on_bad_request_id(self):
         """Test that request_done fails silently with a bad request id."""
-        configurator.request_done(2016)
+        configurator.request_done(self.hass, 2016)

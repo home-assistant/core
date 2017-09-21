@@ -3,10 +3,10 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -15,8 +15,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
-        self.hass.config.components = ['rfxtrx']
+        self.hass = get_test_home_assistant()
+        mock_component(self.hass, 'rfxtrx')
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -28,7 +28,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_valid_config(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -39,7 +39,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_valid_config_int_device_id(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -49,7 +49,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config1(self):
-        self.assertFalse(_setup_component(self.hass, 'switch', {
+        """Test invalid configuration."""
+        self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -60,8 +61,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config2(self):
-        """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'switch', {
+        """Test invalid configuration."""
+        self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'invalid_key': 'afda',
@@ -73,7 +74,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config3(self):
-        self.assertFalse(_setup_component(self.hass, 'switch', {
+        """Test invalid configuration."""
+        self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -85,7 +87,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_invalid_config4(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'switch', {
+        self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -96,7 +98,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_default_config(self):
         """Test with 0 switches."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'devices':
                            {}}}))
@@ -104,7 +106,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_old_config(self):
         """Test with 1 switch."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'devices':
                            {'123efab1': {
@@ -132,7 +134,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_one_switch(self):
         """Test with 1 switch."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'devices':
                            {'0b1100cd0213c7f210010f51': {
@@ -170,7 +172,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_several_switches(self):
         """Test with 3 switches."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'signal_repetitions': 3,
                        'devices':
@@ -203,7 +205,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_discover_switch(self):
         """Test with discovery of switches."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices': {}}}))
@@ -253,7 +255,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_discover_switch_noautoadd(self):
         """Test with discovery of switch when auto add is False."""
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': False,
                        'devices': {}}}))

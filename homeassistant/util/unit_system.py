@@ -2,14 +2,14 @@
 
 import logging
 from numbers import Number
+
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
     LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
-    CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, VOLUME, TEMPERATURE,
-    UNIT_NOT_RECOGNIZED_TEMPLATE)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, VOLUME,
+    TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
 
@@ -64,7 +64,6 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
 class UnitSystem(object):
     """A container for units of measure."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self: object, name: str, temperature: str, length: str,
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""

@@ -1,12 +1,11 @@
 """Test HTML5 notify platform."""
+import asyncio
 import json
-import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 
-from werkzeug.test import EnvironBuilder
-
-from homeassistant.components.http import request_class
 from homeassistant.components.notify import html5
+
+from tests.common import mock_http_component_app
 
 SUBSCRIPTION_1 = {
     'browser': 'chrome',
@@ -35,6 +34,17 @@ SUBSCRIPTION_3 = {
         },
     },
 }
+SUBSCRIPTION_4 = {
+    'browser': 'chrome',
+    'subscription': {
+        'endpoint': 'https://google.com',
+        'expirationTime': None,
+        'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+    },
+}
+
+REGISTER_URL = '/api/notify.html5'
+PUBLISH_URL = '/api/notify.html5/callback'
 
 
 class TestHtml5Notify(object):
@@ -44,8 +54,10 @@ class TestHtml5Notify(object):
         """Test empty json file."""
         hass = MagicMock()
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
             service = html5.get_service(hass, {})
 
         assert service is not None
@@ -54,10 +66,10 @@ class TestHtml5Notify(object):
         """Test ."""
         hass = MagicMock()
 
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write('I am not JSON'.encode('utf-8'))
-            fp.flush()
-            hass.config.path.return_value = fp.name
+        m = mock_open(read_data='I am not JSON')
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
             service = html5.get_service(hass, {})
 
         assert service is None
@@ -71,10 +83,10 @@ class TestHtml5Notify(object):
             'device': SUBSCRIPTION_1
         }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(json.dumps(data).encode('utf-8'))
-            fp.flush()
-            hass.config.path.return_value = fp.name
+        m = mock_open(read_data=json.dumps(data))
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
             service = html5.get_service(hass, {'gcm_sender_id': '100'})
 
         assert service is not None
@@ -82,10 +94,14 @@ class TestHtml5Notify(object):
         service.send_message('Hello', target=['device', 'non_existing'],
                              data={'icon': 'beer.png'})
 
-        assert len(mock_wp.mock_calls) == 2
+        print(mock_wp.mock_calls)
+
+        assert len(mock_wp.mock_calls) == 3
 
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
+        # Third mock_call checks the status_code of the response.
+        assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -93,13 +109,19 @@ class TestHtml5Notify(object):
         assert payload['body'] == 'Hello'
         assert payload['icon'] == 'beer.png'
 
-    def test_registering_new_device_view(self):
+    @asyncio.coroutine
+    def test_registering_new_device_view(self, loop, test_client):
         """Test that the HTML view works."""
         hass = MagicMock()
+        expected = {
+            'unnamed device': SUBSCRIPTION_1,
+        }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
-            fp.close()
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
 
             assert service is not None
@@ -108,29 +130,71 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
-            assert view.json_path == fp.name
+            assert view.json_path == hass.config.path.return_value
             assert view.registrations == {}
 
-            builder = EnvironBuilder(method='POST',
-                                     data=json.dumps(SUBSCRIPTION_1))
-            Request = request_class()
-            resp = view.post(Request(builder.get_environ()))
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_1))
 
-            expected = {
-                'unnamed device': SUBSCRIPTION_1,
-            }
-
-            assert resp.status_code == 200, resp.response
+            content = yield from resp.text()
+            assert resp.status == 200, content
             assert view.registrations == expected
-            with open(fp.name) as fpp:
-                assert json.load(fpp) == expected
+            handle = m()
+            assert json.loads(handle.write.call_args[0][0]) == expected
 
-    def test_registering_new_device_validation(self):
+    @asyncio.coroutine
+    def test_registering_new_device_expiration_view(self, loop, test_client):
+        """Test that the HTML view works."""
+        hass = MagicMock()
+        expected = {
+            'unnamed device': SUBSCRIPTION_4,
+        }
+
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[1][1][0]
+            assert view.json_path == hass.config.path.return_value
+            assert view.registrations == {}
+
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_4))
+
+            content = yield from resp.text()
+            assert resp.status == 200, content
+            assert view.registrations == expected
+            handle = m()
+            assert json.loads(handle.write.call_args[0][0]) == expected
+
+    @asyncio.coroutine
+    def test_registering_new_device_validation(self, loop, test_client):
         """Test various errors when registering a new device."""
         hass = MagicMock()
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
 
             assert service is not None
@@ -140,31 +204,35 @@ class TestHtml5Notify(object):
 
             view = hass.mock_calls[1][1][0]
 
-            Request = request_class()
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
+            resp = yield from client.post(REGISTER_URL, data=json.dumps({
                 'browser': 'invalid browser',
                 'subscription': 'sub info',
             }))
-            resp = view.post(Request(builder.get_environ()))
-            assert resp.status_code == 400, resp.response
+            assert resp.status == 400
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
+            resp = yield from client.post(REGISTER_URL, data=json.dumps({
                 'browser': 'chrome',
             }))
-            resp = view.post(Request(builder.get_environ()))
-            assert resp.status_code == 400, resp.response
+            assert resp.status == 400
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
-                'browser': 'chrome',
-                'subscription': 'sub info',
-            }))
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
-                resp = view.post(Request(builder.get_environ()))
-            assert resp.status_code == 400, resp.response
+                # resp = view.post(Request(builder.get_environ()))
+                resp = yield from client.post(REGISTER_URL, data=json.dumps({
+                    'browser': 'chrome',
+                    'subscription': 'sub info',
+                }))
 
-    def test_unregistering_device_view(self):
+            assert resp.status == 400
+
+    @asyncio.coroutine
+    def test_unregistering_device_view(self, loop, test_client):
         """Test that the HTML unregister view works."""
         hass = MagicMock()
 
@@ -173,11 +241,15 @@ class TestHtml5Notify(object):
             'other device': SUBSCRIPTION_2,
         }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
-            fp.write(json.dumps(config).encode('utf-8'))
-            fp.flush()
-            service = html5.get_service(hass, {})
+        m = mock_open(read_data=json.dumps(config))
+
+        with patch('homeassistant.components.notify.html5.open', m,
+                   create=True):
+            hass.config.path.return_value = 'file.conf'
+
+            with patch('homeassistant.components.notify.html5.os.path.isfile',
+                       return_value=True):
+                service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -185,23 +257,29 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
-            assert view.json_path == fp.name
+            assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            builder = EnvironBuilder(method='DELETE', data=json.dumps({
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            resp = yield from client.delete(REGISTER_URL, data=json.dumps({
                 'subscription': SUBSCRIPTION_1['subscription'],
             }))
-            Request = request_class()
-            resp = view.delete(Request(builder.get_environ()))
 
             config.pop('some device')
 
-            assert resp.status_code == 200, resp.response
+            assert resp.status == 200, resp.response
             assert view.registrations == config
-            with open(fp.name) as fpp:
-                assert json.load(fpp) == config
+            handle = m()
+            assert json.loads(handle.write.call_args[0][0]) == config
 
-    def test_unregistering_device_view_handles_unknown_subscription(self):
+    @asyncio.coroutine
+    def test_unregister_device_view_handle_unknown_subscription(self, loop,
+                                                                test_client):
         """Test that the HTML unregister view handles unknown subscriptions."""
         hass = MagicMock()
 
@@ -210,11 +288,14 @@ class TestHtml5Notify(object):
             'other device': SUBSCRIPTION_2,
         }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
-            fp.write(json.dumps(config).encode('utf-8'))
-            fp.flush()
-            service = html5.get_service(hass, {})
+        m = mock_open(read_data=json.dumps(config))
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            with patch('homeassistant.components.notify.html5.os.path.isfile',
+                       return_value=True):
+                service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -222,21 +303,27 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
-            assert view.json_path == fp.name
+            assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            builder = EnvironBuilder(method='DELETE', data=json.dumps({
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            resp = yield from client.delete(REGISTER_URL, data=json.dumps({
                 'subscription': SUBSCRIPTION_3['subscription']
             }))
-            Request = request_class()
-            resp = view.delete(Request(builder.get_environ()))
 
-            assert resp.status_code == 200, resp.response
+            assert resp.status == 200, resp.response
             assert view.registrations == config
-            with open(fp.name) as fpp:
-                assert json.load(fpp) == config
+            handle = m()
+            assert handle.write.call_count == 0
 
-    def test_unregistering_device_view_handles_json_safe_error(self):
+    @asyncio.coroutine
+    def test_unregistering_device_view_handles_json_safe_error(self, loop,
+                                                               test_client):
         """Test that the HTML unregister view handles JSON write errors."""
         hass = MagicMock()
 
@@ -245,11 +332,14 @@ class TestHtml5Notify(object):
             'other device': SUBSCRIPTION_2,
         }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
-            fp.write(json.dumps(config).encode('utf-8'))
-            fp.flush()
-            service = html5.get_service(hass, {})
+        m = mock_open(read_data=json.dumps(config))
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            with patch('homeassistant.components.notify.html5.os.path.isfile',
+                       return_value=True):
+                service = html5.get_service(hass, {})
 
             assert service is not None
 
@@ -257,30 +347,36 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
-            assert view.json_path == fp.name
+            assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            builder = EnvironBuilder(method='DELETE', data=json.dumps({
-                'subscription': SUBSCRIPTION_1['subscription'],
-            }))
-            Request = request_class()
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
-                resp = view.delete(Request(builder.get_environ()))
+                resp = yield from client.delete(REGISTER_URL, data=json.dumps({
+                    'subscription': SUBSCRIPTION_1['subscription'],
+                }))
 
-            assert resp.status_code == 500, resp.response
+            assert resp.status == 500, resp.response
             assert view.registrations == config
-            with open(fp.name) as fpp:
-                assert json.load(fpp) == config
+            handle = m()
+            assert handle.write.call_count == 0
 
-    def test_callback_view_no_jwt(self):
+    @asyncio.coroutine
+    def test_callback_view_no_jwt(self, loop, test_client):
         """Test that the notification callback view works without JWT."""
         hass = MagicMock()
 
-        with tempfile.NamedTemporaryFile() as fp:
-            hass.config.path.return_value = fp.name
-            fp.close()
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
             service = html5.get_service(hass, {})
 
             assert service is not None
@@ -290,17 +386,21 @@ class TestHtml5Notify(object):
 
             view = hass.mock_calls[2][1][0]
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            resp = yield from client.post(PUBLISH_URL, data=json.dumps({
                 'type': 'push',
                 'tag': '3bc28d69-0921-41f1-ac6a-7a627ba0aa72'
             }))
-            Request = request_class()
-            resp = view.post(Request(builder.get_environ()))
 
-            assert resp.status_code == 401, resp.response
+            assert resp.status == 401, resp.response
 
-    @patch('pywebpush.WebPusher')
-    def test_callback_view_with_jwt(self, mock_wp):
+    @asyncio.coroutine
+    def test_callback_view_with_jwt(self, loop, test_client):
         """Test that the notification callback view works with JWT."""
         hass = MagicMock()
 
@@ -308,25 +408,31 @@ class TestHtml5Notify(object):
             'device': SUBSCRIPTION_1,
         }
 
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(json.dumps(data).encode('utf-8'))
-            fp.flush()
-            hass.config.path.return_value = fp.name
-            service = html5.get_service(hass, {'gcm_sender_id': '100'})
+        m = mock_open(read_data=json.dumps(data))
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            with patch('homeassistant.components.notify.html5.os.path.isfile',
+                       return_value=True):
+                service = html5.get_service(hass, {'gcm_sender_id': '100'})
 
             assert service is not None
 
             # assert hass.called
             assert len(hass.mock_calls) == 3
 
-            service.send_message('Hello', target=['device'],
-                                 data={'icon': 'beer.png'})
+            with patch('pywebpush.WebPusher') as mock_wp:
+                service.send_message('Hello', target=['device'],
+                                     data={'icon': 'beer.png'})
 
-            assert len(mock_wp.mock_calls) == 2
+            assert len(mock_wp.mock_calls) == 3
 
             # WebPusher constructor
             assert mock_wp.mock_calls[0][1][0] == \
                 SUBSCRIPTION_1['subscription']
+            # Third mock_call checks the status_code of the response.
+            assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
 
             # Call to send
             push_payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -339,13 +445,16 @@ class TestHtml5Notify(object):
 
             bearer_token = "Bearer {}".format(push_payload['data']['jwt'])
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+
+            resp = yield from client.post(PUBLISH_URL, data=json.dumps({
                 'type': 'push',
             }), headers={'Authorization': bearer_token})
-            Request = request_class()
-            resp = view.post(Request(builder.get_environ()))
 
-            assert resp.status_code == 200, resp.response
-            returned = resp.response[0].decode('utf-8')
-            expected = '{"event": "push", "status": "ok"}'
-            assert json.loads(returned) == json.loads(expected)
+            assert resp.status == 200
+            body = yield from resp.json()
+            assert body == {"event": "push", "status": "ok"}

@@ -18,26 +18,27 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the NMA notification service."""
-    response = requests.get(_RESOURCE + 'verify',
-                            params={"apikey": config[CONF_API_KEY]})
+    parameters = {
+        'apikey': config[CONF_API_KEY],
+    }
+    response = requests.get(
+        '{}{}'.format(_RESOURCE, 'verify'), params=parameters, timeout=5)
     tree = ET.fromstring(response.content)
 
     if tree[0].tag == 'error':
-        _LOGGER.error("Wrong API key supplied. %s", tree[0].text)
+        _LOGGER.error("Wrong API key supplied: %s", tree[0].text)
         return None
 
     return NmaNotificationService(config[CONF_API_KEY])
 
 
-# pylint: disable=too-few-public-methods
 class NmaNotificationService(BaseNotificationService):
     """Implement the notification service for NMA."""
 
@@ -48,14 +49,15 @@ class NmaNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         data = {
-            "apikey": self._api_key,
-            "application": 'home-assistant',
-            "event": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            "description": message,
-            "priority": 0,
+            'apikey': self._api_key,
+            'application': 'home-assistant',
+            'event': kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            'description': message,
+            'priority': 0,
         }
 
-        response = requests.get(_RESOURCE + 'notify', params=data)
+        response = requests.get(
+            '{}{}'.format(_RESOURCE, 'notify'), params=data, timeout=5)
         tree = ET.fromstring(response.content)
 
         if tree[0].tag == 'error':

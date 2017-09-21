@@ -10,6 +10,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
@@ -22,10 +23,7 @@ REQUIREMENTS = ['pynetio==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_POWER_MWH = 'current_power_mwh'
-ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_START_DATE = 'start_date'
-ATTR_TODAY_MWH = 'today_mwh'
 ATTR_TOTAL_CONSUMPTION_KWH = 'total_energy_kwh'
 
 CONF_OUTLETS = 'outlets'
@@ -40,7 +38,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 
-URL_API_NETIO_EP = '/api/netio/<host>'
+URL_API_NETIO_EP = '/api/netio/{host}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -52,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Configure the Netio platform."""
+    """Set up the Netio platform."""
     from pynetio import Netio
 
     host = config.get(CONF_HOST)
@@ -60,14 +58,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     port = config.get(CONF_PORT)
 
-    if len(DEVICES) == 0:
-        hass.wsgi.register_view(NetioApiView)
+    if not DEVICES:
+        hass.http.register_view(NetioApiView)
 
     dev = Netio(host, port, username, password)
 
     DEVICES[host] = Device(dev, [])
 
-    # Throttle the update for all NetioSwitches of one Netio
+    # Throttle the update for all Netio switches of one Netio
     dev.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(dev.update)
 
     for key in config[CONF_OUTLETS]:
@@ -93,9 +91,11 @@ class NetioApiView(HomeAssistantView):
     url = URL_API_NETIO_EP
     name = 'api:netio'
 
+    @callback
     def get(self, request, host):
         """Request handler."""
-        data = request.args
+        hass = request.app['hass']
+        data = request.query
         states, consumptions, cumulated_consumptions, start_dates = \
             [], [], [], []
 
@@ -117,28 +117,28 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            dev.update_ha_state()
+            hass.async_add_job(dev.async_update_ha_state())
 
         return self.json(True)
 
 
 class NetioSwitch(SwitchDevice):
-    """Provide a netio linked switch."""
+    """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):
-        """Defined to handle throttle."""
+        """Initialize the Netio switch."""
         self._name = name
         self.outlet = outlet
         self.netio = netio
 
     @property
     def name(self):
-        """Netio device's name."""
+        """Return the device's name."""
         return self._name
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return true if entity is available."""
         return not hasattr(self, 'telnet')
 
     def turn_on(self):
@@ -154,22 +154,21 @@ class NetioSwitch(SwitchDevice):
         val[self.outlet - 1] = '1' if value else '0'
         self.netio.get('port list %s' % ''.join(val))
         self.netio.states[self.outlet - 1] = value
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):
-        """Return switch's status."""
+        """Return the switch's status."""
         return self.netio.states[self.outlet - 1]
 
     def update(self):
-        """Called by Home Assistant."""
+        """Update the state."""
         self.netio.update()
 
     @property
     def state_attributes(self):
         """Return optional state attributes."""
         return {
-            ATTR_CURRENT_POWER_W: self.current_power_w,
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,
             ATTR_START_DATE: self.start_date.split('|')[0]
         }
@@ -181,7 +180,7 @@ class NetioSwitch(SwitchDevice):
 
     @property
     def cumulated_consumption_kwh(self):
-        """Total enerygy consumption since start_date."""
+        """Return the total enerygy consumption since start_date."""
         return self.netio.cumulated_consumptions[self.outlet - 1]
 
     @property

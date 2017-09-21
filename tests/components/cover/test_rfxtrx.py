@@ -3,10 +3,10 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -15,8 +15,8 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
-        self.hass.config.components = ['rfxtrx']
+        self.hass = get_test_home_assistant()
+        mock_component('rfxtrx')
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -28,7 +28,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_valid_config(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -39,7 +39,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_invalid_config_capital_letters(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'cover', {
+        self.assertFalse(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -51,7 +51,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_invalid_config_extra_key(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'cover', {
+        self.assertFalse(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'invalid_key': 'afda',
@@ -64,7 +64,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_invalid_config_capital_packetid(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'cover', {
+        self.assertFalse(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -76,7 +76,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_invalid_config_missing_packetid(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'cover', {
+        self.assertFalse(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -87,14 +87,14 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_default_config(self):
         """Test with 0 cover."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'devices': {}}}))
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
     def test_one_cover(self):
         """Test with 1 cover."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'devices':
                           {'0b1400cd0213c7f210010f51': {
@@ -117,7 +117,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_several_covers(self):
         """Test with 3 covers."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'signal_repetitions': 3,
                       'devices':
@@ -145,7 +145,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_discover_covers(self):
         """Test with discovery of covers."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices': {}}}))
@@ -183,7 +183,7 @@ class TestCoverRfxtrx(unittest.TestCase):
 
     def test_discover_cover_noautoadd(self):
         """Test with discovery of cover when auto add is False."""
-        self.assertTrue(_setup_component(self.hass, 'cover', {
+        self.assertTrue(setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': False,
                       'devices': {}}}))

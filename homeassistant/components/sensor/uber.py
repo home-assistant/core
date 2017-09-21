@@ -9,12 +9,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['uber_rides==0.2.5']
+REQUIREMENTS = ['uber_rides==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +31,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVER_TOKEN): cv.string,
-    vol.Required(CONF_START_LATITUDE): cv.latitude,
-    vol.Required(CONF_START_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_START_LATITUDE): cv.latitude,
+    vol.Optional(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_PRODUCT_IDS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -45,27 +44,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from uber_rides.session import Session
 
     session = Session(server_token=config.get(CONF_SERVER_TOKEN))
-
+    start_latitude = config.get(CONF_START_LATITUDE, hass.config.latitude)
+    start_longitude = config.get(CONF_START_LONGITUDE, hass.config.longitude)
+    end_latitude = config.get(CONF_END_LATITUDE)
+    end_longitude = config.get(CONF_END_LONGITUDE)
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = UberEstimate(session, config[CONF_START_LATITUDE],
-                                   config[CONF_START_LONGITUDE],
-                                   config.get(CONF_END_LATITUDE),
-                                   config.get(CONF_END_LONGITUDE))
+    timeandpriceest = UberEstimate(
+        session, start_latitude, start_longitude, end_latitude, end_longitude)
+
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        if (product.get('price_details') is not None) and \
-           product['price_details']['estimate'] is not 'Metered':
+
+        if product.get('price_details') is not None \
+                and product['display_name'] != 'TAXI':
             dev.append(UberSensor(
                 'price', timeandpriceest, product_id, product))
-    add_devices(dev)
+
+    add_devices(dev, True)
 
 
-# pylint: disable=too-few-public-methods
 class UberSensor(Entity):
     """Implementation of an Uber sensor."""
 
@@ -75,8 +77,8 @@ class UberSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(self._product['display_name'],
-                                    self._sensortype)
+        self._name = '{} {}'.format(
+            self._product['display_name'], self._sensortype)
         if self._sensortype == 'time':
             self._unit_of_measurement = 'min'
             time_estimate = self._product.get('time_estimate_seconds', 0)
@@ -85,14 +87,16 @@ class UberSensor(Entity):
             if self._product.get('price_details') is not None:
                 price_details = self._product['price_details']
                 self._unit_of_measurement = price_details.get('currency_code')
-                if price_details.get('low_estimate') is not None:
-                    statekey = 'minimum'
-                else:
-                    statekey = 'low_estimate'
-                self._state = int(price_details.get(statekey, 0))
+                try:
+                    if price_details.get('low_estimate') is not None:
+                        statekey = 'minimum'
+                    else:
+                        statekey = 'low_estimate'
+                    self._state = int(price_details.get(statekey))
+                except TypeError:
+                    self._state = 0
             else:
                 self._state = 0
-        self.update()
 
     @property
     def name(self):
@@ -114,7 +118,7 @@ class UberSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        time_estimate = self._product.get("time_estimate_seconds")
+        time_estimate = self._product.get('time_estimate_seconds')
         params = {
             'Product ID': self._product['product_id'],
             'Product short description': self._product['short_description'],
@@ -155,7 +159,6 @@ class UberSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from the Uber API and update the states."""
         self.data.update()
@@ -172,11 +175,9 @@ class UberSensor(Entity):
                 self._state = 0
 
 
-# pylint: disable=too-few-public-methods
 class UberEstimate(object):
     """The class for handling the time and price estimate."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, session, start_latitude, start_longitude,
                  end_latitude=None, end_longitude=None):
         """Initialize the UberEstimate object."""
@@ -219,8 +220,8 @@ class UberEstimate(object):
                 if product.get('price_details') is None:
                     price_details = {}
                 price_details['estimate'] = price.get('estimate', '0')
-                price_details['high_estimate'] = price.get('high_estimate',
-                                                           '0')
+                price_details['high_estimate'] = price.get(
+                    'high_estimate', '0')
                 price_details['low_estimate'] = price.get('low_estimate', '0')
                 price_details['currency_code'] = price.get('currency_code')
                 surge_multiplier = price.get('surge_multiplier', '0')

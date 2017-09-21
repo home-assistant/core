@@ -31,6 +31,17 @@ alarm_arm_away:
       description: An optional code to arm away the alarm control panel with
       example: 1234
 
+alarm_arm_night:
+  description: Send the alarm the command for arm night
+
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm night
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to arm night the alarm control panel with
+      example: 1234
+
 alarm_trigger:
   description: Send the alarm the command for trigger
 
@@ -41,3 +52,14 @@ alarm_trigger:
     code:
       description: An optional code to trigger the alarm control panel with
       example: 1234
+
+envisalink_alarm_keypress:
+  description: Send custom keypresses to the alarm
+
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger
+      example: 'alarm_control_panel.downstairs'
+    keypress:
+      description: 'String to send to the alarm panel (1-6 characters)'
+      example: '*71'

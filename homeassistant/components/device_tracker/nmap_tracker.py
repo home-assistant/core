@@ -2,38 +2,40 @@
 Support for scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_scanner/
+https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
+from datetime import timedelta
 import logging
 import re
 import subprocess
 from collections import namedtuple
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOSTS
-from homeassistant.util import Throttle
-
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
-
-_LOGGER = logging.getLogger(__name__)
-
-# Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = 'home_interval'
-CONF_EXCLUDE = 'exclude'
 
 REQUIREMENTS = ['python-nmap==0.6.1']
 
+_LOGGER = logging.getLogger(__name__)
+
+CONF_EXCLUDE = 'exclude'
+# Interval in minutes to exclude devices from a scan while they are home
+CONF_HOME_INTERVAL = 'home_interval'
+CONF_OPTIONS = 'scan_options'
+DEFAULT_OPTIONS = '-F --host-timeout 5s'
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): cv.string,
+    vol.Required(CONF_HOSTS): cv.ensure_list,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1))
+        vol.All(cv.ensure_list, vol.Length(min=1)),
+    vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
+        cv.string
 })
 
 
@@ -42,6 +44,7 @@ def get_scanner(hass, config):
     scanner = NmapDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
@@ -58,7 +61,7 @@ def _arp(ip_address):
     return None
 
 
-class NmapDeviceScanner(object):
+class NmapDeviceScanner(DeviceScanner):
     """This class scans for devices using nmap."""
 
     exclude = []
@@ -68,12 +71,13 @@ class NmapDeviceScanner(object):
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
-        self.exclude = config.get(CONF_EXCLUDE, [])
+        self.exclude = config[CONF_EXCLUDE]
         minutes = config[CONF_HOME_INTERVAL]
+        self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
-        _LOGGER.info('nmap scanner initialized')
+        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -88,21 +92,19 @@ class NmapDeviceScanner(object):
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Scan the network for devices.
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info('Scanning')
+        _LOGGER.info("Scanning...")
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = '-F --host-timeout 5s '
+        options = self._options
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
@@ -120,7 +122,8 @@ class NmapDeviceScanner(object):
             options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=self.hosts, arguments=options)
+            result = scanner.scan(hosts=' '.join(self.hosts),
+                                  arguments=options)
         except PortScannerError:
             return False
 
@@ -137,5 +140,5 @@ class NmapDeviceScanner(object):
 
         self.last_results = last_results
 
-        _LOGGER.info('nmap scan successful')
+        _LOGGER.info("nmap scan successful")
         return True

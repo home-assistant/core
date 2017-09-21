@@ -13,9 +13,9 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['freesms==0.1.0']
+REQUIREMENTS = ['freesms==0.1.1']
 
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -23,13 +23,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Free Mobile SMS notification service."""
-    return FreeSMSNotificationService(config[CONF_USERNAME],
-                                      config[CONF_ACCESS_TOKEN])
+    return FreeSMSNotificationService(
+        config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
 
 
-# pylint: disable=too-few-public-methods
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 

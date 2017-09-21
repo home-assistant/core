@@ -33,9 +33,9 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument,too-few-public-methods
+# pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup BloomSky component."""
+    """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
     global BLOOMSKY
@@ -67,9 +67,8 @@ class BloomSky(object):
     def refresh_devices(self):
         """Use the API to retrieve a list of devices."""
         _LOGGER.debug("Fetching BloomSky update")
-        response = requests.get(self.API_URL,
-                                headers={"Authorization": self._api_key},
-                                timeout=10)
+        response = requests.get(
+            self.API_URL, headers={"Authorization": self._api_key}, timeout=10)
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
         elif response.status_code != 200:

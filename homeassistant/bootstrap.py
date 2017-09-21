@@ -1,245 +1,51 @@
-"""Provides methods to bootstrap a home assistant instance."""
-
+"""Provide methods to bootstrap a Home Assistant instance."""
+import asyncio
 import logging
 import logging.handlers
 import os
 import sys
-from collections import defaultdict
-from threading import RLock
+from time import time
+from collections import OrderedDict
 
-from types import ModuleType
 from typing import Any, Optional, Dict
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.setup import async_setup_component
 import homeassistant.loader as loader
-import homeassistant.util.package as pkg_util
+from homeassistant.util.logging import AsyncHandler
+from homeassistant.util.package import async_get_user_site, get_user_site
 from homeassistant.util.yaml import clear_secret_cache
-from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    event_decorators, service, config_per_platform, extract_domain_configs)
+from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
-_SETUP_LOCK = RLock()
-_CURRENT_SETUP = []
-
-ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
+# hass.data key for logging information.
+DATA_LOGGING = 'logging'
 
-def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict]=None) -> bool:
-    """Setup a component and all its dependencies."""
-    if domain in hass.config.components:
-        return True
-
-    _ensure_loader_prepared(hass)
-
-    if config is None:
-        config = defaultdict(dict)
-
-    components = loader.load_order_component(domain)
-
-    # OrderedSet is empty if component or dependencies could not be resolved
-    if not components:
-        return False
-
-    for component in components:
-        if not _setup_component(hass, component, config):
-            return False
-
-    return True
+FIRST_INIT_COMPONENT = set((
+    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
+    'frontend', 'history'))
 
 
-def _handle_requirements(hass: core.HomeAssistant, component,
-                         name: str) -> bool:
-    """Install the requirements for a component."""
-    if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
-        return True
-
-    for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('deps')):
-            _LOGGER.error('Not initializing %s because could not install '
-                          'dependency %s', name, req)
-            return False
-
-    return True
-
-
-def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
-    """Setup a component for Home Assistant."""
-    # pylint: disable=too-many-return-statements,too-many-branches
-    # pylint: disable=too-many-statements
-    if domain in hass.config.components:
-        return True
-
-    with _SETUP_LOCK:
-        # It might have been loaded while waiting for lock
-        if domain in hass.config.components:
-            return True
-
-        if domain in _CURRENT_SETUP:
-            _LOGGER.error('Attempt made to setup %s during setup of %s',
-                          domain, domain)
-            return False
-
-        config = prepare_setup_component(hass, config, domain)
-
-        if config is None:
-            return False
-
-        component = loader.get_component(domain)
-        _CURRENT_SETUP.append(domain)
-
-        try:
-            result = component.setup(hass, config)
-            if result is False:
-                _LOGGER.error('component %s failed to initialize', domain)
-                return False
-            elif result is not True:
-                _LOGGER.error('component %s did not return boolean if setup '
-                              'was successful. Disabling component.', domain)
-                loader.set_component(domain, None)
-                return False
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error during setup of component %s', domain)
-            return False
-        finally:
-            _CURRENT_SETUP.remove(domain)
-
-        hass.config.components.append(component.DOMAIN)
-
-        # Assumption: if a component does not depend on groups
-        # it communicates with devices
-        if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
-           hass.pool.worker_count <= 10:
-            hass.pool.add_worker()
-
-        hass.bus.fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
-        )
-
-        return True
-
-
-def prepare_setup_component(hass: core.HomeAssistant, config: dict,
-                            domain: str):
-    """Prepare setup of a component and return processed config."""
-    # pylint: disable=too-many-return-statements
-    component = loader.get_component(domain)
-    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                    if dep not in hass.config.components]
-
-    if missing_deps:
-        _LOGGER.error(
-            'Not initializing %s because not all dependencies loaded: %s',
-            domain, ", ".join(missing_deps))
-        return None
-
-    if hasattr(component, 'CONFIG_SCHEMA'):
-        try:
-            config = component.CONFIG_SCHEMA(config)
-        except vol.Invalid as ex:
-            log_exception(ex, domain, config)
-            return None
-
-    elif hasattr(component, 'PLATFORM_SCHEMA'):
-        platforms = []
-        for p_name, p_config in config_per_platform(config, domain):
-            # Validate component specific platform schema
-            try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
-            except vol.Invalid as ex:
-                log_exception(ex, domain, config)
-                return None
-
-            # Not all platform components follow same pattern for platforms
-            # So if p_name is None we are not going to validate platform
-            # (the automation component is one of them)
-            if p_name is None:
-                platforms.append(p_validated)
-                continue
-
-            platform = prepare_setup_platform(hass, config, domain,
-                                              p_name)
-
-            if platform is None:
-                return None
-
-            # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.Invalid as ex:
-                    log_exception(ex, '{}.{}'.format(domain, p_name),
-                                  p_validated)
-                    return None
-
-            platforms.append(p_validated)
-
-        # Create a copy of the configuration with all config for current
-        # component removed and add validated config back in.
-        filter_keys = extract_domain_configs(config, domain)
-        config = {key: value for key, value in config.items()
-                  if key not in filter_keys}
-        config[domain] = platforms
-
-    if not _handle_requirements(hass, component, domain):
-        return None
-
-    return config
-
-
-def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
-                           platform_name: str) -> Optional[ModuleType]:
-    """Load a platform and makes sure dependencies are setup."""
-    _ensure_loader_prepared(hass)
-
-    platform_path = PLATFORM_FORMAT.format(domain, platform_name)
-
-    platform = loader.get_platform(domain, platform_name)
-
-    # Not found
-    if platform is None:
-        _LOGGER.error('Unable to find platform %s', platform_path)
-        return None
-
-    # Already loaded
-    elif platform_path in hass.config.components:
-        return platform
-
-    # Load dependencies
-    for component in getattr(platform, 'DEPENDENCIES', []):
-        if not setup_component(hass, component, config):
-            _LOGGER.error(
-                'Unable to prepare setup for platform %s because '
-                'dependency %s could not be initialized', platform_path,
-                component)
-            return None
-
-    if not _handle_requirements(hass, platform, platform_path):
-        return None
-
-    return platform
-
-
-# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
                      hass: Optional[core.HomeAssistant]=None,
                      config_dir: Optional[str]=None,
                      enable_log: bool=True,
                      verbose: bool=False,
                      skip_pip: bool=False,
-                     log_rotate_days: Any=None) \
+                     log_rotate_days: Any=None,
+                     log_file: Any=None) \
                      -> Optional[core.HomeAssistant]:
-    """Try to configure Home Assistant from a config dict.
+    """Try to configure Home Assistant from a configuration dictionary.
 
     Dynamically loads required components and its dependencies.
     """
@@ -248,61 +54,104 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            mount_local_lib_path(config_dir)
+            hass.loop.run_until_complete(
+                async_mount_local_lib_path(config_dir, hass.loop))
 
+    # run task
+    hass = hass.loop.run_until_complete(
+        async_from_config_dict(
+            config, hass, config_dir, enable_log, verbose, skip_pip,
+            log_rotate_days, log_file)
+    )
+
+    return hass
+
+
+@asyncio.coroutine
+def async_from_config_dict(config: Dict[str, Any],
+                           hass: core.HomeAssistant,
+                           config_dir: Optional[str]=None,
+                           enable_log: bool=True,
+                           verbose: bool=False,
+                           skip_pip: bool=False,
+                           log_rotate_days: Any=None,
+                           log_file: Any=None) \
+                           -> Optional[core.HomeAssistant]:
+    """Try to configure Home Assistant from a configuration dictionary.
+
+    Dynamically loads required components and its dependencies.
+    This method is a coroutine.
+    """
+    start = time()
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        conf_util.process_ha_core_config(hass, core_config)
+        yield from conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        log_exception(ex, 'homeassistant', core_config)
+        conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    conf_util.process_ha_config_upgrade(hass)
+    yield from hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        enable_logging(hass, verbose, log_rotate_days)
+        async_enable_logging(hass, verbose, log_rotate_days, log_file)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
-        _LOGGER.warning('Skipping pip installation of required modules. '
-                        'This may cause issues.')
+        _LOGGER.warning("Skipping pip installation of required modules. "
+                        "This may cause issues")
 
-    _ensure_loader_prepared(hass)
+    if not loader.PREPARED:
+        yield from hass.async_add_job(loader.prepare, hass)
+
+    # Merge packages
+    conf_util.merge_packages_config(
+        config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     # Make a copy because we are mutating it.
-    # Convert it to defaultdict so components can always have config dict
+    # Use OrderedDict in case original one was one.
     # Convert values to dictionaries if they are None
-    config = defaultdict(
-        dict, {key: value or {} for key, value in config.items()})
+    new_config = OrderedDict()
+    for key, value in config.items():
+        new_config[key] = value or {}
+    config = new_config
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
 
-    # Setup in a thread to avoid blocking
-    def component_setup():
-        """Set up a component."""
-        if not core_components.setup(hass, config):
-            _LOGGER.error('Home Assistant core failed to initialize. '
-                          'Further initialization aborted.')
-            return hass
+    # setup components
+    # pylint: disable=not-an-iterable
+    res = yield from core_components.async_setup(hass, config)
+    if not res:
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "further initialization aborted")
+        return hass
 
-        persistent_notification.setup(hass, config)
+    yield from persistent_notification.async_setup(hass, config)
 
-        _LOGGER.info('Home Assistant core initialized')
+    _LOGGER.info("Home Assistant core initialized")
 
-        # Give event decorators access to HASS
-        event_decorators.HASS = hass
-        service.HASS = hass
+    # stage 1
+    for component in components:
+        if component not in FIRST_INIT_COMPONENT:
+            continue
+        hass.async_add_job(async_setup_component(hass, component, config))
 
-        # Setup the components
-        for domain in loader.load_order_components(components):
-            _setup_component(hass, domain, config)
+    yield from hass.async_block_till_done()
 
-    hass.loop.run_until_complete(
-        hass.loop.run_in_executor(None, component_setup)
-    )
+    # stage 2
+    for component in components:
+        if component in FIRST_INIT_COMPONENT:
+            continue
+        hass.async_add_job(async_setup_component(hass, component, config))
+
+    yield from hass.async_block_till_done()
+
+    stop = time()
+    _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
+
+    async_register_signal_handling(hass)
     return hass
 
 
@@ -310,7 +159,8 @@ def from_config_file(config_path: str,
                      hass: Optional[core.HomeAssistant]=None,
                      verbose: bool=False,
                      skip_pip: bool=True,
-                     log_rotate_days: Any=None):
+                     log_rotate_days: Any=None,
+                     log_file: Any=None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -319,35 +169,71 @@ def from_config_file(config_path: str,
     if hass is None:
         hass = core.HomeAssistant()
 
+    # run task
+    hass = hass.loop.run_until_complete(
+        async_from_config_file(
+            config_path, hass, verbose, skip_pip, log_rotate_days, log_file)
+    )
+
+    return hass
+
+
+@asyncio.coroutine
+def async_from_config_file(config_path: str,
+                           hass: core.HomeAssistant,
+                           verbose: bool=False,
+                           skip_pip: bool=True,
+                           log_rotate_days: Any=None,
+                           log_file: Any=None):
+    """Read the configuration file and try to start all the functionality.
+
+    Will add functionality to 'hass' parameter.
+    This method is a coroutine.
+    """
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    mount_local_lib_path(config_dir)
+    yield from async_mount_local_lib_path(config_dir, hass.loop)
 
-    enable_logging(hass, verbose, log_rotate_days)
+    async_enable_logging(hass, verbose, log_rotate_days, log_file)
 
     try:
-        config_dict = conf_util.load_yaml_config_file(config_path)
-    except HomeAssistantError:
+        config_dict = yield from hass.async_add_job(
+            conf_util.load_yaml_config_file, config_path)
+    except HomeAssistantError as err:
+        _LOGGER.error("Error loading %s: %s", config_path, err)
         return None
     finally:
         clear_secret_cache()
 
-    return from_config_dict(config_dict, hass, enable_log=False,
-                            skip_pip=skip_pip)
+    hass = yield from async_from_config_dict(
+        config_dict, hass, enable_log=False, skip_pip=skip_pip)
+    return hass
 
 
-def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                   log_rotate_days=None) -> None:
-    """Setup the logging."""
+@core.callback
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                         log_rotate_days=None, log_file=None) -> None:
+    """Set up the logging.
+
+    This method must be run in the event loop.
+    """
     logging.basicConfig(level=logging.INFO)
-    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-           "[%(name)s] %(message)s%(reset)s")
+    fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
+           "[%(name)s] %(message)s")
+    colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+    datefmt = '%Y-%m-%d %H:%M:%S'
+
+    # Suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger('requests').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
+
     try:
         from colorlog import ColoredFormatter
         logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            fmt,
-            datefmt='%y-%m-%d %H:%M:%S',
+            colorfmt,
+            datefmt=datefmt,
             reset=True,
             log_colors={
                 'DEBUG': 'cyan',
@@ -361,13 +247,18 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         pass
 
     # Log errors to a file if we have write access to file or config dir
-    err_log_path = hass.config.path(ERROR_LOG_FILENAME)
+    if log_file is None:
+        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
+    else:
+        err_log_path = os.path.abspath(log_file)
+
     err_path_exists = os.path.isfile(err_log_path)
+    err_dir = os.path.dirname(err_log_path)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or \
-       (not err_path_exists and os.access(hass.config.config_dir, os.W_OK)):
+       (not err_path_exists and os.access(err_dir, os.W_OK)):
 
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
@@ -377,49 +268,48 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                 err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(
-            logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                              datefmt='%y-%m-%d %H:%M:%S'))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+
+        async_handler = AsyncHandler(hass.loop, err_handler)
+
+        @asyncio.coroutine
+        def async_stop_async_handler(event):
+            """Cleanup async handler."""
+            logging.getLogger('').removeHandler(async_handler)
+            yield from async_handler.async_close(blocking=True)
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
+
         logger = logging.getLogger('')
-        logger.addHandler(err_handler)
+        logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
+        # Save the log file location for access by other components.
+        hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
-            'Unable to setup error log %s (access denied)', err_log_path)
-
-
-def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
-    """Ensure Home Assistant loader is prepared."""
-    if not loader.PREPARED:
-        loader.prepare(hass)
-
-
-def log_exception(ex, domain, config):
-    """Generate log exception for config validation."""
-    message = 'Invalid config for [{}]: '.format(domain)
-
-    if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join('%s' % m for m in ex.path))
-    else:
-        message += '{}.'.format(humanize_error(config, ex))
-
-    if hasattr(config, '__line__'):
-        message += " (See {}:{})".format(
-            config.__config_file__, config.__line__ or '?')
-
-    if domain != 'homeassistant':
-        message += (' Please check the docs at '
-                    'https://home-assistant.io/components/{}/'.format(domain))
-
-    _LOGGER.error(message)
+            "Unable to setup error log %s (access denied)", err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:
     """Add local library to Python Path."""
     deps_dir = os.path.join(config_dir, 'deps')
-    if deps_dir not in sys.path:
-        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    lib_dir = get_user_site(deps_dir)
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
+    return deps_dir
+
+
+@asyncio.coroutine
+def async_mount_local_lib_path(config_dir: str,
+                               loop: asyncio.AbstractEventLoop) -> str:
+    """Add local library to Python Path.
+
+    This function is a coroutine.
+    """
+    deps_dir = os.path.join(config_dir, 'deps')
+    lib_dir = yield from async_get_user_site(deps_dir, loop=loop)
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
     return deps_dir

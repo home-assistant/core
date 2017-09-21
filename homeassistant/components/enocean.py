@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the EnOcean component."""
+    """Set up the EnOcean component."""
     global ENOCEAN_DONGLE
 
     serial_dev = config[DOMAIN].get(CONF_DEVICE)
@@ -43,8 +43,8 @@ class EnOceanDongle:
     def __init__(self, hass, ser):
         """Initialize the EnOcean dongle."""
         from enocean.communicators.serialcommunicator import SerialCommunicator
-        self.__communicator = SerialCommunicator(port=ser,
-                                                 callback=self.callback)
+        self.__communicator = SerialCommunicator(
+            port=ser, callback=self.callback)
         self.__communicator.start()
         self.__devices = []
 
@@ -56,20 +56,19 @@ class EnOceanDongle:
         """Send a command from the EnOcean dongle."""
         self.__communicator.send(command)
 
-    def _combine_hex(self, data):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def _combine_hex(self, data):
         """Combine list of integer values to one big integer."""
         output = 0x00
         for i, j in enumerate(reversed(data)):
             output |= (j << i * 8)
         return output
 
-    # pylint: disable=too-many-branches
     def callback(self, temp):
-        """Callback function for EnOcean Device.
+        """Handle EnOcean device's callback.
 
-        This is the callback function called by
-        python-enocan whenever there is an incoming
-        packet.
+        This is the callback function called by python-enocan whenever there
+        is an incoming packet.
         """
         from enocean.protocol.packet import RadioPacket
         if isinstance(temp, RadioPacket):
@@ -112,7 +111,6 @@ class EnOceanDongle:
                         device.value_changed(value)
 
 
-# pylint: disable=too-few-public-methods
 class EnOceanDevice():
     """Parent class for all devices associated with the EnOcean component."""
 

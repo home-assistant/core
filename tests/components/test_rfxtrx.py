@@ -1,10 +1,11 @@
 """The tests for the Rfxtrx component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
 import pytest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
@@ -27,14 +28,14 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_default_config(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}
         }))
 
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices': {}}}))
@@ -43,15 +44,15 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_valid_config(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}}))
 
-        self.hass.config.components.remove('rfxtrx')
-
-        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+    def test_valid_config2(self):
+        """Test configuration."""
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
@@ -60,11 +61,11 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_invalid_config(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
+        self.assertFalse(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {}
         }))
 
-        self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
+        self.assertFalse(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
@@ -72,13 +73,13 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_fire_event(self):
         """Test fire event."""
-        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}
         }))
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -89,6 +90,7 @@ class TestRFXTRX(unittest.TestCase):
 
         calls = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             calls.append(event)
@@ -116,13 +118,13 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_fire_event_sensor(self):
         """Test fire event."""
-        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+        self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}
         }))
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
@@ -133,6 +135,7 @@ class TestRFXTRX(unittest.TestCase):
 
         calls = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             calls.append(event)

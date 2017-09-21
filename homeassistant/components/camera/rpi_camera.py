@@ -12,7 +12,8 @@ import shutil
 import voluptuous as vol
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_FILE_PATH)
+from homeassistant.const import (CONF_NAME, CONF_FILE_PATH,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,10 +36,10 @@ DEFAULT_TIMELAPSE = 1000
 DEFAULT_VERTICAL_FLIP = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FILE_PATH): cv.isfile,
+    vol.Optional(CONF_FILE_PATH): cv.string,
     vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
-    vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_HORIZONTAL_FLIP):
+    vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
         vol.Coerce(int),
     vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITIY):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
@@ -53,8 +54,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def kill_raspistill(*args):
+    """Kill any previously running raspistill process.."""
+    subprocess.Popen(['killall', 'raspistill'],
+                     stdout=subprocess.DEVNULL,
+                     stderr=subprocess.STDOUT)
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Raspberry Camera."""
+    """Set up the Raspberry Camera."""
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
         return False
@@ -75,11 +83,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
     )
 
-    if not os.access(setup_config[CONF_FILE_PATH], os.W_OK):
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
+
+    try:
+        # Try to create an empty file (or open existing) to ensure we have
+        # proper permissions.
+        open(setup_config[CONF_FILE_PATH], 'a').close()
+
+        add_devices([RaspberryCamera(setup_config)])
+    except PermissionError:
         _LOGGER.error("File path is not writable")
         return False
-
-    add_devices([RaspberryCamera(setup_config)])
+    except FileNotFoundError:
+        _LOGGER.error("Could not create output file (missing directory?)")
+        return False
 
 
 class RaspberryCamera(Camera):
@@ -93,9 +110,7 @@ class RaspberryCamera(Camera):
         self._config = device_info
 
         # Kill if there's raspistill instance
-        subprocess.Popen(['killall', 'raspistill'],
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.STDOUT)
+        kill_raspistill()
 
         cmd_args = [
             'raspistill', '--nopreview', '-o', device_info[CONF_FILE_PATH],

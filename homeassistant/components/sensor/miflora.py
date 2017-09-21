@@ -4,7 +4,6 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -12,22 +11,28 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
 
+REQUIREMENTS = ['miflora==0.1.16']
 
-REQUIREMENTS = ['miflora==0.1.9']
+_LOGGER = logging.getLogger(__name__)
 
-LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL = 1200
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=UPDATE_INTERVAL)
-CONF_MAC = 'mac'
+CONF_ADAPTER = 'adapter'
+CONF_CACHE = 'cache_value'
 CONF_FORCE_UPDATE = 'force_update'
 CONF_MEDIAN = 'median'
-CONF_TIMEOUT = 'timeout'
 CONF_RETRIES = 'retries'
-CONF_CACHE = 'cache_value'
+CONF_TIMEOUT = 'timeout'
+
+DEFAULT_ADAPTER = 'hci0'
+DEFAULT_UPDATE_INTERVAL = 1200
+DEFAULT_FORCE_UPDATE = False
+DEFAULT_MEDIAN = 3
 DEFAULT_NAME = 'Mi Flora'
+DEFAULT_RETRIES = 2
+DEFAULT_TIMEOUT = 10
+
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -35,28 +40,31 @@ SENSOR_TYPES = {
     'light': ['Light intensity', 'lux'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
+    'battery': ['Battery', '%'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MEDIAN, default=3): cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
-    vol.Optional(CONF_RETRIES, default=2): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=UPDATE_INTERVAL): cv.positive_int,
+    vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
+    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
+    vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MiFlora sensor."""
+    """Set up the MiFlora sensor."""
     from miflora import miflora_poller
 
     cache = config.get(CONF_CACHE)
-    poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC),
-                                          cache_timeout=cache)
+    poller = miflora_poller.MiFloraPoller(
+        config.get(CONF_MAC), cache_timeout=cache,
+        adapter=config.get(CONF_ADAPTER))
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
@@ -69,15 +77,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         unit = SENSOR_TYPES[parameter][1]
 
         prefix = config.get(CONF_NAME)
-        if len(prefix) > 0:
+        if prefix:
             name = "{} {}".format(prefix, name)
 
-        devs.append(MiFloraSensor(poller,
-                                  parameter,
-                                  name,
-                                  unit,
-                                  force_update,
-                                  median))
+        devs.append(MiFloraSensor(
+            poller, parameter, name, unit, force_update, median))
 
     add_devices(devs)
 
@@ -85,8 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-# pylint: disable=too-many-instance-attributes,too-many-arguments
-    def __init__(self, poller, parameter, name, unit, force_update, median=3):
+    def __init__(self, poller, parameter, name, unit, force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -120,7 +123,6 @@ class MiFloraSensor(Entity):
         """Force update."""
         return self._force_update
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """
         Update current conditions.
@@ -128,34 +130,34 @@ class MiFloraSensor(Entity):
         This uses a rolling median over 3 values to filter out outliers.
         """
         try:
-            LOGGER.debug("Polling data for %s", self.name)
+            _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
-            LOGGER.info("Polling error %s", ioerr)
+            _LOGGER.info("Polling error %s", ioerr)
             data = None
             return
 
         if data is not None:
-            LOGGER.debug("%s = %s", self.name, data)
+            _LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
-            LOGGER.info("Did not receive any data from Mi Flora sensor %s",
-                        self.name)
+            _LOGGER.info("Did not receive any data from Mi Flora sensor %s",
+                         self.name)
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
-            if len(self.data) > 0:
+            if self.data:
                 self.data = self.data[1:]
             else:
                 self._state = None
             return
 
-        LOGGER.debug("Data collected: %s", self.data)
+        _LOGGER.debug("Data collected: %s", self.data)
         if len(self.data) > self.median_count:
             self.data = self.data[1:]
 
         if len(self.data) == self.median_count:
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
-            LOGGER.debug("Median is: %s", median)
+            _LOGGER.debug("Median is: %s", median)
             self._state = median
         else:
-            LOGGER.debug("Not yet enough data for median calculation")
+            _LOGGER.debug("Not yet enough data for median calculation")

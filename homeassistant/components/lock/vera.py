@@ -6,10 +6,10 @@ https://home-assistant.io/components/lock.vera/
 """
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,18 +30,17 @@ class VeraLock(VeraDevice, LockDevice):
         """Initialize the Vera device."""
         self._state = None
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def lock(self, **kwargs):
         """Lock the device."""
         self.vera_device.lock()
         self._state = STATE_LOCKED
-        self.update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
-        self.update_ha_state()
 
     @property
     def is_locked(self):
@@ -49,6 +48,6 @@ class VeraLock(VeraDevice, LockDevice):
         return self._state == STATE_LOCKED
 
     def update(self):
-        """Called by the Vera device callback to update state."""
+        """Update state by the Vera device callback."""
         self._state = (STATE_LOCKED if self.vera_device.is_locked(True)
                        else STATE_UNLOCKED)

@@ -23,7 +23,6 @@ def ts_to_dt(timestamp: Optional[float]) -> Optional[datetime]:
 
 # Based on code at
 # http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-# pylint: disable=too-many-arguments
 def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
                    decimals: int=2, bar_length: int=68) -> None:
     """Print progress bar.
@@ -48,8 +47,8 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
 
 
 def run(script_args: List) -> int:
-    """The actual script body."""
-    # pylint: disable=too-many-locals,invalid-name,too-many-statements
+    """Run the actual script."""
+    # pylint: disable=invalid-name
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from homeassistant.components.recorder import models

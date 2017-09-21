@@ -2,13 +2,23 @@
 import unittest
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.splunk as splunk
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+
+from tests.common import get_test_home_assistant
 
 
 class TestSplunk(unittest.TestCase):
     """Test the Splunk component."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
 
     def test_setup_config_full(self):
         """Test setup with all data."""
@@ -18,15 +28,15 @@ class TestSplunk(unittest.TestCase):
                 'port': 123,
                 'token': 'secret',
                 'ssl': 'False',
+                'name': 'hostname',
             }
         }
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, splunk.DOMAIN, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, splunk.DOMAIN, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
     def test_setup_config_defaults(self):
         """Test setup with defaults."""
@@ -37,12 +47,11 @@ class TestSplunk(unittest.TestCase):
             }
         }
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, splunk.DOMAIN, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, splunk.DOMAIN, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
     def _setup(self, mock_requests):
         """Test the setup."""
@@ -57,8 +66,7 @@ class TestSplunk(unittest.TestCase):
             }
         }
 
-        self.hass = mock.MagicMock()
-        self.hass.pool.worker_count = 2
+        self.hass.bus.listen = mock.MagicMock()
         setup_component(self.hass, splunk.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
@@ -89,12 +97,19 @@ class TestSplunk(unittest.TestCase):
                 'attributes': {},
                 'time': '12345',
                 'value': out,
+                'host': 'HASS',
             }]
 
             payload = {'host': 'http://host:8088/services/collector/event',
                        'event': body}
             self.handler_method(event)
-            self.mock_post.assert_called_once_with(
-                payload['host'], data=payload,
-                headers={'Authorization': 'Splunk secret'})
+            self.assertEqual(self.mock_post.call_count, 1)
+            self.assertEqual(
+                self.mock_post.call_args,
+                mock.call(
+                    payload['host'], data=payload,
+                    headers={'Authorization': 'Splunk secret'},
+                    timeout=10
+                )
+            )
             self.mock_post.reset_mock()

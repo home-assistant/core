@@ -1,8 +1,9 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
-from datetime import timedelta
+from datetime import timedelta, datetime as datetime_sys
 import os
+import re
 from urllib.parse import urlparse
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -12,12 +13,12 @@ from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
@@ -42,7 +43,7 @@ T = TypeVar('T')
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
-    """Validator that at least one key exists."""
+    """Validate that at least one key exists."""
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
@@ -68,6 +69,15 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
+
+
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
@@ -83,6 +93,8 @@ def isfile(value: Any) -> str:
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
+    if value is None:
+        return []
     return value if isinstance(value, list) else [value]
 
 
@@ -167,11 +179,20 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+def time_period_seconds(value: Union[int, str]) -> timedelta:
+    """Validate and transform seconds to a time offset."""
+    try:
+        return timedelta(seconds=int(value))
+    except (ValueError, TypeError):
+        raise vol.Invalid('Expected seconds, got {}'.format(value))
+
+
+time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
+                      time_period_dict)
 
 
 def match_all(value):
-    """Validator that matches all values."""
+    """Validate that matches all values."""
     return value
 
 
@@ -209,10 +230,20 @@ def slug(value):
     if value is None:
         raise vol.Invalid('Slug should not be None')
     value = str(value)
-    slg = slugify(value)
+    slg = util_slugify(value)
     if value == slg:
         return value
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
+
+
+def slugify(value):
+    """Coerce a value to a slug."""
+    if value is None:
+        raise vol.Invalid('Slug should not be None')
+    slg = util_slugify(str(value))
+    if slg:
+        return slg
+    raise vol.Invalid('Unable to slugify {}'.format(value))
 
 
 def string(value: Any) -> str:
@@ -276,6 +307,22 @@ def time(value):
     return time_val
 
 
+def datetime(value):
+    """Validate datetime."""
+    if isinstance(value, datetime_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_datetime(value)
+    except TypeError:
+        date_val = None
+
+    if date_val is None:
+        raise vol.Invalid('Invalid datetime specified: {}'.format(value))
+
+    return date_val
+
+
 def time_zone(value):
     """Validate timezone."""
     if dt_util.get_time_zone(value) is not None:
@@ -284,7 +331,26 @@ def time_zone(value):
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
 
+
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
+
+
+def socket_timeout(value):
+    """Validate timeout float > 0.0.
+
+    None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
+    """
+    if value is None:
+        return _GLOBAL_DEFAULT_TIMEOUT
+    else:
+        try:
+            float_value = float(value)
+            if float_value > 0.0:
+                return float_value
+            raise vol.Invalid('Invalid socket timeout value.'
+                              ' float > 0.0 required.')
+        except Exception as _:
+            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter
@@ -298,25 +364,19 @@ def url(value: Any) -> str:
     raise vol.Invalid('invalid url')
 
 
-def ordered_dict(value_validator, key_validator=match_all):
-    """Validate an ordered dict validator that maintains ordering.
+def x10_address(value):
+    """Validate an x10 address."""
+    regex = re.compile(r'([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$')
+    if not regex.match(value):
+        raise vol.Invalid('Invalid X10 Address')
+    return str(value).lower()
 
-    value_validator will be applied to each value of the dictionary.
-    key_validator (optional) will be applied to each key of the dictionary.
-    """
-    item_validator = vol.Schema({key_validator: value_validator})
 
-    def validator(value):
-        """Validate ordered dict."""
-        config = OrderedDict()
-
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
-
-        return config
-
-    return validator
+def ensure_list_csv(value: Any) -> Sequence:
+    """Ensure that input is a list or make one from comma-separated string."""
+    if isinstance(value, str):
+        return [member.strip() for member in value.split(',')]
+    return ensure_list(value)
 
 
 # Validator helpers
@@ -339,7 +399,7 @@ def key_dependency(key, dependency):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
-    CONF_SCAN_INTERVAL: vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({
@@ -440,8 +500,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
         template)
 })
 
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("wait_template"): template,
+    vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
-    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
-             CONDITION_SCHEMA)],
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
+             _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )

@@ -1,11 +1,19 @@
 """The test for the Template sensor platform."""
-import homeassistant.bootstrap as bootstrap
+import asyncio
 
-from tests.common import get_test_home_assistant
+from homeassistant.core import CoreState, State
+from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, mock_component)
 
 
 class TestTemplateSensor:
     """Test the Template sensor."""
+
+    hass = None
+    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -17,17 +25,21 @@ class TestTemplateSensor:
 
     def test_template(self):
         """Test template."""
-        assert bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_template_sensor': {
-                        'value_template':
-                            "It {{ states.sensor.test_state.state }}."
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template':
+                                "It {{ states.sensor.test_state.state }}."
+                        }
                     }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'It .'
@@ -37,85 +49,175 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'It Works.'
 
-    def test_template_syntax_error(self):
-        """Test templating syntax error."""
-        assert not bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_template_sensor': {
-                        'value_template':
-                            "{% if rubbish %}"
+    def test_icon_template(self):
+        """Test icon template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'icon_template':
+                                "{% if states.sensor.test_state.state == "
+                                "'Works' %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
                     }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes.get('icon') == ''
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['icon'] == 'mdi:check'
+
+    def test_template_syntax_error(self):
+        """Test templating syntax error."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template':
+                                "{% if rubbish %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
         assert self.hass.states.all() == []
 
     def test_template_attribute_missing(self):
         """Test missing attribute template."""
-        assert bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_template_sensor': {
-                        'value_template':
-                        "It {{ states.sensor.test_state.attributes.missing }}."
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': 'It {{ states.sensor.test_state'
+                                              '.attributes.missing }}.'
+                        }
                     }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'unknown'
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
-        assert not bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test INVALID sensor': {
-                        'value_template':
-                            "{{ states.sensor.test_state.state }}"
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test INVALID sensor': {
+                            'value_template':
+                                "{{ states.sensor.test_state.state }}"
+                        }
                     }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_invalid_sensor_does_not_create(self):
         """Test invalid sensor."""
-        assert not bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_template_sensor': 'invalid'
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': 'invalid'
+                    }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+
         assert self.hass.states.all() == []
 
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
-        assert not bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template'
-            }
-        })
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template'
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_missing_template_does_not_create(self):
         """Test missing template."""
-        assert not bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_template_sensor': {
-                        'not_value_template':
-                            "{{ states.sensor.test_state.state }}"
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'not_value_template':
+                                "{{ states.sensor.test_state.state }}"
+                        }
                     }
                 }
-            }
-        })
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    hass.data[DATA_RESTORE_CACHE] = {
+        'sensor.test_template_sensor':
+            State('sensor.test_template_sensor', 'It Test.'),
+    }
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    yield from async_setup_component(hass, 'sensor', {
+        'sensor': {
+            'platform': 'template',
+            'sensors': {
+                'test_template_sensor': {
+                    'value_template':
+                        "It {{ states.sensor.test_state.state }}."
+                }
+            }
+        }
+    })
+
+    state = hass.states.get('sensor.test_template_sensor')
+    assert state.state == 'It Test.'
+
+    yield from hass.async_start()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('sensor.test_template_sensor')
+    assert state.state == 'It .'

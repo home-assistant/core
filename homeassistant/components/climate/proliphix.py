@@ -7,12 +7,13 @@ https://home-assistant.io/components/climate.proliphix/
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    PRECISION_TENTHS, STATE_COOL, STATE_HEAT, STATE_IDLE,
+    ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['proliphix==0.3.1']
+REQUIREMENTS = ['proliphix==0.4.1']
 
 ATTR_FAN = 'fan'
 
@@ -24,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Proliphix thermostats."""
+    """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
@@ -36,20 +37,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([ProliphixThermostat(pdp)])
 
 
-# pylint: disable=abstract-method
 class ProliphixThermostat(ClimateDevice):
     """Representation a Proliphix thermostat."""
 
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        # initial data
         self._pdp.update()
         self._name = self._pdp.name
 
     @property
     def should_poll(self):
-        """Polling needed for thermostat."""
+        """Set up polling needed for thermostat."""
         return True
 
     def update(self):
@@ -62,6 +61,15 @@ class ProliphixThermostat(ClimateDevice):
         return self._name
 
     @property
+    def precision(self):
+        """Return the precision of the system.
+
+        Proliphix temperature values are passed back and forth in the
+        API as tenths of degrees F (i.e. 690 for 69 degrees).
+        """
+        return PRECISION_TENTHS
+
+    @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
@@ -69,7 +77,7 @@ class ProliphixThermostat(ClimateDevice):
         }
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 

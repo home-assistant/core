@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_SEEK, PLATFORM_SCHEMA,
     MediaPlayerDevice)
 from homeassistant.const import (
@@ -28,7 +28,7 @@ DEFAULT_PORT = 3000
 
 SUPPORT_CMUS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF |  \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_SEEK
+    SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_HOST, 'remote'): cv.string,
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discover_info=None):
-    """Setup the CMUS platform."""
+    """Set up the CMUS platform."""
     from pycmus import exceptions
 
     host = config.get(CONF_HOST)
@@ -52,13 +52,13 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_devices([cmus_remote])
+    add_devices([cmus_remote], True)
 
 
 class CmusDevice(MediaPlayerDevice):
     """Representation of a running cmus."""
 
-    # pylint: disable=no-member, too-many-public-methods, abstract-method
+    # pylint: disable=no-member
     def __init__(self, server, password, port, name):
         """Initialize the CMUS device."""
         from pycmus import remote
@@ -72,7 +72,6 @@ class CmusDevice(MediaPlayerDevice):
             auto_name = 'cmus-local'
         self._name = name or auto_name
         self.status = {}
-        self.update()
 
     def update(self):
         """Get the latest data and update the state."""
@@ -90,14 +89,11 @@ class CmusDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the media state."""
-        if 'status' not in self.status:
-            self.update()
-        if self.status['status'] == 'playing':
+        if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status['status'] == 'paused':
+        elif self.status.get('status') == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def media_content_id(self):
@@ -151,8 +147,8 @@ class CmusDevice(MediaPlayerDevice):
         return int(volume)/100
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CMUS
 
     def turn_off(self):
@@ -168,7 +164,7 @@ class CmusDevice(MediaPlayerDevice):
         self.cmus.set_volume(int(volume * 100))
 
     def volume_up(self):
-        """Function to send CMUS the command for volume up."""
+        """Set the volume up."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:
@@ -180,7 +176,7 @@ class CmusDevice(MediaPlayerDevice):
             self.cmus.set_volume(int(current_volume) + 5)
 
     def volume_down(self):
-        """Function to send CMUS the command for volume down."""
+        """Set the volume down."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:

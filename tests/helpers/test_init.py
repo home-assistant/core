@@ -1,5 +1,5 @@
 """Test component helpers."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 from collections import OrderedDict
 import unittest
 
@@ -11,11 +11,13 @@ from tests.common import get_test_home_assistant
 class TestHelpers(unittest.TestCase):
     """Tests homeassistant.helpers module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Init needed objects."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

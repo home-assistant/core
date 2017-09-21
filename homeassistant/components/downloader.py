@@ -38,7 +38,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
@@ -49,7 +48,7 @@ def setup(hass, config):
 
     if not os.path.isdir(download_path):
         _LOGGER.error(
-            "Download path %s does not exist. File Downloader not active.",
+            "Download path %s does not exist. File Downloader not active",
             download_path)
 
         return False
@@ -77,7 +76,7 @@ def setup(hass, config):
                         match = re.findall(r"filename=(\S+)",
                                            req.headers['content-disposition'])
 
-                        if len(match) > 0:
+                        if match:
                             filename = match[0].strip("'\" ")
 
                     if not filename:
@@ -85,7 +84,7 @@ def setup(hass, config):
                             url).strip()
 
                     if not filename:
-                        filename = "ha_download"
+                        filename = 'ha_download'
 
                     # Remove stuff to ruin paths
                     filename = sanitize_filename(filename)

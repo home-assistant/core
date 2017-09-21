@@ -1,6 +1,5 @@
 """Service calling related helpers."""
 import asyncio
-import functools
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
@@ -14,8 +13,6 @@ from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
-HASS = None  # type: Optional[HomeAssistant]
-
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
@@ -23,17 +20,6 @@ CONF_SERVICE_DATA = 'data'
 CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def service(domain, service_name):
-    """Decorator factory to register a service."""
-    def register_service_decorator(action):
-        """Decorator to register a service."""
-        HASS.services.register(domain, service_name,
-                               functools.partial(action, HASS))
-        return action
-
-    return register_service_decorator
 
 
 def call_from_config(hass, config, blocking=False, variables=None,
@@ -94,10 +80,12 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
         domain, service_name, service_data, blocking)
 
 
-def extract_entity_ids(hass, service_call):
-    """Helper method to extract a list of entity ids from a service call.
+def extract_entity_ids(hass, service_call, expand_group=True):
+    """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
+
+    Async friendly.
     """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
@@ -107,7 +95,17 @@ def extract_entity_ids(hass, service_call):
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
 
-    if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id])
+    if expand_group:
 
-    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
+        if isinstance(service_ent_id, str):
+            return group.expand_entity_ids(hass, [service_ent_id])
+
+        return [ent_id for ent_id in
+                group.expand_entity_ids(hass, service_ent_id)]
+
+    else:
+
+        if isinstance(service_ent_id, str):
+            return [service_ent_id]
+
+        return service_ent_id

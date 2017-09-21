@@ -6,17 +6,16 @@ https://home-assistant.io/components/sensor.coinmarketcap/
 """
 import logging
 from datetime import timedelta
-import json
 from urllib.error import HTTPError
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['coinmarketcap==2.0.1']
+REQUIREMENTS = ['coinmarketcap==4.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +29,13 @@ ATTR_PRICE = 'price_usd'
 ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
 
-CONF_CURRENCY = 'currency'
+CONF_ATTRIBUTION = "Data provided by CoinMarketCap"
 
 DEFAULT_CURRENCY = 'bitcoin'
 
 ICON = 'mdi:currency-usd'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
@@ -44,20 +43,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the CoinMarketCap sensor."""
+    """Set up the CoinMarketCap sensor."""
     currency = config.get(CONF_CURRENCY)
 
     try:
         CoinMarketCapData(currency).update()
     except HTTPError:
-        _LOGGER.warning('Currency "%s" is not available. Using "bitcoin"',
+        _LOGGER.warning("Currency %s is not available. Using bitcoin",
                         currency)
         currency = DEFAULT_CURRENCY
 
-    add_devices([CoinMarketCapSensor(CoinMarketCapData(currency))])
+    add_devices([CoinMarketCapSensor(CoinMarketCapData(currency))], True)
 
 
-# pylint: disable=too-few-public-methods
 class CoinMarketCapSensor(Entity):
     """Representation of a CoinMarketCap sensor."""
 
@@ -66,7 +64,6 @@ class CoinMarketCapSensor(Entity):
         self.data = data
         self._ticker = None
         self._unit_of_measurement = 'USD'
-        self.update()
 
     @property
     def name(self):
@@ -76,7 +73,7 @@ class CoinMarketCapSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._ticker.get('price_usd')
+        return round(float(self._ticker.get('price_usd')), 2)
 
     @property
     def unit_of_measurement(self):
@@ -89,10 +86,11 @@ class CoinMarketCapSensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_24H_VOLUME_USD: self._ticker.get('24h_volume_usd'),
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_AVAILABLE_SUPPLY: self._ticker.get('available_supply'),
             ATTR_MARKET_CAP: self._ticker.get('market_cap_usd'),
             ATTR_PERCENT_CHANGE_24H: self._ticker.get('percent_change_24h'),
@@ -101,12 +99,10 @@ class CoinMarketCapSensor(Entity):
             ATTR_TOTAL_SUPPLY: self._ticker.get('total_supply'),
         }
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._ticker = json.loads(
-            self.data.ticker.decode('utf-8').strip('\n '))[0]
+        self._ticker = self.data.ticker[0]
 
 
 class CoinMarketCapData(object):
@@ -117,9 +113,7 @@ class CoinMarketCapData(object):
         self.currency = currency
         self.ticker = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from blockchain.info."""
         from coinmarketcap import Market
-
-        self.ticker = Market().ticker(self.currency)
+        self.ticker = Market().ticker(self.currency, limit=1)

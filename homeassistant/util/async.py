@@ -1,9 +1,12 @@
 """Asyncio backports for Python 3.4.3 compatibility."""
 import concurrent.futures
+import threading
+import logging
 from asyncio import coroutines
 from asyncio.futures import Future
 
 try:
+    # pylint: disable=ungrouped-imports
     from asyncio import ensure_future
 except ImportError:
     # Python 3.4.3 and earlier has this as async
@@ -12,8 +15,11 @@ except ImportError:
     ensure_future = async
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 def _set_result_unless_cancelled(fut, result):
-    """Helper setting the result only if the future was not cancelled."""
+    """Set the result only if the Future was not cancelled."""
     if fut.cancelled():
         return
     fut.set_result(result)
@@ -35,7 +41,7 @@ def _set_concurrent_future_state(concurr, source):
 
 
 def _copy_future_state(source, dest):
-    """Internal helper to copy state from another Future.
+    """Copy state from another Future.
 
     The other Future may be a concurrent.futures.Future.
     """
@@ -97,19 +103,25 @@ def run_coroutine_threadsafe(coro, loop):
 
     Return a concurrent.futures.Future to access the result.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     if not coroutines.iscoroutine(coro):
         raise TypeError('A coroutine object is required')
     future = concurrent.futures.Future()
 
     def callback():
-        """Callback to call the coroutine."""
+        """Handle the call to the coroutine."""
         try:
             # pylint: disable=deprecated-method
             _chain_future(ensure_future(coro, loop=loop), future)
+        # pylint: disable=broad-except
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
-            raise
+            else:
+                _LOGGER.warning("Exception on lost future: ", exc_info=True)
 
     loop.call_soon_threadsafe(callback)
     return future
@@ -122,11 +134,15 @@ def fire_coroutine_threadsafe(coro, loop):
     is intended for fire-and-forget use. This reduces the
     work involved to fire the function on the loop.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     if not coroutines.iscoroutine(coro):
         raise TypeError('A coroutine object is required: %s' % coro)
 
     def callback():
-        """Callback to fire coroutine."""
+        """Handle the firing of a coroutine."""
         # pylint: disable=deprecated-method
         ensure_future(coro, loop=loop)
 
@@ -139,16 +155,22 @@ def run_callback_threadsafe(loop, callback, *args):
 
     Return a concurrent.futures.Future to access the result.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     future = concurrent.futures.Future()
 
     def run_callback():
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
+        # pylint: disable=broad-except
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
-            raise
+            else:
+                _LOGGER.warning("Exception on lost future: ", exc_info=True)
 
     loop.call_soon_threadsafe(run_callback)
     return future

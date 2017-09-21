@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.radiotherm/
 """
 import datetime
 import logging
-from urllib.error import URLError
 
 import voluptuous as vol
 
@@ -16,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.2']
+REQUIREMENTS = ['radiotherm==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,15 +23,24 @@ ATTR_FAN = 'fan'
 ATTR_MODE = 'mode'
 
 CONF_HOLD_TEMP = 'hold_temp'
+CONF_AWAY_TEMPERATURE_HEAT = 'away_temperature_heat'
+CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
+
+DEFAULT_AWAY_TEMPERATURE_HEAT = 60
+DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
+    vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
+                 default=DEFAULT_AWAY_TEMPERATURE_HEAT): vol.Coerce(float),
+    vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
+                 default=DEFAULT_AWAY_TEMPERATURE_COOL): vol.Coerce(float),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Radio Thermostat."""
+    """Set up the Radio Thermostat."""
     import radiotherm
 
     hosts = []
@@ -46,24 +54,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     hold_temp = config.get(CONF_HOLD_TEMP)
+    away_temps = [
+        config.get(CONF_AWAY_TEMPERATURE_HEAT),
+        config.get(CONF_AWAY_TEMPERATURE_COOL)
+    ]
     tstats = []
 
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat, hold_temp))
-        except (URLError, OSError):
+            tstats.append(RadioThermostat(tstat, hold_temp, away_temps))
+        except OSError:
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats)
+    add_devices(tstats, True)
 
 
-# pylint: disable=abstract-method
 class RadioThermostat(ClimateDevice):
     """Representation of a Radio Thermostat."""
 
-    def __init__(self, device, hold_temp):
+    def __init__(self, device, hold_temp, away_temps):
         """Initialize the thermostat."""
         self.device = device
         self.set_time()
@@ -71,8 +82,13 @@ class RadioThermostat(ClimateDevice):
         self._current_temperature = None
         self._current_operation = STATE_IDLE
         self._name = None
-        self.hold_temp = hold_temp
-        self.update()
+        self._fmode = None
+        self._tmode = None
+        self._tstate = None
+        self._hold_temp = hold_temp
+        self._away = False
+        self._away_temps = away_temps
+        self._prev_temp = None
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property
@@ -81,7 +97,7 @@ class RadioThermostat(ClimateDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 
@@ -89,8 +105,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self.device.fmode['human'],
-            ATTR_MODE: self.device.tmode['human']
+            ATTR_FAN: self._fmode,
+            ATTR_MODE: self._tmode,
         }
 
     @property
@@ -113,16 +129,60 @@ class RadioThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
+    @property
+    def is_away_mode_on(self):
+        """Return true if away mode is on."""
+        return self._away
+
     def update(self):
-        """Update the data from the thermostat."""
-        self._current_temperature = self.device.temp['raw']
+        """Update and validate the data from the thermostat."""
+        current_temp = self.device.temp['raw']
+        if current_temp == -1:
+            _LOGGER.error("Couldn't get valid temperature reading")
+            return
+        self._current_temperature = current_temp
         self._name = self.device.name['raw']
-        if self.device.tmode['human'] == 'Cool':
-            self._target_temperature = self.device.t_cool['raw']
+        try:
+            self._fmode = self.device.fmode['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid fan mode reading")
+        try:
+            self._tmode = self.device.tmode['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid thermostat mode reading")
+        try:
+            self._tstate = self.device.tstate['human']
+        except AttributeError:
+            _LOGGER.error("Couldn't get valid thermostat state reading")
+
+        if self._tmode == 'Cool':
+            target_temp = self.device.t_cool['raw']
+            if target_temp == -1:
+                _LOGGER.error("Couldn't get target reading")
+                return
+            self._target_temperature = target_temp
             self._current_operation = STATE_COOL
-        elif self.device.tmode['human'] == 'Heat':
-            self._target_temperature = self.device.t_heat['raw']
+        elif self._tmode == 'Heat':
+            target_temp = self.device.t_heat['raw']
+            if target_temp == -1:
+                _LOGGER.error("Couldn't get valid target reading")
+                return
+            self._target_temperature = target_temp
             self._current_operation = STATE_HEAT
+        elif self._tmode == 'Auto':
+            if self._tstate == 'Cool':
+                target_temp = self.device.t_cool['raw']
+                if target_temp == -1:
+                    _LOGGER.error("Couldn't get valid target reading")
+                    return
+                self._target_temperature = target_temp
+            elif self._tstate == 'Heat':
+                target_temp = self.device.t_heat['raw']
+                if target_temp == -1:
+                    _LOGGER.error("Couldn't get valid target reading")
+                    return
+                self._target_temperature = target_temp
+            self._current_operation = STATE_AUTO
         else:
             self._current_operation = STATE_IDLE
 
@@ -132,10 +192,16 @@ class RadioThermostat(ClimateDevice):
         if temperature is None:
             return
         if self._current_operation == STATE_COOL:
-            self.device.t_cool = temperature
+            self.device.t_cool = round(temperature * 2.0) / 2.0
         elif self._current_operation == STATE_HEAT:
-            self.device.t_heat = temperature
-        if self.hold_temp:
+            self.device.t_heat = round(temperature * 2.0) / 2.0
+        elif self._current_operation == STATE_AUTO:
+            if self._tstate == 'Cool':
+                self.device.t_cool = round(temperature * 2.0) / 2.0
+            elif self._tstate == 'Heat':
+                self.device.t_heat = round(temperature * 2.0) / 2.0
+
+        if self._hold_temp or self._away:
             self.device.hold = 1
         else:
             self.device.hold = 0
@@ -156,6 +222,26 @@ class RadioThermostat(ClimateDevice):
         elif operation_mode == STATE_AUTO:
             self.device.tmode = 3
         elif operation_mode == STATE_COOL:
-            self.device.t_cool = self._target_temperature
+            self.device.t_cool = round(self._target_temperature * 2.0) / 2.0
         elif operation_mode == STATE_HEAT:
-            self.device.t_heat = self._target_temperature
+            self.device.t_heat = round(self._target_temperature * 2.0) / 2.0
+
+    def turn_away_mode_on(self):
+        """Turn away on.
+
+        The RTCOA app simulates away mode by using a hold.
+        """
+        away_temp = None
+        if not self._away:
+            self._prev_temp = self._target_temperature
+            if self._current_operation == STATE_HEAT:
+                away_temp = self._away_temps[0]
+            elif self._current_operation == STATE_COOL:
+                away_temp = self._away_temps[1]
+        self._away = True
+        self.set_temperature(temperature=away_temp)
+
+    def turn_away_mode_off(self):
+        """Turn away off."""
+        self._away = False
+        self.set_temperature(temperature=self._prev_temp)

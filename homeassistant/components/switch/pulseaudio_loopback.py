@@ -82,7 +82,7 @@ class PAServer():
     _current_module_state = ""
 
     def __init__(self, host, port, buff_sz, tcp_timeout):
-        """Simple constructor for reading in our configuration."""
+        """Initialize PulseAudio server."""
         self._pa_host = host
         self._pa_port = int(port)
         self._buffer_size = int(buff_sz)
@@ -106,7 +106,7 @@ class PAServer():
         return return_data
 
     def _get_full_response(self, sock):
-        """Helper method to get the full response back from pulseaudio."""
+        """Get the full response back from pulseaudio."""
         result = ""
         rcv_buffer = sock.recv(self._buffer_size)
         result += rcv_buffer.decode('utf-8')
@@ -137,11 +137,9 @@ class PAServer():
                            self._current_module_state)
         if result and result.group(1).isdigit():
             return int(result.group(1))
-        else:
-            return -1
+        return -1
 
 
-# pylint: disable=too-many-arguments
 class PALoopbackSwitch(SwitchDevice):
     """Representation the presence or absence of a PA loopback module."""
 
@@ -161,7 +159,7 @@ class PALoopbackSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """Tell the core logic if device is on."""
+        """Return true if device is on."""
         return self._module_idx > 0
 
     def turn_on(self, **kwargs):
@@ -171,7 +169,7 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
                 self._sink_name, self._source_name)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 
@@ -182,7 +180,7 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
                 self._sink_name, self._source_name)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 

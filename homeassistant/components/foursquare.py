@@ -1,19 +1,19 @@
 """
-Allows utilizing the Foursquare (Swarm) API.
+Support for the Foursquare (Swarm) API.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/foursquare/
 """
+import asyncio
 import logging
 import os
-import json
 
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
+from homeassistant.config import load_yaml_config_file
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Foursquare component."""
+    """Set up the Foursquare component."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
@@ -75,8 +75,7 @@ def setup(hass, config):
                            descriptions[DOMAIN][SERVICE_CHECKIN],
                            schema=CHECKIN_SERVICE_SCHEMA)
 
-    hass.wsgi.register_view(FoursquarePushReceiver(
-        hass, config[CONF_PUSH_SECRET]))
+    hass.http.register_view(FoursquarePushReceiver(config[CONF_PUSH_SECRET]))
 
     return True
 
@@ -88,21 +87,25 @@ class FoursquarePushReceiver(HomeAssistantView):
     url = "/api/foursquare"
     name = "foursquare"
 
-    def __init__(self, hass, push_secret):
+    def __init__(self, push_secret):
         """Initialize the OAuth callback view."""
-        super().__init__(hass)
         self.push_secret = push_secret
 
+    @asyncio.coroutine
     def post(self, request):
         """Accept the POST from Foursquare."""
-        raw_data = request.form
-        _LOGGER.debug("Received Foursquare push: %s", raw_data)
-        if self.push_secret != raw_data["secret"]:
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
+        secret = data.pop('secret', None)
+
+        _LOGGER.debug("Received Foursquare push: %s", data)
+
+        if self.push_secret != secret:
             _LOGGER.error("Received Foursquare push with invalid"
-                          "push secret! Data: %s", raw_data)
-            return
-        parsed_payload = {
-            key: json.loads(val) for key, val in raw_data.items()
-            if key != "secret"
-        }
-        self.hass.bus.fire(EVENT_PUSH, parsed_payload)
+                          "push secret: %s", secret)
+            return self.json_message('Incorrect secret', HTTP_BAD_REQUEST)
+
+        request.app['hass'].bus.async_fire(EVENT_PUSH, data)
