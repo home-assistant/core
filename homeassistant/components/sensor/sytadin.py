@@ -13,7 +13,8 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['lxml', 'requests']
 
-SYSTADIN_URL = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
+SYSTADIN_URL =
+    'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
 TRAFFIC_JAM_XPATH = '//*[@id="main_content"]/div[1]/div/span[3]/text()'
 MEAN_VELOCITY_XPATH = '//*[@id="main_content"]/div[2]/div/span[3]/text()'
@@ -26,9 +27,12 @@ CONGESTION_REGEX = '([0-9]+.[0-9]+)'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([SytadinSensor('Traffic Jam', SYSTADIN_URL, TRAFFIC_JAM_XPATH, TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)])
-    add_devices([SytadinSensor('Mean Velocity', SYSTADIN_URL, MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX, LENGTH_KILOMETERS+'/h')])
-    add_devices([SytadinSensor('Congestion', SYSTADIN_URL, CONGESTION_XPATH, CONGESTION_REGEX, '')])
+    add_devices([SytadinSensor('Traffic Jam', SYSTADIN_URL,
+        TRAFFIC_JAM_XPATH, TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)])
+    add_devices([SytadinSensor('Mean Velocity', SYSTADIN_URL,
+        MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX, LENGTH_KILOMETERS+'/h')])
+    add_devices([SytadinSensor('Congestion', SYSTADIN_URL,
+       CONGESTION_XPATH, CONGESTION_REGEX, '')])
 
 
 class SytadinSensor(Entity):
@@ -46,7 +50,7 @@ class SytadinSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Sytadin '+ self._name
+        return 'Sytadin ' + self._name
 
     @property
     def state(self):
@@ -68,4 +72,4 @@ class SytadinSensor(Entity):
         tree = etree.HTML(html.content)
         extract_xpath = tree.xpath(self._xpath)
 
-        self._state = re.search(self._regex,extract_xpath[0]).group()
+        self._state = re.search(self._regex, extract_xpath[0]).group()
