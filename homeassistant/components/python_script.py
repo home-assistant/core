@@ -44,7 +44,7 @@ def setup(hass, config):
     Load_scripts(hass)
 
     def reload_scripts_handler(call):
-        """Handle python script service calls."""
+        """Handle reload service calls."""
         Load_scripts(hass)
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
 
@@ -52,7 +52,7 @@ def setup(hass, config):
 
 
 def Load_scripts(hass):
-    """load python_script component."""
+    """Load python_script component."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
