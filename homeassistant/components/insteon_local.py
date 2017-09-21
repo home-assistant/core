@@ -51,6 +51,8 @@ def setup(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
+    _LOGGER.info("Initializing Insteon Local")
+
     try:
         if not os.path.exists(hass.config.path(INSTEON_CACHE)):
             os.makedirs(hass.config.path(INSTEON_CACHE))
@@ -77,6 +79,7 @@ def setup(hass, config):
     hass.data['insteon_local'] = insteonhub
 
     for insteon_platform in INSTEON_PLATFORMS:
+        _LOGGER.info("Load platform " + insteon_platform)
         load_platform(hass, insteon_platform, DOMAIN, {'linked': linked})
 
     return True
