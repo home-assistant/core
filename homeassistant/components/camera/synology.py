@@ -158,7 +158,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
             device = SynologyCamera(
                 hass, websession, config, camera_id, camera['name'],
-                snapshot_path, streaming_path, camera_path, auth_path, timeout, is_enabled, is_recording
+                snapshot_path, streaming_path, camera_path, auth_path,
+                timeout, is_enabled, is_recording
             )
             devices.append(device)
 
