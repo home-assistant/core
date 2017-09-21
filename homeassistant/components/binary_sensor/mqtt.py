@@ -108,6 +108,9 @@ class MqttBinarySensor(BinarySensorDevice):
 
             self.async_schedule_update_ha_state()
 
+        yield from mqtt.async_subscribe(
+            self.hass, self._state_topic, state_message_received, self._qos)
+
         @callback
         def availability_message_received(topic, payload, qos):
             """Handle a new received MQTT availability message."""
@@ -117,9 +120,6 @@ class MqttBinarySensor(BinarySensorDevice):
                 self._available = False
 
             self.async_schedule_update_ha_state()
-
-        yield from mqtt.async_subscribe(
-            self.hass, self._state_topic, state_message_received, self._qos)
 
         if self._availability_topic is not None:
             yield from mqtt.async_subscribe(
