@@ -95,10 +95,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert sensor.icon == "mdi:alert"
         assert len(sensor._data.events) == 4
         assert sensor.state == 1
-
-        matrix = {'Title 1': "117km"}
-        device_state_attributes = sensor.device_state_attributes
-        assert device_state_attributes == matrix
+        assert sensor.device_state_attributes == {'Title 1': "117km"}
 
     def test_update_sensor_without_category(self):
         """Test updating sensor object."""
@@ -117,11 +114,10 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert sensor.icon == "mdi:alert"
         assert len(sensor._data.events) == 4
         assert sensor.state == 4
-
-        matrix = {'Title 1': "117km", 'Title 2': "302km", 'Title 3': "204km",
-                  'Title 6': "48km"}
-        device_state_attributes = sensor.device_state_attributes
-        assert device_state_attributes == matrix
+        assert sensor.device_state_attributes == {'Title 1': "117km",
+                                                  'Title 2': "302km",
+                                                  'Title 3': "204km",
+                                                  'Title 6': "48km"}
 
     def test_update_sensor_without_data(self):
         """Test updating sensor object."""
