@@ -27,7 +27,7 @@ PyJWT==1.5.3
 SoCo==0.12
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.2
+aioautomatic==0.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -133,7 +133,7 @@ somecomfort==0.4.1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.13
+sqlalchemy==1.1.14
 
 # homeassistant.components.statsd
 statsd==3.2.1

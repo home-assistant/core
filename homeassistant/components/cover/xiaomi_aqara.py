@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
+from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
+                                                   XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

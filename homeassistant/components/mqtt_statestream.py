@@ -38,7 +38,7 @@ def async_setup(hass, config):
             return
         payload = new_state.state
 
-        topic = base_topic + entity_id.replace('.', '/')
+        topic = base_topic + entity_id.replace('.', '/') + '/state'
         hass.components.mqtt.async_publish(topic, payload, 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
