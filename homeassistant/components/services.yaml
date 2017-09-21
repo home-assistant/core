@@ -600,3 +600,28 @@ abode:
       entity_id:
         description: Entity id of the quick action to trigger.
         example: 'binary_sensor.home_quick_action'
+
+input_boolean:
+  toggle:
+    description: Toggles an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to toggle
+        example: 'input_boolean.notify_alerts'
+
+  turn_off:
+    description: Turns OFF an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn off
+        example: 'input_boolean.notify_alerts'
+
+  turn_on:
+    description: Turns ON an input boolean
+    
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn on
+        example: 'input_boolean.notify_alerts'
