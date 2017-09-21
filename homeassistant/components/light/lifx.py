@@ -642,6 +642,18 @@ class LIFXStrip(LIFXColor):
         bulb = self.device
         num_zones = len(bulb.color_zones)
 
+        zones = kwargs.get(ATTR_ZONES)
+        if zones is None:
+            # Fast track: setting all zones to the same brightness and color
+            # can be treated as a single-zone bulb.
+            if hsbk[2] is not None and hsbk[3] is not None:
+                yield from super().set_color(ack, hsbk, kwargs, duration)
+                return
+
+            zones = list(range(0, num_zones))
+        else:
+            zones = list(filter(lambda x: x < num_zones, set(zones)))
+
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
             yield from self.set_power(ack, True)
@@ -649,12 +661,6 @@ class LIFXStrip(LIFXColor):
             yield from self.update_color_zones()
             yield from self.set_power(ack, False)
             yield from asyncio.sleep(0.3)
-
-        zones = kwargs.get(ATTR_ZONES, None)
-        if zones is None:
-            zones = list(range(0, num_zones))
-        else:
-            zones = list(filter(lambda x: x < num_zones, set(zones)))
 
         # Send new color to each zone
         for index, zone in enumerate(zones):
