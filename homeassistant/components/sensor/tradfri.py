@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the IKEA Tradfri device platform."""
     if discovery_info is None:
         return
@@ -34,7 +34,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     devices_commands = yield from api(devices_command)
     all_devices = yield from api(*devices_commands)
     devices = [dev for dev in all_devices if not dev.has_light_control]
-    add_devices(TradfriDevice(device, api) for device in devices)
+    async_add_devices(TradfriDevice(device, api) for device in devices)
 
 
 class TradfriDevice(Entity):
