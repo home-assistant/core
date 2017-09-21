@@ -6,15 +6,16 @@ Systadin website : http://www.sytadin.fr
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sytadin/
 """
+import logging
 
 from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.helpers.entity import Entity
 
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['lxml', 'requests']
 
-SYSTADIN_URL =
-    'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
+SYSTADIN = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
 TRAFFIC_JAM_XPATH = '//*[@id="main_content"]/div[1]/div/span[3]/text()'
 MEAN_VELOCITY_XPATH = '//*[@id="main_content"]/div[2]/div/span[3]/text()'
@@ -27,12 +28,16 @@ CONGESTION_REGEX = '([0-9]+.[0-9]+)'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([SytadinSensor('Traffic Jam', SYSTADIN_URL,
-        TRAFFIC_JAM_XPATH, TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)])
+    add_devices([SytadinSensor('Traffic Jam', SYSTADIN_URL, TRAFFIC_JAM_XPATH,
+                                TRAFFIC_JAM_REGEX,LENGTH_KILOMETERS)]
+    )
     add_devices([SytadinSensor('Mean Velocity', SYSTADIN_URL,
-        MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX, LENGTH_KILOMETERS+'/h')])
-    add_devices([SytadinSensor('Congestion', SYSTADIN_URL,
-       CONGESTION_XPATH, CONGESTION_REGEX, '')])
+                                MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX,
+                                LENGTH_KILOMETERS+'/h')]
+    )
+    add_devices([SytadinSensor('Congestion', SYSTADIN_URL, CONGESTION_XPATH,
+                                CONGESTION_REGEX, '')]
+    )
 
 
 class SytadinSensor(Entity):
