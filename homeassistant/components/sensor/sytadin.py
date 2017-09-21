@@ -30,16 +30,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     add_devices([
         SytadinSensor('Traffic Jam', SYSTADIN, TRAFFIC_JAM_XPATH,
-                        TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)
+                      TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)
         ])
     add_devices([
         SytadinSensor('Mean Velocity', SYSTADIN,
-                        MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX,
-                        LENGTH_KILOMETERS+'/h')
+                      MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX,
+                      LENGTH_KILOMETERS+'/h')
         ])
     add_devices([
         SytadinSensor('Congestion', SYSTADIN, CONGESTION_XPATH,
-                        CONGESTION_REGEX, '')
+                      CONGESTION_REGEX, '')
         ])
 
 
