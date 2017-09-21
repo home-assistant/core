@@ -46,6 +46,18 @@ CONTENT_TYPE_HEADER = 'Content-Type'
 
 SYNO_API_URL = '{0}{1}{2}'
 
+SYNO_RECORDING_STATUS = [
+    # Continue recording schedule
+    1,
+    # Motion detect recording schedule
+    2,
+    # Digital input recording schedule
+    3,
+    # Digital input recording schedule
+    4,
+    # Manual recording schedule
+    5]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -56,6 +68,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
+
+def _is_recording_status(status):
+    return status in SYNO_RECORDING_STATUS
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -138,10 +153,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if not config.get(CONF_WHITELIST):
             camera_id = camera['id']
             snapshot_path = camera['snapshot_path']
+            is_enabled = camera['enabled']
+            is_recording = _is_recording_status(camera['recStatus'])
 
             device = SynologyCamera(
                 hass, websession, config, camera_id, camera['name'],
-                snapshot_path, streaming_path, camera_path, auth_path, timeout
+                snapshot_path, streaming_path, camera_path, auth_path, timeout, is_enabled, is_recording
             )
             devices.append(device)
 
@@ -179,10 +196,11 @@ class SynologyCamera(Camera):
 
     def __init__(self, hass, websession, config, camera_id,
                  camera_name, snapshot_path, streaming_path, camera_path,
-                 auth_path, timeout):
+                 auth_path, timeout, is_enabled, is_recording):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self.hass = hass
+        self.is_streaming = is_enabled
         self._websession = websession
         self._name = camera_name
         self._synology_url = config.get(CONF_URL)
@@ -194,6 +212,7 @@ class SynologyCamera(Camera):
         self._camera_path = camera_path
         self._auth_path = auth_path
         self._timeout = timeout
+        self._is_recording = is_recording
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -248,3 +267,8 @@ class SynologyCamera(Camera):
     def name(self):
         """Return the name of this device."""
         return self._name
+
+    @property
+    def is_recording(self):
+        """Return true if the device is recording."""
+        return self._is_recording
