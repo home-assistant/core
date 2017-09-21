@@ -41,17 +41,17 @@ def setup(hass, config):
         _LOGGER.warning('Folder %s not found in config folder', FOLDER)
         return False
 
-    Discover_scripts(hass)
+    discover_scripts(hass)
 
     def reload_scripts_handler(call):
         """Handle reload service calls."""
-        Discover_scripts(hass)
+        discover_scripts(hass)
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
 
     return True
 
 
-def Discover_scripts(hass):
+def discover_scripts(hass):
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
