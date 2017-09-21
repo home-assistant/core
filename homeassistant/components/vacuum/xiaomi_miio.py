@@ -192,7 +192,7 @@ class MiroboVacuum(VacuumDevice):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return list(sorted(FAN_SPEEDS.keys(), key=lambda s: FAN_SPEEDS[s]))
-    
+
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
@@ -204,7 +204,7 @@ class MiroboVacuum(VacuumDevice):
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: str(int(
-                    self.vacuum_state.clean_time.total_seconds() / 60)) 
+                    self.vacuum_state.clean_time.total_seconds() / 60))
                     + ' min',
                 ATTR_CLEANED_AREA: str(int(self.vacuum_state.clean_area))
                     + ' m²',
@@ -215,10 +215,10 @@ class MiroboVacuum(VacuumDevice):
                     self.clean_history.total_duration.total_seconds() / 60))
                     + ' min',
                 ATTR_MAIN_BRUSH_LEFT: str(int(
-                    self.consumable_state.main_brush_left.total_seconds() 
+                    self.consumable_state.main_brush_left.total_seconds()
                     / 3600)) + ' h',
                 ATTR_SIDE_BRUSH_LEFT: str(int(
-                    self.consumable_state.side_brush_left.total_seconds() 
+                    self.consumable_state.side_brush_left.total_seconds()
                     / 3600)) + ' h',
                 ATTR_FILTER_LEFT: str(int(
                     self.consumable_state.filter_left.total_seconds() / 3600))
