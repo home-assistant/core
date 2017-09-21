@@ -204,7 +204,7 @@ class MiroboVacuum(VacuumDevice):
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
                 ATTR_CLEANING_TIME: str(int(
-                    self.vacuum_state.clean_time.total_seconds() 
+                    self.vacuum_state.clean_time.total_seconds()
                     / 60)) + ' min',
                 ATTR_CLEANED_AREA: str(int(
                     self.vacuum_state.clean_area)) + ' m²',
@@ -212,7 +212,7 @@ class MiroboVacuum(VacuumDevice):
                 ATTR_CLEANED_TOTAL_AREA: str(int(
                     self.clean_history.total_area)) + ' m²',
                 ATTR_CLEANING_TOTAL_TIME: str(int(
-                    self.clean_history.total_duration.total_seconds() 
+                    self.clean_history.total_duration.total_seconds()
                     / 60)) + ' min',
                 ATTR_MAIN_BRUSH_LEFT: str(int(
                     self.consumable_state.main_brush_left.total_seconds()
@@ -221,7 +221,7 @@ class MiroboVacuum(VacuumDevice):
                     self.consumable_state.side_brush_left.total_seconds()
                     / 3600)) + ' h',
                 ATTR_FILTER_LEFT: str(int(
-                    self.consumable_state.filter_left.total_seconds() 
+                    self.consumable_state.filter_left.total_seconds()
                     / 3600)) + ' h'})
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
