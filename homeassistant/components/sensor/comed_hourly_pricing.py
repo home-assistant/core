@@ -97,12 +97,12 @@ class ComedHourlyPricingSensor(Entity):
         try:
             if self.type == CONF_FIVE_MINUTE:
                 url_string = _RESOURCE + '?type=5minutefeed'
-                response = get(url_string, timeout=10)
+                response = get(url_string, timeout=60)
                 self._state = round(
                     float(response.json()[0]['price']) + self.offset, 2)
             elif self.type == CONF_CURRENT_HOUR_AVERAGE:
                 url_string = _RESOURCE + '?type=currenthouraverage'
-                response = get(url_string, timeout=10)
+                response = get(url_string, timeout=60)
                 self._state = round(
                     float(response.json()[0]['price']) + self.offset, 2)
             else:
