@@ -284,7 +284,8 @@ class Plant(Entity):
         self._max_brightness_over_days = max(brightness_values)
         if self._max_brightness_over_days < self._config[CONF_MIN_BRIGHTNESS]:
             self._brightness_problem = [
-                'maximum brightness of {} lux too low over last {} days'.format(
+                'maximum brightness of {} lux too low over last '
+                '{} days'.format(
                     self._max_brightness_over_days, self._conf_check_days)
             ]
         else:
