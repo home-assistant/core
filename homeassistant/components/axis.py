@@ -144,7 +144,6 @@ def request_configuration(hass, config, name, host, serialnumber):
     )
 
 
-#def setup(hass, config):
 @asyncio.coroutine
 def async_setup(hass, config):
     print('ASYNC SETUP')
@@ -153,9 +152,9 @@ def async_setup(hass, config):
         """Stop the metadatastream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
             _LOGGER.info("Stopping metadatastream for %s.", serialnumber)
-            device.stop_metadatastream()
+            device.stop()
 
-    #hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
@@ -188,10 +187,9 @@ def async_setup(hass, config):
                                   host)
 
     # Register discovery service
-    #discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
+    discovery.async_listen(hass, SERVICE_AXIS, axis_device_discovered)
 
     if DOMAIN in config:
-        print(DOMAIN)
         for device in config[DOMAIN]:
             device_config = config[DOMAIN][device]
             if CONF_NAME not in device_config:
@@ -216,14 +214,15 @@ def async_setup(hass, config):
         return False
 
     # Register service with Home Assistant.
-    # hass.services.register(DOMAIN,
-    #                        SERVICE_VAPIX_CALL,
-    #                        vapix_service,
-    #                        descriptions[DOMAIN][SERVICE_VAPIX_CALL],
-    #                        schema=SERVICE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_VAPIX_CALL,
+                                 vapix_service,
+                                 descriptions[DOMAIN][SERVICE_VAPIX_CALL],
+                                 schema=SERVICE_SCHEMA)
 
     print('ASYNC SETUP DONE')
     return True
+
 
 from homeassistant.core import callback
 @callback
@@ -233,11 +232,26 @@ def setup_device(hass, config, device_config):
     """Set up device."""
     from axis import AxisDevice
 
-    device_config['hass'] = hass
-    #device = AxisDevice(device_config)  # Initialize device
+    def devicesignal(action, event):
+        if action == 'add':
+            event_config = {
+                'event': event,
+                'name': device_config[CONF_NAME],
+                'location': device_config[ATTR_LOCATION],
+                'trigger_time': device_config[CONF_TRIGGER_TIME]
+            }
+            component = convert(event.topic, 'topic', 'platform')
+            discovery.load_platform(hass,
+                                    component,
+                                    DOMAIN,
+                                    event_config,
+                                    config)
+
     device = AxisDevice(hass.loop, '10.0.1.51', 'root', 'pass')
-    print('DEVICE CREATED')
-    enable_metadatastream = False
+    #device.name = device_config[CONF_NAME]
+    #device.location = device_config[ATTR_LOCATION]
+    #device.trigger_time = device_config[CONF_TRIGGER_TIME]
+    device.signal = devicesignal
 
     if device.serial_number is None:
         # If there is no serial number a connection could not be made
@@ -249,13 +263,14 @@ def setup_device(hass, config, device_config):
         if component in EVENT_TYPES:
             # Sensors are created by device calling event_initialized
             # when receiving initialize messages on metadatastream
-            device.add_event_topic(convert(component, 'type', 'subscribe'))
-            if not enable_metadatastream:
-                enable_metadatastream = True
+            #device.add_event_topic(convert(component, 'type', 'subscribe'))
+            #if not enable_metadatastream:
+            #    enable_metadatastream = True
+            pass
         else:
             camera_config = {
-                CONF_HOST: device_config[CONF_HOST],
                 CONF_NAME: device_config[CONF_NAME],
+                CONF_HOST: device_config[CONF_HOST],
                 CONF_PORT: device_config[CONF_PORT],
                 CONF_USERNAME: device_config[CONF_USERNAME],
                 CONF_PASSWORD: device_config[CONF_PASSWORD]
@@ -265,15 +280,6 @@ def setup_device(hass, config, device_config):
                                     DOMAIN,
                                     camera_config,
                                     config)
-
-    if enable_metadatastream:
-        device.initialize_new_event = event_initialized
-        if not device.initiate_metadatastream():
-            hass.components.persistent_notification.create(
-                'Dependency missing for sensors, '
-                'please check documentation',
-                title=DOMAIN,
-                notification_id='axis_notification')
 
     AXIS_DEVICES[device.serial_number] = device
 
@@ -299,25 +305,18 @@ def _write_config(hass, config):
         outfile.write(data)
 
 
-def event_initialized(event):
-    """Register event initialized on metadatastream here."""
-    hass = event.device_config('hass')
-    discovery.load_platform(hass,
-                            convert(event.topic, 'topic', 'platform'),
-                            DOMAIN, {'axis_event': event})
-
-
 class AxisDeviceEvent(Entity):
     """Representation of a Axis device event."""
 
-    def __init__(self, axis_event):
+    def __init__(self, event_config):
         """Initialize the event."""
-        self.axis_event = axis_event
+        self.axis_event = event_config['event']
         self._event_class = convert(self.axis_event.topic, 'topic', 'class')
-        self._name = '{}_{}_{}'.format(self.axis_event.device_name,
-                                       convert(self.axis_event.topic,
-                                               'topic', 'type'),
+        event_type = convert(self.axis_event.topic, 'topic', 'type')
+        self._name = '{}_{}_{}'.format(event_config['name'],
+                                       event_type,
                                        self.axis_event.id)
+        self.location = event_config[ATTR_LOCATION]
         self.axis_event.callback = self._update_callback
 
     def _update_callback(self):
@@ -348,9 +347,7 @@ class AxisDeviceEvent(Entity):
         tripped = self.axis_event.is_tripped
         attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
-        location = self.axis_event.device_config(ATTR_LOCATION)
-        if location:
-            attr[ATTR_LOCATION] = location
+        attr[ATTR_LOCATION] = self.location
 
         return attr
 
