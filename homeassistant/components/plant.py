@@ -41,6 +41,7 @@ CONF_MIN_CONDUCTIVITY = 'min_' + READING_CONDUCTIVITY
 CONF_MAX_CONDUCTIVITY = 'max_' + READING_CONDUCTIVITY
 CONF_MIN_BRIGHTNESS = 'min_' + READING_BRIGHTNESS
 CONF_MAX_BRIGHTNESS = 'max_' + READING_BRIGHTNESS
+CONF_GROUP_NAME = 'group_name'
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
 CONF_SENSOR_MOISTURE = READING_MOISTURE
@@ -67,6 +68,7 @@ PLANT_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
+    vol.Optional(CONF_GROUP_NAME): cv.string,
 })
 
 DOMAIN = 'plant'
@@ -96,6 +98,13 @@ def async_setup(hass, config):
         _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
+
+        if CONF_GROUP_NAME in plant_config and plant_config[CONF_GROUP_NAME] is not None:
+            group_name = plant_config[CONF_GROUP_NAME]
+            members = ['{}.{}'.format(DOMAIN, plant_name)] #own entity id
+            members.extend(sensor_entity_ids)
+            hass.states.async_set('group.{}'.format(group_name), 'off', {'entity_id':members})
+            _LOGGER.debug("Added plant group %s for plant %s", group_name, plant_name)
 
     yield from component.async_add_entities(entities)
 
