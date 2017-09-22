@@ -1,0 +1,4 @@
+# Describes the format for available recorder services
+
+purge:
+  description: Start purge task, deletes events and states older than x days, according to purge_days variable setting.
