@@ -31,21 +31,13 @@ INSTEON_PLATFORMS = [
     'fan',
 ]
 
-CONF_DEVICES = 'devices'
-
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONENAME): cv.string,
-    vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string})
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list),
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     })
 def setup(hass, config):
     from insteonlocal.Hub import Hub
