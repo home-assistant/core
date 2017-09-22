@@ -72,6 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def _is_recording_status(status):
     return status in SYNO_RECORDING_STATUS
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a Synology IP Camera."""
