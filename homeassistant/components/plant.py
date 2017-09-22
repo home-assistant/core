@@ -6,6 +6,7 @@ https://home-assistant.io/components/plant/
 """
 import logging
 import asyncio
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -18,6 +19,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +45,7 @@ CONF_MAX_CONDUCTIVITY = 'max_' + READING_CONDUCTIVITY
 CONF_MIN_BRIGHTNESS = 'min_' + READING_BRIGHTNESS
 CONF_MAX_BRIGHTNESS = 'max_' + READING_BRIGHTNESS
 CONF_GROUP_NAME = 'group_name'
+CONF_CHECK_DAYS = 'check_days'
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
 CONF_SENSOR_MOISTURE = READING_MOISTURE
@@ -69,6 +73,7 @@ PLANT_SCHEMA = vol.Schema({
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_GROUP_NAME): cv.string,
+    vol.Optional(CONF_CHECK_DAYS): cv.positive_int,
 })
 
 DOMAIN = 'plant'
@@ -147,7 +152,7 @@ class Plant(Entity):
         },
         READING_BRIGHTNESS: {
             ATTR_UNIT_OF_MEASUREMENT: 'lux',
-            'min': CONF_MIN_BRIGHTNESS,
+            # minimum brightness is checked separately
             'max': CONF_MAX_BRIGHTNESS,
             'icon': 'mdi:white-balance-sunny'
         }
@@ -157,8 +162,10 @@ class Plant(Entity):
         """Initialize the Plant component."""
         self._config = config
         self._sensormap = dict()
+        self._readingmap = dict()
         for reading, entity_id in config['sensors'].items():
             self._sensormap[entity_id] = reading
+            self._readingmap[reading] = entity_id
         self._state = STATE_UNKNOWN
         self._name = name
         self._battery = None
@@ -168,6 +175,13 @@ class Plant(Entity):
         self._brightness = None
         self._icon = 'mdi:help-circle'
         self._problems = PROBLEM_NONE
+
+        self._conf_check_days = 3  # default check interval: 3 days
+        self._brightness_updated = True  # on startup check the brightness
+        self._max_brightness_over_days = None
+        self._brightness_problem = []
+        if CONF_CHECK_DAYS in self._config:
+            self._conf_check_days = self._config[CONF_CHECK_DAYS]
 
     @callback
     def state_changed(self, entity_id, _, new_state):
@@ -192,6 +206,7 @@ class Plant(Entity):
             self._conductivity = int(value)
         elif reading == READING_BRIGHTNESS:
             self._brightness = int(value)
+            self._brightness_updated = True
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
@@ -199,7 +214,8 @@ class Plant(Entity):
 
     def _update_state(self):
         """Update the state of the class based sensor data."""
-        result = []
+        self.check_brightness()
+        result = list(self._brightness_problem)
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
             value = getattr(self, '_{}'.format(sensor_name))
@@ -218,13 +234,61 @@ class Plant(Entity):
 
         if result:
             self._state = STATE_PROBLEM
-            self._problems = ','.join(result)
+            self._problems = ', '.join(result)
         else:
             self._state = STATE_OK
             self._icon = 'mdi:thumb-up'
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
         self.async_schedule_update_ha_state()
+
+    def check_brightness(self):
+        """ check brightness levels over a history of several days.
+
+        It usually does not make sense to check the minimum brightness now as
+        it might be night. So we need to check this over several days to see if
+        one of those days was bright enough.
+
+        As this operation is quite expensive, we should not run it so
+        frequently. Thus we only check when the brightness really changed
+        (ie self._brightness_updated == True). The result of the last check
+        is cached in self._brightness_problem.
+
+        """
+        if CONF_MIN_BRIGHTNESS not in self._config or \
+                not self._brightness_updated:
+            # only run this if there is a minimum brightness level defined
+            return
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=self._conf_check_days)
+        _LOGGER.debug("Checking brightness history")
+        entity_id = self._readingmap[READING_BRIGHTNESS]
+        brightness_values = []
+        with session_scope(hass=self.hass) as session:
+            query = session.query(States).filter(
+                (States.entity_id == entity_id.lower())
+                and (States.last_updated > start_date)
+                and (States.last_updated <= end_date)
+            )
+            states = execute(query)
+
+            for state in states:
+                # filter out all None, NaN and "unknown" states
+                # only keep real values
+                try:
+                    brightness_values.append(int(state.state))
+                except ValueError:
+                    pass
+        self._brightness_updated = False
+        self._max_brightness_over_days = max(brightness_values)
+        if self._max_brightness_over_days < self._config[CONF_MIN_BRIGHTNESS]:
+            self._brightness_problem = [
+                'maximum brightness of {} lux too low over last {} days'.format(
+                    self._max_brightness_over_days, self._conf_check_days)
+            ]
+        else:
+            self._brightness_problem = []
 
     @property
     def should_poll(self):
@@ -255,5 +319,9 @@ class Plant(Entity):
 
         for reading in self._sensormap.values():
             attrib[reading] = getattr(self, '_{}'.format(reading))
+
+        if self._max_brightness_over_days is not None:
+            attrib['max brightness over {} days'.format(
+                self._conf_check_days)] = self._max_brightness_over_days
 
         return attrib
