@@ -761,8 +761,8 @@ class ZWaveDeviceEntityValues():
 
         for name in self._schema[const.DISC_VALUES]:
             if self._values[name] is None and \
-                not self._schema[const.DISC_VALUES][name].get(
-                    const.DISC_OPTIONAL):
+                    not self._schema[const.DISC_VALUES][name].get(
+                            const.DISC_OPTIONAL):
                 return
 
         component = self._schema[const.DISC_COMPONENT]
