@@ -161,7 +161,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         def set_state():
             """Set state of template binary sensor."""
             self._state = state
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         # state without delay
         if (state and not self._delay_on) or \

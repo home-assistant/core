@@ -590,6 +590,44 @@ class TestTemplateLight:
 
         assert state.attributes.get('brightness') == '42'
 
+    def test_friendly_name(self):
+        """Test the accessibility of the friendly_name attribute."""
+        with assert_setup_component(1, 'light'):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
+                    'platform': 'template',
+                    'lights': {
+                        'test_template_light': {
+                            'friendly_name': 'Template light',
+                            'value_template': "{{ 1 == 1 }}",
+                            'turn_on': {
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
+                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state is not None
+
+        assert state.attributes.get('friendly_name') == 'Template light'
+
 
 @asyncio.coroutine
 def test_restore_state(hass):

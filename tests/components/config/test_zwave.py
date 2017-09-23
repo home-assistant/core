@@ -143,7 +143,7 @@ def test_get_values(hass, test_client):
 
     node = MockNode(node_id=1)
     value = MockValue(value_id=123456, node=node, label='Test Label',
-                      instance=1, index=2)
+                      instance=1, index=2, poll_intensity=4)
     values = MockEntityValues(primary=value)
     node2 = MockNode(node_id=2)
     value2 = MockValue(value_id=234567, node=node2, label='Test Label 2')
@@ -162,6 +162,7 @@ def test_get_values(hass, test_client):
             'label': 'Test Label',
             'instance': 1,
             'index': 2,
+            'poll_intensity': 4,
         }
     }
 
