@@ -292,7 +292,7 @@ def setup(hass, config):
     entity_hubs = []
     for _, hub_data in hosts.items():
         entity_hubs.append(HMHub(
-            homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
+            hass, homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
     # Register HomeMatic services
     descriptions = load_yaml_config_file(
@@ -571,8 +571,9 @@ def _device_from_servicecall(hass, service):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
-    def __init__(self, homematic, name, use_variables):
+    def __init__(self, hass, homematic, name, use_variables):
         """Initialize HomeMatic hub."""
+        self.hass = hass
         self.entity_id = "{}.{}".format(DOMAIN, name.lower())
         self._homematic = homematic
         self._variables = {}
