@@ -48,8 +48,8 @@ def last_recorder_run(hass):
         return res
 
 
-def get_significant_states(hass, start_time, end_time=None, entity_id=None,
-                           filters=None, get_initial_state=True):
+def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
+                           filters=None, include_start_time_state=True):
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -59,8 +59,6 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     """
     timer_start = time.perf_counter()
     from homeassistant.components.recorder.models import States
-    entity_ids = entity_id.lower().split(
-        ',') if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -87,7 +85,8 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
             'get_significant_states took %fs', elapsed)
 
     return states_to_json(
-        hass, states, start_time, entity_ids, filters, get_initial_state)
+        hass, states, start_time, entity_ids, filters,
+        include_start_time_state)
 
 
 def state_changes_during_period(hass, start_time, end_time=None,
@@ -194,7 +193,7 @@ def states_to_json(
         start_time,
         entity_ids,
         filters=None,
-        get_initial_state=True):
+        include_start_time_state=True):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -208,7 +207,7 @@ def states_to_json(
 
     # Get the states at the start time
     timer_start = time.perf_counter()
-    if get_initial_state:
+    if include_start_time_state:
         for state in get_states(hass, start_time, entity_ids, filters=filters):
             state.last_changed = start_time
             state.last_updated = start_time
@@ -290,12 +289,14 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_id = request.query.get('filter_entity_id')
-        get_initial_state = 'skip_initial_state' not in request.query
+        entity_ids = request.query.get('filter_entity_id')
+        if entity_ids:
+            entity_ids = entity_ids.lower().split(',')
+        include_start_time_state = 'skip_initial_state' not in request.query
 
         result = yield from request.app['hass'].async_add_job(
             get_significant_states, request.app['hass'], start_time, end_time,
-            entity_id, self.filters, get_initial_state)
+            entity_ids, self.filters, include_start_time_state)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start

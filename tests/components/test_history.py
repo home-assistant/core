@@ -164,7 +164,7 @@ class TestComponentHistory(unittest.TestCase):
 
         hist = history.get_significant_states(
             self.hass, one_and_half, four, filters=history.Filters(),
-            get_initial_state=True)
+            include_start_time_state=True)
         assert states == hist
 
     def test_get_significant_states_without_initial(self):
@@ -184,7 +184,7 @@ class TestComponentHistory(unittest.TestCase):
 
         hist = history.get_significant_states(
             self.hass, one_and_half, four, filters=history.Filters(),
-            get_initial_state=False)
+            include_start_time_state=False)
         assert states == hist
 
     def test_get_significant_states_entity_id(self):
@@ -196,7 +196,7 @@ class TestComponentHistory(unittest.TestCase):
         del states['script.can_cancel_this_one']
 
         hist = history.get_significant_states(
-            self.hass, zero, four, 'media_player.test',
+            self.hass, zero, four, ['media_player.test'],
             filters=history.Filters())
         assert states == hist
 
@@ -208,7 +208,7 @@ class TestComponentHistory(unittest.TestCase):
         del states['script.can_cancel_this_one']
 
         hist = history.get_significant_states(
-            self.hass, zero, four, 'media_player.test,thermostat.test',
+            self.hass, zero, four, ['media_player.test', 'thermostat.test'],
             filters=history.Filters())
         assert states == hist
 

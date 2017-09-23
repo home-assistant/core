@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ENTITIES, CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-DEPENDENCIES = ['frontend', 'history']
+DEPENDENCIES = ['history']
 
 _LOGGER = logging.getLogger(__name__)
 
