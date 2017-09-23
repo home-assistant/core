@@ -6,6 +6,7 @@ https://home-assistant.io/components/http/
 """
 import asyncio
 import json
+from functools import wraps
 import logging
 import ssl
 from ipaddress import ip_network
@@ -364,9 +365,12 @@ class HomeAssistantView(object):
         return web.Response(
             body=msg, content_type=CONTENT_TYPE_JSON, status=status_code)
 
-    def json_message(self, error, status_code=200):
+    def json_message(self, message, status_code=200, message_code=None):
         """Return a JSON message response."""
-        return self.json({'message': error}, status_code)
+        data = {'message': message}
+        if message_code is not None:
+            data['code'] = message_code
+        return self.json(data, status_code)
 
     @asyncio.coroutine
     # pylint: disable=no-self-use
@@ -443,3 +447,41 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
+
+
+class RequestDataValidator:
+    """Decorator that will validate the incoming data.
+
+    Takes in a voluptuous schema and adds 'post_data' as
+    keyword argument to the function call.
+
+    Will return a 400 if no JSON provided or doesn't match schema.
+    """
+
+    def __init__(self, schema):
+        """Initialize the decorator."""
+        self._schema = schema
+
+    def __call__(self, method):
+        """Decorate a function."""
+        @asyncio.coroutine
+        @wraps(method)
+        def wrapper(view, request, *args, **kwargs):
+            """Wrap a request handler with data validation."""
+            try:
+                data = yield from request.json()
+            except ValueError:
+                _LOGGER.error('Invalid JSON received.')
+                return view.json_message('Invalid JSON.', 400)
+
+            try:
+                kwargs['data'] = self._schema(data)
+            except vol.Invalid as err:
+                _LOGGER.error('Data does not match schema: %s', err)
+                return view.json_message(
+                    'Message format incorrect: {}'.format(err), 400)
+
+            result = yield from method(view, request, *args, **kwargs)
+            return result
+
+        return wrapper

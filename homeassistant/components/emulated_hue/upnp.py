@@ -136,7 +136,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 # because the data object has not been initialized
                 continue
 
-            if "M-SEARCH" in data.decode('utf-8'):
+            if "M-SEARCH" in data.decode('utf-8', errors='ignore'):
                 # SSDP M-SEARCH method received, respond to it with our info
                 resp_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
