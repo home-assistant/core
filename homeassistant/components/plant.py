@@ -77,7 +77,7 @@ PLANT_SCHEMA = vol.Schema({
 })
 
 DOMAIN = 'plant'
-DEPENDENCIES = ['zone', 'group']
+DEPENDENCIES = ['zone', 'group', 'recorder']
 
 GROUP_NAME_ALL_PLANTS = 'all plants'
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
@@ -96,6 +96,7 @@ def async_setup(hass, config):
                                 group_name=GROUP_NAME_ALL_PLANTS)
 
     entities = []
+    groups = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
         entity = Plant(plant_name, plant_config)
@@ -109,13 +110,13 @@ def async_setup(hass, config):
             group_name = plant_config[CONF_GROUP_NAME]
             members = ['{}.{}'.format(DOMAIN, plant_name)]  # own entity id
             members.extend(sensor_entity_ids)
-            hass.states.async_set('group.{}'.format(group_name), 'off', {
-                'entity_id': members})
+            groups.append(group.Group.async_create_group(hass, group_name,
+                                                         members))
             _LOGGER.debug("Added plant group %s for plant %s",
                           group_name, plant_name)
 
     yield from component.async_add_entities(entities)
-
+    yield from asyncio.gather(*groups, loop=hass.loop)
     return True
 
 
