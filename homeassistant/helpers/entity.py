@@ -71,7 +71,7 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # protect for multible updates
+    # protect for multiple updates
     _update_warn = None
 
     @property

@@ -206,7 +206,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         if not skip_groups:
             # Group ID 0 is a special group in the hub for all lights, but it
-            # is not returned by get_api() so explicity get it and include it.
+            # is not returned by get_api() so explicitly get it and include it.
             # See https://developers.meethue.com/documentation/
             #               groups-api#21_get_all_groups
             _LOGGER.debug("Getting group 0 from bridge")

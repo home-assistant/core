@@ -17,7 +17,7 @@ get_usercode:
       description: Node id of the lock
       example: 18
     code_slot:
-      description: Code slot to retrive a code from
+      description: Code slot to retrieve a code from
       example: 1
 
 nuki_lock_n_go:

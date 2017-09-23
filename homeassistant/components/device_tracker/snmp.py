@@ -75,7 +75,7 @@ class SnmpScanner(DeviceScanner):
         return [client['mac'] for client in self.last_results
                 if client.get('mac')]
 
-    # Supressing no-self-use warning
+    # Suppressing no-self-use warning
     # pylint: disable=R0201
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""

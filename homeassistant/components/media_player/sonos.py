@@ -915,8 +915,8 @@ class SonosDevice(MediaPlayerDevice):
         """Replace queue with playlist represented by src.
 
         Playlists can't be played directly with the self._player.play_uri
-        API as they are actually composed of mulitple URLs. Until soco has
-        suppport for playing a playlist, we'll need to parse the playlist item
+        API as they are actually composed of multiple URLs. Until soco has
+        support for playing a playlist, we'll need to parse the playlist item
         and replace the current queue in order to play it.
         """
         import soco
@@ -1116,7 +1116,7 @@ class SonosDevice(MediaPlayerDevice):
                 return
 
             ##
-            # old is allready master, rejoin
+            # old is already master, rejoin
             if old.coordinator.group.coordinator == old.coordinator:
                 self._player.join(old.coordinator)
                 return

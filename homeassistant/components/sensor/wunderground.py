@@ -139,7 +139,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
             wu_unit (string): "fahrenheit", "celsius", "degrees" etc.
                  see the example json at:
         https://www.wunderground.com/weather/api/d/docs?d=data/forecast&MR=1
-            ha_unit (string): coresponding unit in home assistant
+            ha_unit (string): corresponding unit in home assistant
             title (string): friendly_name of the sensor
         """
         super().__init__(

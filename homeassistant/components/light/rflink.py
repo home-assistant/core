@@ -123,7 +123,7 @@ def devices_from_config(domain_config, hass=None):
             _LOGGER.warning(
                 "Hybrid type for %s not compatible with signal "
                 "repetitions. Please set 'dimmable' or 'switchable' "
-                "type explicity in configuration", device_id)
+                "type explicitly in configuration", device_id)
 
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
