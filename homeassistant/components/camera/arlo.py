@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRIGHTNESS = 'brightness'
 ATTR_FLIPPED = 'flipped'
-ATTR_MIRROED = 'mirrored'
+ATTR_MIRRORED = 'mirrored'
 ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
 ATTR_POWER_SAVE_MODE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
@@ -105,7 +105,7 @@ class ArloCam(Camera):
             self._camera.get_brightness,
             ATTR_FLIPPED:
             self._camera.get_flip_state,
-            ATTR_MIRROED:
+            ATTR_MIRRORED:
             self._camera.get_mirror_state,
             ATTR_MOTION_SENSITIVITY:
             self._camera.get_motion_detection_sensitivity,
