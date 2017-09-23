@@ -146,8 +146,9 @@ class SystemMonitorSensor(Entity):
                         self._state = STATE_ON
                         return
                 except psutil.NoSuchProcess as err:
-                    _LOGGER.warning("Failed to load process with id: %s, old name: %s",
-                                    err.pid, err.name)
+                    _LOGGER.warning(
+                        "Failed to load process with id: %s, old name: %s",
+                        err.pid, err.name)
             self._state = STATE_OFF
         elif self.type == 'network_out' or self.type == 'network_in':
             counters = psutil.net_io_counters(pernic=True)
