@@ -15,7 +15,7 @@ from homeassistant.helpers import (config_validation as cv, discovery)
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
 
-REQUIREMENTS = ['myusps==1.1.3']
+REQUIREMENTS = ['myusps==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
