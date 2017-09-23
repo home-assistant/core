@@ -52,6 +52,9 @@ omit =
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
+	
+	homeassistant/components/doorbird.py
+	homeassistant/components/*/doorbird.py
 
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
@@ -158,6 +161,9 @@ omit =
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
+    homeassistant/components/satel_integra.py
+    homeassistant/components/*/satel_integra.py
+
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
@@ -208,12 +214,12 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
-    homeassistant/components/xiaomi.py
-    homeassistant/components/binary_sensor/xiaomi.py
-    homeassistant/components/cover/xiaomi.py
-    homeassistant/components/light/xiaomi.py
-    homeassistant/components/sensor/xiaomi.py
-    homeassistant/components/switch/xiaomi.py
+    homeassistant/components/xiaomi_aqara.py
+    homeassistant/components/binary_sensor/xiaomi_aqara.py
+    homeassistant/components/cover/xiaomi_aqara.py
+    homeassistant/components/light/xiaomi_aqara.py
+    homeassistant/components/sensor/xiaomi_aqara.py
+    homeassistant/components/switch/xiaomi_aqara.py
 
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
@@ -247,6 +253,7 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
+    homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
@@ -283,6 +290,7 @@ omit =
     homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/huawei_router.py
     homeassistant/components/device_tracker/icloud.py
+    homeassistant/components/device_tracker/keenetic_ndms2.py
     homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/linksys_smart.py
     homeassistant/components/device_tracker/luci.py
@@ -331,7 +339,7 @@ omit =
     homeassistant/components/light/tplink.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
-    homeassistant/components/light/xiaomi_philipslight.py
+    homeassistant/components/light/xiaomi_miio.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/zengge.py
@@ -540,6 +548,7 @@ omit =
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/worldtidesinfo.py
+    homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
@@ -565,6 +574,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/tplink.py
+    homeassistant/components/switch/telnet.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/telegram_bot/*
@@ -581,6 +591,7 @@ omit =
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
+    homeassistant/components/vacuum/mqtt.py
 
 
 [report]
