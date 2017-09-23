@@ -20,8 +20,8 @@ DEPENDENCIES = ['arlo', 'ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRIGHTNESS = 'brightness'
-ATTR_IS_FLIPPED = 'is_flipped'
-ATTR_IS_MIRROED = 'is_mirroed'
+ATTR_FLIPPED = 'flipped'
+ATTR_MIRROED = 'mirroed'
 ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
 ATTR_POWER_SAVE_MODE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
@@ -39,16 +39,8 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS):
-    cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
 })
-
-
-def merge_two_dicts(dict1, dict2):
-    """Merge two dicts into a new dict as a shallow copy."""
-    final = dict1.copy()
-    final.update(dict2)
-    return final
 
 
 @asyncio.coroutine
@@ -106,14 +98,14 @@ class ArloCam(Camera):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return merge_two_dicts(super().state_attributes, {
+        return {
             ATTR_BATTERY_LEVEL:
             self._camera.get_battery_level,
             ATTR_BRIGHTNESS:
             self._camera.get_brightness,
-            ATTR_IS_FLIPPED:
+            ATTR_FLIPPED:
             self._camera.get_flip_state,
-            ATTR_IS_MIRROED:
+            ATTR_MIRROED:
             self._camera.get_mirror_state,
             ATTR_MOTION_SENSITIVITY:
             self._camera.get_motion_detection_sensitivity,
@@ -123,7 +115,7 @@ class ArloCam(Camera):
             self._camera.get_signal_strength,
             ATTR_UNSEEN_VIDEOS:
             self._camera.unseen_videos
-        })
+        }
 
     @property
     def model(self):
