@@ -281,11 +281,11 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         self.wink.set_fan_mode(fan.lower())
 
     def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         self.set_operation_mode(STATE_AUX)
 
     def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         self.set_operation_mode(STATE_AUTO)
 
     @property
