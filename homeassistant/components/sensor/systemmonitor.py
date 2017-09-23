@@ -140,10 +140,16 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
-            if any(self.argument in l.name() for l in psutil.process_iter()):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+            for proc in psutil.process_iter():
+                try:
+                    if self.argument == proc.name():
+                        self._state = STATE_ON
+                        return
+                except psutil.NoSuchProcess as err:
+                    _LOGGER.warning(
+                        "Failed to load process with id: %s, old name: %s",
+                        err.pid, err.name)
+            self._state = STATE_OFF
         elif self.type == 'network_out' or self.type == 'network_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
