@@ -277,7 +277,7 @@ class TodoistProjectData(object):
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 
-    This is analagous to the GoogleCalendarData found in the Google Calendar
+    This is analogous to the GoogleCalendarData found in the Google Calendar
     component.
 
     Takes an object with a 'name' field and optionally an 'id' field (either

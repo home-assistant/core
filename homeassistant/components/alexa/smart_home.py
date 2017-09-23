@@ -43,7 +43,7 @@ def mapping_api_function(name):
 
 @asyncio.coroutine
 def async_handle_message(hass, message):
-    """Handle incomming API messages."""
+    """Handle incoming API messages."""
     assert int(message[ATTR_HEADER][ATTR_PAYLOAD_VERSION]) == 2
 
     # Do we support this API request?
@@ -57,7 +57,7 @@ def async_handle_message(hass, message):
 
 
 def api_message(name, namespace, payload=None):
-    """Create a API formated response message.
+    """Create a API formatted response message.
 
     Async friendly.
     """
@@ -74,7 +74,7 @@ def api_message(name, namespace, payload=None):
 
 
 def api_error(request, exc='DriverInternalError'):
-    """Create a API formated error response.
+    """Create a API formatted error response.
 
     Async friendly.
     """
@@ -83,7 +83,7 @@ def api_error(request, exc='DriverInternalError'):
 
 @asyncio.coroutine
 def async_api_discovery(hass, request):
-    """Create a API formated discovery response.
+    """Create a API formatted discovery response.
 
     Async friendly.
     """
