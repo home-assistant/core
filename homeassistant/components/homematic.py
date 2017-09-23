@@ -620,7 +620,7 @@ class HMHub(Entity):
     def _update_hub(self, now):
         """Retrieve latest state."""
         service_message = self._homematic.getServiceMessages(self._name)
-        state = len(service_message) if service_message else None
+        state = None if service_message is None else len(service_message)
 
         # state have change?
         if self._state != state:
