@@ -35,7 +35,7 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.31']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -761,8 +761,8 @@ class ZWaveDeviceEntityValues():
 
         for name in self._schema[const.DISC_VALUES]:
             if self._values[name] is None and \
-                    not self._schema[const.DISC_VALUES][name].get(
-                            const.DISC_OPTIONAL):
+                not self._schema[const.DISC_VALUES][name].get(
+                    const.DISC_OPTIONAL):
                 return
 
         component = self._schema[const.DISC_COMPONENT]

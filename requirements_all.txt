@@ -806,7 +806,7 @@ python-wink==1.5.1
 python_opendata_transport==0.0.2
 
 # homeassistant.components.zwave
-python_openzwave==0.4.0.31
+python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
 pythonegardia==1.0.20
