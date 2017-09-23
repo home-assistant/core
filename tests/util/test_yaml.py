@@ -54,8 +54,8 @@ class TestYaml(unittest.TestCase):
                 patch_yaml_files(files):
             yaml.load_yaml(YAML_CONFIG_FILE)
 
-    def test_enviroment_variable(self):
-        """Test config file with enviroment variable."""
+    def test_environment_variable(self):
+        """Test config file with environment variable."""
         os.environ["PASSWORD"] = "secret_password"
         conf = "password: !env_var PASSWORD"
         with io.StringIO(conf) as file:
@@ -70,8 +70,8 @@ class TestYaml(unittest.TestCase):
             doc = yaml.yaml.safe_load(file)
         assert doc['password'] == "secret_password"
 
-    def test_invalid_enviroment_variable(self):
-        """Test config file with no enviroment variable sat."""
+    def test_invalid_environment_variable(self):
+        """Test config file with no environment variable sat."""
         conf = "password: !env_var PASSWORD"
         with self.assertRaises(HomeAssistantError):
             with io.StringIO(conf) as file:
