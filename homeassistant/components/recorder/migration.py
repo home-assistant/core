@@ -47,7 +47,7 @@ def _create_index(engine, table_name, index_name):
 
     table = Table(table_name, models.Base.metadata)
     _LOGGER.debug("Looking up index for table %s", table_name)
-    # Look up the index object by name from the table is the the models
+    # Look up the index object by name from the table is the models
     index = next(idx for idx in table.indexes if idx.name == index_name)
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.info("Adding index `%s` to database. Note: this can take several "
@@ -151,7 +151,7 @@ def _apply_update(engine, new_version, old_version):
 def _inspect_schema_version(engine, session):
     """Determine the schema version by inspecting the db structure.
 
-    When the schema verison is not present in the db, either db was just
+    When the schema version is not present in the db, either db was just
     created with the correct schema, or this is a db created before schema
     versions were tracked. For now, we'll test if the changes for schema
     version 1 are present to make the determination. Eventually this logic

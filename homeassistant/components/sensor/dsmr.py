@@ -155,7 +155,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     stop_listerer()
 
                 # reflect disconnect state in devices state by setting an
-                # empty telegram resulting in `unkown` states
+                # empty telegram resulting in `unknown` states
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
@@ -181,7 +181,7 @@ class DSMREntity(Entity):
         if self._obis not in self.telegram:
             return None
 
-        # get the attibute value if the object has it
+        # get the attribute value if the object has it
         dsmr_object = self.telegram[self._obis]
         return getattr(dsmr_object, attribute, None)
 

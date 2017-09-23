@@ -135,7 +135,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level.  Volume has a range (0..1).
 
-        Translate this to a range of (0..100) as expected expected
+        Translate this to a range of (0..100) as expected
         by _russ.set_volume()
         """
         self._russ.set_volume('1', self._zone_id, volume * 100)

@@ -81,7 +81,7 @@ def test_default_setup(hass, monkeypatch):
     assert hass.states.get('switch.test').state == 'on'
 
     # The switch component does not support adding new devices for incoming
-    # events because every new unkown device is added as a light by default.
+    # events because every new unknown device is added as a light by default.
 
     # test changing state from HA propagates to Rflink
     hass.async_add_job(
