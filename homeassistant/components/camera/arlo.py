@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRIGHTNESS = 'brightness'
 ATTR_FLIPPED = 'flipped'
-ATTR_MIRROED = 'mirroed'
+ATTR_MIRROED = 'mirrored'
 ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
 ATTR_POWER_SAVE_MODE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
