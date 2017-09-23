@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_HOSTS, CONF_NAME, ATTR_ENTITY_ID)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['pyhomematic==0.1.32']
@@ -292,7 +292,7 @@ def setup(hass, config):
     entity_hubs = []
     for _, hub_data in hosts.items():
         entity_hubs.append(HMHub(
-            homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
+            hass, homematic, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
     # Register HomeMatic services
     descriptions = load_yaml_config_file(
@@ -571,8 +571,9 @@ def _device_from_servicecall(hass, service):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
-    def __init__(self, homematic, name, use_variables):
+    def __init__(self, hass, homematic, name, use_variables):
         """Initialize HomeMatic hub."""
+        self.hass = hass
         self.entity_id = "{}.{}".format(DOMAIN, name.lower())
         self._homematic = homematic
         self._variables = {}
@@ -580,18 +581,15 @@ class HMHub(Entity):
         self._state = STATE_UNKNOWN
         self._use_variables = use_variables
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Load data init callbacks."""
         # Load data
-        async_track_time_interval(
+        track_time_interval(
             self.hass, self._update_hub, SCAN_INTERVAL_HUB)
-        yield from self.hass.async_add_job(self._update_hub, None)
+        self.hass.add_job(self._update_hub, None)
 
         if self._use_variables:
-            async_track_time_interval(
+            track_time_interval(
                 self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
-            yield from self.hass.async_add_job(self._update_variables, None)
+            self.hass.add_job(self._update_variables, None)
 
     @property
     def name(self):
@@ -621,10 +619,12 @@ class HMHub(Entity):
 
     def _update_hub(self, now):
         """Retrieve latest state."""
-        state = self._homematic.getServiceMessages(self._name)
-        self._state = STATE_UNKNOWN if state is None else len(state)
+        service_message = self._homematic.getServiceMessages(self._name)
+        state = None if service_message is None else len(service_message)
 
-        if now:
+        # state have change?
+        if self._state != state:
+            self._state = state
             self.schedule_update_ha_state()
 
     def _update_variables(self, now):
@@ -641,7 +641,7 @@ class HMHub(Entity):
             state_change = True
             self._variables.update({key: value})
 
-        if state_change and now:
+        if state_change:
             self.schedule_update_ha_state()
 
     def hm_set_variable(self, name, value):
