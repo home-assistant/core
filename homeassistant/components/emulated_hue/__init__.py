@@ -129,7 +129,7 @@ class Config(object):
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning("Alexa type is deprecated and will be removed in a"
-                            "future version")
+                            " future version")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)

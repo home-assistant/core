@@ -148,7 +148,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         @callback
         def async_on_dependency_update(*_):
             """Update ha state when dependencies update."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         depend = copy(children)
         for entity in attributes.values():
@@ -422,12 +422,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """
         return self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
 
-    def async_mute_volume(self, is_volume_muted):
+    def async_mute_volume(self, mute):
         """Mute the volume.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        data = {ATTR_MEDIA_VOLUME_MUTED: is_volume_muted}
+        data = {ATTR_MEDIA_VOLUME_MUTED: mute}
         return self._async_call_service(
             SERVICE_VOLUME_MUTE, data, allow_override=True)
 
