@@ -432,7 +432,7 @@ mutagen==1.38
 mycroftapi==2.0
 
 # homeassistant.components.usps
-myusps==1.2.1
+myusps==1.2.2
 
 # homeassistant.components.media_player.nad
 # homeassistant.components.media_player.nadtcp
