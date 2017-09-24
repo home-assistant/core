@@ -81,7 +81,7 @@ class ToonDataStore:
     def update(self):
         """Update toon data."""
         now = datetime.now()
-        if (now - self.last_update < timedelta(seconds=5)):
+        if now - self.last_update < timedelta(seconds=5):
             return
 
         self.last_update = now
