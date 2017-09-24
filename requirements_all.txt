@@ -549,7 +549,7 @@ pyRFXtrx==0.20.1
 pyW215==0.6.0
 
 # homeassistant.components.sensor.airvisual
-pyairvisual==0.1.0
+pyairvisual==1.0.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
