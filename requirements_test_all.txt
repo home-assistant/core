@@ -45,6 +45,10 @@ ephem==3.7.6.0
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.5
 
+# homeassistant.components.feedreader
+# homeassistant.components.sensor.geo_rss_events
+feedparser==5.2.1
+
 # homeassistant.components.conversation
 fuzzywuzzy==0.15.1
 
@@ -53,6 +57,9 @@ gTTS-token==1.1.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.7
+
+# homeassistant.components.sensor.geo_rss_events
+haversine==0.4.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.8
