@@ -52,7 +52,7 @@ omit =
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
-	
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
@@ -581,7 +581,6 @@ omit =
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
-    homeassistant/components/upnp.py
     homeassistant/components/vacuum/roomba.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
