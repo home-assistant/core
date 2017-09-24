@@ -64,13 +64,13 @@ class ImapSensor(Entity):
         self._port = port
         self._unread_count = 0
         self._connection = None
-        self._task = None
+        self._idle_loop_task = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         if not self.should_poll:
-            self._task = self.hass.loop.create_task(self.idle_loop())
+            self._idle_loop_task = self.hass.loop.create_task(self.idle_loop())
 
     @property
     def name(self):
@@ -132,7 +132,7 @@ class ImapSensor(Entity):
                 else:
                     yield from self.async_update_ha_state()
             except (aioimaplib.AioImapException, asyncio.TimeoutError):
-                self.disconnect()
+                self.disconnected()
 
     @asyncio.coroutine
     def async_update(self):
@@ -143,7 +143,7 @@ class ImapSensor(Entity):
             if (yield from self.connection()):
                 yield from self.refresh_unread_count()
         except (aioimaplib.AioImapException, asyncio.TimeoutError):
-            self.disconnect()
+            self.disconnected()
 
     @asyncio.coroutine
     def refresh_unread_count(self):
@@ -153,9 +153,9 @@ class ImapSensor(Entity):
             _, lines = yield from self._connection.search('UnSeen UnDeleted')
             self._unread_count = len(lines[0].split())
 
-    def disconnect(self):
-        """Drop the connection after exceptions."""
-        _LOGGER.warning("Lost %s, attempting to reconnect", self._server)
+    def disconnected(self):
+        """Forget the connection after it was lost."""
+        _LOGGER.warning("Lost %s (will attempt to reconnect)", self._server)
         self._connection = None
 
     @asyncio.coroutine
@@ -165,5 +165,5 @@ class ImapSensor(Entity):
             if self._connection.has_pending_idle():
                 self._connection.idle_done()
             yield from self._connection.logout()
-        if self._task:
-            self._task.cancel()
+        if self._idle_loop_task:
+            self._idle_loop_task.cancel()
