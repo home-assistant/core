@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
@@ -231,10 +232,8 @@ class Config(object):
             expose = False
         else:
             expose = None
-        if explicit_expose:
-            _LOGGER.warning("The attribute 'emulated_hue' is deprecated and"
-                            "will be removed in a future version use"
-                            "'emulated_hue_hidden' instead")
+        get_deprecated(entity.attributes, ATTR_EMULATED_HUE_HIDDEN,
+                       ATTR_EMULATED_HUE, None)
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 
