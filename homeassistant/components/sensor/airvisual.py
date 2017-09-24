@@ -312,8 +312,7 @@ class AirVisualData(object):
             self.country = resp.get('country')
             self.pollution_info = resp.get('current', {}).get('pollution', {})
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error(
-                "Unable to retrieve data on this location: %s, %s, %s",
-                self.city, self.state, self.country)
+            _LOGGER.error('Unable to retrieve data on this location: %s',
+                          self.__dict__)
             _LOGGER.debug(exc_info)
             self.pollution_info = {}
