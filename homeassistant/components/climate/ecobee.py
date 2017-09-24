@@ -283,9 +283,7 @@ class Thermostat(ClimateDevice):
         return 'auxHeat' in self.thermostat['equipmentStatus']
 
     def turn_away_mode_on(self):
-        """
-        Turn away mode on by setting it in away hold indefinitely.
-        """
+        """Turn away mode on by setting it on away hold indefinitely."""
         if self._current_hold_mode != AWAY_MODE:
             self.data.ecobee.set_climate_hold(self.thermostat_index, 'away',
                                               'indefinite')
