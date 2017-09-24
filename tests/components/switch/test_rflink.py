@@ -233,7 +233,7 @@ def test_nogroup_device_id(hass, monkeypatch):
 
 @asyncio.coroutine
 def test_device_defaults(hass, monkeypatch):
-    """Events should be fired if device_defaults config says so."""
+    """Event should fire if device_defaults config says so."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
