@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['miniupnpc==1.9']
+REQUIREMENTS = ['miniupnpc==2.0.2']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +57,9 @@ def setup(hass, config):
     config = config[DOMAIN]
     host = config.get(CONF_LOCAL_IP)
 
-    if host is None:
+    if host is not None:
+        host = str(host)
+    else:
         host = get_local_ip()
 
     if host == '127.0.0.1':

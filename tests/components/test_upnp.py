@@ -83,6 +83,7 @@ def test_no_config_maps_hass_local_to_remote_port(hass, mock_miniupnpc):
     assert len(mock_miniupnpc.addportmapping.mock_calls) == 1
     external, _, host, internal, _, _ = \
         mock_miniupnpc.addportmapping.mock_calls[0][1]
+    assert host == '192.168.0.10'
     assert external == 8123
     assert internal == 8123
 
