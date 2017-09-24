@@ -73,7 +73,7 @@ def test_setup_fails_if_update_fails(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
-    """Test setup fails if first update fails."""
+    """Test set txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
 
@@ -90,7 +90,7 @@ def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
 
 @asyncio.coroutine
 def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
-    """Test setup fails if first update fails."""
+    """Test clear txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
 

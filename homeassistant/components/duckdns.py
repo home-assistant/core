@@ -35,7 +35,7 @@ SERVICE_TXT_SCHEMA = vol.Schema({
 def async_set_txt(hass, txt):
     """Set the txt record. Pass in None to remove it."""
     yield from hass.services.async_call(DOMAIN, SERVICE_SET_TXT, {
-        'txt': txt
+        ATTR_TXT: txt
     }, blocking=True)
 
 
@@ -93,7 +93,6 @@ def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False):
         params['clear'] = 'true'
 
     resp = yield from session.get(UPDATE_URL, params=params)
-    print(resp)
     body = yield from resp.text()
 
     if body != 'OK':
