@@ -98,7 +98,7 @@ def hass_hue(loop, hass):
     hass.states.async_set(
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
-    
+
     # Ceiling Fan is explicitly excluded from being exposed
     ceiling_fan_entity = hass.states.get('fan.ceiling_fan')
     attrs = dict(ceiling_fan_entity.attributes)
