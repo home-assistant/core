@@ -186,12 +186,12 @@ class Thermostat(ClimateDevice):
 
     @property
     def current_hold_mode(self):
+        """Return current hold mode."""
         mode = self._current_hold_mode
         return None if mode == AWAY_MODE else mode
 
     @property
     def _current_hold_mode(self):
-        """Return current hold mode."""
         events = self.thermostat['events']
         for event in events:
             if event['running']:
@@ -283,8 +283,12 @@ class Thermostat(ClimateDevice):
         return 'auxHeat' in self.thermostat['equipmentStatus']
 
     def turn_away_mode_on(self):
+        """
+        Turn away mode on by setting it in away hold indefinitely.
+        """
         if self._current_hold_mode != AWAY_MODE:
-            self.data.ecobee.set_climate_hold(self.thermostat_index, 'away', 'indefinite')
+            self.data.ecobee.set_climate_hold(self.thermostat_index, 'away',
+                                              'indefinite')
             self.update_without_throttle = True
 
     def turn_away_mode_off(self):
