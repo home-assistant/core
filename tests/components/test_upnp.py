@@ -1,5 +1,6 @@
 """Test the UPNP component."""
 import asyncio
+from collections import OrderedDict
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -111,13 +112,14 @@ def test_map_hass_to_remote_port(hass, mock_miniupnpc):
 @asyncio.coroutine
 def test_map_internal_to_remote_ports(hass, mock_miniupnpc):
     """Test mapping local to remote ports."""
+    ports = OrderedDict()
+    ports['hass'] = 1000
+    ports[1883] = 3883
+
     result = yield from async_setup_component(hass, 'upnp', {
         'upnp': {
             'local_ip': '192.168.0.10',
-            'ports': {
-                'hass': 1000,
-                1883: 3883
-            }
+            'ports': ports
         }
     })
 
