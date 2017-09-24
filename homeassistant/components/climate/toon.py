@@ -15,9 +15,6 @@ from homeassistant.const import (TEMP_CELSIUS,
 
 import homeassistant.components.toon as toon_main
 
-import logging
-_LOGGER = logging.getLogger(__name__)
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup thermostat."""
     # Add toon
@@ -34,7 +31,7 @@ class ThermostatDevice(ClimateDevice):
         self.thermos = hass.data[toon_main.TOON_HANDLE]
 
         # set up internal state vars
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._temperature = None
         self._setpoint = None
         self._operation_list = [STATE_HEAT,
