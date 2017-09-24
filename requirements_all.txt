@@ -228,6 +228,7 @@ fastdotcom==0.0.1
 fedexdeliverymanager==1.0.4
 
 # homeassistant.components.feedreader
+# homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
 # homeassistant.components.sensor.fitbit
@@ -285,6 +286,9 @@ ha-ffmpeg==1.7
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
+
+# homeassistant.components.sensor.geo_rss_events
+haversine==0.4.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.8
