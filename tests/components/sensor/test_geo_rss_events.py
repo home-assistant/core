@@ -48,23 +48,6 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
             setup_component(self.hass, 'sensor', {'sensor': self.config}))
         self.assertIsNotNone(self.hass.states.get('sensor.event_service_any'))
 
-    def test_filter_entries(self):
-        """Test filtering entries."""
-        import feedparser
-        data = self.setup_data()
-        raw_data = load_fixture('geo_rss_events.xml')
-        feed_data = feedparser.parse(raw_data)
-        filtered_entries = data.filter_entries(feed_data)
-        # Check the number of entries found
-        assert len(filtered_entries) == 4
-        # Check entries of first hit
-        assert filtered_entries[0][geo_rss_events.ATTR_TITLE] == "Title 1"
-        assert filtered_entries[0][
-                   geo_rss_events.ATTR_CATEGORY] == "Category 1"
-        distance0 = 116.586
-        self.assertAlmostEqual(filtered_entries[0][
-                                   geo_rss_events.ATTR_DISTANCE], distance0, 0)
-
     def setup_data(self, url='url'):
         """Set up data object for use by sensors."""
         home_latitude = -33.865
@@ -96,6 +79,12 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert len(sensor._data.events) == 4
         assert sensor.state == 1
         assert sensor.device_state_attributes == {'Title 1': "117km"}
+        # Check entries of first hit
+        assert sensor._data.events[0][geo_rss_events.ATTR_TITLE] == "Title 1"
+        assert sensor._data.events[0][
+                   geo_rss_events.ATTR_CATEGORY] == "Category 1"
+        self.assertAlmostEqual(sensor._data.events[0][
+                                   geo_rss_events.ATTR_DISTANCE], 116.586, 0)
 
     def test_update_sensor_without_category(self):
         """Test updating sensor object."""
