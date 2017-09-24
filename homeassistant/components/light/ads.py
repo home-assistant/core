@@ -14,8 +14,8 @@ import pyads
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_VARNAME_ENABLE = 'varname_enable'
-CONF_VARNAME_BRIGHTNESS = 'varname_brightness'
+CONF_ADSVAR_ENABLE = 'adsvar_enable'
+CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 
 DEFAULT_NAME = 'ADS Light'
 DEPENDENCIES = ['ads']
@@ -23,15 +23,15 @@ DEPENDENCIES = ['ads']
 SUPPORT_ADS = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_VARNAME_ENABLE): cv.string,
-    vol.Optional(CONF_VARNAME_BRIGHTNESS): cv.string,
+    vol.Required(CONF_ADSVAR_ENABLE): cv.string,
+    vol.Optional(CONF_ADSVAR_BRIGHTNESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    varname_enable = config.get(CONF_VARNAME_ENABLE)
-    varname_brightness = config.get(CONF_VARNAME_BRIGHTNESS)
+    varname_enable = config.get(CONF_ADSVAR_ENABLE)
+    varname_brightness = config.get(CONF_ADSVAR_BRIGHTNESS)
     devname = config.get(CONF_NAME)
 
     add_devices([AdsLight(varname_enable, varname_brightness, devname)])
