@@ -52,7 +52,7 @@ class SimplePushNotificationService(BaseNotificationService):
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
-        if ATTR_ENCRYPTED:
+        if self._password:
             send_encrypted(self._device_key, self._password, self._salt, title,
                            message, event=self._event)
         else:
