@@ -39,24 +39,23 @@ def async_get_service(hass, config, discovery_info=None):
     url = config.get(CONF_URL)
     room = config.get(CONF_ROOM)
 
-    return RocketChatNotificationService(hass, url, username, password, room)
+    return RocketChatNotificationService(url, username, password, room)
 
 
 class RocketChatNotificationService(BaseNotificationService):
     """Implement the notification service for Rocket.Chat."""
 
-    def __init__(self, hass, url, username, password, room):
+    def __init__(self, url, username, password, room):
         """Initialize the service."""
         from rocketchat_API.rocketchat import RocketChat
         from rocketchat_API.APIExceptions.RocketExceptions import (
             RocketConnectionException, RocketAuthenticationException)
-        self._url = url
         self._room = room
         try:
-            self._server = RocketChat(username, password, server_url=self._url)
+            self._server = RocketChat(username, password, server_url=url)
         except RocketConnectionException:
             _LOGGER.warning(
-                "Unable to connect to Rocket.Chat server at %s.", self._url)
+                "Unable to connect to Rocket.Chat server at %s.", url)
         except RocketAuthenticationException:
             _LOGGER.warning(
                 "Rocket.Chat authentication failed for user %s.", username)
