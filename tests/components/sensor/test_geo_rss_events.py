@@ -1,5 +1,6 @@
 """The test for the geo rss events sensor platform."""
 import unittest
+from unittest import mock
 
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
@@ -123,4 +124,20 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert sensor.unit_of_measurement == "Unit 3"
         assert sensor.icon == "mdi:alert"
         assert len(sensor._data.events) == 0
+        assert sensor.state == 0
+
+    @mock.patch('feedparser.parse', return_value=None)
+    def test_update_sensor_with_none_result(self, parse_function):
+        """Test updating sensor object."""
+        data = self.setup_data("http://invalid.url/")
+        category = None
+        name = "Name 4"
+        unit_of_measurement = "Unit 4"
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                    data, name,
+                                                    unit_of_measurement)
+
+        sensor.update()
+        assert sensor.name == "Name 4 Any"
+        assert sensor.unit_of_measurement == "Unit 4"
         assert sensor.state == 0

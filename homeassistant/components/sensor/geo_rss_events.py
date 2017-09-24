@@ -131,22 +131,26 @@ class GeoRssServiceSensor(Entity):
         """Update this sensor from the GeoRSS service."""
         _LOGGER.debug("About to update sensor %s", self.entity_id)
         self._data.update()
-        if self._category is None:
-            # Add all events regardless of category.
-            my_events = self._data.events
+        # If no events were found due to an error then just set state to zero.
+        if self._data.events is None:
+            self._state = 0
         else:
-            # Only keep events that belong to sensor's category.
-            my_events = [event for event in self._data.events if
-                         event[ATTR_CATEGORY] == self._category]
-        _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
-                      my_events)
-        self._state = len(my_events)
-        # And now compute the attributes from the filtered events.
-        matrix = {}
-        for event in my_events:
-            matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
-                event[ATTR_DISTANCE])
-        self._state_attributes = matrix
+            if self._category is None:
+                # Add all events regardless of category.
+                my_events = self._data.events
+            else:
+                # Only keep events that belong to sensor's category.
+                my_events = [event for event in self._data.events if
+                             event[ATTR_CATEGORY] == self._category]
+            _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
+                          my_events)
+            self._state = len(my_events)
+            # And now compute the attributes from the filtered events.
+            matrix = {}
+            for event in my_events:
+                matrix[event[ATTR_TITLE]] = '{:.0f}km'.format(
+                    event[ATTR_DISTANCE])
+            self._state_attributes = matrix
 
 
 class GeoRssServiceData(object):
