@@ -13,14 +13,14 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE,
-                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-                                 CONF_STATE)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = getLogger(__name__)
-REQUIREMENTS = ['pyairvisual==0.1.0']
+REQUIREMENTS = ['pyairvisual==1.0.0']
 
 ATTR_CITY = 'city'
 ATTR_COUNTRY = 'country'
@@ -135,11 +135,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     country = config.get(CONF_COUNTRY)
 
     if city and state and country:
-        _LOGGER.debug('Constructing sensors based on city, state, and country')
+        _LOGGER.debug('Using city, state, and country: %s, %s, %s', city,
+                      state, country)
         data = AirVisualData(
             pav.Client(api_key), city=city, state=state, country=country)
     else:
-        _LOGGER.debug('Constructing sensors based on latitude and longitude')
+        _LOGGER.debug('Using latitude and longitude: %s, %s', latitude,
+                      longitude)
         data = AirVisualData(
             pav.Client(api_key),
             latitude=latitude,
@@ -181,6 +183,8 @@ class AirVisualBaseSensor(Entity):
             ATTR_CITY: self._data.city,
             ATTR_COUNTRY: self._data.country,
             ATTR_REGION: self._data.state,
+            ATTR_LATITUDE: self._data.latitude,
+            ATTR_LONGITUDE: self._data.longitude,
             ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
         }
 
@@ -285,7 +289,7 @@ class AirVisualData(object):
 
         self.latitude = kwargs.get(CONF_LATITUDE)
         self.longitude = kwargs.get(CONF_LONGITUDE)
-        self.radius = kwargs.get(CONF_RADIUS)
+        self._radius = kwargs.get(CONF_RADIUS)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -296,13 +300,19 @@ class AirVisualData(object):
             if self.city and self.state and self.country:
                 resp = self._client.city(self.city, self.state,
                                          self.country).get('data')
+                self.longitude, self.latitude = resp.get('location').get(
+                    'coordinates')
             else:
                 resp = self._client.nearest_city(self.latitude, self.longitude,
-                                                 self.radius).get('data')
+                                                 self._radius).get('data')
             _LOGGER.debug('New data retrieved: %s', resp)
+
+            self.city = resp.get('city')
+            self.state = resp.get('state')
+            self.country = resp.get('country')
             self.pollution_info = resp.get('current', {}).get('pollution', {})
         except exceptions.HTTPError as exc_info:
-            _LOGGER('Unable to retrieve data from the API')
-            _LOGGER.error("There is likely no data on this location")
+            _LOGGER.error('Unable to retrieve data on this location: %s',
+                          self.__dict__)
             _LOGGER.debug(exc_info)
             self.pollution_info = {}
