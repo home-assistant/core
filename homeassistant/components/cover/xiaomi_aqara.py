@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.xiaomi import (PY_XIAOMI_GATEWAY, XiaomiDevice)
+from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
+                                                   XiaomiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +25,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class XiaomiGenericCover(XiaomiDevice, CoverDevice):
-    """Representation of a XiaomiPlug."""
+    """Representation of a XiaomiGenericCover."""
 
     def __init__(self, device, name, data_key, xiaomi_hub):
-        """Initialize the XiaomiPlug."""
+        """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
@@ -44,19 +45,19 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self._write_to_hub(self._sid, self._data_key['status'], 'close')
+        self._write_to_hub(self._sid, **{self._data_key['status']: 'close'})
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._write_to_hub(self._sid, self._data_key['status'], 'open')
+        self._write_to_hub(self._sid, **{self._data_key['status']: 'open'})
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._write_to_hub(self._sid, self._data_key['status'], 'stop')
+        self._write_to_hub(self._sid, **{self._data_key['status']: 'stop'})
 
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
-        self._write_to_hub(self._sid, self._data_key['pos'], str(position))
+        self._write_to_hub(self._sid, **{self._data_key['pos']: str(position)})
 
     def parse_data(self, data):
         """Parse data sent by gateway."""

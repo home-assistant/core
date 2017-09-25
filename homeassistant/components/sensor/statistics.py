@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ ATTR_SAMPLING_SIZE = 'sampling_size'
 ATTR_TOTAL = 'total'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
+CONF_MAX_AGE = 'max_age'
+
 DEFAULT_NAME = 'Stats'
 DEFAULT_SIZE = 20
 ICON = 'mdi:calculator'
@@ -41,7 +44,9 @@ ICON = 'mdi:calculator'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE): cv.positive_int,
+    vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_MAX_AGE): cv.time_period
 })
 
 
@@ -51,16 +56,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
+    max_age = config.get(CONF_MAX_AGE, None)
 
     async_add_devices(
-        [StatisticsSensor(hass, entity_id, name, sampling_size)], True)
+        [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
+        True)
     return True
 
 
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, hass, entity_id, name, sampling_size):
+    def __init__(self, hass, entity_id, name, sampling_size, max_age):
         """Initialize the Statistics sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -71,11 +78,12 @@ class StatisticsSensor(Entity):
         else:
             self._name = '{} {}'.format(name, ATTR_COUNT)
         self._sampling_size = sampling_size
+        self._max_age = max_age
         self._unit_of_measurement = None
-        if self._sampling_size == 0:
-            self.states = deque()
-        else:
-            self.states = deque(maxlen=self._sampling_size)
+        self.states = deque(maxlen=self._sampling_size)
+        if self._max_age is not None:
+            self.ages = deque(maxlen=self._sampling_size)
+
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
@@ -89,6 +97,9 @@ class StatisticsSensor(Entity):
 
             try:
                 self.states.append(float(new_state.state))
+                if self._max_age is not None:
+                    now = dt_util.utcnow()
+                    self.ages.append(now)
                 self.count = self.count + 1
             except ValueError:
                 self.count = self.count + 1
@@ -128,8 +139,7 @@ class StatisticsSensor(Entity):
                 ATTR_MAX_VALUE: self.max,
                 ATTR_MEDIAN: self.median,
                 ATTR_MIN_VALUE: self.min,
-                ATTR_SAMPLING_SIZE: 'unlimited' if self._sampling_size is
-                                    0 else self._sampling_size,
+                ATTR_SAMPLING_SIZE: self._sampling_size,
                 ATTR_STANDARD_DEVIATION: self.stdev,
                 ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
@@ -142,9 +152,20 @@ class StatisticsSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
+    def _purge_old(self):
+        """Remove states which are older than self._max_age."""
+        now = dt_util.utcnow()
+
+        while (len(self.ages) > 0) and (now - self.ages[0]) > self._max_age:
+            self.ages.popleft()
+            self.states.popleft()
+
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data and updates the states."""
+        if self._max_age is not None:
+            self._purge_old()
+
         if not self.is_binary:
             try:
                 self.mean = round(statistics.mean(self.states), 2)

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.pushbullet/
 """
 import logging
+import mimetypes
 
 import voluptuous as vol
 
@@ -20,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
+ATTR_FILE_URL = 'file_url'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -80,24 +82,11 @@ class PushBulletNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
-        url = None
-        filepath = None
-        if data:
-            url = data.get(ATTR_URL, None)
-            filepath = data.get(ATTR_FILE, None)
         refreshed = False
 
         if not targets:
             # Backward compatibility, notify all devices in own account
-            if url:
-                self.pushbullet.push_link(title, url, body=message)
-            elif filepath and self.hass.config.is_allowed_path(filepath):
-                with open(filepath, "rb") as fileh:
-                    filedata = self.pushbullet.upload_file(fileh, filepath)
-                    self.pushbullet.push_file(title=title, body=message,
-                                              **filedata)
-            else:
-                self.pushbullet.push_note(title, message)
+            self._push_data(message, title, data, self.pushbullet)
             _LOGGER.info("Sent notification to self")
             return
 
@@ -112,16 +101,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                if url:
-                    self.pushbullet.push_link(
-                        title, url, body=message, email=tname)
-                if filepath and self.hass.config.is_allowed_path(filepath):
-                    with open(filepath, "rb") as fileh:
-                        filedata = self.pushbullet.upload_file(fileh, filepath)
-                        self.pushbullet.push_file(title=title, body=message,
-                                                  **filedata)
-                else:
-                    self.pushbullet.push_note(title, message, email=tname)
+                self._push_data(message, title, data, self.pushbullet, tname)
                 _LOGGER.info("Sent notification to email %s", tname)
                 continue
 
@@ -140,15 +120,47 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                if url:
-                    self.pbtargets[ttype][tname].push_link(
-                        title, url, body=message)
-                else:
-                    self.pbtargets[ttype][tname].push_note(title, message)
+                self._push_data(message, title, data,
+                                self.pbtargets[ttype][tname])
                 _LOGGER.info("Sent notification to %s/%s", ttype, tname)
             except KeyError:
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
-            except self.pushbullet.errors.PushError:
-                _LOGGER.error("Notify failed to: %s/%s", ttype, tname)
-                continue
+
+    def _push_data(self, message, title, data, pusher, tname=None):
+        from pushbullet import PushError
+        if data is None:
+            data = {}
+        url = data.get(ATTR_URL)
+        filepath = data.get(ATTR_FILE)
+        file_url = data.get(ATTR_FILE_URL)
+        try:
+            if url:
+                if tname:
+                    pusher.push_link(title, url, body=message, email=tname)
+                else:
+                    pusher.push_link(title, url, body=message)
+            elif filepath:
+                if not self.hass.config.is_allowed_path(filepath):
+                    _LOGGER.error("Filepath is not valid or allowed.")
+                    return
+                with open(filepath, "rb") as fileh:
+                    filedata = self.pushbullet.upload_file(fileh, filepath)
+                    if filedata.get('file_type') == 'application/x-empty':
+                        _LOGGER.error("Can not send an empty file.")
+                        return
+                    pusher.push_file(title=title, body=message, **filedata)
+            elif file_url:
+                if not file_url.startswith('http'):
+                    _LOGGER.error("Url should start with http or https.")
+                    return
+                pusher.push_file(title=title, body=message, file_name=file_url,
+                                 file_url=file_url,
+                                 file_type=mimetypes.guess_type(file_url)[0])
+            else:
+                if tname:
+                    pusher.push_note(title, message, email=tname)
+                else:
+                    pusher.push_note(title, message)
+        except PushError as err:
+            _LOGGER.error("Notify failed: %s", err)

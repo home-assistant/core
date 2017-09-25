@@ -146,7 +146,7 @@ def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
                                           (-3 + 4 * cos2SigmaM ** 2)))
     s = AXIS_B * A * (sigma - deltaSigma)
 
-    s /= 1000  # Converion of meters to kilometers
+    s /= 1000  # Conversion of meters to kilometers
     if miles:
         s *= MILES_PER_KILOMETER  # kilometers to miles
 

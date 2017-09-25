@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
 
-REQUIREMENTS = ['pynello==1.5']
+REQUIREMENTS = ['pynello==1.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

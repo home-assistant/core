@@ -33,7 +33,7 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.5.4', 'aiolifx_effects==0.1.1']
+REQUIREMENTS = ['aiolifx==0.6.0', 'aiolifx_effects==0.1.2']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -325,29 +325,33 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
-            yield from entity.async_update()
-            yield from entity.async_update_ha_state()
+            yield from entity.update_hass()
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
-            device.timeout = MESSAGE_TIMEOUT
-            device.retry_count = MESSAGE_RETRIES
-            device.unregister_timeout = UNAVAILABLE_GRACE
 
+            # Read initial state
             ack = AwaitAioLIFX().wait
-            yield from ack(device.get_version)
-            yield from ack(device.get_color)
+            version_resp = yield from ack(device.get_version)
+            if version_resp:
+                color_resp = yield from ack(device.get_color)
 
-            if lifxwhite(device):
-                entity = LIFXWhite(device, self.effects_conductor)
-            elif lifxmultizone(device):
-                yield from ack(partial(device.get_color_zones, start_index=0))
-                entity = LIFXStrip(device, self.effects_conductor)
+            if version_resp is None or color_resp is None:
+                _LOGGER.error("Failed to initialize %s", device.ip_addr)
             else:
-                entity = LIFXColor(device, self.effects_conductor)
+                device.timeout = MESSAGE_TIMEOUT
+                device.retry_count = MESSAGE_RETRIES
+                device.unregister_timeout = UNAVAILABLE_GRACE
 
-            _LOGGER.debug("%s register READY", entity.who)
-            self.entities[device.mac_addr] = entity
-            self.async_add_devices([entity])
+                if lifxwhite(device):
+                    entity = LIFXWhite(device, self.effects_conductor)
+                elif lifxmultizone(device):
+                    entity = LIFXStrip(device, self.effects_conductor)
+                else:
+                    entity = LIFXColor(device, self.effects_conductor)
+
+                _LOGGER.debug("%s register READY", entity.who)
+                self.entities[device.mac_addr] = entity
+                self.async_add_devices([entity], True)
 
     @callback
     def unregister(self, device):
@@ -638,6 +642,18 @@ class LIFXStrip(LIFXColor):
         bulb = self.device
         num_zones = len(bulb.color_zones)
 
+        zones = kwargs.get(ATTR_ZONES)
+        if zones is None:
+            # Fast track: setting all zones to the same brightness and color
+            # can be treated as a single-zone bulb.
+            if hsbk[2] is not None and hsbk[3] is not None:
+                yield from super().set_color(ack, hsbk, kwargs, duration)
+                return
+
+            zones = list(range(0, num_zones))
+        else:
+            zones = list(filter(lambda x: x < num_zones, set(zones)))
+
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
             yield from self.set_power(ack, True)
@@ -645,12 +661,6 @@ class LIFXStrip(LIFXColor):
             yield from self.update_color_zones()
             yield from self.set_power(ack, False)
             yield from asyncio.sleep(0.3)
-
-        zones = kwargs.get(ATTR_ZONES, None)
-        if zones is None:
-            zones = list(range(0, num_zones))
-        else:
-            zones = list(filter(lambda x: x < num_zones, set(zones)))
 
         # Send new color to each zone
         for index, zone in enumerate(zones):
@@ -674,9 +684,13 @@ class LIFXStrip(LIFXColor):
     @asyncio.coroutine
     def update_color_zones(self):
         """Get updated color information for each zone."""
-        ack = AwaitAioLIFX().wait
-        bulb = self.device
-
-        # Each get_color_zones returns the next 8 zones
-        for zone in range(0, len(bulb.color_zones), 8):
-            yield from ack(partial(bulb.get_color_zones, start_index=zone))
+        zone = 0
+        top = 1
+        while self.available and zone < top:
+            # Each get_color_zones can update 8 zones at once
+            resp = yield from AwaitAioLIFX().wait(partial(
+                self.device.get_color_zones,
+                start_index=zone))
+            if resp:
+                zone += 8
+                top = resp.count

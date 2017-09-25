@@ -4,13 +4,13 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['credstash==1.13.2', 'botocore==1.4.93']
+REQUIREMENTS = ['credstash==1.13.3', 'botocore==1.4.93']
 
 
 def run(args):
     """Handle credstash script."""
     parser = argparse.ArgumentParser(
-        description=("Modify Home-Assistant secrets in credstash."
+        description=("Modify Home Assistant secrets in credstash."
                      "Use the secrets in configuration files with: "
                      "!secret <name>"))
     parser.add_argument(
