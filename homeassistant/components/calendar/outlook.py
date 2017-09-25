@@ -35,8 +35,6 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 
 CONF_CAL_ID = 'cal_id'
-CONF_DEVICE_ID = 'device_id'
-CONF_NAME = 'name'
 CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
 CONF_SEARCH = 'search'
@@ -161,16 +159,16 @@ class OutlookService():
                       parameters=None):
         """ Generic API Sending """
         # Send these headers with all API calls
-        headers = {'User-Agent':'HomeAssistant',
-                   'Authorization':'Bearer {0}'.format(token),
-                   'Accept':'application/json'}
+        headers = {'User-Agent': 'HomeAssistant',
+                   'Authorization': 'Bearer {0}'.format(token),
+                   'Accept': 'application/json'}
 
         # Use these headers to instrument calls. Makes it easier
         # to correlate requests and responses in case of problems
         # and is a recommended best practice.
         request_id = str(uuid.uuid4())
-        instrumentation = {'client-request-id' : request_id,
-                           'return-client-request-id' : 'true'}
+        instrumentation = {'client-request-id': request_id,
+                           'return-client-request-id': 'true'}
 
         headers.update(instrumentation)
 
@@ -185,14 +183,14 @@ class OutlookService():
                                        headers=headers,
                                        params=parameters)
         elif method.upper() == 'PATCH':
-            headers.update({'Content-Type' : 'application/json'})
+            headers.update({'Content-Type': 'application/json'})
             data = json.dumps(payload)
             response = requests.patch(url,
                                       headers=headers,
                                       data=data,
                                       params=parameters)
         elif method.upper() == 'POST':
-            headers.update({'Content-Type':'application/json'})
+            headers.update({'Content-Type': 'application/json'})
             data = json.dumps(payload)
             response = requests.post(url,
                                      headers=headers,
@@ -270,9 +268,9 @@ class OutlookService():
                 event = events[0]
                 # date = 'date' if event['IsAllDay'] else 'dateTime'
                 # print(date)
-                return {'start':{'dateTime':event['Start']['DateTime']},
-                        'end':{'dateTime':event['End']['DateTime']},
-                        'summary':event['Subject']}
+                return {'start': {'dateTime': event['Start']['DateTime']},
+                        'end': {'dateTime': event['End']['DateTime']},
+                        'summary': event['Subject']}
         return None
 
     def get_calendar_info(self, json_calendar):
@@ -425,8 +423,8 @@ class OutlookAuthHelper:
         params = {'client_id': self.client_id,
                   'redirect_uri': self.redirect_uri,
                   'response_type': 'code',
-                  'scope': ' '.join(str(i) for i in self.scopes)
-                 }
+                  'scope': ' '.join(str(i) for i in self.scopes)}
+
         signin_url = self.authorize_url.format(urlencode(params))
         return signin_url
 
@@ -437,8 +435,8 @@ class OutlookAuthHelper:
                      'redirect_uri': self.redirect_uri,
                      'scope': ' '.join(str(i) for i in self.scopes),
                      'client_id': self.client_id,
-                     'client_secret': self.client_secret
-                    }
+                     'client_secret': self.client_secret}
+
         res = requests.post(self.token_url, data=post_data)
         try:
             self.token = res.json()
