@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
 
     options = [
-        item.strip() for item in config.get(CONF_MONITORED_CONDITIONS).split(',')
+        it.strip() for it in config.get(CONF_MONITORED_CONDITIONS).split(',')
     ]
 
     if OPTION_TRAFFIC_JAM in options:
