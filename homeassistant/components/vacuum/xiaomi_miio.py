@@ -156,15 +156,6 @@ class MiroboVacuum(VacuumDevice):
         self.consumable_state = None
         self.clean_history = None
 
-        self.consumable_state = None
-        self.clean_history = None
-
-        self.consumable_state = None
-        self.clean_history = None
-
-        self.consumable_state = None
-        self.clean_history = None
-
     @property
     def name(self):
         """Return the name of the device."""
