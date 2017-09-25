@@ -249,8 +249,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     # pylint: disable=invalid-name
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
-        # from timeit import default_timer as timer
-        # start = timer()
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')
@@ -280,9 +278,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
                     CONF_WAYPOINT_IMPORT: True,
                     CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
                 }})
-
-        # end = timer()
-        # assert False, end-start
 
         self.hass.states.set(
             'zone.inner', 'zoning',

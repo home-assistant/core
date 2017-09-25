@@ -91,20 +91,14 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return True
 
 
-def _parse_topic(topic, pretty=False):
+def _parse_topic(topic):
     """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple.
 
     Async friendly.
     """
-    parts = topic.split('/')
-    dev_id_format = ''
-    if pretty:
-        dev_id_format = '{} {}'
-    else:
-        dev_id_format = '{}_{}'
-    dev_id = slugify(dev_id_format.format(parts[1], parts[2]))
-    host_name = parts[1]
-    return (host_name, dev_id)
+    _, user, device, *_ = topic.split('/', 3)
+
+    return user, device
 
 
 def _parse_see_args(message):
@@ -112,10 +106,11 @@ def _parse_see_args(message):
 
     Async friendly.
     """
-    (host_name, dev_id) = _parse_topic(message['topic'], False)
+    user, device = _parse_topic(message['topic'])
+    dev_id = slugify('{}_{}'.format(user, device))
     kwargs = {
         'dev_id': dev_id,
-        'host_name': host_name,
+        'host_name': user,
         'gps': (message['lat'], message['lon']),
         'attributes': {}
     }
@@ -352,7 +347,7 @@ def async_handle_waypoints_message(hass, context, message):
         return
 
     if context.waypoint_whitelist is not None:
-        user, _ = _parse_topic(message['topic'])
+        user = _parse_topic(message['topic'])[0]
 
         if user not in context.waypoint_whitelist:
             return
@@ -361,9 +356,11 @@ def async_handle_waypoints_message(hass, context, message):
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message['topic'])
 
+    name_base = ' '.join(_parse_topic(message['topic']))
+
     for wayp in wayps:
         name = wayp['desc']
-        pretty_name = _parse_topic(message['topic'], True)[1] + ' - ' + name
+        pretty_name = '{} - {}'.format(name_base, name)
         lat = wayp['lat']
         lon = wayp['lon']
         rad = wayp['rad']
