@@ -6,13 +6,11 @@ https://home-assistant.io/components/sensor.comed_hourly_pricing/
 """
 from datetime import timedelta
 import logging
-import voluptuous as vol
 import asyncio
+import json
 import async_timeout
 import aiohttp
-import json
-
-from requests import RequestException, get
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -50,16 +48,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
-
     websession = async_get_clientsession(hass)
     dev = []
-    
+
     for variable in config[CONF_MONITORED_FEEDS]:
         dev.append(ComedHourlyPricingSensor(
-            hass.loop, websession, variable[CONF_SENSOR_TYPE], 
+            hass.loop, websession, variable[CONF_SENSOR_TYPE],
             variable[CONF_OFFSET], variable.get(CONF_NAME)))
 
     async_add_devices(dev, True)
@@ -109,7 +107,7 @@ class ComedHourlyPricingSensor(Entity):
             if self.type == CONF_FIVE_MINUTE or \
                     self.type == CONF_CURRENT_HOUR_AVERAGE:
                 url_string = _RESOURCE
-                if (self.type == CONF_FIVE_MINUTE):
+                if self.type == CONF_FIVE_MINUTE:
                     url_string += '?type=5minutefeed'
                 else:
                     url_string += '?type=currenthouraverage'
@@ -127,5 +125,5 @@ class ComedHourlyPricingSensor(Entity):
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)
-        except (RequestException, ValueError, KeyError):
+        except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
