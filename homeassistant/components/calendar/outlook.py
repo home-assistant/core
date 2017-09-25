@@ -348,10 +348,10 @@ class OutlookAuthCallbackView(HomeAssistantView):
         html_response = """<html><head><title>Outlook Auth</title></head>
         <body><h1>{}</h1></body></html>""".format(response_message)
 
-        #config_contents = {
-        #    ATTR_ACCESS_TOKEN: self.oauth.token['access_token'],
-        #    ATTR_REFRESH_TOKEN: self.oauth.token['refresh_token']
-        #}
+        # config_contents = {
+        #     ATTR_ACCESS_TOKEN: self.oauth.token['access_token'],
+        #     ATTR_REFRESH_TOKEN: self.oauth.token['refresh_token']
+        # }
         if not config_from_file(hass.config.path(OUTLOOK_CONFIG_FILE),
                                 self.oauth.token):
             _LOGGER.error("Failed to save config file")
