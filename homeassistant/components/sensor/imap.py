@@ -65,6 +65,7 @@ class ImapSensor(Entity):
         self._port = port
         self._unread_count = 0
         self._connection = None
+        self._does_push = None
         self._idle_loop_task = None
 
     @asyncio.coroutine
@@ -96,7 +97,7 @@ class ImapSensor(Entity):
     @property
     def should_poll(self):
         """Return if polling is needed."""
-        return self._connection and not self._connection.has_capability('IDLE')
+        return self._does_push == False
 
     @asyncio.coroutine
     def connection(self):
@@ -110,6 +111,7 @@ class ImapSensor(Entity):
                 yield from self._connection.wait_hello_from_server()
                 yield from self._connection.login(self._user, self._password)
                 yield from self._connection.select()
+                self._does_push = self._connection.has_capability('IDLE')
             except (aioimaplib.AioImapException, asyncio.TimeoutError):
                 self._connection = None
 
