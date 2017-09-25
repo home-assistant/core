@@ -8,8 +8,17 @@ https://home-assistant.io/components/sensor.sytadin/
 """
 import logging
 
-from homeassistant.const import LENGTH_KILOMETERS
+from datetime import timedelta
+import voluptuous as vol
+
+from homeassistant.const import (CONF_NAME, LENGTH_KILOMETERS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
+from homeassistant.util import Throttle
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,35 +34,60 @@ TRAFFIC_JAM_REGEX = '([0-9]+)'
 MEAN_VELOCITY_REGEX = '([0-9]+)'
 CONGESTION_REGEX = '([0-9]+.[0-9]+)'
 
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+OPTION_TRAFFIC_JAM = 'traffic_jam'
+OPTION_MEAN_VELOCITY = 'mean_velocity'
+OPTION_CONGESTION = 'congestion'
+CONF_UPDATE_INTERVAL = 'update_interval'
+
+TIMEOUT = 10
+
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MONITORED_CONDITIONS): cv.string,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
+})
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([
-        SytadinSensor('Traffic Jam', SYSTADIN, TRAFFIC_JAM_XPATH,
-                      TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS)
-        ])
-    add_devices([
-        SytadinSensor('Mean Velocity', SYSTADIN,
-                      MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX,
-                      LENGTH_KILOMETERS+'/h')
-        ])
-    add_devices([
-        SytadinSensor('Congestion', SYSTADIN, CONGESTION_XPATH,
-                      CONGESTION_REGEX, '')
-        ])
+
+    options = [item.strip() for item in config.get(CONF_MONITORED_CONDITIONS).split(',')]
+
+    if OPTION_TRAFFIC_JAM in options:
+        add_devices([
+            SytadinSensor('Traffic Jam', SYSTADIN, TRAFFIC_JAM_XPATH,
+                          TRAFFIC_JAM_REGEX, LENGTH_KILOMETERS,
+                          config.get(CONF_UPDATE_INTERVAL))
+            ])
+    if OPTION_MEAN_VELOCITY in options:
+        add_devices([
+            SytadinSensor('Mean Velocity', SYSTADIN,
+                          MEAN_VELOCITY_XPATH, MEAN_VELOCITY_REGEX,
+                          LENGTH_KILOMETERS+'/h',
+                          config.get(CONF_UPDATE_INTERVAL))
+            ])
+    if OPTION_CONGESTION in options:
+        add_devices([
+            SytadinSensor('Congestion', SYSTADIN, CONGESTION_XPATH,
+                          CONGESTION_REGEX, '', config.get(CONF_UPDATE_INTERVAL))
+            ])
 
 
 class SytadinSensor(Entity):
     """Sytadin Sensor."""
 
-    def __init__(self, name, url, xpath, regex, unit):
+    def __init__(self, name, url, xpath, regex, unit, interval):
         """Initialize the sensor."""
-        self._state = 0
+        self._state = None
         self._name = name
         self._url = url
         self._xpath = xpath
         self._regex = regex
         self._unit = unit
+        self.update = Throttle(interval)(self._update)
+
 
     @property
     def name(self):
@@ -70,13 +104,13 @@ class SytadinSensor(Entity):
         """Return the unit of measurement."""
         return self._unit
 
-    def update(self):
+    def _update(self):
         """Fetch new state data for the sensor."""
         import requests
         import re
         from lxml import etree
 
-        html = requests.get(self._url)
+        html = requests.get(self._url, timeout=TIMEOUT)
         tree = etree.HTML(html.content)
         extract_xpath = tree.xpath(self._xpath)
 
