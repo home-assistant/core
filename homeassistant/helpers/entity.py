@@ -299,7 +299,6 @@ class Entity(object):
             self._update_again = False
             self.async_schedule_update_ha_state(force_refresh=True)
 
-
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
 
