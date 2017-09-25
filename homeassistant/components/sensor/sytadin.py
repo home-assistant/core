@@ -68,7 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name = SENSOR_TYPES.get(OPTION_TRAFFIC_JAM)[0]
         add_devices([
             SytadinSensor(name, SYSTADIN, TRAFFIC_JAM_XPATH,
-                          TRAFFIC_JAM_REGEX, SENSOR_TYPES.get(OPTION_TRAFFIC_JAM)[1],
+                          TRAFFIC_JAM_REGEX,
+                          SENSOR_TYPES.get(OPTION_TRAFFIC_JAM)[1],
                           config.get(CONF_UPDATE_INTERVAL))
             ])
     if OPTION_MEAN_VELOCITY in options:
