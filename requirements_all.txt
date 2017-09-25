@@ -401,7 +401,7 @@ liveboxplaytv==1.4.9
 lmnotify==0.0.4
 
 # homeassistant.components.sensor.lyft
-lyft_rides==0.1.0b0
+lyft_rides==0.2
 
 # homeassistant.components.notify.matrix
 matrix-client==0.0.6
