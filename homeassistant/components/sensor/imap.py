@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.imap/
 """
 import logging
 import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -128,7 +129,8 @@ class ImapSensor(Entity):
                     idle = yield from self._connection.idle_start()
                     yield from self._connection.wait_server_push()
                     self._connection.idle_done()
-                    yield from asyncio.wait_for(idle, 10)
+                    with async_timeout.timeout(10):
+                        yield from idle
                 else:
                     yield from self.async_update_ha_state()
             except (aioimaplib.AioImapException, asyncio.TimeoutError):
