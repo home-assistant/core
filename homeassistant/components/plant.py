@@ -244,7 +244,8 @@ class Plant(Entity):
         self.async_schedule_update_ha_state()
 
     def check_brightness(self):
-        """ check brightness levels over a history of several days.
+        """
+        Check brightness levels over a history of several days.
 
         It usually does not make sense to check the minimum brightness now as
         it might be night. So we need to check this over several days to see if
@@ -254,7 +255,6 @@ class Plant(Entity):
         frequently. Thus we only check when the brightness really changed
         (ie self._brightness_updated == True). The result of the last check
         is cached in self._brightness_problem.
-
         """
         if CONF_MIN_BRIGHTNESS not in self._config or \
                 not self._brightness_updated:
