@@ -192,7 +192,7 @@ class OutlookService():
                                       data=data,
                                       params=parameters)
         elif method.upper() == 'POST':
-            headers.update({'Content-Type' : 'application/json'})
+            headers.update({'Content-Type':'application/json'})
             data = json.dumps(payload)
             response = requests.post(url,
                                      headers=headers,
@@ -225,9 +225,9 @@ class OutlookService():
         #  - Only first 10 results returned
         #  - Only return the ReceivedDateTime, Subject, and From fields
         #  - Sort the results by the ReceivedDateTime field in desc order
-        #query_parameters = {'$top': '10',
-        #                    '$select': 'ReceivedDateTime,Subject,From',
-        #                    '$orderby': 'ReceivedDateTime DESC'}
+        # query_parameters = {'$top': '10',
+        #                     '$select': 'ReceivedDateTime,Subject,From',
+        #                     '$orderby': 'ReceivedDateTime DESC'}
 
         result = self.make_api_call('GET', get_messages_url, access_token)
 
@@ -268,11 +268,11 @@ class OutlookService():
             events = json_data['value']
             if len(events) == 1:
                 event = events[0]
-                #date = 'date' if event['IsAllDay'] else 'dateTime'
-                #print(date)
-                return {'start': {'dateTime' : event['Start']['DateTime']},
-                        'end' : {'dateTime' : event['End']['DateTime']},
-                        'summary': event['Subject']}
+                # date = 'date' if event['IsAllDay'] else 'dateTime'
+                # print(date)
+                return {'start':{'dateTime':event['Start']['DateTime']},
+                        'end':{'dateTime':event['End']['DateTime']},
+                        'summary':event['Subject']}
         return None
 
     def get_calendar_info(self, json_calendar):
@@ -308,7 +308,6 @@ class OutlookService():
 
         return True
 
-
     def update_config(self, path, calendar):
         """Write the outlook_calendar.yaml."""
         with open(path, 'a') as out:
@@ -328,8 +327,6 @@ class OutlookAuthCallbackView(HomeAssistantView):
         self.config = config
         self.add_devices = add_devices
         self.oauth = oauth
-
-
 
     @callback
     def get(self, request):
@@ -368,6 +365,7 @@ class OutlookAuthCallbackView(HomeAssistantView):
 
         return html_response
 
+
 class OutlookCalendarEventDevice(CalendarEventDevice):
     """An Outlook calendar event device."""
 
@@ -377,6 +375,7 @@ class OutlookCalendarEventDevice(CalendarEventDevice):
                                         calendar,
                                         data.get('search', None))
         super().__init__(hass, data)
+
 
 class OutlookCalendarData(object):
     """Class to utilize calendar service object to get next event."""
@@ -393,6 +392,7 @@ class OutlookCalendarData(object):
         self.event = self.calendar_service.get_calendar_first_event(
             self.calendar_id)
         return True
+
 
 class OutlookAuthHelper:
     """Class to perform Auth on the Outlook platform."""
@@ -455,8 +455,7 @@ class OutlookAuthHelper:
                      'redirect_uri': self.redirect_uri,
                      'scope': ' '.join(str(i) for i in self.scopes),
                      'client_id': self.client_id,
-                     'client_secret': self.client_secret
-                    }
+                     'client_secret': self.client_secret}
         res = requests.post(self.token_url, data=post_data)
         try:
             self.token = res.json()
