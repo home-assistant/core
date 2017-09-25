@@ -14,6 +14,8 @@ from homeassistant.const import (
 from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
+from homeassistant.exceptions import (
+    PlatformNotReady)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rocketchat-API==0.6.1']
@@ -39,7 +41,10 @@ def async_get_service(hass, config, discovery_info=None):
     url = config.get(CONF_URL)
     room = config.get(CONF_ROOM)
 
-    return RocketChatNotificationService(url, username, password, room)
+    try:
+        return RocketChatNotificationService(url, username, password, room)
+    except PlatformNotReady:
+        _LOGGER.error("Unable to initialise Rocket.Chat service.")
 
 
 class RocketChatNotificationService(BaseNotificationService):
@@ -56,13 +61,23 @@ class RocketChatNotificationService(BaseNotificationService):
         except RocketConnectionException:
             _LOGGER.warning(
                 "Unable to connect to Rocket.Chat server at %s.", url)
+            raise PlatformNotReady()
         except RocketAuthenticationException:
             _LOGGER.warning(
                 "Rocket.Chat authentication failed for user %s.", username)
             _LOGGER.info("Please check your username/password.")
+            raise PlatformNotReady()
 
     @asyncio.coroutine
     def async_send_message(self, message="", **kwargs):
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
-        self._server.chat_post_message(message, channel=self._room, **data)
+        resp = self._server.chat_post_message(message, channel=self._room,
+                                              **data)
+        if resp.status_code == 200:
+            success = resp.json()["success"]
+            if not success:
+                _LOGGER.error("Unable to post Rocket.Chat message")
+        else:
+            _LOGGER.error("Incorrect status code when posting message: %d",
+                          resp.status_code)
