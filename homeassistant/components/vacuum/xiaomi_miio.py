@@ -372,21 +372,12 @@ class MiroboVacuum(VacuumDevice):
         from mirobo import DeviceException
         try:
             state = yield from self.hass.async_add_job(self._vacuum.status)
-            consumable = yield from self.hass.async_add_job(
-                self._vacuum.consumable_status)
-            cleanhis = yield from self.hass.async_add_job(
-                self._vacuum.clean_history)
             _LOGGER.debug("Got new state from the vacuum: %s", state.data)
             self.vacuum_state = state
-<<<<<<< 948b16c1ad5f6baea7f7264209a35bb75c255eda
             self.consumable_state = yield from self.hass.async_add_job(
                 self._vacuum.consumable_status)
             self.clean_history = yield from self.hass.async_add_job(
                 self._vacuum.clean_history)
-=======
-            self.consumable_state = consumable
-            self.clean_history = cleanhis
->>>>>>> Added new statistic attributes
             self._is_on = state.is_on
             self._available = True
         except OSError as exc:
