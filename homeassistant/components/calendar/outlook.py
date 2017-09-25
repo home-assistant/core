@@ -8,6 +8,7 @@ from datetime import timedelta
 from urllib.parse import urlencode
 import requests
 import voluptuous as vol
+from voluptuous.error import Error as VoluptuousError
 import yaml
 
 # Import the device class from the component that you want to support
@@ -162,22 +163,18 @@ class OutlookService():
 
         response = None
 
-        if (method.upper()=='GET'):
+        if method.upper() == 'GET':
             response = requests.get(url, headers=headers, params=parameters)
-        elif (method.upper()=='DELETE'):
+        elif method.upper() == 'DELETE':
             response = requests.delete(url, headers=headers, params=parameters)
-        elif (method.upper()=='PATCH'):
+        elif method.upper() == 'PATCH':
             headers.update({'Content-Type' : 'application/json'})
-            response = requests.patch(url,
-                                      headers=headers, 
-                                      data=json.dumps(payload), 
-                                      params=parameters)
-        elif (method.upper()=='POST'):
+            data = json.dumps(payload)
+            response = requests.patch(url, headers=headers, data=data, params=parameters)
+        elif method.upper() == 'POST':
             headers.update({'Content-Type' : 'application/json'})
-            response = requests.post(url,
-                                     headers=headers, 
-                                     data=json.dumps(payload),
-                                     params=parameters)
+            data = json.dumps(payload)
+            response = requests.post(url, headers=headers, data=data, params=parameters)
 
         return response
 
@@ -206,11 +203,10 @@ class OutlookService():
         #                    '$select': 'ReceivedDateTime,Subject,From',
         #                    '$orderby': 'ReceivedDateTime DESC'}
 
-        r = self.make_api_call('GET', get_messages_url, access_token)
-        #r = self.make_api_call('GET', get_messages_url, access_token, parameters = query_parameters)
-  
-        if (r.status_code==requests.codes.ok):
-            json_data = r.json()
+        result = self.make_api_call('GET', get_messages_url, access_token)
+
+        if result.status_code == requests.codes.get('ok'):
+            json_data = result.json()
             for json_calendar in json_data["value"]:
                 calendar = self.get_calendar_info(json_calendar)
                 if self.calendar_data.get(calendar[CONF_CAL_ID], None) is not None:
@@ -236,9 +232,13 @@ class OutlookService():
 
         print(query_parameters)
 
-        r = self.make_api_call('GET', get_calendarview_url, access_token, parameters=query_parameters)
-        if (r.status_code==requests.codes.ok):
-            json_data = r.json()
+        result = self.make_api_call('GET',
+                                    get_calendarview_url,
+                                    access_token,
+                                    parameters=query_parameters)
+
+        if result.status_code == requests.codes.get('ok'):
+            json_data = result.json()
             events = json_data['value']
             if len(events) == 1:
                 event = events[0]
@@ -294,7 +294,7 @@ class OutlookAuthCallbackView(HomeAssistantView):
     url = '/api/outlook/callback'
     name = 'api:outlook:callback'
 
-    def __init__(self, config, add_devices, oauth): 
+    def __init__(self, config, add_devices, oauth):
         """Initialize the OAuth callback view."""
         self.config = config
         self.add_devices = add_devices
@@ -305,27 +305,15 @@ class OutlookAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
-        from oauthlib.oauth2.rfc6749.errors import  MissingTokenError
 
         hass = request.app['hass']
         data = request.GET
 
-        response_message = """Outlook has been successfully authorized! You can close this window now!"""
+        response_message = """Outlook has been successfully authorized!
+            You can close this window now!"""
 
         if data.get('code') is not None:
-            try:
-                self.oauth.get_token_from_code(data.get('code'))
-            except MissingTokenError as error:
-                _LOGGER.error("Missing token: %s", error)
-                response_message = """Something went wrong when
-                attempting authenticating with Outlook. The error
-                encountered was {}. Please try again!""".format(error)
-            except MismatchingStateError as error:
-                _LOGGER.error("Mismatched state, CSRF error: %s", error)
-                response_message = """Something went wrong when
-                attempting authenticating with Outlook. The error
-                encountered was {}. Please try again!""".format(error)
+            self.oauth.get_token_from_code(data.get('code'))
         else:
             _LOGGER.error("Unknown error when authing")
             response_message = """Something went wrong when
@@ -371,6 +359,7 @@ class OutlookCalendarData(object):
         return True
 
 class OutlookAuthHelper:
+    """Class to perform Auth on the Outlook platform."""
     # Constant strings for OAuth2 flow
     # The OAuth authority
     authority = 'https://login.microsoftonline.com'
@@ -382,9 +371,9 @@ class OutlookAuthHelper:
     token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 
     # The scopes required by the app
-    scopes = [ 'openid',
-               'offline_access',
-               'https://outlook.office.com/calendars.read' ]
+    scopes = ['openid',
+              'offline_access',
+              'https://outlook.office.com/calendars.read']
 
     def __init__(self, hass, client_id, client_secret):
         self.token = {}
@@ -394,53 +383,47 @@ class OutlookAuthHelper:
 
     def get_signin_url(self):
         # Build the query parameters for the signin url
-        params = { 'client_id': self.client_id,
-                   'redirect_uri': self.redirect_uri,
-                   'response_type': 'code',
-                   'scope': ' '.join(str(i) for i in self.scopes)
-                  }
-            
+        params = {'client_id': self.client_id,
+                  'redirect_uri': self.redirect_uri,
+                  'response_type': 'code',
+                  'scope': ' '.join(str(i) for i in self.scopes)
+                 }
         signin_url = self.authorize_url.format(urlencode(params))
-  
         return signin_url
 
     def get_token_from_code(self, auth_code):
         # Build the post form for the token request
-        post_data = { 'grant_type': 'authorization_code',
-                      'code': auth_code,
-                      'redirect_uri': self.redirect_uri,
-                      'scope': ' '.join(str(i) for i in self.scopes),
-                      'client_id': self.client_id,
-                      'client_secret': self.client_secret
+        post_data = {'grant_type': 'authorization_code',
+                     'code': auth_code,
+                     'redirect_uri': self.redirect_uri,
+                     'scope': ' '.join(str(i) for i in self.scopes),
+                     'client_id': self.client_id,
+                     'client_secret': self.client_secret
                     }
-              
-        r = requests.post(self.token_url, data = post_data)
-        
+        result = requests.post(self.token_url, data=post_data)
         try:
-            self.token = r.json()
+            self.token = result.json()
             self.calc_expiration()
             return self.token
-        except:
-            return 'Error retrieving token: {0} - {1}'.format(r.status_code, r.text)
+        except ValueError:
+            return 'Error retrieving token: {0} - {1}'.format(result.status_code, result.text)
 
     def get_token_from_refresh_token(self):
         # Build the post form for the token request
-        post_data = { 'grant_type': 'refresh_token',
-                      'refresh_token': self.token.get('refresh_token'),
-                      'redirect_uri': self.redirect_uri,
-                      'scope': ' '.join(str(i) for i in self.scopes),
-                      'client_id': self.client_id,
-                      'client_secret': self.client_secret
+        post_data = {'grant_type': 'refresh_token',
+                     'refresh_token': self.token.get('refresh_token'),
+                     'redirect_uri': self.redirect_uri,
+                     'scope': ' '.join(str(i) for i in self.scopes),
+                     'client_id': self.client_id,
+                     'client_secret': self.client_secret
                     }
-              
-        r = requests.post(self.token_url, data = post_data)
-  
+        result = requests.post(self.token_url, data=post_data)
         try:
-            self.token = r.json()
+            self.token = result.json()
             self.calc_expiration()
             return self.token
-        except:
-            return 'Error retrieving token: {0} - {1}'.format(r.status_code, r.text)
+        except ValueError:
+            return 'Error retrieving token: {0} - {1}'.format(result.status_code, result.text)
 
     def calc_expiration(self):
         expiration = int(time.time()) + self.token['expires_in'] - 300
@@ -450,7 +433,7 @@ class OutlookAuthHelper:
         current_token = self.token.get(ATTR_ACCESS_TOKEN)
         expiration = self.token.get('token_expires')
         now = int(time.time())
-        if (current_token and expiration and now < expiration):
+        if current_token and expiration and now < expiration:
             # Token still valid
             return current_token
         else:
