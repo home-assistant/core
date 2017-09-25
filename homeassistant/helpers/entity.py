@@ -73,6 +73,7 @@ class Entity(object):
 
     # protect for multiple updates
     _update_warn = None
+    _update_again = False
 
     @property
     def should_poll(self) -> bool:
@@ -207,8 +208,7 @@ class Entity(object):
         # update entity data
         if force_refresh:
             if self._update_warn:
-                _LOGGER.warning("Update for %s is already in progress",
-                                self.entity_id)
+                self._update_again = True
                 return
 
             self._update_warn = self.hass.loop.call_later(
@@ -293,6 +293,12 @@ class Entity(object):
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
+
+        # Start over if we aborted an overlapping update
+        if force_refresh and self._update_again:
+            self._update_again = False
+            self.async_schedule_update_ha_state(force_refresh=True)
+
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
