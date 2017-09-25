@@ -76,9 +76,11 @@ DEVICE_SCHEMA = vol.Schema({
         vol.All(cv.ensure_list, [_SINGLE_CALSEARCH_CONFIG]),
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Outlook platform."""
-    # Assign configuration variables.  The configuration check takes care they are present.
+    # Assign configuration variables.
+    # The configuration check takes care they are present.
     client_id = config[CONF_CLIENT_ID]
     client_secret = config[CONF_CLIENT_SECRET]
 
@@ -89,6 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     service = OutlookService(hass, oauth)
     add_devices(service.calendars)
+
 
 def config_from_file(filename, config=None):
     """Small configuration file management function."""
@@ -116,19 +119,24 @@ def config_from_file(filename, config=None):
 
 
 def request_app_setup(hass, config, oauth, add_devices):
-    start_url = '{}{}'.format(hass.config.api.base_url, OUTLOOK_AUTH_START)
-    callback_url = '{}{}'.format(hass.config.api.base_url, OUTLOOK_AUTH_CALLBACK_PATH)
+    start_url = '{}{}'.format(hass.config.api.base_url,
+                              OUTLOOK_AUTH_START)
+    callback_url = '{}{}'.format(hass.config.api.base_url,
+                                 OUTLOOK_AUTH_CALLBACK_PATH)
 
     outlook_auth_start_url = oauth.get_signin_url()
 
     print('Outlook.com Authenticate:{}'.format(outlook_auth_start_url))
 
-    hass.http.register_redirect(OUTLOOK_AUTH_START, outlook_auth_start_url)
-    hass.http.register_view(OutlookAuthCallbackView(config, add_devices, oauth))
+    hass.http.register_redirect(OUTLOOK_AUTH_START,
+                                outlook_auth_start_url)
+    hass.http.register_view(
+        OutlookAuthCallbackView(config, add_devices, oauth))
 
     persistent_notification = loader.get_component('persistent_notification')
     persistent_notification.create(
-        hass, 'In order to authorize Home-Assistant to view your calendars<br />'
+        hass, 'In order to authorize Home-Assistant<br/>'
+              'to view your calendars<br />'
               'you must visit: <a href="{}" target="_blank">{}</a><br />'
               'Callback url: {}'
               ''.format(start_url, start_url, callback_url),
@@ -145,12 +153,17 @@ class OutlookService():
         self.hass = hass
         self.oauth = oauth
 
-    def make_api_call(self, method, url, token, payload=None, parameters=None):
+    def make_api_call(self,
+                      method,
+                      url,
+                      token,
+                      payload=None,
+                      parameters=None):
         """ Generic API Sending """
         # Send these headers with all API calls
-        headers = {'User-Agent' : 'HomeAssistant',
-                   'Authorization' : 'Bearer {0}'.format(token),
-                   'Accept' : 'application/json'}
+        headers = {'User-Agent':'HomeAssistant',
+                   'Authorization':'Bearer {0}'.format(token),
+                   'Accept':'application/json'}
 
         # Use these headers to instrument calls. Makes it easier
         # to correlate requests and responses in case of problems
@@ -164,17 +177,27 @@ class OutlookService():
         response = None
 
         if method.upper() == 'GET':
-            response = requests.get(url, headers=headers, params=parameters)
+            response = requests.get(url,
+                                    headers=headers,
+                                    params=parameters)
         elif method.upper() == 'DELETE':
-            response = requests.delete(url, headers=headers, params=parameters)
+            response = requests.delete(url,
+                                       headers=headers,
+                                       params=parameters)
         elif method.upper() == 'PATCH':
             headers.update({'Content-Type' : 'application/json'})
             data = json.dumps(payload)
-            response = requests.patch(url, headers=headers, data=data, params=parameters)
+            response = requests.patch(url,
+                                      headers=headers,
+                                      data=data,
+                                      params=parameters)
         elif method.upper() == 'POST':
             headers.update({'Content-Type' : 'application/json'})
             data = json.dumps(payload)
-            response = requests.post(url, headers=headers, data=data, params=parameters)
+            response = requests.post(url,
+                                     headers=headers,
+                                     data=data,
+                                     params=parameters)
 
         return response
 
@@ -187,8 +210,11 @@ class OutlookService():
         for calendar in self.calendar_data.values():
             for entity in calendar[CONF_ENTITIES]:
                 if entity[CONF_TRACK]:
-                    result.append(OutlookCalendarEventDevice(self.hass, self,
-                                                             calendar[CONF_CAL_ID], entity))
+                    result.append(
+                        OutlookCalendarEventDevice(self.hass,
+                                                   self,
+                                                   calendar[CONF_CAL_ID],
+                                                   entity))
         return result
 
     def scan_for_calendars(self):
@@ -198,7 +224,7 @@ class OutlookService():
         # Use OData query parameters to control the results
         #  - Only first 10 results returned
         #  - Only return the ReceivedDateTime, Subject, and From fields
-        #  - Sort the results by the ReceivedDateTime field in descending order
+        #  - Sort the results by the ReceivedDateTime field in desc order
         #query_parameters = {'$top': '10',
         #                    '$select': 'ReceivedDateTime,Subject,From',
         #                    '$orderby': 'ReceivedDateTime DESC'}
@@ -208,14 +234,14 @@ class OutlookService():
         if result.status_code == requests.codes.get('ok'):
             json_data = result.json()
             for json_calendar in json_data["value"]:
-                calendar = self.get_calendar_info(json_calendar)
-                if self.calendar_data.get(calendar[CONF_CAL_ID], None) is not None:
+                cal = self.get_calendar_info(json_calendar)
+                if self.calendar_data.get(cal[CONF_CAL_ID], None) is not None:
                     continue
 
-                self.calendar_data.update({calendar[CONF_CAL_ID]: calendar})
+                self.calendar_data.update({cal[CONF_CAL_ID]: cal})
                 self.update_config(
                     self.hass.config.path(YAML_DEVICES),
-                    self.calendar_data[calendar[CONF_CAL_ID]]
+                    self.calendar_data[cal[CONF_CAL_ID]]
                 )
 
     def get_calendar_first_event(self, calendar_id):
@@ -256,7 +282,9 @@ class OutlookService():
             CONF_ENTITIES: [{
                 CONF_TRACK: True,
                 CONF_NAME: json_calendar['Name'],
-                CONF_DEVICE_ID: generate_entity_id('{}', json_calendar['Name'], hass=self.hass),
+                CONF_DEVICE_ID: generate_entity_id('{}',
+                                                   json_calendar['Name'],
+                                                   hass=self.hass),
             }]
         })
         return calendar_info
@@ -269,10 +297,11 @@ class OutlookService():
                 data = yaml.load(file)
                 for calendar in data:
                     try:
-                        self.calendar_data.update({calendar[CONF_CAL_ID]: DEVICE_SCHEMA(calendar)})
-                    except VoluptuousError as exception:
+                        self.calendar_data.update(
+                            {calendar[CONF_CAL_ID]: DEVICE_SCHEMA(calendar)})
+                    except VoluptuousError as exc:
                         # keep going
-                        _LOGGER.warning('Calendar Invalid Data: %s', exception)
+                        _LOGGER.warning('Calendar Invalid Data: %s', exc)
         except FileNotFoundError:
             # When YAML file could not be loaded/did not contain a dict
             return False
@@ -328,10 +357,14 @@ class OutlookAuthCallbackView(HomeAssistantView):
         #    ATTR_ACCESS_TOKEN: self.oauth.token['access_token'],
         #    ATTR_REFRESH_TOKEN: self.oauth.token['refresh_token']
         #}
-        if not config_from_file(hass.config.path(OUTLOOK_CONFIG_FILE), self.oauth.token):
+        if not config_from_file(hass.config.path(OUTLOOK_CONFIG_FILE),
+                                self.oauth.token):
             _LOGGER.error("Failed to save config file")
 
-        hass.async_add_job(setup_platform, hass, self.config, self.add_devices)
+        hass.async_add_job(setup_platform,
+                           hass,
+                           self.config,
+                           self.add_devices)
 
         return html_response
 
@@ -340,7 +373,9 @@ class OutlookCalendarEventDevice(CalendarEventDevice):
 
     def __init__(self, hass, calendar_service, calendar, data):
         """The same as a google calendar but without the api calls."""
-        self.data = OutlookCalendarData(calendar_service, calendar, data.get('search', None))
+        self.data = OutlookCalendarData(calendar_service,
+                                        calendar,
+                                        data.get('search', None))
         super().__init__(hass, data)
 
 class OutlookCalendarData(object):
@@ -355,7 +390,8 @@ class OutlookCalendarData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        self.event = self.calendar_service.get_calendar_first_event(self.calendar_id)
+        self.event = self.calendar_service.get_calendar_first_event(
+            self.calendar_id)
         return True
 
 class OutlookAuthHelper:
@@ -364,11 +400,14 @@ class OutlookAuthHelper:
     # The OAuth authority
     authority = 'https://login.microsoftonline.com'
 
-    # The authorize URL that initiates the OAuth2 client credential flow for admin consent
-    authorize_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/authorize?{0}')
+    # The authorize URL that initiates the OAuth2 client credential flow
+    # for admin consent
+    authorize_url = '{0}{1}'.format(authority,
+                                    '/common/oauth2/v2.0/authorize?{0}')
 
     # The token issuing endpoint
-    token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
+    token_url = '{0}{1}'.format(authority,
+                                '/common/oauth2/v2.0/token')
 
     # The scopes required by the app
     scopes = ['openid',
@@ -400,13 +439,14 @@ class OutlookAuthHelper:
                      'client_id': self.client_id,
                      'client_secret': self.client_secret
                     }
-        result = requests.post(self.token_url, data=post_data)
+        res = requests.post(self.token_url, data=post_data)
         try:
-            self.token = result.json()
+            self.token = res.json()
             self.calc_expiration()
             return self.token
         except ValueError:
-            return 'Error retrieving token: {0} - {1}'.format(result.status_code, result.text)
+            return 'Error retrieving token: {0} - {1}'.format(res.status_code,
+                                                              res.text)
 
     def get_token_from_refresh_token(self):
         # Build the post form for the token request
@@ -417,13 +457,14 @@ class OutlookAuthHelper:
                      'client_id': self.client_id,
                      'client_secret': self.client_secret
                     }
-        result = requests.post(self.token_url, data=post_data)
+        res = requests.post(self.token_url, data=post_data)
         try:
-            self.token = result.json()
+            self.token = res.json()
             self.calc_expiration()
             return self.token
         except ValueError:
-            return 'Error retrieving token: {0} - {1}'.format(result.status_code, result.text)
+            return 'Error retrieving token: {0} - {1}'.format(res.status_code,
+                                                              res.text)
 
     def calc_expiration(self):
         expiration = int(time.time()) + self.token['expires_in'] - 300
@@ -443,7 +484,8 @@ class OutlookAuthHelper:
 
     @property
     def redirect_uri(self):
-        return '{}{}'.format(self.hass.config.api.base_url, OUTLOOK_AUTH_CALLBACK_PATH)
+        return '{}{}'.format(self.hass.config.api.base_url,
+                             OUTLOOK_AUTH_CALLBACK_PATH)
 
     @property
     def config_is_valid(self):
