@@ -47,7 +47,7 @@ class AdsBinarySensor(ads.AdsDevice, BinarySensorDevice):
 
         self._name = name
         self._state = False
-        self._device_class = device_class
+        self._device_class = device_class or 'moving'
         self.adsvar = adsvar
         self.adstype = ads.PLCTYPE_BOOL
 
@@ -69,5 +69,9 @@ class AdsBinarySensor(ads.AdsDevice, BinarySensorDevice):
         return self._state
 
     def bool_callback(self, name, value):
+        _LOGGER.debug('Variable "{0}" changed its value to "{1}"'.format(name, value))
         self._state = value
-        self.schedule_update_ha_state()
+        try:
+            self.schedule_update_ha_state()
+        except AttributeError:
+            pass

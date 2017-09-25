@@ -86,6 +86,9 @@ class AdsHub:
         hnotify, huser = self.__client.add_device_notification(
             name, attr, self.device_notification_callback
         )
+        hnotify = int(hnotify)
+
+        _LOGGER.debug('Added Device Notification {0}'.format(hnotify))
 
         self._notification_items[hnotify] = NotificationItem(
             hnotify, huser, device, name, plc_datatype, callback
@@ -94,20 +97,17 @@ class AdsHub:
     def device_notification_callback(self, addr, notification, huser):
         contents = notification.contents
 
-        hnotify = contents.hNotification
+        hnotify = int(contents.hNotification)
+        _LOGGER.debug('Received Notification {0}'.format(hnotify))
         data = contents.data
 
-        try:
-            notification_item = self._notification_items[hnotify]
-        except KeyError:
-            _LOGGER.warning('Received notification with unknown handle.')
-            return
+        notification_item = self._notification_items[hnotify]
 
         # parse data to desired datatype
         if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
-            value = bool(struct.unpack(bytearray(data)[:1])[0])
+            value = bool(struct.unpack('<?', bytearray(data)[:1])[0])
         else:
-            return
+            _LOGGER.warning('No callback available for this datatype.')
 
         # execute callback
         notification_item.callback(notification_item.name, value)
