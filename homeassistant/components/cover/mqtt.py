@@ -21,8 +21,8 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    valid_publish_topic, valid_subscribe_topic)
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC,
+    CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,8 @@ CONF_SET_POSITION_TEMPLATE = 'set_position_template'
 CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_CLOSE = 'payload_close'
 CONF_PAYLOAD_STOP = 'payload_stop'
+CONF_PAYLOAD_AVAILABLE = 'payload_available'
+CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_STATE_OPEN = 'state_open'
 CONF_STATE_CLOSED = 'state_closed'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
@@ -50,6 +52,8 @@ DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
 DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
 DEFAULT_PAYLOAD_STOP = 'STOP'
+DEFAULT_PAYLOAD_AVAILABLE = 'online'
+DEFAULT_PAYLOAD_NOT_AVAILABLE = 'offline'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = 0
@@ -69,11 +73,16 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
     vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
+    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
+                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -106,6 +115,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_TILT_COMMAND_TOPIC),
         config.get(CONF_TILT_STATUS_TOPIC),
         config.get(CONF_QOS),
@@ -115,6 +125,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_OPEN),
         config.get(CONF_PAYLOAD_CLOSE),
         config.get(CONF_PAYLOAD_STOP),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         config.get(CONF_OPTIMISTIC),
         value_template,
         config.get(CONF_TILT_OPEN_POSITION),
@@ -131,9 +143,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttCover(CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, name, state_topic, command_topic, tilt_command_topic,
-                 tilt_status_topic, qos, retain, state_open, state_closed,
-                 payload_open, payload_close, payload_stop,
+    def __init__(self, name, state_topic, command_topic, availability_topic,
+                 tilt_command_topic, tilt_status_topic, qos, retain,
+                 state_open, state_closed, payload_open, payload_close,
+                 payload_stop, payload_available, payload_not_available,
                  optimistic, value_template, tilt_open_position,
                  tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
                  tilt_invert, position_topic, set_position_template):
@@ -143,12 +156,16 @@ class MqttCover(CoverDevice):
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
+        self._availability_topic = availability_topic
+        self._available = True if availability_topic is None else False
         self._tilt_command_topic = tilt_command_topic
         self._tilt_status_topic = tilt_status_topic
         self._qos = qos
         self._payload_open = payload_open
         self._payload_close = payload_close
         self._payload_stop = payload_stop
+        self._payload_available = payload_available
+        self._payload_not_available = payload_not_available
         self._state_open = state_open
         self._state_closed = state_closed
         self._retain = retain
@@ -181,8 +198,8 @@ class MqttCover(CoverDevice):
                 self.async_schedule_update_ha_state()
 
         @callback
-        def message_received(topic, payload, qos):
-            """Handle new MQTT message."""
+        def state_message_received(topic, payload, qos):
+            """Handle new MQTT state messages."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -205,12 +222,28 @@ class MqttCover(CoverDevice):
 
             self.async_schedule_update_ha_state()
 
+        @callback
+        def availability_message_received(topic, payload, qos):
+            """Handle new MQTT availability messages."""
+            if payload == self._payload_available:
+                self._available = True
+            elif payload == self._payload_not_available:
+                self._available = False
+
+            self.async_schedule_update_ha_state()
+
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
             yield from mqtt.async_subscribe(
-                self.hass, self._state_topic, message_received, self._qos)
+                self.hass, self._state_topic,
+                state_message_received, self._qos)
+
+        if self._availability_topic is not None:
+            yield from mqtt.async_subscribe(
+                self.hass, self._availability_topic,
+                availability_message_received, self._qos)
 
         if self._tilt_status_topic is None:
             self._tilt_optimistic = True
@@ -229,6 +262,11 @@ class MqttCover(CoverDevice):
     def name(self):
         """Return the name of the cover."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if cover is available."""
+        return self._available
 
     @property
     def is_closed(self):
