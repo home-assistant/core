@@ -97,7 +97,7 @@ class ImapSensor(Entity):
     @property
     def should_poll(self):
         """Return if polling is needed."""
-        return self._does_push == False
+        return not self._does_push
 
     @asyncio.coroutine
     def connection(self):
