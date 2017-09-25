@@ -86,12 +86,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     config = hass.config.path(config.get(CONF_FILENAME))
 
     setup_tv(host, name, customize, config, timeout, hass,
-        add_devices, turn_on_action)
+             add_devices, turn_on_action)
 
 
-def setup_tv(
-    host, name, customize, config, timeout, hass,
-        add_devices, turn_on_action):
+def setup_tv(host, name, customize, config, timeout, hass,
+             add_devices, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -126,7 +125,7 @@ def setup_tv(
         configurator.request_done(request_id)
 
     add_devices([LgWebOSDevice(host, name, customize, config, timeout,
-        hass, turn_on_action)], True)
+                               hass, turn_on_action)], True)
 
 
 def request_configuration(
@@ -158,9 +157,8 @@ def request_configuration(
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(
-        self, host, name, customize, config, timeout,
-            hass, on_action):
+    def __init__(self, host, name, customize, config, timeout,
+                 hass, on_action):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         self._client = WebOsClient(host, config, timeout)
