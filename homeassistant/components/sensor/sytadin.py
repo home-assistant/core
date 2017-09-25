@@ -11,14 +11,11 @@ import logging
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, LENGTH_KILOMETERS)
+from homeassistant.const import (LENGTH_KILOMETERS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +39,6 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 
 TIMEOUT = 10
 
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
@@ -53,7 +48,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
 
-    options = [item.strip() for item in config.get(CONF_MONITORED_CONDITIONS).split(',')]
+    options = [item.strip()
+        for item in config.get(CONF_MONITORED_CONDITIONS).split(',')
+    ]
 
     if OPTION_TRAFFIC_JAM in options:
         add_devices([
@@ -71,9 +68,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if OPTION_CONGESTION in options:
         add_devices([
             SytadinSensor('Congestion', SYSTADIN, CONGESTION_XPATH,
-                          CONGESTION_REGEX, '', config.get(CONF_UPDATE_INTERVAL))
+                          CONGESTION_REGEX, '',
+                          config.get(CONF_UPDATE_INTERVAL))
             ])
-
 
 class SytadinSensor(Entity):
     """Sytadin Sensor."""
@@ -87,7 +84,6 @@ class SytadinSensor(Entity):
         self._regex = regex
         self._unit = unit
         self.update = Throttle(interval)(self._update)
-
 
     @property
     def name(self):
