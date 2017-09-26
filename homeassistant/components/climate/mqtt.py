@@ -36,6 +36,8 @@ CONF_MODE_COMMAND_TOPIC = 'mode_command_topic'
 CONF_TEMPERATURE_COMMAND_TOPIC = 'temperature_command_topic'
 CONF_FAN_MODE_COMMAND_TOPIC = 'fan_mode_command_topic'
 CONF_SWING_MODE_COMMAND_TOPIC = 'swing_mode_command_topic'
+CONF_CURRENT_TEMPERATURE_TOPIC = 'current_temperature_topic'
+
 CONF_FAN_MODE_LIST = 'fan_modes'
 CONF_MODE_LIST = 'modes'
 CONF_SWING_MODE_LIST = 'swing_modes'
@@ -49,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_FAN_MODE_LIST,
                  default=[STATE_AUTO, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
@@ -78,6 +81,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     CONF_TEMPERATURE_COMMAND_TOPIC,
                     CONF_FAN_MODE_COMMAND_TOPIC,
                     CONF_SWING_MODE_COMMAND_TOPIC,
+                    CONF_CURRENT_TEMPERATURE_TOPIC,
                 )
             },
             config.get(CONF_QOS),
@@ -121,23 +125,40 @@ class MqttClimate(ClimateDevice):
         self._swing_list = swing_mode_list
         self._target_temperature_step = 1
         self._send_if_off = send_if_off
+        self._sensor_entity_id = sensor_entity_id
 
+    def async_added_to_hass(self):
+        """Handle being added to home assistant."""
         @callback
-        def async_handle_sensor_changed(entity_id, old_state, new_state):
+        def handle_sensor_changed(entity_id, old_state, new_state):
             """Handle temperature changes."""
             if new_state is None:
                 return
 
             self.update_current_temperature(new_state)
-            hass.async_add_job(self.async_update_ha_state)
+            self.hass.async_add_job(self.async_update_ha_state())
 
         async_track_state_change(
-            hass, sensor_entity_id, async_handle_sensor_changed)
+            self.hass, self._sensor_entity_id, handle_sensor_changed)
 
-        # TODO move to 'on added'
-        sensor_state = hass.states.get(sensor_entity_id)
+        @callback
+        def handle_temperature_received(topic, payload, qos):
+            """Handle current temperature coming via MQTT."""
+            try:
+                self._current_temperature = float(payload)
+                self.hass.async_add_job(self.async_update_ha_state())
+            except ValueError:
+                _LOGGER.error("Could not parse temperature from %s", payload)
+
+        if self._topic[CONF_CURRENT_TEMPERATURE_TOPIC] is not None:
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_CURRENT_TEMPERATURE_TOPIC],
+                handle_temperature_received, self._qos)
+
+        sensor_state = self.hass.states.get(self._sensor_entity_id)
         if sensor_state:
-            self._async_update_current_temperature(sensor_state)
+            self.update_current_temperature(sensor_state)
+            self.hass.async_add_job(self.async_update_ha_state())
 
     def update_current_temperature(self, state):
         """Update thermostat with latest state from sensor."""
