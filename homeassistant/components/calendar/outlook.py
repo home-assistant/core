@@ -155,8 +155,8 @@ class OutlookService():
         self.hass = hass
         self.oauth = oauth
 
-    def make_api_call(self,
-                      method,
+    @staticmethod
+    def make_api_call(method,
                       url,
                       token,
                       payload=None,
@@ -313,7 +313,8 @@ class OutlookService():
 
         return True
 
-    def update_config(self, path, calendar):
+    @staticmethod
+    def update_config(path, calendar):
         """Write the outlook_calendar.yaml."""
         with open(path, 'a') as out:
             out.write('\n')
