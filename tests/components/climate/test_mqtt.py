@@ -1,5 +1,6 @@
 """The tests for the mqtt climate component."""
 import unittest
+import copy
 
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM
@@ -177,8 +178,9 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_receive_mqtt_temperature(self):
         """Test getting the current temperature via MQTT."""
-        config = dict(DEFAULT_CONFIG)
+        config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['current_temperature_topic'] = 'current_temperature'
+        del config['climate']['target_sensor']
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, climate.DOMAIN, config)
 

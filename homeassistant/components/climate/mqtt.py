@@ -14,7 +14,8 @@ import homeassistant.components.mqtt as mqtt
 
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
-    PLATFORM_SCHEMA, STATE_AUTO, ATTR_OPERATION_MODE)
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
+    ATTR_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME)
@@ -44,26 +45,30 @@ CONF_SWING_MODE_LIST = 'swing_modes'
 CONF_INITIAL = 'initial'
 CONF_SEND_IF_OFF = 'send_if_off'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSOR): cv.entity_id,
-    vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_FAN_MODE_LIST,
-                 default=[STATE_AUTO, SPEED_LOW,
-                          SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
-    vol.Optional(CONF_SWING_MODE_LIST,
-                 default=[STATE_ON, STATE_OFF]): cv.ensure_list,
-    vol.Optional(CONF_MODE_LIST,
-                 default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
-                          STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
-    vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
-})
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_CURRENT_TEMPERATURE_TOPIC, CONF_SENSOR),
+    CLIMATE_PLATFORM_SCHEMA.extend({
+        vol.Optional(CONF_SENSOR): cv.entity_id,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
+            mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_FAN_MODE_LIST,
+                     default=[STATE_AUTO, SPEED_LOW,
+                              SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
+        vol.Optional(CONF_SWING_MODE_LIST,
+                     default=[STATE_ON, STATE_OFF]): cv.ensure_list,
+        vol.Optional(CONF_MODE_LIST,
+                     default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
+                              STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
+        vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+    })
+)
 
 
 @asyncio.coroutine
@@ -138,8 +143,9 @@ class MqttClimate(ClimateDevice):
             self.update_current_temperature(new_state)
             self.hass.async_add_job(self.async_update_ha_state())
 
-        async_track_state_change(
-            self.hass, self._sensor_entity_id, handle_sensor_changed)
+        if self._sensor_entity_id is not None:
+            async_track_state_change(
+                self.hass, self._sensor_entity_id, handle_sensor_changed)
 
         @callback
         def handle_temperature_received(topic, payload, qos):
