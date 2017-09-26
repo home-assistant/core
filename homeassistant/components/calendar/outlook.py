@@ -1,4 +1,4 @@
-""" Outlook Calendar """
+"""Outlook Calendar."""
 import logging
 import os
 import json
@@ -18,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.core import callback
 from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import generate_entity_id
@@ -34,6 +33,8 @@ CONF_CLIENT_SECRET = 'client_secret'
 ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 
+CONF_DEVICE_ID = 'device_id'
+CONF_NAME = 'name'
 CONF_CAL_ID = 'cal_id'
 CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
@@ -117,6 +118,7 @@ def config_from_file(filename, config=None):
 
 
 def request_app_setup(hass, config, oauth, add_devices):
+    """Request application setup."""
     start_url = '{}{}'.format(hass.config.api.base_url,
                               OUTLOOK_AUTH_START)
     callback_url = '{}{}'.format(hass.config.api.base_url,
@@ -143,11 +145,13 @@ def request_app_setup(hass, config, oauth, add_devices):
 
 
 class OutlookService():
-    """ Service to interact with Outlook API v2.0 """
+    """Service to interact with Outlook API v2.0."""
+
     outlook_api_endpoint = 'https://outlook.office.com/api/v2.0{0}'
     calendar_data = {}
 
     def __init__(self, hass, oauth):
+        """Initialize OutlookService."""
         self.hass = hass
         self.oauth = oauth
 
@@ -157,7 +161,7 @@ class OutlookService():
                       token,
                       payload=None,
                       parameters=None):
-        """ Generic API Sending """
+        """Generic API Sending."""
         # Send these headers with all API calls
         headers = {'User-Agent': 'HomeAssistant',
                    'Authorization': 'Bearer {0}'.format(token),
@@ -201,6 +205,7 @@ class OutlookService():
 
     @property
     def calendars(self):
+        """Get calendars."""
         if not self.load_config(self.hass.config.path(YAML_DEVICES)):
             self.scan_for_calendars()
 
@@ -216,6 +221,7 @@ class OutlookService():
         return result
 
     def scan_for_calendars(self):
+        """Scan for calendars."""
         get_messages_url = self.outlook_api_endpoint.format('/Me/Calendars')
         access_token = self.oauth.get_access_token()
 
@@ -243,6 +249,7 @@ class OutlookService():
                 )
 
     def get_calendar_first_event(self, calendar_id):
+        """Get the first event for calendar_id."""
         path = '/Me/Calendars/{0}/calendarview'.format(calendar_id)
         get_calendarview_url = self.outlook_api_endpoint.format(path)
         access_token = self.oauth.get_access_token()
@@ -329,10 +336,8 @@ class OutlookAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-
         hass = request.app['hass']
         data = request.GET
-
         response_message = """Outlook has been successfully authorized!
             You can close this window now!"""
 
@@ -360,7 +365,6 @@ class OutlookAuthCallbackView(HomeAssistantView):
                            hass,
                            self.config,
                            self.add_devices)
-
         return html_response
 
 
@@ -379,7 +383,7 @@ class OutlookCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search=None):
-        """Setup how we are going to search the google calendar."""
+        """Setup how we are going to search the outlook calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
@@ -387,6 +391,7 @@ class OutlookCalendarData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """Determine the event."""
         self.event = self.calendar_service.get_calendar_first_event(
             self.calendar_id)
         return True
@@ -394,6 +399,7 @@ class OutlookCalendarData(object):
 
 class OutlookAuthHelper:
     """Class to perform Auth on the Outlook platform."""
+
     # Constant strings for OAuth2 flow
     # The OAuth authority
     authority = 'https://login.microsoftonline.com'
@@ -413,12 +419,14 @@ class OutlookAuthHelper:
               'https://outlook.office.com/calendars.read']
 
     def __init__(self, hass, client_id, client_secret):
+        """Initialize OutlookAuthHelper."""
         self.token = {}
         self.hass = hass
         self.client_id = client_id
         self.client_secret = client_secret
 
     def get_signin_url(self):
+        """Get the signin url."""
         # Build the query parameters for the signin url
         params = {'client_id': self.client_id,
                   'redirect_uri': self.redirect_uri,
@@ -429,6 +437,7 @@ class OutlookAuthHelper:
         return signin_url
 
     def get_token_from_code(self, auth_code):
+        """Get the access token."""
         # Build the post form for the token request
         post_data = {'grant_type': 'authorization_code',
                      'code': auth_code,
@@ -447,6 +456,7 @@ class OutlookAuthHelper:
                                                               res.text)
 
     def get_token_from_refresh_token(self):
+        """Get the refresh token."""
         # Build the post form for the token request
         post_data = {'grant_type': 'refresh_token',
                      'refresh_token': self.token.get('refresh_token'),
@@ -464,28 +474,31 @@ class OutlookAuthHelper:
                                                               res.text)
 
     def calc_expiration(self):
+        """Get the expiration."""
         expiration = int(time.time()) + self.token['expires_in'] - 300
         self.token['token_expires'] = expiration
 
     def get_access_token(self):
+        """Get the access token."""
         current_token = self.token.get(ATTR_ACCESS_TOKEN)
         expiration = self.token.get('token_expires')
         now = int(time.time())
         if current_token and expiration and now < expiration:
             # Token still valid
             return current_token
-        else:
-            # Token expired
-            self.get_token_from_refresh_token()
-            return self.token.get(ATTR_ACCESS_TOKEN)
+        # Token expired
+        self.get_token_from_refresh_token()
+        return self.token.get(ATTR_ACCESS_TOKEN)
 
     @property
     def redirect_uri(self):
+        """Get the redirect uri."""
         return '{}{}'.format(self.hass.config.api.base_url,
                              OUTLOOK_AUTH_CALLBACK_PATH)
 
     @property
     def config_is_valid(self):
+        """Determine if the calendar configfile is valid."""
         config_path = self.hass.config.path(OUTLOOK_CONFIG_FILE)
         if os.path.isfile(config_path):
             self.token = config_from_file(config_path)
