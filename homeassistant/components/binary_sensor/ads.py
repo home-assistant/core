@@ -3,13 +3,12 @@ Support for ADS binary sensors.
 
 """
 import logging
-import struct
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
-    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
-from homeassistant.components import ads
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA, STATE_ON
+from homeassistant.components.ads import DATA_ADS
 from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 import homeassistant.helpers.config_validation as cv
 
@@ -32,26 +31,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Set up the Binary Sensor platform for ADS. """
+    ads_hub = hass.data.get(DATA_ADS)
+
+    if not ads_hub:
+        return False
+
     adsvar = config.get(CONF_ADSVAR)
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    add_devices([AdsBinarySensor(name, adsvar, device_class)])
+    add_devices([AdsBinarySensor(ads_hub, name, adsvar, device_class)])
 
 
-class AdsBinarySensor(ads.AdsDevice, BinarySensorDevice):
+class AdsBinarySensor(BinarySensorDevice):
     """ Representation of ADS binary sensors. """
 
-    def __init__(self, name, adsvar, device_class):
-        ads.AdsDevice.__init__(self)
-
+    def __init__(self, ads_hub, name, adsvar, device_class):
         self._name = name
         self._state = False
         self._device_class = device_class or 'moving'
+        self._ads_hub = ads_hub
         self.adsvar = adsvar
-        self.adstype = ads.PLCTYPE_BOOL
 
-        self.add_bool_device_notification(self.adsvar, self.bool_callback)
+        self._ads_hub.add_bool_device_notification(self.adsvar,
+                                                   self.callback)
 
     @property
     def name(self):
@@ -64,11 +67,11 @@ class AdsBinarySensor(ads.AdsDevice, BinarySensorDevice):
         return self._device_class
 
     @property
-    def in_on(self):
+    def is_on(self):
         """ Return if the binary sensor is on. """
         return self._state
 
-    def bool_callback(self, name, value):
+    def callback(self, name, value):
         _LOGGER.debug('Variable "{0}" changed its value to "{1}"'.format(name, value))
         self._state = value
         try:

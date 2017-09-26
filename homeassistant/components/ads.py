@@ -18,9 +18,9 @@ REQUIREMENTS = ['pyads==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_ADS = 'data_ads'
+ADS_PLATFORMS = ['switch', 'binary_sensor', 'light']
 DOMAIN = 'ads'
-
-ADS_HUB = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -33,8 +33,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """ Set up the ADS component. """
-    global ADS_HUB
-
     _LOGGER.info('created ADS client')
     conf = config[DOMAIN]
 
@@ -45,17 +43,19 @@ def setup(hass, config):
     client = pyads.Connection(net_id, port, ip_address)
 
     try:
-        ADS_HUB = AdsHub(client)
+        ads = AdsHub(client)
     except pyads.pyads.ADSError as e:
         _LOGGER.error('Could not connect to ADS host (netid={}, port={})'
                       .format(net_id, port))
         return False
 
+    hass.data[DATA_ADS] = ads
+
     return True
 
 
 NotificationItem = namedtuple(
-    'NotificationItem', 'hnotify huser device name plc_datatype callback'
+    'NotificationItem', 'hnotify huser name plc_datatype callback'
 )
 
 
@@ -63,27 +63,27 @@ class AdsHub:
     """ Representation of a PyADS connection. """
 
     def __init__(self, ads_client):
-        self.__client = ads_client
-        self.__client.open()
+        self._client = ads_client
+        self._client.open()
 
         # all ADS devices are registered here
-        self.__devices = []
+        self._devices = []
         self._notification_items = {}
 
     def register_device(self, device):
         """ Register a new device. """
-        self.__devices.append(device)
+        self._devices.append(device)
 
     def write_by_name(self, name, value, plc_datatype):
-        return self.__client.write_by_name(name, value, plc_datatype)
+        return self._client.write_by_name(name, value, plc_datatype)
 
     def read_by_name(self, name, plc_datatype):
-        return self.__client.read_by_name(name, plc_datatype)
+        return self._client.read_by_name(name, plc_datatype)
 
-    def add_device_notification(self, device, name, plc_datatype, callback):
+    def _add_device_notification(self, name, plc_datatype, callback):
         """ Add a notification to the ADS devices. """
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
-        hnotify, huser = self.__client.add_device_notification(
+        hnotify, huser = self._client.add_device_notification(
             name, attr, self.device_notification_callback
         )
         hnotify = int(hnotify)
@@ -91,7 +91,7 @@ class AdsHub:
         _LOGGER.debug('Added Device Notification {0}'.format(hnotify))
 
         self._notification_items[hnotify] = NotificationItem(
-            hnotify, huser, device, name, plc_datatype, callback
+            hnotify, huser, name, plc_datatype, callback
         )
 
     def device_notification_callback(self, addr, notification, huser):
@@ -112,6 +112,9 @@ class AdsHub:
         # execute callback
         notification_item.callback(notification_item.name, value)
 
+    def add_bool_device_notification(self, name, callback):
+        self._add_device_notification(name, pyads.PLCTYPE_BOOL, callback)
+
 
 class AdsDevice:
 
@@ -125,7 +128,3 @@ class AdsDevice:
     def read_by_name(self, name, plc_datatype):
         return self.__hub.read_by_name(name, plc_datatype)
 
-    def add_bool_device_notification(self, name, callback):
-        self.__hub.add_device_notification(
-            self, name, pyads.PLCTYPE_BOOL, callback
-        )
