@@ -14,12 +14,14 @@ def mock_client(hass, test_client):
     """Start the Hass HTTP component."""
     mock_component(hass, 'group')
     mock_component(hass, 'zone')
-    hass.loop.run_until_complete(
-        async_setup_component(hass, 'device_tracker', {
-            'device_tracker': {
-                'platform': 'owntracks_http'
-            }
-        }))
+    with patch('homeassistant.components.device_tracker.async_load_config',
+               return_value=mock_coro([])):
+        hass.loop.run_until_complete(
+            async_setup_component(hass, 'device_tracker', {
+                'device_tracker': {
+                    'platform': 'owntracks_http'
+                }
+            }))
     return hass.loop.run_until_complete(test_client(hass.http.app))
 
 
@@ -34,6 +36,7 @@ def mock_handle_message():
 
 @asyncio.coroutine
 def test_forward_message_correctly(mock_client, mock_handle_message):
+    """Test that we forward messages correctly to OwnTracks handle message."""
     resp = yield from mock_client.post('/api/owntracks/user/device', json={
         '_type': 'test'
     })
@@ -49,6 +52,7 @@ def test_forward_message_correctly(mock_client, mock_handle_message):
 
 @asyncio.coroutine
 def test_handle_value_error(mock_client, mock_handle_message):
+    """Test that we handle errors from handle message correctly."""
     mock_handle_message.side_effect = ValueError
     resp = yield from mock_client.post('/api/owntracks/user/device', json={
         '_type': 'test'
