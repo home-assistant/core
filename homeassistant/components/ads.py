@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS
 import homeassistant.helpers.config_validation as cv
 import pyads
-from pyads import PLCTYPE_BOOL
+from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE
 
 REQUIREMENTS = ['pyads==2.2.0']
 
@@ -80,11 +80,11 @@ class AdsHub:
     def read_by_name(self, name, plc_datatype):
         return self._client.read_by_name(name, plc_datatype)
 
-    def _add_device_notification(self, name, plc_datatype, callback):
+    def add_device_notification(self, name, plc_datatype, callback):
         """ Add a notification to the ADS devices. """
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
         hnotify, huser = self._client.add_device_notification(
-            name, attr, self.device_notification_callback
+            name, attr, self._device_notification_callback
         )
         hnotify = int(hnotify)
 
@@ -94,14 +94,19 @@ class AdsHub:
             hnotify, huser, name, plc_datatype, callback
         )
 
-    def device_notification_callback(self, addr, notification, huser):
+    def _device_notification_callback(self, addr, notification, huser):
         contents = notification.contents
 
         hnotify = int(contents.hNotification)
         _LOGGER.debug('Received Notification {0}'.format(hnotify))
         data = contents.data
 
-        notification_item = self._notification_items[hnotify]
+        try:
+            notification_item = self._notification_items[hnotify]
+        except KeyError:
+            _LOGGER.debug('Unknown Device Notification handle: {0}'
+                          .format(hnotify))
+            return
 
         # parse data to desired datatype
         if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
@@ -111,20 +116,3 @@ class AdsHub:
 
         # execute callback
         notification_item.callback(notification_item.name, value)
-
-    def add_bool_device_notification(self, name, callback):
-        self._add_device_notification(name, pyads.PLCTYPE_BOOL, callback)
-
-
-class AdsDevice:
-
-    def __init__(self):
-        self.__hub = ADS_HUB
-        self.__hub.register_device(self)
-
-    def write_by_name(self, name, value, plc_datatype):
-        return self.__hub.write_by_name(name, value, plc_datatype)
-
-    def read_by_name(self, name, plc_datatype):
-        return self.__hub.read_by_name(name, plc_datatype)
-

@@ -1,46 +1,47 @@
 """
 Support for ADS light sources.
 """
-import math
 import logging
+import math
+
 import voluptuous as vol
 
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components import ads
+from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL, PLCTYPE_UINT
 import homeassistant.helpers.config_validation as cv
-import pyads
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_ADSVAR_ENABLE = 'adsvar_enable'
-CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
-
-DEFAULT_NAME = 'ADS Light'
 DEPENDENCIES = ['ads']
-
+DEFAULT_NAME = 'ADS Light'
+CONF_ADSVAR = 'adsvar'
+CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 SUPPORT_ADS = SUPPORT_BRIGHTNESS
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADSVAR_ENABLE): cv.string,
+    vol.Required(CONF_ADSVAR): cv.string,
     vol.Optional(CONF_ADSVAR_BRIGHTNESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    varname_enable = config.get(CONF_ADSVAR_ENABLE)
+    ads_hub = hass.data.get(DATA_ADS)
+    if not ads_hub:
+        return False
+
+    varname_enable = config.get(CONF_ADSVAR)
     varname_brightness = config.get(CONF_ADSVAR_BRIGHTNESS)
     devname = config.get(CONF_NAME)
 
-    add_devices([AdsLight(varname_enable, varname_brightness, devname)])
+    add_devices([AdsLight(ads_hub, varname_enable, varname_brightness,
+                          devname)])
 
 
-class AdsLight(ads.AdsDevice, Light):
+class AdsLight(Light):
 
-    def __init__(self, varname_enable, varname_brightness, devname):
-        ads.AdsDevice.__init__(self)
+    def __init__(self, ads_hub, varname_enable, varname_brightness, devname):
+        self._ads_hub = ads_hub
         self._on_state = False
         self._brightness = 50
         self._devname = devname
@@ -82,11 +83,11 @@ class AdsLight(ads.AdsDevice, Light):
 
         bval = math.floor(self._brightness / 256.0 * 100.0)
 
-        self.write_by_name(self.varname_enable, True, pyads.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self.varname_enable, True, PLCTYPE_BOOL)
 
         if self.varname_brightness is not None:
-            self.write_by_name(self.varname_brightness,
-                               bval, pyads.PLCTYPE_UINT)
+            self._ads_hub.write_by_name(self.varname_brightness, bval,
+                                        PLCTYPE_UINT)
 
         self._on_state = True
 
@@ -96,8 +97,10 @@ class AdsLight(ads.AdsDevice, Light):
         if brightness is not None:
             self._brightness = brightness
         bval = math.floor(self._brightness / 256.0 * 100.0)
-        self.write_by_name(self.varname_brightness, bval, pyads.PLCTYPE_UINT)
-        self.write_by_name(self.varname_enable, False, pyads.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self.varname_brightness, bval,
+                                    PLCTYPE_UINT)
+        self._ads_hub.write_by_name(self.varname_enable, False,
+                                    PLCTYPE_BOOL)
         self._on_state = False
 
     def value_changed(self, val):

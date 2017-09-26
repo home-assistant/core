@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA, STATE_ON
-from homeassistant.components.ads import DATA_ADS
+from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL
 from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 import homeassistant.helpers.config_validation as cv
 
@@ -32,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Set up the Binary Sensor platform for ADS. """
     ads_hub = hass.data.get(DATA_ADS)
-
     if not ads_hub:
         return False
 
@@ -53,8 +52,8 @@ class AdsBinarySensor(BinarySensorDevice):
         self._ads_hub = ads_hub
         self.adsvar = adsvar
 
-        self._ads_hub.add_bool_device_notification(self.adsvar,
-                                                   self.callback)
+        self._ads_hub.add_device_notification(self.adsvar, PLCTYPE_BOOL,
+                                              self.callback)
 
     @property
     def name(self):
@@ -72,7 +71,8 @@ class AdsBinarySensor(BinarySensorDevice):
         return self._state
 
     def callback(self, name, value):
-        _LOGGER.debug('Variable "{0}" changed its value to "{1}"'.format(name, value))
+        _LOGGER.debug('Variable "{0}" changed its value to "{1}"'
+                      .format(name, value))
         self._state = value
         try:
             self.schedule_update_ha_state()
