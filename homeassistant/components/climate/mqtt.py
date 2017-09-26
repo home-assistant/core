@@ -38,6 +38,12 @@ CONF_TEMPERATURE_COMMAND_TOPIC = 'temperature_command_topic'
 CONF_FAN_MODE_COMMAND_TOPIC = 'fan_mode_command_topic'
 CONF_SWING_MODE_COMMAND_TOPIC = 'swing_mode_command_topic'
 CONF_CURRENT_TEMPERATURE_TOPIC = 'current_temperature_topic'
+CONF_AWAY_MODE_COMMAND_TOPIC = 'away_mode_command_topic'
+CONF_HOLD_COMMAND_TOPIC = 'hold_command_topic'
+CONF_AUX_COMMAND_TOPIC = 'aux_command_topic'
+
+CONF_PAYLOAD_ON = 'payload_on'
+CONF_PAYLOAD_OFF = 'payload_off'
 
 CONF_FAN_MODE_LIST = 'fan_modes'
 CONF_MODE_LIST = 'modes'
@@ -54,6 +60,9 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
             mqtt.valid_subscribe_topic,
         vol.Optional(CONF_FAN_MODE_LIST,
@@ -67,6 +76,8 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
         vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
     })
 )
 
@@ -87,6 +98,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     CONF_FAN_MODE_COMMAND_TOPIC,
                     CONF_SWING_MODE_COMMAND_TOPIC,
                     CONF_CURRENT_TEMPERATURE_TOPIC,
+                    CONF_AWAY_MODE_COMMAND_TOPIC,
+                    CONF_HOLD_COMMAND_TOPIC,
+                    CONF_AUX_COMMAND_TOPIC
                 )
             },
             config.get(CONF_QOS),
@@ -97,7 +111,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_INITIAL),
             None, None, SPEED_LOW,
             STATE_OFF, STATE_OFF, None,
-            config.get(CONF_SEND_IF_OFF))
+            config.get(CONF_SEND_IF_OFF),
+            config.get(CONF_PAYLOAD_ON),
+            config.get(CONF_PAYLOAD_OFF))
     ])
 
 
@@ -106,10 +122,9 @@ class MqttClimate(ClimateDevice):
 
     def __init__(self, hass, name, sensor_entity_id, topic, qos, retain,
                  mode_list, fan_mode_list, swing_mode_list,
-                 target_temperature,
-                 away, hold, current_fan_mode,
-                 current_swing_mode,
-                 current_operation, aux, send_if_off):
+                 target_temperature, away, hold, current_fan_mode,
+                 current_swing_mode, current_operation, aux, send_if_off,
+                 payload_on, payload_off):
         """Initialize the climate device."""
         self.hass = hass
         self._name = name
@@ -131,6 +146,8 @@ class MqttClimate(ClimateDevice):
         self._target_temperature_step = 1
         self._send_if_off = send_if_off
         self._sensor_entity_id = sensor_entity_id
+        self._payload_on = payload_on
+        self._payload_off = payload_off
 
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
@@ -311,24 +328,49 @@ class MqttClimate(ClimateDevice):
     def turn_away_mode_on(self):
         """Turn away mode on."""
         self._away = True
+
+        if self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None:
+            mqtt.publish(self.hass, self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
+                         self._payload_on, self._qos, self._retain)
+
         self.schedule_update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
+
+        if self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None:
+            mqtt.publish(self.hass, self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
+                         self._payload_off, self._qos, self._retain)
+
         self.schedule_update_ha_state()
 
     def set_hold_mode(self, hold):
         """Update hold mode on."""
         self._hold = hold
+
+        if self._topic[CONF_HOLD_COMMAND_TOPIC] is not None:
+            mqtt.publish(self.hass, self._topic[CONF_HOLD_COMMAND_TOPIC],
+                         hold, self._qos, self._retain)
+
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
         """Turn away auxillary heater on."""
         self._aux = True
+
+        if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
+            mqtt.publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
+                         self._payload_on, self._qos, self._retain)
+
         self.schedule_update_ha_state()
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
         self._aux = False
+
+        if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
+            mqtt.publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
+                         self._payload_off, self._qos, self._retain)
+
         self.schedule_update_ha_state()

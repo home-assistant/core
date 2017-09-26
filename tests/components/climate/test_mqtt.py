@@ -25,6 +25,9 @@ DEFAULT_CONFIG = {
         'temperature_command_topic': 'temperature-topic',
         'fan_mode_command_topic': 'fan-mode-topic',
         'swing_mode_command_topic': 'swing-mode-topic',
+        'away_mode_command_topic': 'away-mode-topic',
+        'hold_command_topic': 'hold-topic',
+        'aux_command_topic': 'aux-topic'
     }}
 
 
@@ -188,3 +191,67 @@ class TestMQTTClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(47, state.attributes.get('current_temperature'))
+
+    def test_set_away_mode(self):
+        """Test setting of the away mode."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['payload_on'] = 'AN'
+        config['climate']['payload_off'] = 'AUS'
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(None, state.attributes.get('away_mode'))
+        climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('away-mode-topic', 'AN', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('on', state.attributes.get('away_mode'))
+
+        climate.set_away_mode(self.hass, False, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('away-mode-topic', 'AUS', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('off', state.attributes.get('away_mode'))
+
+    def test_set_hold(self):
+        """Test setting the hold mode."""
+        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(None, state.attributes.get('hold_mode'))
+        climate.set_hold_mode(self.hass, 'on', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('hold-topic', 'on', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('on', state.attributes.get('hold_mode'))
+
+        climate.set_hold_mode(self.hass, 'off', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('hold-topic', 'off', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('off', state.attributes.get('hold_mode'))
+
+    def test_set_aux(self):
+        """Test setting of the aux heating."""
+        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(None, state.attributes.get('aux_heat'))
+        climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('aux-topic', 'ON', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('on', state.attributes.get('aux_heat'))
+
+        climate.set_aux_heat(self.hass, False, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('aux-topic', 'OFF', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('off', state.attributes.get('aux_heat'))
