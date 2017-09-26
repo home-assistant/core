@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.synology/
 """
 import asyncio
+import json
 import logging
+import urllib
 
+import requests
 import voluptuous as vol
-
-import aiohttp
-import async_timeout
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_create_clientsession,
+    async_create_clientsession,
     async_aiohttp_proxy_web)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
@@ -26,25 +26,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Synology Camera'
-DEFAULT_STREAM_ID = '0'
 DEFAULT_TIMEOUT = 5
-CONF_CAMERA_NAME = 'camera_name'
-CONF_STREAM_ID = 'stream_id'
-
-QUERY_CGI = 'query.cgi'
-QUERY_API = 'SYNO.API.Info'
-AUTH_API = 'SYNO.API.Auth'
-CAMERA_API = 'SYNO.SurveillanceStation.Camera'
-STREAMING_API = 'SYNO.SurveillanceStation.VideoStream'
-SESSION_ID = '0'
-
-WEBAPI_PATH = '/webapi/'
-AUTH_PATH = 'auth.cgi'
-CAMERA_PATH = 'camera.cgi'
-STREAMING_PATH = 'SurveillanceStation/videoStreaming.cgi'
-CONTENT_TYPE_HEADER = 'Content-Type'
-
-SYNO_API_URL = '{0}{1}{2}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -62,138 +44,46 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a Synology IP Camera."""
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
-    websession_init = async_get_clientsession(hass, verify_ssl)
 
-    # Determine API to use for authentication
-    syno_api_url = SYNO_API_URL.format(
-        config.get(CONF_URL), WEBAPI_PATH, QUERY_CGI)
-
-    query_payload = {
-        'api': QUERY_API,
-        'method': 'Query',
-        'version': '1',
-        'query': 'SYNO.'
-    }
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
-            query_req = yield from websession_init.get(
-                syno_api_url,
-                params=query_payload
-            )
-
-        # Skip content type check because Synology doesn't return JSON with
-        # right content type
-        query_resp = yield from query_req.json(content_type=None)
-        auth_path = query_resp['data'][AUTH_API]['path']
-        camera_api = query_resp['data'][CAMERA_API]['path']
-        camera_path = query_resp['data'][CAMERA_API]['path']
-        streaming_path = query_resp['data'][STREAMING_API]['path']
-
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.exception("Error on %s", syno_api_url)
+        surveillance = SurveillanceStation(
+            config.get(CONF_URL),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
+            verify_ssl=verify_ssl,
+            timeout=timeout
+        )
+    except (requests.exceptions.RequestException, ValueError):
+        _LOGGER.exception("Error when initializing SurveillanceStation")
         return False
 
-    # Authticate to NAS to get a session id
-    syno_auth_url = SYNO_API_URL.format(
-        config.get(CONF_URL), WEBAPI_PATH, auth_path)
-
-    session_id = yield from get_session_id(
-        hass,
-        websession_init,
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        syno_auth_url,
-        timeout
-    )
-
-    # init websession
-    websession = async_create_clientsession(
-        hass, verify_ssl, cookies={'id': session_id})
-
-    # Use SessionID to get cameras in system
-    syno_camera_url = SYNO_API_URL.format(
-        config.get(CONF_URL), WEBAPI_PATH, camera_api)
-
-    camera_payload = {
-        'api': CAMERA_API,
-        'method': 'List',
-        'version': '1'
-    }
-    try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
-            camera_req = yield from websession.get(
-                syno_camera_url,
-                params=camera_payload
-            )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.exception("Error on %s", syno_camera_url)
-        return False
-
-    camera_resp = yield from camera_req.json(content_type=None)
-    cameras = camera_resp['data']['cameras']
+    cameras = surveillance.get_all_cameras()
+    websession = async_create_clientsession(hass, verify_ssl)
 
     # add cameras
     devices = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
-            camera_id = camera['id']
-            snapshot_path = camera['snapshot_path']
-
-            device = SynologyCamera(
-                hass, websession, config, camera_id, camera['name'],
-                snapshot_path, streaming_path, camera_path, auth_path, timeout
-            )
+            device = SynologyCamera(hass, websession, surveillance,
+                                    camera.camera_id)
             devices.append(device)
 
     async_add_devices(devices)
 
 
-@asyncio.coroutine
-def get_session_id(hass, websession, username, password, login_url, timeout):
-    """Get a session id."""
-    auth_payload = {
-        'api': AUTH_API,
-        'method': 'Login',
-        'version': '2',
-        'account': username,
-        'passwd': password,
-        'session': 'SurveillanceStation',
-        'format': 'sid'
-    }
-    try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
-            auth_req = yield from websession.get(
-                login_url,
-                params=auth_payload
-            )
-        auth_resp = yield from auth_req.json(content_type=None)
-        return auth_resp['data']['sid']
-
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.exception("Error on %s", login_url)
-        return False
-
-
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, hass, websession, config, camera_id,
-                 camera_name, snapshot_path, streaming_path, camera_path,
-                 auth_path, timeout):
+    def __init__(self, hass, websession, surveillance, camera_id):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self.hass = hass
         self._websession = websession
-        self._name = camera_name
-        self._synology_url = config.get(CONF_URL)
-        self._camera_name = config.get(CONF_CAMERA_NAME)
-        self._stream_id = config.get(CONF_STREAM_ID)
+        self._surveillance = surveillance
         self._camera_id = camera_id
-        self._snapshot_path = snapshot_path
-        self._streaming_path = streaming_path
-        self._camera_path = camera_path
-        self._auth_path = auth_path
-        self._timeout = timeout
+        self._camera = self._surveillance.get_camera(camera_id)
+        self._motion_setting = self._surveillance.get_motion_setting(camera_id)
+        self.is_streaming = self._camera.is_enabled
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -203,48 +93,348 @@ class SynologyCamera(Camera):
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
-        image_url = SYNO_API_URL.format(
-            self._synology_url, WEBAPI_PATH, self._camera_path)
-
-        image_payload = {
-            'api': CAMERA_API,
-            'method': 'GetSnapshot',
-            'version': '1',
-            'cameraId': self._camera_id
-        }
-        try:
-            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
-                response = yield from self._websession.get(
-                    image_url,
-                    params=image_payload
-                )
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error fetching %s", image_url)
-            return None
-
-        image = yield from response.read()
-
-        return image
+        return self._surveillance.get_camera_image(self._camera_id)
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
         """Return a MJPEG stream image response directly from the camera."""
-        streaming_url = SYNO_API_URL.format(
-            self._synology_url, WEBAPI_PATH, self._streaming_path)
-
-        streaming_payload = {
-            'api': STREAMING_API,
-            'method': 'Stream',
-            'version': '1',
-            'cameraId': self._camera_id,
-            'format': 'mjpeg'
-        }
-        stream_coro = self._websession.get(
-            streaming_url, params=streaming_payload)
+        streaming_url = self._camera.video_stream_url
+        stream_coro = self._websession.get(streaming_url)
 
         yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):
         """Return the name of this device."""
+        return self._camera.name
+
+    @property
+    def is_recording(self):
+        """Return true if the device is recording."""
+        return self._camera.is_recording
+
+    def should_poll(self):
+        """Update the recording state periodically."""
+        return True
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update the status of the camera."""
+        self._surveillance.update()
+        self._camera = self._surveillance.get_camera(self._camera.camera_id)
+        self._motion_setting = self._surveillance.get_motion_setting(
+            self._camera.camera_id)
+        self.is_streaming = self._camera.is_enabled
+
+    @property
+    def motion_detection_enabled(self):
+        """Return the camera motion detection status."""
+        return self._motion_setting.is_enabled
+
+    def enable_motion_detection(self):
+        """Enable motion detection in the camera."""
+        self._surveillance.enable_motion_detection(self._camera_id)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        self._surveillance.disable_motion_detection(self._camera_id)
+
+
+BASE_API_INFO = {
+    'auth': {
+        'name': 'SYNO.API.Auth',
+        'version': 2
+    },
+    'camera': {
+        'name': 'SYNO.SurveillanceStation.Camera',
+        'version': 1
+    },
+    'camera_event': {
+        'name': 'SYNO.SurveillanceStation.Camera.Event',
+        'version': 1
+    },
+    'video_stream': {
+        'name': 'SYNO.SurveillanceStation.VideoStream',
+        'version': 1
+    },
+}
+
+API_NAMES = map(lambda api: api['name'], BASE_API_INFO.values())
+
+RECORDING_STATUS = [
+    # Continue recording schedule
+    1,
+    # Motion detect recording schedule
+    2,
+    # Digital input recording schedule
+    3,
+    # Digital input recording schedule
+    4,
+    # Manual recording schedule
+    5]
+MOTION_DETECTION_SOURCE_DISABLED = -1
+MOTION_DETECTION_SOURCE_BY_CAMERA = 0
+MOTION_DETECTION_SOURCE_BY_SURVEILLANCE = 1
+
+
+class Api:
+    """An implementation of a Synology SurveillanceStation API."""
+
+    def __init__(self, url, username, password, timeout=10, verify_ssl=True):
+        """Initialize a Synology Surveillance API."""
+        self._base_url = url + '/webapi/'
+        self._username = username
+        self._password = password
+        self._timeout = timeout
+        self._verify_ssl = verify_ssl
+        self._api_info = None
+        self._sid = None
+
+        self._initialize_api_info()
+        self._initialize_api_sid()
+
+    def _initialize_api_info(self, **kwargs):
+        content = self._get_json(self._base_url + 'query.cgi', {
+            'api': 'SYNO.API.Info',
+            'method': 'Query',
+            'version': '1',
+            'query': ','.join(API_NAMES),
+            **kwargs
+        })
+
+        self._api_info = BASE_API_INFO
+        for api in self._api_info.values():
+            api_name = api['name']
+            api['url'] = self._base_url + content['data'][api_name]['path']
+
+    def _initialize_api_sid(self, **kwargs):
+        api = self._api_info['auth']
+        content = self._get_json(api['url'], {
+            'api': api['name'],
+            'method': 'Login',
+            'version': api['version'],
+            'account': self._username,
+            'passwd': self._password,
+            'format': 'sid',
+            **kwargs
+        })
+
+        self._sid = content['data']['sid']
+
+    def camera_list(self, **kwargs):
+        """Return a list of cameras."""
+        api = self._api_info['camera']
+        content = self._get_json(api['url'], {
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'List',
+            'version': api['version'],
+            **kwargs
+        })
+
+        cameras = []
+
+        for data in content['data']['cameras']:
+            cameras.append(Camera(data, self._video_stream_url))
+
+        return cameras
+
+    def camera_info(self, camera_ids, **kwargs):
+        """Return a list of cameras matching camera_ids."""
+        api = self._api_info['camera']
+        content = self._get_json(api['url'], {
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'GetInfo',
+            'version': api['version'],
+            'cameraIds': ', '.join(str(id) for id in camera_ids),
+            **kwargs
+        })
+
+        cameras = []
+
+        for data in content['data']['cameras']:
+            cameras.append(Camera(data, self._video_stream_url))
+
+        return cameras
+
+    def camera_snapshot(self, camera_id, **kwargs):
+        """Return bytes of camera image."""
+        api = self._api_info['camera']
+        response = self._get(api['url'], {
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'GetSnapshot',
+            'version': api['version'],
+            'cameraId': camera_id,
+            **kwargs
+        })
+
+        return response.content
+
+    def camera_event_motion_enum(self, camera_id, **kwargs):
+        """Return motion settings matching camera_id."""
+        api = self._api_info['camera_event']
+        content = self._get_json(api['url'], {
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'MotionEnum',
+            'version': api['version'],
+            'camId': camera_id,
+            **kwargs
+        })
+
+        return MotionSetting(camera_id, content['data']['MDParam'])
+
+    def camera_event_md_param_save(self, camera_id, **kwargs):
+        """Update motion settings matching camera_id with keyword args."""
+        api = self._api_info['camera_event']
+        content = self._get_json(api['url'], {
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'MDParamSave',
+            'version': api['version'],
+            'camId': camera_id,
+            **kwargs
+        })
+
+        return content['data']['camId']
+
+    def _video_stream_url(self, camera_id, video_format='mjpeg'):
+        api = self._api_info['video_stream']
+
+        return api['url'] + '?' + urllib.parse.urlencode({
+            '_sid': self._sid,
+            'api': api['name'],
+            'method': 'Stream',
+            'version': api['version'],
+            'cameraId': camera_id,
+            'format': video_format,
+        })
+
+    def _get(self, url, payload):
+        response = requests.get(url, payload, timeout=self._timeout,
+                                verify=self._verify_ssl)
+
+        if response.status_code == 200:
+            return response
+        else:
+            response.raise_for_status()
+
+    def _get_json(self, url, payload):
+        response = self._get(url, payload)
+        content = json.loads(response.content)
+
+        if 'success' not in content or content['success'] is False:
+            raise ValueError('Invalid or failed response', content)
+
+        return content
+
+
+class Camera:
+    """An representation of a Synology SurveillanceStation camera."""
+
+    def __init__(self, data, video_stream_url_provider):
+        """Initialize a Surveillance Station camera."""
+        self._camera_id = data['id']
+        self._name = data['name']
+        self._is_enabled = data['enabled']
+        self._recording_status = data['recStatus']
+        self._video_stream_url = video_stream_url_provider(self.camera_id)
+
+    @property
+    def camera_id(self):
+        """Return id of the camera."""
+        return self._camera_id
+
+    @property
+    def name(self):
+        """Return name of the camera."""
         return self._name
+
+    @property
+    def video_stream_url(self):
+        """Return video stream url of the camera."""
+        return self._video_stream_url
+
+    @property
+    def is_enabled(self):
+        """Return true if camera is enabled."""
+        return self._is_enabled
+
+    @property
+    def is_recording(self):
+        """Return true if camera is recording."""
+        return self._recording_status in RECORDING_STATUS
+
+
+class MotionSetting:
+    """An representation of a Synology SurveillanceStation motion setting."""
+
+    def __init__(self, camera_id, data):
+        """Initialize a Surveillance Station motion setting."""
+        self._camera_id = camera_id
+        self._source = data['source']
+
+    @property
+    def camera_id(self):
+        """Return id of the camera."""
+        return self._camera_id
+
+    @property
+    def is_enabled(self):
+        """Return true if motion detection is enabled."""
+        return MOTION_DETECTION_SOURCE_DISABLED != self._source
+
+
+class SurveillanceStation:
+    """An implementation of a Synology SurveillanceStation."""
+
+    def __init__(self, url, username, password, timeout=10, verify_ssl=True):
+        """Initialize a Surveillance Station."""
+        self._api = Api(url, username, password, timeout, verify_ssl)
+        self._cameras_by_id = None
+        self._motion_settings_by_id = None
+
+        self.update()
+
+    def update(self):
+        """Update cameras and motion settings with latest from API."""
+        cameras = self._api.camera_list()
+        self._cameras_by_id = {v.camera_id: v for i, v in enumerate(cameras)}
+
+        motion_settings = []
+        for camera_id in self._cameras_by_id.keys():
+            motion_setting = self._api.camera_event_motion_enum(camera_id)
+            motion_settings.append(motion_setting)
+
+        self._motion_settings_by_id = {
+            v.camera_id: v for i, v in enumerate(motion_settings)}
+
+    def get_all_cameras(self):
+        """Return a list of cameras."""
+        return self._cameras_by_id.values()
+
+    def get_camera(self, camera_id):
+        """Return camera matching camera_id."""
+        return self._cameras_by_id[camera_id]
+
+    def get_camera_image(self, camera_id):
+        """Return bytes of camera image for camera matching camera_id."""
+        return self._api.camera_snapshot(camera_id)
+
+    def get_motion_setting(self, camera_id):
+        """Return motion setting matching camera_id."""
+        return self._motion_settings_by_id[camera_id]
+
+    def enable_motion_detection(self, camera_id):
+        """Enable motion detection for camera matching camera_id."""
+        self._api.camera_event_md_param_save(
+            camera_id,
+            source=MOTION_DETECTION_SOURCE_BY_SURVEILLANCE)
+
+    def disable_motion_detection(self, camera_id):
+        """Disable motion detection for camera matching camera_id."""
+        self._api.camera_event_md_param_save(
+            camera_id,
+            source=MOTION_DETECTION_SOURCE_DISABLED)
