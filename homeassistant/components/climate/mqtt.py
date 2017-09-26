@@ -14,7 +14,7 @@ import homeassistant.components.mqtt as mqtt
 
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
-    PLATFORM_SCHEMA, STATE_AUTO)
+    PLATFORM_SCHEMA, STATE_AUTO, ATTR_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME)
@@ -39,6 +39,8 @@ CONF_SWING_MODE_COMMAND_TOPIC = 'swing_mode_command_topic'
 CONF_FAN_MODE_LIST = 'fan_modes'
 CONF_MODE_LIST = 'modes'
 CONF_SWING_MODE_LIST = 'swing_modes'
+CONF_INITIAL = 'initial'
+CONF_SEND_IF_OFF = 'send_if_off'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSOR): cv.entity_id,
@@ -56,12 +58,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
                           STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
+    vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Demo climate devices."""
+    """Set up the MQTT climate devices."""
     async_add_devices([
         MqttClimate(
             hass,
@@ -81,8 +85,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_MODE_LIST),
             config.get(CONF_FAN_MODE_LIST),
             config.get(CONF_SWING_MODE_LIST),
-            24, None, None, SPEED_LOW,
-            STATE_OFF, STATE_OFF, None)
+            config.get(CONF_INITIAL),
+            None, None, SPEED_LOW,
+            STATE_OFF, STATE_OFF, None,
+            config.get(CONF_SEND_IF_OFF))
     ])
 
 
@@ -94,7 +100,7 @@ class MqttClimate(ClimateDevice):
                  target_temperature,
                  away, hold, current_fan_mode,
                  current_swing_mode,
-                 current_operation, aux):
+                 current_operation, aux, send_if_off):
         """Initialize the climate device."""
         self.hass = hass
         self._name = name
@@ -114,24 +120,26 @@ class MqttClimate(ClimateDevice):
         self._operation_list = mode_list
         self._swing_list = swing_mode_list
         self._target_temperature_step = 1
-        async_track_state_change(
-            hass, sensor_entity_id, self._async_sensor_changed)
+        self._send_if_off = send_if_off
 
+        @callback
+        def async_handle_sensor_changed(entity_id, old_state, new_state):
+            """Handle temperature changes."""
+            if new_state is None:
+                return
+
+            self.update_current_temperature(new_state)
+            hass.async_add_job(self.async_update_ha_state)
+
+        async_track_state_change(
+            hass, sensor_entity_id, async_handle_sensor_changed)
+
+        # TODO move to 'on added'
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
-            self._async_update_temp(sensor_state)
+            self._async_update_current_temperature(sensor_state)
 
-    @asyncio.coroutine
-    def _async_sensor_changed(self, entity_id, old_state, new_state):
-        """Handle temperature changes."""
-        if new_state is None:
-            return
-
-        self._async_update_temp(new_state)
-        yield from self.async_update_ha_state()
-
-    @callback
-    def _async_update_temp(self, state):
+    def update_current_temperature(self, state):
         """Update thermostat with latest state from sensor."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -206,20 +214,25 @@ class MqttClimate(ClimateDevice):
         """Return the list of available fan modes."""
         return self._fan_list
 
-    def set_temperature(self, **kwargs):
+    @asyncio.coroutine
+    def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
+        if kwargs.get(ATTR_OPERATION_MODE) is not None:
+            operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+            yield from self.async_set_operation_mode(operation_mode)
+
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            if self._current_operation != STATE_OFF:
+            if self._send_if_off or self._current_operation != STATE_OFF:
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_TEMPERATURE_COMMAND_TOPIC],
                     self._target_temperature, self._qos, self._retain)
 
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     def set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        if self._current_operation != STATE_OFF:
+        if self._send_if_off or self._current_operation != STATE_OFF:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_SWING_MODE_COMMAND_TOPIC],
                 swing_mode, self._qos, self._retain)
@@ -228,7 +241,7 @@ class MqttClimate(ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
-        if self._current_operation != STATE_OFF:
+        if self._send_if_off or self._current_operation != STATE_OFF:
             mqtt.async_publish(
                 self.hass, self._topic[CONF_FAN_MODE_COMMAND_TOPIC],
                 fan, self._qos, self._retain)
@@ -238,9 +251,6 @@ class MqttClimate(ClimateDevice):
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode) -> None:
         """Set new operation mode."""
-        if self._topic[CONF_MODE_COMMAND_TOPIC] is None:
-            return
-
         if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
             if (self._current_operation == STATE_OFF and
                     operation_mode != STATE_OFF):
@@ -253,9 +263,10 @@ class MqttClimate(ClimateDevice):
                     self.hass, self._topic[CONF_POWER_COMMAND_TOPIC],
                     STATE_OFF, self._qos, self._retain)
 
-        mqtt.async_publish(
-            self.hass, self._topic[CONF_MODE_COMMAND_TOPIC],
-            operation_mode, self._qos, self._retain)
+        if self._topic[CONF_MODE_COMMAND_TOPIC] is not None:
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_MODE_COMMAND_TOPIC],
+                operation_mode, self._qos, self._retain)
 
         self._current_operation = operation_mode
         self.hass.async_add_job(self.async_update_ha_state())

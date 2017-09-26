@@ -6,7 +6,8 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate
-from homeassistant.const import (STATE_OFF)
+from homeassistant.const import (STATE_OFF, ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from tests.common import (get_test_home_assistant, mock_mqtt_component)
 
@@ -40,7 +41,7 @@ class BaseMQTT(unittest.TestCase):
     def test_setup_params(self):
         """Test the initial parameters."""
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(24, state.attributes.get('temperature'))
+        self.assertEqual(21, state.attributes.get('temperature'))
         self.assertEqual("low", state.attributes.get('fan_mode'))
         self.assertEqual("off", state.attributes.get('swing_mode'))
         self.assertEqual("off", state.attributes.get('operation_mode'))
@@ -57,46 +58,6 @@ class TestMQTTClimate(BaseMQTT):
           climate.STATE_AUTO, STATE_OFF, climate.STATE_COOL,
           climate.STATE_HEAT, climate.STATE_DRY, climate.STATE_FAN_ONLY
         ], modes)
-
-    def test_set_fan_mode_bad_attr(self):
-        """Test setting fan mode without required attribute."""
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-
-    def test_set_fan_mode(self):
-        """Test setting of new fan mode."""
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-        climate.set_fan_mode(self.hass, "low", ENTITY_CLIMATE)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("low", state.attributes.get('fan_mode'))
-
-    def test_set_swing_mode_bad_attr(self):
-        """Test setting swing mode without required attribute."""
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-
-    def test_set_swing(self):
-        """Test setting of new swing mode."""
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("off", state.attributes.get('swing_mode'))
-        climate.set_swing_mode(self.hass, "on", ENTITY_CLIMATE)
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual("on", state.attributes.get('swing_mode'))
-
-
-class TestMQTTClimateMode(BaseMQTT):
-    """Test the mqtt climate hvac operation mode."""
 
     def test_set_operation_bad_attr_and_state(self):
         """Test setting operation mode without required attribute.
@@ -124,3 +85,66 @@ class TestMQTTClimateMode(BaseMQTT):
         self.assertEqual("cool", state.state)
         self.assertEqual(('mode-topic', 'cool', 0, False),
                          self.mock_publish.mock_calls[-2][1])
+
+    def test_set_fan_mode_bad_attr(self):
+        """Test setting fan mode without required attribute."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("low", state.attributes.get('fan_mode'))
+        climate.set_fan_mode(self.hass, None, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("low", state.attributes.get('fan_mode'))
+
+    def test_set_fan_mode(self):
+        """Test setting of new fan mode."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("low", state.attributes.get('fan_mode'))
+        climate.set_fan_mode(self.hass, 'high', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('fan-mode-topic', 'high', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual('high', state.attributes.get('fan_mode'))
+
+    def test_set_swing_mode_bad_attr(self):
+        """Test setting swing mode without required attribute."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("off", state.attributes.get('swing_mode'))
+        climate.set_swing_mode(self.hass, None, ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("off", state.attributes.get('swing_mode'))
+
+    def test_set_swing(self):
+        """Test setting of new swing mode."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("off", state.attributes.get('swing_mode'))
+        climate.set_swing_mode(self.hass, 'on', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('swing-mode-topic', 'on', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("on", state.attributes.get('swing_mode'))
+
+    def test_set_target_temperature(self):
+        """Test setting the target temperature."""
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(21, state.attributes.get('temperature'))
+        climate.set_operation_mode(self.hass, 'heat', ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        self.assertEqual(('mode-topic', 'heat', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        climate.set_temperature(self.hass, temperature=47, entity_id=ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(47, state.attributes.get('temperature'))
+        self.assertEqual(('temperature-topic', 47, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_sensor_changed(self):
+        """Test getting the temperature from a changing sensor."""
+        self.hass.states.set(ENT_SENSOR, 42,
+                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(42, state.attributes.get('current_temperature'))
