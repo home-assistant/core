@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['lxml=4.0.0']
+REQUIREMENTS = [ 'lxml==4.0.0' ]
 
 SYSTADIN = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
 
