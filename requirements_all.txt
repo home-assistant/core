@@ -396,6 +396,9 @@ liveboxplaytv==1.4.9
 # homeassistant.components.notify.lametric
 lmnotify==0.0.4
 
+# homeassistant.components.sensor.sytadin
+lxml==4.0.0
+
 # homeassistant.components.sensor.lyft
 lyft_rides==0.1.0b0
 
