@@ -73,7 +73,7 @@ class ThresholdSensor(BinarySensorDevice):
         self._threshold = threshold
         self._hysteresis = hysteresis
         self._device_class = device_class
-        self._deviation = False
+        self._state = False
         self.sensor_value = 0
 
         @callback
@@ -102,7 +102,7 @@ class ThresholdSensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._deviation
+        return self._state
 
     @property
     def should_poll(self):
@@ -136,8 +136,8 @@ class ThresholdSensor(BinarySensorDevice):
         # we explicitly turn the sensor off since it is not 'lower' or 'upper' w.r.t. the threshold
 
         if self._hysteresis == 0 and self.sensor_value == self._threshold:
-            self._deviation = False
+            self._state = False
         elif self.sensor_value > (self._threshold + self._hysteresis):
-            self._deviation = self.is_upper
+            self._state = self.is_upper
         elif self.sensor_value < (self._threshold - self._hysteresis):
-            self._deviation = not self.is_upper
+            self._state = not self.is_upper
