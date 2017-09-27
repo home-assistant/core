@@ -194,47 +194,47 @@ class Api:
         self._initialize_api_sid()
 
     def _initialize_api_info(self, **kwargs):
-        content = self._get_json(self._base_url + 'query.cgi', {
+        payload = dict({
             'api': 'SYNO.API.Info',
             'method': 'Query',
             'version': '1',
             'query': ','.join(API_NAMES),
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(self._base_url + 'query.cgi', payload)
 
         self._api_info = BASE_API_INFO
         for api in self._api_info.values():
             api_name = api['name']
-            api['url'] = self._base_url + content['data'][api_name]['path']
+            api['url'] = self._base_url + response['data'][api_name]['path']
 
     def _initialize_api_sid(self, **kwargs):
         api = self._api_info['auth']
-        content = self._get_json(api['url'], {
+        payload = dict({
             'api': api['name'],
             'method': 'Login',
             'version': api['version'],
             'account': self._username,
             'passwd': self._password,
             'format': 'sid',
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(api['url'], payload)
 
-        self._sid = content['data']['sid']
+        self._sid = response['data']['sid']
 
     def camera_list(self, **kwargs):
         """Return a list of cameras."""
         api = self._api_info['camera']
-        content = self._get_json(api['url'], {
+        payload = dict({
             '_sid': self._sid,
             'api': api['name'],
             'method': 'List',
             'version': api['version'],
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(api['url'], payload)
 
         cameras = []
 
-        for data in content['data']['cameras']:
+        for data in response['data']['cameras']:
             cameras.append(Camera(data, self._video_stream_url))
 
         return cameras
@@ -242,18 +242,18 @@ class Api:
     def camera_info(self, camera_ids, **kwargs):
         """Return a list of cameras matching camera_ids."""
         api = self._api_info['camera']
-        content = self._get_json(api['url'], {
+        payload = dict({
             '_sid': self._sid,
             'api': api['name'],
             'method': 'GetInfo',
             'version': api['version'],
             'cameraIds': ', '.join(str(id) for id in camera_ids),
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(api['url'], payload)
 
         cameras = []
 
-        for data in content['data']['cameras']:
+        for data in response['data']['cameras']:
             cameras.append(Camera(data, self._video_stream_url))
 
         return cameras
@@ -261,44 +261,44 @@ class Api:
     def camera_snapshot(self, camera_id, **kwargs):
         """Return bytes of camera image."""
         api = self._api_info['camera']
-        response = self._get(api['url'], {
+        payload = dict({
             '_sid': self._sid,
             'api': api['name'],
             'method': 'GetSnapshot',
             'version': api['version'],
             'cameraId': camera_id,
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get(api['url'], payload)
 
         return response.content
 
     def camera_event_motion_enum(self, camera_id, **kwargs):
         """Return motion settings matching camera_id."""
         api = self._api_info['camera_event']
-        content = self._get_json(api['url'], {
+        payload = dict({
             '_sid': self._sid,
             'api': api['name'],
             'method': 'MotionEnum',
             'version': api['version'],
             'camId': camera_id,
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(api['url'], payload)
 
-        return MotionSetting(camera_id, content['data']['MDParam'])
+        return MotionSetting(camera_id, response['data']['MDParam'])
 
     def camera_event_md_param_save(self, camera_id, **kwargs):
         """Update motion settings matching camera_id with keyword args."""
         api = self._api_info['camera_event']
-        content = self._get_json(api['url'], {
+        payload = dict({
             '_sid': self._sid,
             'api': api['name'],
             'method': 'MDParamSave',
             'version': api['version'],
             'camId': camera_id,
-            **kwargs
-        })
+        }, **kwargs)
+        response = self._get_json(api['url'], payload)
 
-        return content['data']['camId']
+        return response['data']['camId']
 
     def _video_stream_url(self, camera_id, video_format='mjpeg'):
         api = self._api_info['video_stream']
