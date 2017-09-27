@@ -31,6 +31,7 @@ CONF_THRESHOLD = 'threshold'
 CONF_UPPER = 'upper'
 
 DEFAULT_NAME = 'Threshold'
+DEFAULT_HYSTERESIS = 0.0
 
 SENSOR_TYPES = [CONF_LOWER, CONF_UPPER]
 
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_THRESHOLD): vol.Coerce(float),
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-    vol.Optional(CONF_HYSTERESIS, default=0.0): vol.Coerce(float),
+    vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
