@@ -114,7 +114,7 @@ class DemoClimate(ClimateDevice):
 
     @property
     def is_aux_heat_on(self):
-        """Return true if away mode is on."""
+        """Return true if aux heat is on."""
         return self._aux
 
     @property
@@ -183,7 +183,7 @@ class DemoClimate(ClimateDevice):
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
-        """Turn away auxiliary heater on."""
+        """Turn auxillary heater on."""
         self._aux = True
         self.schedule_update_ha_state()
 
