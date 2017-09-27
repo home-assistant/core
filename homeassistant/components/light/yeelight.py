@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.3.2']
+REQUIREMENTS = ['yeelight==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 

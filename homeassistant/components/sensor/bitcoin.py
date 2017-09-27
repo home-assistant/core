@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['blockchain==1.3.3']
+REQUIREMENTS = ['blockchain==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

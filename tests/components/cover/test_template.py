@@ -21,7 +21,7 @@ class TestTemplateCover(unittest.TestCase):
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Initialize services when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -245,32 +245,6 @@ class TestTemplateCover(unittest.TestCase):
                                 "mdi:check"
                                 "{% endif %}"
                         }
-                    }
-                }
-            })
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_template_position_or_value(self):
-        """Test that at least one of value or position template is used."""
-        with assert_setup_component(1, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', {
-                'cover': {
-                    'platform': 'template',
-                    'covers': {
-                        'test_template_cover': {
-                            'open_cover': {
-                                'service': 'cover.open_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                            'close_cover': {
-                                'service': 'cover.close_cover',
-                                'entity_id': 'cover.test_state'
-                            },
-                        },
                     }
                 }
             })
@@ -589,6 +563,85 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
+
+    def test_set_position_optimistic(self):
+        """Test optimistic position mode."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'set_cover_position': {
+                                'service': 'test.automation',
+                            },
+                        }
+                    }
+                }
+            })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_position') is None
+
+        cover.set_cover_position(self.hass, 42,
+                                 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_position') == 42.0
+
+        cover.close_cover(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.state == STATE_CLOSED
+
+        cover.open_cover(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.state == STATE_OPEN
+
+    def test_set_tilt_position_optimistic(self):
+        """Test the optimistic tilt_position mode."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'position_template':
+                                "{{ 100 }}",
+                            'set_cover_position': {
+                                'service': 'test.automation',
+                            },
+                            'set_cover_tilt_position': {
+                                'service': 'test.automation',
+                            },
+                        }
+                    }
+                }
+            })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_tilt_position') is None
+
+        cover.set_cover_tilt_position(self.hass, 42,
+                                      'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_tilt_position') == 42.0
+
+        cover.close_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_tilt_position') == 0.0
+
+        cover.open_cover_tilt(self.hass, 'cover.test_template_cover')
+        self.hass.block_till_done()
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('current_tilt_position') == 100.0
 
     def test_icon_template(self):
         """Test icon template."""

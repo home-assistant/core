@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['russound_rio==0.1.3']
+REQUIREMENTS = ['russound_rio==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
