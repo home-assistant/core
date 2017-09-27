@@ -28,7 +28,6 @@ CONF_MAX = 'max'
 CONF_MODE = 'mode'
 CONF_STEP = 'step'
 
-MODE_BOTH = 'both'
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
 
@@ -36,8 +35,7 @@ ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_STEP = 'step'
-ATTR_HIDDEN_SLIDER = 'hiddenslider'
-ATTR_HIDDEN_BOX = 'hiddenbox'
+ATTR_MODE = 'mode'
 
 SERVICE_SELECT_VALUE = 'select_value'
 
@@ -58,9 +56,6 @@ def _cv_input_number(cfg):
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid('Initial value {} not in range {}-{}'
                           .format(state, minimum, maximum))
-    mode = cfg.get(CONF_MODE)
-    if mode not in [MODE_BOTH, MODE_BOX, MODE_SLIDER]:
-        raise vol.Invalid('Mode must be one of both, box, or slider')
     return cfg
 
 
@@ -75,7 +70,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MODE, default=MODE_SLIDER): cv.string,
+            vol.Optional(CONF_MODE, default=MODE_SLIDER):
+                vol.In(MODE_BOX, MODE_SLIDER),
         }, _cv_input_number)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -137,7 +133,7 @@ class InputNumber(Entity):
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
                  unit, mode):
-        """Initialize a select input."""
+        """Initialize an input number."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
@@ -146,12 +142,7 @@ class InputNumber(Entity):
         self._step = step
         self._icon = icon
         self._unit = unit
-        self._hidden_slider = True
-        self._hidden_box = True
-        if mode == MODE_BOTH or mode == MODE_BOX:
-            self._hidden_box = False
-        if mode == MODE_BOTH or mode == MODE_SLIDER:
-            self._hidden_slider = False
+        self._mode = mode
 
     @property
     def should_poll(self):
@@ -185,8 +176,7 @@ class InputNumber(Entity):
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step,
-            ATTR_HIDDEN_SLIDER: self._hidden_slider,
-            ATTR_HIDDEN_BOX: self._hidden_box,
+            ATTR_MODE: self._mode,
         }
 
     @asyncio.coroutine
