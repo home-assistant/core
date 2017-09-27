@@ -12,12 +12,14 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
-                                 CONF_HOST, CONF_INCLUDE, CONF_NAME,
-                                 CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME,
-                                 CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.components.discovery import SERVICE_AXIS
+                                 CONF_EVENT, CONF_HOST, CONF_INCLUDE,
+                                 CONF_NAME, CONF_PASSWORD, CONF_PORT,
+                                 CONF_TRIGGER_TIME, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -88,10 +90,13 @@ def request_configuration(hass, config, name, host, serialnumber):
             configurator.notify_errors(request_id,
                                        "Functionality mandatory.")
             return False
+
         callback_data[CONF_INCLUDE] = callback_data[CONF_INCLUDE].split()
         callback_data[CONF_HOST] = host
+
         if CONF_NAME not in callback_data:
             callback_data[CONF_NAME] = name
+
         try:
             device_config = DEVICE_SCHEMA(callback_data)
         except vol.Invalid:
@@ -102,7 +107,6 @@ def request_configuration(hass, config, name, host, serialnumber):
         if setup_device(hass, config, device_config):
             config_file = _read_config(hass)
             config_file[serialnumber] = dict(device_config)
-            del config_file[serialnumber]['hass']
             _write_config(hass, config_file)
             configurator.request_done(request_id)
         else:
@@ -149,13 +153,14 @@ def async_setup(hass, config):
     print('ASYNC SETUP')
     """Common setup for Axis devices."""
     def _shutdown(call):  # pylint: disable=unused-argument
-        """Stop the metadatastream on shutdown."""
+        """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
-            _LOGGER.info("Stopping metadatastream for %s.", serialnumber)
+            _LOGGER.info("Stopping event stream for %s.", serialnumber)
             device.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
+    @asyncio.coroutine
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
         host = discovery_info[CONF_HOST]
@@ -172,7 +177,7 @@ def async_setup(hass, config):
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
-                if not setup_device(hass, config, device_config):
+                if not (yield from setup_device(hass, config, device_config)):
                     _LOGGER.error("Couldn\'t set up %s",
                                   device_config[CONF_NAME])
             else:
@@ -181,7 +186,7 @@ def async_setup(hass, config):
         else:
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
-            device.url = host
+            device.host = host
             async_dispatcher_send(hass,
                                   DOMAIN + '_' + device.name + '_new_ip',
                                   host)
@@ -194,7 +199,7 @@ def async_setup(hass, config):
             device_config = config[DOMAIN][device]
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device
-            if not setup_device(hass, config, device_config):
+            if not (yield from setup_device(hass, config, device_config)):
                 _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
 
     # Services to communicate with device.
@@ -224,34 +229,38 @@ def async_setup(hass, config):
     return True
 
 
-from homeassistant.core import callback
-@callback
-#@asyncio.coroutine
+# @callback
+@asyncio.coroutine
 def setup_device(hass, config, device_config):
     print('setup device')
     """Set up device."""
     from axis import AxisDevice
 
-    def devicesignal(action, event):
+    def signal_callback(action, event):
         if action == 'add':
             event_config = {
-                'event': event,
-                'name': device_config[CONF_NAME],
-                'location': device_config[ATTR_LOCATION],
-                'trigger_time': device_config[CONF_TRIGGER_TIME]
+                CONF_EVENT: event,
+                CONF_NAME: device_config[CONF_NAME],
+                ATTR_LOCATION: device_config[ATTR_LOCATION],
+                CONF_TRIGGER_TIME: device_config[CONF_TRIGGER_TIME]
             }
-            component = convert(event.topic, 'topic', 'platform')
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    event_config,
-                                    config)
+            component = event.event_platform
+            hass.async_add_job(discovery.async_load_platform(hass,
+                                                             component,
+                                                             DOMAIN,
+                                                             event_config,
+                                                             config))
 
-    device = AxisDevice(hass.loop, '10.0.1.51', 'root', 'pass')
-    #device.name = device_config[CONF_NAME]
-    #device.location = device_config[ATTR_LOCATION]
-    #device.trigger_time = device_config[CONF_TRIGGER_TIME]
-    device.signal = devicesignal
+    event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
+                              EVENT_TYPES))
+    device = AxisDevice(hass.loop,
+                        device_config[CONF_HOST],
+                        device_config[CONF_USERNAME],
+                        device_config[CONF_PASSWORD],
+                        device_config[CONF_PORT],
+                        events=event_types)
+    device.signal = signal_callback
+    device.name = device_config[CONF_NAME]
 
     if device.serial_number is None:
         # If there is no serial number a connection could not be made
@@ -260,14 +269,7 @@ def setup_device(hass, config, device_config):
 
     for component in device_config[CONF_INCLUDE]:
         break
-        if component in EVENT_TYPES:
-            # Sensors are created by device calling event_initialized
-            # when receiving initialize messages on metadatastream
-            #device.add_event_topic(convert(component, 'type', 'subscribe'))
-            #if not enable_metadatastream:
-            #    enable_metadatastream = True
-            pass
-        else:
+        if component == 'camera':
             camera_config = {
                 CONF_NAME: device_config[CONF_NAME],
                 CONF_HOST: device_config[CONF_HOST],
@@ -275,14 +277,14 @@ def setup_device(hass, config, device_config):
                 CONF_USERNAME: device_config[CONF_USERNAME],
                 CONF_PASSWORD: device_config[CONF_PASSWORD]
             }
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    camera_config,
-                                    config)
+            hass.async_add_job(discovery.async_load_platform(hass,
+                                                             component,
+                                                             DOMAIN,
+                                                             camera_config,
+                                                             config))
 
     AXIS_DEVICES[device.serial_number] = device
-
+    print('setup device done')
     return True
 
 
@@ -310,15 +312,14 @@ class AxisDeviceEvent(Entity):
 
     def __init__(self, event_config):
         """Initialize the event."""
-        self.axis_event = event_config['event']
-        self._event_class = convert(self.axis_event.topic, 'topic', 'class')
-        event_type = convert(self.axis_event.topic, 'topic', 'type')
-        self._name = '{}_{}_{}'.format(event_config['name'],
-                                       event_type,
+        self.axis_event = event_config[CONF_EVENT]
+        self._name = '{}_{}_{}'.format(event_config[CONF_NAME],
+                                       self.axis_event.event_type,
                                        self.axis_event.id)
         self.location = event_config[ATTR_LOCATION]
         self.axis_event.callback = self._update_callback
 
+    @callback
     def _update_callback(self):
         """Update the sensor's state, if needed."""
         self.update()
@@ -332,7 +333,7 @@ class AxisDeviceEvent(Entity):
     @property
     def device_class(self):
         """Return the class of the event."""
-        return self._event_class
+        return self.axis_event.event_class
 
     @property
     def should_poll(self):
@@ -350,47 +351,3 @@ class AxisDeviceEvent(Entity):
         attr[ATTR_LOCATION] = self.location
 
         return attr
-
-
-def convert(item, from_key, to_key):
-    """Translate between Axis and HASS syntax."""
-    for entry in REMAP:
-        if entry[from_key] == item:
-            return entry[to_key]
-
-
-REMAP = [{'type': 'motion',
-          'class': 'motion',
-          'topic': 'tns1:VideoAnalytics/tnsaxis:MotionDetection',
-          'subscribe': 'onvif:VideoAnalytics/axis:MotionDetection',
-          'platform': 'binary_sensor'},
-         {'type': 'vmd3',
-          'class': 'motion',
-          'topic': 'tns1:RuleEngine/tnsaxis:VMD3/vmd3_video_1',
-          'subscribe': 'onvif:RuleEngine/axis:VMD3/vmd3_video_1',
-          'platform': 'binary_sensor'},
-         {'type': 'pir',
-          'class': 'motion',
-          'topic': 'tns1:Device/tnsaxis:Sensor/PIR',
-          'subscribe': 'onvif:Device/axis:Sensor/axis:PIR',
-          'platform': 'binary_sensor'},
-         {'type': 'sound',
-          'class': 'sound',
-          'topic': 'tns1:AudioSource/tnsaxis:TriggerLevel',
-          'subscribe': 'onvif:AudioSource/axis:TriggerLevel',
-          'platform': 'binary_sensor'},
-         {'type': 'daynight',
-          'class': 'light',
-          'topic': 'tns1:VideoSource/tnsaxis:DayNightVision',
-          'subscribe': 'onvif:VideoSource/axis:DayNightVision',
-          'platform': 'binary_sensor'},
-         {'type': 'tampering',
-          'class': 'safety',
-          'topic': 'tns1:VideoSource/tnsaxis:Tampering',
-          'subscribe': 'onvif:VideoSource/axis:Tampering',
-          'platform': 'binary_sensor'},
-         {'type': 'input',
-          'class': 'input',
-          'topic': 'tns1:Device/tnsaxis:IO/Port',
-          'subscribe': 'onvif:Device/axis:IO/Port',
-          'platform': 'binary_sensor'}, ]
