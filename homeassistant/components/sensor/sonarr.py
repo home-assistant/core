@@ -36,17 +36,19 @@ SENSOR_TYPES = {
     'upcoming': ['Upcoming', 'Episodes', 'mdi:television'],
     'wanted': ['Wanted', 'Episodes', 'mdi:television'],
     'series': ['Series', 'Shows', 'mdi:television'],
-    'commands': ['Commands', 'Commands', 'mdi:code-braces']
+    'commands': ['Commands', 'Commands', 'mdi:code-braces'],
+    'status': ['Status', 'Status', 'mdi:information']
 }
 
 ENDPOINTS = {
-    'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace?apikey={4}',
-    'queue': 'http{0}://{1}:{2}/{3}api/queue?apikey={4}',
+    'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace',
+    'queue': 'http{0}://{1}:{2}/{3}api/queue',
     'upcoming':
-        'http{0}://{1}:{2}/{3}api/calendar?apikey={4}&start={5}&end={6}',
-    'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing?apikey={4}',
-    'series': 'http{0}://{1}:{2}/{3}api/series?apikey={4}',
-    'commands': 'http{0}://{1}:{2}/{3}api/command?apikey={4}'
+        'http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}',
+    'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing',
+    'series': 'http{0}://{1}:{2}/{3}api/series',
+    'commands': 'http{0}://{1}:{2}/{3}api/command',
+    'status': 'http{0}://{1}:{2}/{3}api/system/status'
 }
 
 # Support to Yottabytes for the future, why not
@@ -156,6 +158,8 @@ class SonarrSensor(Entity):
             for show in self.data:
                 attributes[show['title']] = '{}/{} Episodes'.format(
                     show['episodeFileCount'], show['episodeCount'])
+        elif self.type == 'status':
+            attributes = self.data
         return attributes
 
     @property
@@ -168,9 +172,12 @@ class SonarrSensor(Entity):
         start = get_date(self._tz)
         end = get_date(self._tz, self.days)
         try:
-            res = requests.get(ENDPOINTS[self.type].format(
-                self.ssl, self.host, self.port, self.urlbase, self.apikey,
-                start, end), timeout=5)
+            res = requests.get(
+                ENDPOINTS[self.type].format(
+                    self.ssl, self.host, self.port,
+                    self.urlbase, start, end),
+                headers={'X-Api-Key': self.apikey},
+                timeout=10)
         except OSError:
             _LOGGER.error("Host %s is not available", self.host)
             self._available = False
@@ -193,10 +200,13 @@ class SonarrSensor(Entity):
                 self._state = len(self.data)
             elif self.type == 'wanted':
                 data = res.json()
-                res = requests.get('{}&pageSize={}'.format(
-                    ENDPOINTS[self.type].format(
-                        self.ssl, self.host, self.port, self.urlbase,
-                        self.apikey), data['totalRecords']), timeout=5)
+                res = requests.get(
+                    '{}?pageSize={}'.format(
+                        ENDPOINTS[self.type].format(
+                            self.ssl, self.host, self.port, self.urlbase),
+                        data['totalRecords']),
+                    headers={'X-Api-Key': self.apikey},
+                    timeout=10)
                 self.data = res.json()['records']
                 self._state = len(self.data)
             elif self.type == 'diskspace':
@@ -217,6 +227,9 @@ class SonarrSensor(Entity):
                         self._unit
                     )
                 )
+            elif self.type == 'status':
+                self.data = res.json()
+                self._state = self.data['version']
             self._available = True
 
 

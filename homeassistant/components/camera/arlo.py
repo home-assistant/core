@@ -14,14 +14,30 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_BRIGHTNESS = 'brightness'
+ATTR_FLIPPED = 'flipped'
+ATTR_MIRRORED = 'mirrored'
+ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
+ATTR_POWER_SAVE_MODE = 'power_save_mode'
+ATTR_SIGNAL_STRENGTH = 'signal_strength'
+ATTR_UNSEEN_VIDEOS = 'unseen_videos'
+
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
+
+POWERSAVE_MODE_MAPPING = {
+    1: 'best_battery_life',
+    2: 'optimized',
+    3: 'best_video'
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
@@ -79,6 +95,28 @@ class ArloCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_BATTERY_LEVEL:
+            self._camera.get_battery_level,
+            ATTR_BRIGHTNESS:
+            self._camera.get_brightness,
+            ATTR_FLIPPED:
+            self._camera.get_flip_state,
+            ATTR_MIRRORED:
+            self._camera.get_mirror_state,
+            ATTR_MOTION_SENSITIVITY:
+            self._camera.get_motion_detection_sensitivity,
+            ATTR_POWER_SAVE_MODE:
+            POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
+            ATTR_SIGNAL_STRENGTH:
+            self._camera.get_signal_strength,
+            ATTR_UNSEEN_VIDEOS:
+            self._camera.unseen_videos
+        }
 
     @property
     def model(self):

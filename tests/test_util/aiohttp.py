@@ -201,6 +201,7 @@ def mock_aiohttp_client():
 
     with mock.patch('aiohttp.ClientSession') as mock_session:
         instance = mock_session()
+        instance.request = mocker.match_request
 
         for method in ('get', 'post', 'put', 'options', 'delete'):
             setattr(instance, method,

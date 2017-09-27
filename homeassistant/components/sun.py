@@ -126,7 +126,7 @@ class Sun(Entity):
         """Run when the state of the sun has changed."""
         self.update_sun_position(now)
         self.update_as_of(now)
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
         # Schedule next update at next_change+1 second so sun state has changed
         async_track_point_in_utc_time(
@@ -137,4 +137,4 @@ class Sun(Entity):
     def timer_update(self, time):
         """Needed to update solar elevation and azimuth."""
         self.update_sun_position(time)
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()

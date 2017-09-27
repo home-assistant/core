@@ -20,11 +20,12 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, __version__)
+    EVENT_HOMEASSISTANT_STOP, __version__, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['python-wink==1.5.1', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.6.0', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,10 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
+ATTR_NAME = 'name'
+ATTR_PAIRING_MODE = 'pairing_mode'
+ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
+ATTR_HUB_NAME = 'hub_name'
 
 WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
 WINK_AUTH_START = '/auth/wink'
@@ -56,9 +61,12 @@ DEFAULT_CONFIG = {
     'client_secret': 'CLIENT_SECRET_HERE'
 }
 
-SERVICE_ADD_NEW_DEVICES = 'add_new_devices'
+SERVICE_ADD_NEW_DEVICES = 'pull_newly_added_devices_from_wink'
 SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
-SERVICE_KEEP_ALIVE = 'keep_pubnub_updates_flowing'
+SERVICE_RENAME_DEVICE = 'rename_wink_device'
+SERVICE_DELETE_DEVICE = 'delete_wink_device'
+SERVICE_SET_PAIRING_MODE = 'pair_new_device'
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -74,10 +82,28 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
+RENAME_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_NAME): cv.string
+}, extra=vol.ALLOW_EXTRA)
+
+DELETE_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+}, extra=vol.ALLOW_EXTRA)
+
+SET_PAIRING_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_HUB_NAME): cv.string,
+    vol.Required(ATTR_PAIRING_MODE): cv.string,
+    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
+}, extra=vol.ALLOW_EXTRA)
+
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
     'fan', 'alarm_control_panel', 'scene'
 ]
+
+WINK_HUBS = []
 
 
 def _write_config_file(file_path, config):
@@ -176,6 +202,9 @@ def setup(hass, config):
     """Set up the Wink component."""
     import pywink
     from pubnubsubhandler import PubNubSubscriptionHandler
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -313,6 +342,7 @@ def setup(hass, config):
     def stop_subscription(event):
         """Stop the pubnub subscription."""
         hass.data[DOMAIN]['pubnub'].unsubscribe()
+        hass.data[DOMAIN]['pubnub'] = None
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
@@ -333,7 +363,9 @@ def setup(hass, config):
             for entity in entity_list:
                 time.sleep(1)
                 entity.schedule_update_ha_state(True)
-    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
+
+    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update,
+                           descriptions.get(SERVICE_REFRESH_STATES))
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
@@ -341,12 +373,71 @@ def setup(hass, config):
         for _component in WINK_COMPONENTS:
             discovery.load_platform(hass, _component, DOMAIN, {}, config)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
+    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices,
+                           descriptions.get(SERVICE_ADD_NEW_DEVICES))
+
+    def set_pairing_mode(call):
+        """Put the hub in provided pairing mode."""
+        hub_name = call.data.get('hub_name')
+        pairing_mode = call.data.get('pairing_mode')
+        kidde_code = call.data.get('kidde_radio_code')
+        for hub in WINK_HUBS:
+            if hub.name() == hub_name:
+                hub.pair_new_device(pairing_mode,
+                                    kidde_radio_code=kidde_code)
+
+    def rename_device(call):
+        """Set specified device's name."""
+        # This should only be called on one device at a time.
+        found_device = None
+        entity_id = call.data.get('entity_id')[0]
+        all_devices = []
+        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+            all_devices += list_of_devices
+        for device in all_devices:
+            if device.entity_id == entity_id:
+                found_device = device
+        if found_device is not None:
+            name = call.data.get('name')
+            found_device.wink.set_name(name)
+
+    hass.services.register(DOMAIN, SERVICE_RENAME_DEVICE, rename_device,
+                           descriptions.get(SERVICE_RENAME_DEVICE),
+                           schema=RENAME_DEVICE_SCHEMA)
+
+    def delete_device(call):
+        """Delete specified device."""
+        # This should only be called on one device at a time.
+        found_device = None
+        entity_id = call.data.get('entity_id')[0]
+        all_devices = []
+        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+            all_devices += list_of_devices
+        for device in all_devices:
+            if device.entity_id == entity_id:
+                found_device = device
+        if found_device is not None:
+            found_device.wink.remove_device()
+
+    hass.services.register(DOMAIN, SERVICE_DELETE_DEVICE, delete_device,
+                           descriptions.get(SERVICE_DELETE_DEVICE),
+                           schema=DELETE_DEVICE_SCHEMA)
+
+    hubs = pywink.get_hubs()
+    for hub in hubs:
+        if hub.device_manufacturer() == 'wink':
+            WINK_HUBS.append(hub)
+
+    if WINK_HUBS:
+        hass.services.register(
+            DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
+            descriptions.get(SERVICE_SET_PAIRING_MODE),
+            schema=SET_PAIRING_MODE_SCHEMA)
 
     # Load components for the devices in Wink that we support
-    for component in WINK_COMPONENTS:
-        hass.data[DOMAIN]['entities'][component] = []
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for wink_component in WINK_COMPONENTS:
+        hass.data[DOMAIN]['entities'][wink_component] = []
+        discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
 
     return True
 
