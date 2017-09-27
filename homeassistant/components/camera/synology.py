@@ -9,18 +9,18 @@ import json
 import logging
 import urllib
 
+import homeassistant.components.camera as camera
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.camera import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
-from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_aiohttp_proxy_web)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(devices)
 
 
-class SynologyCamera(Camera):
+class SynologyCamera(camera.Camera):
     """An implementation of a Synology NAS based IP camera."""
 
     def __init__(self, hass, websession, surveillance, camera_id):
