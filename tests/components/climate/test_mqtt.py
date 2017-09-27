@@ -301,12 +301,12 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('away_mode'))
 
         climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('away_mode'))
 
         fire_mqtt_message(self.hass, 'away-state', 'ON')
         self.hass.block_till_done()
@@ -332,7 +332,7 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('away_mode'))
         climate.set_away_mode(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.assertEqual(('away-mode-topic', 'AN', 0, False),
@@ -398,12 +398,12 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('aux_heat'))
+        self.assertEqual('off', state.attributes.get('aux_heat'))
 
         climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('aux_heat'))
+        self.assertEqual('off', state.attributes.get('aux_heat'))
 
         fire_mqtt_message(self.hass, 'aux-state', 'ON')
         self.hass.block_till_done()
@@ -425,7 +425,7 @@ class TestMQTTClimate(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(None, state.attributes.get('aux_heat'))
+        self.assertEqual('off', state.attributes.get('aux_heat'))
         climate.set_aux_heat(self.hass, True, ENTITY_CLIMATE)
         self.hass.block_till_done()
         self.assertEqual(('aux-topic', 'ON', 0, False),

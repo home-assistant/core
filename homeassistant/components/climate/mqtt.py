@@ -134,8 +134,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_FAN_MODE_LIST),
             config.get(CONF_SWING_MODE_LIST),
             config.get(CONF_INITIAL),
-            None, None, SPEED_LOW,  # TODO make defaults false
-            STATE_OFF, STATE_OFF, None,  # TODO s.o.
+            False, None, SPEED_LOW,
+            STATE_OFF, STATE_OFF, False,
             config.get(CONF_SEND_IF_OFF),
             config.get(CONF_PAYLOAD_ON),
             config.get(CONF_PAYLOAD_OFF))
