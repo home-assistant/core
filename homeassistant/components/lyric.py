@@ -11,7 +11,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_SCAN_INTERVAL, HTTP_BAD_REQUEST, HTTP_OK)
-from homeassistant.loader import get_component
 from homeassistant.components.http import HomeAssistantView
 
 _CONFIGURING = {}
@@ -51,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def request_configuration(lyric, hass, config):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     if 'lyric' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
         configurator.notify_errors(
@@ -67,7 +66,7 @@ def request_configuration(lyric, hass, config):
     hass.http.register_view(LyricAuthenticateView(lyric))
 
     _CONFIGURING['lyric'] = configurator.request_config(
-        hass, "Lyric", lyric_configuration_callback,
+        "Lyric", lyric_configuration_callback,
         description=('To configure Lyric, click Request Authorization below, '
                      'log into your Lyric account, when you get a successfull '
                      'authorize, click continue. '),
@@ -92,7 +91,7 @@ def setup_lyric(hass, lyric, config, url=None):
 
     if 'lyric' in _CONFIGURING:
         _LOGGER.debug("configuration done")
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(_CONFIGURING.pop('lyric'))
 
     _LOGGER.debug("proceeding with setup")
