@@ -39,7 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_THRESHOLD): vol.Coerce(float),
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-    vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
+    vol.Optional(
+        CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
@@ -55,17 +56,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     limit_type = config.get(CONF_TYPE)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices(
-        [ThresholdSensor(hass, entity_id, name, threshold, hysteresis, limit_type,
-                         device_class)], True)
+    async_add_devices([ThresholdSensor(
+        hass, entity_id, name, threshold,
+        hysteresis, limit_type, device_class)
+    ], True)
+
     return True
 
 
 class ThresholdSensor(BinarySensorDevice):
     """Representation of a Threshold sensor."""
 
-    def __init__(self, hass, entity_id, name, threshold, hysteresis, limit_type,
-                 device_class):
+    def __init__(self, hass, entity_id, name, threshold,
+                 hysteresis, limit_type, device_class):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -129,12 +132,15 @@ class ThresholdSensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data and updates the states."""
+        # Change the sensor state if we have exceeded the set point or dropped
+        # below the reset point.
 
-        # Change the sensor state if we have exceeded the set point or dropped below the reset point.
-        # By using is_upper for the state we automatically handle both upper and lower threshold types.
-        
-        # If the sensor is configured with no hysteresis and the sensor value is equal to the threshold,
-        # we explicitly turn the sensor off since it is not 'lower' or 'upper' w.r.t. the threshold
+        # By using is_upper for the state we automatically handle both upper
+        # and lower threshold types.
+
+        # If the sensor is configured with no hysteresis and the sensor value
+        # is equal to the threshold, we explicitly turn the sensor off since it
+        # is not 'lower' or 'upper' w.r.t. the threshold
 
         if self._hysteresis == 0 and self.sensor_value == self._threshold:
             self._state = False
