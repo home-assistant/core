@@ -29,7 +29,6 @@ class TeslaLock(TeslaDevice, LockDevice):
         """Initialisation of the lock."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self._name = self.tesla_device.name
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def lock(self, **kwargs):

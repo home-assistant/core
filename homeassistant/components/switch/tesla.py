@@ -30,7 +30,6 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         """Initialisation of the switch."""
         self._state = None
         super().__init__(tesla_device, controller)
-        self._name = self.tesla_device.name
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     def lock(self, **kwargs):

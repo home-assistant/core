@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.15']
+REQUIREMENTS = ['teslajsonpy==0.0.16']
 
 DOMAIN = 'tesla'
 
@@ -56,7 +56,7 @@ def setup(hass, base_config):
         try:
             hass.data[DOMAIN] = {
                 'controller': teslaApi(
-                    email, password, update_interval, _LOGGER),
+                    email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
