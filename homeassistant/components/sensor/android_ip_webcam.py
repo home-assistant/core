@@ -78,8 +78,8 @@ class IPWebcamSensor(AndroidIPCamEntity):
             rounded_level = round(int(self._state), -1)
             returning_icon = 'mdi:battery'
             if rounded_level < 10:
-                returning_icon = 'mdi:battery-outline'
-            elif self._state == 100:
+                returning_icon = 'mdi:battery-alert'
+            elif rounded_level == 100:
                 returning_icon = 'mdi:battery'
             else:
                 returning_icon = 'mdi:battery-{}'.format(str(rounded_level))
