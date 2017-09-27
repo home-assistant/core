@@ -220,7 +220,12 @@ class BrSensor(Entity):
 
             # update all other sensors
             if self.type.startswith(SYMBOL) or self.type.startswith(CONDITION):
-                condition = data.get(FORECAST)[fcday].get(CONDITION)
+                try:
+                    condition = data.get(FORECAST)[fcday].get(CONDITION)
+                except IndexError:
+                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    return False
+
                 if condition:
                     new_state = condition.get(CONDITION, None)
                     if self.type.startswith(SYMBOL):
@@ -240,7 +245,11 @@ class BrSensor(Entity):
                         return True
                 return False
             else:
-                new_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                try:
+                    new_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                except IndexError:
+                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    return False
 
                 if new_state != self._state:
                     self._state = new_state

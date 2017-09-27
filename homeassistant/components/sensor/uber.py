@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['uber_rides==0.5.1']
+REQUIREMENTS = ['uber_rides==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,11 +87,14 @@ class UberSensor(Entity):
             if self._product.get('price_details') is not None:
                 price_details = self._product['price_details']
                 self._unit_of_measurement = price_details.get('currency_code')
-                if price_details.get('low_estimate') is not None:
-                    statekey = 'minimum'
-                else:
-                    statekey = 'low_estimate'
-                self._state = int(price_details.get(statekey, 0))
+                try:
+                    if price_details.get('low_estimate') is not None:
+                        statekey = 'minimum'
+                    else:
+                        statekey = 'low_estimate'
+                    self._state = int(price_details.get(statekey))
+                except TypeError:
+                    self._state = 0
             else:
                 self._state = 0
 

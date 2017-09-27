@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
-# reuqests more easily (by removing spaces from the requests as well).
+# requests more easily (by removing spaces from the requests as well).
 # This lets "dark seagreen" and "dark sea green" both match the same
 # color "darkseagreen".
 COLORS = {
@@ -308,7 +308,7 @@ def color_rgbw_to_rgb(r, g, b, w):
     # Add the white channel back into the rgb channels.
     rgb = (r + w, g + w, b + w)
 
-    # Match the output maximum value to the input. This ensures the the
+    # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
     return _match_max_scale((r, g, b, w), rgb)
 

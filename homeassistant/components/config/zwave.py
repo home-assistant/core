@@ -55,6 +55,7 @@ class ZWaveNodeValueView(HomeAssistantView):
                 'label': entity_values.primary.label,
                 'index': entity_values.primary.index,
                 'instance': entity_values.primary.instance,
+                'poll_intensity': entity_values.primary.poll_intensity,
             }
         return self.json(values_data)
 
