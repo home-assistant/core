@@ -62,10 +62,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # add cameras
     devices = []
-    for camera in cameras:
+    for data in cameras:
         if not config.get(CONF_WHITELIST):
             device = SynologyCamera(hass, websession, surveillance,
-                                    camera.camera_id)
+                                    data.camera_id)
             devices.append(device)
 
     async_add_devices(devices)
