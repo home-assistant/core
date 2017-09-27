@@ -9,10 +9,10 @@ import json
 import logging
 import urllib
 
-import homeassistant.components.camera as camera
 import requests
 import voluptuous as vol
 
+import homeassistant.components.camera as camera
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.camera import PLATFORM_SCHEMA
 from homeassistant.const import (
