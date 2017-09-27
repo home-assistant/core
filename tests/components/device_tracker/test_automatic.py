@@ -1,5 +1,6 @@
 """Test the automatic device tracker platform."""
 import asyncio
+from datetime import datetime
 import logging
 from unittest.mock import patch, MagicMock
 import aioautomatic
@@ -71,10 +72,12 @@ def test_valid_credentials(
     vehicle.display_name = 'mock_display_name'
     vehicle.fuel_level_percent = 45.6
     vehicle.latest_location = None
+    vehicle.updated_at = datetime(2017, 8, 13, 1, 2, 3)
 
     trip.end_location.lat = 45.567
     trip.end_location.lon = 34.345
     trip.end_location.accuracy_m = 5.6
+    trip.ended_at = datetime(2017, 8, 13, 1, 2, 4)
 
     @asyncio.coroutine
     def get_session(*args, **kwargs):

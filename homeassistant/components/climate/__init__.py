@@ -44,6 +44,12 @@ STATE_IDLE = 'idle'
 STATE_AUTO = 'auto'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
+STATE_ECO = 'eco'
+STATE_ELECTRIC = 'electric'
+STATE_PERFORMANCE = 'performance'
+STATE_HIGH_DEMAND = 'high_demand'
+STATE_HEAT_PUMP = 'heat_pump'
+STATE_GAS = 'gas'
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -147,7 +153,7 @@ def set_hold_mode(hass, hold_mode, entity_id=None):
 
 @bind_hass
 def set_aux_heat(hass, aux_heat, entity_id=None):
-    """Turn all or specified climate devices auxillary heater on."""
+    """Turn all or specified climate devices auxiliary heater on."""
     data = {
         ATTR_AUX_HEAT: aux_heat
     }
@@ -661,22 +667,22 @@ class ClimateDevice(Entity):
         return self.hass.async_add_job(self.set_hold_mode, hold_mode)
 
     def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         raise NotImplementedError()
 
     def async_turn_aux_heat_on(self):
-        """Turn auxillary heater on.
+        """Turn auxiliary heater on.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.turn_aux_heat_on)
 
     def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         raise NotImplementedError()
 
     def async_turn_aux_heat_off(self):
-        """Turn auxillary heater off.
+        """Turn auxiliary heater off.
 
         This method must be run in the event loop and returns a coroutine.
         """

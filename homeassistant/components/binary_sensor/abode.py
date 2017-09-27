@@ -6,76 +6,69 @@ https://home-assistant.io/components/binary_sensor.abode/
 """
 import logging
 
-from homeassistant.components.abode import (CONF_ATTRIBUTION, DATA_ABODE)
-from homeassistant.const import (ATTR_ATTRIBUTION)
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
+                                            DOMAIN as ABODE_DOMAIN)
+from homeassistant.components.binary_sensor import BinarySensorDevice
+
 
 DEPENDENCIES = ['abode']
 
 _LOGGER = logging.getLogger(__name__)
 
-# Sensor types: Name, device_class
-SENSOR_TYPES = {
-    'Door Contact': 'opening',
-    'Motion Camera': 'motion',
-}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    data = hass.data.get(DATA_ABODE)
+    import abodepy.helpers.constants as CONST
+    import abodepy.helpers.timeline as TIMELINE
 
-    sensors = []
-    for sensor in data.devices:
-        _LOGGER.debug('Sensor type %s', sensor.type)
-        if sensor.type in ['Door Contact', 'Motion Camera']:
-            sensors.append(AbodeBinarySensor(hass, data, sensor))
+    data = hass.data[ABODE_DOMAIN]
 
-    _LOGGER.debug('Adding %d sensors', len(sensors))
-    add_devices(sensors)
+    device_types = [CONST.TYPE_CONNECTIVITY, CONST.TYPE_MOISTURE,
+                    CONST.TYPE_MOTION, CONST.TYPE_OCCUPANCY,
+                    CONST.TYPE_OPENING]
+
+    devices = []
+    for device in data.abode.get_devices(generic_type=device_types):
+        if data.is_excluded(device):
+            continue
+
+        devices.append(AbodeBinarySensor(data, device))
+
+    for automation in data.abode.get_automations(
+            generic_type=CONST.TYPE_QUICK_ACTION):
+        if data.is_automation_excluded(automation):
+            continue
+
+        devices.append(AbodeQuickActionBinarySensor(
+            data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
+
+    data.devices.extend(devices)
+
+    add_devices(devices)
 
 
-class AbodeBinarySensor(BinarySensorDevice):
+class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     """A binary sensor implementation for Abode device."""
-
-    def __init__(self, hass, data, device):
-        """Initialize a sensor for Abode device."""
-        super(AbodeBinarySensor, self).__init__()
-        self._device = device
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{0} {1}".format(self._device.type, self._device.name)
 
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        if self._device.type == 'Door Contact':
-            return self._device.status != 'Closed'
-        elif self._device.type == 'Motion Camera':
-            return self._device.get_value('motion_event') == '1'
+        return self._device.is_on
 
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        return SENSOR_TYPES.get(self._device.type)
+        return self._device.generic_type
+
+
+class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
+    """A binary sensor implementation for Abode quick action automations."""
+
+    def trigger(self):
+        """Trigger a quick automation."""
+        self._automation.trigger()
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        attrs['device_id'] = self._device.device_id
-        attrs['battery_low'] = self._device.battery_low
-
-        return attrs
-
-    def update(self):
-        """Update the device state."""
-        self._device.refresh()
+    def is_on(self):
+        """Return True if the binary sensor is on."""
+        return self._automation.is_active
