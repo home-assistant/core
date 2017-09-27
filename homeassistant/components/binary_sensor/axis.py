@@ -21,13 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Axis device event."""
-    add_devices([AxisBinarySensor(discovery_info, hass)], True)
+    add_devices([AxisBinarySensor(hass, discovery_info)], True)
 
 
 class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
     """Representation of a binary Axis event."""
 
-    def __init__(self, event_config, hass):
+    def __init__(self, hass, event_config):
         """Initialize the binary sensor."""
         self.hass = hass
         self._state = False
