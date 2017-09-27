@@ -59,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([ThresholdSensor(
         hass, entity_id, name, threshold,
         hysteresis, limit_type, device_class)
-    ], True)
+                      ], True)
 
     return True
 
