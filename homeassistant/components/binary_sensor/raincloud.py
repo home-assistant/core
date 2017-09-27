@@ -61,6 +61,7 @@ class RainCloudBinarySensor(RainCloudHub, BinarySensorDevice):
 
     def __init__(self, hass, data, sensor_type):
         """Initialize a sensor for raincloud device."""
+        super().__init__(hass, data)
         self._hass = hass
         self._sensor_type = sensor_type
         self.data = data

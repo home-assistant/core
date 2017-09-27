@@ -46,8 +46,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
-        vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
-            vol.All(vol.In(ALLOWED_WATERING_TIME)),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -57,7 +55,6 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-    default_watering_timer = conf.get(CONF_WATERING_TIME)
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
@@ -66,9 +63,7 @@ def setup(hass, config):
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             raise HTTPError
-        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass,
-                                                 raincloud,
-                                                 default_watering_timer)
+        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass, raincloud)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
@@ -96,11 +91,10 @@ def setup(hass, config):
 class RainCloudHub(Entity):
     """Base class for all Raincloud entities."""
 
-    def __init__(self, hass, data, default_watering_timer):
+    def __init__(self, hass, data):
         """Initialize the entity."""
         self._hass = hass
         self.data = data
-        self.default_watering_timer = default_watering_timer
 
     @asyncio.coroutine
     def async_added_to_hass(self):

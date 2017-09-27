@@ -10,7 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.raincloud import (
-    CONF_ATTRIBUTION, DATA_RAINCLOUD, RainCloudHub)
+    ALLOWED_WATERING_TIME, CONF_ATTRIBUTION, CONF_WATERING_TIME,
+    DATA_RAINCLOUD, DEFAULT_WATERING_TIME, RainCloudHub)
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
@@ -28,6 +29,8 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
+        vol.All(vol.In(ALLOWED_WATERING_TIME)),
 })
 
 
@@ -35,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a raincloud device."""
     raincloud_hub = hass.data[DATA_RAINCLOUD]
     raincloud = raincloud_hub.data
-    default_watering_timer = raincloud_hub.default_watering_timer
+    default_watering_timer = config.get(CONF_WATERING_TIME)
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -56,6 +59,7 @@ class RainCloudSwitch(RainCloudHub, SwitchDevice):
 
     def __init__(self, hass, data, sensor_type, default_watering_timer):
         """Initialize a switch for raincloud device."""
+        super().__init__(hass, data)
         self._hass = hass
         self._sensor_type = sensor_type
         self.data = data
