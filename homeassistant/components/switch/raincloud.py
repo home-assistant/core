@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import CONF_ATTRIBUTION, DATA_RAINCLOUD
+from homeassistant.components.raincloud import (
+    CONF_ATTRIBUTION, DATA_RAINCLOUD, RainCloudHub)
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
@@ -41,23 +42,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # create an sensor for each zone managed by faucet
         for zone in raincloud.controller.faucet.zones:
             sensors.append(
-                RainCloudSwitch(zone, sensor_type, default_watering_timer))
+                RainCloudSwitch(hass,
+                                zone,
+                                sensor_type,
+                                default_watering_timer))
 
     add_devices(sensors, True)
     return True
 
 
-class RainCloudSwitch(SwitchDevice):
+class RainCloudSwitch(RainCloudHub, SwitchDevice):
     """A switch implementation for raincloud device."""
 
-    def __init__(self, data, sensor_type, default_watering_timer):
+    def __init__(self, hass, data, sensor_type, default_watering_timer):
         """Initialize a switch for raincloud device."""
+        self._hass = hass
         self._sensor_type = sensor_type
-        self._data = data
+        self.data = data
         self._default_watering_timer = default_watering_timer
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[1])
         self._name = "{0} {1}".format(
-            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
+            self.data.name, SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = None
 
     @property
@@ -73,26 +78,26 @@ class RainCloudSwitch(SwitchDevice):
     def turn_on(self):
         """Turn the device on."""
         if self._sensor_type == 'manual_watering':
-            self._data.watering_time = self._default_watering_timer
+            self.data.watering_time = self._default_watering_timer
         elif self._sensor_type == 'auto_watering':
-            self._data.auto_watering = True
+            self.data.auto_watering = True
         self._state = True
 
     def turn_off(self):
         """Turn the device off."""
         if self._sensor_type == 'manual_watering':
-            self._data.watering_time = 'off'
+            self.data.watering_time = 'off'
         elif self._sensor_type == 'auto_watering':
-            self._data.auto_watering = False
+            self.data.auto_watering = False
         self._state = False
 
     def update(self):
         """Update device state."""
         _LOGGER.debug("Updating RainCloud switch: %s", self._name)
         if self._sensor_type == 'manual_watering':
-            self._state = bool(self._data.watering_time)
+            self._state = bool(self.data.watering_time)
         elif self._sensor_type == 'auto_watering':
-            self._state = self._data.auto_watering
+            self._state = self.data.auto_watering
 
     @property
     def icon(self):
@@ -104,7 +109,7 @@ class RainCloudSwitch(SwitchDevice):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self._data.current_time,
+            'current_time': self.data.current_time,
             'default_manual_timer': self._default_watering_timer,
-            'identifier': self._data.serial
+            'identifier': self.data.serial
         }

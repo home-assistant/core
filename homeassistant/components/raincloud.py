@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 
@@ -92,12 +93,12 @@ def setup(hass, config):
     return True
 
 
-class RainCloudHub(object):
+class RainCloudHub(Entity):
     """Base class for all Raincloud entities."""
 
     def __init__(self, hass, data, default_watering_timer):
         """Initialize the entity."""
-        self.hass = hass
+        self._hass = hass
         self.data = data
         self.default_watering_timer = default_watering_timer
 
@@ -105,7 +106,7 @@ class RainCloudHub(object):
     def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
+            self._hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
 
     def _update_callback(self):
         """Callback update method."""
