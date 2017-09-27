@@ -291,7 +291,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Turn auxiliary heater off."""
         self.set_operation_mode(STATE_HEAT)
 
-
     @property
     def min_temp(self):
         """Return the minimum temperature."""
