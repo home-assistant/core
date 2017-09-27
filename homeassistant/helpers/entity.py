@@ -198,7 +198,7 @@ class Entity(object):
         # update entity data
         if force_refresh:
             if self._update_warn:
-                # Update is already in progress. Protect overtasks our core
+                # Update is already in progress.
                 return
 
             self._update_warn = self.hass.loop.call_later(
