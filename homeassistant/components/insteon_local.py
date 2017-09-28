@@ -43,12 +43,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     from insteonlocal.Hub import Hub
-"""Setup Insteon Hub component."""
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    host = config[DOMAIN].get(CONF_HOST)
-    port = config[DOMAIN].get(CONF_PORT)
-    timeout = config[DOMAIN].get(CONF_TIMEOUT)
+    conf = config[DOMAIN]
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
+    timeout = conf.get(CONF_TIMEOUT)
 
     _LOGGER.info("Initializing Insteon Local")
 
