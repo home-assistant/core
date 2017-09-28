@@ -376,9 +376,11 @@ class RflinkCommand(RflinkDevice):
         # Cover options for RFlink
         elif command == 'close_cover':
             cmd = 'DOWN'
+            self._state = False
 
         elif command == 'open_cover':
             cmd = 'UP'
+            self._state = True
 
         elif command == 'stop_cover':
             cmd = 'STOP'

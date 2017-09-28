@@ -6,7 +6,6 @@ https://home-assistant.io/components/cover.rflink/
 """
 import asyncio
 import logging
-
 import voluptuous as vol
 
 from homeassistant.components.rflink import (
@@ -16,6 +15,8 @@ from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
+
+
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ class RflinkCover(RflinkCommand, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return None
+        return False
 
     def async_close_cover(self, **kwargs):
         """Turn the device close."""
