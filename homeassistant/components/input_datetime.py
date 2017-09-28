@@ -9,7 +9,6 @@ import logging
 import datetime
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -37,14 +36,6 @@ SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DATE): cv.date,
     vol.Optional(ATTR_TIME): cv.time,
 })
-
-SERVICE_WITH_DATE_SUBSCHEMA = {
-    vol.Required(ATTR_DATE): cv.date
-}
-
-SERVICE_WITH_TIME_SUBSCHEMA = {
-    vol.Required(ATTR_TIME): cv.time
-}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -96,24 +87,16 @@ def async_setup(hass, config):
 
         tasks = []
         for input_datetime in target_inputs:
-            schema = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-            if input_datetime.has_date():
-                schema = schema.extend(SERVICE_WITH_DATE_SUBSCHEMA)
-            if input_datetime.has_time():
-                schema = schema.extend(SERVICE_WITH_TIME_SUBSCHEMA)
-
-            try:
-                schema(dict(call.data))
-                tasks.append(
-                    input_datetime.async_set_datetime(
-                        call.data.get(ATTR_DATE),
-                        call.data.get(ATTR_TIME)
-                    )
-                )
-            except vol.Invalid as ex:
+            time = call.data.get(ATTR_TIME)
+            date = call.data.get(ATTR_DATE)
+            if (input_datetime.has_date() and not date) or \
+               (input_datetime.has_time() and not time):
                 _LOGGER.error("Invalid service data for "
                               "input_datetime.set_datetime: %s",
-                              humanize_error(call.data, ex))
+                              str(call.data))
+                continue
+
+            tasks.append(input_datetime.async_set_datetime(date, time))
 
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
