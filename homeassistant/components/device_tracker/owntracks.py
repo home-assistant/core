@@ -1,5 +1,5 @@
 """
-Support the OwnTracks platform.
+Device tracker platform that adds support for OwnTracks over MQTT.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
@@ -64,13 +64,7 @@ def get_cipher():
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an OwnTracks tracker."""
-    max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
-    waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
-    waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
-    secret = config.get(CONF_SECRET)
-
-    context = OwnTracksContext(async_see, secret, max_gps_accuracy,
-                               waypoint_import, waypoint_whitelist)
+    context = context_from_config(async_see, config)
 
     @asyncio.coroutine
     def async_handle_mqtt_message(topic, payload, qos):
@@ -177,6 +171,17 @@ def _decrypt_payload(secret, topic, ciphertext):
             "Ignoring encrypted payload because unable to decrypt using "
             "key for topic %s", topic)
         return None
+
+
+def context_from_config(async_see, config):
+    """Create an async context from Home Assistant config."""
+    max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
+    waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
+    waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
+    secret = config.get(CONF_SECRET)
+
+    return OwnTracksContext(async_see, secret, max_gps_accuracy,
+                            waypoint_import, waypoint_whitelist)
 
 
 class OwnTracksContext:

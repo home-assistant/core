@@ -373,6 +373,7 @@ jsonrpc-websocket==0.5
 keyring>=9.3,<10.0
 
 # homeassistant.components.device_tracker.owntracks
+# homeassistant.components.device_tracker.owntracks_http
 libnacl==1.5.2
 
 # homeassistant.components.dyson
