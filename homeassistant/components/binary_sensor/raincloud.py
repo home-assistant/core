@@ -10,24 +10,18 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.raincloud import (
-    CONF_ATTRIBUTION, DATA_RAINCLOUD, RainCloudHub)
+    BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 DEPENDENCIES = ['raincloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    'is_watering': ['Watering', ''],
-    'status': ['Status', ''],
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
 })
 
 
@@ -39,40 +33,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         if sensor_type == 'status':
             sensors.append(
-                RainCloudBinarySensor(hass,
-                                      raincloud.controller,
-                                      sensor_type))
+                RainCloudBinarySensor(raincloud.controller, sensor_type))
             sensors.append(
-                RainCloudBinarySensor(hass,
-                                      raincloud.controller.faucet,
+                RainCloudBinarySensor(raincloud.controller.faucet,
                                       sensor_type))
 
         else:
             # create an sensor for each zone managed by faucet
             for zone in raincloud.controller.faucet.zones:
-                sensors.append(RainCloudBinarySensor(hass, zone, sensor_type))
+                sensors.append(RainCloudBinarySensor(zone, sensor_type))
 
     add_devices(sensors, True)
     return True
 
 
-class RainCloudBinarySensor(RainCloudHub, BinarySensorDevice):
+class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
     """A sensor implementation for raincloud device."""
-
-    def __init__(self, hass, data, sensor_type):
-        """Initialize a sensor for raincloud device."""
-        super().__init__(hass, data)
-        self._hass = hass
-        self._sensor_type = sensor_type
-        self.data = data
-        self._name = "{0} {1}".format(
-            self.data.name, SENSOR_TYPES.get(self._sensor_type)[0])
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def is_on(self):
@@ -91,13 +67,4 @@ class RainCloudBinarySensor(RainCloudHub, BinarySensorDevice):
             return 'mdi:water' if self.is_on else 'mdi:water-off'
         elif self._sensor_type == 'status':
             return 'mdi:pipe' if self.is_on else 'mdi:pipe-disconnected'
-        return SENSOR_TYPES.get(self._sensor_type)[1]
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
-            'identifier': self.data.serial
-        }
+        return ICON_MAP.get(self._sensor_type)

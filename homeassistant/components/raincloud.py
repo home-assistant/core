@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
@@ -35,6 +35,45 @@ NOTIFICATION_TITLE = 'Rain Cloud Setup'
 DATA_RAINCLOUD = 'raincloud'
 DOMAIN = 'raincloud'
 DEFAULT_WATERING_TIME = 15
+
+KEY_MAP = {
+    'auto_watering': 'Automatic Watering',
+    'battery': 'Battery',
+    'is_watering': 'Watering',
+    'manual_watering': 'Manual Watering',
+    'next_cycle': 'Next Cycle',
+    'rain_delay': 'Rain Delay',
+    'status': 'Status',
+    'watering_time': 'Remaining Watering Time',
+}
+
+ICON_MAP = {
+    'auto_watering': 'mdi:autorenew',
+    'battery': '',
+    'is_watering': '',
+    'manual_watering': 'mdi:water-pump',
+    'next_cycle': 'mdi:calendar-clock',
+    'rain_delay': 'mdi:weather-rainy',
+    'status': '',
+    'watering_time': 'mdi:water-pump',
+}
+
+UNIT_OF_MEASUREMENT_MAP = {
+    'auto_watering': '',
+    'battery': '%',
+    'is_watering': '',
+    'manual_watering': '',
+    'next_cycle': '',
+    'rain_delay': 'days',
+    'status': '',
+    'watering_time': 'min',
+}
+
+BINARY_SENSORS = ['is_watering', 'status']
+
+SENSORS = ['battery', 'next_cycle', 'rain_delay', 'watering_time']
+
+SWITCHES = ['auto_watering', 'manual_watering']
 
 SCAN_INTERVAL = timedelta(seconds=20)
 
@@ -63,7 +102,7 @@ def setup(hass, config):
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             raise HTTPError
-        hass.data[DATA_RAINCLOUD] = RainCloudHub(hass, raincloud)
+        hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
@@ -88,20 +127,55 @@ def setup(hass, config):
     return True
 
 
-class RainCloudHub(Entity):
+class RainCloudHub(object):
     """Base class for all Raincloud entities."""
 
-    def __init__(self, hass, data):
+    def __init__(self, data):
         """Initialize the entity."""
-        self._hass = hass
         self.data = data
+
+
+class RainCloudEntity(Entity):
+    """Entity class for RainCloud devices."""
+
+    def __init__(self, data, sensor_type):
+        """Initialize the entity."""
+        self.data = data
+        self._sensor_type = sensor_type
+        self._name = "{0} {1}".format(
+            self.data.name, KEY_MAP.get(self._sensor_type))
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self._hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
+            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
 
     def _update_callback(self):
         """Callback update method."""
-        self.data.update()
+        self.update()
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'current_time': self.data.current_time,
+            'identifier': self.data.serial,
+        }
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return ICON_MAP.get(self._sensor_type)
