@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     })
-})
+}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     from insteonlocal.Hub import Hub
