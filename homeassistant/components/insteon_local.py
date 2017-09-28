@@ -39,9 +39,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     })
-def setup(hass,config):
+def setup(hass, config):
     from insteonlocal.Hub import Hub
-
+"""Setup Insteon Hub component."""
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     host = config[DOMAIN].get(CONF_HOST)
