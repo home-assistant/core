@@ -126,9 +126,6 @@ class InputDatetime(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Run when entity about to be added."""
-        if self._current_datetime is not None:
-            return
-
         restore_val = None
 
         # Priority 1: Initial State
