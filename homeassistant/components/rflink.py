@@ -11,6 +11,7 @@ import logging
 import os
 
 import async_timeout
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
@@ -21,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
+
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -369,6 +371,19 @@ class RflinkCommand(RflinkDevice):
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
             self._state = self._state in [STATE_UNKNOWN, False]
+
+        # Cover options for RFlink
+        elif command == 'close_cover':
+            cmd = 'DOWN'
+            self._state = False
+
+        elif command == 'open_cover':
+            cmd = 'UP'
+            self._state = True
+
+        elif command == 'stop_cover':
+            cmd = 'STOP'
+            self._state = True
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
