@@ -9,6 +9,7 @@ from collections import defaultdict
 import functools as ft
 import logging
 import os
+
 import async_timeout
 
 from homeassistant.config import load_yaml_config_file
@@ -99,8 +100,7 @@ def identify_event_type(event):
         return EVENT_KEY_COMMAND
     elif EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
-    else:
-        return 'unknown'
+    return 'unknown'
 
 
 @asyncio.coroutine
