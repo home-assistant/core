@@ -10,12 +10,14 @@ import datetime
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.util import dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_HAS_DATE): cv.boolean,
             vol.Required(CONF_HAS_TIME): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL,
-                         default=datetime.datetime(1970, 1, 1)): cv.datetime,
+            vol.Optional(CONF_INITIAL): cv.datetime,
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
                                          (CONF_HAS_TIME, True)))})
 }, extra=vol.ALLOW_EXTRA)
@@ -128,20 +129,26 @@ class InputDatetime(Entity):
         if self._current_datetime is not None:
             return
 
-        old_state = yield from async_get_last_state(self.hass, self.entity_id)
-        if old_state is not None:
-            restore_val = dt_util.parse_datetime(old_state.state)
-            if restore_val is None:
-                restore_val = self._initial
-        else:
+        restore_val = None
+
+        # Priority 1: Initial State
+        if self._initial is not None:
             restore_val = self._initial
 
-        if not self._has_date:
-            self._current_datetime = restore_val.time()
-        elif not self._has_time:
-            self._current_datetime = restore_val.date()
-        else:
-            self._current_datetime = restore_val
+        # Priority 2: Old state
+        if restore_val is None:
+            old_state = yield from async_get_last_state(self.hass,
+                                                        self.entity_id)
+            if old_state is not None:
+                restore_val = dt_util.parse_datetime(old_state.state)
+
+        if restore_val is not None:
+            if not self._has_date:
+                self._current_datetime = restore_val.time()
+            elif not self._has_time:
+                self._current_datetime = restore_val.date()
+            else:
+                self._current_datetime = restore_val
 
     def has_date(self):
         """Return whether the input datetime carries a date."""
@@ -170,7 +177,7 @@ class InputDatetime(Entity):
     def state(self):
         """Return the state of the component."""
         if self._current_datetime is None:
-            return None
+            return STATE_UNKNOWN
 
         return self._current_datetime
 
@@ -181,6 +188,9 @@ class InputDatetime(Entity):
             'has_date': self._has_date,
             'has_time': self._has_time,
         }
+
+        if self._current_datetime is None:
+            return attrs
 
         if self._has_date and self._current_datetime is not None:
             attrs['year'] = self._current_datetime.year
