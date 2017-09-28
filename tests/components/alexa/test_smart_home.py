@@ -19,19 +19,6 @@ def test_create_api_message():
     assert msg['payload'] == {}
 
 
-def test_mapping_api_funct():
-    """Test function ref from mapping function."""
-    assert smart_home.mapping_api_function('notExists') is None
-    assert smart_home.mapping_api_function('DiscoverAppliancesRequest') == \
-        smart_home.async_api_discovery
-    assert smart_home.mapping_api_function('TurnOnRequest') == \
-        smart_home.async_api_turn_on
-    assert smart_home.mapping_api_function('TurnOffRequest') == \
-        smart_home.async_api_turn_off
-    assert smart_home.mapping_api_function('SetPercentageRequest') == \
-        smart_home.async_api_set_percentage
-
-
 @asyncio.coroutine
 def test_wrong_version(hass):
     """Test with wrong version."""
