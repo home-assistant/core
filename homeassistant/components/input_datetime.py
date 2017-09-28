@@ -34,7 +34,7 @@ ATTR_TIME = 'time'
 SERVICE_SET_DATETIME = 'set_datetime'
 
 SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_DATE): cv.date,
     vol.Optional(ATTR_TIME): cv.time,
 })
