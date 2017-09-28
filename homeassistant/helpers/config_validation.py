@@ -307,20 +307,30 @@ def time(value):
     return time_val
 
 
+def date(value):
+    """Validate date."""
+    date_val = dt_util.parse_date(value)
+
+    if date_val is None:
+        raise vol.Invalid('Invalid date specified: {}'.format(value))
+
+    return date_val
+
+
 def datetime(value):
     """Validate datetime."""
     if isinstance(value, datetime_sys):
         return value
 
     try:
-        date_val = dt_util.parse_datetime(value)
+        datetime_val = dt_util.parse_datetime(value)
     except TypeError:
-        date_val = None
+        datetime_val = None
 
-    if date_val is None:
+    if datetime_val is None:
         raise vol.Invalid('Invalid datetime specified: {}'.format(value))
 
-    return date_val
+    return datetime_val
 
 
 def time_zone(value):
@@ -450,10 +460,11 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema({
 
 TIME_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'time',
+    'day': date,
     'before': time,
     'after': time,
     'weekday': weekdays,
-}), has_at_least_one_key('before', 'after', 'weekday'))
+}), has_at_least_one_key('day', 'before', 'after', 'weekday'))
 
 ZONE_CONDITION_SCHEMA = vol.Schema({
     vol.Required(CONF_CONDITION): 'zone',
