@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 import pyads
 from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE
 
-REQUIREMENTS = ['pyads==2.2.0']
+REQUIREMENTS = ['pyads']
 
 _LOGGER = logging.getLogger(__name__)
 
