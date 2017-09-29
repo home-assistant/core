@@ -434,7 +434,10 @@ class YeelightLight(Light):
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
         import yeelight
+        duration = int(self.config[CONF_TRANSITION])  # in ms
+        if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
+            duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
         try:
-            self._bulb.turn_off()
+            self._bulb.turn_off(duration=duration)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb off: %s", ex)
