@@ -86,12 +86,6 @@ class SynologyCamera(Camera):
 
     def camera_image(self):
         """Return bytes of camera image."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
-
-    @asyncio.coroutine
-    def async_camera_image(self):
-        """Return a still image response from the camera."""
         return self._surveillance.get_camera_image(self._camera_id)
 
     @asyncio.coroutine
