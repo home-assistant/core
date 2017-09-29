@@ -128,7 +128,7 @@ def setup(hass, config):
 
 
 class RainCloudHub(object):
-    """Base class for all Raincloud entities."""
+    """Representation of a base RainCloud device."""
 
     def __init__(self, data):
         """Initialize the entity."""
@@ -139,7 +139,7 @@ class RainCloudEntity(Entity):
     """Entity class for RainCloud devices."""
 
     def __init__(self, data, sensor_type):
-        """Initialize the entity."""
+        """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(
@@ -159,7 +159,7 @@ class RainCloudEntity(Entity):
 
     def _update_callback(self):
         """Callback update method."""
-        self.update()
+        self.schedule_update_ha_state(True)
 
     @property
     def unit_of_measurement(self):

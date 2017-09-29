@@ -13,7 +13,6 @@ from homeassistant.components.raincloud import (
     DATA_RAINCLOUD, ICON_MAP, RainCloudEntity, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.icon import icon_for_battery_level
 
 DEPENDENCIES = ['raincloud']
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class RainCloudSensor(RainCloudEntity, Entity):
+class RainCloudSensor(RainCloudEntity):
     """A sensor implementation for raincloud device."""
 
     @property
