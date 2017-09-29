@@ -19,7 +19,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_aiohttp_proxy_web)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 REQUIREMENTS = ['py-synology==0.1.1']
 
