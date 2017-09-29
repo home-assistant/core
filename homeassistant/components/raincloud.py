@@ -116,7 +116,6 @@ def setup(hass, config):
     def hub_refresh(event_time):
         """Call Raincloud hub to refresh information."""
         _LOGGER.debug("Updating RainCloud Hub component.")
-        raincloud = hass.data[DATA_RAINCLOUD]
         raincloud.data.update()
 
         dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD)
