@@ -5,6 +5,7 @@ import os
 import pkgutil
 import re
 import sys
+from pkg_resources import Requirement, RequirementParseError
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
@@ -169,6 +170,37 @@ def gather_modules():
     return reqs
 
 
+def generate_codeowners(reqs):
+    output = []
+    output.append("# Home Assistant codeowners")
+    output.append("# Automatically generated, do not modify manually!\n")
+
+    # this mapping should be read from a file
+    map = {'python-mirobo': ['rytilahti'],
+           'python-yeelight': ['rytilahti'],
+           'python-eq3bt': ['rytilahti']}
+    for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
+        for req in sorted(requirements,
+                          key=lambda name: (len(name.split('.')), name)):
+
+            filename = req.replace(".", "/") + ".py"
+            print(pkg)
+            if '#' in pkg:  # in case of git dependencies
+                _, pkg = pkg.split("#", maxsplit=1)
+            try:
+                req = Requirement.parse(pkg)
+            except RequirementParseError:
+                print("ERROR: unable to parse requirement line: %s" % pkg)
+                continue
+
+            users_to_notify = map.get(req.unsafe_name, [])
+            if len(users_to_notify) < 1: continue
+
+            output.append("%s%s" % (filename, " ".join([" @%s" % x for x in users_to_notify])))
+
+    return '\n'.join(output)
+
+
 def generate_requirements_list(reqs):
     """Generate a pip file based on requirements."""
     output = []
@@ -234,6 +266,12 @@ def write_constraints_file(data):
         req_file.write(data + CONSTRAINT_BASE)
 
 
+def write_codeowners_file(data):
+    """Write codeowners to a file."""
+    with open('CODEOWNERS.md_generated', 'w', newline="\n") as owners_file:
+        owners_file.write(data)
+
+
 def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
@@ -288,6 +326,7 @@ def main():
 
         sys.exit(0)
 
+    write_codeowners_file(generate_codeowners(data))
     write_requirements_file(reqs_file)
     write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
