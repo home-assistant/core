@@ -145,20 +145,20 @@ class Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.thermostat['runtime']['actualTemperature'] / 10
+        return self.thermostat['runtime']['actualTemperature'] / 10.0
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.current_operation == STATE_AUTO:
-            return int(self.thermostat['runtime']['desiredHeat'] / 10)
+            return self.thermostat['runtime']['desiredHeat'] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.current_operation == STATE_AUTO:
-            return int(self.thermostat['runtime']['desiredCool'] / 10)
+            return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
@@ -167,9 +167,9 @@ class Thermostat(ClimateDevice):
         if self.current_operation == STATE_AUTO:
             return None
         if self.current_operation == STATE_HEAT:
-            return int(self.thermostat['runtime']['desiredHeat'] / 10)
+            return self.thermostat['runtime']['desiredHeat'] / 10.0
         elif self.current_operation == STATE_COOL:
-            return int(self.thermostat['runtime']['desiredCool'] / 10)
+            return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
@@ -310,7 +310,7 @@ class Thermostat(ClimateDevice):
                 self.data.ecobee.resume_program(self.thermostat_index)
         else:
             if hold_mode == TEMPERATURE_HOLD:
-                self.set_temp_hold(int(self.current_temperature))
+                self.set_temp_hold(self.current_temperature)
             else:
                 self.data.ecobee.set_climate_hold(
                     self.thermostat_index, hold_mode, self.hold_preference())
@@ -336,15 +336,11 @@ class Thermostat(ClimateDevice):
         elif self.current_operation == STATE_COOL:
             heat_temp = temp - 20
             cool_temp = temp
-
-        self.data.ecobee.set_hold_temp(self.thermostat_index, cool_temp,
-                                       heat_temp, self.hold_preference())
-        _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
-                      "cool=%s, is=%s", heat_temp, isinstance(
-                          heat_temp, (int, float)), cool_temp,
-                      isinstance(cool_temp, (int, float)))
-
-        self.update_without_throttle = True
+        else:
+            # In auto mode set temperature between
+            heat_temp = temp - 10
+            cool_temp = temp + 10
+        self.set_auto_temp_hold(heat_temp, cool_temp)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -354,9 +350,9 @@ class Thermostat(ClimateDevice):
 
         if self.current_operation == STATE_AUTO and low_temp is not None \
            and high_temp is not None:
-            self.set_auto_temp_hold(int(low_temp), int(high_temp))
+            self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
-            self.set_temp_hold(int(temp))
+            self.set_temp_hold(temp)
         else:
             _LOGGER.error(
                 "Missing valid arguments for set_temperature in %s", kwargs)
@@ -375,7 +371,7 @@ class Thermostat(ClimateDevice):
     def resume_program(self, resume_all):
         """Resume the thermostat schedule program."""
         self.data.ecobee.resume_program(
-            self.thermostat_index, str(resume_all).lower())
+            self.thermostat_index, 'true' if resume_all else 'false')
         self.update_without_throttle = True
 
     def hold_preference(self):
