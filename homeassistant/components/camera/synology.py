@@ -110,8 +110,7 @@ class SynologyCamera(Camera):
         """Update the recording state periodically."""
         return True
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Update the status of the camera."""
         self._surveillance.update()
         self._camera = self._surveillance.get_camera(self._camera.camera_id)
