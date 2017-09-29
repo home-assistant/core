@@ -149,6 +149,9 @@ omit =
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
 
+    homeassistant/components/raincloud.py
+    homeassistant/components/*/raincloud.py
+
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
