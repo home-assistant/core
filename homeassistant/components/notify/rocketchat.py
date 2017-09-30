@@ -4,7 +4,6 @@ Rocket.Chat notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.rocketchat/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
-from homeassistant.exceptions import (
-    PlatformNotReady)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rocketchat-API==0.6.1']
@@ -32,9 +29,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+def get_service(hass, config, discovery_info=None):
     """Return the notify service."""
+    from rocketchat_API.APIExceptions.RocketExceptions import (
+        RocketConnectionException, RocketAuthenticationException)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -43,8 +41,15 @@ def async_get_service(hass, config, discovery_info=None):
 
     try:
         return RocketChatNotificationService(url, username, password, room)
-    except PlatformNotReady:
-        return None
+    except RocketConnectionException:
+        _LOGGER.warning(
+            "Unable to connect to Rocket.Chat server at %s.", url)
+    except RocketAuthenticationException:
+        _LOGGER.warning(
+            "Rocket.Chat authentication failed for user %s.", username)
+        _LOGGER.info("Please check your username/password.")
+
+    return None
 
 
 class RocketChatNotificationService(BaseNotificationService):
@@ -53,23 +58,10 @@ class RocketChatNotificationService(BaseNotificationService):
     def __init__(self, url, username, password, room):
         """Initialize the service."""
         from rocketchat_API.rocketchat import RocketChat
-        from rocketchat_API.APIExceptions.RocketExceptions import (
-            RocketConnectionException, RocketAuthenticationException)
         self._room = room
-        try:
-            self._server = RocketChat(username, password, server_url=url)
-        except RocketConnectionException:
-            _LOGGER.warning(
-                "Unable to connect to Rocket.Chat server at %s.", url)
-            raise PlatformNotReady()
-        except RocketAuthenticationException:
-            _LOGGER.warning(
-                "Rocket.Chat authentication failed for user %s.", username)
-            _LOGGER.info("Please check your username/password.")
-            raise PlatformNotReady()
+        self._server = RocketChat(username, password, server_url=url)
 
-    @asyncio.coroutine
-    def async_send_message(self, message="", **kwargs):
+    def send_message(self, message="", **kwargs):
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
         resp = self._server.chat_post_message(message, channel=self._room,
