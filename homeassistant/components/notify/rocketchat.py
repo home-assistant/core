@@ -44,7 +44,7 @@ def async_get_service(hass, config, discovery_info=None):
     try:
         return RocketChatNotificationService(url, username, password, room)
     except PlatformNotReady:
-        _LOGGER.error("Unable to initialise Rocket.Chat service.")
+        return None
 
 
 class RocketChatNotificationService(BaseNotificationService):
