@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONTROLLER = None
 
+CONF_COMM_TYPE = 'comm_type'
+
 DOMAIN = 'mochad'
 
 CONFIG_SCHEMA = vol.Schema({

@@ -109,8 +109,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         origin = config.get(CONF_ORIGIN)
         destination = config.get(CONF_DESTINATION)
 
-        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
-                                        destination, options)
+        sensor = GoogleTravelTimeSensor(
+            hass, name, api_key, origin, destination, options)
 
         if sensor.valid_api_connection:
             add_devices_callback([sensor])

@@ -44,18 +44,19 @@ CONF_WELCOME_SENSORS = 'welcome_sensors'
 CONF_PRESENCE_SENSORS = 'presence_sensors'
 CONF_TAG_SENSORS = 'tag_sensors'
 
+DEFAULT_TIMEOUT = 15
+DEFAULT_OFFSET = 90
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOME): cv.string,
-    vol.Optional(CONF_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_OFFSET): cv.positive_int,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(
-        CONF_WELCOME_SENSORS, default=WELCOME_SENSOR_TYPES.keys()):
-        vol.All(cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]),
-    vol.Optional(
-        CONF_PRESENCE_SENSORS, default=PRESENCE_SENSOR_TYPES.keys()):
+    vol.Optional(CONF_HOME): cv.string,
+    vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): cv.positive_int,
+    vol.Optional(CONF_PRESENCE_SENSORS, default=PRESENCE_SENSOR_TYPES):
         vol.All(cv.ensure_list, [vol.In(PRESENCE_SENSOR_TYPES)]),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_WELCOME_SENSORS, default=WELCOME_SENSOR_TYPES):
+        vol.All(cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]),
 })
 
 
@@ -63,16 +64,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
     netatmo = get_component('netatmo')
-    home = config.get(CONF_HOME, None)
-    timeout = config.get(CONF_TIMEOUT, 15)
-    offset = config.get(CONF_OFFSET, 90)
+    home = config.get(CONF_HOME)
+    timeout = config.get(CONF_TIMEOUT)
+    offset = config.get(CONF_OFFSET)
 
     module_name = None
 
     import lnetatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
-        if data.get_camera_names() == []:
+        if not data.get_camera_names():
             return None
     except lnetatmo.NoDevice:
         return None
@@ -93,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in welcome_sensors:
                 add_devices([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
-                    offset, camera_type, variable)])
+                    offset, camera_type, variable)], True)
         if camera_type == 'NOC':
             if CONF_CAMERAS in config:
                 if config[CONF_CAMERAS] != [] and \
@@ -102,14 +103,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in presence_sensors:
                 add_devices([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout, offset,
-                    camera_type, variable)])
+                    camera_type, variable)], True)
 
         for module_name in data.get_module_names(camera_name):
             for variable in tag_sensors:
                 camera_type = None
                 add_devices([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout, offset,
-                    camera_type, variable)])
+                    camera_type, variable)], True)
 
 
 class NetatmoBinarySensor(BinarySensorDevice):
@@ -137,7 +138,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._unique_id = "Netatmo_binary_sensor {0} - {1}".format(
             self._name, camera_id)
         self._cameratype = camera_type
-        self.update()
+        self._state = None
 
     @property
     def name(self):

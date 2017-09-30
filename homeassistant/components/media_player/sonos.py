@@ -322,6 +322,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_title = None
         self._media_radio_show = None
         self._media_next_title = None
+        self._available = True
         self._support_previous_track = False
         self._support_next_track = False
         self._support_play = False
@@ -386,6 +387,11 @@ class SonosDevice(MediaPlayerDevice):
         """Return coordinator of this player."""
         return self._coordinator
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def _is_available(self):
         try:
             sock = socket.create_connection(
@@ -416,11 +422,11 @@ class SonosDevice(MediaPlayerDevice):
                 self._player.get_sonos_favorites()['favorites']
 
         if self._last_avtransport_event:
-            is_available = True
+            self._available = True
         else:
-            is_available = self._is_available()
+            self._available = self._is_available()
 
-        if not is_available:
+        if not self._available:
             self._player_volume = None
             self._player_volume_muted = None
             self._status = 'OFF'
@@ -695,6 +701,9 @@ class SonosDevice(MediaPlayerDevice):
         if url in ('', 'NOT_IMPLEMENTED', None):
             if fallback_uri in ('', 'NOT_IMPLEMENTED', None):
                 return None
+            if fallback_uri.find('tts_proxy') > 0:
+                # If the content is a tts don't try to fetch an image from it.
+                return None
             return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
                 host=self._player.ip_address,
                 port=1400,
@@ -893,7 +902,45 @@ class SonosDevice(MediaPlayerDevice):
             if len(fav) == 1:
                 src = fav.pop()
                 self._source_name = src['title']
-                self._player.play_uri(src['uri'], src['meta'], src['title'])
+
+                if ('object.container.playlistContainer' in src['meta'] or
+                        'object.container.album.musicAlbum' in src['meta']):
+                    self._replace_queue_with_playlist(src)
+                    self._player.play_from_queue(0)
+                else:
+                    self._player.play_uri(src['uri'], src['meta'],
+                                          src['title'])
+
+    def _replace_queue_with_playlist(self, src):
+        """Replace queue with playlist represented by src.
+
+        Playlists can't be played directly with the self._player.play_uri
+        API as they are actually composed of multiple URLs. Until soco has
+        support for playing a playlist, we'll need to parse the playlist item
+        and replace the current queue in order to play it.
+        """
+        import soco
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(src['meta'])
+        namespaces = {'item':
+                      'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+                      'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
+        desc = root.find('item:item', namespaces).find('desc:desc',
+                                                       namespaces).text
+
+        res = [soco.data_structures.DidlResource(uri=src['uri'],
+                                                 protocol_info="DUMMY")]
+        didl = soco.data_structures.DidlItem(title="DUMMY",
+                                             parent_id="DUMMY",
+                                             item_id=src['uri'],
+                                             desc=desc,
+                                             resources=res)
+
+        self._player.stop()
+        self._player.clear_queue()
+        self._player.play_mode = 'NORMAL'
+        self._player.add_to_queue(didl)
 
     @property
     def source_list(self):
@@ -1069,7 +1116,7 @@ class SonosDevice(MediaPlayerDevice):
                 return
 
             ##
-            # old is allready master, rejoin
+            # old is already master, rejoin
             if old.coordinator.group.coordinator == old.coordinator:
                 self._player.join(old.coordinator)
                 return

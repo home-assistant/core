@@ -23,7 +23,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['plexapi==2.0.2']
 
@@ -82,8 +81,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if file_config:
         # Setup a configured PlexServer
-        host, token = file_config.popitem()
-        token = token['token']
+        host, host_config = file_config.popitem()
+        token = host_config['token']
+        try:
+            has_ssl = host_config['ssl']
+        except KeyError:
+            has_ssl = False
+        try:
+            verify_ssl = host_config['verify']
+        except KeyError:
+            verify_ssl = True
+
     # Via discovery
     elif discovery_info is not None:
         # Parse discovery data
@@ -95,19 +103,34 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if host in _CONFIGURING:
             return
         token = None
+        has_ssl = False
+        verify_ssl = True
     else:
         return
 
-    setup_plexserver(host, token, hass, config, add_devices_callback)
+    setup_plexserver(
+        host, token, has_ssl, verify_ssl,
+        hass, config, add_devices_callback
+    )
 
 
-def setup_plexserver(host, token, hass, config, add_devices_callback):
+def setup_plexserver(
+        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
+    cert_session = None
+    http_prefix = 'https' if has_ssl else 'http'
+    if has_ssl and (verify_ssl is False):
+        _LOGGER.info("Ignoring SSL verification")
+        cert_session = requests.Session()
+        cert_session.verify = False
     try:
-        plexserver = plexapi.server.PlexServer('http://%s' % host, token)
+        plexserver = plexapi.server.PlexServer(
+            '%s://%s' % (http_prefix, host),
+            token, cert_session
+        )
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
@@ -119,18 +142,20 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
     # Save config
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
-                'token': token
+                'token': token,
+                'ssl': has_ssl,
+                'verify': verify_ssl,
             }}):
         _LOGGER.error("Failed to save configuration file")
 
-    _LOGGER.info('Connected to: http://%s', host)
+    _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
     plex_clients = {}
     plex_sessions = {}
@@ -144,9 +169,9 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-        except OSError:
-            _LOGGER.error("Could not connect to plex server at http://%s",
-                          host)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
             return
 
         new_plex_clients = []
@@ -193,6 +218,10 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
             return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
+            return
 
         plex_sessions.clear()
         for session in sessions:
@@ -206,7 +235,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
 
 def request_configuration(host, hass, config, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
@@ -217,10 +246,13 @@ def request_configuration(host, hass, config, add_devices_callback):
     def plex_configuration_callback(data):
         """Handle configuration changes."""
         setup_plexserver(
-            host, data.get('token'), hass, config, add_devices_callback)
+            host, data.get('token'),
+            cv.boolean(data.get('has_ssl')),
+            cv.boolean(data.get('do_not_verify')),
+            hass, config, add_devices_callback
+        )
 
     _CONFIGURING[host] = configurator.request_config(
-        hass,
         'Plex Media Server',
         plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
@@ -229,6 +261,14 @@ def request_configuration(host, hass, config, add_devices_callback):
         fields=[{
             'id': 'token',
             'name': 'X-Plex-Token',
+            'type': ''
+        }, {
+            'id': 'has_ssl',
+            'name': 'Use SSL',
+            'type': ''
+        }, {
+            'id': 'do_not_verify_ssl',
+            'name': 'Do not verify SSL',
             'type': ''
         }])
 
@@ -671,7 +711,7 @@ class PlexClient(MediaPlayerDevice):
             if ("127.0.0.1" in client.baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
-                # playback is occuring
+                # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)

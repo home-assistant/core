@@ -22,6 +22,10 @@ from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
 from homeassistant.components.config.automation import (
     CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
+from homeassistant.components.config.script import (
+    CONFIG_PATH as SCRIPTS_CONFIG_PATH)
+from homeassistant.components.config.customize import (
+    CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, mock_coro)
@@ -31,6 +35,8 @@ YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
+SCRIPTS_PATH = os.path.join(CONFIG_DIR, SCRIPTS_CONFIG_PATH)
+CUSTOMIZE_PATH = os.path.join(CONFIG_DIR, CUSTOMIZE_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -65,8 +71,15 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(AUTOMATIONS_PATH):
             os.remove(AUTOMATIONS_PATH)
 
+        if os.path.isfile(SCRIPTS_PATH):
+            os.remove(SCRIPTS_PATH)
+
+        if os.path.isfile(CUSTOMIZE_PATH):
+            os.remove(CUSTOMIZE_PATH)
+
         self.hass.stop()
 
+    # pylint: disable=no-self-use
     def test_create_default_config(self):
         """Test creation of default config."""
         config_util.create_default_config(CONFIG_DIR, False)
@@ -75,6 +88,7 @@ class TestConfig(unittest.TestCase):
         assert os.path.isfile(VERSION_PATH)
         assert os.path.isfile(GROUP_PATH)
         assert os.path.isfile(AUTOMATIONS_PATH)
+        assert os.path.isfile(CUSTOMIZE_PATH)
 
     def test_find_config_file_yaml(self):
         """Test if it finds a YAML config file."""
@@ -169,7 +183,8 @@ class TestConfig(unittest.TestCase):
             CONF_ELEVATION: 101,
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             CONF_NAME: 'Home',
-            CONF_TIME_ZONE: 'America/Los_Angeles'
+            CONF_TIME_ZONE: 'America/Los_Angeles',
+            CONF_CUSTOMIZE: OrderedDict(),
         }
 
         assert expected_values == ha_conf
@@ -260,40 +275,30 @@ class TestConfig(unittest.TestCase):
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
-        """Test removal of library on upgrade."""
-        ha_version = '0.7.0'
-
+        """Test removal of library on upgrade from before 0.50."""
+        ha_version = '0.49.0'
         mock_os.path.isdir = mock.Mock(return_value=True)
-
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
-
             self.hass.config.path = mock.Mock()
-
             config_util.process_ha_config_upgrade(self.hass)
-
             hass_path = self.hass.config.path.return_value
 
             self.assertEqual(mock_os.path.isdir.call_count, 1)
             self.assertEqual(
                 mock_os.path.isdir.call_args, mock.call(hass_path)
             )
-
             self.assertEqual(mock_shutil.rmtree.call_count, 1)
             self.assertEqual(
                 mock_shutil.rmtree.call_args, mock.call(hass_path)
             )
 
-    @mock.patch('homeassistant.config.shutil')
-    @mock.patch('homeassistant.config.os')
-    def test_not_remove_lib_if_not_upgrade(self, mock_os, mock_shutil):
-        """Test removal of library with no upgrade."""
-        ha_version = __version__
-
-        mock_os.path.isdir = mock.Mock(return_value=True)
+    def test_process_config_upgrade(self):
+        """Test update of version on upgrade."""
+        ha_version = '0.8.0'
 
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
@@ -301,12 +306,38 @@ class TestConfig(unittest.TestCase):
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
-            self.hass.config.path = mock.Mock()
+            config_util.process_ha_config_upgrade(self.hass)
+
+            self.assertEqual(opened_file.write.call_count, 1)
+            self.assertEqual(
+                opened_file.write.call_args, mock.call(__version__)
+            )
+
+    def test_config_upgrade_same_version(self):
+        """Test no update of version on no upgrade."""
+        ha_version = __version__
+
+        mock_open = mock.mock_open()
+        with mock.patch('homeassistant.config.open', mock_open, create=True):
+            opened_file = mock_open.return_value
+            # pylint: disable=no-member
+            opened_file.readline.return_value = ha_version
 
             config_util.process_ha_config_upgrade(self.hass)
 
-            assert mock_os.path.isdir.call_count == 0
-            assert mock_shutil.rmtree.call_count == 0
+            assert opened_file.write.call_count == 0
+
+    def test_config_upgrade_no_file(self):
+        """Test update of version on upgrade, with no version file."""
+        mock_open = mock.mock_open()
+        mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT]
+        with mock.patch('homeassistant.config.open', mock_open, create=True):
+            opened_file = mock_open.return_value
+            # pylint: disable=no-member
+            config_util.process_ha_config_upgrade(self.hass)
+            self.assertEqual(opened_file.write.call_count, 1)
+            self.assertEqual(
+                opened_file.write.call_args, mock.call(__version__))
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
@@ -318,11 +349,12 @@ class TestConfig(unittest.TestCase):
 
         mock_open = mock.mock_open()
 
-        def mock_isfile(filename):
+        def _mock_isfile(filename):
             return True
 
         with mock.patch('homeassistant.config.open', mock_open, create=True), \
-                mock.patch('homeassistant.config.os.path.isfile', mock_isfile):
+                mock.patch(
+                    'homeassistant.config.os.path.isfile', _mock_isfile):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
@@ -343,11 +375,12 @@ class TestConfig(unittest.TestCase):
 
         mock_open = mock.mock_open()
 
-        def mock_isfile(filename):
+        def _mock_isfile(filename):
             return False
 
         with mock.patch('homeassistant.config.open', mock_open, create=True), \
-                mock.patch('homeassistant.config.os.path.isfile', mock_isfile):
+                mock.patch(
+                    'homeassistant.config.os.path.isfile', _mock_isfile):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version

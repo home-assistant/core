@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND,
-    ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
+    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
+    ATTR_DELAY_SECS)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
@@ -174,7 +174,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise True."""
-        return self._current_activity != 'PowerOff'
+        return self._current_activity not in [None, 'PowerOff']
 
     def update(self):
         """Return current activity."""
@@ -202,18 +202,27 @@ class HarmonyRemote(remote.RemoteDevice):
         else:
             _LOGGER.error("No activity specified with turn_on service")
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Start the PowerOff activity."""
         import pyharmony
         pyharmony.ha_power_off(self._token, self.host, self._port)
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a set of commands to one device."""
         import pyharmony
+        device = kwargs.pop(ATTR_DEVICE, None)
+        if device is None:
+            _LOGGER.error("Missing required argument: device")
+            return
+        params = {}
+        num_repeats = kwargs.pop(ATTR_NUM_REPEATS, None)
+        if num_repeats is not None:
+            params['repeat_num'] = num_repeats
+        delay_secs = kwargs.pop(ATTR_DELAY_SECS, None)
+        if delay_secs is not None:
+            params['delay_secs'] = delay_secs
         pyharmony.ha_send_commands(
-            self._token, self.host, self._port, kwargs[ATTR_DEVICE],
-            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
-            float(kwargs[ATTR_DELAY_SECS]))
+            self._token, self.host, self._port, device, command, **params)
 
     def sync(self):
         """Sync the Harmony device with the web service."""

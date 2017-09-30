@@ -14,7 +14,7 @@ from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['bellows==0.3.2']
+REQUIREMENTS = ['bellows==0.3.4']
 
 DOMAIN = 'zha'
 
@@ -218,7 +218,7 @@ class ApplicationListener:
 class Entity(entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overriden by subclasses
+    _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
                  model, **kwargs):

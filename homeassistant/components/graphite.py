@@ -45,13 +45,12 @@ def setup(hass, config):
     try:
         sock.connect((host, port))
         sock.shutdown(2)
-        _LOGGER.debug('Connection to Graphite possible')
+        _LOGGER.debug("Connection to Graphite possible")
     except socket.error:
-        _LOGGER.error('Not able to connect to Graphite')
+        _LOGGER.error("Not able to connect to Graphite")
         return False
 
     GraphiteFeeder(hass, host, port, prefix)
-
     return True
 
 
@@ -143,15 +142,15 @@ class GraphiteFeeder(threading.Thread):
                 _LOGGER.debug("Processing STATE_CHANGED event for %s",
                               event.data['entity_id'])
                 try:
-                    self._report_attributes(event.data['entity_id'],
-                                            event.data['new_state'])
+                    self._report_attributes(
+                        event.data['entity_id'], event.data['new_state'])
                 # pylint: disable=broad-except
                 except Exception:
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")
             else:
-                _LOGGER.warning("Processing unexpected event type %s",
-                                event.event_type)
+                _LOGGER.warning(
+                    "Processing unexpected event type %s", event.event_type)
 
             self._queue.task_done()

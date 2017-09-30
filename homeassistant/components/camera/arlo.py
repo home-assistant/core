@@ -14,14 +14,30 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_BRIGHTNESS = 'brightness'
+ATTR_FLIPPED = 'flipped'
+ATTR_MIRRORED = 'mirrored'
+ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
+ATTR_POWER_SAVE_MODE = 'power_save_mode'
+ATTR_SIGNAL_STRENGTH = 'signal_strength'
+ATTR_UNSEEN_VIDEOS = 'unseen_videos'
+
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
+
+POWERSAVE_MODE_MAPPING = {
+    1: 'best_battery_life',
+    2: 'optimized',
+    3: 'best_video'
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
@@ -49,7 +65,6 @@ class ArloCam(Camera):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._base_stn = hass.data[DATA_ARLO].base_stations[0]
         self._name = self._camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
@@ -82,6 +97,28 @@ class ArloCam(Camera):
         return self._name
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_BATTERY_LEVEL:
+            self._camera.get_battery_level,
+            ATTR_BRIGHTNESS:
+            self._camera.get_brightness,
+            ATTR_FLIPPED:
+            self._camera.get_flip_state,
+            ATTR_MIRRORED:
+            self._camera.get_mirror_state,
+            ATTR_MOTION_SENSITIVITY:
+            self._camera.get_motion_detection_sensitivity,
+            ATTR_POWER_SAVE_MODE:
+            POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
+            ATTR_SIGNAL_STRENGTH:
+            self._camera.get_signal_strength,
+            ATTR_UNSEEN_VIDEOS:
+            self._camera.unseen_videos
+        }
+
+    @property
     def model(self):
         """Camera model."""
         return self._camera.model_id
@@ -103,7 +140,16 @@ class ArloCam(Camera):
 
     def set_base_station_mode(self, mode):
         """Set the mode in the base station."""
-        self._base_stn.mode = mode
+        # Get the list of base stations identified by library
+        base_stations = self.hass.data[DATA_ARLO].base_stations
+
+        # Some Arlo cameras does not have basestation
+        # So check if there is base station detected first
+        # if yes, then choose the primary base station
+        # Set the mode on the chosen base station
+        if base_stations:
+            primary_base_station = base_stations[0]
+            primary_base_station.mode = mode
 
     def enable_motion_detection(self):
         """Enable the Motion detection in base station (Arm)."""

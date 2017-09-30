@@ -11,14 +11,13 @@ import aiohttp
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
 
-import homeassistant.loader as loader
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
     CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.0']
+REQUIREMENTS = ['amcrest==1.2.1']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +91,6 @@ def setup(hass, config):
 
     amcrest_cams = config[DOMAIN]
 
-    persistent_notification = loader.get_component('persistent_notification')
     for device in amcrest_cams:
         camera = AmcrestCamera(device.get(CONF_HOST),
                                device.get(CONF_PORT),
@@ -103,8 +101,8 @@ def setup(hass, config):
 
         except (ConnectTimeout, HTTPError) as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
-            persistent_notification.create(
-                hass, 'Error: {}<br />'
+            hass.components.persistent_notification.create(
+                'Error: {}<br />'
                 'You will need to restart hass after fixing.'
                 ''.format(ex),
                 title=NOTIFICATION_TITLE,

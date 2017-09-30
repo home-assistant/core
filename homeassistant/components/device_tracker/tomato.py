@@ -7,8 +7,6 @@ https://home-assistant.io/components/device_tracker.tomato/
 import json
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -17,9 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 CONF_HTTP_ID = 'http_id'
 
@@ -54,8 +49,6 @@ class TomatoDeviceScanner(DeviceScanner):
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
         self.logger = logging.getLogger("{}.{}".format(__name__, "Tomato"))
-        self.lock = threading.Lock()
-
         self.last_results = {"wldev": [], "dhcpd_lease": []}
 
         self.success_init = self._update_tomato_info()
@@ -76,50 +69,48 @@ class TomatoDeviceScanner(DeviceScanner):
 
         return filter_named[0]
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
         """Ensure the information from the Tomato router is up to date.
 
         Return boolean if scanning successful.
         """
-        with self.lock:
-            self.logger.info("Scanning")
+        self.logger.info("Scanning")
 
-            try:
-                response = requests.Session().send(self.req, timeout=3)
-                # Calling and parsing the Tomato api here. We only need the
-                # wldev and dhcpd_lease values.
-                if response.status_code == 200:
+        try:
+            response = requests.Session().send(self.req, timeout=3)
+            # Calling and parsing the Tomato api here. We only need the
+            # wldev and dhcpd_lease values.
+            if response.status_code == 200:
 
-                    for param, value in \
-                            self.parse_api_pattern.findall(response.text):
+                for param, value in \
+                        self.parse_api_pattern.findall(response.text):
 
-                        if param == 'wldev' or param == 'dhcpd_lease':
-                            self.last_results[param] = \
-                                json.loads(value.replace("'", '"'))
-                    return True
+                    if param == 'wldev' or param == 'dhcpd_lease':
+                        self.last_results[param] = \
+                            json.loads(value.replace("'", '"'))
+                return True
 
-                elif response.status_code == 401:
-                    # Authentication error
-                    self.logger.exception((
-                        "Failed to authenticate, "
-                        "please check your username and password"))
-                    return False
-
-            except requests.exceptions.ConnectionError:
-                # We get this if we could not connect to the router or
-                # an invalid http_id was supplied.
-                self.logger.exception("Failed to connect to the router or "
-                                      "invalid http_id supplied")
+            elif response.status_code == 401:
+                # Authentication error
+                self.logger.exception((
+                    "Failed to authenticate, "
+                    "please check your username and password"))
                 return False
 
-            except requests.exceptions.Timeout:
-                # We get this if we could not connect to the router or
-                # an invalid http_id was supplied.
-                self.logger.exception("Connection to the router timed out")
-                return False
+        except requests.exceptions.ConnectionError:
+            # We get this if we could not connect to the router or
+            # an invalid http_id was supplied.
+            self.logger.exception("Failed to connect to the router or "
+                                  "invalid http_id supplied")
+            return False
 
-            except ValueError:
-                # If JSON decoder could not parse the response.
-                self.logger.exception("Failed to parse response from router")
-                return False
+        except requests.exceptions.Timeout:
+            # We get this if we could not connect to the router or
+            # an invalid http_id was supplied.
+            self.logger.exception("Connection to the router timed out")
+            return False
+
+        except ValueError:
+            # If JSON decoder could not parse the response.
+            self.logger.exception("Failed to parse response from router")
+            return False

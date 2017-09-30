@@ -23,6 +23,7 @@ from homeassistant.core import callback
 from homeassistant.const import (ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -55,6 +56,7 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
@@ -62,6 +64,7 @@ def enable_motion_detection(hass, entity_id=None):
         DOMAIN, SERVICE_EN_MOTION, data))
 
 
+@bind_hass
 def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None

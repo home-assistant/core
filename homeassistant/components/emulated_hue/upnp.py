@@ -1,8 +1,7 @@
-"""Provides a UPNP discovery method that mimicks Hue hubs."""
+"""Provides a UPNP discovery method that mimics Hue hubs."""
 import threading
 import socket
 import logging
-import os
 import select
 
 from aiohttp import web
@@ -86,18 +85,6 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
             advertise_ip, advertise_port).replace("\n", "\r\n") \
                                          .encode('utf-8')
 
-        # Set up a pipe for signaling to the receiver that it's time to
-        # shutdown. Essentially, we place the SSDP socket into nonblocking
-        # mode and use select() to wait for data to arrive on either the SSDP
-        # socket or the pipe. If data arrives on either one, select() returns
-        # and tells us which filenos have data ready to read.
-        #
-        # When we want to stop the responder, we write data to the pipe, which
-        # causes the select() to return and indicate that said pipe has data
-        # ready to be read, which indicates to us that the responder needs to
-        # be shutdown.
-        self._interrupted_read_pipe, self._interrupted_write_pipe = os.pipe()
-
     def run(self):
         """Run the server."""
         # Listen for UDP port 1900 packets sent to SSDP multicast address
@@ -119,7 +106,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
             socket.inet_aton(self.host_ip_addr))
 
         if self.upnp_bind_multicast:
-            ssdp_socket.bind(("239.255.255.250", 1900))
+            ssdp_socket.bind(("", 1900))
         else:
             ssdp_socket.bind((self.host_ip_addr, 1900))
 
@@ -130,26 +117,26 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
             try:
                 read, _, _ = select.select(
-                    [self._interrupted_read_pipe, ssdp_socket], [],
-                    [ssdp_socket])
+                    [ssdp_socket], [],
+                    [ssdp_socket], 2)
 
-                if self._interrupted_read_pipe in read:
-                    # Implies self._interrupted is True
-                    clean_socket_close(ssdp_socket)
-                    return
-                elif ssdp_socket in read:
+                if ssdp_socket in read:
                     data, addr = ssdp_socket.recvfrom(1024)
                 else:
+                    # most likely the timeout, so check for interrupt
                     continue
             except socket.error as ex:
                 if self._interrupted:
                     clean_socket_close(ssdp_socket)
                     return
 
-                _LOGGER.error("UPNP Responder socket exception occured: %s",
+                _LOGGER.error("UPNP Responder socket exception occurred: %s",
                               ex.__str__)
+                # without the following continue, a second exception occurs
+                # because the data object has not been initialized
+                continue
 
-            if "M-SEARCH" in data.decode('utf-8'):
+            if "M-SEARCH" in data.decode('utf-8', errors='ignore'):
                 # SSDP M-SEARCH method received, respond to it with our info
                 resp_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
@@ -161,7 +148,6 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
         """Stop the server."""
         # Request for server
         self._interrupted = True
-        os.write(self._interrupted_write_pipe, bytes([0]))
         self.join()
 
 

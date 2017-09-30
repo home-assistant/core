@@ -15,7 +15,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 
 REQUIREMENTS = ['python-roku==3.1.3']
 
@@ -52,7 +51,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
 
-    persistent_notification = loader.get_component('persistent_notification')
     rokus = []
     for host in hosts:
         new_roku = RokuDevice(host)
@@ -66,8 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         except AttributeError:
             _LOGGER.error("Unable to initialize roku at %s", host)
-            persistent_notification.create(
-                hass, 'Error: Unable to initialize roku at {}<br />'
+            hass.components.persistent_notification.create(
+                'Error: Unable to initialize roku at {}<br />'
                 'Check its network connection or consider '
                 'using auto discovery.<br />'
                 'You will need to restart hass after fixing.'

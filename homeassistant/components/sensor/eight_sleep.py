@@ -197,10 +197,16 @@ class EightUserSensor(EightSleepUserEntity):
         sleep_time = sum(self._attr['breakdown'].values()) - \
             self._attr['breakdown']['awake']
         state_attr[ATTR_SLEEP_DUR] = sleep_time
-        state_attr[ATTR_LIGHT_PERC] = round((
-            self._attr['breakdown']['light'] / sleep_time) * 100, 2)
-        state_attr[ATTR_DEEP_PERC] = round((
-            self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
+        try:
+            state_attr[ATTR_LIGHT_PERC] = round((
+                self._attr['breakdown']['light'] / sleep_time) * 100, 2)
+        except ZeroDivisionError:
+            state_attr[ATTR_LIGHT_PERC] = 0
+        try:
+            state_attr[ATTR_DEEP_PERC] = round((
+                self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
+        except ZeroDivisionError:
+            state_attr[ATTR_DEEP_PERC] = 0
 
         if self._units == 'si':
             room_temp = round(self._attr['room_temp'], 2)

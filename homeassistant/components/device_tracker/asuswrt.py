@@ -8,9 +8,7 @@ import logging
 import re
 import socket
 import telnetlib
-import threading
 from collections import namedtuple
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,7 +16,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pexpect==4.0.1']
@@ -31,8 +28,6 @@ CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
 
 DEFAULT_SSH_PORT = 22
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -123,8 +118,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
                                                self.password,
                                                self.mode == "ap")
 
-        self.lock = threading.Lock()
-
         self.last_results = {}
 
         # Test the router is accessible.
@@ -145,7 +138,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 return client['host']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the ASUSWRT router is up to date.
 
@@ -154,19 +146,18 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info('Checking Devices')
-            data = self.get_asuswrt_data()
-            if not data:
-                return False
+        _LOGGER.info('Checking Devices')
+        data = self.get_asuswrt_data()
+        if not data:
+            return False
 
-            active_clients = [client for client in data.values() if
-                              client['status'] == 'REACHABLE' or
-                              client['status'] == 'DELAY' or
-                              client['status'] == 'STALE' or
-                              client['status'] == 'IN_ASSOCLIST']
-            self.last_results = active_clients
-            return True
+        active_clients = [client for client in data.values() if
+                          client['status'] == 'REACHABLE' or
+                          client['status'] == 'DELAY' or
+                          client['status'] == 'STALE' or
+                          client['status'] == 'IN_ASSOCLIST']
+        self.last_results = active_clients
+        return True
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""

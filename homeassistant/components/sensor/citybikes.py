@@ -82,9 +82,9 @@ NETWORKS_RESPONSE_SCHEMA = vol.Schema({
 
 STATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_FREE_BIKES): cv.positive_int,
-    vol.Required(ATTR_EMPTY_SLOTS): cv.positive_int,
+    vol.Required(ATTR_EMPTY_SLOTS): vol.Any(cv.positive_int, None),
     vol.Required(ATTR_LATITUDE): cv.latitude,
-    vol.Required(ATTR_LONGITUDE): cv.latitude,
+    vol.Required(ATTR_LONGITUDE): cv.longitude,
     vol.Required(ATTR_ID): cv.string,
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_TIMESTAMP): cv.string,
@@ -129,7 +129,7 @@ def async_citybikes_request(hass, uri, schema):
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the CityBikes platform."""
     if DOMAIN not in hass.data:
@@ -159,7 +159,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     yield from network.ready.wait()
 
-    entities = []
+    devices = []
     for station in network.stations:
         dist = location.distance(latitude, longitude,
                                  station[ATTR_LATITUDE],
@@ -169,9 +169,9 @@ def async_setup_platform(hass, config, async_add_entities,
 
         if radius > dist or stations_list.intersection((station_id,
                                                         station_uid)):
-            entities.append(CityBikesStation(network, station_id, name))
+            devices.append(CityBikesStation(network, station_id, name))
 
-    async_add_entities(entities, True)
+    async_add_devices(devices, True)
 
 
 class CityBikesNetwork:
