@@ -229,7 +229,7 @@ def setup(hass, config):
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
 
-    register_built_in_panel(hass, 'map', 'panel.map', 'mdi:account-location')
+    register_built_in_panel(hass, 'map', 'map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
                   'dev-template', 'dev-mqtt', 'kiosk'):

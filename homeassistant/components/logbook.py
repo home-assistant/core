@@ -101,7 +101,7 @@ def setup(hass, config):
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
     register_built_in_panel(
-        hass, 'logbook', 'panel.logbook', 'mdi:format-list-bulleted-type')
+        hass, 'logbook', 'logbook', 'mdi:format-list-bulleted-type')
 
     hass.services.register(
         DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
