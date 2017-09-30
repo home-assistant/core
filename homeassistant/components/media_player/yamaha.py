@@ -214,7 +214,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._volume = (self._receiver.volume / 100) + 1
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._call_playback_function(self._receiver.play, "play")
 
     def media_pause(self):

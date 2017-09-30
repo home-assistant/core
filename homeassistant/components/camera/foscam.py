@@ -59,7 +59,7 @@ class FoscamCam(Camera):
                                             self._password, verbose=False)
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed
         result, response = self._foscam_session.snap_picture_2()
