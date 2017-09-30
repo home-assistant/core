@@ -366,7 +366,8 @@ class MqttClimate(ClimateDevice):
 
         self.async_schedule_update_ha_state()
 
-    def set_swing_mode(self, swing_mode):
+    @asyncio.coroutine
+    def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
         if self._send_if_off or self._current_operation != STATE_OFF:
             mqtt.async_publish(
@@ -375,9 +376,10 @@ class MqttClimate(ClimateDevice):
 
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
             self._current_swing_mode = swing_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
+    @asyncio.coroutine
+    def async_set_fan_mode(self, fan):
         """Set new target temperature."""
         if self._send_if_off or self._current_operation != STATE_OFF:
             mqtt.async_publish(
@@ -386,7 +388,7 @@ class MqttClimate(ClimateDevice):
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._current_fan_mode = fan
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode) -> None:
@@ -422,52 +424,60 @@ class MqttClimate(ClimateDevice):
         """List of available swing modes."""
         return self._swing_list
 
-    def turn_away_mode_on(self):
+    @asyncio.coroutine
+    def async_turn_away_mode_on(self):
         """Turn away mode on."""
         if self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None:
-            mqtt.publish(self.hass, self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
-                         self._payload_on, self._qos, self._retain)
+            mqtt.async_publish(self.hass,
+                               self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
+                               self._payload_on, self._qos, self._retain)
 
         if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
             self._away = True
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def turn_away_mode_off(self):
+    @asyncio.coroutine
+    def async_turn_away_mode_off(self):
         """Turn away mode off."""
         if self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None:
-            mqtt.publish(self.hass, self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
-                         self._payload_off, self._qos, self._retain)
+            mqtt.async_publish(self.hass,
+                               self._topic[CONF_AWAY_MODE_COMMAND_TOPIC],
+                               self._payload_off, self._qos, self._retain)
 
         if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
             self._away = False
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def set_hold_mode(self, hold):
+    @asyncio.coroutine
+    def async_set_hold_mode(self, hold):
         """Update hold mode on."""
         if self._topic[CONF_HOLD_COMMAND_TOPIC] is not None:
-            mqtt.publish(self.hass, self._topic[CONF_HOLD_COMMAND_TOPIC],
-                         hold, self._qos, self._retain)
+            mqtt.async_publish(self.hass,
+                               self._topic[CONF_HOLD_COMMAND_TOPIC],
+                               hold, self._qos, self._retain)
 
         if self._topic[CONF_HOLD_STATE_TOPIC] is None:
             self._hold = hold
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def turn_aux_heat_on(self):
+    @asyncio.coroutine
+    def async_turn_aux_heat_on(self):
         """Turn auxillary heater on."""
         if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
-            mqtt.publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
-                         self._payload_on, self._qos, self._retain)
+            mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
+                               self._payload_on, self._qos, self._retain)
 
         if self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._aux = True
             self.async_schedule_update_ha_state()
 
-    def turn_aux_heat_off(self):
+    @asyncio.coroutine
+    def async_turn_aux_heat_off(self):
         """Turn auxillary heater off."""
         if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
-            mqtt.publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
-                         self._payload_off, self._qos, self._retain)
+            mqtt.async_publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
+                               self._payload_off, self._qos, self._retain)
 
         if self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._aux = False
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
