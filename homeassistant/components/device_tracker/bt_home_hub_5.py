@@ -19,7 +19,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
-_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
+_MAC_REGEX = re.compile(r'([0-9a-f]{2}\:){5}[0-9a-f]{2}')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
@@ -42,7 +42,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
         _LOGGER.info("Initialising BT Home Hub 5")
         self.host = config.get(CONF_HOST, '192.168.1.254')
         self.last_results = {}
-        self.url = 'http://{}/nonAuth/home_status.xml'.format(self.host)
+        self.url = 'http://{}/index.cgi?active_page=9098'.format(self.host)
 
         # Test the router is accessible
         data = _get_homehub_data(self.url)
@@ -89,7 +89,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 def _get_homehub_data(url):
     """Retrieve data from BT Home Hub 5 and return parsed result."""
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=8)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
         return
@@ -101,29 +101,39 @@ def _get_homehub_data(url):
 
 def _parse_homehub_response(data_str):
     """Parse the BT Home Hub 5 data format."""
-    root = ET.fromstring(data_str)
+    from bs4 import BeautifulSoup
 
-    dirty_json = root.find('known_device_list').get('value')
+    # Find the beginning of devices table (the header)
+    soup = BeautifulSoup(data_str, 'html.parser')
+    macaddr_header = soup.find(text='MAC Address')
+    if macaddr_header is None:
+        _LOGGER.error("Could not find 'MAC Address' header")
+        return
+    table_header_row = macaddr_header.parent.parent # -> th -> tr
+    if table_header_row.name != 'tr':
+        _LOGGER.error("Header row not in the expected place")
+        return
 
-    # Normalise the JavaScript data to JSON.
-    clean_json = unquote(dirty_json.replace('\'', '\"')
-                         .replace('{', '{\"')
-                         .replace(':\"', '\":\"')
-                         .replace('\",', '\",\"'))
+    # Identify columns of mac addr and device name. Device name is sadly
+    # truncated, but the untuncated one requires authentication to get to.
+    mac_address_col = None
+    device_name_col = None
+    for i, headercell in enumerate(table_header_row.children):
+        if headercell.find(text='MAC Address'): mac_address_col = i
+        elif headercell.find(text='Device'): device_name_col = i
+    if device_name_col is None or mac_address_col is None:
+        _LOGGER.error("Couldn't identify column nos of mac address and device name")
+        return
 
-    known_devices = [x for x in json.loads(clean_json) if x]
-
+    # Run through all the rows of the table, hunting for anything with a MAC
     devices = {}
-
-    for device in known_devices:
-        name = device.get('name')
-        mac = device.get('mac')
-
-        if _MAC_REGEX.match(mac) or ',' in mac:
-            for mac_addr in mac.split(','):
-                if _MAC_REGEX.match(mac_addr):
-                    devices[mac_addr] = name
-        else:
-            devices[mac] = name
+    tablerow = table_header_row
+    while tablerow.next_sibling is not None and 'bgcolor' in tablerow.next_sibling.attrs:
+        tablerow = tablerow.next_sibling
+        cells = list(tablerow.children)
+        mac_address = cells[mac_address_col].text
+        device_name = cells[device_name_col].text
+        if _MAC_REGEX.match(mac_address):
+            devices[mac_address] = device_name
 
     return devices
