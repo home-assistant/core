@@ -172,7 +172,7 @@ class MqttClimate(ClimateDevice):
             """Handle current temperature coming via MQTT."""
             try:
                 self._current_temperature = float(payload)
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
             except ValueError:
                 _LOGGER.error("Could not parse temperature from %s", payload)
 
@@ -188,7 +188,7 @@ class MqttClimate(ClimateDevice):
                 _LOGGER.error("Invalid mode: %s", payload)
             else:
                 self._current_operation = payload
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
 
         if self._topic[CONF_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -200,7 +200,7 @@ class MqttClimate(ClimateDevice):
             """Handle target temperature coming via MQTT."""
             try:
                 self._target_temperature = float(payload)
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
             except ValueError:
                 _LOGGER.error("Could not parse temperature from %s", payload)
 
@@ -216,7 +216,7 @@ class MqttClimate(ClimateDevice):
                 _LOGGER.error("Invalid fan mode: %s", payload)
             else:
                 self._current_fan_mode = payload
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -230,7 +230,7 @@ class MqttClimate(ClimateDevice):
                 _LOGGER.error("Invalid swing mode: %s", payload)
             else:
                 self._current_swing_mode = payload
-                self.hass.async_add_job(self.async_update_ha_state())
+                self.async_schedule_update_ha_state()
 
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -242,12 +242,12 @@ class MqttClimate(ClimateDevice):
             """Handle receiving away mode via MQTT."""
             if payload == self._payload_on:
                 self._away = True
-                self.hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._away = False
-                self.hass.async_add_job(self.async_update_ha_state())
             else:
                 _LOGGER.error("Invalid away mode: %s", payload)
+
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -259,12 +259,12 @@ class MqttClimate(ClimateDevice):
             """Handle receiving aux mode via MQTT."""
             if payload == self._payload_on:
                 self._aux = True
-                self.hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._aux = False
-                self.hass.async_add_job(self.async_update_ha_state())
             else:
                 _LOGGER.error("Invalid aux mode: %s", payload)
+
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_AUX_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -275,7 +275,7 @@ class MqttClimate(ClimateDevice):
         def handle_hold_mode_received(topic, payload, qos):
             """Handle receiving hold mode via MQTT."""
             self._hold = payload
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_HOLD_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -410,7 +410,7 @@ class MqttClimate(ClimateDevice):
 
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = operation_mode
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @property
     def current_swing_mode(self):
@@ -453,14 +453,14 @@ class MqttClimate(ClimateDevice):
             self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
-        """Turn away auxillary heater on."""
+        """Turn auxillary heater on."""
         if self._topic[CONF_AUX_COMMAND_TOPIC] is not None:
             mqtt.publish(self.hass, self._topic[CONF_AUX_COMMAND_TOPIC],
                          self._payload_on, self._qos, self._retain)
 
         if self._topic[CONF_AUX_STATE_TOPIC] is None:
             self._aux = True
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
