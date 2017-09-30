@@ -19,7 +19,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
@@ -253,6 +252,8 @@ class Plant(Entity):
         (ie self._brightness_updated == True). The result of the last check
         is cached in self._brightness_problem.
         """
+        from homeassistant.components.recorder.models import States
+
         if CONF_MIN_BRIGHTNESS not in self._config or \
                 not self._brightness_updated:
             # only run this if there is a minimum brightness level defined
@@ -265,9 +266,9 @@ class Plant(Entity):
         brightness_values = []
         with session_scope(hass=self.hass) as session:
             query = session.query(States).filter(
-                (States.entity_id == entity_id.lower())
-                and (States.last_updated > start_date)
-                and (States.last_updated <= end_date)
+                (States.entity_id == entity_id.lower()) and
+                (States.last_updated > start_date) and
+                (States.last_updated <= end_date)
             )
             states = execute(query)
 
