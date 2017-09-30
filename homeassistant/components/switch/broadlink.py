@@ -14,9 +14,11 @@ import socket
 import voluptuous as vol
 
 from homeassistant.util.dt import utcnow
+from homeassistant.util import Throttle
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_COMMAND_OFF, CONF_COMMAND_ON,
+    CONF_FRIENDLY_NAME, CONF_SWITCHES,
+    CONF_COMMAND_OFF, CONF_COMMAND_ON,
     CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
@@ -24,20 +26,24 @@ REQUIREMENTS = ['broadlink==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+
 DOMAIN = 'broadlink'
 DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
 SERVICE_LEARN = 'learn_command'
 SERVICE_SEND = 'send_packet'
+CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
             'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
             'rm2_pro_plus_bl', 'rm_mini_shate']
 SP1_TYPES = ['sp1']
 SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
+MP1_TYPES = ["mp1"]
 
-SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES
+SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
@@ -45,9 +51,17 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
+MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
+    vol.Optional('slot_1'): cv.string,
+    vol.Optional('slot_2'): cv.string,
+    vol.Optional('slot_3'): cv.string,
+    vol.Optional('slot_4'): cv.string
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SWITCHES, default={}):
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
@@ -59,7 +73,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Broadlink switches."""
     import broadlink
-    devices = config.get(CONF_SWITCHES, {})
+    devices = config.get(CONF_SWITCHES)
+    slots = config.get('slots', {})
     ip_addr = config.get(CONF_HOST)
     friendly_name = config.get(CONF_FRIENDLY_NAME)
     mac_addr = binascii.unhexlify(
@@ -114,6 +129,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         if retry == DEFAULT_RETRY-1:
                             _LOGGER.error("Failed to send packet to device")
 
+    def _get_mp1_slot_name(switch_friendly_name, slot):
+        if not slots['slot_{}'.format(slot)]:
+            return '{} slot {}'.format(switch_friendly_name, slot)
+        return slots['slot_{}'.format(slot)]
+
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
@@ -136,6 +156,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
+    elif switch_type in MP1_TYPES:
+        switches = []
+        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
+        parent_device = BroadlinkMP1Switch(broadlink_device)
+        for i in range(1, 5):
+            slot = BroadlinkMP1Slot(
+                _get_mp1_slot_name(friendly_name, i),
+                broadlink_device, i, parent_device)
+            switches.append(slot)
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -268,3 +297,84 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         if state is None and retry > 0:
             return self._update(retry-1)
         self._state = state
+
+
+class BroadlinkMP1Slot(BroadlinkRMSwitch):
+    """Representation of a slot of Broadlink switch."""
+
+    def __init__(self, friendly_name, device, slot, parent_device):
+        """Initialize the slot of switch."""
+        super().__init__(friendly_name, device, None, None)
+        self._command_on = 1
+        self._command_off = 0
+        self._slot = slot
+        self._parent_device = parent_device
+
+    @property
+    def assumed_state(self):
+        """Return true if unable to access real state of entity."""
+        return False
+
+    def _sendpacket(self, packet, retry=2):
+        """Send packet to device."""
+        try:
+            self._device.set_power(self._slot, packet)
+        except (socket.timeout, ValueError) as error:
+            if retry < 1:
+                _LOGGER.error(error)
+                return False
+            if not self._auth():
+                return False
+            return self._sendpacket(packet, max(0, retry-1))
+        return True
+
+    @property
+    def should_poll(self):
+        """Polling needed."""
+        return True
+
+    def update(self):
+        """Trigger update for all switches on the parent device."""
+        self._parent_device.update()
+        self._state = self._parent_device.get_outlet_status(self._slot)
+
+
+class BroadlinkMP1Switch(object):
+    """Representation of a Broadlink switch - To fetch states of all slots."""
+
+    def __init__(self, device):
+        """Initialize the switch."""
+        self._device = device
+        self._states = None
+
+    def get_outlet_status(self, slot):
+        """Get status of outlet from cached status list."""
+        return self._states['s{}'.format(slot)]
+
+    @Throttle(TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Fetch new state data for this device."""
+        self._update()
+
+    def _update(self, retry=2):
+        try:
+            states = self._device.check_power()
+        except (socket.timeout, ValueError) as error:
+            if retry < 1:
+                _LOGGER.error(error)
+                return
+            if not self._auth():
+                return
+            return self._update(max(0, retry-1))
+        if states is None and retry > 0:
+            return self._update(max(0, retry-1))
+        self._states = states
+
+    def _auth(self, retry=2):
+        try:
+            auth = self._device.auth()
+        except socket.timeout:
+            auth = False
+        if not auth and retry > 0:
+            return self._auth(retry-1)
+        return auth

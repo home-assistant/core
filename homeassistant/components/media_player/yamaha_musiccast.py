@@ -33,7 +33,9 @@ SUPPORTED_FEATURES = (
     SUPPORT_SELECT_SOURCE
 )
 
-REQUIREMENTS = ['pymusiccast==0.1.0']
+KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
+
+REQUIREMENTS = ['pymusiccast==0.1.2']
 
 DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
@@ -47,16 +49,48 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yamaha MusicCast platform."""
+    import socket
     import pymusiccast
+
+    known_hosts = hass.data.get(KNOWN_HOSTS_KEY)
+    if known_hosts is None:
+        known_hosts = hass.data[KNOWN_HOSTS_KEY] = []
+    _LOGGER.debug("known_hosts: %s", known_hosts)
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    receiver = pymusiccast.McDevice(host, udp_port=port)
-    _LOGGER.debug("receiver: %s / Port: %d", receiver, port)
+    # Get IP of host to prevent duplicates
+    try:
+        ipaddr = socket.gethostbyname(host)
+    except (OSError) as error:
+        _LOGGER.error(
+            "Could not communicate with %s:%d: %s", host, port, error)
+        return
 
-    add_devices([YamahaDevice(receiver, name)], True)
+    if [item for item in known_hosts if item[0] == ipaddr]:
+        _LOGGER.warning("Host %s:%d already registered.", host, port)
+        return
+
+    if [item for item in known_hosts if item[1] == port]:
+        _LOGGER.warning("Port %s:%d already registered.", host, port)
+        return
+
+    reg_host = (ipaddr, port)
+    known_hosts.append(reg_host)
+
+    try:
+        receiver = pymusiccast.McDevice(ipaddr, udp_port=port)
+    except pymusiccast.exceptions.YMCInitError as err:
+        _LOGGER.error(err)
+        receiver = None
+
+    if receiver:
+        _LOGGER.debug("receiver: %s / Port: %d", receiver, port)
+        add_devices([YamahaDevice(receiver, name)], True)
+    else:
+        known_hosts.remove(reg_host)
 
 
 class YamahaDevice(MediaPlayerDevice):
