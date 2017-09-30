@@ -7,20 +7,17 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.setup import setup_component
 from homeassistant.components import climate
-from homeassistant.const import (STATE_OFF, ATTR_UNIT_OF_MEASUREMENT,
-                                 TEMP_CELSIUS)
+from homeassistant.const import STATE_OFF
 
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           fire_mqtt_message, mock_component)
 
 ENTITY_CLIMATE = 'climate.test'
-ENT_SENSOR = 'sensor.test'
 
 DEFAULT_CONFIG = {
     'climate': {
         'platform': 'mqtt',
         'name': 'test',
-        'target_sensor': ENT_SENSOR,
         'mode_command_topic': 'mode-topic',
         'temperature_command_topic': 'temperature-topic',
         'fan_mode_command_topic': 'fan-mode-topic',
@@ -264,28 +261,10 @@ class TestMQTTClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(1701, state.attributes.get('temperature'))
 
-    def test_sensor_changed(self):
-        """Test getting the temperature from a changing sensor."""
-        self.hass.states.set(ENT_SENSOR, 0,
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.block_till_done()
-
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
-
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(0, state.attributes.get('current_temperature'))
-
-        self.hass.states.set(ENT_SENSOR, 42,
-                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual(42, state.attributes.get('current_temperature'))
-
     def test_receive_mqtt_temperature(self):
         """Test getting the current temperature via MQTT."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['current_temperature_topic'] = 'current_temperature'
-        del config['climate']['target_sensor']
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, climate.DOMAIN, config)
 

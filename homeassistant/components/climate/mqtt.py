@@ -17,21 +17,18 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-    CONF_NAME)
+    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import (async_track_state_change)
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt', 'sensor']
+DEPENDENCIES = ['mqtt']
 
 DEFAULT_NAME = 'MQTT HVAC'
 
-CONF_SENSOR = 'target_sensor'
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'
 CONF_MODE_COMMAND_TOPIC = 'mode_command_topic'
@@ -60,43 +57,39 @@ CONF_SWING_MODE_LIST = 'swing_modes'
 CONF_INITIAL = 'initial'
 CONF_SEND_IF_OFF = 'send_if_off'
 
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_CURRENT_TEMPERATURE_TOPIC, CONF_SENSOR),
-    CLIMATE_PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
-            mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_FAN_MODE_LIST,
-                     default=[STATE_AUTO, SPEED_LOW,
-                              SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
-        vol.Optional(CONF_SWING_MODE_LIST,
-                     default=[STATE_ON, STATE_OFF]): cv.ensure_list,
-        vol.Optional(CONF_MODE_LIST,
-                     default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
-                              STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
-        vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-    })
-)
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
+        mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_FAN_MODE_LIST,
+                 default=[STATE_AUTO, SPEED_LOW,
+                          SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
+    vol.Optional(CONF_SWING_MODE_LIST,
+                 default=[STATE_ON, STATE_OFF]): cv.ensure_list,
+    vol.Optional(CONF_MODE_LIST,
+                 default=[STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT,
+                          STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
+    vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+    vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+})
 
 
 @asyncio.coroutine
@@ -106,7 +99,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         MqttClimate(
             hass,
             config.get(CONF_NAME),
-            config.get(CONF_SENSOR),
             {
                 key: config.get(key) for key in (
                     CONF_POWER_COMMAND_TOPIC,
@@ -145,11 +137,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
-    def __init__(self, hass, name, sensor_entity_id, topic, qos, retain,
-                 mode_list, fan_mode_list, swing_mode_list,
-                 target_temperature, away, hold, current_fan_mode,
-                 current_swing_mode, current_operation, aux, send_if_off,
-                 payload_on, payload_off):
+    def __init__(self, hass, name, topic, qos, retain, mode_list,
+                 fan_mode_list, swing_mode_list, target_temperature, away,
+                 hold, current_fan_mode, current_swing_mode,
+                 current_operation, aux, send_if_off, payload_on,
+                 payload_off):
         """Initialize the climate device."""
         self.hass = hass
         self._name = name
@@ -170,25 +162,11 @@ class MqttClimate(ClimateDevice):
         self._swing_list = swing_mode_list
         self._target_temperature_step = 1
         self._send_if_off = send_if_off
-        self._sensor_entity_id = sensor_entity_id
         self._payload_on = payload_on
         self._payload_off = payload_off
 
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
-        @callback
-        def handle_sensor_changed(entity_id, old_state, new_state):
-            """Handle temperature changes."""
-            if new_state is None:
-                return
-
-            self.update_current_temperature(new_state)
-            self.hass.async_add_job(self.async_update_ha_state())
-
-        if self._sensor_entity_id is not None:
-            async_track_state_change(
-                self.hass, self._sensor_entity_id, handle_sensor_changed)
-
         @callback
         def handle_current_temp_received(topic, payload, qos):
             """Handle current temperature coming via MQTT."""
@@ -303,21 +281,6 @@ class MqttClimate(ClimateDevice):
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_HOLD_STATE_TOPIC],
                 handle_hold_mode_received, self._qos)
-
-        sensor_state = self.hass.states.get(self._sensor_entity_id)
-        if sensor_state:
-            self.update_current_temperature(sensor_state)
-            self.hass.async_add_job(self.async_update_ha_state())
-
-    def update_current_temperature(self, state):
-        """Update thermostat with latest state from sensor."""
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-        try:
-            self._current_temperature = self.hass.config.units.temperature(
-                float(state.state), unit)
-        except ValueError as ex:
-            _LOGGER.error('Unable to update from sensor: %s', ex)
 
     @property
     def should_poll(self):
