@@ -865,7 +865,7 @@ radiotherm==1.3
 raincloudy==0.0.1
 
 # homeassistant.components.raspihats
-raspihats==2.2.3
+# raspihats==2.2.3smbus-cffi==0.5.1
 
 # homeassistant.components.switch.rainmachine
 regenmaschine==0.4.1
