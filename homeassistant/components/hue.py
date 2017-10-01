@@ -6,12 +6,8 @@ https://home-assistant.io/components/hue/
 """
 import json
 import logging
-from datetime import timedelta
-
-import requests
 
 from homeassistant.const import (CONF_FILENAME)
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 PHUE_CONFIG_FILE = 'phue.conf'
