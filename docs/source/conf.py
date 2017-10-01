@@ -117,7 +117,6 @@ def linkcode_resolve(domain, info):
         linespec = "#L%d" % (lineno + 1)
     else:
         linespec = ""
-    
     index = fn.find("/homeassistant/")
     if index == -1:
         index = 0
