@@ -159,7 +159,7 @@ class TravisCISensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating sensor %s - %s", self._name, self._state)
+        _LOGGER.debug("Updating sensor %s", self._name)
 
         repo = self._data.repo(self._repo_name)
         self._build = self._data.build(repo.last_build_id)
