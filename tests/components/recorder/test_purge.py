@@ -17,7 +17,7 @@ class TestRecorderPurge(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        config = {'purge_days': 4}
+        config = {'purge_keep_days': 4, 'purge_interval': 2}
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass, config)
         self.hass.start()
@@ -112,6 +112,7 @@ class TestRecorderPurge(unittest.TestCase):
 
     def test_purge_method(self):
         """Test purge method."""
+        service_data = {'keep_days': 4}
         self._add_test_states()
         self._add_test_events()
 
@@ -126,12 +127,26 @@ class TestRecorderPurge(unittest.TestCase):
 
             self.hass.data[DATA_INSTANCE].block_till_done()
 
-            # run purge method
+            # run purge method - no service data, should not work
             self.hass.services.call('recorder', 'purge')
             self.hass.async_block_till_done()
 
             # Small wait for recorder thread
-            sleep(0.5)
+            sleep(0.1)
+
+            # we should only have 2 states left after purging
+            self.assertEqual(states.count(), 5)
+
+            # now we should only have 3 events left
+            self.assertEqual(events.count(), 5)
+
+            # run purge method - correct service data
+            self.hass.services.call('recorder', 'purge',
+                                    service_data=service_data)
+            self.hass.async_block_till_done()
+
+            # Small wait for recorder thread
+            sleep(0.1)
 
             # we should only have 2 states left after purging
             self.assertEqual(states.count(), 2)
