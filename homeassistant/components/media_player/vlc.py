@@ -137,7 +137,7 @@ class VlcDevice(MediaPlayerDevice):
         self._volume = volume
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._vlc.play()
         self._state = STATE_PLAYING
 

@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if DATA_KNX not in hass.data \
@@ -58,25 +58,25 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
-        async_add_devices_config(hass, config, add_devices)
+        async_add_devices_config(hass, config, async_add_devices)
 
     return True
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, add_devices):
+def async_add_devices_discovery(hass, discovery_info, async_add_devices):
     """Set up covers for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXCover(hass, device))
-    add_devices(entities)
+    async_add_devices(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, add_devices):
+def async_add_devices_config(hass, config, async_add_devices):
     """Set up cover for KNX platform configured within plattform."""
     import xknx
     cover = xknx.devices.Cover(
@@ -90,23 +90,20 @@ def async_add_devices_config(hass, config, add_devices):
         group_address_angle_state=config.get(CONF_ANGLE_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
         travel_time_down=config.get(CONF_TRAVELLING_TIME_DOWN),
-        travel_time_up=config.get(CONF_TRAVELLING_TIME_UP))
+        travel_time_up=config.get(CONF_TRAVELLING_TIME_UP),
+        invert_position=config.get(CONF_INVERT_POSITION),
+        invert_angle=config.get(CONF_INVERT_ANGLE))
 
-    invert_position = config.get(CONF_INVERT_POSITION)
-    invert_angle = config.get(CONF_INVERT_ANGLE)
     hass.data[DATA_KNX].xknx.devices.add(cover)
-    add_devices([KNXCover(hass, cover, invert_position, invert_angle)])
+    async_add_devices([KNXCover(hass, cover)])
 
 
 class KNXCover(CoverDevice):
     """Representation of a KNX cover."""
 
-    def __init__(self, hass, device, invert_position=False,
-                 invert_angle=False):
+    def __init__(self, hass, device):
         """Initialize the cover."""
         self.device = device
-        self.invert_position = invert_position
-        self.invert_angle = invert_angle
         self.hass = hass
         self.async_register_callbacks()
 
@@ -144,9 +141,7 @@ class KNXCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return int(self.from_knx_position(
-            self.device.current_position(),
-            self.invert_position))
+        return self.device.current_position()
 
     @property
     def is_closed(self):
@@ -172,8 +167,7 @@ class KNXCover(CoverDevice):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            knx_position = self.to_knx_position(position, self.invert_position)
-            yield from self.device.set_position(knx_position)
+            yield from self.device.set_position(position)
             self.start_auto_updater()
 
     @asyncio.coroutine
@@ -187,17 +181,14 @@ class KNXCover(CoverDevice):
         """Return current tilt position of cover."""
         if not self.device.supports_angle:
             return None
-        return int(self.from_knx_position(
-            self.device.angle,
-            self.invert_angle))
+        return self.device.current_angle()
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         if ATTR_TILT_POSITION in kwargs:
-            position = kwargs[ATTR_TILT_POSITION]
-            knx_position = self.to_knx_position(position, self.invert_angle)
-            yield from self.device.set_angle(knx_position)
+            tilt_position = kwargs[ATTR_TILT_POSITION]
+            yield from self.device.set_angle(tilt_position)
 
     def start_auto_updater(self):
         """Start the autoupdater to update HASS while cover is moving."""
@@ -220,20 +211,3 @@ class KNXCover(CoverDevice):
             self.stop_auto_updater()
 
         self.hass.add_job(self.device.auto_stop_if_necessary())
-
-    @staticmethod
-    def from_knx_position(raw, invert):
-        """Convert KNX position [0...255] to hass position [100...0]."""
-        position = round((raw/256)*100)
-        if not invert:
-            position = 100 - position
-        return position
-
-    @staticmethod
-    def to_knx_position(value, invert):
-        """Convert hass position [100...0] to KNX position [0...255]."""
-        knx_position = round(value/100*255.4)
-        if not invert:
-            knx_position = 255-knx_position
-        print(value, " -> ", knx_position)
-        return knx_position

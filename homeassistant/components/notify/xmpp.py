@@ -15,8 +15,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT
 
 REQUIREMENTS = ['sleekxmpp==1.3.2',
                 'dnspython3==1.15.0',
-                'pyasn1==0.3.3',
-                'pyasn1-modules==0.1.1']
+                'pyasn1==0.3.6',
+                'pyasn1-modules==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
