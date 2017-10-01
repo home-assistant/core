@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation.
 
 """
 import struct
+import time
 import logging
 import ctypes
 from collections import namedtuple
@@ -83,10 +84,21 @@ class AdsHub:
     def add_device_notification(self, name, plc_datatype, callback):
         """ Add a notification to the ADS devices. """
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
-        hnotify, huser = self._client.add_device_notification(
-            name, attr, self._device_notification_callback
-        )
-        hnotify = int(hnotify)
+
+        notification_sent = False
+        while not notification_sent:
+            try:
+                hnotify, huser = self._client.add_device_notification(
+                    name, attr, self._device_notification_callback
+                )
+                hnotify = int(hnotify)
+            except pyads.pyads.ADSError:
+                _LOGGER.debug('Could not add notification for "{0}". Retrying.'
+                              .format(name))
+                time.sleep(0.1)
+                continue
+            notification_sent = True
+
 
         _LOGGER.debug('Added Device Notification {0}'.format(hnotify))
 
