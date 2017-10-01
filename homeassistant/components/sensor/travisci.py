@@ -108,7 +108,6 @@ class TravisCISensor(Entity):
 
     def __init__(self, data, repo_name, user, default_branch, sensor_type):
         """Initialize the sensor."""
-        self._repo = None
         self._build = None
         self._sensor_type = sensor_type
         self._data = data
@@ -162,13 +161,15 @@ class TravisCISensor(Entity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor %s - %s", self._name, self._state)
 
-        self._repo = self._data.repo(self._repo_name)
-        self._build = self._data.build(self._repo.last_build_id)
+        repo = self._data.repo(self._repo_name)
+        self._build = self._data.build(repo.last_build_id)
 
-        if self._repo:
+        if self._build:
             if self._sensor_type == 'state':
                 branch_stats = \
                     self._data.branch(self._default_branch, self._repo_name)
                 self._state = branch_stats.state
+
             else:
-                self._state = getattr(self._repo, self._sensor_type)
+                param = self._sensor_type.replace('last_build_', '')
+                self._state = getattr(self._build, param)
