@@ -27,6 +27,7 @@ SENSOR_TYPES = {
     'last_capture': ['Last', None, 'run-fast'],
     'total_cameras': ['Arlo Cameras', None, 'video'],
     'captured_today': ['Captured Today', None, 'file-video'],
+    'battery_level': ['Battery Level', '%', 'battery-50']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -111,6 +112,12 @@ class ArloSensor(Entity):
             except (AttributeError, IndexError):
                 self._state = STATE_UNKNOWN
 
+        elif self._sensor_type == 'battery_level':
+            try:
+                self._state = self._data.get_battery_level
+            except (TypeError):
+                self._state = STATE_UNKNOWN
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -120,7 +127,8 @@ class ArloSensor(Entity):
         attrs['brand'] = DEFAULT_BRAND
 
         if self._sensor_type == 'last_capture' or \
-           self._sensor_type == 'captured_today':
+           self._sensor_type == 'captured_today' or \
+           self._sensor_type == 'battery_level':
             attrs['model'] = self._data.model_id
 
         return attrs
