@@ -33,8 +33,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
     'last_build_id': ['Last Build ID', '', 'mdi:account-card-details'],
-    'last_build_finished_at': ['Last Build Finished At', '', 'mdi:timetable'],
     'last_build_duration': ['Last Build Duration', 'sec', 'mdi:timelapse'],
+    'last_build_finished_at': ['Last Build Finished At', '', 'mdi:timetable'],
+    'last_build_started_at': ['Last Build Started At', '', 'mdi:timetable'],
     'last_build_state': ['Last Build State', '', 'mdi:github-circle'],
     'state': ['State', '', 'mdi:github-circle'],
 
@@ -160,22 +161,14 @@ class TravisCISensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor %s - %s", self._name, self._state)
+
         self._repo = self._data.repo(self._repo_name)
         self._build = self._data.build(self._repo.last_build_id)
+
         if self._repo:
-            if self._sensor_type == 'last_build_id':
-                self._state = self._repo.last_build_id
-
-            elif self._sensor_type == 'last_build_state':
-                self._state = self._repo.last_build_state
-
-            elif self._sensor_type == 'last_build_finished_at':
-                self._state = self._repo.last_build_finished_at
-
-            elif self._sensor_type == 'last_build_duration':
-                self._state = self._repo.last_build_duration
-
-            elif self._sensor_type == 'state':
+            if self._sensor_type == 'state':
                 branch_stats = \
                     self._data.branch(self._default_branch, self._repo_name)
                 self._state = branch_stats.state
+            else:
+                self._state = getattr(self._repo, self._sensor_type)
