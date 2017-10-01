@@ -1,15 +1,15 @@
-"""The tests for the hue_sensors platform."""
+"""The tests for the hue sensors platform."""
 
 import requests_mock
 import unittest
 
-from homeassistant.components.sensor.hue_sensors import (
+from homeassistant.components.sensor.hue import (
     HueSensorData, HueSensor)
 from tests.common import load_fixture, get_test_home_assistant
 
 
 class TestHueSensor(unittest.TestCase):
-    """Test the uk_transport platform."""
+    """Test the Hue sensors platform."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
