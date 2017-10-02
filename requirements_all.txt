@@ -181,7 +181,7 @@ denonavr==0.5.3
 directpy==0.1
 
 # homeassistant.components.notify.discord
-discord.py==0.16.11
+discord.py==0.16.12
 
 # homeassistant.components.updater
 distro==1.0.4
