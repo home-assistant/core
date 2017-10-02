@@ -52,6 +52,9 @@ omit =
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
+	
+	homeassistant/components/doorbird.py
+	homeassistant/components/*/doorbird.py
 
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
@@ -157,6 +160,9 @@ omit =
 
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
+
+    homeassistant/components/satel_integra.py
+    homeassistant/components/*/satel_integra.py
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
@@ -542,6 +548,7 @@ omit =
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/worldtidesinfo.py
+    homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
@@ -567,6 +574,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/tplink.py
+    homeassistant/components/switch/telnet.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/telegram_bot/*
