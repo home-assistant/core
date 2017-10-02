@@ -24,7 +24,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
-    'google-api-python-client==1.6.2',
+    'google-api-python-client==1.6.4',
     'oauth2client==4.0.0',
 ]
 
