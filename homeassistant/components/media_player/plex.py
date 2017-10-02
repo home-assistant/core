@@ -351,10 +351,8 @@ class PlexClient(MediaPlayerDevice):
 
         if session:  # Not being triggered by Chrome or FireTablet Plex App
             self._session = session
-            print("Session".format(session))
         if device:
             self._device = device
-            print("Device".format(device))
             self._session = None
 
         if self._device:
