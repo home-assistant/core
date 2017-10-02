@@ -302,7 +302,7 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices = update_devices
         self.update_sessions = update_sessions
 
-        self._clearMedia()
+        self._clear_media()
 
         self.refresh(device, session)
 
@@ -324,7 +324,7 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
-    def _clearMedia(self):
+    def _clear_media(self):
         """Set all Media Items to None."""
         # General
         self._media_content_id = None
@@ -347,7 +347,7 @@ class PlexClient(MediaPlayerDevice):
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
-        self._clearMedia()
+        self._clear_media()
 
         if session:  # Not being triggered by Chrome or FireTablet Plex App
             self._session = session
@@ -494,8 +494,6 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self._get_thumbnail_url(self._session.art)
 
             self._media_image_url = thumb_url
-        else:
-            self._media_image_url = None
 
     def _get_thumbnail_url(self, property_value):
         """Return full URL (if exists) for a thumbnail property."""
@@ -514,6 +512,7 @@ class PlexClient(MediaPlayerDevice):
         """Force client to idle."""
         self._state = STATE_IDLE
         self._session = None
+        self._clear_media()
 
     @property
     def unique_id(self):
