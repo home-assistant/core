@@ -276,7 +276,7 @@ gntp==1.0.3
 google-api-python-client==1.6.2
 
 # homeassistant.components.sensor.google_travel_time
-googlemaps==2.4.6
+googlemaps==2.5.1
 
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
