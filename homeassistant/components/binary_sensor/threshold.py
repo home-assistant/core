@@ -132,16 +132,6 @@ class ThresholdSensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data and updates the states."""
-        # Change the sensor state if we have exceeded the set point or dropped
-        # below the reset point.
-
-        # By using is_upper for the state we automatically handle both upper
-        # and lower threshold types.
-
-        # If the sensor is configured with no hysteresis and the sensor value
-        # is equal to the threshold, we explicitly turn the sensor off since it
-        # is not 'lower' or 'upper' w.r.t. the threshold
-
         if self._hysteresis == 0 and self.sensor_value == self._threshold:
             self._state = False
         elif self.sensor_value > (self._threshold + self._hysteresis):
