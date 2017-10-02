@@ -180,3 +180,61 @@ for i in [1, 2]:
 
     assert hass.states.is_state('hello.1', 'world')
     assert hass.states.is_state('hello.2', 'world')
+
+
+@asyncio.coroutine
+def test_unpacking_sequence(hass, caplog):
+    """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
+    source = """
+a,b = (1,2)
+ab_list = [(a,b) for a,b in [(1, 2), (3, 4)]]
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.ab_list', '{}'.format(ab_list))
+"""
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.a', '1')
+    assert hass.states.is_state('hello.b', '2')
+    assert hass.states.is_state('hello.ab_list', '[(1, 2), (3, 4)]')
+
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
+def test_reload(hass):
+    """Test we can re-discover scripts."""
+    scripts = [
+        '/some/config/dir/python_scripts/hello.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        res = yield from async_setup_component(hass, 'python_script', {})
+
+    assert res
+    assert hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')
+
+    scripts = [
+        '/some/config/dir/python_scripts/hello2.py',
+        '/some/config/dir/python_scripts/world_beer.py'
+    ]
+    with patch('homeassistant.components.python_script.os.path.isdir',
+               return_value=True), \
+            patch('homeassistant.components.python_script.glob.iglob',
+                  return_value=scripts):
+        yield from hass.services.async_call(
+            'python_script', 'reload', {}, blocking=True)
+
+    assert not hass.services.has_service('python_script', 'hello')
+    assert hass.services.has_service('python_script', 'hello2')
+    assert hass.services.has_service('python_script', 'world_beer')
+    assert hass.services.has_service('python_script', 'reload')

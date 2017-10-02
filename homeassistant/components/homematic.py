@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyhomematic==0.1.30']
+REQUIREMENTS = ['pyhomematic==0.1.32']
 
 DOMAIN = 'homematic'
 
@@ -65,7 +65,8 @@ HM_DEVICE_TYPES = {
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
-        'FillingLevel', 'ValveDrive', 'EcoLogic'],
+        'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
+        'IPSmoke'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall'],
