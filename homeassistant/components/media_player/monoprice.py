@@ -19,8 +19,8 @@ REQUIREMENTS = ['pymonoprice==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_MONOPRICE = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
-                    SUPPORT_VOLUME_STEP |SUPPORT_TURN_ON |\
+SUPPORT_MONOPRICE = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+                    SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
                     SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 ZONE_SCHEMA = vol.Schema({
@@ -60,7 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone {} - {}".format(zone_id, extra[CONF_NAME]))
-        add_devices([MonopriceZone(monoprice, sources, zone_id, extra[CONF_NAME])], True)
+        add_devices([MonopriceZone(monoprice, sources,
+                                   zone_id, extra[CONF_NAME])], True)
     return True
 
 
@@ -172,4 +173,3 @@ class MonopriceZone(MediaPlayerDevice):
             return
         self._monoprice.set_volume(self._zone_id,
                                    max(self._volume - 1, 0))
-
