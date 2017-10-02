@@ -99,8 +99,8 @@ class AdsHub:
                 continue
             notification_sent = True
 
-
-        _LOGGER.debug('Added Device Notification {0}'.format(hnotify))
+        _LOGGER.debug('Added Device Notification {0} for variable {1}'
+                      .format(hnotify, name))
 
         self._notification_items[hnotify] = NotificationItem(
             hnotify, huser, name, plc_datatype, callback
@@ -123,6 +123,8 @@ class AdsHub:
         # parse data to desired datatype
         if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
             value = bool(struct.unpack('<?', bytearray(data)[:1])[0])
+        elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
+            value = struct.unpack('<h', bytearray(data)[:2])[0]
         else:
             _LOGGER.warning('No callback available for this datatype.')
 
