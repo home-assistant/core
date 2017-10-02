@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                in config[CONF_SOURCES].items()}
 
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone {} - {}".format(zone_id, extra[CONF_NAME]))
+        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         add_devices([MonopriceZone(monoprice, sources,
                                    zone_id, extra[CONF_NAME])], True)
     return True
@@ -110,12 +110,12 @@ class MonopriceZone(MediaPlayerDevice):
 
     @property
     def name(self):
-        """Returns the name of the zone."""
+        """Return the name of the zone."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the zone."""
+        """Return the state of the zone."""
         return self._state
 
     @property
@@ -132,7 +132,7 @@ class MonopriceZone(MediaPlayerDevice):
 
     @property
     def supported_features(self):
-        """Flags of media commands that are supported."""
+        """Return flag of media commands that are supported."""
         return SUPPORT_MONOPRICE
 
     @property
@@ -153,11 +153,11 @@ class MonopriceZone(MediaPlayerDevice):
         self._monoprice.set_source(self._zone_id, idx)
 
     def turn_on(self):
-        """turn the media player on."""
+        """Turn the media player on."""
         self._monoprice.set_power(self._zone_id, True)
 
     def turn_off(self):
-        """turn_off media player."""
+        """Turn the media player off."""
         self._monoprice.set_power(self._zone_id, False)
 
     def mute_volume(self, mute):
