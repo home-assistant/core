@@ -11,19 +11,18 @@ from homeassistant.components.cloud import DOMAIN, auth_api
 @pytest.fixture
 def cloud_client(hass, test_client):
     """Fixture that can fetch from the cloud client."""
-    hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
-        'cloud': {
-            'mode': 'development'
-        }
-    }))
+    with patch('homeassistant.components.cloud.Cloud.initialize'):
+        hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
+            'cloud': {
+                'mode': 'development',
+                'cognito_client_id': 'cognito_client_id',
+                'user_pool_id': 'user_pool_id',
+                'region': 'region',
+                'api_base': 'api_base',
+                'iot_endpoint': 'iot_endpoint',
+            }
+        }))
     return hass.loop.run_until_complete(test_client(hass.http.app))
-
-
-@pytest.fixture
-def mock_auth(cloud_client, hass):
-    """Fixture to mock authentication."""
-    auth = hass.data[DOMAIN]['auth'] = MagicMock()
-    return auth
 
 
 @pytest.fixture
@@ -41,9 +40,9 @@ def test_account_view_no_account(cloud_client):
 
 
 @asyncio.coroutine
-def test_account_view(mock_auth, cloud_client):
+def test_account_view(hass, cloud_client):
     """Test fetching account if no account available."""
-    mock_auth.account = MagicMock(email='hello@home-assistant.io')
+    hass.data[DOMAIN].email = 'hello@home-assistant.io'
     req = yield from cloud_client.get('/api/cloud/account')
     assert req.status == 200
     result = yield from req.json()
@@ -51,49 +50,56 @@ def test_account_view(mock_auth, cloud_client):
 
 
 @asyncio.coroutine
-def test_login_view(mock_auth, cloud_client):
+def test_login_view(hass, cloud_client):
     """Test logging in."""
-    mock_auth.account = MagicMock(email='hello@home-assistant.io')
-    req = yield from cloud_client.post('/api/cloud/login', json={
-        'email': 'my_username',
-        'password': 'my_password'
-    })
+    hass.data[DOMAIN].email = 'hello@home-assistant.io'
+
+    with patch('homeassistant.components.cloud.iot.CloudIoT.connect'), \
+            patch('homeassistant.components.cloud.'
+                  'auth_api.login') as mock_login:
+        req = yield from cloud_client.post('/api/cloud/login', json={
+            'email': 'my_username',
+            'password': 'my_password'
+        })
 
     assert req.status == 200
     result = yield from req.json()
     assert result == {'email': 'hello@home-assistant.io'}
-    assert len(mock_auth.login.mock_calls) == 1
-    result_user, result_pass = mock_auth.login.mock_calls[0][1]
+    assert len(mock_login.mock_calls) == 1
+    cloud, result_user, result_pass = mock_login.mock_calls[0][1]
     assert result_user == 'my_username'
     assert result_pass == 'my_password'
 
 
 @asyncio.coroutine
-def test_login_view_invalid_json(mock_auth, cloud_client):
+def test_login_view_invalid_json(cloud_client):
     """Try logging in with invalid JSON."""
-    req = yield from cloud_client.post('/api/cloud/login', data='Not JSON')
+    with patch('homeassistant.components.cloud.auth_api.login') as mock_login:
+        req = yield from cloud_client.post('/api/cloud/login', data='Not JSON')
     assert req.status == 400
-    assert len(mock_auth.mock_calls) == 0
+    assert len(mock_login.mock_calls) == 0
 
 
 @asyncio.coroutine
-def test_login_view_invalid_schema(mock_auth, cloud_client):
+def test_login_view_invalid_schema(cloud_client):
     """Try logging in with invalid schema."""
-    req = yield from cloud_client.post('/api/cloud/login', json={
-        'invalid': 'schema'
-    })
+    with patch('homeassistant.components.cloud.auth_api.login') as mock_login:
+        req = yield from cloud_client.post('/api/cloud/login', json={
+            'invalid': 'schema'
+        })
     assert req.status == 400
-    assert len(mock_auth.mock_calls) == 0
+    assert len(mock_login.mock_calls) == 0
 
 
 @asyncio.coroutine
-def test_login_view_request_timeout(mock_auth, cloud_client):
+def test_login_view_request_timeout(cloud_client):
     """Test request timeout while trying to log in."""
-    mock_auth.login.side_effect = asyncio.TimeoutError
-    req = yield from cloud_client.post('/api/cloud/login', json={
-        'email': 'my_username',
-        'password': 'my_password'
-    })
+    with patch('homeassistant.components.cloud.auth_api.login',
+               side_effect=asyncio.TimeoutError):
+        req = yield from cloud_client.post('/api/cloud/login', json={
+            'email': 'my_username',
+            'password': 'my_password'
+        })
 
     assert req.status == 502
 
@@ -101,23 +107,25 @@ def test_login_view_request_timeout(mock_auth, cloud_client):
 @asyncio.coroutine
 def test_login_view_invalid_credentials(mock_auth, cloud_client):
     """Test logging in with invalid credentials."""
-    mock_auth.login.side_effect = auth_api.Unauthenticated
-    req = yield from cloud_client.post('/api/cloud/login', json={
-        'email': 'my_username',
-        'password': 'my_password'
-    })
+    with patch('homeassistant.components.cloud.auth_api.login',
+               side_effect=auth_api.Unauthenticated):
+        req = yield from cloud_client.post('/api/cloud/login', json={
+            'email': 'my_username',
+            'password': 'my_password'
+        })
 
     assert req.status == 401
 
 
 @asyncio.coroutine
-def test_login_view_unknown_error(mock_auth, cloud_client):
+def test_login_view_unknown_error(cloud_client):
     """Test unknown error while logging in."""
-    mock_auth.login.side_effect = auth_api.UnknownError
-    req = yield from cloud_client.post('/api/cloud/login', json={
-        'email': 'my_username',
-        'password': 'my_password'
-    })
+    with patch('homeassistant.components.cloud.auth_api.login',
+               side_effect=auth_api.UnknownError):
+        req = yield from cloud_client.post('/api/cloud/login', json={
+            'email': 'my_username',
+            'password': 'my_password'
+        })
 
     assert req.status == 502
 
