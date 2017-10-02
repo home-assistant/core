@@ -638,7 +638,7 @@ pyicloud==0.9.1
 pyiss==1.0.1
 
 # homeassistant.components.remote.itach
-pyitachip2ir==0.0.6
+pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
 pykira==0.1.1
