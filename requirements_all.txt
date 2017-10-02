@@ -273,7 +273,7 @@ gitterpy==0.1.5
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.6.2
+google-api-python-client==1.6.4
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.5.1
