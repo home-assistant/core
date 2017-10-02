@@ -12,7 +12,9 @@ from components.media_player.monoprice import MonopriceZone, PLATFORM_SCHEMA
 
 
 class MockState(object):
+    """Mock for zone state object."""
     def __init__(self):
+        """Init zone state."""
         self.power = True
         self.volume = 0
         self.mute = True
@@ -20,29 +22,38 @@ class MockState(object):
 
 
 class MockMonoprice(object):
+    """Mock for pymonoprice object."""
+
     def __init__(self):
+        """Init mock object."""
         self.zones = defaultdict(lambda *a: MockState())
 
     def zone_status(self, zone_id):
+        """Get zone status."""
         return self.zones[zone_id]
 
     def set_source(self, zone_id, source_idx):
+        """Set source for zone."""
         self.zones[zone_id].source = source_idx
 
     def set_power(self, zone_id, power):
+        """Turn zone on/off."""
         self.zones[zone_id].power = power
 
     def set_mute(self, zone_id, mute):
+        """Mute/unmute zone."""
         self.zones[zone_id].mute = mute
 
     def set_volume(self, zone_id, volume):
+        """Set volume for zone."""
         self.zones[zone_id].volume = volume
 
 
 class TestMonopriceSchema(unittest.TestCase):
-    """Tests Monoprice schema."""
+    """Test Monoprice schema."""
+
     def test_valid_schema(self):
-        """Tests valid schema."""
+        """Test valid schema."""
         valid_schema = {
             'platform': 'monoprice',
             'port': '/dev/ttyUSB0',
@@ -77,7 +88,7 @@ class TestMonopriceSchema(unittest.TestCase):
         PLATFORM_SCHEMA(valid_schema)
 
     def test_invalid_schemas(self):
-        """Tests invalid schemas."""
+        """Test invalid schemas."""
         schemas = (
             {},  # Empty
             None,  # None
@@ -131,7 +142,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):
-        """Sets up the test case."""
+        """Set up the test case."""
         self.monoprice = MockMonoprice()
         # Note, source dictionary is unsorted!
         self.media_player = MonopriceZone(self.monoprice, {1: 'one',
@@ -140,7 +151,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
                                           12, 'Zone name')
 
     def test_update(self):
-        """Tests updating values from monoprice."""
+        """Test updating values from monoprice."""
         self.assertIsNone(self.media_player.state)
         self.assertIsNone(self.media_player.volume_level)
         self.assertIsNone(self.media_player.is_volume_muted)
@@ -154,11 +165,11 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual('one', self.media_player.source)
 
     def test_name(self):
-        """Tests name property."""
+        """Test name property."""
         self.assertEqual('Zone name', self.media_player.name)
 
     def test_state(self):
-        """Tests state property."""
+        """Test state property."""
         self.assertIsNone(self.media_player.state)
 
         self.media_player.update()
@@ -169,7 +180,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual(STATE_OFF, self.media_player.state)
 
     def test_volume_level(self):
-        """Tests volume level property."""
+        """Test volume level property."""
         self.assertIsNone(self.media_player.volume_level)
         self.media_player.update()
         self.assertEqual(0.0, self.media_player.volume_level, 0.0001)
@@ -183,7 +194,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual(.5, self.media_player.volume_level, 0.0001)
 
     def test_is_volume_muted(self):
-        """Tests volume muted property."""
+        """Test volume muted property."""
         self.assertIsNone(self.media_player.is_volume_muted)
 
         self.media_player.update()
@@ -194,26 +205,26 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertFalse(self.media_player.is_volume_muted)
 
     def test_supported_features(self):
-        """Tests supported features property."""
+        """Test supported features property."""
         self.assertEqual(SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |
                          SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON |
                          SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE,
                          self.media_player.supported_features)
 
     def test_source(self):
-        """Tests source property."""
+        """Test source property."""
         self.assertIsNone(self.media_player.source)
         self.media_player.update()
         self.assertEqual('one', self.media_player.source)
 
     def test_source_list(self):
-        """Tests source list property."""
+        """Test source list property."""
         # Note, the list is sorted!
         self.assertEqual(['one', 'two', 'three'],
                          self.media_player.source_list)
 
     def test_select_source(self):
-        """Tests source selection methods."""
+        """Test source selection methods."""
         self.media_player.update()
 
         self.assertEqual('one', self.media_player.source)
@@ -230,7 +241,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual('two', self.media_player.source)
 
     def test_turn_on(self):
-        """Tests turning on the zone."""
+        """Test turning on the zone."""
         self.monoprice.zones[12].power = False
         self.media_player.update()
         self.assertEqual(STATE_OFF, self.media_player.state)
@@ -241,7 +252,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual(STATE_ON, self.media_player.state)
 
     def test_turn_off(self):
-        """Tests turning off the zone."""
+        """Test turning off the zone."""
         self.monoprice.zones[12].power = True
         self.media_player.update()
         self.assertEqual(STATE_ON, self.media_player.state)
@@ -252,7 +263,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertEqual(STATE_OFF, self.media_player.state)
 
     def test_mute_volume(self):
-        """Tests mute functionality."""
+        """Test mute functionality."""
         self.monoprice.zones[12].mute = True
         self.media_player.update()
         self.assertTrue(self.media_player.is_volume_muted)
@@ -268,7 +279,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertTrue(self.media_player.is_volume_muted)
 
     def test_set_volume_level(self):
-        """Tests set volume level."""
+        """Test set volume level."""
         self.media_player.set_volume_level(1.0)
         self.assertEqual(38, self.monoprice.zones[12].volume)
         self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
@@ -282,7 +293,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
 
     def test_volume_up(self):
-        """Tests increasing volume by one."""
+        """Test increasing volume by one."""
         self.monoprice.zones[12].volume = 37
         self.media_player.update()
         self.media_player.volume_up()
@@ -296,7 +307,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.assertTrue(isinstance(self.monoprice.zones[12].volume, int))
 
     def test_volume_down(self):
-        """Tests decreasing volume by one."""
+        """Test decreasing volume by one."""
         self.monoprice.zones[12].volume = 1
         self.media_player.update()
         self.media_player.volume_down()
