@@ -69,7 +69,7 @@ holidays==0.8.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==3.0.0
+influxdb==4.1.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
