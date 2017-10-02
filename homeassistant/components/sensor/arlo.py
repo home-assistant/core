@@ -14,7 +14,7 @@ from homeassistant.components.arlo import (
     CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO)
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -27,6 +27,7 @@ SENSOR_TYPES = {
     'last_capture': ['Last', None, 'run-fast'],
     'total_cameras': ['Arlo Cameras', None, 'video'],
     'captured_today': ['Captured Today', None, 'file-video'],
+    'battery_level': ['Battery Level', '%', 'battery-50']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -109,7 +110,13 @@ class ArloSensor(Entity):
                 video = self._data.videos()[0]
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
-                self._state = STATE_UNKNOWN
+                self._state = None
+
+        elif self._sensor_type == 'battery_level':
+            try:
+                self._state = self._data.get_battery_level
+            except TypeError:
+                self._state = None
 
     @property
     def device_state_attributes(self):
@@ -120,7 +127,8 @@ class ArloSensor(Entity):
         attrs['brand'] = DEFAULT_BRAND
 
         if self._sensor_type == 'last_capture' or \
-           self._sensor_type == 'captured_today':
+           self._sensor_type == 'captured_today' or \
+           self._sensor_type == 'battery_level':
             attrs['model'] = self._data.model_id
 
         return attrs
