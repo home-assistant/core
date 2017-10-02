@@ -97,20 +97,18 @@ def async_setup(hass, config):
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
-        entity = Plant(plant_name, plant_config)
+        group_name = None
+        if CONF_GROUP_NAME in plant_config and \
+                plant_config[CONF_GROUP_NAME] is not None:
+            group_name = plant_config[CONF_GROUP_NAME]
+            hass.components.group.set_group(group_name)
+            _LOGGER.debug("Added plant group %s for plant %s",
+                          group_name, plant_name)
+        entity = Plant(plant_name, plant_config, group_name)
         sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
         _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
-
-        if CONF_GROUP_NAME in plant_config and \
-                plant_config[CONF_GROUP_NAME] is not None:
-            group_name = plant_config[CONF_GROUP_NAME]
-            members = ['{}.{}'.format(DOMAIN, plant_name)]  # own entity id
-            members.extend(sensor_entity_ids)
-            hass.components.group.set_group(group_name, entity_ids=members)
-            _LOGGER.debug("Added plant group %s for plant %s",
-                          group_name, plant_name)
 
     yield from component.async_add_entities(entities)
     return True
@@ -155,9 +153,10 @@ class Plant(Entity):
         }
     }
 
-    def __init__(self, name, config):
+    def __init__(self, name, config, group_name=None):
         """Initialize the Plant component."""
         self._config = config
+        self._group_name = group_name
         self._sensormap = dict()
         self._readingmap = dict()
         for reading, entity_id in config['sensors'].items():
@@ -325,3 +324,16 @@ class Plant(Entity):
                 self._conf_check_days)] = self._max_brightness_over_days
 
         return attrib
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Create a group with all sensors.
+
+        This must be run after the component was created to that we get the
+        valid entity_id.
+        """
+        if self._group_name is not None:
+            members = [self.entity_id]
+            members.extend(list(self._config[CONF_SENSORS].values()))
+            self.hass.components.group.set_group(self._group_name,
+                                                 entity_ids=members)
