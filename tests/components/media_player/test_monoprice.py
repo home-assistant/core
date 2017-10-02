@@ -1,3 +1,4 @@
+"""The tests for Monoprice Media player platform."""
 import unittest
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from components.media_player.monoprice import MonopriceZone, PLATFORM_SCHEMA
 
 class MockState(object):
     """Mock for zone state object."""
+
     def __init__(self):
         """Init zone state."""
         self.power = True
