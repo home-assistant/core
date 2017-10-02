@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
+    ATTR_ATTRIBUTION, CONF_API_KEY,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -183,8 +183,6 @@ class AirVisualBaseSensor(Entity):
             ATTR_CITY: self._data.city,
             ATTR_COUNTRY: self._data.country,
             ATTR_REGION: self._data.state,
-            ATTR_LATITUDE: self._data.latitude,
-            ATTR_LONGITUDE: self._data.longitude,
             ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
         }
 
@@ -287,8 +285,8 @@ class AirVisualData(object):
         self.state = kwargs.get(CONF_STATE)
         self.country = kwargs.get(CONF_COUNTRY)
 
-        self.latitude = kwargs.get(CONF_LATITUDE)
-        self.longitude = kwargs.get(CONF_LONGITUDE)
+        self._latitude = kwargs.get(CONF_LATITUDE)
+        self._longitude = kwargs.get(CONF_LONGITUDE)
         self._radius = kwargs.get(CONF_RADIUS)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -300,7 +298,7 @@ class AirVisualData(object):
             if self.city and self.state and self.country:
                 resp = self._client.city(self.city, self.state,
                                          self.country).get('data')
-                self.longitude, self.latitude = resp.get('location').get(
+                self._longitude, self._latitude = resp.get('location').get(
                     'coordinates')
             else:
                 resp = self._client.nearest_city(self.latitude, self.longitude,
