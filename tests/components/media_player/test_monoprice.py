@@ -46,7 +46,6 @@ class TestMonopriceSchema(unittest.TestCase):
         valid_schema = {
             'platform': 'monoprice',
             'port': '/dev/ttyUSB0',
-            'name': 'Monoprice',
             'zones': {11: {'name': 'a'},
                       12: {'name': 'a'},
                       13: {'name': 'a'},
@@ -86,13 +85,6 @@ class TestMonopriceSchema(unittest.TestCase):
             {
                 'platform': 'monoprice',
                 'name': 'Name',
-                'zones': {11: {'name': 'a'}},
-                'sources': {1: {'name': 'b'}},
-            },
-            # Missing name
-            {
-                'platform': 'monoprice',
-                'port': 'aaa',
                 'zones': {11: {'name': 'a'}},
                 'sources': {1: {'name': 'b'}},
             },

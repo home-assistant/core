@@ -44,7 +44,6 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT): cv.string,
-    vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
     vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
 })
@@ -74,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MonopriceZone(MediaPlayerDevice):
-    """ Represents a Monoprice amplifier zone. """
+    """ Represents an Monoprice amplifier zone. """
 
     # pylint: disable=too-many-public-methods
 
