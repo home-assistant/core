@@ -55,7 +55,7 @@ class TibberSensor(Entity):
         self._state = None
         self._device_state_attributes = None
         self._unit_of_measurement = None
-        self._name = 'Electricity price  {}'.format(self._tibber_home.address1)
+        self._name = 'Electricity price {}'.format(self._tibber_home.address1)
 
     @asyncio.coroutine
     def async_update(self):
