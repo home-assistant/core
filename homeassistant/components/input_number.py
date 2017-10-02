@@ -1,5 +1,5 @@
 """
-Component to offer a way to select a numeric value from a slider or text box.
+Component to offer a way to set a numeric value from a slider or text box.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_number/
@@ -37,9 +37,9 @@ ATTR_MAX = 'max'
 ATTR_STEP = 'step'
 ATTR_MODE = 'mode'
 
-SERVICE_SELECT_VALUE = 'select_value'
+SERVICE_SET_VALUE = 'set_value'
 
-SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
+SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
@@ -78,9 +78,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def select_value(hass, entity_id, value):
+def set_value(hass, entity_id, value):
     """Set input_number to value."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_VALUE, {
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
     })
@@ -111,18 +111,18 @@ def async_setup(hass, config):
         return False
 
     @asyncio.coroutine
-    def async_select_value_service(call):
+    def async_set_value_service(call):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_number.async_select_value(call.data[ATTR_VALUE])
+        tasks = [input_number.async_set_value(call.data[ATTR_VALUE])
                  for input_number in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
-        schema=SERVICE_SELECT_VALUE_SCHEMA)
+        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
+        schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
@@ -151,7 +151,7 @@ class InputNumber(Entity):
 
     @property
     def name(self):
-        """Return the name of the select input slider."""
+        """Return the name of the input slider."""
         return self._name
 
     @property
@@ -195,8 +195,8 @@ class InputNumber(Entity):
             self._current_value = self._minimum
 
     @asyncio.coroutine
-    def async_select_value(self, value):
-        """Select new value."""
+    def async_set_value(self, value):
+        """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
             _LOGGER.warning("Invalid value: %s (range %s - %s)",

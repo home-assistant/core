@@ -426,7 +426,7 @@ class TestTemplateCover(unittest.TestCase):
                             'position_template':
                                 "{{ states.input_number.test.state | int }}",
                             'set_cover_position': {
-                                'service': 'input_number.select_value',
+                                'service': 'input_number.set_value',
                                 'entity_id': 'input_number.test',
                                 'data_template': {
                                     'value': '{{ position }}'
