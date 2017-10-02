@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -34,11 +34,19 @@ SOURCE_SCHEMA = vol.Schema({
 CONF_ZONES = 'zones'
 CONF_SOURCES = 'sources'
 
+# Valid zone ids: 11-16 or 21-26 or 31-36
+ZONE_IDS = vol.All(vol.Coerce(int), vol.Any(vol.Range(min=11, max=16),
+                                            vol.Range(min=21, max=26),
+                                            vol.Range(min=31, max=36)))
+
+# Valid source ids: 1-6
+SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.Schema({cv.positive_int: SOURCE_SCHEMA}),
+    vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
+    vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
 })
 
 
@@ -115,6 +123,8 @@ class MonopriceZone(MediaPlayerDevice):
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
+        if self._volume is None:
+            return None
         return self._volume / 38.0
 
     @property
