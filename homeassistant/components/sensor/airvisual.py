@@ -13,9 +13,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY,
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE,
+                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+                                 CONF_STATE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -301,8 +301,8 @@ class AirVisualData(object):
                 self._longitude, self._latitude = resp.get('location').get(
                     'coordinates')
             else:
-                resp = self._client.nearest_city(self.latitude, self.longitude,
-                                                 self._radius).get('data')
+                resp = self._client.nearest_city(
+                    self._latitude, self._longitude, self._radius).get('data')
             _LOGGER.debug('New data retrieved: %s', resp)
 
             self.city = resp.get('city')
