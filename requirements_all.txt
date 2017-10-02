@@ -45,7 +45,7 @@ SoCo==0.12
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.11.8
+abodepy==0.11.9
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.3
