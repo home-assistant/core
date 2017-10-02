@@ -423,11 +423,11 @@ class PlexClient(MediaPlayerDevice):
             self._media_content_type = None
 
         # title (movie name, tv episode name, music song name)
-        if self._session:
-            if self._is_player_active:
-                self._media_title = self._convert_na_to_none(self._session.title)
-            else:
-                self._media_title = None
+        if self._session and self._is_player_active:
+            self._media_title = self._convert_na_to_none(self._session.title)
+
+        if self._session and not self._is_player_active:
+            self._media_title = None
 
         # Movies
         if (self.media_content_type == MEDIA_TYPE_VIDEO and
