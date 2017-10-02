@@ -123,7 +123,7 @@ class TestMonopriceSchema(unittest.TestCase):
 
         )
         for value in schemas:
-            with self.assertRaises(vol.MultipleInvalid) as cm:
+            with self.assertRaises(vol.MultipleInvalid):
                 PLATFORM_SCHEMA(value)
 
 

@@ -1,6 +1,5 @@
 """
-Support for interfacing with Monoprice 6 zone home audio controller
-via serial interface.
+Support for interfacing with Monoprice 6 zone home audio controller.
 
 https://www.monoprice.com/product?p_id=10761
 """
@@ -51,8 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Monoprice 6-zone amplifier platform. """
-
+    """Set up the Monoprice 6-zone amplifier platform."""
     port = config.get(CONF_PORT)
 
     if port is None:
@@ -73,11 +71,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MonopriceZone(MediaPlayerDevice):
-    """ Represents an Monoprice amplifier zone. """
+    """Represents an Monoprice amplifier zone."""
 
     # pylint: disable=too-many-public-methods
 
     def __init__(self, monoprice, sources, zone_id, zone_name):
+        """Initialize new zone."""
         self._monoprice = monoprice
         # dict source_id -> source name
         self._source_id_name = sources
@@ -111,29 +110,29 @@ class MonopriceZone(MediaPlayerDevice):
 
     @property
     def name(self):
-        """ Returns the name of the zone. """
+        """Returns the name of the zone."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the zone. """
+        """Returns the state of the zone."""
         return self._state
 
     @property
     def volume_level(self):
-        """ Volume level of the media player (0..1). """
+        """Volume level of the media player (0..1)."""
         if self._volume is None:
             return None
         return self._volume / 38.0
 
     @property
     def is_volume_muted(self):
-        """ Boolean if volume is currently muted. """
+        """Boolean if volume is currently muted."""
         return self._mute
 
     @property
     def supported_features(self):
-        """ Flags of media commands that are supported. """
+        """Flags of media commands that are supported."""
         return SUPPORT_MONOPRICE
 
     @property
@@ -147,26 +146,26 @@ class MonopriceZone(MediaPlayerDevice):
         return self._source_names
 
     def select_source(self, source):
-        """ Set input source. """
+        """Set input source."""
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
         self._monoprice.set_source(self._zone_id, idx)
 
     def turn_on(self):
-        """ turn the media player on. """
+        """turn the media player on."""
         self._monoprice.set_power(self._zone_id, True)
 
     def turn_off(self):
-        """ turn_off media player. """
+        """turn_off media player."""
         self._monoprice.set_power(self._zone_id, False)
 
     def mute_volume(self, mute):
-        """ Mute (true) or unmute (false) media player. """
+        """Mute (true) or unmute (false) media player."""
         self._monoprice.set_mute(self._zone_id, mute)
 
     def set_volume_level(self, volume):
-        """ Set volume level, range 0..1. """
+        """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, int(volume * 38))
 
     def volume_up(self):
