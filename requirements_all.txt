@@ -865,7 +865,7 @@ radiotherm==1.3
 raincloudy==0.0.1
 
 # homeassistant.components.raspihats
-# raspihats==2.2.1
+# raspihats==2.2.3
 
 # homeassistant.components.switch.rainmachine
 regenmaschine==0.4.1
@@ -934,6 +934,7 @@ sleekxmpp==1.3.2
 # homeassistant.components.sleepiq
 sleepyq==0.6
 
+# homeassistant.components.raspihats
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.envirophat
