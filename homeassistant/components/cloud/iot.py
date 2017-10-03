@@ -45,9 +45,11 @@ class CloudIoT:
             """Handle IoT message."""
             _, handler, message_id = msg.topic.rsplit('/', 2)
 
+            _LOGGER.debug('Received message on %s: %s', msg.topic, msg.payload)
+
             self.cloud.hass.add_job(
                 async_handle_message, hass, self.cloud, handler,
-                message_id, msg.payload)
+                message_id, msg.payload.decode('utf-8'))
 
         try:
             if not client.connect(keepAliveIntervalSecond=IOT_KEEP_ALIVE):
@@ -70,9 +72,9 @@ class CloudIoT:
 
     def publish(self, topic, payload):
         """Publish a message to the cloud."""
-        self.client.publish(
-            PUBLISH_TOPIC_FORMAT.format(self.cloud.thing_name, topic),
-            payload, 1)
+        topic = PUBLISH_TOPIC_FORMAT.format(self.cloud.thing_name, topic)
+        _LOGGER.debug('Publishing message to %s: %s', topic, payload)
+        self.client.publish(topic, payload, 1)
 
     def disconnect(self):
         """Disconnect the client."""
