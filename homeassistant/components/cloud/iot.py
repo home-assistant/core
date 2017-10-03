@@ -128,4 +128,4 @@ def async_handle_alexa(hass, cloud, message_id, payload):
 
     yield from hass.async_add_job(
         cloud.iot.publish, ALEXA_PUBLISH_TOPIC.format(message_id),
-        json.dumps(response[smart_home.ATTR_PAYLOAD]))
+        json.dumps(response))
