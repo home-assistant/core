@@ -71,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MODE, default=MODE_SLIDER):
-                vol.In(MODE_BOX, MODE_SLIDER),
+                vol.In([MODE_BOX, MODE_SLIDER]),
         }, _cv_input_number)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)

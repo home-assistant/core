@@ -70,6 +70,38 @@ class TestInputNumber(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))
 
+    def test_mode(self):
+        """Test mode settings."""
+        self.assertTrue(
+            setup_component(self.hass, DOMAIN, {DOMAIN: {
+                'test_default_slider': {
+                    'min': 0,
+                    'max': 100,
+                },
+                'test_explicit_box': {
+                    'min': 0,
+                    'max': 100,
+                    'mode': 'box',
+                },
+                'test_explicit_slider': {
+                    'min': 0,
+                    'max': 100,
+                    'mode': 'slider',
+                },
+            }}))
+
+        state = self.hass.states.get('input_number.test_default_slider')
+        assert state
+        self.assertEqual('slider', state.attributes['mode'])
+
+        state = self.hass.states.get('input_number.test_explicit_box')
+        assert state
+        self.assertEqual('box', state.attributes['mode'])
+
+        state = self.hass.states.get('input_number.test_explicit_slider')
+        assert state
+        self.assertEqual('slider', state.attributes['mode'])
+
 
 @asyncio.coroutine
 def test_restore_state(hass):
