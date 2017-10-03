@@ -5,14 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_spi_mcp/
 
 Example configuration:
-
-sensor:
-  - platform: rpi_spi_mcp
-    channels:
-      - name: "Humidity Sensor"
-        bus: 0
-        device: 1
-        channel: 0
 """
 import logging
 import voluptuous as vol
