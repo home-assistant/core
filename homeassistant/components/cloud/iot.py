@@ -1,5 +1,6 @@
 """Module to handle messages from Home Assistant cloud."""
 import asyncio
+import gzip
 import json
 import logging
 import os
@@ -44,12 +45,12 @@ class CloudIoT:
         def message_callback(mqtt_client, userdata, msg):
             """Handle IoT message."""
             _, handler, message_id = msg.topic.rsplit('/', 2)
-
-            _LOGGER.debug('Received message on %s: %s', msg.topic, msg.payload)
+            payload = gzip.decompress(msg.payload).decode('utf-8')
+            _LOGGER.debug('Received message on %s: %s', msg.topic, payload)
 
             self.cloud.hass.add_job(
                 async_handle_message, hass, self.cloud, handler,
-                message_id, msg.payload.decode('utf-8'))
+                message_id, payload)
 
         try:
             if not client.connect(keepAliveIntervalSecond=IOT_KEEP_ALIVE):
@@ -74,6 +75,7 @@ class CloudIoT:
         """Publish a message to the cloud."""
         topic = PUBLISH_TOPIC_FORMAT.format(self.cloud.thing_name, topic)
         _LOGGER.debug('Publishing message to %s: %s', topic, payload)
+        payload = bytearray(gzip.compress(payload.encode('utf-8')))
         self.client.publish(topic, payload, 1)
 
     def disconnect(self):
