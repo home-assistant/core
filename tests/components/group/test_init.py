@@ -274,7 +274,6 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
         self.assertIsNone(group_state.attributes.get(group.ATTR_CONTROL))
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
-        self.assertEqual(2, group_state.attributes.get(group.ATTR_ORDER))
 
     def test_groups_get_unique_names(self):
         """Two groups with same name should both have a unique entity id."""
