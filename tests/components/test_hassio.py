@@ -52,6 +52,64 @@ def test_fail_setup_cannot_connect(hass):
 
 
 @asyncio.coroutine
+def test_setup_api_ping(hass, aioclient_mock):
+    """Test setup with API ping."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {})
+        assert result
+
+    assert aioclient_mock.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_api_push_api_data(hass, aioclient_mock):
+    """Test setup with API push."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {
+            'http': {
+                'api_password': "123456",
+                'server_port': 9999
+            },
+            'hassio': {}
+        })
+        assert result
+
+    assert aioclient_mock.call_count == 2
+    assert not aioclient_mock.mock_calls[-1][2]['ssl']
+    assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
+    assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
+
+
+@asyncio.coroutine
+def test_setup_api_push_api_data_default(hass, aioclient_mock):
+    """Test setup with API push default data."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.get(
+        "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {
+            'http': {},
+            'hassio': {}
+        })
+        assert result
+
+    assert aioclient_mock.call_count == 2
+    assert not aioclient_mock.mock_calls[-1][2]['ssl']
+    assert 'password' not in aioclient_mock.mock_calls[-1][2]
+    assert 'port' not in aioclient_mock.mock_calls[-1][2]
+
+
+@asyncio.coroutine
 def test_forward_request(hassio_client):
     """Test fetching normal path."""
     response = MagicMock()
