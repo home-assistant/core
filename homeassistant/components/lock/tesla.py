@@ -35,13 +35,11 @@ class TeslaLock(TeslaDevice, LockDevice):
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self._name)
         self.tesla_device.lock()
-        self._state = STATE_LOCKED
 
     def unlock(self, **kwargs):
         """Send the unlock command."""
         _LOGGER.debug("Unlocking doors for: %s", self._name)
         self.tesla_device.unlock()
-        self._state = STATE_UNLOCKED
 
     @property
     def is_locked(self):

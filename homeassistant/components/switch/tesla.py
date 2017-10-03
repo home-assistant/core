@@ -32,17 +32,15 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         super().__init__(tesla_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
-    def lock(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Send the on command."""
         _LOGGER.debug("Enable charging: %s", self._name)
         self.tesla_device.start_charge()
-        self._state = STATE_ON
 
-    def unlock(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Send the off command."""
         _LOGGER.debug("Disable charging  for: %s", self._name)
         self.tesla_device.stop_charge()
-        self._state = STATE_OFF
 
     @property
     def is_on(self):
