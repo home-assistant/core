@@ -14,7 +14,9 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
@@ -27,6 +29,14 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
+SERVICE_ADDON_START = 'addon_start'
+SERVICE_ADDON_STOP = 'addon_stop'
+SERVICE_ADDON_RESTART = 'addon_restart'
+SERVICE_ADDON_STDIN = 'addon_stdin'
+
+ATTR_ADDON = 'addon'
+ATTR_INPUT = 'input'
+
 NO_TIMEOUT = {
     re.compile(r'^homeassistant/update$'),
     re.compile(r'^host/update$'),
@@ -38,6 +48,21 @@ NO_TIMEOUT = {
 
 NO_AUTH = {
     re.compile(r'^panel$'), re.compile(r'^addons/[^/]*/logo$')
+}
+
+SCHEMA_ADDON = vol.Schema({
+    vol.Required(ATTR_ADDON): cv.slug,
+})
+
+SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
+    vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)
+})
+
+MAP_SERVICE_API = {
+    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON),
+    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON),
+    SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON),
+    SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN),
 }
 
 
@@ -66,6 +91,20 @@ def async_setup(hass, config):
     if 'http' in config:
         yield from hassio.update_hass_api(config.get('http'))
 
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Handle service calls for HassIO."""
+        api_command = MAP_SERVICE_API[service.service][0]
+        addon = service.data[ATTR_ADDON]
+        data = service.data[ATTR_INPUT] if ATTR_INPUT in service.data else None
+
+        yield from hassio.send_command(
+            api_command.format(addon=addon), payload=data, timeout=60)
+
+    for service, settings in MAP_SERVICE_API.items():
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler, schema=settings[1])
+
     return True
 
 
@@ -83,7 +122,7 @@ class HassIO(object):
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/ping")
+        return self.send_command("/supervisor/ping", method="get")
 
     def update_hass_api(self, http_config):
         """Update Home-Assistant API data on HassIO.
@@ -103,16 +142,16 @@ class HassIO(object):
         return self.send_command("/homeassistant/options", payload=options)
 
     @asyncio.coroutine
-    def send_command(self, command, payload=None, timeout=10):
+    def send_command(self, command, method="post", payload=None, timeout=10):
         """Send API command to HassIO.
 
         This method is a coroutine.
         """
         try:
             with async_timeout.timeout(timeout, loop=self.loop):
-                request = yield from self.websession.get(
-                    "http://{}{}".format(self._ip, command), json=payload
-                )
+                request = yield from self.websession.request(
+                    method, "http://{}{}".format(self._ip, command),
+                    json=payload)
 
                 if request.status != 200:
                     _LOGGER.error(
