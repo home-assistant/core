@@ -21,6 +21,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from spidev import SpiDev
 
+REQUIREMENTS = ['spidev==3.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CHANNELS = 'channels'
