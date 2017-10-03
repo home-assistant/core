@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = HueSensorData(url)
     data.update()
     sensors = []
-    for key in data.data.keys():
+    for key in data.data:
         sensors.append(HueSensor(key, data))
     add_devices(sensors, True)
 
@@ -58,6 +58,7 @@ class HueSensor(Entity):
         """Initialize the sensor object."""
         self._hue_id = hue_id
         self._data = data    # data is in .data
+        self._icon = None
         self._name = self._data.data[self._hue_id]['name']
         self._model = self._data.data[self._hue_id]['model']
         self._state = self._data.data[self._hue_id]['state']
@@ -76,7 +77,7 @@ class HueSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self.ICON
+        return self._icon
 
     @property
     def device_state_attributes(self):
@@ -88,16 +89,17 @@ class HueSensor(Entity):
         self._data.update()
         self._state = self._data.data[self._hue_id]['state']
         if self._model == 'SML001':
+            self._icon = 'mdi:run-fast'
             self._attributes['light_level'] = self._data.data[
                 self._hue_id]['light_level']
             self._attributes['temperature'] = self._data.data[
                 self._hue_id]['temperature']
         elif self._model in ['RWL021', 'ZGPSWITCH']:
-            self.ICON = 'mdi:remote'
+            self._icon = 'mdi:remote'
             self._attributes['last updated'] = self._data.data[
                 self._hue_id]['last_updated']
         elif self._model == 'Geofence':
-            self.ICON = 'mdi:cellphone'
+            self._icon = 'mdi:cellphone'
 
 
 def parse_hue_api_response(response):
