@@ -14,8 +14,6 @@ sensor:
         device: 1
         channel: 0
 """
-import asyncio
-from datetime import timedelta
 import logging
 import voluptuous as vol
 from homeassistant.core import callback
