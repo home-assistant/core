@@ -16,7 +16,6 @@ sensor:
 """
 import logging
 import voluptuous as vol
-from homeassistant.core import callback
 from homeassistant.helpers.event import (async_track_time_interval)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
