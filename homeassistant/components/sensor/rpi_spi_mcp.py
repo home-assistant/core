@@ -38,10 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     channels = config.get(CONF_CHANNELS)
     for channel in channels:
         add_devices([RPiSpiMcpChannel(channel)])
+
 
 class RPiSpiMcpChannel(Entity):
     def __init__(self, channel):
