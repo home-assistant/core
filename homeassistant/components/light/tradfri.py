@@ -114,8 +114,10 @@ class Tradfri(Light):
             else:
                 self._features |= SUPPORT_RGB_COLOR
 
-        _LOGGER.debug("features detected for %s %s: %d",
-                self._name, self._light.device_info.model_number, self._features)
+        _LOGGER.debug(
+            "features detected for %s %s: %d",
+            self._name, self._light.device_info.model_number, self._features
+        )
 
         self._ok_temps = \
             self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
