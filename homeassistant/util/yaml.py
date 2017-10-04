@@ -264,7 +264,7 @@ def _secret_yaml(loader: SafeLineLoader,
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
-    global credstash
+    global credstash  # pylint: disable=invalid-name
 
     if credstash:
         try:
@@ -274,7 +274,8 @@ def _secret_yaml(loader: SafeLineLoader,
                 return pwd
         except credstash.ItemNotFound:
             pass
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
+            # Catch if package installed and no config
             credstash = None
 
     _LOGGER.error("Secret %s not defined", node.value)
