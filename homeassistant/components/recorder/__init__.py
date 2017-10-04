@@ -54,7 +54,7 @@ DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
-CONF_PURGE_DAYS = 'purge_days'
+CONF_PURGE_KEEP_DAYS = 'purge_keep_days'
 CONF_PURGE_INTERVAL = 'purge_interval'
 CONF_EVENT_TYPES = 'event_types'
 
@@ -77,7 +77,7 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Inclusive(CONF_PURGE_DAYS, 'purge'):
+        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -120,7 +120,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
-    purge_days = conf.get(CONF_PURGE_DAYS)
+    purge_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
     db_url = conf.get(CONF_DB_URL, None)
