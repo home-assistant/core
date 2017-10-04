@@ -155,6 +155,7 @@ class KNXClimate(ClimateDevice):
 
     @property
     def target_temperature_high(self):
+        """Return the highbound target temperature we try to reach."""
         if self.device.target_temperature_comfort:
             return max(
                 self.device.target_temperature_comfort,
@@ -163,6 +164,7 @@ class KNXClimate(ClimateDevice):
 
     @property
     def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
         if self.device.target_temperature_comfort:
             return min(
                 self.device.target_temperature_comfort,
