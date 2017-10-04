@@ -99,10 +99,10 @@ def do_authentication(hass, config):
     from oauth2client.file import Storage
 
     oauth = OAuth2WebServerFlow(
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'Home-Assistant.io',
+        client_id=config[CONF_CLIENT_ID],
+        client_secret=config[CONF_CLIENT_SECRET],
+        scope='https://www.googleapis.com/auth/calendar.readonly',
+        redirect_uri='Home-Assistant.io',
     )
 
     try:
