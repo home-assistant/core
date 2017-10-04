@@ -5,5 +5,5 @@ purge:
 
   fields:
     keep_days:
-      description: Number of history days to keep in database after purge. Value > 0
+      description: Number of history days to keep in database after purge. Value >= 0
       example: 2
