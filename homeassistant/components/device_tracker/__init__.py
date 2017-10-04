@@ -89,9 +89,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
                      cv.time_period, cv.positive_timedelta)
 })
 
-DISCOVERY_PLATFORMS = {
-    SERVICE_NETGEAR: 'netgear',
-}
+DISCOVERY_PLATFORMS = {}
 
 
 @bind_hass

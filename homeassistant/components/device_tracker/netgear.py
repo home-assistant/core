@@ -37,6 +37,9 @@ def get_scanner(hass, config):
     username = info.get(CONF_USERNAME)
     password = info.get(CONF_PASSWORD)
     port = info.get(CONF_PORT)
+    # Check that all parameters are provided
+    if not all([host, username, password, port]):
+        return None
 
     scanner = NetgearDeviceScanner(host, username, password, port)
 
