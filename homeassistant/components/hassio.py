@@ -129,7 +129,7 @@ class HassIO(object):
 
         This method return a coroutine.
         """
-        port = http_config.get(CONF_SERVER_PORT) else SERVER_PORT
+        port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
         options = {
             'ssl': CONF_SSL_CERTIFICATE in http_config,
             'port': port,
