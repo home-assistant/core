@@ -7,6 +7,7 @@ from homeassistant.const import (
 
 from components.device_tracker import netgear
 
+
 class NetgearTest(unittest.TestCase):
     """Test netgear platform."""
 
