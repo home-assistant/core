@@ -62,7 +62,6 @@ class ClicksendNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
-
         data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
                                'to': self.recipient, 'body': message,
                                'lang': self.language, 'voice': self.voice}]})
