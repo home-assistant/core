@@ -47,7 +47,7 @@ ATTR_KEEP_DAYS = 'keep_days'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=1))
+        vol.All(vol.Coerce(int), vol.Range(min=0))
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
