@@ -83,7 +83,7 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = SkybellDevice.device_state_attributes.fget(self)
+        attrs = super().device_state_attributes
 
         attrs['event_date'] = self._event['createdAt']
 
@@ -98,9 +98,6 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
         if not self._event:
             self._event = event
 
-        if event and event['id'] != self._event['id']:
-            self._state = True
-        else:
-            self._state = False
+        self._state = bool(event and event['id'] != self._event['id'])
 
         self._event = event

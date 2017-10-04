@@ -4,18 +4,14 @@ Camera support for the Skybell HD Doorbell.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.skybell/
 """
+from datetime import timedelta
+
 import logging
 import requests
 
-from datetime import timedelta
-
 from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
-
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+from homeassistant.components.camera import Camera
 
 DEPENDENCIES = ['skybell']
 

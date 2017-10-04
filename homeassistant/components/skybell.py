@@ -6,9 +6,10 @@ https://home-assistant.io/components/skybell/
 """
 import logging
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from requests.exceptions import HTTPError, ConnectTimeout
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity

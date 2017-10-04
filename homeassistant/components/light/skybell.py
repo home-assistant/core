@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.skybell/
 import logging
 
 from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
