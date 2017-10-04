@@ -500,12 +500,12 @@ class Group(Entity):
         """Return the state attributes for the group."""
         data = {
             ATTR_ENTITY_ID: self.tracking,
-            ATTR_ORDER: self._order,
         }
         if not self._user_defined:
             data[ATTR_AUTO] = True
         if self.view:
             data[ATTR_VIEW] = True
+            data[ATTR_ORDER] = self._order
         if self.control:
             data[ATTR_CONTROL] = self.control
         return data
