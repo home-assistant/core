@@ -29,7 +29,7 @@ class DemoCalendar(Calendar):
         for eni in range(0, 10):
             event = {
                 'start': dt.now() + dt.dt.timedelta(days = eni),
-                'end': dt.now() + dt.dt.timedelta(minutes = 10 * eni),
+                'end': dt.now() + dt.dt.timedelta(days = eni) + dt.dt.timedelta(minutes = 10 * eni),
                 'text': test
             }
             self._events.append(event)

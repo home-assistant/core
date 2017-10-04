@@ -29,6 +29,7 @@ def async_setup(hass, config):
     hass.components.frontend.register_built_in_panel(
         'calendar', 'Calendar', 'mdi:calendar')
     hass.http.register_view(CalendarPlatformsView(calendars))
+    hass.http.register_view(CalendarEventView(calendars))
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config={}, discovery_info={}):
@@ -142,3 +143,13 @@ class CalendarPlatformsView(CalendarView):
         for calendar in self.calendars:
             platforms.append(calendar.name)
         return self.json(platforms)
+
+class CalendarEventView(CalendarView):
+    url = "/api/calendar/events/{platform}"
+    name = "api:calendar:events"
+
+    @asyncio.coroutine
+    def get(self, request, platform):
+        calendar = self.get_calendar(platform)
+        events = yield from calendar.async_get_events()
+        return self.json(events)
