@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the ClickSend notification service."""
     if _authenticate(config) is False:
-        _LOGGER.exception("You are not authorized to access ClickSend")
+        _LOGGER.error("You are not authorized to access ClickSend")
         return None
 
     return ClicksendNotificationService(config)
@@ -59,23 +59,19 @@ class ClicksendNotificationService(BaseNotificationService):
         self.recipient = config.get(CONF_RECIPIENT)
         self.language = config.get(CONF_LANGUAGE)
         self.voice = config.get(CONF_VOICE)
-        _LOGGER.debug(self.voice)
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
-        _LOGGER.debug(message)
         data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
                                'to': self.recipient, 'body': message,
                                'lang': self.language, 'voice': self.voice}]})
         api_url = "{}/voice/send".format(BASE_API_URL)
-        _LOGGER.debug(api_url)
         resp = requests.post(api_url, data=json.dumps(data), headers=HEADERS,
                              auth=(self.username, self.api_key), timeout=5)
 
         obj = json.loads(resp.text)
         response_msg = obj['response_msg']
         response_code = obj['response_code']
-        _LOGGER.error(str(obj))
         if resp.status_code != 200:
             _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
                           response_msg, response_code)
