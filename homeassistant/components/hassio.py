@@ -17,7 +17,7 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE)
@@ -129,15 +129,12 @@ class HassIO(object):
 
         This method return a coroutine.
         """
+        port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
         options = {
             'ssl': CONF_SSL_CERTIFICATE in http_config,
+            'port': port,
+            'password': http_config.get(CONF_API_PASSWORD),
         }
-
-        if http_config.get(CONF_SERVER_PORT):
-            options['port'] = http_config[CONF_SERVER_PORT]
-
-        if http_config.get(CONF_API_PASSWORD):
-            options['password'] = http_config[CONF_API_PASSWORD]
 
         return self.send_command("/homeassistant/options", payload=options)
 
