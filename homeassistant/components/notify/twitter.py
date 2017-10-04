@@ -75,7 +75,7 @@ class TwitterNotificationService(BaseNotificationService):
 
         self.upload_media_then_callback(callback, media)
 
-    def send_message_callback(self, message, media_id):
+    def send_message_callback(self, message, media_id=None):
         """Tweet a message, optionally with media."""
         if self.user:
             resp = self.api.request('direct_messages/new',
@@ -95,7 +95,7 @@ class TwitterNotificationService(BaseNotificationService):
     def upload_media_then_callback(self, callback, media_path=None):
         """Upload media."""
         if not media_path:
-            return None
+            return callback()
 
         with open(media_path, 'rb') as file:
             total_bytes = os.path.getsize(media_path)

@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.2.0']
+REQUIREMENTS = ['netdisco==1.2.2']
 
 DOMAIN = 'discovery'
 
@@ -45,7 +45,7 @@ SERVICE_HANDLERS = {
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_WINK: ('wink', None),
-    SERVICE_XIAOMI_GW: ('xiaomi', None),
+    SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),

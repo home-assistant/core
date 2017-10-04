@@ -96,7 +96,8 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing:
             from pyatv import const
             state = self._playing.play_state
-            if state == const.PLAY_STATE_NO_MEDIA or \
+            if state == const.PLAY_STATE_IDLE or \
+                    state == const.PLAY_STATE_NO_MEDIA or \
                     state == const.PLAY_STATE_LOADING:
                 return STATE_IDLE
             elif state == const.PLAY_STATE_PLAYING:

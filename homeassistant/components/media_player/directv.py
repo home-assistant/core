@@ -1,5 +1,5 @@
 """
-Support for the DirecTV recievers.
+Support for the DirecTV receivers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DirecTvDevice(MediaPlayerDevice):
-    """Representation of a DirecTV reciever on the network."""
+    """Representation of a DirecTV receiver on the network."""
 
     def __init__(self, name, host, port, device):
         """Initialize the device."""

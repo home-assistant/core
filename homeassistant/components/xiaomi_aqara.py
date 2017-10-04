@@ -8,8 +8,7 @@ from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC)
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/PyXiaomiGateway/archive/'
-                '0.3.2.zip#PyXiaomiGateway==0.3.2']
+REQUIREMENTS = ['PyXiaomiGateway==0.5.1']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -17,7 +16,7 @@ ATTR_RINGTONE_VOL = 'ringtone_vol'
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
-DOMAIN = 'xiaomi'
+DOMAIN = 'xiaomi_aqara'
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 
 
@@ -39,6 +38,17 @@ def _validate_conf(config):
             raise vol.Invalid('Invalid key %s.'
                               ' Key must be 16 characters', key)
         res_gw_conf['key'] = key
+
+        host = gw_conf.get('host')
+        if host is not None:
+            res_gw_conf['host'] = host
+            res_gw_conf['port'] = gw_conf.get('port', 9898)
+
+            _LOGGER.warning(
+                'Static address (%s:%s) of the gateway provided. '
+                'Discovery of this host will be skipped.',
+                res_gw_conf['host'], res_gw_conf['port'])
+
         res_config.append(res_gw_conf)
     return res_config
 
@@ -89,7 +99,7 @@ def setup(hass, config):
         _LOGGER.error("No gateway discovered")
         return False
     hass.data[PY_XIAOMI_GATEWAY].listen()
-    _LOGGER.debug("Listening for broadcast")
+    _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
     for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
