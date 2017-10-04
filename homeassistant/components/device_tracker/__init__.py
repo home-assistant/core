@@ -18,7 +18,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
-from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
