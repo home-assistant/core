@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.remote import JSONEncoder
 
 from tests.common import (
-    get_test_home_assistant, fire_time_changed, fire_service_discovered,
+    get_test_home_assistant, fire_time_changed,
     patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
 
 from ...test_util.aiohttp import mock_aiohttp_client
