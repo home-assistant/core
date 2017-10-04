@@ -807,7 +807,6 @@ class ZWaveDeviceEntityValues():
 
         if node_config.get(CONF_REFRESH_VALUE):
             self.primary.set_change_verified(True)
-            _LOGGER.info("Values for %s are forced refreshed.", generated_id)
         else:
             self.primary.set_change_verified(DEFAULT_CONF_REFRESH_VALUE)
 
@@ -851,7 +850,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         from pydispatch import dispatcher
         self.values = values
         self.node = values.primary.node
-        self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
