@@ -41,6 +41,7 @@ def last_recorder_run(hass):
 
     with session_scope(hass=hass) as session:
         res = (session.query(RecorderRuns)
+               .filter(RecorderRuns.end.isnot(None))
                .order_by(RecorderRuns.end.desc()).first())
         if res is None:
             return None
