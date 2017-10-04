@@ -105,8 +105,8 @@ def test_setup_api_push_api_data_default(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 2
     assert not aioclient_mock.mock_calls[-1][2]['ssl']
-    assert 'password' not in aioclient_mock.mock_calls[-1][2]
-    assert 'port' not in aioclient_mock.mock_calls[-1][2]
+    assert aioclient_mock.mock_calls[-1][2]['password'] is None
+    assert aioclient_mock.mock_calls[-1][2]['port'] == 8123
 
 
 @asyncio.coroutine
