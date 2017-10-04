@@ -45,4 +45,3 @@ class NetgearTest(unittest.TestCase):
         # all parameters are missing
         config = {DOMAIN: {}}
         self.assertIsNone(netgear.get_scanner(None, config))
-
