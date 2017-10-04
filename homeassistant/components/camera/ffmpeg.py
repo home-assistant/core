@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.ffmpeg/
 """
 import asyncio
 import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
