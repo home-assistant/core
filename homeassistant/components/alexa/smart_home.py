@@ -11,12 +11,11 @@ from homeassistant.util.decorator import Registry
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_HEADER = 'header'
-ATTR_NAME = 'name'
-ATTR_NAMESPACE = 'namespace'
-ATTR_MESSAGE_ID = 'messageId'
-ATTR_PAYLOAD = 'payload'
-ATTR_PAYLOAD_VERSION = 'payloadVersion'
+API_DIRECTIVE = 'directive'
+API_EVENT = 'event'
+API_HEADER = 'header'
+API_PAYLOAD = 'payload'
+API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
@@ -32,44 +31,68 @@ MAPPING_COMPONENT = {
 @asyncio.coroutine
 def async_handle_message(hass, message):
     """Handle incoming API messages."""
-    assert int(message[ATTR_HEADER][ATTR_PAYLOAD_VERSION]) == 2
+    assert message[API_DIRECTIVE][API_HEADER]['payloadVersion'] == 3
+
+    # Read head data
+    message = message[API_DIRECTIVE]
+    namespace = message[API_HEADER]['namespace']
+    name = message[API_HEADER]['name']
 
     # Do we support this API request?
-    funct_ref = HANDLERS.get(message[ATTR_HEADER][ATTR_NAME])
+    funct_ref = HANDLERS.get((namespace, name))
     if not funct_ref:
         _LOGGER.warning(
-            "Unsupported API request %s", message[ATTR_HEADER][ATTR_NAME])
+            "Unsupported API request %s/%s", namespace, name)
         return api_error(message)
 
     return (yield from funct_ref(hass, message))
 
 
-def api_message(name, namespace, payload=None):
+def api_message(request, name='Alexa', namespace='Response', payload=None):
     """Create a API formatted response message.
 
     Async friendly.
     """
     payload = payload or {}
-    return {
-        ATTR_HEADER: {
-            ATTR_MESSAGE_ID: str(uuid4()),
-            ATTR_NAME: name,
-            ATTR_NAMESPACE: namespace,
-            ATTR_PAYLOAD_VERSION: '2',
-        },
-        ATTR_PAYLOAD: payload,
+
+    response = {
+        API_EVENT: {
+            API_HEADER: {
+                'namespace': namespace,
+                'name': name,
+                'messageId': str(uuid4()),
+                'payloadVersion': '3',
+            },
+            API_PAYLOAD: payload,
+        }
     }
 
+    # If a correlation token exsits, add it to header / Need by Async requests
+    token = request[API_HEADER].get('correlationToken')
+    if token:
+        response[API_EVENT][API_HEADER]['correlationToken'] = token
 
-def api_error(request, exc='DriverInternalError'):
+    # Extend event with endpoint object / Need by Async requests
+    if API_ENDPOINT in request:
+        response[API_EVENT][API_ENDPOINT] = request[API_ENDPOINT].copy()
+
+    return response
+
+
+def api_error(request, error_type='INTERNAL_ERROR', error_message=""):
     """Create a API formatted error response.
 
     Async friendly.
     """
-    return api_message(exc, request[ATTR_HEADER][ATTR_NAMESPACE])
+    payload = {
+        'type': error_type,
+        'message': error_message,
+    }
+
+    return api_message(request, name='ErrorResponse', payload=payload)
 
 
-@HANDLERS.register('DiscoverAppliancesRequest')
+@HANDLERS.register(('Alexa.Discovery', 'Discover'))
 @asyncio.coroutine
 def async_api_discovery(hass, request):
     """Create a API formatted discovery response.
@@ -120,22 +143,21 @@ def extract_entity(funct):
     @asyncio.coroutine
     def async_api_entity_wrapper(hass, request):
         """Process a turn on request."""
-        entity_id = \
-            request[ATTR_PAYLOAD]['appliance']['applianceId'].replace('#', '.')
+        entity_id = request[API_ENDPOINT]['endpointId'].replace('#', '.')
 
         # extract state object
         entity = hass.states.get(entity_id)
         if not entity:
             _LOGGER.error("Can't process %s for %s",
-                          request[ATTR_HEADER][ATTR_NAME], entity_id)
-            return api_error(request)
+                          request[API_HEADER]['name'], entity_id)
+            return api_error(request, error_type='NO_SUCH_ENDPOINT')
 
         return (yield from funct(hass, request, entity))
 
     return async_api_entity_wrapper
 
 
-@HANDLERS.register('TurnOnRequest')
+@HANDLERS.register(('Alexa.PowerController', 'TurnOn'))
 @extract_entity
 @asyncio.coroutine
 def async_api_turn_on(hass, request, entity):
@@ -144,10 +166,10 @@ def async_api_turn_on(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
-    return api_message('TurnOnConfirmation', 'Alexa.ConnectedHome.Control')
+    return api_message(request)
 
 
-@HANDLERS.register('TurnOffRequest')
+@HANDLERS.register(('Alexa.PowerController', 'TurnOff'))
 @extract_entity
 @asyncio.coroutine
 def async_api_turn_off(hass, request, entity):
@@ -156,16 +178,16 @@ def async_api_turn_off(hass, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=True)
 
-    return api_message('TurnOffConfirmation', 'Alexa.ConnectedHome.Control')
+    return api_message(request)
 
 
-@HANDLERS.register('SetPercentageRequest')
+@HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
 @extract_entity
 @asyncio.coroutine
 def async_api_set_percentage(hass, request, entity):
     """Process a set percentage request."""
     if entity.domain == light.DOMAIN:
-        brightness = request[ATTR_PAYLOAD]['percentageState']['value']
+        brightness = request[API_PAYLOAD]['percentage']
         yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: entity.entity_id,
             light.ATTR_BRIGHTNESS: brightness,
@@ -173,5 +195,4 @@ def async_api_set_percentage(hass, request, entity):
     else:
         return api_error(request)
 
-    return api_message(
-        'SetPercentageConfirmation', 'Alexa.ConnectedHome.Control')
+    return api_message(request)
