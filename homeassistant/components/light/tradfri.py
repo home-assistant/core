@@ -104,7 +104,7 @@ class Tradfri(Light):
         self._name = self._light.name
         self._rgb_color = None
         self._features = SUPPORT_BRIGHTNESS
-        
+
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
                 if "CWS" in self._light.device_info.model_number:
@@ -113,9 +113,10 @@ class Tradfri(Light):
                     self._features |= SUPPORT_COLOR_TEMP
             else:
                 self._features |= SUPPORT_RGB_COLOR
-            
-        _LOGGER.debug("features detected for %s %s: %d", self._name, self._light.device_info.model_number, self._features)
-        
+
+        _LOGGER.debug("features detected for %s %s: %d", 
+            self._name, self._light.device_info.model_number, self._features)
+
         self._ok_temps = \
             self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
 
