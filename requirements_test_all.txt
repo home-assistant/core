@@ -37,7 +37,7 @@ aiohttp_cors==0.5.3
 apns2==0.1.1
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.8
+dsmr_parser==0.11
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
@@ -69,7 +69,7 @@ holidays==0.8.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==3.0.0
+influxdb==4.1.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2

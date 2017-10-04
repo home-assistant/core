@@ -1,8 +1,8 @@
 """
-Component to offer a way to select a value from a slider.
+Component to offer a way to set a numeric value from a slider or text box.
 
 For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/input_slider/
+at https://home-assistant.io/components/input_number/
 """
 import asyncio
 import logging
@@ -19,29 +19,34 @@ from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'input_slider'
+DOMAIN = 'input_number'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
+CONF_MODE = 'mode'
 CONF_STEP = 'step'
+
+MODE_SLIDER = 'slider'
+MODE_BOX = 'box'
 
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_STEP = 'step'
+ATTR_MODE = 'mode'
 
-SERVICE_SELECT_VALUE = 'select_value'
+SERVICE_SET_VALUE = 'set_value'
 
-SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
+SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
 
-def _cv_input_slider(cfg):
-    """Configure validation helper for input slider (voluptuous)."""
+def _cv_input_number(cfg):
+    """Configure validation helper for input number (voluptuous)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
@@ -64,16 +69,18 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_STEP, default=1):
                 vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-        }, _cv_input_slider)
+            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_MODE, default=MODE_SLIDER):
+                vol.In([MODE_BOX, MODE_SLIDER]),
+        }, _cv_input_number)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-def select_value(hass, entity_id, value):
-    """Set input_slider to value."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_VALUE, {
+def set_value(hass, entity_id, value):
+    """Set input_number to value."""
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
     })
@@ -94,37 +101,39 @@ def async_setup(hass, config):
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
+        mode = cfg.get(CONF_MODE)
 
-        entities.append(InputSlider(
-            object_id, name, initial, minimum, maximum, step, icon, unit))
+        entities.append(InputNumber(
+            object_id, name, initial, minimum, maximum, step, icon, unit,
+            mode))
 
     if not entities:
         return False
 
     @asyncio.coroutine
-    def async_select_value_service(call):
+    def async_set_value_service(call):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
-                 for input_slider in target_inputs]
+        tasks = [input_number.async_set_value(call.data[ATTR_VALUE])
+                 for input_number in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
-        schema=SERVICE_SELECT_VALUE_SCHEMA)
+        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
+        schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
 
 
-class InputSlider(Entity):
+class InputNumber(Entity):
     """Represent an slider."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
-                 unit):
-        """Initialize a select input."""
+                 unit, mode):
+        """Initialize an input number."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
@@ -133,6 +142,7 @@ class InputSlider(Entity):
         self._step = step
         self._icon = icon
         self._unit = unit
+        self._mode = mode
 
     @property
     def should_poll(self):
@@ -141,7 +151,7 @@ class InputSlider(Entity):
 
     @property
     def name(self):
-        """Return the name of the select input slider."""
+        """Return the name of the input slider."""
         return self._name
 
     @property
@@ -165,7 +175,8 @@ class InputSlider(Entity):
         return {
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
-            ATTR_STEP: self._step
+            ATTR_STEP: self._step,
+            ATTR_MODE: self._mode,
         }
 
     @asyncio.coroutine
@@ -184,8 +195,8 @@ class InputSlider(Entity):
             self._current_value = self._minimum
 
     @asyncio.coroutine
-    def async_select_value(self, value):
-        """Select new value."""
+    def async_set_value(self, value):
+        """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
             _LOGGER.warning("Invalid value: %s (range %s - %s)",
