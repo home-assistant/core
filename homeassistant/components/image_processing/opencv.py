@@ -28,7 +28,7 @@ CASCADE_URL = \
     'https://raw.githubusercontent.com/opencv/opencv/master/data/' + \
     'lbpcascades/lbpcascade_frontalface.xml'
 
-CONF_CLASSIFIER = 'classifer'
+CONF_CLASSIFIER = 'classifier'
 CONF_FILE = 'file'
 CONF_MIN_SIZE = 'min_size'
 CONF_NEIGHBORS = 'neighbors'
