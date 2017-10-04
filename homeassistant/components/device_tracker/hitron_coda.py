@@ -75,17 +75,17 @@ class HitronCODADeviceScanner(DeviceScanner):
         # doing a request
         try:
             res = requests.get(self._url, timeout=10, cookies={
-              'LANG_COOKIE': 'en_US',
-              'cur_modelname': 'CODA-4582U',
-              'userName': self._username,
-              'password': self._password,
-              'userid': '1198377306',  # magic number
-              'modelname': 'CODA-4582U',
-              'IE8': '0',
-              'isEdit2': '0',
-              'isEdit3': '0',
-              'isEdit': '0',
-              'isEdit1': '0',
+                'LANG_COOKIE': 'en_US',
+                'cur_modelname': 'CODA-4582U',
+                'userName': self._username,
+                'password': self._password,
+                'userid': '1198377306',  # magic number
+                'modelname': 'CODA-4582U',
+                'IE8': '0',
+                'isEdit2': '0',
+                'isEdit3': '0',
+                'isEdit': '0',
+                'isEdit1': '0',
             })
         except requests.exceptions.Timeout:
             _LOGGER.error(
