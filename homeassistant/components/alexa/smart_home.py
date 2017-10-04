@@ -19,10 +19,10 @@ API_ENDPOINT = 'endpoint'
 
 
 MAPPING_COMPONENT = {
-    switch.DOMAIN: ['SWITCH', ('turnOff', 'turnOn'), None],
+    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
     light.DOMAIN: [
-        'LIGHT', ('turnOff', 'turnOn'), {
-            light.SUPPORT_BRIGHTNESS: 'setPercentage'
+        'LIGHT', ('Alexa.PowerController',), {
+            light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController'
         }
     ],
 }
@@ -99,7 +99,7 @@ def async_api_discovery(hass, request):
 
     Async friendly.
     """
-    discovered_appliances = []
+    discovery_endpoints = []
 
     for entity in hass.states.async_all():
         class_data = MAPPING_COMPONENT.get(entity.domain)
@@ -107,35 +107,42 @@ def async_api_discovery(hass, request):
         if not class_data:
             continue
 
-        appliance = {
-            'actions': [],
-            'applianceTypes': [class_data[0]],
+        endpoint = {
+            'displayCategories': [class_data[0]],
             'additionalApplianceDetails': {},
-            'applianceId': entity.entity_id.replace('.', '#'),
-            'friendlyDescription': '',
+            'endpointId': entity.entity_id.replace('.', '#'),
             'friendlyName': entity.name,
-            'isReachable': True,
+            'description': '',
             'manufacturerName': 'Unknown',
-            'modelName': 'Unknown',
-            'version': 'Unknown',
         }
+        actions = set()
 
         # static actions
         if class_data[1]:
-            appliance['actions'].extend(list(class_data[1]))
+            actions += set(class_data[1])
 
         # dynamic actions
         if class_data[2]:
             supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             for feature, action_name in class_data[2].items():
                 if feature & supported > 0:
-                    appliance['actions'].append(action_name)
+                    actions.add(action_name)
 
-        discovered_appliances.append(appliance)
+        # Write action into capabilities
+        capabilities = []
+        for action in actions:
+            capabilities.append({
+                'type': 'AlexaInterface',
+                'interface': action,
+                'version': 3,
+            })
+
+        endpoint['capabilities'] = capabilities
+        discovery_endpoints.append(endpoint)
 
     return api_message(
-        'DiscoverAppliancesResponse', 'Alexa.ConnectedHome.Discovery',
-        payload={'discoveredAppliances': discovered_appliances})
+        request, name='Discover', namespace='Alexa.Discovery',
+        payload=discovery_endpoints)
 
 
 def extract_entity(funct):
@@ -181,18 +188,16 @@ def async_api_turn_off(hass, request, entity):
     return api_message(request)
 
 
-@HANDLERS.register(('Alexa.PercentageController', 'SetPercentage'))
+@HANDLERS.register(('Alexa.BrightnessController', 'SetBrightness'))
 @extract_entity
 @asyncio.coroutine
 def async_api_set_percentage(hass, request, entity):
-    """Process a set percentage request."""
-    if entity.domain == light.DOMAIN:
-        brightness = request[API_PAYLOAD]['percentage']
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_BRIGHTNESS: brightness,
-        }, blocking=True)
-    else:
-        return api_error(request)
+    """Process a set brightness request."""
+    brightness = request[API_PAYLOAD]['brightness']
+
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_BRIGHTNESS: brightness,
+    }, blocking=True)
 
     return api_message(request)
