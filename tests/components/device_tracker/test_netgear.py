@@ -1,3 +1,4 @@
+"""Test netgear platform."""
 import unittest
 from unittest.mock import Mock, patch
 
@@ -44,3 +45,4 @@ class NetgearTest(unittest.TestCase):
         # all parameters are missing
         config = {DOMAIN: {}}
         self.assertIsNone(netgear.get_scanner(None, config))
+
