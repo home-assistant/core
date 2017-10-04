@@ -54,7 +54,7 @@ DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
-CONF_PURGE_DAYS = 'purge_keep_days'
+CONF_PURGE_DAYS = 'purge_days'
 CONF_PURGE_INTERVAL = 'purge_interval'
 CONF_EVENT_TYPES = 'event_types'
 
@@ -138,27 +138,18 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @asyncio.coroutine
     def async_handle_purge_interval(now):
         """Handle purge interval."""
-        if purge_days is not None:
-            _LOGGER.debug("Staring purge by interval, purge days is %s",
-                          purge_days)
-            instance.do_purge(purge_days)
+        instance.do_purge(purge_days)
 
     @asyncio.coroutine
     def async_handle_purge_service(service):
         """Handle calls to the purge service."""
-        purge_days = service.data.get(ATTR_KEEP_DAYS)
-        if purge_days is not None:
-            _LOGGER.debug("Staring purge by service, purge days is %s",
-                          purge_days)
-            instance.do_purge(purge_days)
-        else:
-            _LOGGER.warning("Purge by service - purge days not get")
+        instance.do_purge(service.data[ATTR_KEEP_DAYS])
 
     descriptions = yield from hass.async_add_job(
         conf_util.load_yaml_config_file, path.join(
             path.dirname(__file__), 'services.yaml'))
 
-    if purge_interval is not None:
+    if purge_interval and purge_days:
         async_track_time_interval(hass, async_handle_purge_interval,
                                   timedelta(days=purge_interval))
 
