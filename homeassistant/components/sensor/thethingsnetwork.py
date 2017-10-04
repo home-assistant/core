@@ -153,12 +153,11 @@ class TtnDataStorage(object):
             _LOGGER.error("Application ID is not available: %s", self._app_id)
             return False
 
-        if status == 200:
-            data = yield from req.json()
-            self.data = data[0]
+        data = yield from req.json()
+        self.data = data[0]
 
-            for value in self._values.items():
-                if value[0] not in self.data.keys():
-                    _LOGGER.warning("Value not available: %s", value[0])
+        for value in self._values.items():
+            if value[0] not in self.data.keys():
+                _LOGGER.warning("Value not available: %s", value[0])
 
         return req
