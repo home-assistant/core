@@ -12,8 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_SCAN_INTERVAL,
+    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['TravisPy==0.3.5']
@@ -21,9 +21,8 @@ REQUIREMENTS = ['TravisPy==0.3.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Information provided by https://travis-ci.org/"
-CONF_BRANCH_NAME = 'default_branch'
-CONF_GITHUB_TOKEN = 'github_token'
-CONF_REPOSITORY_NAME = 'repository_names'
+CONF_BRANCH = 'branch'
+CONF_REPOSITORY = 'repository'
 
 DEFAULT_BRANCH_NAME = 'master'
 
@@ -43,13 +42,12 @@ SENSOR_TYPES = {
 NOTIFICATION_ID = 'travisci'
 NOTIFICATION_TITLE = 'Travis CI Sensor Setup'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_GITHUB_TOKEN): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_BRANCH_NAME, default=DEFAULT_BRANCH_NAME): cv.string,
-    vol.Optional(CONF_REPOSITORY_NAME, default=[]):
+    vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
+    vol.Optional(CONF_REPOSITORY, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
         cv.time_period,
@@ -61,9 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from travispy import TravisPy
     from travispy.errors import TravisError
 
-    token = config.get(CONF_GITHUB_TOKEN)
-    repositories = config.get(CONF_REPOSITORY_NAME)
-    default_branch = config.get(CONF_BRANCH_NAME)
+    token = config.get(CONF_API_KEY)
+    repositories = config.get(CONF_REPOSITORY)
+    branch = config.get(CONF_BRANCH)
 
     try:
         travis = TravisPy.github_auth(token)
@@ -91,11 +89,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             repo = "{0}/{1}".format(user.login, repo)
 
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            sensors.append(TravisCISensor(travis,
-                                          repo,
-                                          user,
-                                          default_branch,
-                                          sensor_type))
+            sensors.append(
+                TravisCISensor(travis, repo, user, branch, sensor_type))
 
     add_devices(sensors, True)
     return True
@@ -104,14 +99,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TravisCISensor(Entity):
     """Representation of a Travis CI sensor."""
 
-    def __init__(self, data, repo_name, user, default_branch, sensor_type):
+    def __init__(self, data, repo_name, user, branch, sensor_type):
         """Initialize the sensor."""
         self._build = None
         self._sensor_type = sensor_type
         self._data = data
         self._repo_name = repo_name
         self._user = user
-        self._default_branch = default_branch
+        self._branch = branch
         self._state = STATE_UNKNOWN
         self._name = "{0} {1}".format(self._repo_name,
                                       SENSOR_TYPES[self._sensor_type][0])
@@ -165,7 +160,7 @@ class TravisCISensor(Entity):
         if self._build:
             if self._sensor_type == 'state':
                 branch_stats = \
-                    self._data.branch(self._default_branch, self._repo_name)
+                    self._data.branch(self._branch, self._repo_name)
                 self._state = branch_stats.state
 
             else:
