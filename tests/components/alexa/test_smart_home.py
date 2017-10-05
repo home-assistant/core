@@ -140,8 +140,14 @@ def test_discovery_request(hass):
             assert appliance['displayCategories'][0] == "LIGHT"
             assert appliance['friendlyName'] == "Test light 2"
             assert len(appliance['capabilities']) == 2
-            assert appliance['capabilities'][-1]['interface'] == \
-                'Alexa.BrightnessController'
+
+            caps = set()
+            for feature in appliance['capabilities']:
+                caps.add(feature['interface'])
+
+            assert 'Alexa.BrightnessController' in caps
+            assert 'Alexa.PowerController' in caps
+
             continue
 
         raise AssertionError("Unknown appliance!")
