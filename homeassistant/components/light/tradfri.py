@@ -201,16 +201,16 @@ class Tradfri(Light):
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
-        if self._light_data.hex_color not in (None, '0'): 
+        if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
 
-        # handle GW behavoiur which does report hex color '0' whenevener 
+        # handle GW behavoiur which does report hex color '0' whenevener
         # a bulb is set to a color_xy which isn't one of the predefined ones
-        # -> convert xyb to rgb when available 
+        # -> convert xyb to rgb when available
         elif self._light_data.xy_color not in (None, '0') and \
                 self._light_data.dimmer not in (None, '0'):
             self._rgb_color = color_util.color_xy_brightness_to_RGB(
-                self._light_data.xy_color[0]/65536, 
-                self._light_data.xy_color[1]/65536, 
+                self._light_data.xy_color[0]/65536,
+                self._light_data.xy_color[1]/65536,
                 self._light_data.dimmer)
