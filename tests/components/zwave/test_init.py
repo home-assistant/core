@@ -771,7 +771,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert discovery.async_load_platform.called
         assert self.primary.set_change_verified.called
         assert len(self.primary.set_change_verified.mock_calls) == 1
-        assert self.primary.set_change_verified.mock_calls[0][1][0] == True
+        assert self.primary.set_change_verified.mock_calls[0][1][0]
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
@@ -802,7 +802,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert discovery.async_load_platform.called
         assert self.primary.set_change_verified.called
         assert len(self.primary.set_change_verified.mock_calls) == 1
-        assert self.primary.set_change_verified.mock_calls[0][1][0] == False
+        assert not self.primary.set_change_verified.mock_calls[0][1][0]
 
 
 class TestZwave(unittest.TestCase):
