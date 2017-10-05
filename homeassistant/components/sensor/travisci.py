@@ -4,7 +4,6 @@ This component provides HA sensor support for Travis CI framework.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.travisci/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -57,8 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Travis CI sensor."""
     from travispy import TravisPy
     from travispy.errors import TravisError
@@ -99,7 +97,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                           default_branch,
                                           sensor_type))
 
-    async_add_devices(sensors, True)
+    add_devices(sensors, True)
     return True
 
 
