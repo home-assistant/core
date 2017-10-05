@@ -48,7 +48,7 @@ def async_handle_message(hass, message):
     return (yield from funct_ref(hass, message))
 
 
-def api_message(request, name='Alexa', namespace='Response', payload=None):
+def api_message(request, name='Response', namespace='Alexa', payload=None):
     """Create a API formatted response message.
 
     Async friendly.
