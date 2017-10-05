@@ -5,13 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/skybell/
 """
 import logging
-import voluptuous as vol
 
 from requests.exceptions import HTTPError, ConnectTimeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['skybellpy==0.1.1']
@@ -80,16 +80,14 @@ class SkybellDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-
-        attrs['device_id'] = self._device.device_id
-        attrs['status'] = self._device.status
-        attrs['location'] = self._device.location
-        attrs['wifi_ssid'] = self._device.wifi_ssid
-        attrs['wifi_status'] = self._device.wifi_status
-        attrs['last_check_in'] = self._device.last_check_in
-        attrs['motion_threshold'] = self._device.motion_threshold
-        attrs['video_profile'] = self._device.video_profile
-
-        return attrs
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'device_id': self._device.device_id,
+            'status': self._device.status,
+            'location': self._device.location,
+            'wifi_ssid': self._device.wifi_ssid,
+            'wifi_status': self._device.wifi_status,
+            'last_check_in': self._device.last_check_in,
+            'motion_threshold': self._device.motion_threshold,
+            'video_profile': self._device.video_profile,
+        }

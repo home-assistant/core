@@ -4,20 +4,18 @@ Binary sensor support for the Skybell HD Doorbell.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.skybell/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.skybell import (
+    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['skybell']
 
@@ -49,7 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(SkybellBinarySensor(device, sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
@@ -57,12 +54,12 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
 
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor for a Skybell device."""
-        SkybellDevice.__init__(self, device)
+        super().__init__(device)
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(self._device.name,
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[1]
-        self._event = None
+        self._event = {}
         self._state = None
 
     @property
@@ -85,19 +82,16 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
         """Return the state attributes."""
         attrs = super().device_state_attributes
 
-        attrs['event_date'] = self._event['createdAt']
+        attrs['event_date'] = self._event.get('createdAt')
 
         return attrs
 
     def update(self):
         """Get the latest data and updates the state."""
-        SkybellDevice.update(self)
+        super().update()
 
         event = self._device.latest(SENSOR_TYPES.get(self._sensor_type)[2])
 
-        if not self._event:
-            self._event = event
-
-        self._state = bool(event and event['id'] != self._event['id'])
+        self._state = bool(event and event.get('id') != self._event.get('id'))
 
         self._event = event

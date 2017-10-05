@@ -5,13 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.skybell/
 """
 from datetime import timedelta
-
 import logging
+
 import requests
 
+from homeassistant.components.camera import Camera
 from homeassistant.components.skybell import (
     DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-from homeassistant.components.camera import Camera
 
 DEPENDENCIES = ['skybell']
 
@@ -29,7 +29,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(SkybellCamera(device))
 
     add_devices(sensors, True)
-    return True
 
 
 class SkybellCamera(SkybellDevice, Camera):

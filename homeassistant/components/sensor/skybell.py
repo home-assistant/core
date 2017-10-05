@@ -9,12 +9,12 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.skybell import (
     DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['skybell']
 
@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(SkybellSensor(device, sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class SkybellSensor(SkybellDevice):
@@ -53,12 +52,12 @@ class SkybellSensor(SkybellDevice):
 
     def __init__(self, device, sensor_type):
         """Initialize a sensor for a Skybell device."""
-        SkybellDevice.__init__(self, device)
+        super().__init__(device)
         self._sensor_type = sensor_type
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[1])
         self._name = "{0} {1}".format(self._device.name,
                                       SENSOR_TYPES.get(self._sensor_type)[0])
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):

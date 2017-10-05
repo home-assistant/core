@@ -6,12 +6,12 @@ https://home-assistant.io/components/light.skybell/
 """
 import logging
 
-from homeassistant.components.skybell import (
-    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+from homeassistant.components.skybell import (
+    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 
 DEPENDENCIES = ['skybell']
 
@@ -27,7 +27,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(SkybellLight(device))
 
     add_devices(sensors, True)
-    return True
 
 
 def to_skybell_level(level):
@@ -45,7 +44,7 @@ class SkybellLight(SkybellDevice, Light):
 
     def __init__(self, device):
         """Initialize a light for a Skybell device."""
-        SkybellDevice.__init__(self, device)
+        super().__init__(device)
         self._name = self._device.name
 
     @property

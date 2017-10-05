@@ -8,13 +8,13 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.skybell import (
     DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['skybell']
 
@@ -44,7 +44,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(SkybellSwitch(device, switch_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class SkybellSwitch(SkybellDevice, SwitchDevice):
@@ -52,7 +51,7 @@ class SkybellSwitch(SkybellDevice, SwitchDevice):
 
     def __init__(self, device, switch_type):
         """Initialize a light for a Skybell device."""
-        SkybellDevice.__init__(self, device)
+        super().__init__(device)
         self._switch_type = switch_type
         self._name = "{0} {1}".format(self._device.name,
                                       SWITCH_TYPES.get(self._switch_type)[0])
