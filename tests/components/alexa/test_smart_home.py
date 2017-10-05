@@ -236,7 +236,7 @@ def test_api_set_brightness(hass):
         'Alexa.BrightnessController', 'SetBrightness', 'light#test')
 
     # add payload
-    msg['directive']['payload']['brightness'] = '50'
+    request['directive']['payload']['brightness'] = '50'
 
     # settup test devices
     hass.states.async_set(
