@@ -67,6 +67,7 @@ def test_create_api_message_special():
     request = request['directive']
 
     request['header'].pop('correlationToken')
+    request.pop['endpoint']
 
     msg = smart_home.api_message(request, 'testName', 'testNameSpace')
 
@@ -97,7 +98,8 @@ def test_wrong_version(hass):
 @asyncio.coroutine
 def test_discovery_request(hass):
     """Test alexa discovery request."""
-    msg = get_new_request('Alexa.Discovery', 'Discover')
+    request = get_new_request('Alexa.Discovery', 'Discover')
+    request.pop['endpoint']
 
     # settup test devices
     hass.states.async_set(
@@ -110,16 +112,16 @@ def test_discovery_request(hass):
             'friendly_name': "Test light 2", 'supported_features': 1
         })
 
-    resp = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
 
-    assert len(resp['payload']['endpoints']) == 3
-    assert resp['header']['name'] == 'Discover.Response'
-    assert resp['header']['namespace'] == 'Alexa.Discovery'
+    assert len(msg['payload']['endpoints']) == 3
+    assert msg['header']['name'] == 'Discover.Response'
+    assert msg['header']['namespace'] == 'Alexa.Discovery'
 
-    for appliance in resp['payload']['endpoints']:
+    for appliance in msg['payload']['endpoints']:
         if appliance['endpointId'] == 'switch#test':
             assert appliance['displayCategories'][0] == "SWITCH"
             assert appliance['friendlyName'] == "Test switch"
