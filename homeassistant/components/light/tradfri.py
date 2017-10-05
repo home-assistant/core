@@ -104,12 +104,14 @@ class Tradfri(Light):
         self._name = self._light.name
         self._rgb_color = None
         self._features = SUPPORT_BRIGHTNESS
-
-        if self._light_data.hex_color is not None:
-            if self._light.device_info.manufacturer == IKEA:
+        if self._light.device_info.manufacturer == IKEA:
+            if "WS" in self._light.device_info.model_number:
                 self._features |= SUPPORT_COLOR_TEMP
-            else:
+            if "CWS" in self._light.device_info.model_number:
                 self._features |= SUPPORT_RGB_COLOR
+
+        if self._light_data.hex_color is not None and self._light.device_info.manufacturer != IKEA:
+            self._features |= SUPPORT_RGB_COLOR
 
         self._ok_temps = \
             self._light.device_info.manufacturer in ALLOWED_TEMPERATURES
@@ -117,14 +119,16 @@ class Tradfri(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        from pytradfri.color import MAX_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+        from pytradfri.color import MAX_KELVIN_WS, MAX_KELVIN
+        max_kelvin = MAX_KELVIN if "CWS" in self._light.device_info.model_number else MAX_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(max_kelvin)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        from pytradfri.color import MIN_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
+        from pytradfri.color import MIN_KELVIN_WS, MIN_KELVIN
+        min_kelvin = MIN_KELVIN if "CWS" in self._light.device_info.model_number else MIN_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(min_kelvin)
 
     @property
     def supported_features(self):
