@@ -45,7 +45,7 @@ SoCo==0.12
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.11.8
+abodepy==0.11.9
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.3
@@ -181,7 +181,7 @@ denonavr==0.5.3
 directpy==0.1
 
 # homeassistant.components.notify.discord
-discord.py==0.16.11
+discord.py==0.16.12
 
 # homeassistant.components.updater
 distro==1.0.4
@@ -273,10 +273,10 @@ gitterpy==0.1.5
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.6.2
+google-api-python-client==1.6.4
 
 # homeassistant.components.sensor.google_travel_time
-googlemaps==2.4.6
+googlemaps==2.5.1
 
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
@@ -351,7 +351,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==3.0.0
+influxdb==4.1.1
 
 # homeassistant.components.insteon_local
 insteonlocal==0.52
@@ -443,13 +443,13 @@ myusps==1.2.2
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
-netdisco==1.2.0
+netdisco==1.2.2
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
 # homeassistant.components.image_processing.opencv
-numpy==1.13.1
+numpy==1.13.3
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -552,6 +552,9 @@ pyHS100==0.2.4.2
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.20.1
 
+# homeassistant.components.sensor.tibber
+pyTibber==0.1.1
+
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
@@ -638,7 +641,7 @@ pyicloud==0.9.1
 pyiss==1.0.1
 
 # homeassistant.components.remote.itach
-pyitachip2ir==0.0.6
+pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -820,13 +823,13 @@ python_opendata_transport==0.0.2
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.20
+pythonegardia==1.0.21
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==2.2
+pytradfri==2.2.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -865,7 +868,7 @@ radiotherm==1.3
 raincloudy==0.0.1
 
 # homeassistant.components.raspihats
-# raspihats==2.2.1
+# raspihats==2.2.3
 
 # homeassistant.components.switch.rainmachine
 regenmaschine==0.4.1
@@ -934,6 +937,7 @@ sleekxmpp==1.3.2
 # homeassistant.components.sleepiq
 sleepyq==0.6
 
+# homeassistant.components.raspihats
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.envirophat
@@ -1067,7 +1071,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.9.24
+youtube_dl==2017.10.01
 
 # homeassistant.components.light.zengge
 zengge==0.2
