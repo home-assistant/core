@@ -154,7 +154,7 @@ def test_api_entity_not_exists(hass):
 
     call_switch = async_mock_service(hass, 'switch', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -169,7 +169,7 @@ def test_api_entity_not_exists(hass):
 def test_api_function_not_implemented(hass):
     """Test api call that is not implemented to us."""
     request = get_new_request('Alexa.HAHAAH', 'Sweet')
-    msg = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -183,7 +183,7 @@ def test_api_function_not_implemented(hass):
 @pytest.mark.parametrize("domain", ['light', 'switch'])
 def test_api_turn_on(hass, domain):
     """Test api turn on process."""
-    msg = get_new_request(
+    request = get_new_request(
         'Alexa.PowerController', 'TurnOn', '{}#test'.format(domain))
 
     # settup test devices
@@ -194,7 +194,7 @@ def test_api_turn_on(hass, domain):
 
     call = async_mock_service(hass, domain, 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -208,7 +208,7 @@ def test_api_turn_on(hass, domain):
 @pytest.mark.parametrize("domain", ['light', 'switch'])
 def test_api_turn_off(hass, domain):
     """Test api turn on process."""
-    msg = get_new_request(
+    request = get_new_request(
         'Alexa.PowerController', 'TurnOff', '{}#test'.format(domain))
 
     # settup test devices
@@ -219,7 +219,7 @@ def test_api_turn_off(hass, domain):
 
     call = async_mock_service(hass, domain, 'turn_off')
 
-    msg = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
@@ -232,7 +232,7 @@ def test_api_turn_off(hass, domain):
 @asyncio.coroutine
 def test_api_set_brightness(hass):
     """Test api set brightness process."""
-    msg = get_new_request(
+    request = get_new_request(
         'Alexa.BrightnessController', 'SetBrightness', 'light#test')
 
     # add payload
@@ -244,7 +244,7 @@ def test_api_set_brightness(hass):
 
     call_light = async_mock_service(hass, 'light', 'turn_on')
 
-    msg = yield from smart_home.async_handle_message(hass, msg)
+    msg = yield from smart_home.async_handle_message(hass, request)
 
     assert 'event' in msg
     msg = msg['event']
