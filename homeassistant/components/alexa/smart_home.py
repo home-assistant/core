@@ -119,7 +119,7 @@ def async_api_discovery(hass, request):
 
         # static actions
         if class_data[1]:
-            actions += set(class_data[1])
+            actions |= set(class_data[1])
 
         # dynamic actions
         if class_data[2]:
