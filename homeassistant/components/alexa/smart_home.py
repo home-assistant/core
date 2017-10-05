@@ -141,7 +141,7 @@ def async_api_discovery(hass, request):
         discovery_endpoints.append(endpoint)
 
     return api_message(
-        request, name='Discover', namespace='Alexa.Discovery',
+        request, name='Discover.Response', namespace='Alexa.Discovery',
         payload={'endpoints': discovery_endpoints})
 
 
