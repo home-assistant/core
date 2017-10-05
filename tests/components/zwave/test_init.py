@@ -742,6 +742,68 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert len(self.primary.enable_poll.mock_calls) == 1
         assert self.primary.enable_poll.mock_calls[0][1][0] == 123
 
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_config_refresh_value_true(self, discovery, get_platform):
+        """Test refresh value."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {self.entity_id: {
+            zwave.CONF_REFRESH_VALUE: True,
+        }}
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        assert self.primary.set_change_verified.called
+        assert len(self.primary.set_change_verified.mock_calls) == 1
+        assert self.primary.set_change_verified.mock_calls[0][1][0] == True
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_config_refresh_value_false(self, discovery, get_platform):
+        """Test refresh value."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {self.entity_id: {
+            zwave.CONF_REFRESH_VALUE: False,
+        }}
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        assert self.primary.set_change_verified.called
+        assert len(self.primary.set_change_verified.mock_calls) == 1
+        assert self.primary.set_change_verified.mock_calls[0][1][0] == False
+
 
 class TestZwave(unittest.TestCase):
     """Test zwave init."""
