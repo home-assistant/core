@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Information provided by https://travis-ci.org/"
 CONF_BRANCH_NAME = 'default_branch'
 CONF_GITHUB_TOKEN = 'github_token'
-CONF_REPOSITORY_NAME = 'repository_name'
+CONF_REPOSITORY_NAME = 'repository_names'
 
 DEFAULT_BRANCH_NAME = 'master'
 
