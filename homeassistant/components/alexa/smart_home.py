@@ -142,7 +142,7 @@ def async_api_discovery(hass, request):
 
     return api_message(
         request, name='Discover', namespace='Alexa.Discovery',
-        payload=discovery_endpoints)
+        payload={'endpoints': discovery_endpoints})
 
 
 def extract_entity(funct):
