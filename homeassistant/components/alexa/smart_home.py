@@ -31,7 +31,7 @@ MAPPING_COMPONENT = {
 @asyncio.coroutine
 def async_handle_message(hass, message):
     """Handle incoming API messages."""
-    assert message[API_DIRECTIVE][API_HEADER]['payloadVersion'] == 3
+    assert message[API_DIRECTIVE][API_HEADER]['payloadVersion'] == '3'
 
     # Read head data
     message = message[API_DIRECTIVE]
