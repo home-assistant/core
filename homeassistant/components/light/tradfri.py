@@ -3,6 +3,8 @@ Support for the IKEA Tradfri platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tradfri/
+
+some change for git testing
 """
 import asyncio
 import logging
