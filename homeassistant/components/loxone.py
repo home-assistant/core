@@ -17,7 +17,8 @@ from struct import unpack
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
+                                 CONF_PASSWORD)
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['websockets==3.2']
@@ -29,7 +30,6 @@ DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 80
 
 EVENT = 'loxone_received'
-
 
 KEEPALIVEINTERVAL = timedelta(seconds=120)
 
@@ -66,7 +66,8 @@ def async_setup(hass, config):
         data = {device_uuid: value}
         hass.bus.async_fire(EVENT, data)
 
-    hass.services.async_register(DOMAIN, 'event_bus_command', handle_event_bus_command)
+    hass.services.async_register(DOMAIN, 'event_bus_command',
+                                 handle_event_bus_command)
 
     @asyncio.coroutine
     def handle_websocket_command(call):
@@ -75,7 +76,8 @@ def async_setup(hass, config):
         device_uuid = call.data.get(ATTR_UUID, DEFAULT)
         yield from api.send_websocket_command(device_uuid, value)
 
-    hass.services.async_register(DOMAIN, 'event_websocket_command', handle_websocket_command)
+    hass.services.async_register(DOMAIN, 'event_websocket_command',
+                                 handle_websocket_command)
 
     return True
 
@@ -137,7 +139,8 @@ class LoxoneGateway:
         try:
             if not self._ws:
                 self._ws = yield from wslib.connect(
-                    "ws://{}:{}/ws/rfc6455".format(self._host, self._port), timeout=5)
+                    "ws://{}:{}/ws/rfc6455".format(self._host, self._port),
+                    timeout=5)
                 yield from self._ws.send("jdev/sys/getkey")
                 yield from self._ws.recv()
                 key = yield from self._ws.recv()
@@ -180,11 +183,13 @@ class LoxoneGateway:
     def _async_process_message(self, message):
         if len(message) == 8:
             unpacked_data = unpack('ccccI', message)
-            self._current_typ = int.from_bytes(unpacked_data[1], byteorder='big')
+            self._current_typ = int.from_bytes(unpacked_data[1],
+                                               byteorder='big')
         else:
             parsed_data = parse_loxone_message(self._current_typ, message)
             _LOGGER.debug(parsed_data)
             self._hass.bus.async_fire(EVENT, parsed_data)
+
 
 @asyncio.coroutine
 def _ws_process_message(message, async_callback):
@@ -237,11 +242,8 @@ def parse_loxone_message(typ, message):
             packet = message[start:end]
             event_uuid = uuid.UUID(bytes_le=packet[0:16])
             fields = event_uuid.urn.replace("urn:uuid:", "").split("-")
-            uuidstr = fields[0] + "-" + \
-                      fields[1] + "-" + \
-                      fields[2] + "-" + \
-                      fields[3] + \
-                      fields[4]
+            uuidstr = fields[0] + "-" + fields[1] + "-" + fields[2] + "-" + \
+                      fields[3] + fields[4]
             value = unpack('d', packet[16:24])[0]
             event_dict[uuidstr] = value
             start += 24
