@@ -9,7 +9,7 @@ from homeassistant.components.alexa import smart_home
 from tests.common import async_mock_service
 
 
-def get_new_request(namespace, name, endpoint=True):
+def get_new_request(namespace, name, endpoint=None):
     """Generate a new API message."""
     raw_msg = {
         'directive': {
@@ -67,7 +67,6 @@ def test_create_api_message_special():
     request = request['directive']
 
     request['header'].pop('correlationToken')
-    request.pop['endpoint']
 
     msg = smart_home.api_message(request, 'testName', 'testNameSpace')
 
@@ -99,7 +98,6 @@ def test_wrong_version(hass):
 def test_discovery_request(hass):
     """Test alexa discovery request."""
     request = get_new_request('Alexa.Discovery', 'Discover')
-    request.pop['endpoint']
 
     # settup test devices
     hass.states.async_set(
