@@ -51,8 +51,8 @@ def test_create_api_message_defaults():
     assert msg['header']['messageId'] != request['header']['messageId']
     assert msg['header']['correlationToken'] == \
         request['header']['correlationToken']
-    assert msg['header']['name'] == 'Alexa'
-    assert msg['header']['namespace'] == 'Response'
+    assert msg['header']['name'] == 'Response'
+    assert msg['header']['namespace'] == 'Alexa'
     assert msg['header']['payloadVersion'] == '3'
 
     assert 'test' in msg['payload']
