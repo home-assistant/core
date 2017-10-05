@@ -263,7 +263,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # create a service for calling run_scene directly on the bridge,
     # used to simplify automation rules.
     def hue_activate_scene(call):
-        """Service to call directly directly into bridge to set scenes."""
+        """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
         bridge.run_scene(group_name, scene_name)
