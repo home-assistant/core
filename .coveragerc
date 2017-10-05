@@ -182,6 +182,9 @@ omit =
     homeassistant/components/tesla.py
     homeassistant/components/*/tesla.py
 
+    homeassistant/components/thethingsnetwork.py
+    homeassistant/components/*/thethingsnetwork.py
+
     homeassistant/components/*/thinkingcleaner.py
 
     homeassistant/components/tradfri.py
