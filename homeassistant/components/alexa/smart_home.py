@@ -191,7 +191,7 @@ def async_api_turn_off(hass, request, entity):
 @HANDLERS.register(('Alexa.BrightnessController', 'SetBrightness'))
 @extract_entity
 @asyncio.coroutine
-def async_api_set_percentage(hass, request, entity):
+def async_api_set_brightness(hass, request, entity):
     """Process a set brightness request."""
     brightness = request[API_PAYLOAD]['brightness']
 
