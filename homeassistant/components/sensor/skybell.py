@@ -58,7 +58,6 @@ class SkybellSensor(SkybellDevice):
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[1])
         self._name = "{0} {1}".format(self._device.name,
                                       SENSOR_TYPES.get(self._sensor_type)[0])
-        self._device_class = SENSOR_TYPES.get(self._sensor_type)[1]
         self._state = STATE_UNKNOWN
 
     @property
