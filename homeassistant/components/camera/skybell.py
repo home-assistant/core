@@ -49,7 +49,7 @@ class SkybellCamera(SkybellDevice, Camera):
 
     def camera_image(self):
         """Get the latest camera image."""
-        SkybellDevice.update(self)
+        super().update()
 
         if self._url != self._device.image:
             self._url = self._device.image

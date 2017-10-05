@@ -81,7 +81,7 @@ class SkybellSensor(SkybellDevice):
 
     def update(self):
         """Get the latest data and updates the state."""
-        SkybellDevice.update(self)
+        super().update()
 
         if self._sensor_type == 'chime_level':
             self._state = self._device.outdoor_chime_level

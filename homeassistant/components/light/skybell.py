@@ -29,12 +29,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-def to_skybell_level(level):
+def _to_skybell_level(level):
     """Convert the given HASS light level (0-255) to Skybell (0-100)."""
     return int((level * 100) / 255)
 
 
-def to_hass_level(level):
+def _to_hass_level(level):
     """Convert the given Skybell (0-100) light level to HASS (0-255)."""
     return int((level * 255) / 100)
 
@@ -57,10 +57,10 @@ class SkybellLight(SkybellDevice, Light):
         if ATTR_RGB_COLOR in kwargs:
             self._device.led_rgb = kwargs[ATTR_RGB_COLOR]
         elif ATTR_BRIGHTNESS in kwargs:
-            self._device.led_intensity = to_skybell_level(
+            self._device.led_intensity = _to_skybell_level(
                 kwargs[ATTR_BRIGHTNESS])
         else:
-            self._device.led_intensity = to_skybell_level(255)
+            self._device.led_intensity = _to_skybell_level(255)
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
@@ -74,7 +74,7 @@ class SkybellLight(SkybellDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return to_hass_level(self._device.led_intensity)
+        return _to_hass_level(self._device.led_intensity)
 
     @property
     def rgb_color(self):
