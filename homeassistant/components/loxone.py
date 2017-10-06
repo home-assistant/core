@@ -21,14 +21,12 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
                                  CONF_PASSWORD)
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['websockets==3.2']
+REQUIREMENTS = ['websockets==3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'loxone'
-DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 80
-
 EVENT = 'loxone_received'
 
 KEEPALIVEINTERVAL = timedelta(seconds=120)
@@ -37,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -45,7 +43,6 @@ CONFIG_SCHEMA = vol.Schema({
 DEFAULT = ""
 ATTR_UUID = 'uuid'
 ATTR_VALUE = 'value'
-
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -83,20 +80,9 @@ def async_setup(hass, config):
 
 
 class LoxoneGateway:
-    """
-    Loxone Gateway
-    Main class for the communication with the miniserver
-    """
-
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    """ Main class for the communication with the miniserver """
     def __init__(self, hass, user, password, host, port):
-        """
-        :param hass: Reference to the hass object
-        :param user: Username to communicate with the Miniserver
-        :param password: Password of the user
-        :param host: Address where the Loxone Miniserver runs
-        :param port: Port of the Loxone Miniserver on the host
-        """
+        """ Username, password, host and port of a Loxone user """
         self._hass = hass
         self._user = user
         self._password = password
@@ -107,12 +93,9 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def send_websocket_command(self, device_uuid, value):
-        """
-        Send a websocket command to the Miniserver
-        :param device_uuid: Device id of a sensor or input
-        :param value: Value to be sent
-        """
-        yield from self._ws.send("jdev/sps/io/{}/{}".format(device_uuid, value))
+        """ Send a websocket command to the Miniserver """
+        yield from self._ws.send(
+            "jdev/sps/io/{}/{}".format(device_uuid, value))
 
     def get_process_message_callback(self):
         """Function to be called when data is received."""
@@ -135,6 +118,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _ws_read(self):
+        """ Establish the connection an read the messages"""
         import websockets as wslib
         try:
             if not self._ws:
@@ -144,8 +128,8 @@ class LoxoneGateway:
                 yield from self._ws.send("jdev/sys/getkey")
                 yield from self._ws.recv()
                 key = yield from self._ws.recv()
-                yield from self._ws.send(
-                    "authenticate/" + get_hash(key, self._user, self._password))
+                yield from self._ws.send("authenticate/{}".format(get_hash(
+                    key, self._user, self._password)))
                 yield from self._ws.recv()
                 yield from self._ws.send("jdev/sps/enablebinstatusupdate")
                 yield from self._ws.recv()
@@ -166,6 +150,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _ws_listen(self, async_callback):
+        """ Listen to all commands from the Miniserver"""
         try:
             while True:
                 result = yield from self._ws_read()
@@ -181,6 +166,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _async_process_message(self, message):
+        """ Process the messages """
         if len(message) == 8:
             unpacked_data = unpack('ccccI', message)
             self._current_typ = int.from_bytes(unpacked_data[1],
@@ -193,10 +179,7 @@ class LoxoneGateway:
 
 @asyncio.coroutine
 def _ws_process_message(message, async_callback):
-    """
-    :param message: Received message
-    :param async_callback: Callback function
-    """
+    """ Process the messages """
     try:
         yield from async_callback(message)
     except:  # pylint: disable=bare-except
@@ -204,27 +187,17 @@ def _ws_process_message(message, async_callback):
 
 
 def get_hash(key, username, password):
-    """
-    :param key: Key from the Miniserver
-    :param username: Username
-    :param password: Password of the user
-    :return: Hashed Key
-    """
+    """ Get the login data from username and password """
     key_dict = json.loads(key)
     key_value = key_dict['LL']['value']
-    data = username + ":" + password
+    data = "{}:{}".format(username, password)
     decoded_key = codecs.decode(key_value.encode("ascii"), "hex")
     hmac_obj = hmac.new(decoded_key, data.encode('UTF-8'), hashlib.sha1)
     return hmac_obj.hexdigest()
 
 
 def parse_loxone_message(typ, message):
-    """
-    Parser of the Loxone message
-    :param typ: Typ of the Message
-    :param message: Message from the Miniserver
-    :return: Parsed message as dict
-    """
+    """ Parser of the Loxone message """
     event_dict = {}
     if typ == 0:
         _LOGGER.debug("Text Message received!!")
@@ -242,8 +215,8 @@ def parse_loxone_message(typ, message):
             packet = message[start:end]
             event_uuid = uuid.UUID(bytes_le=packet[0:16])
             fields = event_uuid.urn.replace("urn:uuid:", "").split("-")
-            uuidstr = fields[0] + "-" + fields[1] + "-" + fields[2] + "-" + \
-                      fields[3] + fields[4]
+            uuidstr = "{}-{}-{}-{}-{}".format(fields[0], fields[1], fields[2],
+                                              fields[3], fields[4])
             value = unpack('d', packet[16:24])[0]
             event_dict[uuidstr] = value
             start += 24

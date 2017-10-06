@@ -2,10 +2,12 @@
 Loxone simple sensor
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/loxone/
+https://home-assistant.io/components/sensor.loxone/
 """
 
 import logging
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_UNIT_OF_MEASUREMENT)
 
@@ -14,12 +16,25 @@ EVENT = 'loxone_received'
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SENSOR_NAME = 'sensorname'
+CONF_SENSOR_TYP = 'sensortyp'
+CONF_UUID = 'uuid'
 
-def setup_platform(hass, config, add_devices):
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_UUID): cv.string,
+        vol.Required(CONF_SENSOR_NAME): cv.string,
+        vol.Required(CONF_SENSOR_TYP): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    sensor_name = config.get("sensorname")
-    uuid = config.get("uuid")
-    sensor_typ = config.get("sensortyp")
+    sensor_name = config.get(CONF_SENSOR_NAME)
+    uuid = config.get(CONF_UUID)
+    sensor_typ = config.get(CONF_SENSOR_TYP)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     sensor = Loxonesensor(sensor_name, uuid, sensor_typ, unit_of_measurement)
     add_devices([sensor])
@@ -31,7 +46,7 @@ class Loxonesensor(Entity):
 
     def __init__(self, name, uuid, sensor_typ, unit_of_measurement):
         """Initialize the sensor."""
-        self._state = 0.0
+        self._state = None
         self._name = name
         self._uuid = uuid
         self._sensor_typ = sensor_typ
