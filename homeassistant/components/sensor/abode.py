@@ -48,13 +48,18 @@ class AbodeSensor(AbodeDevice):
         super().__init__(data, device)
         self._sensor_type = sensor_type
         self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][1])
-        self._name = "{0} {1}".format(self.name,
+        self._name = "{0} {1}".format(self._device.name,
                                       SENSOR_TYPES[self._sensor_type][0])
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def state(self):
