@@ -161,14 +161,28 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        from pytradfri.color import MAX_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+        #~ from pytradfri.color import MAX_KELVIN_WS
+        #~ return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
+        from pytradfri.color import MAX_KELVIN_WS, MAX_KELVIN
+        max_kelvin = (
+            MAX_KELVIN
+            if "CWS" in self._light.device_info.model_number
+            else MAX_KELVIN_WS
+        )
+        return color_util.color_temperature_kelvin_to_mired(max_kelvin)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        from pytradfri.color import MIN_KELVIN_WS
-        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
+        #~ from pytradfri.color import MIN_KELVIN_WS
+        #~ return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
+        from pytradfri.color import MIN_KELVIN_WS, MIN_KELVIN
+        min_kelvin = (
+            MIN_KELVIN
+            if "CWS" in self._light.device_info.model_number
+            else MIN_KELVIN_WS
+        )
+        return color_util.color_temperature_kelvin_to_mired(min_kelvin)
 
     @property
     def device_state_attributes(self):
