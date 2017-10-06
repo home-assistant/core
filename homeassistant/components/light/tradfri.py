@@ -297,14 +297,13 @@ class TradfriLight(Light):
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
 
-        if self._light_data.hex_color is not None:
-            if self._light.device_info.manufacturer == IKEA:
-                if "CWS" in self._light.device_info.model_number:
-                    self._features |= SUPPORT_RGB_COLOR
-                    self._features |= SUPPORT_COLOR_TEMP
-                else:
-                    self._features |= SUPPORT_COLOR_TEMP
-            else:
+        if self._light.device_info.manufacturer == IKEA:
+            if "CWS" in self._light.device_info.model_number:
+                self._features |= SUPPORT_RGB_COLOR
+            if "WS" in self._light.device_info.model_number:
+                self._features |= SUPPORT_COLOR_TEMP
+        else:
+            if self._light_data.hex_color is not None:
                 self._features |= SUPPORT_RGB_COLOR
                 self._features |= SUPPORT_COLOR_TEMP
 
@@ -317,7 +316,7 @@ class TradfriLight(Light):
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
-        if self._light_data.hex_color not in (None, '0'): 
+        if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
 
@@ -325,11 +324,14 @@ class TradfriLight(Light):
                 self._light_data.xy_color[1] not in (None, '0') and \
                 self._light_data.dimmer not in (None, '0'):
             self._rgb_color = color_util.color_xy_brightness_to_RGB(
-                self._light_data.xy_color[0]/65536, 
-                self._light_data.xy_color[1]/65536, 
+                self._light_data.xy_color[0]/65536,
+                self._light_data.xy_color[1]/65536,
                 self._light_data.dimmer)
 
         elif self._light_data.dimmer not in (None, '0'):
-            self._rgb_color = (self._light_data.dimmer, self._light_data.dimmer, self._light_data.dimmer)
+            self._rgb_color = (
+                    self._light_data.dimmer,
+                    self._light_data.dimmer,
+                    self._light_data.dimmer)
 
         self.hass.async_add_job(self.async_update_ha_state())
