@@ -164,7 +164,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
+        from bluepy.btle import BTLEException
         try:
             self._thermostat.update()
-        except Exception as ex:
-            _LOGGER.warning("Updating the state failed: %s" % ex)
+        except BTLEException as ex:
+            _LOGGER.warning("Updating the state failed: %s", ex)
