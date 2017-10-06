@@ -44,6 +44,7 @@ DEFAULT = ""
 ATTR_UUID = 'uuid'
 ATTR_VALUE = 'value'
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Loxone component."""
@@ -81,6 +82,7 @@ def async_setup(hass, config):
 
 class LoxoneGateway:
     """ Main class for the communication with the miniserver """
+
     def __init__(self, hass, user, password, host, port):
         """ Username, password, host and port of a Loxone user """
         self._hass = hass
