@@ -629,7 +629,7 @@ pyharmony==1.0.16
 pyhik==0.1.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.32
+pyhomematic==0.1.33
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
