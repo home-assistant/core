@@ -6,15 +6,16 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 """
 # pylint: disable=import-error
 import logging
+import asyncio
+
 from datetime import timedelta
 
-from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.components.google import (
-    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
-    GoogleCalendarService)
-from homeassistant.util import Throttle, dt
+from homeassistant.components.calendar import Calendar
+from homeassistant.components.google import GoogleCalendarService, TOKEN_FILE
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.util import Throttle
+
+DOMAIN = 'GoogleCalendar'
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
@@ -22,56 +23,42 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'singleEvents': True,
 }
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=2)
 
-def setup_platform(hass, config, add_devices, disc_info=None):
-    """Set up the calendar platform for event devices."""
-    if disc_info is None:
-        return
+_LOGGER = logging.getLogger(__name__)
 
-    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
-        return
-
+@asyncio.coroutine
+def async_get_handler(hass, config, async_add_devices, discovery_info=None):
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    add_devices([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
-                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
+    return GoogleCalendar(hass, DOMAIN, calendar_service)
 
 
-class GoogleCalendarEventDevice(CalendarEventDevice):
-    """A calendar event device."""
+class GoogleCalendar(Calendar):
 
-    def __init__(self, hass, calendar_service, calendar, data):
-        """Create the Calendar event device."""
-        self.data = GoogleCalendarData(calendar_service, calendar,
-                                       data.get('search', None))
-        super().__init__(hass, data)
-
-
-class GoogleCalendarData(object):
-    """Class to utilize calendar service object to get next event."""
-
-    def __init__(self, calendar_service, calendar_id, search=None):
-        """Set up how we are going to search the google calendar."""
+    def __init__(self, hass, name, calendar_service):
         self.calendar_service = calendar_service
-        self.calendar_id = calendar_id
-        self.search = search
-        self.event = None
+        self.calendar_id = 'hj3i0ucmkenfjmdbrr85v7o2q8@group.calendar.google.com'
+        self.events = []
+
+        super().__init__(hass, name)
+
+    @asyncio.coroutine
+    def async_get_events(self):
+        return self.events
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data."""
+    @asyncio.coroutine
+    def async_update(self):
         service = self.calendar_service.get()
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['timeMin'] = dt.now().isoformat('T')
         params['calendarId'] = self.calendar_id
-        if self.search:
-            params['q'] = self.search
 
-        events = service.events()  # pylint: disable=no-member
+        events = service.events()
         result = events.list(**params).execute()
 
+        _LOGGER.info('Finding events: %s', result)
+
         items = result.get('items', [])
-        self.event = items[0] if len(items) == 1 else None
-        return True
+        self.events = items

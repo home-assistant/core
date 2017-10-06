@@ -103,14 +103,19 @@ class CalendarEntity(Entity):
     def async_update(self):
         """Retrieves evens from platform."""
         # TODO
+        _LOGGER.info('Update')
 
-class Calendar(object):
+class Calendar(Entity):
     """Represents a calendar device."""
 
     def __init__(self, hass, name):
         """Initialize calendar object."""
         self.hass = hass
-        self.name = name
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     def async_update(self):
         # TODO
@@ -120,6 +125,7 @@ class Calendar(object):
     def async_get_events(self):
         """Returns a list of events."""
         raise NotImplementedError()
+
 
 class CalendarView(HomeAssistantView):
     """Base Calendar view."""
