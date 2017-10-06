@@ -104,6 +104,9 @@ prometheus_client==0.0.19
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
+# homeassistant.components.climate.ephember
+pyephember==0.0.3
+
 # homeassistant.components.litejet
 pylitejet==0.1
 
