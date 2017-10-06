@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for siren in sirens_to_set:
             if service.service != SERVICE_SET_SIREN_AUTO_SHUTOFF:
                 if siren.wink.device_manufacturer() != 'dome':
-                    _LOGGER.error("This service can only be performed on Dome sirens.")
+                    _LOGGER.error("Service only valid for Dome sirens.")
                     return
                 if service.service == SERVICE_SET_CHIME_VOLUME:
                     siren.wink.set_chime_volume(service.data.get(ATTR_VOLUME))
@@ -108,7 +108,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             else:
                 siren.wink.set_auto_shutoff(
                     service.data.get(ATTR_AUTO_SHUTOFF))
-
 
     for switch in pywink.get_switches():
         _id = switch.object_id() + switch.name()
