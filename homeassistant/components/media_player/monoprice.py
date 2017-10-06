@@ -1,6 +1,5 @@
 """
 Support for interfacing with Monoprice 6 zone home audio controller.
-https://www.monoprice.com/product?p_id=10761
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.monoprice/
