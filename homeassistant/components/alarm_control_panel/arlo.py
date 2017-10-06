@@ -41,7 +41,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     base_stations = []
     for base_station in data.base_stations:
         base_stations.append(ArloBaseStation(base_station, home_mode_name))
-    async_add_devices(base_stations)
+    async_add_devices(base_stations, True)
 
 
 class ArloBaseStation(AlarmControlPanel):
@@ -51,7 +51,7 @@ class ArloBaseStation(AlarmControlPanel):
         """Initialize the alarm control panel."""
         self._base_station = data
         self._home_mode_name = home_mode_name
-        self._state = self._base_station.mode
+        self._state = None
 
     @property
     def icon(self):
@@ -74,10 +74,9 @@ class ArloBaseStation(AlarmControlPanel):
             mode = self._base_station.mode
             if mode:
                 self._state = self._get_state_from_mode(mode)
-                return self._state
+                return
             i += 1
         self._state = None
-        return self._state
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
