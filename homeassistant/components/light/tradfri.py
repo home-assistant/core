@@ -307,10 +307,12 @@ class TradfriLight(Light):
             if self._light.device_info.manufacturer == IKEA:
                 if "CWS" in self._light.device_info.model_number:
                     self._features |= SUPPORT_RGB_COLOR
+                    self._features |= SUPPORT_COLOR_TEMP
                 else:
                     self._features |= SUPPORT_COLOR_TEMP
             else:
                 self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_COLOR_TEMP
 
         #~ _LOGGER.warning(
             #~ "features detected for %s %s: %d", 
