@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.arlo import (DATA_ARLO, CONF_ATTRIBUTION)
-from homeassistant.components.alarm_control_panel import (AlarmControlPanel, PLATFORM_SCHEMA)
+from homeassistant.components.alarm_control_panel import (AlarmControlPanel,
+                                                          PLATFORM_SCHEMA)
 from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
@@ -27,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a sensor for an Arlo device."""
@@ -36,7 +38,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     home_mode_name = config.get(CONF_HOME_MODE_NAME)
-    base_stations = [ArloBaseStation(base_station, home_mode_name) for base_station in data.base_stations]
+    base_stations = []
+    for base_station in data.base_stations:
+        base_stations.append(ArloBaseStation(base_station, home_mode_name))
     async_add_devices(base_stations)
 
 
@@ -102,5 +106,4 @@ class ArloBaseStation(AlarmControlPanel):
             return STATE_ALARM_DISARMED
         elif mode == self._home_mode_name:
             return STATE_ALARM_ARMED_HOME
-        else:
-            return None
+        return None
