@@ -1,17 +1,20 @@
 """
 Support for interfacing with Monoprice 6 zone home audio controller.
-
 https://www.monoprice.com/product?p_id=10761
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.monoprice/
 """
 import logging
 
 import voluptuous as vol
-from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
+
+from homeassistant.const import (CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.media_player import (
+    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_VOLUME_MUTE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 
 
 REQUIREMENTS = ['pymonoprice==0.2']
@@ -53,10 +56,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config.get(CONF_PORT)
 
-    if port is None:
-        _LOGGER.error("Invalid config. Expected %s", CONF_PORT)
-        return False
-
     from pymonoprice import Monoprice
     monoprice = Monoprice(port)
 
@@ -67,11 +66,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         add_devices([MonopriceZone(monoprice, sources,
                                    zone_id, extra[CONF_NAME])], True)
-    return True
 
 
 class MonopriceZone(MediaPlayerDevice):
-    """Represents an Monoprice amplifier zone."""
+    """Representation of a a Monoprice amplifier zone."""
 
     # pylint: disable=too-many-public-methods
 
