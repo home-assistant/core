@@ -14,7 +14,7 @@ from homeassistant.components.vacuum import (SUPPORT_BATTERY,
                                              SUPPORT_STATUS, SUPPORT_STOP,
                                              SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
                                              VacuumDevice)
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 ATTR_FULL_CLEAN_TYPE = "full_clean_type"
 ATTR_CLEAN_ID = "clean_id"
