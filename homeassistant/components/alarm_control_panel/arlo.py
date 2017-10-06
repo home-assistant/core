@@ -51,6 +51,7 @@ class ArloBaseStation(AlarmControlPanel):
         """Initialize the alarm control panel."""
         self._base_station = data
         self._home_mode_name = home_mode_name
+        self._state = self._base_station.mode
 
     @property
     def icon(self):
@@ -60,6 +61,11 @@ class ArloBaseStation(AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
+        return self._state
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update the state of the device."""
         # PyArlo sometimes returns None for mode. So retry 3 times before
         # returning None.
         num_retries = 3
@@ -67,9 +73,11 @@ class ArloBaseStation(AlarmControlPanel):
         while i < num_retries:
             mode = self._base_station.mode
             if mode:
-                return self._get_state_from_mode(mode)
+                self._state = self._get_state_from_mode(mode)
+                return self._state
             i += 1
-        return None
+        self._state = None
+        return self._state
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
