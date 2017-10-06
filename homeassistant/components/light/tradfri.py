@@ -330,8 +330,8 @@ class TradfriLight(Light):
 
         elif self._light_data.dimmer not in (None, '0'):
             self._rgb_color = (
-                    self._light_data.dimmer,
-                    self._light_data.dimmer,
-                    self._light_data.dimmer)
+                self._light_data.dimmer,
+                self._light_data.dimmer,
+                self._light_data.dimmer)
 
         self.hass.async_add_job(self.async_update_ha_state())
