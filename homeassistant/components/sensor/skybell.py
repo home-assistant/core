@@ -22,9 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-# Sensor types: Name, icon, unit
+# Sensor types: Name, icon
 SENSOR_TYPES = {
-    'chime_level': ['Chime Level', 'bell-ring', None],
+    'chime_level': ['Chime Level', 'bell-ring'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -54,9 +54,9 @@ class SkybellSensor(SkybellDevice):
         """Initialize a sensor for a Skybell device."""
         super().__init__(device)
         self._sensor_type = sensor_type
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[1])
+        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][1])
         self._name = "{0} {1}".format(self._device.name,
-                                      SENSOR_TYPES.get(self._sensor_type)[0])
+                                      SENSOR_TYPES[self._sensor_type][0])
         self._state = None
 
     @property
@@ -73,11 +73,6 @@ class SkybellSensor(SkybellDevice):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return SENSOR_TYPES.get(self._sensor_type)[2]
 
     def update(self):
         """Get the latest data and updates the state."""

@@ -58,7 +58,7 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(self._device.name,
                                       SENSOR_TYPES[self._sensor_type][0])
-        self._device_class = SENSOR_TYPES.get(self._sensor_type)[1]
+        self._device_class = SENSOR_TYPES[self._sensor_type][1]
         self._event = {}
         self._state = None
 
@@ -90,7 +90,7 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
         """Get the latest data and updates the state."""
         super().update()
 
-        event = self._device.latest(SENSOR_TYPES.get(self._sensor_type)[2])
+        event = self._device.latest(SENSOR_TYPES[self._sensor_type][2])
 
         self._state = bool(event and event.get('id') != self._event.get('id'))
 
