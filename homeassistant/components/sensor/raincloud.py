@@ -13,7 +13,7 @@ from homeassistant.components.raincloud import (
     DATA_RAINCLOUD, ICON_MAP, RainCloudEntity, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['raincloud']
 
