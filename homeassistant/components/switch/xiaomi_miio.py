@@ -39,8 +39,6 @@ SUCCESS = ['ok']
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch from config."""
     from mirobo import Plug, DeviceException
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -57,7 +55,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                      device_info.raw['hw_ver'])
 
         xiaomi_plug_switch = XiaomiPlugSwitch(name, plug, device_info)
-        hass.data[PLATFORM][host] = xiaomi_plug_switch
     except DeviceException:
         raise PlatformNotReady
 
