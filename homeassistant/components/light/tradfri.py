@@ -3,8 +3,6 @@ Support for the IKEA Tradfri platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tradfri/
-
-some change for git testing
 """
 import asyncio
 import logging
@@ -299,11 +297,24 @@ class TradfriLight(Light):
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
 
+        #~ if self._light_data.hex_color is not None:
+            #~ if self._light.device_info.manufacturer == IKEA:
+                #~ self._features |= SUPPORT_COLOR_TEMP
+            #~ else:
+                #~ self._features |= SUPPORT_RGB_COLOR
+
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
-                self._features |= SUPPORT_COLOR_TEMP
+                if "CWS" in self._light.device_info.model_number:
+                    self._features |= SUPPORT_RGB_COLOR
+                else:
+                    self._features |= SUPPORT_COLOR_TEMP
             else:
                 self._features |= SUPPORT_RGB_COLOR
+
+        #~ _LOGGER.warning(
+            #~ "features detected for %s %s: %d", 
+            #~ self._name, self._light.device_info.model_number, self._features)
 
         self._temp_supported = self._light.device_info.manufacturer \
             in ALLOWED_TEMPERATURES
@@ -314,8 +325,25 @@ class TradfriLight(Light):
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
-        if self._light_data.hex_color not in (None, '0'):
+
+        if self._light_data.hex_color not in (None, '0'): 
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
+
+        elif self._light_data.xy_color[0] not in (None, '0') and \
+                self._light_data.xy_color[1] not in (None, '0') and \
+                self._light_data.dimmer not in (None, '0'):
+            self._rgb_color = color_util.color_xy_brightness_to_RGB(
+                self._light_data.xy_color[0]/65536, 
+                self._light_data.xy_color[1]/65536, 
+                self._light_data.dimmer)
+
+        elif self._light_data.dimmer not in (None, '0'):
+            self._rgb_color = (self._light_data.dimmer, self._light_data.dimmer, self._light_data.dimmer)
+
+
+        #~ if self._light_data.hex_color not in (None, '0'):
+            #~ self._rgb_color = color_util.rgb_hex_to_rgb_list(
+                #~ self._light_data.hex_color)
 
         self.hass.async_add_job(self.async_update_ha_state())
