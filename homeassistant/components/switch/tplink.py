@@ -45,15 +45,7 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, smartplug, name):
         """Initialize the switch."""
         self.smartplug = smartplug
-
-        # Use the name set on the device if not set
-        if name is None:
-            self._name = self.smartplug.alias
-        else:
-            self._name = name
-
         self._state = None
-        _LOGGER.debug("Setting up TP-Link Smart Plug")
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -86,6 +78,9 @@ class SmartPlugSwitch(SwitchDevice):
         try:
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
+
+            if self._name is None:
+                self._name = self.smartplug.alias
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
