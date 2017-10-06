@@ -161,28 +161,14 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        #~ from pytradfri.color import MAX_KELVIN_WS
-        #~ return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
-        from pytradfri.color import MAX_KELVIN_WS, MAX_KELVIN
-        max_kelvin = (
-            MAX_KELVIN
-            if "CWS" in self._light.device_info.model_number
-            else MAX_KELVIN_WS
-        )
-        return color_util.color_temperature_kelvin_to_mired(max_kelvin)
+        from pytradfri.color import MAX_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MAX_KELVIN_WS)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        #~ from pytradfri.color import MIN_KELVIN_WS
-        #~ return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
-        from pytradfri.color import MIN_KELVIN_WS, MIN_KELVIN
-        min_kelvin = (
-            MIN_KELVIN
-            if "CWS" in self._light.device_info.model_number
-            else MIN_KELVIN_WS
-        )
-        return color_util.color_temperature_kelvin_to_mired(min_kelvin)
+        from pytradfri.color import MIN_KELVIN_WS
+        return color_util.color_temperature_kelvin_to_mired(MIN_KELVIN_WS)
 
     @property
     def device_state_attributes(self):
@@ -311,12 +297,6 @@ class TradfriLight(Light):
         self._rgb_color = None
         self._features = SUPPORTED_FEATURES
 
-        #~ if self._light_data.hex_color is not None:
-            #~ if self._light.device_info.manufacturer == IKEA:
-                #~ self._features |= SUPPORT_COLOR_TEMP
-            #~ else:
-                #~ self._features |= SUPPORT_RGB_COLOR
-
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
                 if "CWS" in self._light.device_info.model_number:
@@ -328,10 +308,6 @@ class TradfriLight(Light):
                 self._features |= SUPPORT_RGB_COLOR
                 self._features |= SUPPORT_COLOR_TEMP
 
-        #~ _LOGGER.warning(
-            #~ "features detected for %s %s: %d", 
-            #~ self._name, self._light.device_info.model_number, self._features)
-
         self._temp_supported = self._light.device_info.manufacturer \
             in ALLOWED_TEMPERATURES
 
@@ -341,7 +317,6 @@ class TradfriLight(Light):
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
-
         if self._light_data.hex_color not in (None, '0'): 
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
@@ -356,10 +331,5 @@ class TradfriLight(Light):
 
         elif self._light_data.dimmer not in (None, '0'):
             self._rgb_color = (self._light_data.dimmer, self._light_data.dimmer, self._light_data.dimmer)
-
-
-        #~ if self._light_data.hex_color not in (None, '0'):
-            #~ self._rgb_color = color_util.rgb_hex_to_rgb_list(
-                #~ self._light_data.hex_color)
 
         self.hass.async_add_job(self.async_update_ha_state())
