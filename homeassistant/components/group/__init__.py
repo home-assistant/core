@@ -269,7 +269,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
+        descriptions[SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def groups_service_handler(service):
@@ -346,11 +346,11 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET, groups_service_handler,
-        descriptions[DOMAIN][SERVICE_SET], schema=SET_SERVICE_SCHEMA)
+        descriptions[SERVICE_SET], schema=SET_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE, groups_service_handler,
-        descriptions[DOMAIN][SERVICE_REMOVE], schema=REMOVE_SERVICE_SCHEMA)
+        descriptions[SERVICE_REMOVE], schema=REMOVE_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def visibility_service_handler(service):
@@ -368,7 +368,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
-        descriptions[DOMAIN][SERVICE_SET_VISIBILITY],
+        descriptions[SERVICE_SET_VISIBILITY],
         schema=SET_VISIBILITY_SERVICE_SCHEMA)
 
     return True

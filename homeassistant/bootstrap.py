@@ -83,6 +83,18 @@ def async_from_config_dict(config: Dict[str, Any],
     This method is a coroutine.
     """
     start = time()
+
+    if enable_log:
+        async_enable_logging(hass, verbose, log_rotate_days, log_file)
+
+    if sys.version_info[:2] < (3, 5):
+        _LOGGER.warning(
+            'Python 3.4 support has been deprecated and will be removed in '
+            'the begining of 2018. Please upgrade Python or your operating '
+            'system. More info: https://home-assistant.io/blog/2017/10/06/'
+            'deprecating-python-3.4-support/'
+        )
+
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -92,9 +104,6 @@ def async_from_config_dict(config: Dict[str, Any],
         return None
 
     yield from hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
-
-    if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days, log_file)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:

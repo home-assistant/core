@@ -218,7 +218,7 @@ class ApplicationListener:
 class Entity(entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overriden by subclasses
+    _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
                  model, **kwargs):

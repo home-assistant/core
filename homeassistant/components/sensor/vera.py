@@ -48,18 +48,20 @@ class VeraSensor(VeraDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self.vera_device.category == "Temperature Sensor":
+        import pyvera as veraApi
+        if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
-        elif self.vera_device.category == "Light Sensor":
+        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             return 'lux'
-        elif self.vera_device.category == "Humidity Sensor":
+        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return '%'
-        elif self.vera_device.category == "Power meter":
+        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return 'watts'
 
     def update(self):
         """Update the state."""
-        if self.vera_device.category == "Temperature Sensor":
+        import pyvera as veraApi
+        if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self.current_value = self.vera_device.temperature
 
             vera_temp_units = (
@@ -70,11 +72,11 @@ class VeraSensor(VeraDevice, Entity):
             else:
                 self._temperature_units = TEMP_CELSIUS
 
-        elif self.vera_device.category == "Light Sensor":
+        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             self.current_value = self.vera_device.light
-        elif self.vera_device.category == "Humidity Sensor":
+        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self.current_value = self.vera_device.humidity
-        elif self.vera_device.category == "Scene Controller":
+        elif self.vera_device.category == veraApi.CATEGORY_SCENE_CONTROLLER:
             value = self.vera_device.get_last_scene_id(True)
             time = self.vera_device.get_last_scene_time(True)
             if time == self.last_changed_time:
@@ -82,10 +84,10 @@ class VeraSensor(VeraDevice, Entity):
             else:
                 self.current_value = value
             self.last_changed_time = time
-        elif self.vera_device.category == "Power meter":
+        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             power = convert(self.vera_device.power, float, 0)
             self.current_value = int(round(power, 0))
-        elif self.vera_device.category == "Sensor":
+        elif self.vera_device.is_trippable:
             tripped = self.vera_device.is_tripped
             self.current_value = 'Tripped' if tripped else 'Not Tripped'
         else:

@@ -6,7 +6,9 @@ from uuid import uuid4
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
+from homeassistant.util.decorator import Registry
 
+HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_HEADER = 'header'
@@ -27,27 +29,13 @@ MAPPING_COMPONENT = {
 }
 
 
-def mapping_api_function(name):
-    """Return function pointer to api function for name.
-
-    Async friendly.
-    """
-    mapping = {
-        'DiscoverAppliancesRequest': async_api_discovery,
-        'TurnOnRequest': async_api_turn_on,
-        'TurnOffRequest': async_api_turn_off,
-        'SetPercentageRequest': async_api_set_percentage,
-    }
-    return mapping.get(name, None)
-
-
 @asyncio.coroutine
 def async_handle_message(hass, message):
-    """Handle incomming API messages."""
+    """Handle incoming API messages."""
     assert int(message[ATTR_HEADER][ATTR_PAYLOAD_VERSION]) == 2
 
     # Do we support this API request?
-    funct_ref = mapping_api_function(message[ATTR_HEADER][ATTR_NAME])
+    funct_ref = HANDLERS.get(message[ATTR_HEADER][ATTR_NAME])
     if not funct_ref:
         _LOGGER.warning(
             "Unsupported API request %s", message[ATTR_HEADER][ATTR_NAME])
@@ -57,14 +45,14 @@ def async_handle_message(hass, message):
 
 
 def api_message(name, namespace, payload=None):
-    """Create a API formated response message.
+    """Create a API formatted response message.
 
     Async friendly.
     """
     payload = payload or {}
     return {
         ATTR_HEADER: {
-            ATTR_MESSAGE_ID: uuid4(),
+            ATTR_MESSAGE_ID: str(uuid4()),
             ATTR_NAME: name,
             ATTR_NAMESPACE: namespace,
             ATTR_PAYLOAD_VERSION: '2',
@@ -74,16 +62,17 @@ def api_message(name, namespace, payload=None):
 
 
 def api_error(request, exc='DriverInternalError'):
-    """Create a API formated error response.
+    """Create a API formatted error response.
 
     Async friendly.
     """
     return api_message(exc, request[ATTR_HEADER][ATTR_NAMESPACE])
 
 
+@HANDLERS.register('DiscoverAppliancesRequest')
 @asyncio.coroutine
 def async_api_discovery(hass, request):
-    """Create a API formated discovery response.
+    """Create a API formatted discovery response.
 
     Async friendly.
     """
@@ -146,6 +135,7 @@ def extract_entity(funct):
     return async_api_entity_wrapper
 
 
+@HANDLERS.register('TurnOnRequest')
 @extract_entity
 @asyncio.coroutine
 def async_api_turn_on(hass, request, entity):
@@ -157,6 +147,7 @@ def async_api_turn_on(hass, request, entity):
     return api_message('TurnOnConfirmation', 'Alexa.ConnectedHome.Control')
 
 
+@HANDLERS.register('TurnOffRequest')
 @extract_entity
 @asyncio.coroutine
 def async_api_turn_off(hass, request, entity):
@@ -168,6 +159,7 @@ def async_api_turn_off(hass, request, entity):
     return api_message('TurnOffConfirmation', 'Alexa.ConnectedHome.Control')
 
 
+@HANDLERS.register('SetPercentageRequest')
 @extract_entity
 @asyncio.coroutine
 def async_api_set_percentage(hass, request, entity):

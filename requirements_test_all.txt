@@ -37,13 +37,17 @@ aiohttp_cors==0.5.3
 apns2==0.1.1
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.8
+dsmr_parser==0.11
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.5
+
+# homeassistant.components.feedreader
+# homeassistant.components.sensor.geo_rss_events
+feedparser==5.2.1
 
 # homeassistant.components.conversation
 fuzzywuzzy==0.15.1
@@ -54,6 +58,9 @@ gTTS-token==1.1.1
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.7
 
+# homeassistant.components.sensor.geo_rss_events
+haversine==0.4.5
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.8
 
@@ -62,7 +69,7 @@ holidays==0.8.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==3.0.0
+influxdb==4.1.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
