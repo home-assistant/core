@@ -93,7 +93,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ON_COMMAND_TYPE,default=DEFAULT_ON_COMMAND_TYPE):
+    vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
         vol.In(VALUES_ON_COMMAND_TYPE),
 })
 
@@ -410,6 +410,10 @@ class MqttLight(Light):
                 self.hass, self._topic[CONF_COMMAND_TOPIC],
                 self._payload['on'], self._qos, self._retain)
             should_update = True
+
+        # If brightness is being used instead of an on command, make sure
+        # there is a brightness input.  Either set the brightness to our
+        # saved value or the maximum value if this is the first call
         elif self._on_command_type == 'BRIGHTNESS':
             if ATTR_BRIGHTNESS not in kwargs:
                 kwargs[ATTR_BRIGHTNESS] = self._brightness if \
@@ -496,7 +500,7 @@ class MqttLight(Light):
 
         if self._on_command_type == 'LAST':
             mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
-                self._payload['on'], self._qos, self._retain)
+                               self._payload['on'], self._qos, self._retain)
             should_update = True
 
         if self._optimistic:
