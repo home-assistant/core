@@ -1,28 +1,33 @@
 """
-This component provides HA alarm_control_panel support for Arlo.
+Support for Arlo Alarm Control Panels.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.arlo/
 """
 import asyncio
 import logging
+
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanel, PLATFORM_SCHEMA)
 from homeassistant.components.arlo import (DATA_ARLO, CONF_ATTRIBUTION)
-from homeassistant.components.alarm_control_panel import (AlarmControlPanel,
-                                                          PLATFORM_SCHEMA)
-from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
-from homeassistant.helpers import config_validation as cv
-
-DEPENDENCIES = ['arlo']
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
+ARMED = 'armed'
+
 CONF_HOME_MODE_NAME = 'home_mode_name'
+
+DEPENDENCIES = ['arlo']
+
+DISARMED = 'disarmed'
+
 ICON = 'mdi:security'
-ARMED = "armed"
-DISARMED = "disarmed"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
@@ -31,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up Arlo Base Stations."""
+    """Set up the Arlo Alarm Control Panels."""
     data = hass.data[DATA_ARLO]
 
     if not data.base_stations:
@@ -45,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class ArloBaseStation(AlarmControlPanel):
-    """An AlarmControlPanel implementation for Arlo."""
+    """Representation of an Arlo Alarm Control Panel."""
 
     def __init__(self, data, home_mode_name):
         """Initialize the alarm control panel."""
@@ -107,7 +112,7 @@ class ArloBaseStation(AlarmControlPanel):
         }
 
     def _get_state_from_mode(self, mode):
-        """Convert Arlo mode to HA state."""
+        """Convert Arlo mode to Home Assistant state."""
         if mode == ARMED:
             return STATE_ALARM_ARMED_AWAY
         elif mode == DISARMED:
