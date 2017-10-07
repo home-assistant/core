@@ -68,8 +68,7 @@ class ArloBaseStation(AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Update the state of the device."""
         # PyArlo sometimes returns None for mode. So retry 3 times before
         # returning None.
