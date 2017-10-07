@@ -32,6 +32,7 @@ ATTR_TIMESTAMP = 'timestamp'
 CONF_CITY = 'city'
 CONF_COUNTRY = 'country'
 CONF_RADIUS = 'radius'
+CONF_SHOW_ON_MAP = 'show_on_map'
 
 MASS_PARTS_PER_MILLION = 'ppm'
 MASS_PARTS_PER_BILLION = 'ppb'
@@ -114,7 +115,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE):
     cv.string,
     vol.Optional(CONF_COUNTRY):
-    cv.string
+    cv.string,
+    vol.Optional(CONF_SHOW_ON_MAP, default=True):
+    cv.boolean
 })
 
 
@@ -133,12 +136,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     city = config.get(CONF_CITY)
     state = config.get(CONF_STATE)
     country = config.get(CONF_COUNTRY)
+    show_on_map = config.get(CONF_SHOW_ON_MAP)
 
     if city and state and country:
         _LOGGER.debug('Using city, state, and country: %s, %s, %s', city,
                       state, country)
         data = AirVisualData(
-            pav.Client(api_key), city=city, state=state, country=country)
+            pav.Client(api_key),
+            city=city,
+            state=state,
+            country=country,
+            show_on_map=show_on_map)
     else:
         _LOGGER.debug('Using latitude and longitude: %s, %s', latitude,
                       longitude)
@@ -146,7 +154,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             pav.Client(api_key),
             latitude=latitude,
             longitude=longitude,
-            radius=radius)
+            radius=radius,
+            show_on_map=show_on_map)
 
     sensors = []
     for locale in monitored_locales:
@@ -178,15 +187,22 @@ class AirVisualBaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: 'AirVisual©',
+        attrs = {
+            ATTR_ATTRIBUTION: '©AirVisual',
             ATTR_CITY: self._data.city,
             ATTR_COUNTRY: self._data.country,
             ATTR_REGION: self._data.state,
-            ATTR_LATITUDE: self._data.latitude,
-            ATTR_LONGITUDE: self._data.longitude,
             ATTR_TIMESTAMP: self._data.pollution_info.get('ts')
         }
+
+        if self._data.show_on_map:
+            attrs[ATTR_LATITUDE] = self._data.latitude
+            attrs[ATTR_LONGITUDE] = self._data.longitude
+        else:
+            attrs['lati'] = self._data.latitude
+            attrs['long'] = self._data.longitude
+
+        return attrs
 
     @property
     def icon(self):
@@ -291,6 +307,8 @@ class AirVisualData(object):
         self.longitude = kwargs.get(CONF_LONGITUDE)
         self._radius = kwargs.get(CONF_RADIUS)
 
+        self.show_on_map = kwargs.get(CONF_SHOW_ON_MAP)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update with new AirVisual data."""
@@ -300,8 +318,6 @@ class AirVisualData(object):
             if self.city and self.state and self.country:
                 resp = self._client.city(self.city, self.state,
                                          self.country).get('data')
-                self.longitude, self.latitude = resp.get('location').get(
-                    'coordinates')
             else:
                 resp = self._client.nearest_city(self.latitude, self.longitude,
                                                  self._radius).get('data')
@@ -310,6 +326,8 @@ class AirVisualData(object):
             self.city = resp.get('city')
             self.state = resp.get('state')
             self.country = resp.get('country')
+            self.longitude, self.latitude = resp.get('location').get(
+                'coordinates')
             self.pollution_info = resp.get('current', {}).get('pollution', {})
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to retrieve data on this location: %s',
