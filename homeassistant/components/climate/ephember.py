@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyephember==0.0.3']
 
