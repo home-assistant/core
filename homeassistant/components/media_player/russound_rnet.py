@@ -92,29 +92,24 @@ class RussoundRNETDevice(MediaPlayerDevice):
         _LOGGER.debug("ret= %s", ret)
         if ret is not None:
             _LOGGER.debug("Updating status for zone %s", self._zone_id)
-            #if self._russ.get_power('1', self._zone_id) == 0:
             if ret[0] == 0:
                 self._state = STATE_OFF
             else:
                 self._state = STATE_ON
-
             self._volume = ret[2] * 2 / 100.0
-            #self._volume = self._russ.get_volume('1', self._zone_id) / 100.0
-
-            # Returns 0 based index for source.
-            #index = self._russ.get_source('1', self._zone_id)
+        # Returns 0 based index for source.
             index = ret[1]
-            # Possibility exists that user has defined list of all sources.
-            # If a source is set externally that is beyond the defined list then
-            # an exception will be thrown.
-            # In this case return and unknown source (None)
+        # Possibility exists that user has defined list of all sources.
+        # If a source is set externally that is beyond the defined list then
+        # an exception will be thrown.
+        # In this case return and unknown source (None)
             try:
                 self._source = self._sources[index]
             except IndexError:
                 self._source = None
         else:
             _LOGGER.error("Could not update status for zone %s", self._zone_id)
-            
+
     @property
     def name(self):
         """Return the name of the zone."""
