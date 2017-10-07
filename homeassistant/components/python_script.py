@@ -28,7 +28,7 @@ ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
                             'is_state_attr', 'remove', 'set'])
 ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
 ALLOWED_TIME = set(['sleep', 'strftime', 'strptime', 'gmtime', 'localtime',
-                    'ctime', 'time'])
+                    'ctime', 'time', 'mktime'])
 ALLOWED_DT_UTIL = set([
     'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
     'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
