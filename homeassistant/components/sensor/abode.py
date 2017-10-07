@@ -1,5 +1,5 @@
 """
-This component provides HA sensor support for Abode Security System.
+Support for Abode Security System sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.abode/
@@ -8,10 +8,9 @@ import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['abode']
-
-_LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
@@ -48,7 +47,7 @@ class AbodeSensor(AbodeDevice):
         super().__init__(data, device)
         self._sensor_type = sensor_type
         self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][1])
-        self._name = "{0} {1}".format(self._device.name,
+        self._name = '{0} {1}'.format(self._device.name,
                                       SENSOR_TYPES[self._sensor_type][0])
 
     @property
