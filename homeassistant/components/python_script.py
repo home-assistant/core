@@ -29,6 +29,7 @@ ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
 ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
 ALLOWED_TIME = set(['sleep', 'strftime', 'strptime', 'gmtime', 'localtime',
                     'ctime', 'time', 'mktime'])
+ALLOWED_DATETIME = set(['date', 'time', 'datetime', 'timedelta', 'tzinfo'])
 ALLOWED_DT_UTIL = set([
     'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
     'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
@@ -121,6 +122,7 @@ def execute(hass, filename, source, data=None):
               obj is hass.states and name not in ALLOWED_STATEMACHINE or
               obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
               obj is dt_util and name not in ALLOWED_DT_UTIL or
+              obj is datetime and name not in ALLOWED_DATETIME or
               obj is time and name not in ALLOWED_TIME):
             raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))

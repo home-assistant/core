@@ -161,6 +161,7 @@ def test_accessing_forbidden_methods(hass, caplog):
     for source, name in {
         'hass.stop()': 'HomeAssistant.stop',
         'dt_util.set_default_time_zone()': 'module.set_default_time_zone',
+        'datetime.non_existing': 'module.non_existing',
         'time.tzset()': 'module.tzset',
     }.items():
         caplog.records.clear()
