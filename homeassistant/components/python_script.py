@@ -11,6 +11,7 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+import homeassistant.util.dt as dt_util
 
 DOMAIN = 'python_script'
 REQUIREMENTS = ['restrictedpython==4.0a3']
@@ -26,6 +27,10 @@ ALLOWED_EVENTBUS = set(['fire'])
 ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
                             'is_state_attr', 'remove', 'set'])
 ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
+ALLOWED_DT_UTIL = set([
+    'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
+    'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
+    'get_age'])
 
 
 class ScriptError(HomeAssistantError):
@@ -112,7 +117,8 @@ def execute(hass, filename, source, data=None):
         elif (obj is hass and name not in ALLOWED_HASS or
               obj is hass.bus and name not in ALLOWED_EVENTBUS or
               obj is hass.states and name not in ALLOWED_STATEMACHINE or
-              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY):
+              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
+              obj is dt_util and name not in ALLOWED_DT_UTIL):
             raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))
 
@@ -122,6 +128,7 @@ def execute(hass, filename, source, data=None):
     builtins.update(utility_builtins)
     builtins['datetime'] = datetime
     builtins['time'] = time
+    builtins['dt_util'] = dt_util
     restricted_globals = {
         '__builtins__': builtins,
         '_print_': StubPrinter,
