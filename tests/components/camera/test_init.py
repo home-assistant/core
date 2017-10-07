@@ -27,7 +27,7 @@ class TestSetupCamera(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platfrom on camera component."""
+        """Setup demo platform on camera component."""
         config = {
             camera.DOMAIN: {
                 'platform': 'demo'

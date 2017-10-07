@@ -136,8 +136,9 @@ class WinkHub(WinkBinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'update needed': self.wink.update_needed(),
-            'firmware version': self.wink.firmware_version()
+            'update_needed': self.wink.update_needed(),
+            'firmware_version': self.wink.firmware_version(),
+            'pairing_mode': self.wink.pairing_mode()
         }
 
 

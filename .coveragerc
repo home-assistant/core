@@ -52,7 +52,7 @@ omit =
 
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
-	
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
@@ -149,6 +149,9 @@ omit =
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
 
+    homeassistant/components/raincloud.py
+    homeassistant/components/*/raincloud.py
+
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
@@ -178,6 +181,9 @@ omit =
 
     homeassistant/components/tesla.py
     homeassistant/components/*/tesla.py
+
+    homeassistant/components/thethingsnetwork.py
+    homeassistant/components/*/thethingsnetwork.py
 
     homeassistant/components/*/thinkingcleaner.py
 
@@ -399,6 +405,7 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/clicksend.py
+    homeassistant/components/notify/clicksendaudio.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
@@ -538,6 +545,7 @@ omit =
     homeassistant/components/sensor/tank_utility.py
     homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
+    homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
@@ -581,7 +589,6 @@ omit =
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
-    homeassistant/components/upnp.py
     homeassistant/components/vacuum/roomba.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py

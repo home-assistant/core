@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = vol.Schema({
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_FIRE_EVENT): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
             vol.Optional(CONF_GROUP, default=True): cv.boolean,
             # deprecated config options
@@ -123,7 +123,7 @@ def devices_from_config(domain_config, hass=None):
             _LOGGER.warning(
                 "Hybrid type for %s not compatible with signal "
                 "repetitions. Please set 'dimmable' or 'switchable' "
-                "type explicity in configuration", device_id)
+                "type explicitly in configuration", device_id)
 
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
