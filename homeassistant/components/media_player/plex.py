@@ -431,43 +431,38 @@ class PlexClient(MediaPlayerDevice):
                 self._convert_na_to_none(self._session.year) is not None):
             self._media_title += ' (' + str(self._session.year) + ')'
 
-        if self._is_player_active:
-            # TV Show
-            if self._media_content_type is MEDIA_TYPE_TVSHOW:
-                # season number (00)
-                if callable(self._convert_na_to_none(self._session.seasons)):
-                    self._media_season = self._convert_na_to_none(
-                        self._session.seasons()[0].index).zfill(2)
-                elif self._convert_na_to_none(
-                        self._session.parentIndex) is not None:
-                    self._media_season = self._session.parentIndex.zfill(2)
-                else:
-                    self._media_season = None
+        # TV Show
+        if self._media_content_type is MEDIA_TYPE_TVSHOW:
+            # season number (00)
+            if callable(self._convert_na_to_none(self._session.seasons)):
+                self._media_season = self._convert_na_to_none(
+                    self._session.seasons()[0].index).zfill(2)
+            elif self._convert_na_to_none(
+                    self._session.parentIndex) is not None:
+                self._media_season = self._session.parentIndex.zfill(2)
+            else:
+                self._media_season = None
+            # show name
+            self._media_series_title = self._convert_na_to_none(
+                self._session.grandparentTitle)
+            # episode number (00)
+            if self._convert_na_to_none(self._session.index) is not None:
+                self._media_episode = str(self._session.index).zfill(2)
 
-                # show name
-                self._media_series_title = self._convert_na_to_none(
-                    self._session.grandparentTitle)
-
-                # episode number (00)
-                if self._convert_na_to_none(
-                        self._session.index) is not None:
-                    self._media_episode = str(self._session.index).zfill(2)
-
-            # Music
-            if self._media_content_type == MEDIA_TYPE_MUSIC:
-                self._media_album_name = self._convert_na_to_none(
-                    self._session.parentTitle)
-                self._media_album_artist = self._convert_na_to_none(
-                    self._session.grandparentTitle)
-                self._media_track = self._convert_na_to_none(
-                    self._session.index)
-                self._media_artist = self._convert_na_to_none(
-                    self._session.originalTitle)
-                # use album artist if track artist is missing
-                if self._media_artist is None:
-                    _LOGGER.debug("Using album artist because track artist "
-                                  "was not found: %s", self.entity_id)
-                    self._media_artist = self._media_album_artist
+        # Music
+        if self._media_content_type == MEDIA_TYPE_MUSIC:
+            self._media_album_name = self._convert_na_to_none(
+                self._session.parentTitle)
+            self._media_album_artist = self._convert_na_to_none(
+                self._session.grandparentTitle)
+            self._media_track = self._convert_na_to_none(self._session.index)
+            self._media_artist = self._convert_na_to_none(
+                self._session.originalTitle)
+            # use album artist if track artist is missing
+            if self._media_artist is None:
+                _LOGGER.debug("Using album artist because track artist "
+                              "was not found: %s", self.entity_id)
+                self._media_artist = self._media_album_artist
 
         # set app name to library name
         if (self._session is not None
