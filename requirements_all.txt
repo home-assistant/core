@@ -41,11 +41,14 @@ PyXiaomiGateway==0.5.1
 # homeassistant.components.media_player.sonos
 SoCo==0.12
 
+# homeassistant.components.sensor.travisci
+TravisPy==0.3.5
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.11.8
+abodepy==0.12.1
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.3
@@ -544,6 +547,9 @@ pyHS100==0.2.4.2
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.20.1
 
+# homeassistant.components.sensor.tibber
+pyTibber==0.1.1
+
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
@@ -618,7 +624,7 @@ pyharmony==1.0.16
 pyhik==0.1.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.32
+pyhomematic==0.1.33
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -718,7 +724,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
-pysnmp==4.3.9
+pysnmp==4.3.10
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
@@ -737,7 +743,7 @@ python-digitalocean==1.12
 python-ecobee-api==0.0.9
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.5
+# python-eq3bt==0.1.6
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.1
@@ -825,7 +831,7 @@ pythonegardia==1.0.20
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==2.2
+pytradfri==2.2.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
