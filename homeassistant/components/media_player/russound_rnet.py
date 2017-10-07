@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['russound==0.1.7']
+REQUIREMENTS = ['russound==0.1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
