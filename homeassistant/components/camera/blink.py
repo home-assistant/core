@@ -76,6 +76,6 @@ class BlinkCamera(Camera):
         return self.data.camera_thumbs[self._name]
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         self.request_image()
         return self.response.content

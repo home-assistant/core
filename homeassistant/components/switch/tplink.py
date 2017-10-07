@@ -11,18 +11,17 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_NAME)
+from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyHS100==0.2.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'Current consumption'
-ATTR_TOTAL_CONSUMPTION = 'Total consumption'
-ATTR_DAILY_CONSUMPTION = 'Daily consumption'
-ATTR_VOLTAGE = 'Voltage'
-ATTR_CURRENT = 'Current'
+ATTR_CURRENT_CONSUMPTION = 'current_consumption'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_DAILY_CONSUMPTION = 'daily_consumption'
+ATTR_CURRENT = 'current'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

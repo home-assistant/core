@@ -140,7 +140,7 @@ select_source:
 
   fields:
     entity_id:
-      description: Name(s) of entites to change source on
+      description: Name(s) of entities to change source on
       example: 'media_player.media_player.txnr535_0009b0d81f82'
     source:
       description: Name of the source to switch to. Platform dependent.
@@ -151,7 +151,7 @@ clear_playlist:
 
   fields:
     entity_id:
-      description: Name(s) of entites to change source on
+      description: Name(s) of entities to change source on
       example: 'media_player.living_room_chromecast'
 
 shuffle_set:
@@ -170,7 +170,7 @@ snapcast_snapshot:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will be snapshotted. Platform dependent.
+      description: Name(s) of entities that will be snapshotted. Platform dependent.
       example: 'media_player.living_room'
 
 snapcast_restore:
@@ -178,7 +178,7 @@ snapcast_restore:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will be restored. Platform dependent.
+      description: Name(s) of entities that will be restored. Platform dependent.
       example: 'media_player.living_room'
 
 sonos_join:
@@ -190,7 +190,7 @@ sonos_join:
       example: 'media_player.living_room_sonos'
 
     entity_id:
-      description: Name(s) of entites that will coordinate the grouping. Platform dependent.
+      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
       example: 'media_player.living_room_sonos'
 
 sonos_unjoin:
@@ -198,7 +198,7 @@ sonos_unjoin:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will be unjoined from their group. Platform dependent.
+      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
       example: 'media_player.living_room_sonos'
 
 sonos_snapshot:
@@ -206,7 +206,7 @@ sonos_snapshot:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will be snapshot. Platform dependent.
+      description: Name(s) of entities that will be snapshot. Platform dependent.
       example: 'media_player.living_room_sonos'
 
     with_group:
@@ -218,7 +218,7 @@ sonos_restore:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will be restored. Platform dependent.
+      description: Name(s) of entities that will be restored. Platform dependent.
       example: 'media_player.living_room_sonos'
 
     with_group:
@@ -230,7 +230,7 @@ sonos_set_sleep_timer:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will have a timer set.
+      description: Name(s) of entities that will have a timer set.
       example: 'media_player.living_room_sonos'
     sleep_time:
       description: Number of seconds to set the timer
@@ -241,7 +241,7 @@ sonos_clear_sleep_timer:
 
   fields:
     entity_id:
-      description: Name(s) of entites that will have the timer cleared.
+      description: Name(s) of entities that will have the timer cleared.
       example: 'media_player.living_room_sonos'
 
 
