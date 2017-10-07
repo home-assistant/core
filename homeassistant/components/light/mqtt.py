@@ -51,7 +51,7 @@ CONF_WHITE_VALUE_COMMAND_TOPIC = 'white_value_command_topic'
 CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
-CONF_SEND_ON_WITH_CHANGE = 'send_on_with_change'
+CONF_ON_COMMAND_TYPE = 'on_command_type'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -59,9 +59,9 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
-DEFAULT_SEND_ON_WITH_CHANGE = "BEFORE"
+DEFAULT_ON_COMMAND_TYPE = "LAST"
 
-VALUES_SEND_ON_WITH_CHANGE = ["BEFORE", "AFTER", "NONE"]
+VALUES_ON_COMMAND_TYPE = ["FIRST", "LAST", "BRIGHTNESS"]
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -93,9 +93,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_SEND_ON_WITH_CHANGE,
-                 default=DEFAULT_SEND_ON_WITH_CHANGE):
-        vol.In(VALUES_SEND_ON_WITH_CHANGE),
+    vol.Optional(CONF_ON_COMMAND_TYPE,default=DEFAULT_ON_COMMAND_TYPE):
+        vol.In(VALUES_ON_COMMAND_TYPE),
 })
 
 
@@ -148,7 +147,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS_SCALE),
         config.get(CONF_WHITE_VALUE_SCALE),
-        config.get(CONF_SEND_ON_WITH_CHANGE),
+        config.get(CONF_ON_COMMAND_TYPE),
     )])
 
 
@@ -157,7 +156,7 @@ class MqttLight(Light):
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale, send_on_with_change):
+                 white_value_scale, on_command_type='LAST'):
         """Initialize MQTT light."""
         self._name = name
         self._effect_list = effect_list
@@ -181,7 +180,7 @@ class MqttLight(Light):
             optimistic or topic[CONF_XY_STATE_TOPIC] is None
         self._brightness_scale = brightness_scale
         self._white_value_scale = white_value_scale
-        self._send_on_with_change = send_on_with_change
+        self._on_command_type = on_command_type
         self._state = False
         self._brightness = None
         self._rgb = None
@@ -405,13 +404,16 @@ class MqttLight(Light):
         This method is a coroutine.
         """
         should_update = False
-        style_changed = False
 
-        if self._send_on_with_change == 'BEFORE':
+        if self._on_command_type == 'FIRST':
             mqtt.async_publish(
                 self.hass, self._topic[CONF_COMMAND_TOPIC],
                 self._payload['on'], self._qos, self._retain)
             should_update = True
+        elif self._on_command_type == 'BRIGHTNESS':
+            if ATTR_BRIGHTNESS not in kwargs:
+                kwargs[ATTR_BRIGHTNESS] = self._brightness if \
+                                          self._brightness else 255
 
         if ATTR_RGB_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
@@ -425,7 +427,6 @@ class MqttLight(Light):
             else:
                 rgb_color_str = '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR])
 
-            style_changed = True
             mqtt.async_publish(
                 self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
                 rgb_color_str, self._qos, self._retain)
@@ -442,7 +443,6 @@ class MqttLight(Light):
                 self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
                 device_brightness, self._qos, self._retain)
 
-            style_changed = True
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
@@ -454,7 +454,6 @@ class MqttLight(Light):
                 self.hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._qos, self._retain)
 
-            style_changed = True
             if self._optimistic_color_temp:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
@@ -467,7 +466,6 @@ class MqttLight(Light):
                     self.hass, self._topic[CONF_EFFECT_COMMAND_TOPIC],
                     effect, self._qos, self._retain)
 
-                style_changed = True
                 if self._optimistic_effect:
                     self._effect = kwargs[ATTR_EFFECT]
                     should_update = True
@@ -480,7 +478,6 @@ class MqttLight(Light):
                 self.hass, self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC],
                 device_white_value, self._qos, self._retain)
 
-            style_changed = True
             if self._optimistic_white_value:
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
@@ -493,17 +490,12 @@ class MqttLight(Light):
                 '{},{}'.format(*kwargs[ATTR_XY_COLOR]), self._qos,
                 self._retain)
 
-            style_changed = True
             if self._optimistic_xy:
                 self._xy = kwargs[ATTR_XY_COLOR]
                 should_update = True
 
-        # Send an on command if no style item was changed (just a
-        # basic on command), or if style was changed and the on is
-        # after the style change.
-        if not style_changed or self._send_on_with_change == 'AFTER':
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_COMMAND_TOPIC],
+        if self._on_command_type == 'LAST':
+            mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
                 self._payload['on'], self._qos, self._retain)
             should_update = True
 
