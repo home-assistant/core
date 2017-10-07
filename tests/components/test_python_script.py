@@ -160,7 +160,8 @@ def test_accessing_forbidden_methods(hass, caplog):
 
     for source, name in {
         'hass.stop()': 'HomeAssistant.stop',
-        'dt_util.set_default_time_zone': 'module.set_default_time_zone'
+        'dt_util.set_default_time_zone()': 'module.set_default_time_zone',
+        'time.tzset()': 'module.tzset',
     }.items():
         caplog.records.clear()
         hass.async_add_job(execute, hass, 'test.py', source, {})
@@ -212,7 +213,7 @@ def test_exposed_modules(hass, caplog):
     """Test datetime and time modules exposed."""
     caplog.set_level(logging.ERROR)
     source = """
-hass.states.set('module.time', time.ctime(521276400))
+hass.states.set('module.time', time.strftime('%Y', time.gmtime(521276400)))
 hass.states.set('module.datetime',
                 datetime.timedelta(minutes=1).total_seconds())
 """
@@ -220,7 +221,7 @@ hass.states.set('module.datetime',
     hass.async_add_job(execute, hass, 'test.py', source, {})
     yield from hass.async_block_till_done()
 
-    assert hass.states.is_state('module.time', 'Wed Jul  9 00:00:00 1986')
+    assert hass.states.is_state('module.time', '1986')
     assert hass.states.is_state('module.datetime', '60.0')
 
     # No errors logged = good
