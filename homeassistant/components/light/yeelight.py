@@ -4,6 +4,7 @@ Support for Xiaomi Yeelight Wifi color bulb.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.yeelight/
 """
+import os
 import logging
 import colorsys
 from typing import Tuple
@@ -14,10 +15,12 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_to_rgb)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
+    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, ATTR_BRIGHTNESS_PCT,
+    ATTR_KELVIN,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
     Light, PLATFORM_SCHEMA)
@@ -90,6 +93,13 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_STOP]
 
 
+SERVICE_SET_SCENE = 'yeelight_set_scene'
+
+SCENE_NAME = "name"
+SCENE_COLOR_AND_BRIGNTNESS = "color_and_brightness"
+SCENE_TEMPERATURE_AND_BRIGHTNESS = "temperature_and_brightness"
+SCENE_NIGHTLIGHT = "nightlight"
+
 # Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
@@ -131,6 +141,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(YeelightLight(device, device_config))
 
     add_devices(lights, True)
+
+    def yeelight_set_scene(call):
+        """Handler for yeelight_set_scene service."""
+        entity_id = call.data.get('entity_id')
+        for light in lights:
+            if light.entity_id == entity_id:
+                light.set_scene(**call.data)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register('light', SERVICE_SET_SCENE, yeelight_set_scene,
+                           descriptions.get(SERVICE_SET_SCENE))
 
 
 class YeelightLight(Light):
@@ -441,3 +463,30 @@ class YeelightLight(Light):
             self._bulb.turn_off(duration=duration)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb off: %s", ex)
+
+    def set_scene(self, **kwargs) -> None:
+        """Set the smart LED directly to a specified state."""
+        _LOGGER.debug("set_scene()")
+        import yeelight
+        scene = kwargs.get(SCENE_NAME)
+        brightness = kwargs.get(ATTR_BRIGHTNESS_PCT, 100)
+        if scene == SCENE_COLOR_AND_BRIGNTNESS:
+            if (ATTR_RGB_COLOR in kwargs and
+                    self.supported_features & SUPPORT_COLOR_TEMP):
+                rgb = kwargs.get(ATTR_RGB_COLOR)
+                color = (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]
+                params = ['color', color, brightness]
+        elif scene == SCENE_TEMPERATURE_AND_BRIGHTNESS:
+            if (ATTR_KELVIN in kwargs and
+                    self.supported_features & SUPPORT_COLOR_TEMP):
+                params = ['ct', kwargs.get(ATTR_KELVIN), brightness]
+        elif scene == SCENE_NIGHTLIGHT:
+            params = ['nightlight', brightness]
+        else:
+            _LOGGER.error("Unsupported scene.")
+
+        try:
+            if params:
+                self._bulb.send_command('set_scene', params)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set smart LED scene: %s", ex)
