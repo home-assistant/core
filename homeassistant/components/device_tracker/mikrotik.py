@@ -133,8 +133,7 @@ class MikrotikScanner(DeviceScanner):
             self.host
         )
 
-        device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
-        
+        device_names = self.client(cmd='/ip/dhcp-server/lease/getall')        
         if devices_tracker == 'capsman':
             devices = self.client(
                 cmd='/caps-man/registration-table/getall'
