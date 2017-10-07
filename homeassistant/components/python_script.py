@@ -1,8 +1,9 @@
 """Component to allow running Python scripts."""
-import glob
-import os
-import logging
 import datetime
+import glob
+import logging
+import os
+import time
 
 import voluptuous as vol
 
@@ -120,6 +121,7 @@ def execute(hass, filename, source, data=None):
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
     builtins['datetime'] = datetime
+    builtins['time'] = time
     restricted_globals = {
         '__builtins__': builtins,
         '_print_': StubPrinter,
