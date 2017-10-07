@@ -16,11 +16,15 @@ DEFAULT_NAME = 'ADS sensor'
 DEPENDENCIES = ['ads']
 
 CONF_ADSVAR = 'adsvar'
+CONF_ADSTYPE = 'adstype'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADSVAR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
+    vol.Optional(CONF_ADSTYPE, default=ads.ADSTYPE_INT): vol.In(
+        [ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]
+    ),
 })
 
 
@@ -31,23 +35,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     adsvar = config.get(CONF_ADSVAR)
+    adstype = config.get(CONF_ADSTYPE)
     name = config.get(CONF_NAME)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    add_devices([AdsSensor(ads_hub, adsvar, name, unit_of_measurement)])
+    add_devices([AdsSensor(ads_hub, adsvar, adstype, name,
+                           unit_of_measurement)])
 
 
 class AdsSensor(Entity):
 
-    def __init__(self, ads_hub, adsvar, devname, unit_of_measurement):
+    def __init__(self, ads_hub, adsvar, adstype, devname, unit_of_measurement):
         self._ads_hub = ads_hub
         self._name = devname
         self._value = 0
         self._unit_of_measurement = unit_of_measurement
         self.adsvar = adsvar
+        self.adstype = adstype
 
-        self._ads_hub.add_device_notification(self.adsvar, ads.PLCTYPE_INT,
-                                              self.callback)
+        self._ads_hub.add_device_notification(
+            self.adsvar, ads.ADS_TYPEMAP[adstype], self.callback)
 
     @property
     def name(self):

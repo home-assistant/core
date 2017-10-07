@@ -10,7 +10,8 @@ import logging
 import ctypes
 from collections import namedtuple
 import voluptuous as vol
-from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS
+from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
+    EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 import pyads
 from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE
@@ -20,6 +21,21 @@ REQUIREMENTS = ['pyads']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_ADS = 'data_ads'
+
+# Supported Types
+ADSTYPE_INT = 'int'
+ADSTYPE_UINT = 'uint'
+ADSTYPE_BYTE = 'byte'
+ADSTYPE_BOOL = 'bool'
+
+ADS_TYPEMAP = {
+    ADSTYPE_BOOL: PLCTYPE_BOOL,
+    ADSTYPE_BYTE: PLCTYPE_BYTE,
+    ADSTYPE_INT: PLCTYPE_INT,
+    ADSTYPE_UINT: PLCTYPE_UINT,
+}
+
+
 ADS_PLATFORMS = ['switch', 'binary_sensor', 'light']
 DOMAIN = 'ads'
 
@@ -51,6 +67,7 @@ def setup(hass, config):
         return False
 
     hass.data[DATA_ADS] = ads
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
     return True
 
@@ -71,6 +88,18 @@ class AdsHub:
         self._devices = []
         self._notification_items = {}
 
+    def shutdown(self, *args, **kwargs):
+        _LOGGER.debug('Shutting down ADS')
+        for key, notification_item in self._notification_items.items():
+            self._client.del_device_notification(
+                notification_item.hnotify,
+                notification_item.huser
+            )
+            _LOGGER.debug('Deleting device notification {0}, {1}'
+                          .format(notification_item.hnotify,
+                                  notification_item.huser))
+        self._client.close()
+
     def register_device(self, device):
         """ Register a new device. """
         self._devices.append(device)
@@ -85,19 +114,19 @@ class AdsHub:
         """ Add a notification to the ADS devices. """
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
-        notification_sent = False
-        while not notification_sent:
+        for i in range(5):
             try:
                 hnotify, huser = self._client.add_device_notification(
                     name, attr, self._device_notification_callback
                 )
                 hnotify = int(hnotify)
+                break
             except pyads.pyads.ADSError:
-                _LOGGER.debug('Could not add notification for "{0}". Retrying.'
+                _LOGGER.debug('Could not add notification for "{0}". Retrying...'
                               .format(name))
                 time.sleep(0.1)
-                continue
-            notification_sent = True
+        else:
+            return False
 
         _LOGGER.debug('Added Device Notification {0} for variable {1}'
                       .format(hnotify, name))
@@ -125,7 +154,12 @@ class AdsHub:
             value = bool(struct.unpack('<?', bytearray(data)[:1])[0])
         elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
             value = struct.unpack('<h', bytearray(data)[:2])[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
+            value = struct.unpack('<B', bytearray(data)[:1])[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_UINT:
+            value = struct.unpack('<H', bytearray(data)[:2])[0]
         else:
+            value = bytearray(data)
             _LOGGER.warning('No callback available for this datatype.')
 
         # execute callback
