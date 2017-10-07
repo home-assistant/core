@@ -102,7 +102,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
             self._source = self._sources[index]
         except IndexError:
             self._source = None
-
+            
     @property
     def name(self):
         """Return the name of the zone."""
