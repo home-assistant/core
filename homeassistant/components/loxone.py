@@ -217,7 +217,7 @@ def parse_loxone_message(typ, message):
             packet = message[start:end]
             event_uuid = uuid.UUID(bytes_le=packet[0:16])
             fields = event_uuid.urn.replace("urn:uuid:", "").split("-")
-            uuidstr = "{}-{}-{}-{}-{}".format(fields[0], fields[1], fields[2],
+            uuidstr = "{}-{}-{}-{}{}".format(fields[0], fields[1], fields[2],
                                               fields[3], fields[4])
             value = unpack('d', packet[16:24])[0]
             event_dict[uuidstr] = value
