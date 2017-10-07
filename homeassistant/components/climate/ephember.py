@@ -20,7 +20,7 @@ REQUIREMENTS = ['pyephember==0.0.3']
 _LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -94,12 +94,10 @@ class EphEmberThermostat(ClimateDevice):
         """Turn auxiliary heater on."""
         self._ember.activateBoostByZoneName(
             self._zone_name, self._zone['targetTemperature'])
-        self.update()
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._ember.deactivateBoostByZoneName(self._zone_name)
-        self.update()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -115,7 +113,6 @@ class EphEmberThermostat(ClimateDevice):
         """Return the maximum temperature."""
         return self._zone['targetTemperature']
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
         self._zone = self._ember.getZone(self._zone_name)
