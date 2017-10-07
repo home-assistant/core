@@ -7,20 +7,21 @@ https://home-assistant.io/components/sensor.arlo/
 import asyncio
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import (
     CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO)
-
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['arlo']
 
-_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=90)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
@@ -35,8 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
-SCAN_INTERVAL = timedelta(seconds=90)
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -48,18 +47,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         if sensor_type == 'total_cameras':
-            sensors.append(ArloSensor(hass,
-                                      SENSOR_TYPES[sensor_type][0],
-                                      arlo,
-                                      sensor_type))
+            sensors.append(ArloSensor(
+                hass, SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
             for camera in arlo.cameras:
-                name = '{0} {1}'.format(SENSOR_TYPES[sensor_type][0],
-                                        camera.name)
+                name = '{0} {1}'.format(
+                    SENSOR_TYPES[sensor_type][0], camera.name)
                 sensors.append(ArloSensor(hass, name, camera, sensor_type))
 
     async_add_devices(sensors, True)
-    return True
 
 
 class ArloSensor(Entity):
@@ -120,7 +116,7 @@ class ArloSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
+        """Return the device state attributes."""
         attrs = {}
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
