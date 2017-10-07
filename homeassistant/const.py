@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 54
+MINOR_VERSION = 55
 PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -245,6 +245,9 @@ ATTR_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 
 CONF_UNIT_SYSTEM_METRIC = 'metric'  # type: str
 CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
+
+# Electrical attributes
+ATTR_VOLTAGE = 'voltage'
 
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'

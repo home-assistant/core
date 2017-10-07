@@ -57,7 +57,7 @@ class USPSPackageSensor(Entity):
         for package in self._usps.packages:
             status = slugify(package['primary_status'])
             if status == STATUS_DELIVERED and \
-                    package['date'] < now().date():
+                    package['delivery_date'] < now().date():
                 continue
             status_counts[status] += 1
         self._attributes = {

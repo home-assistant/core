@@ -14,9 +14,13 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
+import voluptuous as vol
 
-from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
-from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT
+from homeassistant.components.http import (
+    HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.frontend import register_built_in_panel
 
@@ -25,14 +29,40 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
+SERVICE_ADDON_START = 'addon_start'
+SERVICE_ADDON_STOP = 'addon_stop'
+SERVICE_ADDON_RESTART = 'addon_restart'
+SERVICE_ADDON_STDIN = 'addon_stdin'
+
+ATTR_ADDON = 'addon'
+ATTR_INPUT = 'input'
+
 NO_TIMEOUT = {
-    re.compile(r'^homeassistant/update$'), re.compile(r'^host/update$'),
-    re.compile(r'^supervisor/update$'), re.compile(r'^addons/[^/]*/update$'),
-    re.compile(r'^addons/[^/]*/install$')
+    re.compile(r'^homeassistant/update$'),
+    re.compile(r'^host/update$'),
+    re.compile(r'^supervisor/update$'),
+    re.compile(r'^addons/[^/]*/update$'),
+    re.compile(r'^addons/[^/]*/install$'),
+    re.compile(r'^addons/[^/]*/rebuild$')
 }
 
 NO_AUTH = {
     re.compile(r'^panel$'), re.compile(r'^addons/[^/]*/logo$')
+}
+
+SCHEMA_ADDON = vol.Schema({
+    vol.Required(ATTR_ADDON): cv.slug,
+})
+
+SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
+    vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)
+})
+
+MAP_SERVICE_API = {
+    SERVICE_ADDON_START: ('/addons/{addon}/start', SCHEMA_ADDON),
+    SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON),
+    SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON),
+    SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN),
 }
 
 
@@ -48,8 +78,7 @@ def async_setup(hass, config):
     websession = async_get_clientsession(hass)
     hassio = HassIO(hass.loop, websession, host)
 
-    api_ok = yield from hassio.is_connected()
-    if not api_ok:
+    if not (yield from hassio.is_connected()):
         _LOGGER.error("Not connected with HassIO!")
         return False
 
@@ -58,6 +87,23 @@ def async_setup(hass, config):
     if 'frontend' in hass.config.components:
         register_built_in_panel(hass, 'hassio', 'Hass.io',
                                 'mdi:access-point-network')
+
+    if 'http' in config:
+        yield from hassio.update_hass_api(config.get('http'))
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Handle service calls for HassIO."""
+        api_command = MAP_SERVICE_API[service.service][0]
+        addon = service.data[ATTR_ADDON]
+        data = service.data[ATTR_INPUT] if ATTR_INPUT in service.data else None
+
+        yield from hassio.send_command(
+            api_command.format(addon=addon), payload=data, timeout=60)
+
+    for service, settings in MAP_SERVICE_API.items():
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler, schema=settings[1])
 
     return True
 
@@ -71,30 +117,52 @@ class HassIO(object):
         self.websession = websession
         self._ip = ip
 
-    @asyncio.coroutine
     def is_connected(self):
         """Return True if it connected to HassIO supervisor.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/supervisor/ping", method="get")
+
+    def update_hass_api(self, http_config):
+        """Update Home-Assistant API data on HassIO.
+
+        This method return a coroutine.
+        """
+        port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
+        options = {
+            'ssl': CONF_SSL_CERTIFICATE in http_config,
+            'port': port,
+            'password': http_config.get(CONF_API_PASSWORD),
+        }
+
+        return self.send_command("/homeassistant/options", payload=options)
+
+    @asyncio.coroutine
+    def send_command(self, command, method="post", payload=None, timeout=10):
+        """Send API command to HassIO.
 
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(10, loop=self.loop):
-                request = yield from self.websession.get(
-                    "http://{}{}".format(self._ip, "/supervisor/ping")
-                )
+            with async_timeout.timeout(timeout, loop=self.loop):
+                request = yield from self.websession.request(
+                    method, "http://{}{}".format(self._ip, command),
+                    json=payload)
 
                 if request.status != 200:
-                    _LOGGER.error("Ping return code %d.", request.status)
+                    _LOGGER.error(
+                        "%s return code %d.", command, request.status)
                     return False
 
                 answer = yield from request.json()
                 return answer and answer['result'] == 'ok'
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout on ping request")
+            _LOGGER.error("Timeout on %s request", command)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Client error on ping request %s", err)
+            _LOGGER.error("Client error on %s request %s", command, err)
 
         return False
 
