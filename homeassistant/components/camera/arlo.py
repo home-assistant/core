@@ -1,5 +1,5 @@
 """
-This component provides basic support for Netgear Arlo IP cameras.
+Support for Netgear Arlo IP cameras.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.arlo/
@@ -9,19 +9,34 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-
-DEPENDENCIES = ['arlo', 'ffmpeg']
+from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
+ATTR_BRIGHTNESS = 'brightness'
+ATTR_FLIPPED = 'flipped'
+ATTR_MIRRORED = 'mirrored'
+ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
+ATTR_POWER_SAVE_MODE = 'power_save_mode'
+ATTR_SIGNAL_STRENGTH = 'signal_strength'
+ATTR_UNSEEN_VIDEOS = 'unseen_videos'
+
+CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+
+DEPENDENCIES = ['arlo', 'ffmpeg']
+
+POWERSAVE_MODE_MAPPING = {
+    1: 'best_battery_life',
+    2: 'optimized',
+    3: 'best_video'
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
@@ -81,13 +96,29 @@ class ArloCam(Camera):
         return self._name
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_BATTERY_LEVEL: self._camera.get_battery_level,
+            ATTR_BRIGHTNESS: self._camera.get_brightness,
+            ATTR_FLIPPED: self._camera.get_flip_state,
+            ATTR_MIRRORED: self._camera.get_mirror_state,
+            ATTR_MOTION_SENSITIVITY:
+                self._camera.get_motion_detection_sensitivity,
+            ATTR_POWER_SAVE_MODE:
+                POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
+            ATTR_SIGNAL_STRENGTH: self._camera.get_signal_strength,
+            ATTR_UNSEEN_VIDEOS: self._camera.unseen_videos
+        }
+
+    @property
     def model(self):
-        """Camera model."""
+        """Return the camera model."""
         return self._camera.model_id
 
     @property
     def brand(self):
-        """Camera brand."""
+        """Return the camera brand."""
         return DEFAULT_BRAND
 
     @property
@@ -97,7 +128,7 @@ class ArloCam(Camera):
 
     @property
     def motion_detection_enabled(self):
-        """Camera Motion Detection Status."""
+        """Return the camera motion detection status."""
         return self._motion_status
 
     def set_base_station_mode(self, mode):
@@ -105,7 +136,7 @@ class ArloCam(Camera):
         # Get the list of base stations identified by library
         base_stations = self.hass.data[DATA_ARLO].base_stations
 
-        # Some Arlo cameras does not have basestation
+        # Some Arlo cameras does not have base station
         # So check if there is base station detected first
         # if yes, then choose the primary base station
         # Set the mode on the chosen base station

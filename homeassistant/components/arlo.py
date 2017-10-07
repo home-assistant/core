@@ -1,5 +1,5 @@
 """
-This component provides basic support for Netgear Arlo IP cameras.
+This component provides support for Netgear Arlo IP cameras.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/arlo/
@@ -12,7 +12,7 @@ from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['pyarlo==0.0.4']
+REQUIREMENTS = ['pyarlo==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ DEFAULT_BRAND = 'Netgear Arlo'
 DOMAIN = 'arlo'
 
 NOTIFICATION_ID = 'arlo_notification'
-NOTIFICATION_TITLE = 'Arlo Camera Setup'
+NOTIFICATION_TITLE = 'Arlo Component Setup'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

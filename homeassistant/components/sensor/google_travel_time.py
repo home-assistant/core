@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['googlemaps==2.4.6']
+REQUIREMENTS = ['googlemaps==2.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -711,7 +711,7 @@ class PlexClient(MediaPlayerDevice):
             if ("127.0.0.1" in client.baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
-                # playback is occuring
+                # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)

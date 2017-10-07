@@ -576,7 +576,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
-        assert self.primary.disable_poll.called
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
@@ -742,7 +741,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert self.primary.enable_poll.called
         assert len(self.primary.enable_poll.mock_calls) == 1
         assert self.primary.enable_poll.mock_calls[0][1][0] == 123
-        assert not self.primary.disable_poll.called
 
 
 class TestZwave(unittest.TestCase):
@@ -886,6 +884,85 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert value.label == "New Label"
+
+    def test_set_poll_intensity_enable(self):
+        """Test zwave set_poll_intensity service, succsessful set."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=0)
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 0
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 4,
+        })
+        self.hass.block_till_done()
+
+        enable_poll = value.enable_poll
+        assert value.enable_poll.called
+        assert len(enable_poll.mock_calls) == 2
+        assert enable_poll.mock_calls[0][1][0] == 4
+
+    def test_set_poll_intensity_enable_failed(self):
+        """Test zwave set_poll_intensity service, failed set."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=0)
+        value.enable_poll.return_value = False
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 0
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 4,
+        })
+        self.hass.block_till_done()
+
+        enable_poll = value.enable_poll
+        assert value.enable_poll.called
+        assert len(enable_poll.mock_calls) == 1
+
+    def test_set_poll_intensity_disable(self):
+        """Test zwave set_poll_intensity service, successful disable."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=4)
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 4
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 0,
+        })
+        self.hass.block_till_done()
+
+        disable_poll = value.disable_poll
+        assert value.disable_poll.called
+        assert len(disable_poll.mock_calls) == 2
+
+    def test_set_poll_intensity_disable_failed(self):
+        """Test zwave set_poll_intensity service, failed disable."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=4)
+        value.disable_poll.return_value = False
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 4
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 0,
+        })
+        self.hass.block_till_done()
+
+        disable_poll = value.disable_poll
+        assert value.disable_poll.called
+        assert len(disable_poll.mock_calls) == 1
 
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""

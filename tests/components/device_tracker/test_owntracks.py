@@ -1,13 +1,12 @@
 """The tests for the Owntracks device tracker."""
 import asyncio
 import json
-import os
-from collections import defaultdict
 import unittest
 from unittest.mock import patch
 
-from tests.common import (assert_setup_component, fire_mqtt_message,
-                          get_test_home_assistant, mock_mqtt_component)
+from tests.common import (assert_setup_component, fire_mqtt_message, mock_coro,
+                          get_test_home_assistant, mock_mqtt_component,
+                          mock_component)
 
 import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.setup import setup_component
@@ -20,9 +19,9 @@ DEVICE = 'phone'
 
 LOCATION_TOPIC = 'owntracks/{}/{}'.format(USER, DEVICE)
 EVENT_TOPIC = 'owntracks/{}/{}/event'.format(USER, DEVICE)
-WAYPOINT_TOPIC = owntracks.WAYPOINT_TOPIC.format(USER, DEVICE)
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoints'.format(USER, DEVICE)
 USER_BLACKLIST = 'ram'
-WAYPOINT_TOPIC_BLOCKED = owntracks.WAYPOINT_TOPIC.format(
+WAYPOINT_TOPIC_BLOCKED = 'owntracks/{}/{}/waypoints'.format(
     USER_BLACKLIST, DEVICE)
 
 DEVICE_TRACKER_STATE = 'device_tracker.{}_{}'.format(USER, DEVICE)
@@ -252,7 +251,26 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        with assert_setup_component(1, device_tracker.DOMAIN):
+        mock_component(self.hass, 'group')
+        mock_component(self.hass, 'zone')
+
+        patcher = patch('homeassistant.components.device_tracker.'
+                        'DeviceTracker.async_update_config')
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        orig_context = owntracks.OwnTracksContext
+
+        def store_context(*args):
+            self.context = orig_context(*args)
+            return self.context
+
+        with patch('homeassistant.components.device_tracker.async_load_config',
+                   return_value=mock_coro([])), \
+                patch('homeassistant.components.device_tracker.'
+                      'load_yaml_config_file', return_value=mock_coro({})), \
+                patch.object(owntracks, 'OwnTracksContext', store_context), \
+                assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'owntracks',
@@ -290,17 +308,10 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         # Clear state between teste
         self.hass.states.set(DEVICE_TRACKER_STATE, None)
-        owntracks.REGIONS_ENTERED = defaultdict(list)
-        owntracks.MOBILE_BEACONS_ACTIVE = defaultdict(list)
 
     def teardown_method(self, _):
         """Stop everything that was started."""
         self.hass.stop()
-
-        try:
-            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
-        except FileNotFoundError:
-            pass
 
     def assert_tracker_state(self, location):
         """Test the assertion of a tracker state."""
@@ -372,7 +383,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('outer')
 
         # Left clean zone state
-        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+        self.assertFalse(self.context.regions_entered[USER])
 
     def test_event_with_spaces(self):
         """Test the entry event."""
@@ -386,7 +397,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, message)
 
         # Left clean zone state
-        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+        self.assertFalse(self.context.regions_entered[USER])
 
     def test_event_entry_exit_inaccurate(self):
         """Test the event for inaccurate exit."""
@@ -405,7 +416,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
         # But does exit region correctly
-        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+        self.assertFalse(self.context.regions_entered[USER])
 
     def test_event_entry_exit_zero_accuracy(self):
         """Test entry/exit events with accuracy zero."""
@@ -424,7 +435,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assert_location_state('inner')
 
         # But does exit region correctly
-        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+        self.assertFalse(self.context.regions_entered[USER])
 
     def test_event_exit_outside_zone_sets_away(self):
         """Test the event for exit zone."""
@@ -604,7 +615,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
         self.hass.block_till_done()
         self.send_message(EVENT_TOPIC, exit_message)
-        self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
+        self.assertEqual(self.context.mobile_beacons_active['greg_phone'], [])
 
     def test_mobile_multiple_enter_exit(self):
         """Test the multiple entering."""
@@ -618,7 +629,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.send_message(EVENT_TOPIC, enter_message)
         self.send_message(EVENT_TOPIC, exit_message)
 
-        self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
+        self.assertEqual(self.context.mobile_beacons_active['greg_phone'], [])
 
     def test_waypoint_import_simple(self):
         """Test a simple import of list of waypoints."""
@@ -706,6 +717,19 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
+        mock_component(self.hass, 'group')
+        mock_component(self.hass, 'zone')
+
+        patch_load = patch(
+            'homeassistant.components.device_tracker.async_load_config',
+            return_value=mock_coro([]))
+        patch_load.start()
+        self.addCleanup(patch_load.stop)
+
+        patch_save = patch('homeassistant.components.device_tracker.'
+                           'DeviceTracker.async_update_config')
+        patch_save.start()
+        self.addCleanup(patch_save.stop)
 
     def teardown_method(self, method):
         """Tear down resources."""
@@ -749,7 +773,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                     # key missing
                 }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(None)
+        assert self.hass.states.get(DEVICE_TRACKER_STATE) is None
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
@@ -762,7 +786,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                     CONF_SECRET: 'wrong key',
                 }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(None)
+        assert self.hass.states.get(DEVICE_TRACKER_STATE) is None
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
@@ -776,7 +800,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                         LOCATION_TOPIC: 'wrong key'
                     }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(None)
+        assert self.hass.states.get(DEVICE_TRACKER_STATE) is None
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
@@ -790,7 +814,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                         'owntracks/{}/{}'.format(USER, 'otherdevice'): 'foobar'
                     }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(None)
+        assert self.hass.states.get(DEVICE_TRACKER_STATE) is None
 
     try:
         import libnacl

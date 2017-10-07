@@ -22,6 +22,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['influxdb==4.1.1']
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'
@@ -37,7 +39,6 @@ CONF_FIELD = 'field'
 CONF_MEASUREMENT_NAME = 'measurement'
 CONF_WHERE = 'where'
 
-REQUIREMENTS = ['influxdb==3.0.0']
 
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
