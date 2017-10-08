@@ -11,6 +11,7 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/configurator.py @home-assistant/core
 homeassistant/components/group.py @home-assistant/core
 homeassistant/components/history.py @home-assistant/core
+homeassistant/components/hue.py @robmarkcole
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/input_*.py @home-assistant/core
 homeassistant/components/introduction.py @home-assistant/core
@@ -39,3 +40,4 @@ homeassistant/components/*/zwave.py @home-assistant/z-wave
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/sensor/hue.py @robmarkcole
