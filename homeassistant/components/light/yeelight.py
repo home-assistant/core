@@ -23,10 +23,6 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    import yeelight
-
 REQUIREMENTS = ['yeelight==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
