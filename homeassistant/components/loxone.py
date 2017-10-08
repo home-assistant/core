@@ -1,5 +1,5 @@
 """
-Component to create an interface to the Loxone Miniserver
+Component to create an interface to the Loxone Miniserver.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/loxone/
@@ -52,7 +52,13 @@ def async_setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
-    api = LoxoneGateway(hass, user, password, host, port)
+
+    try:
+        api = LoxoneGateway(hass, user, password, host, port)
+    except:  # pylint: disable=bare-except
+        _LOGGER.error("Unable to connect to the Loxone Miniserver!")
+        return False
+
     api.start_listener(api.get_process_message_callback())
     async_track_time_interval(hass, api.send_keepalive, KEEPALIVEINTERVAL)
 
@@ -81,10 +87,10 @@ def async_setup(hass, config):
 
 
 class LoxoneGateway:
-    """ Main class for the communication with the miniserver """
+    """Main class for the communication with the miniserver."""
 
     def __init__(self, hass, user, password, host, port):
-        """ Username, password, host and port of a Loxone user """
+        """Username, password, host and port of a Loxone user."""
         self._hass = hass
         self._user = user
         self._password = password
@@ -95,7 +101,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def send_websocket_command(self, device_uuid, value):
-        """ Send a websocket command to the Miniserver """
+        """Send a websocket command to the Miniserver."""
         yield from self._ws.send(
             "jdev/sps/io/{}/{}".format(device_uuid, value))
 
@@ -120,7 +126,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _ws_read(self):
-        """ Establish the connection an read the messages"""
+        """Establish the connection an read the messages."""
         import websockets as wslib
         try:
             if not self._ws:
@@ -152,7 +158,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _ws_listen(self, async_callback):
-        """ Listen to all commands from the Miniserver"""
+        """Listen to all commands from the Miniserver."""
         try:
             while True:
                 result = yield from self._ws_read()
@@ -168,7 +174,7 @@ class LoxoneGateway:
 
     @asyncio.coroutine
     def _async_process_message(self, message):
-        """ Process the messages """
+        """Process the messages."""
         if len(message) == 8:
             unpacked_data = unpack('ccccI', message)
             self._current_typ = int.from_bytes(unpacked_data[1],
@@ -181,7 +187,7 @@ class LoxoneGateway:
 
 @asyncio.coroutine
 def _ws_process_message(message, async_callback):
-    """ Process the messages """
+    """Process the messages."""
     try:
         yield from async_callback(message)
     except:  # pylint: disable=bare-except
@@ -189,7 +195,7 @@ def _ws_process_message(message, async_callback):
 
 
 def get_hash(key, username, password):
-    """ Get the login data from username and password """
+    """Get the login data from username and password."""
     key_dict = json.loads(key)
     key_value = key_dict['LL']['value']
     data = "{}:{}".format(username, password)
@@ -199,7 +205,7 @@ def get_hash(key, username, password):
 
 
 def parse_loxone_message(typ, message):
-    """ Parser of the Loxone message """
+    """Parser of the Loxone message."""
     event_dict = {}
     if typ == 0:
         _LOGGER.debug("Text Message received!!")
@@ -217,8 +223,8 @@ def parse_loxone_message(typ, message):
             packet = message[start:end]
             event_uuid = uuid.UUID(bytes_le=packet[0:16])
             fields = event_uuid.urn.replace("urn:uuid:", "").split("-")
-            uuidstr = "{}-{}-{}-{}{}".format(fields[0], fields[1], fields[2],
-                                              fields[3], fields[4])
+            uuidstr = "{}-{}-{}-{}{}".format(
+                fields[0], fields[1], fields[2], fields[3], fields[4])
             value = unpack('d', packet[16:24])[0]
             event_dict[uuidstr] = value
             start += 24

@@ -1,5 +1,5 @@
 """
-Loxone simple sensor
+Loxone simple sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.loxone/
@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.loxone/
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_UNIT_OF_MEASUREMENT)
 
@@ -20,14 +21,12 @@ CONF_SENSOR_NAME = 'sensorname'
 CONF_SENSOR_TYP = 'sensortyp'
 CONF_UUID = 'uuid'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_UUID): cv.string,
-        vol.Required(CONF_SENSOR_NAME): cv.string,
-        vol.Required(CONF_SENSOR_TYP): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+   vol.Required(CONF_UUID): cv.string,
+   vol.Required(CONF_SENSOR_NAME): cv.string,
+   vol.Required(CONF_SENSOR_TYP): cv.string,
+   vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -59,7 +58,7 @@ class Loxonesensor(Entity):
 
     @property
     def should_poll(self):
-        """ Disable polling"""
+        """Disable polling."""
         return False
 
     @property
@@ -73,7 +72,7 @@ class Loxonesensor(Entity):
         return self._unit_of_measurement
 
     def event_handler(self, event):
-        """ Event_handler """
+        """Event_handler."""
         if self._uuid in event.data:
             if self._sensor_typ == "InfoOnlyAnalog":
                 self._state = round(event.data[self._uuid], 1)
