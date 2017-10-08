@@ -9,6 +9,7 @@ import asyncio
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
     CONF_NAME, CONF_SENSORS)
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['android_ip_webcam']
 
@@ -75,14 +76,5 @@ class IPWebcamSensor(AndroidIPCamEntity):
     def icon(self):
         """Return the icon for the sensor."""
         if self._sensor == 'battery_level' and self._state is not None:
-            rounded_level = round(int(self._state), -1)
-            returning_icon = 'mdi:battery'
-            if rounded_level < 10:
-                returning_icon = 'mdi:battery-outline'
-            elif self._state == 100:
-                returning_icon = 'mdi:battery'
-            else:
-                returning_icon = 'mdi:battery-{}'.format(str(rounded_level))
-
-            return returning_icon
+            return icon_for_battery_level(int(self._state))
         return ICON_MAP.get(self._sensor, 'mdi:eye')

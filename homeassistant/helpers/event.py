@@ -1,6 +1,7 @@
 """Helpers for listening to events."""
 import functools as ft
 
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
 from ..core import HomeAssistant, callback
 from ..const import (
@@ -35,6 +36,7 @@ def threaded_listener_factory(async_factory):
 
 
 @callback
+@bind_hass
 def async_track_state_change(hass, entity_ids, action, from_state=None,
                              to_state=None):
     """Track specific state changes.
@@ -86,6 +88,7 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 
 @callback
+@bind_hass
 def async_track_template(hass, template, action, variables=None):
     """Add a listener that track state changes with template condition."""
     from . import condition
@@ -114,6 +117,7 @@ track_template = threaded_listener_factory(async_track_template)
 
 
 @callback
+@bind_hass
 def async_track_same_state(hass, orig_value, period, action,
                            async_check_func=None, entity_ids=MATCH_ALL):
     """Track the state of entities for a period and run a action.
@@ -170,6 +174,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 
 
 @callback
+@bind_hass
 def async_track_point_in_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
@@ -187,6 +192,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 
 @callback
+@bind_hass
 def async_track_point_in_utc_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
@@ -221,6 +227,7 @@ track_point_in_utc_time = threaded_listener_factory(
 
 
 @callback
+@bind_hass
 def async_track_time_interval(hass, action, interval):
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
@@ -251,6 +258,7 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
 @callback
+@bind_hass
 def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
     remove = None
@@ -279,6 +287,7 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 
 
 @callback
+@bind_hass
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
     remove = None
@@ -307,6 +316,7 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 
 
 @callback
+@bind_hass
 def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
                                 hour=None, minute=None, second=None,
                                 local=False):
@@ -352,6 +362,7 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 
 @callback
+@bind_hass
 def async_track_time_change(hass, action, year=None, month=None, day=None,
                             hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""
