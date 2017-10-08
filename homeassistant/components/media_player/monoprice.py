@@ -56,7 +56,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
 
     from pymonoprice import Monoprice
-    monoprice = Monoprice(port)
+    try:
+        monoprice = Monoprice(port)
+    except:
+        _LOGGER.error('Error connecting to Monoprice controller.')
+        return
 
     sources = {source_id: extra[CONF_NAME] for source_id, extra
                in config[CONF_SOURCES].items()}
