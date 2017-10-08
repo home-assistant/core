@@ -22,10 +22,10 @@ CONF_SENSOR_TYP = 'sensortyp'
 CONF_UUID = 'uuid'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-   vol.Required(CONF_UUID): cv.string,
-   vol.Required(CONF_SENSOR_NAME): cv.string,
-   vol.Required(CONF_SENSOR_TYP): cv.string,
-   vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+    vol.Required(CONF_UUID): cv.string,
+    vol.Required(CONF_SENSOR_NAME): cv.string,
+    vol.Required(CONF_SENSOR_TYP): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
 })
 
 
