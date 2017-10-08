@@ -119,8 +119,7 @@ class YiCamera(Camera):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
-        url = self.get_latest_video_url()
-
+        url = yield from self.hass.async_add_job(self.get_latest_video_url)
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = yield from ffmpeg.get_image(
