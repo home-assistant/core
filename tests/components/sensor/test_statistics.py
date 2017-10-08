@@ -8,6 +8,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import get_test_home_assistant
 from unittest.mock import patch
 from datetime import datetime, timedelta
+from tests.common import init_recorder_component
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -27,6 +28,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.variance = round(statistics.variance(self.values), 2)
         self.change = self.values[-1] - self.values[0]
         self.average_change = self.change / (len(self.values) - 1)
+        init_recorder_component(self.hass)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
