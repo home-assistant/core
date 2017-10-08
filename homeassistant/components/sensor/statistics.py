@@ -42,8 +42,6 @@ DEFAULT_NAME = 'Stats'
 DEFAULT_SIZE = 20
 ICON = 'mdi:calculator'
 
-DEPENDENCIES = ['recorder']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -91,7 +89,9 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
 
-        hass.async_add_job(self._initzialize_from_database)
+        if 'recorder' in self._hass.config.components:
+            # only use the database if it's configured
+            hass.async_add_job(self._initzialize_from_database)
 
         @callback
         # pylint: disable=invalid-name
@@ -205,7 +205,7 @@ class StatisticsSensor(Entity):
         list so that we get it in the right order again.
         """
         from homeassistant.components.recorder.models import States
-        _LOGGER.debug("initializing values for % from the database",
+        _LOGGER.debug("initializing values for %s from the database",
                       self.entity_id)
 
         with session_scope(hass=self._hass) as session:
@@ -213,9 +213,9 @@ class StatisticsSensor(Entity):
                 .filter(States.entity_id == self._entity_id.lower())\
                 .order_by(States.last_updated.desc())\
                 .limit(self._sampling_size)
-            states = reversed(execute(query))
+            states = execute(query)
 
-        for state in states:
+        for state in reversed(states):
             self._add_state_to_queue(state)
 
         _LOGGER.debug("initializing from database completed")
