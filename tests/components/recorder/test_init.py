@@ -195,8 +195,7 @@ def test_recorder_setup_failure():
     with patch.object(Recorder, '_setup_connection') as setup, \
             patch('homeassistant.components.recorder.time.sleep'):
         setup.side_effect = ImportError("driver not found")
-        rec = Recorder(
-            hass, purge_days=0, uri='sqlite://', include={}, exclude={})
+        rec = Recorder(hass, uri='sqlite://', include={}, exclude={})
         rec.start()
         rec.join()
 

@@ -87,8 +87,8 @@ def async_setup(hass, config):
 
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(
-        hass, 'input_slider',
-        {'input_slider': {
+        hass, 'input_number',
+        {'input_number': {
             'noise_allowance': {'icon': 'mdi:bell-ring',
                                 'min': 0,
                                 'max': 10,
@@ -163,7 +163,7 @@ def async_setup(hass, config):
         'scene.romantic_lights']))
     tasks2.append(group.Group.async_create_group(hass, 'Bedroom', [
         lights[0], switches[1], media_players[0],
-        'input_slider.noise_allowance']))
+        'input_number.noise_allowance']))
     tasks2.append(group.Group.async_create_group(hass, 'Kitchen', [
         lights[2], 'cover.kitchen_window', 'lock.kitchen_door']))
     tasks2.append(group.Group.async_create_group(hass, 'Doors', [

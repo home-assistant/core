@@ -41,11 +41,14 @@ PyXiaomiGateway==0.5.1
 # homeassistant.components.media_player.sonos
 SoCo==0.12
 
+# homeassistant.components.sensor.travisci
+TravisPy==0.3.5
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.11.8
+abodepy==0.12.1
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.3
@@ -273,7 +276,7 @@ gitterpy==0.1.5
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.6.2
+google-api-python-client==1.6.4
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.5.1
@@ -540,17 +543,20 @@ pwmled==1.2.1
 py-cpuinfo==3.3.0
 
 # homeassistant.components.camera.synology
-py-synology==0.1.1
+py-synology==0.1.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.2.4.2
+pyHS100==0.3.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.20.1
+
+# homeassistant.components.sensor.tibber
+pyTibber==0.1.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -626,7 +632,7 @@ pyharmony==1.0.16
 pyhik==0.1.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.32
+pyhomematic==0.1.33
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -638,7 +644,7 @@ pyicloud==0.9.1
 pyiss==1.0.1
 
 # homeassistant.components.remote.itach
-pyitachip2ir==0.0.6
+pyitachip2ir==0.0.7
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -726,7 +732,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
-pysnmp==4.3.9
+pysnmp==4.3.10
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
@@ -745,7 +751,7 @@ python-digitalocean==1.12
 python-ecobee-api==0.0.10
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.5
+# python-eq3bt==0.1.6
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.1
@@ -820,13 +826,13 @@ python_opendata_transport==0.0.2
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.20
+pythonegardia==1.0.21
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==2.2
+pytradfri==2.2.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -924,6 +930,9 @@ simplepush==1.1.3
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5
+
+# homeassistant.components.skybell
+skybellpy==0.1.1
 
 # homeassistant.components.notify.slack
 slacker==0.9.60
