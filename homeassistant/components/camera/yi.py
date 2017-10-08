@@ -107,7 +107,7 @@ class YiCamera(Camera):
         ftp.cwd(latest_dir)
         videos = ftp.nlst()
         if not videos:
-            _LOGGER.warning('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
         return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
