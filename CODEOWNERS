@@ -45,6 +45,7 @@ homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
+homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/tplink.py @rytilahti
