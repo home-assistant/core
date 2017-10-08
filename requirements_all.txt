@@ -540,7 +540,7 @@ pwmled==1.2.1
 py-cpuinfo==3.3.0
 
 # homeassistant.components.camera.synology
-py-synology==0.1.1
+py-synology==0.1.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
