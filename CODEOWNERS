@@ -43,11 +43,10 @@ homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
-homeassistant/components/media_player/kodi.py @armills
-homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/*/xiaomi_miio.py @rytilahti
