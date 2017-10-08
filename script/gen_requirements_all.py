@@ -46,6 +46,7 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
+    'hue-sensors',
     'holidays',
     'influxdb',
     'libpurecoollink',
