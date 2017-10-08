@@ -39,6 +39,12 @@ ADS_TYPEMAP = {
 ADS_PLATFORMS = ['switch', 'binary_sensor', 'light']
 DOMAIN = 'ads'
 
+# config variable names
+CONF_ADSVAR = 'adsvar'
+CONF_ADSTYPE = 'adstype'
+CONF_ADS_USE_NOTIFY = 'use_notify'
+CONF_ADS_POLL_INTERVAL = 'poll_interval'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
