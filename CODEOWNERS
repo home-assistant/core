@@ -29,6 +29,9 @@ homeassistant/components/weblink.py @home-assistant/core
 homeassistant/components/websocket_api.py @home-assistant/core
 homeassistant/components/zone.py @home-assistant/core
 
+# To monitor non-pypi additions
+requirements_all.txt @andrey-git
+
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
 
@@ -36,6 +39,13 @@ homeassistant/components/zwave/* @home-assistant/z-wave
 homeassistant/components/*/zwave.py @home-assistant/z-wave
 
 # Indiviudal components
+homeassistant/components/climate/eq3btsmart.py @rytilahti
+homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/history_graph.py @andrey-git
+homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/sensor/waqi.py @andrey-git
+homeassistant/components/switch/tplink.py @rytilahti
+homeassistant/components/*/xiaomi_miio.py @rytilahti

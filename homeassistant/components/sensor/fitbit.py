@@ -17,7 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.3.0']

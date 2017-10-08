@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_HOST, default=None): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-        cv.string, vol.In(['4', '2.2'])),
+        cv.string, vol.In(['5', '4', '2.2'])),
     vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
 })
 
@@ -73,7 +73,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
 
     # Protocol version specific obis
-    if dsmr_version == '4':
+    if dsmr_version in ('4', '5'):
         gas_obis = obis_ref.HOURLY_GAS_METER_READING
     else:
         gas_obis = obis_ref.GAS_METER_READING
