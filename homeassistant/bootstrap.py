@@ -11,13 +11,11 @@ from typing import Any, Optional, Dict
 
 import voluptuous as vol
 
-import homeassistant.components as core_components
+from homeassistant import (
+    core, config as conf_util, loader, components as core_components)
 from homeassistant.components import persistent_notification
-import homeassistant.config as conf_util
-import homeassistant.core as core
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
-import homeassistant.loader as loader
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, get_user_site
 from homeassistant.util.yaml import clear_secret_cache

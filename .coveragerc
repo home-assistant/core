@@ -169,6 +169,9 @@ omit =
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
+    
+    homeassistant/components/skybell.py
+    homeassistant/components/*/skybell.py
 
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
