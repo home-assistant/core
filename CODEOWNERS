@@ -63,3 +63,4 @@ homeassistant/components/tesla.py @zabuldon
 homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen
 homeassistant/components/*/xiaomi_miio.py @rytilahti
+homeassistant/components/climate/ephember.py @ttroy50
