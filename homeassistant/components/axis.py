@@ -186,7 +186,7 @@ def async_setup(hass, config):
         else:
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
-            device.host = host
+            device.config.host = host
             async_dispatcher_send(hass,
                                   DOMAIN + '_' + device.name + '_new_ip',
                                   host)
@@ -210,9 +210,9 @@ def async_setup(hass, config):
         """Service to send a message."""
         for _, device in AXIS_DEVICES.items():
             if device.name == call.data[CONF_NAME]:
-                response = device.do_request(call.data[SERVICE_CGI],
-                                             call.data[SERVICE_ACTION],
-                                             call.data[SERVICE_PARAM])
+                response = device.vapix.do_request(call.data[SERVICE_CGI],
+                                                   call.data[SERVICE_ACTION],
+                                                   call.data[SERVICE_PARAM])
                 hass.bus.async_fire(SERVICE_VAPIX_CALL_RESPONSE, response)
                 return True
         _LOGGER.info("Couldn\'t find device %s", call.data[CONF_NAME])
@@ -232,7 +232,6 @@ def async_setup(hass, config):
 # @callback
 @asyncio.coroutine
 def setup_device(hass, config, device_config):
-    print('setup device')
     """Set up device."""
     from axis import AxisDevice
 
@@ -253,13 +252,9 @@ def setup_device(hass, config, device_config):
 
     event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
                               EVENT_TYPES))
-    device = AxisDevice(hass.loop,
-                        device_config[CONF_HOST],
-                        device_config[CONF_USERNAME],
-                        device_config[CONF_PASSWORD],
-                        device_config[CONF_PORT],
-                        events=event_types)
-    device.signal = signal_callback
+    device_config['events'] = event_types
+    device_config['signal'] = signal_callback
+    device = AxisDevice(hass.loop, **device_config)
     device.name = device_config[CONF_NAME]
 
     if device.serial_number is None:
@@ -284,7 +279,6 @@ def setup_device(hass, config, device_config):
                                                              config))
 
     AXIS_DEVICES[device.serial_number] = device
-    print('setup device done')
     return True
 
 
