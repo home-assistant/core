@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL
+from homeassistant.components.ads import DATA_ADS
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev_name = config.get(CONF_NAME)
     ads_var = config.get(CONF_ADSVAR)
 
-    add_devices([AdsSwitch(ads_hub, dev_name, ads_var)])
+    add_devices([AdsSwitch(ads_hub, dev_name, ads_var)], True)
 
 
 class AdsSwitch(ToggleEntity):
@@ -51,13 +51,20 @@ class AdsSwitch(ToggleEntity):
         return self.dev_name
 
     def turn_on(self, **kwargs):
-        self._ads_hub.write_by_name(self.ads_var, True, PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self.ads_var, True,
+                                    self._ads_hub.PLCTYPE_BOOL)
         self._on_state = True
 
     def turn_off(self, **kwargs):
-        self._ads_hub.write_by_name(self.ads_var, False, PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self.ads_var, False,
+                                    self._ads_hub.PLCTYPE_BOOL)
         self._on_state = False
 
     def value_changed(self, val):
         self._on_state = val
         self.schedule_update_ha_state()
+
+    def update(self):
+        self._on_state = self._ads_hub.read_by_name(
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL
+        )
