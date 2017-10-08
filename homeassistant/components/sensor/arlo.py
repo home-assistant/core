@@ -87,7 +87,7 @@ class ArloSensor(Entity):
         """Icon to use in the frontend, if any."""
         if self._sensor_type == 'battery_level' and self._state is not None:
             return icon_for_battery_level(battery_level=int(self._state),
-                                         charging=False)
+                                          charging=False)
         return self._icon
 
     @property
