@@ -16,6 +16,7 @@ from homeassistant.components.arlo import (
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,9 @@ class ArloSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if self._sensor_type == 'battery_level' and self._state is not None:
+            return icon_for_battery_level(battery_level=int(self._state),
+                                          charging=False)
         return self._icon
 
     @property
