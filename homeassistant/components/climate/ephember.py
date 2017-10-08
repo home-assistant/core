@@ -14,7 +14,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyephember==0.0.3']
+REQUIREMENTS = ['pyephember==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         ember = EphEmber(username, password)
-        zones = ember.getZones()
+        zones = ember.get_zones()
         for zone in zones:
             add_devices([EphEmberThermostat(ember, zone)])
     except RuntimeError:
@@ -91,12 +91,12 @@ class EphEmberThermostat(ClimateDevice):
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
-        self._ember.activateBoostByZoneName(
+        self._ember.activate_boost_by_name(
             self._zone_name, self._zone['targetTemperature'])
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
-        self._ember.deactivateBoostByZoneName(self._zone_name)
+        self._ember.deactivate_boost_by_name(self._zone_name)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -114,4 +114,4 @@ class EphEmberThermostat(ClimateDevice):
 
     def update(self):
         """Get the latest data."""
-        self._zone = self._ember.getZone(self._zone_name)
+        self._zone = self._ember.get_zone(self._zone_name)
