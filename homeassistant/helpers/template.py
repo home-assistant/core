@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -30,6 +30,7 @@ _RE_GET_ENTITIES = re.compile(
 )
 
 
+@bind_hass
 def attach(hass, obj):
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
