@@ -11,6 +11,7 @@ from tests.common import load_fixture, get_test_home_assistant
 class TestHueSensor(unittest.TestCase):
     """Test the Hue sensors platform."""
 
+
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
@@ -25,7 +26,7 @@ class TestHueSensor(unittest.TestCase):
         with requests_mock.mock() as mock_req:
             mock_url = 'http://mock'
             mock_req.get(mock_url, text=load_fixture('hue_sensors.json'))
-            data = HueSensorData(mock_url)
+            data = HueSensorData(mock_url, parse_hue_api_response)
             data.update()
             sensors = []
             for key in data.data.keys():
