@@ -55,10 +55,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config.get(CONF_PORT)
 
+    from serial import SerialException
     from pymonoprice import Monoprice
     try:
         monoprice = Monoprice(port)
-    except:
+    except SerialException:
         _LOGGER.error('Error connecting to Monoprice controller.')
         return
 
