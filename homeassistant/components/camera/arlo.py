@@ -23,8 +23,8 @@ ARLO_MODE_DISARMED = 'disarmed'
 ATTR_BRIGHTNESS = 'brightness'
 ATTR_FLIPPED = 'flipped'
 ATTR_MIRRORED = 'mirrored'
-ATTR_MOTION_SENSITIVITY = 'motion_detection_sensitivity'
-ATTR_POWER_SAVE_MODE = 'power_save_mode'
+ATTR_MOTION = 'motion_detection_sensitivity'
+ATTR_POWERSAVE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
 ATTR_UNSEEN_VIDEOS = 'unseen_videos'
 
@@ -105,8 +105,8 @@ class ArloCam(Camera):
             ATTR_BRIGHTNESS: self.attrs.get(ATTR_BRIGHTNESS),
             ATTR_FLIPPED: self.attrs.get(ATTR_FLIPPED),
             ATTR_MIRRORED: self.attrs.get(ATTR_MIRRORED),
-            ATTR_MOTION_SENSITIVITY: self.attrs.get(ATTR_MOTION_SENSITIVITY),
-            ATTR_POWER_SAVE_MODE: self.attrs.get(ATTR_POWER_SAVE_MODE),
+            ATTR_MOTION: self.attrs.get(ATTR_MOTION),
+            ATTR_POWERSAVE: self.attrs.get(ATTR_POWERSAVE),
             ATTR_SIGNAL_STRENGTH: self.attrs.get(ATTR_SIGNAL_STRENGTH),
             ATTR_UNSEEN_VIDEOS: self.attrs.get(ATTR_UNSEEN_VIDEOS),
         }
@@ -156,14 +156,18 @@ class ArloCam(Camera):
 
     @asyncio.coroutine
     def async_update(self):
+        """Add an attribute-update task to the executor pool."""
         self.hass.add_job(self.update_attributes)
 
     def update_attributes(self):
+        """Update all camera attributes."""
         self.attrs[ATTR_BATTERY_LEVEL] = self._camera.get_battery_level
         self.attrs[ATTR_BRIGHTNESS] = self._camera.get_battery_level
         self.attrs[ATTR_FLIPPED] = self._camera.get_flip_state,
         self.attrs[ATTR_MIRRORED] = self._camera.get_mirror_state,
-        self.attrs[ATTR_MOTION_SENSITIVITY] = self._camera.get_motion_detection_sensitivity,
-        self.attrs[ATTR_POWER_SAVE_MODE] = POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
+        self.attrs[
+            ATTR_MOTION] = self._camera.get_motion_detection_sensitivity,
+        self.attrs[ATTR_POWERSAVE] = POWERSAVE_MODE_MAPPING[
+            self._camera.get_powersave_mode],
         self.attrs[ATTR_SIGNAL_STRENGTH] = self._camera.get_signal_strength,
         self.attrs[ATTR_UNSEEN_VIDEOS] = self._camera.unseen_videos
