@@ -44,6 +44,7 @@ TEST_REQUIREMENTS = (
     'gTTS-token',
     'ha-ffmpeg',
     'hbmqtt',
+    'hue-sensors',
     'holidays',
     'influxdb',
     'libpurecoollink',
