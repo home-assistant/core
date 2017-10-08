@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
     cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
+    vol.Required(CONF_PASSWORD):
     cv.string,
     vol.Optional(CONF_FFMPEG_ARGUMENTS):
     cv.string
@@ -66,7 +66,6 @@ class YiCamera(Camera):
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
         self._last_image = None
         self._last_url = None
-        self._hass = hass
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
@@ -84,11 +83,6 @@ class YiCamera(Camera):
     def brand(self):
         """Camera brand."""
         return DEFAULT_BRAND
-
-    @property
-    def should_poll(self):
-        """Camera should poll periodically."""
-        return True
 
     async def get_latest_video_url(self):
         """Retrieve the latest video file from the customized Yi FTP server."""
@@ -131,11 +125,9 @@ class YiCamera(Camera):
         url = await self.get_latest_video_url()
 
         if url != self._last_url:
-            ffmpeg = ImageFrame(self._manager.binary, loop=self._hass.loop)
-            image = await ffmpeg.get_image(
+            ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
+            self._last_image = await ffmpeg.get_image(
                 url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments)
-
-            self._last_image = image
             self._last_url = url
 
         return self._last_image
@@ -144,11 +136,11 @@ class YiCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
-        stream = CameraMjpeg(self._manager.binary, loop=self._hass.loop)
+        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(
             self._last_url, extra_cmd=self._extra_arguments)
 
         await async_aiohttp_proxy_stream(
-            self._hass, request, stream,
+            self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
         await stream.close()
