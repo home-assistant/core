@@ -154,7 +154,8 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         self.hass.add_job(self.update_attributes)
 
     def update_attributes(self):
