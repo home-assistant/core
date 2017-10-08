@@ -100,6 +100,7 @@ SCENE_COLOR_AND_BRIGNTNESS = "color_and_brightness"
 SCENE_TEMPERATURE_AND_BRIGHTNESS = "temperature_and_brightness"
 SCENE_NIGHTLIGHT = "nightlight"
 
+
 # Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
