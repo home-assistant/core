@@ -105,11 +105,14 @@ class YiCamera(Camera):
 
         latest_dir = dirs[-1]
         ftp.cwd(latest_dir)
-        latest_video = ftp.nlst()[-1]
+        videos = ftp.nlst()
+        if not videos:
+            _LOGGER.warning('Video folder "%s" is empty; delaying', latest_dir)
+            return False
 
         return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
             self.user, self.passwd, self.host, self.port, self.path,
-            latest_dir, latest_video)
+            latest_dir, videos[-1])
 
     @asyncio.coroutine
     def async_camera_image(self):
