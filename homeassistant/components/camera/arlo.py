@@ -39,7 +39,8 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS):
+    cv.string,
 })
 
 
@@ -68,6 +69,7 @@ class ArloCam(Camera):
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
+        self.attrs = {}
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -99,16 +101,14 @@ class ArloCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_BATTERY_LEVEL: self._camera.get_battery_level,
-            ATTR_BRIGHTNESS: self._camera.get_brightness,
-            ATTR_FLIPPED: self._camera.get_flip_state,
-            ATTR_MIRRORED: self._camera.get_mirror_state,
-            ATTR_MOTION_SENSITIVITY:
-                self._camera.get_motion_detection_sensitivity,
-            ATTR_POWER_SAVE_MODE:
-                POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
-            ATTR_SIGNAL_STRENGTH: self._camera.get_signal_strength,
-            ATTR_UNSEEN_VIDEOS: self._camera.unseen_videos
+            ATTR_BATTERY_LEVEL: self.attrs.get(ATTR_BATTERY_LEVEL),
+            ATTR_BRIGHTNESS: self.attrs.get(ATTR_BRIGHTNESS),
+            ATTR_FLIPPED: self.attrs.get(ATTR_FLIPPED),
+            ATTR_MIRRORED: self.attrs.get(ATTR_MIRRORED),
+            ATTR_MOTION_SENSITIVITY: self.attrs.get(ATTR_MOTION_SENSITIVITY),
+            ATTR_POWER_SAVE_MODE: self.attrs.get(ATTR_POWER_SAVE_MODE),
+            ATTR_SIGNAL_STRENGTH: self.attrs.get(ATTR_SIGNAL_STRENGTH),
+            ATTR_UNSEEN_VIDEOS: self.attrs.get(ATTR_UNSEEN_VIDEOS),
         }
 
     @property
@@ -153,3 +153,16 @@ class ArloCam(Camera):
         """Disable the motion detection in base station (Disarm)."""
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
+
+    def update(self):
+        self.hass.add_job(self.update_attributes)
+
+    def update_attributes(self):
+        self.attrs[ATTR_BATTERY_LEVEL] = self._camera.get_battery_level
+        self.attrs[ATTR_BRIGHTNESS] = self._camera.get_battery_level
+        self.attrs[ATTR_FLIPPED] = self._camera.get_flip_state,
+        self.attrs[ATTR_MIRRORED] = self._camera.get_mirror_state,
+        self.attrs[ATTR_MOTION_SENSITIVITY] = self._camera.get_motion_detection_sensitivity,
+        self.attrs[ATTR_POWER_SAVE_MODE] = POWERSAVE_MODE_MAPPING[self._camera.get_powersave_mode],
+        self.attrs[ATTR_SIGNAL_STRENGTH] = self._camera.get_signal_strength,
+        self.attrs[ATTR_UNSEEN_VIDEOS] = self._camera.unseen_videos
