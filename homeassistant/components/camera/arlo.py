@@ -154,8 +154,7 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Add an attribute-update task to the executor pool."""
         self.hass.add_job(self.update_attributes)
 
