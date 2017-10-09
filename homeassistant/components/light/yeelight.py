@@ -54,6 +54,10 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
+YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
+YEELIGHT_RGB_MIN_KELVIN = 1700
+YEELIGHT_RGB_MAX_KELVIN = 6500
+
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
 EFFECT_STROBE = "Strobe epilepsy!"
@@ -190,6 +194,20 @@ class YeelightLight(Light):
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
         return self._brightness
+
+    @property
+    def min_mireds(self):
+        """Return minimum supported color temperature."""
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            return kelvin_to_mired(YEELIGHT_RGB_MAX_KELVIN)
+        return kelvin_to_mired(YEELIGHT_MAX_KELVIN)
+
+    @property
+    def max_mireds(self):
+        """Return maximum supported color temperature."""
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            return kelvin_to_mired(YEELIGHT_RGB_MIN_KELVIN)
+        return kelvin_to_mired(YEELIGHT_MIN_KELVIN)
 
     def _get_rgb_from_properties(self):
         rgb = self._properties.get('rgb', None)
