@@ -150,7 +150,6 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    print('ASYNC SETUP')
     """Common setup for Axis devices."""
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the event stream on shutdown."""
@@ -170,7 +169,7 @@ def async_setup(hass, config):
         if serialnumber not in AXIS_DEVICES:
             config_file = _read_config(hass)
             if serialnumber in config_file:
-                # Device config saved to file
+                # Device config previously saved to file
                 try:
                     device_config = DEVICE_SCHEMA(config_file[serialnumber])
                     device_config[CONF_HOST] = host
@@ -224,8 +223,6 @@ def async_setup(hass, config):
                                  vapix_service,
                                  descriptions[DOMAIN][SERVICE_VAPIX_CALL],
                                  schema=SERVICE_SCHEMA)
-
-    print('ASYNC SETUP DONE')
     return True
 
 
@@ -257,13 +254,7 @@ def setup_device(hass, config, device_config):
     device = AxisDevice(hass.loop, **device_config)
     device.name = device_config[CONF_NAME]
 
-    if device.serial_number is None:
-        # If there is no serial number a connection could not be made
-        _LOGGER.error("Couldn\'t connect to %s", device_config[CONF_HOST])
-        return False
-
     for component in device_config[CONF_INCLUDE]:
-        break
         if component == 'camera':
             camera_config = {
                 CONF_NAME: device_config[CONF_NAME],
