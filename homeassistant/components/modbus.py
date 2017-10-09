@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_PORT, ATTR_STATE)
+    CONF_HOST, CONF_METHOD, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, ATTR_STATE)
 
 DOMAIN = 'modbus'
 
@@ -24,9 +24,7 @@ REQUIREMENTS = ['pymodbus==1.3.1']
 CONF_BAUDRATE = 'baudrate'
 CONF_BYTESIZE = 'bytesize'
 CONF_STOPBITS = 'stopbits'
-CONF_TYPE = 'type'
 CONF_PARITY = 'parity'
-CONF_TIMEOUT = 'timeout'
 
 SERIAL_SCHEMA = {
     vol.Required(CONF_BAUDRATE): cv.positive_int,
