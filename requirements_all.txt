@@ -902,7 +902,7 @@ russound==0.1.7
 russound_rio==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.4.0
+rxv==0.5.1
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.6.0
