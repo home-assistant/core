@@ -430,6 +430,7 @@ omit =
     homeassistant/components/notify/pushover.py
     homeassistant/components/notify/pushsafer.py
     homeassistant/components/notify/rest.py
+    homeassistant/components/notify/rocketchat.py
     homeassistant/components/notify/sendgrid.py
     homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
