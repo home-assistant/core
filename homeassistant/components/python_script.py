@@ -181,6 +181,7 @@ class TimeWrapper:
     # Class variable, only going to warn once per Home Assistant run
     warned = False
 
+    # pylint: disable=no-self-use
     def sleep(self, *args, **kwargs):
         """Sleep method that warns once."""
         if not TimeWrapper.warned:
