@@ -104,7 +104,7 @@ class TradfriGroup(Light):
     def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
         keys = {
-            'transition_time': int(kwargs.get(ATTR_TRANSITION, 0.05)) * 10
+            'transition_time': float(kwargs.get(ATTR_TRANSITION, 0.5)) * 10
         }
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -258,7 +258,7 @@ class TradfriLight(Light):
                 self._light_control.set_kelvin_color(kelvin)))
 
         keys = {
-            'transition_time': int(kwargs.get(ATTR_TRANSITION, 0.05)) * 10
+            'transition_time': float(kwargs.get(ATTR_TRANSITION, 0.5)) * 10
         }
 
         if ATTR_BRIGHTNESS in kwargs:
