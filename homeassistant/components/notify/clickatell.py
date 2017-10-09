@@ -44,8 +44,8 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = {'apiKey': self.api_key, 
-                'to': self.recipient, 
+        data = {'apiKey': self.api_key,
+                'to': self.recipient,
                 'content': message}
 
         try:
