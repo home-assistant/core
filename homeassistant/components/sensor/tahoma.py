@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
+from homeassistant.components.tahoma import (TahomaDevice)
 
 DEPENDENCIES = ['tahoma']
 
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma controller devices."""
     add_devices(
         TahomaSensor(device, hass.data['TAHOMA_CONTROLLER'])
-        for device in TAHOMA_DEVICES['sensor'])
+        for device in hass.data['sensor'])
 
 
 class TahomaSensor(TahomaDevice, Entity):

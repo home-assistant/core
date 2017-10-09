@@ -22,7 +22,6 @@ DOMAIN = 'tahoma'
 
 TAHOMA_ID_LIST_SCHEMA = vol.Schema([cv.string])
 
-TAHOMA_DEVICES = defaultdict(list)
 TAHOMA_ID_FORMAT = '{}_{}'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -56,13 +55,16 @@ def setup(hass, config):
         _LOGGER.exception("Cannot fetch informations from Tahoma API")
         return False
 
+    hass.data['cover'] = []
+    hass.data['sensor'] = []
+
     for device in devices:
         _device = api.get_device(device)
         if any(ext not in _device.type for ext in exclude):
             device_type = map_tahoma_device(_device)
             if device_type is None:
                 continue
-            TAHOMA_DEVICES[device_type].append(_device)
+            hass.data[device_type].append(_device)
 
     return True
 

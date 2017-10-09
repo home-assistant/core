@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.tahoma/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
-from homeassistant.components.tahoma import (TAHOMA_DEVICES, TahomaDevice)
+from homeassistant.components.tahoma import (TahomaDevice)
 
 DEPENDENCIES = ['tahoma']
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma covers."""
     add_devices(
         TahomaCover(device, hass.data['TAHOMA_CONTROLLER']) for
-        device in TAHOMA_DEVICES['cover'])
+        device in hass.data['cover'])
 
 
 class TahomaCover(TahomaDevice, CoverDevice):
