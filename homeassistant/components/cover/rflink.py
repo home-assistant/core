@@ -104,9 +104,9 @@ class RflinkCover(RflinkCommand, CoverDevice):
         return False
     
     @property
- -  def is_closed(self):
- -      """Return if the cover is closed."""
-  -     return None
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
 
     def async_close_cover(self, **kwargs):
         """Turn the device close."""
