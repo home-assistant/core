@@ -3,11 +3,14 @@ import json
 from datetime import datetime, timedelta
 from time import sleep
 import unittest
+from unittest.mock import patch
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder
+from homeassistant.components.recorder import PurgeTask
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.models import States, Events
+from homeassistant.components.recorder.models import States, Events, PurgeRun
 from homeassistant.components.recorder.util import session_scope
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -153,3 +156,76 @@ class TestRecorderPurge(unittest.TestCase):
 
             # now we should only have 3 events left
             self.assertEqual(events.count(), 3)
+
+
+class TestPurgeRun(unittest.TestCase):
+    """Base class for purge run tests."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def test_purge_not_initialised(self):
+        """Purge timestamp is None if purging never initialised."""
+        config = {}
+        init_recorder_component(self.hass, config)
+        with session_scope(hass=self.hass) as session:
+            run = session.query(PurgeRun).one_or_none()
+            self.assertIsNone(run)
+
+    def test_purge_initialised(self):
+        """Purge timestamp defaults to utcnow() when first initialised."""
+        now = dt_util.parse_datetime("2017-10-17 17:17:17.171717+0000")
+        with patch('homeassistant.components.recorder.dt_util.utcnow') \
+                as now_mock:
+            now_mock.return_value = now
+            config = {'purge_keep_days': 4, 'purge_interval': 2}
+            init_recorder_component(self.hass, config)
+
+        with session_scope(hass=self.hass) as session:
+            run = session.query(PurgeRun).one_or_none()
+            self.assertIsNotNone(run)
+            self.assertIsInstance(run.last, datetime)
+            self.assertEqual(dt_util.UTC.localize(run.last), now)
+
+    @patch('homeassistant.components.recorder.purge.query_last_purge_time')
+    @patch('homeassistant.components.recorder.async_track_point_in_time')
+    def test_purge_skipped(self, track_mock, query_mock):
+        """Purge schedule maintained if purge skipped (e.g. HA restarts)."""
+        now = dt_util.utcnow()
+        last_purge = now - timedelta(days=7)
+        next_purge = now + timedelta(minutes=30)
+
+        # Mock the last purge as seven days ago
+        query_mock.return_value = last_purge
+        config = {'purge_keep_days': 4, 'purge_interval': 2}
+        init_recorder_component(self.hass, config)
+
+        # Expect next purge to be scheduled for 30 minutes after restart
+        self.assertEqual(track_mock.call_count, 1)
+        self.assertAlmostEqual(track_mock.call_args_list[0][0][2],
+                               next_purge, delta=timedelta(seconds=1))
+
+    def test_purge_updated(self):
+        """Purge timestamp is updated after a scheduled purge."""
+        config = {'purge_keep_days': 4, 'purge_interval': 2}
+        init_recorder_component(self.hass, config)
+        self.hass.start()
+
+        # Trigger a purge and record utcnow() as timestamp
+        now = dt_util.utcnow()
+        self.hass.data[DATA_INSTANCE].queue.put(
+            PurgeTask(config['purge_keep_days'], now))
+
+        self.hass.block_till_done()
+        self.hass.data[DATA_INSTANCE].block_till_done()
+
+        # Confirm that last purge timestamp is utcnow()
+        with session_scope(hass=self.hass) as session:
+            run = session.query(PurgeRun).one_or_none()
+            self.assertIsNotNone(run)
+            self.assertEqual(dt_util.UTC.localize(run.last), now)
