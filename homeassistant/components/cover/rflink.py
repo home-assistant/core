@@ -102,7 +102,7 @@ class RflinkCover(RflinkCommand, CoverDevice):
     def should_poll(self):
         """No polling available in RFlink cover."""
         return False
-    
+
     @property
  -  def is_closed(self):
  -      """Return if the cover is closed."""
