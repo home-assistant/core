@@ -60,7 +60,7 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
         _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
         self._state = getattr(self.data, self._sensor_type)
         if self._sensor_type == 'status':
-            self._state = True if self._state == 'Online' else False
+            self._state = self._state == 'Online'
 
     @property
     def icon(self):
