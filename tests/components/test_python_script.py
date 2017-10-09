@@ -162,13 +162,12 @@ def test_accessing_forbidden_methods(hass, caplog):
         'hass.stop()': 'HomeAssistant.stop',
         'dt_util.set_default_time_zone()': 'module.set_default_time_zone',
         'datetime.non_existing': 'module.non_existing',
-        'time.tzset()': 'module.tzset',
+        'time.tzset()': 'TimeWrapper.tzset',
     }.items():
         caplog.records.clear()
         hass.async_add_job(execute, hass, 'test.py', source, {})
         yield from hass.async_block_till_done()
-
-        assert "Not allowed to access ".format(name) in caplog.text
+        assert "Not allowed to access {}".format(name) in caplog.text
 
 
 @asyncio.coroutine
@@ -262,3 +261,19 @@ def test_reload(hass):
     assert hass.services.has_service('python_script', 'hello2')
     assert hass.services.has_service('python_script', 'world_beer')
     assert hass.services.has_service('python_script', 'reload')
+
+
+@asyncio.coroutine
+def test_sleep_warns_one(hass, caplog):
+    """Test time.sleep warns once."""
+    caplog.set_level(logging.WARNING)
+    source = """
+time.sleep(2)
+time.sleep(5)
+"""
+
+    with patch('homeassistant.components.python_script.time.sleep'):
+        hass.async_add_job(execute, hass, 'test.py', source, {})
+        yield from hass.async_block_till_done()
+
+    assert caplog.text.count('time.sleep') == 1

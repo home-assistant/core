@@ -123,7 +123,7 @@ def execute(hass, filename, source, data=None):
               obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
               obj is dt_util and name not in ALLOWED_DT_UTIL or
               obj is datetime and name not in ALLOWED_DATETIME or
-              obj is time and name not in ALLOWED_TIME):
+              isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
             raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))
 
@@ -132,7 +132,7 @@ def execute(hass, filename, source, data=None):
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
     builtins['datetime'] = datetime
-    builtins['time'] = time
+    builtins['time'] = TimeWrapper()
     builtins['dt_util'] = dt_util
     restricted_globals = {
         '__builtins__': builtins,
@@ -173,3 +173,23 @@ class StubPrinter:
         # pylint: disable=no-self-use
         _LOGGER.warning(
             "Don't use print() inside scripts. Use logger.info() instead.")
+
+
+class TimeWrapper:
+    """Wrapper of the time module."""
+
+    # Class variable, only going to warn once per Home Assistant run
+    warned = False
+
+    def sleep(self, *args, **kwargs):
+        """Sleep method that warns once."""
+        if not TimeWrapper.warned:
+            TimeWrapper.warned = True
+            _LOGGER.warning('Using time.sleep can reduce the performance of '
+                            'Home Assistant')
+
+        time.sleep(*args, **kwargs)
+
+    def __getattr__(self, attr):
+        """Fetch an attribute from Time module."""
+        return getattr(time, attr)
