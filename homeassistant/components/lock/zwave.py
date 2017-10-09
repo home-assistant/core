@@ -251,7 +251,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         if not alarm_type:
             return
-        if alarm_type is 21:
+        if alarm_type == 21:
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)),
                 MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level)))
@@ -260,7 +260,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)), str(alarm_level))
             return
-        if alarm_type is 161:
+        if alarm_type == 161:
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)),
                 TAMPER_ALARM_LEVEL.get(str(alarm_level)))

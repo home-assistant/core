@@ -16,7 +16,7 @@ from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.6.1']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 

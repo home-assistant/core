@@ -7,8 +7,10 @@ control of Rflink switch devices.
 
 import asyncio
 
+from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.core import callback
 
 from ..test_rflink import mock_rflink
 
@@ -24,7 +26,7 @@ CONFIG = {
         'devices': {
             'protocol_0_0': {
                 'name': 'test',
-                'aliasses': ['test_alias_0_0'],
+                'aliases': ['test_alias_0_0'],
             },
         },
     },
@@ -47,7 +49,7 @@ def test_default_setup(hass, monkeypatch):
     assert switch_initial.attributes['assumed_state']
 
     # switch should follow state of the hardware device by interpreting
-    # incoming events for its name and aliasses
+    # incoming events for its name and aliases
 
     # mock incoming command event for this device
     event_callback({
@@ -70,7 +72,7 @@ def test_default_setup(hass, monkeypatch):
 
     assert hass.states.get('switch.test').state == 'off'
 
-    # test following aliasses
+    # test following aliases
     # mock incoming command event for this device alias
     event_callback({
         'id': 'test_alias_0_0',
@@ -81,7 +83,7 @@ def test_default_setup(hass, monkeypatch):
     assert hass.states.get('switch.test').state == 'on'
 
     # The switch component does not support adding new devices for incoming
-    # events because every new unkown device is added as a light by default.
+    # events because every new unknown device is added as a light by default.
 
     # test changing state from HA propagates to Rflink
     hass.async_add_job(
@@ -112,7 +114,7 @@ def test_group_alias(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                     'name': 'test',
-                    'group_aliasses': ['test_group_0_0'],
+                    'group_aliases': ['test_group_0_0'],
                 },
             },
         },
@@ -155,7 +157,7 @@ def test_nogroup_alias(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                     'name': 'test',
-                    'nogroup_aliasses': ['test_nogroup_0_0'],
+                    'nogroup_aliases': ['test_nogroup_0_0'],
                 },
             },
         },
@@ -227,3 +229,84 @@ def test_nogroup_device_id(hass, monkeypatch):
     yield from hass.async_block_till_done()
     # should affect state
     assert hass.states.get(DOMAIN + '.test').state == 'on'
+
+
+@asyncio.coroutine
+def test_device_defaults(hass, monkeypatch):
+    """Event should fire if device_defaults config says so."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'device_defaults': {
+                'fire_event': True,
+            },
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    calls = []
+
+    @callback
+    def listener(event):
+        calls.append(event)
+    hass.bus.async_listen_once(EVENT_BUTTON_PRESSED, listener)
+
+    # test event for new unconfigured sensor
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'off',
+    })
+    yield from hass.async_block_till_done()
+
+    assert calls[0].data == {'state': 'off', 'entity_id': DOMAIN + '.test'}
+
+
+@asyncio.coroutine
+def test_not_firing_default(hass, monkeypatch):
+    """By default no bus events should be fired."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'aliases': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    calls = []
+
+    @callback
+    def listener(event):
+        calls.append(event)
+    hass.bus.async_listen_once(EVENT_BUTTON_PRESSED, listener)
+
+    # test event for new unconfigured sensor
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'off',
+    })
+    yield from hass.async_block_till_done()
+
+    assert not calls, 'an event has been fired'

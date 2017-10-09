@@ -4,18 +4,22 @@ Support for the World Air Quality Index service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.waqi/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
+import aiohttp
 import voluptuous as vol
 
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, STATE_UNKNOWN, CONF_TOKEN)
+    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pwaqi==3.0']
+REQUIREMENTS = ['waqiasync==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +31,18 @@ ATTR_PM10 = 'pm_10'
 ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
 ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
+
+KEY_TO_ATTR = {
+    'pm25': ATTR_PM2_5,
+    'pm10': ATTR_PM10,
+    'h': ATTR_HUMIDITY,
+    'p': ATTR_PRESSURE,
+    't': ATTR_TEMPERATURE,
+    'o3': ATTR_OZONE,
+    'no2': ATTR_NITROGEN_DIOXIDE,
+    'so2': ATTR_SULFUR_DIOXIDE,
+}
+
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
@@ -34,9 +50,7 @@ CONF_STATIONS = 'stations'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SENSOR_TYPES = {
-    'aqi': ['AQI', '0-300+', 'mdi:cloud']
-}
+TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATIONS): cv.ensure_list,
@@ -45,51 +59,65 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
-    import pwaqi
+    import waqiasync
 
     token = config.get(CONF_TOKEN)
     station_filter = config.get(CONF_STATIONS)
     locations = config.get(CONF_LOCATIONS)
 
+    client = waqiasync.WaqiClient(
+        token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
-    for location_name in locations:
-        station_ids = pwaqi.findStationCodesByCity(location_name, token)
-        _LOGGER.info("The following stations were returned: %s", station_ids)
-        for station in station_ids:
-            waqi_sensor = WaqiSensor(WaqiData(station, token), station)
-            if (not station_filter) or \
-               (waqi_sensor.station_name in station_filter):
-                dev.append(WaqiSensor(WaqiData(station, token), station))
-
-    add_devices(dev, True)
+    try:
+        for location_name in locations:
+            stations = yield from client.search(location_name)
+            _LOGGER.debug("The following stations were returned: %s", stations)
+            for station in stations:
+                waqi_sensor = WaqiSensor(client, station)
+                if not station_filter or \
+                    {waqi_sensor.uid,
+                     waqi_sensor.url,
+                     waqi_sensor.station_name} & set(station_filter):
+                    dev.append(waqi_sensor)
+    except (aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError):
+        _LOGGER.exception('Failed to connct to WAQI servers.')
+        raise PlatformNotReady
+    async_add_devices(dev, True)
 
 
 class WaqiSensor(Entity):
     """Implementation of a WAQI sensor."""
 
-    def __init__(self, data, station_id):
+    def __init__(self, client, station):
         """Initialize the sensor."""
-        self.data = data
-        self._station_id = station_id
-        self._details = None
+        self._client = client
+        try:
+            self.uid = station['uid']
+        except (KeyError, TypeError):
+            self.uid = None
+
+        try:
+            self.url = station['station']['url']
+        except (KeyError, TypeError):
+            self.url = None
+
+        try:
+            self.station_name = station['station']['name']
+        except (KeyError, TypeError):
+            self.station_name = None
+
+        self._data = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        try:
-            return 'WAQI {}'.format(self._details['city']['name'])
-        except (KeyError, TypeError):
-            return 'WAQI {}'.format(self._station_id)
-
-    @property
-    def station_name(self):
-        """Return the name of the station."""
-        try:
-            return self._details['city']['name']
-        except (KeyError, TypeError):
-            return None
+        if self.station_name:
+            return 'WAQI {}'.format(self.station_name)
+        return 'WAQI {}'.format(self.url if self.url else self.uid)
 
     @property
     def icon(self):
@@ -99,10 +127,9 @@ class WaqiSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._details is not None:
-            return self._details.get('aqi')
-        else:
-            return STATE_UNKNOWN
+        if self._data is not None:
+            return self._data.get('aqi')
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -114,52 +141,32 @@ class WaqiSensor(Entity):
         """Return the state attributes of the last update."""
         attrs = {}
 
-        if self.data is not None:
+        if self._data is not None:
             try:
-                attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
-                attrs[ATTR_TIME] = self._details.get('time')
-                attrs[ATTR_DOMINENTPOL] = self._details.get('dominentpol')
-                for values in self._details['iaqi']:
-                    if values['p'] == 'pm25':
-                        attrs[ATTR_PM2_5] = values['cur']
-                    elif values['p'] == 'pm10':
-                        attrs[ATTR_PM10] = values['cur']
-                    elif values['p'] == 'h':
-                        attrs[ATTR_HUMIDITY] = values['cur']
-                    elif values['p'] == 'p':
-                        attrs[ATTR_PRESSURE] = values['cur']
-                    elif values['p'] == 't':
-                        attrs[ATTR_TEMPERATURE] = values['cur']
-                    elif values['p'] == 'o3':
-                        attrs[ATTR_OZONE] = values['cur']
-                    elif values['p'] == 'no2':
-                        attrs[ATTR_NITROGEN_DIOXIDE] = values['cur']
-                    elif values['p'] == 'so2':
-                        attrs[ATTR_SULFUR_DIOXIDE] = values['cur']
+                attrs[ATTR_ATTRIBUTION] = ' and '.join(
+                    [ATTRIBUTION] + [
+                        v['name'] for v in self._data.get('attributions', [])])
+
+                attrs[ATTR_TIME] = self._data['time']['s']
+                attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')
+
+                iaqi = self._data['iaqi']
+                for key in iaqi:
+                    if key in KEY_TO_ATTR:
+                        attrs[KEY_TO_ATTR[key]] = iaqi[key]['v']
+                    else:
+                        attrs[key] = iaqi[key]['v']
                 return attrs
             except (IndexError, KeyError):
                 return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
-        self.data.update()
-        self._details = self.data.data
-
-
-class WaqiData(object):
-    """Get the latest data and update the states."""
-
-    def __init__(self, station_id, token):
-        """Initialize the data object."""
-        self._station_id = station_id
-        self._token = token
-        self.data = None
-
-    def update(self):
-        """Get the data from World Air Quality Index and updates the states."""
-        import pwaqi
-        try:
-            self.data = pwaqi.get_station_observation(
-                self._station_id, self._token)
-        except AttributeError:
-            _LOGGER.exception("Unable to fetch data from WAQI")
+        if self.uid:
+            result = yield from self._client.get_station_by_number(self.uid)
+        elif self.url:
+            result = yield from self._client.get_station_by_name(self.url)
+        else:
+            result = None
+        self._data = result

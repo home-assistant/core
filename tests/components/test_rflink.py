@@ -4,13 +4,16 @@ import asyncio
 from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.components.rflink import (
+    CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_STOP_COVER)
 from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
-def mock_rflink(hass, config, domain, monkeypatch, failures=None):
+def mock_rflink(hass, config, domain, monkeypatch, failures=None,
+                platform_count=1):
     """Create mock Rflink asyncio protocol, test component setup."""
     transport, protocol = (Mock(), Mock())
 
@@ -45,7 +48,7 @@ def mock_rflink(hass, config, domain, monkeypatch, failures=None):
         mock_create)
 
     # verify instanstiation of component with given config
-    with assert_setup_component(1, domain):
+    with assert_setup_component(platform_count, domain):
         yield from async_setup_component(hass, domain, config)
 
     # hook into mock config for injecting events
@@ -99,7 +102,7 @@ def test_send_no_wait(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                         'name': 'test',
-                        'aliasses': ['test_alias_0_0'],
+                        'aliases': ['test_alias_0_0'],
                 },
             },
         },
@@ -115,6 +118,90 @@ def test_send_no_wait(hass, monkeypatch):
     yield from hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == 'protocol_0_0'
     assert protocol.send_command.call_args_list[0][0][1] == 'off'
+
+
+@asyncio.coroutine
+def test_cover_send_no_wait(hass, monkeypatch):
+    """Test command sending to a cover device without ack."""
+    domain = 'cover'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+            'wait_for_ack': False,
+        },
+        domain: {
+            'platform': 'rflink',
+            'devices': {
+                'RTS_0100F2_0': {
+                        'name': 'test',
+                        'aliases': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = yield from mock_rflink(
+        hass, config, domain, monkeypatch)
+
+    hass.async_add_job(
+        hass.services.async_call(domain, SERVICE_STOP_COVER,
+                                 {ATTR_ENTITY_ID: 'cover.test'}))
+    yield from hass.async_block_till_done()
+    assert protocol.send_command.call_args_list[0][0][0] == 'RTS_0100F2_0'
+    assert protocol.send_command.call_args_list[0][0][1] == 'STOP'
+
+
+@asyncio.coroutine
+def test_send_command(hass, monkeypatch):
+    """Test send_command service."""
+    domain = 'rflink'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = yield from mock_rflink(
+        hass, config, domain, monkeypatch, platform_count=5)
+
+    hass.async_add_job(
+        hass.services.async_call(domain, SERVICE_SEND_COMMAND,
+                                 {'device_id': 'newkaku_0000c6c2_1',
+                                  'command': 'on'}))
+    yield from hass.async_block_till_done()
+    assert (protocol.send_command_ack.call_args_list[0][0][0]
+            == 'newkaku_0000c6c2_1')
+    assert protocol.send_command_ack.call_args_list[0][0][1] == 'on'
+
+
+@asyncio.coroutine
+def test_send_command_invalid_arguments(hass, monkeypatch):
+    """Test send_command service."""
+    domain = 'rflink'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = yield from mock_rflink(
+        hass, config, domain, monkeypatch, platform_count=5)
+
+    # one argument missing
+    hass.async_add_job(
+        hass.services.async_call(domain, SERVICE_SEND_COMMAND,
+                                 {'command': 'on'}))
+    hass.async_add_job(
+        hass.services.async_call(domain, SERVICE_SEND_COMMAND,
+                                 {'device_id': 'newkaku_0000c6c2_1'}))
+    # no arguments
+    hass.async_add_job(
+        hass.services.async_call(domain, SERVICE_SEND_COMMAND, {}))
+    yield from hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list == []
 
 
 @asyncio.coroutine
@@ -192,7 +279,7 @@ def test_error_when_not_connected(hass, monkeypatch):
             'devices': {
                 'protocol_0_0': {
                         'name': 'test',
-                        'aliasses': ['test_alias_0_0'],
+                        'aliases': ['test_alias_0_0'],
                 },
             },
         },

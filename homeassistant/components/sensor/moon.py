@@ -64,8 +64,7 @@ class MoonSensor(Entity):
             return 'Waning gibbous'
         elif self._state == 21:
             return 'Last quarter'
-        else:
-            return 'Waning crescent'
+        return 'Waning crescent'
 
     @property
     def icon(self):

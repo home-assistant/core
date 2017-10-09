@@ -90,8 +90,7 @@ class PhilipsTV(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self._watching_tv:
             return SUPPORT_PHILIPS_JS_TV
-        else:
-            return SUPPORT_PHILIPS_JS
+        return SUPPORT_PHILIPS_JS
 
     @property
     def state(self):
@@ -152,23 +151,19 @@ class PhilipsTV(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def media_previous_track(self):
-        """Send rewind commmand."""
+        """Send rewind command."""
         self._tv.sendKey('Previous')
 
     def media_next_track(self):
-        """Send fast forward commmand."""
+        """Send fast forward command."""
         self._tv.sendKey('Next')
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._watching_tv:
-            if self._channel_name:
-                return '{} - {}'.format(self._source, self._channel_name)
-            else:
-                return self._source
-        else:
-            return self._source
+        if self._watching_tv and self._channel_name:
+            return '{} - {}'.format(self._source, self._channel_name)
+        return self._source
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

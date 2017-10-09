@@ -8,9 +8,7 @@ import logging
 import re
 import socket
 import telnetlib
-import threading
 from collections import namedtuple
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,7 +16,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pexpect==4.0.1']
@@ -31,8 +28,6 @@ CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
 
 DEFAULT_SSH_PORT = 22
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -60,19 +55,10 @@ _LEASES_REGEX = re.compile(
     r'(?P<host>([^\s]+))')
 
 # Command to get both 5GHz and 2.4GHz clients
-_WL_CMD = '{ wl -i eth2 assoclist & wl -i eth1 assoclist ; }'
+_WL_CMD = 'for dev in `nvram get wl_ifnames`; do wl -i $dev assoclist; done'
 _WL_REGEX = re.compile(
     r'\w+\s' +
     r'(?P<mac>(([0-9A-F]{2}[:-]){5}([0-9A-F]{2})))')
-
-_ARP_CMD = 'arp -n'
-_ARP_REGEX = re.compile(
-    r'.+\s' +
-    r'\((?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\)\s' +
-    r'.+\s' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))' +
-    r'\s' +
-    r'.*')
 
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
@@ -84,15 +70,6 @@ _IP_NEIGH_REGEX = re.compile(
     r'\s?(router)?'
     r'(?P<status>(\w+))')
 
-_NVRAM_CMD = 'nvram get client_info_tmp'
-_NVRAM_REGEX = re.compile(
-    r'.*>.*>' +
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
-    r'>' +
-    r'(?P<mac>(([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})))' +
-    r'>' +
-    r'.*')
-
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
@@ -102,7 +79,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
+AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases')
 
 
 class AsusWrtDeviceScanner(DeviceScanner):
@@ -141,8 +118,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
                                                self.password,
                                                self.mode == "ap")
 
-        self.lock = threading.Lock()
-
         self.last_results = {}
 
         # Test the router is accessible.
@@ -163,7 +138,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 return client['host']
         return None
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the ASUSWRT router is up to date.
 
@@ -172,19 +146,18 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        with self.lock:
-            _LOGGER.info('Checking ARP')
-            data = self.get_asuswrt_data()
-            if not data:
-                return False
+        _LOGGER.info('Checking Devices')
+        data = self.get_asuswrt_data()
+        if not data:
+            return False
 
-            active_clients = [client for client in data.values() if
-                              client['status'] == 'REACHABLE' or
-                              client['status'] == 'DELAY' or
-                              client['status'] == 'STALE' or
-                              client['status'] == 'IN_NVRAM']
-            self.last_results = active_clients
-            return True
+        active_clients = [client for client in data.values() if
+                          client['status'] == 'REACHABLE' or
+                          client['status'] == 'DELAY' or
+                          client['status'] == 'STALE' or
+                          client['status'] == 'IN_ASSOCLIST']
+        self.last_results = active_clients
+        return True
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
@@ -204,41 +177,12 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
                 host = ''
 
-                # match mac addresses to IP addresses in ARP table
-                for arp in result.arp:
-                    if match.group('mac').lower() in \
-                            arp.decode('utf-8').lower():
-                        arp_match = _ARP_REGEX.search(
-                            arp.decode('utf-8').lower())
-                        if not arp_match:
-                            _LOGGER.warning("Could not parse arp row: %s", arp)
-                            continue
-
-                        devices[arp_match.group('ip')] = {
-                            'host': host,
-                            'status': '',
-                            'ip': arp_match.group('ip'),
-                            'mac': match.group('mac').upper(),
-                            }
-
-                # match mac addresses to IP addresses in NVRAM table
-                for nvr in result.nvram:
-                    if match.group('mac').upper() in nvr.decode('utf-8'):
-                        nvram_match = _NVRAM_REGEX.search(nvr.decode('utf-8'))
-                        if not nvram_match:
-                            _LOGGER.warning("Could not parse nvr row: %s", nvr)
-                            continue
-
-                        # skip current check if already in ARP table
-                        if nvram_match.group('ip') in devices.keys():
-                            continue
-
-                        devices[nvram_match.group('ip')] = {
-                            'host': host,
-                            'status': 'IN_NVRAM',
-                            'ip': nvram_match.group('ip'),
-                            'mac': match.group('mac').upper(),
-                            }
+                devices[match.group('mac').upper()] = {
+                    'host': host,
+                    'status': 'IN_ASSOCLIST',
+                    'ip': '',
+                    'mac': match.group('mac').upper(),
+                    }
 
         else:
             for lease in result.leases:
@@ -256,20 +200,23 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 if host == '*':
                     host = ''
 
-                devices[match.group('ip')] = {
+                devices[match.group('mac')] = {
                     'host': host,
                     'status': '',
                     'ip': match.group('ip'),
                     'mac': match.group('mac').upper(),
                     }
 
-        for neighbor in result.neighbors:
-            match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
-            if not match:
-                _LOGGER.warning("Could not parse neighbor row: %s", neighbor)
-                continue
-            if match.group('ip') in devices:
-                devices[match.group('ip')]['status'] = match.group('status')
+            for neighbor in result.neighbors:
+                match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
+                if not match:
+                    _LOGGER.warning("Could not parse neighbor row: %s",
+                                    neighbor)
+                    continue
+                if match.group('mac') in devices:
+                    devices[match.group('mac')]['status'] = (
+                        match.group('status'))
+
         return devices
 
 
@@ -317,27 +264,19 @@ class SshConnection(_Connection):
         try:
             if not self.connected:
                 self.connect()
-            self._ssh.sendline(_IP_NEIGH_CMD)
-            self._ssh.prompt()
-            neighbors = self._ssh.before.split(b'\n')[1:-1]
             if self._ap:
-                self._ssh.sendline(_ARP_CMD)
-                self._ssh.prompt()
-                arp_result = self._ssh.before.split(b'\n')[1:-1]
+                neighbors = ['']
                 self._ssh.sendline(_WL_CMD)
                 self._ssh.prompt()
                 leases_result = self._ssh.before.split(b'\n')[1:-1]
-                self._ssh.sendline(_NVRAM_CMD)
-                self._ssh.prompt()
-                nvram_result = self._ssh.before.split(b'\n')[1].split(b'<')[1:]
             else:
-                arp_result = ['']
-                nvram_result = ['']
+                self._ssh.sendline(_IP_NEIGH_CMD)
+                self._ssh.prompt()
+                neighbors = self._ssh.before.split(b'\n')[1:-1]
                 self._ssh.sendline(_LEASES_CMD)
                 self._ssh.prompt()
                 leases_result = self._ssh.before.split(b'\n')[1:-1]
-            return AsusWrtResult(neighbors, leases_result, arp_result,
-                                 nvram_result)
+            return AsusWrtResult(neighbors, leases_result)
         except exceptions.EOF as err:
             _LOGGER.error("Connection refused. SSH enabled?")
             self.disconnect()
@@ -407,23 +346,14 @@ class TelnetConnection(_Connection):
             neighbors = (self._telnet.read_until(self._prompt_string).
                          split(b'\n')[1:-1])
             if self._ap:
-                self._telnet.write('{}\n'.format(_ARP_CMD).encode('ascii'))
-                arp_result = (self._telnet.read_until(self._prompt_string).
-                              split(b'\n')[1:-1])
                 self._telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
                 leases_result = (self._telnet.read_until(self._prompt_string).
                                  split(b'\n')[1:-1])
-                self._telnet.write('{}\n'.format(_NVRAM_CMD).encode('ascii'))
-                nvram_result = (self._telnet.read_until(self._prompt_string).
-                                split(b'\n')[1].split(b'<')[1:])
             else:
-                arp_result = ['']
-                nvram_result = ['']
                 self._telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
                 leases_result = (self._telnet.read_until(self._prompt_string).
                                  split(b'\n')[1:-1])
-            return AsusWrtResult(neighbors, leases_result, arp_result,
-                                 nvram_result)
+            return AsusWrtResult(neighbors, leases_result)
         except EOFError:
             _LOGGER.error("Unexpected response from router")
             self.disconnect()

@@ -192,7 +192,7 @@ class TellstickDevice(Entity):
         raise NotImplementedError
 
     def _parse_tellcore_data(self, tellcore_data):
-        """Turn the value recieved from tellcore into something useful."""
+        """Turn the value received from tellcore into something useful."""
         raise NotImplementedError
 
     def _update_model(self, new_state, data):

@@ -40,6 +40,15 @@ CONDITION_CLASSES = {
     'exceptional': [],
 }
 
+VISIBILTY_CLASSES = {
+    'VP': '<1',
+    'PO': '1-4',
+    'MO': '4-10',
+    'GO': '10-20',
+    'VG': '20-40',
+    'EX': '>40'
+}
+
 SCAN_INTERVAL = timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
@@ -51,7 +60,8 @@ SENSOR_TYPES = {
     'wind_speed': ['Wind Speed', 'm/s'],
     'wind_direction': ['Wind Direction', None],
     'wind_gust': ['Wind Gust', 'm/s'],
-    'visibility': ['Visibility', 'km'],
+    'visibility': ['Visibility', None],
+    'visibility_distance': ['Visibility Distance', 'km'],
     'uv': ['UV', None],
     'precipitation': ['Probability of Precipitation', '%'],
     'humidity': ['Humidity', '%']
@@ -119,15 +129,16 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if (self._condition == 'visibility_distance' and
+                'visibility' in self.data.data.__dict__.keys()):
+            return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
         if self._condition in self.data.data.__dict__.keys():
             variable = getattr(self.data.data, self._condition)
             if self._condition == "weather":
                 return [k for k, v in CONDITION_CLASSES.items() if
                         self.data.data.weather.value in v][0]
-            else:
-                return variable.value
-        else:
-            return STATE_UNKNOWN
+            return variable.value
+        return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):

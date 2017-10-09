@@ -12,6 +12,7 @@ import re
 from homeassistant.components.google import (
     CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -148,8 +149,7 @@ class CalendarEventDevice(Entity):
             if 'date' in date:
                 return dt.start_of_local_day(dt.dt.datetime.combine(
                     dt.parse_date(date['date']), dt.dt.time.min))
-            else:
-                return dt.as_local(dt.parse_datetime(date['dateTime']))
+            return dt.as_local(dt.parse_datetime(date['dateTime']))
 
         start = _get_date(self.data.event['start'])
         end = _get_date(self.data.event['end'])

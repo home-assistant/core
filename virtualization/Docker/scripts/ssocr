@@ -10,20 +10,15 @@ PACKAGES=(
 
 apt-get install -y --no-install-recommends ${PACKAGES[@]}
 
+cd /usr/src/app/
+mkdir -p build && cd build
+
 # Clone the latest code from GitHub
-git clone --depth 1 https://github.com/auerswal/ssocr.git /usr/local/src/ssocr
+git clone --depth 1 https://github.com/auerswal/ssocr.git ssocr
+cd ssocr/
 
-# Build ssocr
-(
-  # Setup the build directory
-  cd /usr/local/src/ssocr
+# Compile the library
+make
 
-  # compile the library
-  make
-
-  # Install the binaries/libraries to your local system (prefix is /usr/local)
-  make install
-
-  # Cleanup
-  make clean
-)
+# Install the binaries/libraries to your local system (prefix is /usr/local)
+make install

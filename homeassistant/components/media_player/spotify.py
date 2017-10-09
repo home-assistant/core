@@ -10,7 +10,6 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.loader import get_component
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
@@ -62,9 +61,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 def request_configuration(hass, config, add_devices, oauth):
     """Request Spotify authorization."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     hass.data[DOMAIN] = configurator.request_config(
-        hass, DEFAULT_NAME, lambda _: None,
+        DEFAULT_NAME, lambda _: None,
         link_name=CONFIGURATOR_LINK_NAME,
         link_url=oauth.get_authorize_url(),
         description=CONFIGURATOR_DESCRIPTION,
@@ -88,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         request_configuration(hass, config, add_devices, oauth)
         return
     if hass.data.get(DOMAIN):
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
     player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
@@ -149,6 +148,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             new_token = \
                 self._oauth.refresh_access_token(
                     self._token_info['refresh_token'])
+            # skip when refresh failed
+            if new_token is None:
+                return
+
             self._token_info = new_token
             token_refreshed = True
         if self._player is None or token_refreshed:
@@ -159,6 +162,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def update(self):
         """Update state and attributes."""
         self.refresh_spotify_instance()
+
+        # Don't true update when token is expired
+        if self._oauth.is_token_expired(self._token_info):
+            _LOGGER.warning("Spotify failed to update, token expired.")
+            return
+
         # Available devices
         player_devices = self._player.devices()
         if player_devices is not None:
@@ -171,7 +180,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                                  for device in devices}
                 device_diff = {name: id for name, id in self._devices.items()
                                if old_devices.get(name, None) is None}
-                if len(device_diff) > 0:
+                if device_diff:
                     _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
@@ -186,7 +195,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._artist = ', '.join([artist.get('name')
                                       for artist in item.get('artists')])
             self._uri = current.get('uri')
-            self._image_url = item.get('album').get('images')[0].get('url')
+            images = item.get('album').get('images')
+            self._image_url = images[0].get('url') if images else None
         # Playing state
         self._state = STATE_PAUSED
         if current.get('is_playing'):
@@ -312,5 +322,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Return the media player features that are supported."""
         if self._user is not None and self._user['product'] == 'premium':
             return SUPPORT_SPOTIFY
-        else:
-            return None
+        return None
+
+    @property
+    def media_content_type(self):
+        """Return the media type."""
+        return MEDIA_TYPE_MUSIC

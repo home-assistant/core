@@ -23,8 +23,7 @@ from homeassistant.util.color import (
     color_xy_brightness_to_RGB)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
-                '1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5']
+REQUIREMENTS = ['lightify==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

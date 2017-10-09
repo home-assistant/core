@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN
 
 REQUIREMENTS = ['fritzhome==1.0.2']
 
@@ -21,13 +21,15 @@ _LOGGER = logging.getLogger(__name__)
 # Standard Fritz Box IP
 DEFAULT_HOST = 'fritz.box'
 
-ATTR_CURRENT_CONSUMPTION = 'Current Consumption'
-ATTR_CURRENT_CONSUMPTION_UNIT = 'W'
+ATTR_CURRENT_CONSUMPTION = 'current_consumption'
+ATTR_CURRENT_CONSUMPTION_UNIT = 'current_consumption_unit'
+ATTR_CURRENT_CONSUMPTION_UNIT_VALUE = 'W'
 
-ATTR_TOTAL_CONSUMPTION = 'Total Consumption'
-ATTR_TOTAL_CONSUMPTION_UNIT = 'kWh'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
+ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
 
-ATTR_TEMPERATURE = 'Temperature'
+ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -86,17 +88,21 @@ class FritzDectSwitch(SwitchDevice):
         if self.data.has_powermeter and \
            self.data.current_consumption != STATE_UNKNOWN and \
            self.data.total_consumption != STATE_UNKNOWN:
-            attrs[ATTR_CURRENT_CONSUMPTION] = "%.1f %s" % \
-                (self.data.current_consumption, ATTR_CURRENT_CONSUMPTION_UNIT)
-            attrs[ATTR_TOTAL_CONSUMPTION] = "%.3f %s" % \
-                (self.data.total_consumption, ATTR_TOTAL_CONSUMPTION_UNIT)
+            attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
+                self.data.current_consumption)
+            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
+                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE)
+            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
+                self.data.total_consumption)
+            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
+                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
 
         if self.data.has_temperature and \
            self.data.temperature != STATE_UNKNOWN:
-            attrs[ATTR_TEMPERATURE] = "%.1f %s" % \
-              (self.units.temperature(self.data.temperature, TEMP_CELSIUS),
-               self.units.temperature_unit)
-
+            attrs[ATTR_TEMPERATURE] = "{}".format(
+                self.units.temperature(self.data.temperature, TEMP_CELSIUS))
+            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
+                self.units.temperature_unit)
         return attrs
 
     @property

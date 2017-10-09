@@ -91,8 +91,7 @@ class MVGLiveSensor(Entity):
         """Return the name of the sensor."""
         if self._name:
             return self._name
-        else:
-            return self._station
+        return self._station
 
     @property
     def state(self):

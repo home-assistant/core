@@ -280,7 +280,9 @@ class SpeechManager(object):
 
         # Options
         if provider.default_options and options:
-            options = provider.default_options.copy().update(options)
+            merged_options = provider.default_options.copy()
+            merged_options.update(options)
+            options = merged_options
         options = options or provider.default_options
         if options is not None:
             invalid_opts = [opt_name for opt_name in options.keys()

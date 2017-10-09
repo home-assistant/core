@@ -38,7 +38,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
         """Return the name of the binary sensor."""
         return hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
-            self._device_label) + " door window"
+            self._device_label)
 
     @property
     def is_on(self):

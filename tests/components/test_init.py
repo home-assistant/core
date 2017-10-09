@@ -82,7 +82,7 @@ class TestComponentsCore(unittest.TestCase):
 
         # We can't test if our service call results in services being called
         # because by mocking out the call service method, we mock out all
-        # So we mimick how the service registry calls services
+        # So we mimic how the service registry calls services
         service_call = ha.ServiceCall('homeassistant', 'turn_on', {
             'entity_id': ['light.test', 'sensor.bla', 'light.bla']
         })

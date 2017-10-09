@@ -28,12 +28,15 @@ CONF_PING_COUNT = 'count'
 
 DEFAULT_NAME = 'Ping Binary sensor'
 DEFAULT_PING_COUNT = 5
-DEFAULT_SENSOR_CLASS = 'connectivity'
+DEFAULT_DEVICE_CLASS = 'connectivity'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
 PING_MATCHER = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)')
+
+PING_MATCHER_BUSYBOX = re.compile(
+    r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)')
 
 WIN32_PING_MATCHER = re.compile(
     r'(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms')
@@ -70,7 +73,7 @@ class PingBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_SENSOR_CLASS
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def is_on(self):
@@ -126,14 +129,21 @@ class PingData(object):
                     'avg': rtt_avg,
                     'max': rtt_max,
                     'mdev': ''}
-            else:
-                match = PING_MATCHER.search(str(out).split('\n')[-1])
-                rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
+            if 'max/' not in str(out):
+                match = PING_MATCHER_BUSYBOX.search(str(out).split('\n')[-1])
+                rtt_min, rtt_avg, rtt_max = match.groups()
                 return {
                     'min': rtt_min,
                     'avg': rtt_avg,
                     'max': rtt_max,
-                    'mdev': rtt_mdev}
+                    'mdev': ''}
+            match = PING_MATCHER.search(str(out).split('\n')[-1])
+            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
+            return {
+                'min': rtt_min,
+                'avg': rtt_avg,
+                'max': rtt_max,
+                'mdev': rtt_mdev}
         except (subprocess.CalledProcessError, AttributeError):
             return False
 

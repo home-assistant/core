@@ -121,10 +121,6 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
 class WinkSmokeDetector(WinkBinarySensorDevice):
     """Representation of a Wink Smoke detector."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -136,25 +132,18 @@ class WinkSmokeDetector(WinkBinarySensorDevice):
 class WinkHub(WinkBinarySensorDevice):
     """Representation of a Wink Hub."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'update needed': self.wink.update_needed(),
-            'firmware version': self.wink.firmware_version()
+            'update_needed': self.wink.update_needed(),
+            'firmware_version': self.wink.firmware_version(),
+            'pairing_mode': self.wink.pairing_mode()
         }
 
 
 class WinkRemote(WinkBinarySensorDevice):
     """Representation of a Wink Lutron Connected bulb remote."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
@@ -175,10 +164,6 @@ class WinkRemote(WinkBinarySensorDevice):
 class WinkButton(WinkBinarySensorDevice):
     """Representation of a Wink Relay button."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -190,10 +175,6 @@ class WinkButton(WinkBinarySensorDevice):
 
 class WinkGang(WinkBinarySensorDevice):
     """Representation of a Wink Relay gang."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
 
     @property
     def is_on(self):
