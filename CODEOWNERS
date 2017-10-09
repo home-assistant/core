@@ -57,5 +57,7 @@ homeassistant/components/switch/tplink.py @rytilahti
 
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen
+homeassistant/components/tesla.py @zabuldon
+homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen
 homeassistant/components/*/xiaomi_miio.py @rytilahti
