@@ -11,7 +11,6 @@ import os
 from homeassistant.components import zone
 from homeassistant.core import callback, State
 from homeassistant.setup import setup_component
-from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -23,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.remote import JSONEncoder
 
 from tests.common import (
-    get_test_home_assistant, fire_time_changed, fire_service_discovered,
+    get_test_home_assistant, fire_time_changed,
     patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
 
 from ...test_util.aiohttp import mock_aiohttp_client
@@ -310,36 +309,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             assert aioclient_mock.call_count == 1, \
                 'No http request for macvendor made!'
         self.assertEqual(tracker.devices['b827eb000000'].vendor, vendor_string)
-
-    def test_discovery(self):
-        """Test discovery."""
-        scanner = get_component('device_tracker.test').SCANNER
-
-        with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
-            with patch.object(scanner, 'scan_devices',
-                              autospec=True) as mock_scan:
-                with assert_setup_component(1, device_tracker.DOMAIN):
-                    assert setup_component(
-                        self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
-                fire_service_discovered(self.hass, 'test', {})
-                self.assertTrue(mock_scan.called)
-
-    @patch(
-        'homeassistant.components.device_tracker.DeviceTracker.see')
-    @patch(
-        'homeassistant.components.device_tracker.demo.setup_scanner',
-        autospec=True)
-    def test_discover_platform(self, mock_demo_setup_scanner, mock_see):
-        """Test discovery of device_tracker demo platform."""
-        assert device_tracker.DOMAIN not in self.hass.config.components
-        discovery.load_platform(
-            self.hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
-            {})
-        self.hass.block_till_done()
-        assert device_tracker.DOMAIN in self.hass.config.components
-        assert mock_demo_setup_scanner.called
-        assert mock_demo_setup_scanner.call_args[0] == (
-            self.hass, {}, mock_see, {'test_key': 'test_val'})
 
     def test_update_stale(self):
         """Test stalled update."""

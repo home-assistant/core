@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['raincloudy==0.0.1']
+REQUIREMENTS = ['raincloudy==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -41,11 +41,14 @@ PyXiaomiGateway==0.5.1
 # homeassistant.components.media_player.sonos
 SoCo==0.12
 
+# homeassistant.components.sensor.travisci
+TravisPy==0.3.5
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.6
 
 # homeassistant.components.abode
-abodepy==0.11.9
+abodepy==0.12.1
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.3
@@ -540,14 +543,14 @@ pwmled==1.2.1
 py-cpuinfo==3.3.0
 
 # homeassistant.components.camera.synology
-py-synology==0.1.1
+py-synology==0.1.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.2.4.2
+pyHS100==0.3.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.20.1
@@ -565,7 +568,7 @@ pyairvisual==1.0.0
 pyalarmdotcom==0.3.0
 
 # homeassistant.components.arlo
-pyarlo==0.0.6
+pyarlo==0.0.7
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.4
@@ -629,7 +632,7 @@ pyharmony==1.0.16
 pyhik==0.1.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.32
+pyhomematic==0.1.33
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -729,7 +732,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
-pysnmp==4.3.9
+pysnmp==4.3.10
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
@@ -748,7 +751,7 @@ python-digitalocean==1.12
 python-ecobee-api==0.0.10
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.5
+# python-eq3bt==0.1.6
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.1
@@ -770,6 +773,7 @@ python-juicenet==0.0.5
 # python-lirc==1.2.3
 
 # homeassistant.components.light.xiaomi_miio
+# homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
 python-mirobo==0.2.0
 
@@ -814,7 +818,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.6.0
+python-wink==1.7.0
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.0.2
@@ -823,7 +827,7 @@ python_opendata_transport==0.0.2
 python_openzwave==0.4.0.35
 
 # homeassistant.components.alarm_control_panel.egardia
-pythonegardia==1.0.21
+pythonegardia==1.0.22
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -865,7 +869,7 @@ rachiopy==0.1.2
 radiotherm==1.3
 
 # homeassistant.components.raincloud
-raincloudy==0.0.1
+raincloudy==0.0.3
 
 # homeassistant.components.raspihats
 # raspihats==2.2.3
@@ -882,6 +886,9 @@ rflink==0.0.34
 # homeassistant.components.ring
 ring_doorbell==0.1.4
 
+# homeassistant.components.notify.rocketchat
+rocketchat-API==0.6.1
+
 # homeassistant.components.vacuum.roomba
 roombapy==1.3.1
 
@@ -895,7 +902,7 @@ russound==0.1.7
 russound_rio==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.4.0
+rxv==0.5.1
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.6.0
@@ -927,6 +934,9 @@ simplepush==1.1.3
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5
+
+# homeassistant.components.skybell
+skybellpy==0.1.1
 
 # homeassistant.components.notify.slack
 slacker==0.9.60
@@ -983,7 +993,7 @@ tellduslive==0.3.4
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.11
+teslajsonpy==0.0.17
 
 # homeassistant.components.thingspeak
 thingspeak==0.4.1

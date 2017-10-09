@@ -169,6 +169,9 @@ omit =
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
+    
+    homeassistant/components/skybell.py
+    homeassistant/components/*/skybell.py
 
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
@@ -427,6 +430,7 @@ omit =
     homeassistant/components/notify/pushover.py
     homeassistant/components/notify/pushsafer.py
     homeassistant/components/notify/rest.py
+    homeassistant/components/notify/rocketchat.py
     homeassistant/components/notify/sendgrid.py
     homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
@@ -549,6 +553,7 @@ omit =
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
@@ -585,6 +590,7 @@ omit =
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/switch/xiaomi_miio.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
