@@ -16,11 +16,10 @@ from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_THROTTLE_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
@@ -159,13 +158,8 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
-    @Throttle(UPDATE_THROTTLE_INTERVAL)
     def update(self):
         """Add an attribute-update task to the executor pool."""
-        self.hass.add_job(self.update_attributes)
-
-    def update_attributes(self):
-        """Update all camera attributes."""
         self.attrs[ATTR_BATTERY_LEVEL] = self._camera.get_battery_level
         self.attrs[ATTR_BRIGHTNESS] = self._camera.get_battery_level
         self.attrs[ATTR_FLIPPED] = self._camera.get_flip_state,
