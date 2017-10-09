@@ -176,7 +176,7 @@ def async_setup(hass, config):
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
-                if not (yield from setup_device(hass, config, device_config)):
+                if not setup_device(hass, config, device_config):
                     _LOGGER.error("Couldn\'t set up %s",
                                   device_config[CONF_NAME])
             else:
@@ -198,7 +198,7 @@ def async_setup(hass, config):
             device_config = config[DOMAIN][device]
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device
-            if not (yield from setup_device(hass, config, device_config)):
+            if not setup_device(hass, config, device_config):
                 _LOGGER.error("Couldn\'t set up %s", device_config[CONF_NAME])
 
     # Services to communicate with device.
@@ -226,13 +226,12 @@ def async_setup(hass, config):
     return True
 
 
-# @callback
-@asyncio.coroutine
 def setup_device(hass, config, device_config):
     """Set up device."""
     from axis import AxisDevice
 
     def signal_callback(action, event):
+        """Callback to configure events when initialized on event stream."""
         if action == 'add':
             event_config = {
                 CONF_EVENT: event,
@@ -253,6 +252,11 @@ def setup_device(hass, config, device_config):
     device_config['signal'] = signal_callback
     device = AxisDevice(hass.loop, **device_config)
     device.name = device_config[CONF_NAME]
+
+    if device.serial_number is None:
+        # If there is no serial number a connection could not be made
+        _LOGGER.error("Couldn\'t connect to %s", device_config[CONF_HOST])
+        return False
 
     for component in device_config[CONF_INCLUDE]:
         if component == 'camera':
