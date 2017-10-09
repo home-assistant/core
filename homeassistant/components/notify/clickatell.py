@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_API_KEY, CONF_RECIPIENT)
 from homeassistant.components.notify import (
-                PLATFORM_SCHEMA, BaseNotificationService)
+    PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Clickatell notification service."""
-
     return ClickatellNotificationService(config)
 
 
@@ -48,9 +47,7 @@ class ClickatellNotificationService(BaseNotificationService):
                 'to': self.recipient,
                 'content': message}
 
-        try:
-            resp = requests.get(BASE_API_URL, params=data, timeout=5)
-            if (resp.status_code != 200) or (resp.status_code != 201):
-                _LOGGER.error("Error %s : %s", resp.status_code, resp.text)
-        except Exception as err:
-            _LOGGER.error("Error %s : %s", type(err), err.message)
+        resp = requests.get(BASE_API_URL, params=data, timeout=5)
+        if (resp.status_code != 200) or (resp.status_code != 201):
+            _LOGGER.error("Error %s : %s", resp.status_code, resp.text)
+        _LOGGER.error("Error %s : %s", type(err), err.message)
