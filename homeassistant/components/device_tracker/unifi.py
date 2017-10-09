@@ -4,7 +4,6 @@ Support for Unifi WAP controllers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
-from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -14,7 +13,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 import homeassistant.util.dt as dt_util
-
+from datetime import timedelta
 
 REQUIREMENTS = ['pyunifi==2.13']
 
@@ -22,13 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
 CONF_DETECTION_TIME = 'detection_time'
-CONF_API_VERSION = 'api'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
-DEFAULT_API_VERSION = 'v4'
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -41,86 +38,63 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
-        cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string
+                     cv.time_period, cv.positive_timedelta)
 })
 
 
-def get_scanner(hass, config, ectrl=None):
+def get_scanner(hass, config):
     """Set up the Unifi device_tracker."""
-    from pyunifi.controller import APIError
-    config = config[DOMAIN]
-    result = None
-    if ectrl is not None:
-        _LOGGER.debug("ectrl found")
+    from pyunifi.controller import Controller, APIError
+
+    host = config[DOMAIN].get(CONF_HOST)
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    site_id = config[DOMAIN].get(CONF_SITE_ID)
+    port = config[DOMAIN].get(CONF_PORT)
+    verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
+    detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
+
     try:
-        result = UnifiScanner(config, ectrl=ectrl)
-    except (ValueError, APIError) as ex:
+        ctrl = Controller(host, username, password, port, version='v4',
+                          site_id=site_id, ssl_verify=verify_ssl)
+    except APIError as ex:
+        _LOGGER.error("Failed to connect to Unifi: %s", ex)
         hass.components.persistent_notification.create(
             'Failed to connect to Unifi. '
-            'Error: {} <br />'
+            'Error: {}<br />'
             'You will need to restart hass after fixing.'
-            .format(ex),
+            ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-    return result
+        return False
+
+    return UnifiScanner(ctrl, detection_time)
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, config, ectrl=None):
-        """Set up the Unifi device_tracker."""
-        from pyunifi.controller import Controller, APIError
-        _LOGGER.debug("pyunifi loaded")
-        host = config.get(CONF_HOST)
-        username = config.get(CONF_USERNAME)
-        password = config.get(CONF_PASSWORD)
-        site_id = config.get(CONF_SITE_ID)
-        port = config.get(CONF_PORT)
-        verify_ssl = config.get(CONF_VERIFY_SSL)
-        detection_time = config.get(CONF_DETECTION_TIME)
-        api_version = config.get(CONF_API_VERSION)
-
-        if api_version != 'v4' and api_version != 'v5':
-            _LOGGER.critical("Invalid API version")
-            raise ValueError("Invalid API version")
-
-        try:
-            if ectrl is None:
-                ctrl = Controller(host, username, password, port,
-                                  version=api_version,
-                                  site_id=site_id, ssl_verify=verify_ssl)
-            else:
-                _LOGGER.debug("External controller used")
-                ctrl = ectrl(host, username, password, port,
-                             version=api_version, site_id=site_id,
-                             ssl_verify=verify_ssl)
-            _LOGGER.info("Connection to controller successful")
-            self._controller = ctrl
-        except APIError as ex:
-            _LOGGER.critical("Failed to connect to Unifi: %s", ex)
-            raise ex
-
+    def __init__(self, controller, detection_time: timedelta):
+        """Initialize the scanner."""
         self._detection_time = detection_time
+        self._controller = controller
         self._update()
 
     def _update(self):
         """Get the clients from the device."""
-        _LOGGER.info("Updating client information")
         from pyunifi.controller import APIError
         try:
             clients = self._controller.get_clients()
-            _LOGGER.debug("Found %d clients", len(clients))
         except APIError as ex:
-            _LOGGER.critical("Failed to scan clients: %s", ex)
+            _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
         self._clients = {
             client['mac']: client
             for client in clients
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self._detection_time}
+                client['last_seen']))) < self._detection_time
+                }
 
     def scan_devices(self):
         """Scan for devices."""
