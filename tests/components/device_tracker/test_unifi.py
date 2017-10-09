@@ -25,6 +25,28 @@ def mock_scanner():
         yield scanner
 
 
+def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
+    """Test the setup with a string for ssl_verify representing the absolute
+    path to a CA certificate bundle"""
+    config = {
+        DOMAIN: unifi.PLATFORM_SCHEMA({
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "/tmp/unifi.crt"
+        })
+    }
+    result = unifi.get_scanner(hass, config)
+    assert mock_scanner.return_value == result
+    assert mock_ctrl.call_count == 1
+    assert mock_ctrl.mock_calls[0] == \
+        mock.call('localhost', 'foo', 'password', 8443,
+                  version='v4', site_id='default', ssl_verify="/tmp/unifi.crt")
+
+    assert mock_scanner.call_count == 1
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
+
+
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
     """Test the setup with minimal configuration."""
     config = {
@@ -86,7 +108,23 @@ def test_config_error():
             CONF_HOST: 'myhost',
             'port': 'foo',  # bad port!
         })
-
+    with pytest.raises(vol.Invalid):
+        unifi.PLATFORM_SCHEMA({
+            CONF_USERNAME: 'foo',
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_HOST: 'myhost',
+            CONF_VERIFY_SSL: None,  # Invalid ssl_verify
+            'port': 123,
+        })
+    with pytest.raises(vol.Invalid):
+        unifi.PLATFORM_SCHEMA({
+            CONF_USERNAME: 'foo',
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_HOST: 'myhost',
+            CONF_VERIFY_SSL: 5555,  # Invalid ssl_verify
+            'port': 123,
+        })
+    
 
 def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
     """Test for controller failure."""
