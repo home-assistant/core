@@ -1,150 +1,102 @@
-"""The tests for the Unifi WAP device tracker platform."""
-import unittest
-from unittest import mock
-import urllib
+"""
+Support for Unifi WAP controllers.
 
-from unifi import controller
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.unifi/
+"""
+import logging
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
-from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_PLATFORM)
-import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
+import homeassistant.loader as loader
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_VERIFY_SSL
 
-class TestUnifiScanner(unittest.TestCase):
-    """Test the Unifiy platform."""
+REQUIREMENTS = ['pyunifi==2.13']
 
-    @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
-    @mock.patch.object(controller, 'Controller')
-    def test_config_minimal(self, mock_ctrl, mock_scanner):
-        """Test the setup with minimal configuration."""
-        config = {
-            DOMAIN: unifi.PLATFORM_SCHEMA({
-                CONF_PLATFORM: unifi.DOMAIN,
-                CONF_USERNAME: 'foo',
-                CONF_PASSWORD: 'password',
-            })
-        }
-        result = unifi.get_scanner(None, config)
-        self.assertEqual(mock_scanner.return_value, result)
-        self.assertEqual(mock_ctrl.call_count, 1)
-        self.assertEqual(
-            mock_ctrl.call_args,
-            mock.call('localhost', 'foo', 'password', 8443, 'v4', 'default')
-        )
-        self.assertEqual(mock_scanner.call_count, 1)
-        self.assertEqual(
-            mock_scanner.call_args,
-            mock.call(mock_ctrl.return_value)
-        )
+_LOGGER = logging.getLogger(__name__)
+CONF_PORT = 'port'
+CONF_SITE_ID = 'site_id'
 
-    @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
-    @mock.patch.object(controller, 'Controller')
-    def test_config_full(self, mock_ctrl, mock_scanner):
-        """Test the setup with full configuration."""
-        config = {
-            DOMAIN: unifi.PLATFORM_SCHEMA({
-                CONF_PLATFORM: unifi.DOMAIN,
-                CONF_USERNAME: 'foo',
-                CONF_PASSWORD: 'password',
-                CONF_HOST: 'myhost',
-                'port': 123,
-                'site_id': 'abcdef01',
-            })
-        }
-        result = unifi.get_scanner(None, config)
-        self.assertEqual(mock_scanner.return_value, result)
-        self.assertEqual(mock_ctrl.call_count, 1)
-        self.assertEqual(
-            mock_ctrl.call_args,
-            mock.call('myhost', 'foo', 'password', 123, 'v4', 'abcdef01')
-        )
-        self.assertEqual(mock_scanner.call_count, 1)
-        self.assertEqual(
-            mock_scanner.call_args,
-            mock.call(mock_ctrl.return_value)
-        )
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 8443
+DEFAULT_VERIFY_SSL = True
 
-    def test_config_error(self):
-        """Test for configuration errors."""
-        with self.assertRaises(vol.Invalid):
-            unifi.PLATFORM_SCHEMA({
-                # no username
-                CONF_PLATFORM: unifi.DOMAIN,
-                CONF_HOST: 'myhost',
-                'port': 123,
-            })
-        with self.assertRaises(vol.Invalid):
-            unifi.PLATFORM_SCHEMA({
-                CONF_PLATFORM: unifi.DOMAIN,
-                CONF_USERNAME: 'foo',
-                CONF_PASSWORD: 'password',
-                CONF_HOST: 'myhost',
-                'port': 'foo',  # bad port!
-            })
+NOTIFICATION_ID = 'unifi_notification'
+NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
-    @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
-    @mock.patch.object(controller, 'Controller')
-    def test_config_controller_failed(self, mock_ctrl, mock_scanner):
-        """Test for controller failure."""
-        config = {
-            'device_tracker': {
-                CONF_PLATFORM: unifi.DOMAIN,
-                CONF_USERNAME: 'foo',
-                CONF_PASSWORD: 'password',
-            }
-        }
-        mock_ctrl.side_effect = urllib.error.HTTPError(
-            '/', 500, 'foo', {}, None)
-        result = unifi.get_scanner(None, config)
-        self.assertFalse(result)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_SITE_ID, default='default'): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+})
 
-    def test_scanner_update(self):  # pylint: disable=no-self-use
-        """Test the scanner update."""
-        ctrl = mock.MagicMock()
-        fake_clients = [
-        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        ]
-        ctrl.get_clients.return_value = fake_clients
-        unifi.UnifiScanner(ctrl)
-        self.assertEqual(ctrl.get_clients.call_count, 1)
-        self.assertEqual(ctrl.get_clients.call_args, mock.call())
 
-    def test_scanner_update_error(self):  # pylint: disable=no-self-use
-        """Test the scanner update for error."""
-        ctrl = mock.MagicMock()
-        ctrl.get_clients.side_effect = urllib.error.HTTPError(
-            '/', 500, 'foo', {}, None)
-        unifi.UnifiScanner(ctrl)
+def get_scanner(hass, config):
+    """Set up the Unifi device_tracker."""
+    from pyunifi.controller import Controller, APIError
 
-    def test_scan_devices(self):
-        """Test the scanning for devices."""
-        ctrl = mock.MagicMock()
-        fake_clients = [
-        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        ]
-        ctrl.get_clients.return_value = fake_clients
-        scanner = unifi.UnifiScanner(ctrl)
-        self.assertEqual(set(['123', '234']), set(scanner.scan_devices()))
+    host = config[DOMAIN].get(CONF_HOST)
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    site_id = config[DOMAIN].get(CONF_SITE_ID)
+    port = config[DOMAIN].get(CONF_PORT)
+    verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
 
-    def test_get_device_name(self):
-        """Test the getting of device names."""
-        ctrl = mock.MagicMock()
-        fake_clients = [
-            {'mac': '123',
-             'hostname': 'foobar',
-             'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-            {'mac': '234',
-             'name': 'Nice Name',
-             'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-            {'mac': '456',
-             'last_seen': '1504786810'},
-        ]
-        ctrl.get_clients.return_value = fake_clients
-        scanner = unifi.UnifiScanner(ctrl)
-        self.assertEqual('foobar', scanner.get_device_name('123'))
-        self.assertEqual('Nice Name', scanner.get_device_name('234'))
-        self.assertEqual(None, scanner.get_device_name('456'))
-        self.assertEqual(None, scanner.get_device_name('unknown'))
+    persistent_notification = loader.get_component('persistent_notification')
+    try:
+        ctrl = Controller(host, username, password, port, version='v4',
+                          site_id=site_id, ssl_verify=verify_ssl)
+    except APIError as ex:
+        _LOGGER.error("Failed to connect to Unifi: %s", ex)
+        persistent_notification.create(
+            hass, 'Failed to connect to Unifi. '
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
+
+    return UnifiScanner(ctrl)
+
+
+class UnifiScanner(DeviceScanner):
+    """Provide device_tracker support from Unifi WAP client data."""
+
+    def __init__(self, controller):
+        """Initialize the scanner."""
+        self._controller = controller
+        self._update()
+
+    def _update(self):
+        """Get the clients from the device."""
+        from pyunifi.controller import APIError
+        try:
+            clients = self._controller.get_clients()
+        except APIError as ex:
+            _LOGGER.error("Failed to scan clients: %s", ex)
+            clients = []
+
+        self._clients = {client['mac']: client for client in clients}
+
+    def scan_devices(self):
+        """Scan for devices."""
+        self._update()
+        return self._clients.keys()
+
+    def get_device_name(self, mac):
+        """Return the name (if known) of the device.
+
+        If a name has been set in Unifi, then return that, else
+        return the hostname if it has been detected.
+        """
+        client = self._clients.get(mac, {})
+        name = client.get('name') or client.get('hostname')
+        _LOGGER.debug("Device %s name %s", mac, name)
+        return name
