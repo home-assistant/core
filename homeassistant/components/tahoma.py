@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tahoma/
 """
 import logging
-from collections import defaultdict
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
