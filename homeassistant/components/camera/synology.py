@@ -44,6 +44,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
 
+    if not verify_ssl:
+        from requests.packages import urllib3
+        _LOGGER.warning('InsecureRequestWarning is disabled for camera.synology platform')
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     try:
         from synology.surveillance_station import SurveillanceStation
         surveillance = SurveillanceStation(
