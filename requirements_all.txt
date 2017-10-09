@@ -773,6 +773,7 @@ python-juicenet==0.0.5
 # python-lirc==1.2.3
 
 # homeassistant.components.light.xiaomi_miio
+# homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
 python-mirobo==0.2.0
 
