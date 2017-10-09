@@ -169,7 +169,7 @@ omit =
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
-    
+
     homeassistant/components/skybell.py
     homeassistant/components/*/skybell.py
 
@@ -270,6 +270,7 @@ omit =
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/onvif.py
     homeassistant/components/camera/synology.py
+    homeassistant/components/camera/yi.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py
