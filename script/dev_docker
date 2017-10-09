@@ -14,21 +14,19 @@ docker build -t home-assistant-dev -f virtualization/Docker/Dockerfile.dev .
 if [ $# -gt 0 ]
 then
   docker run \
-    -d \
+    --net=host \
     --device=/dev/ttyUSB0:/zwaveusbstick:rwm \
     -e "TZ=$1" \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
-    -p 8123:8123 \
     -t -i home-assistant-dev
 
 else
   docker run \
-    -d \
+    --net=host \
     -v /etc/localtime:/etc/localtime:ro \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
-    -p 8123:8123 \
     --rm \
     -t -i home-assistant-dev
 
