@@ -532,6 +532,48 @@ class TestInfluxDB(unittest.TestCase):
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
 
+    def test_event_listener_unit_of_measurement_field(self, mock_client):
+        """Test the event listener for unit of measurement field."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'override_measurement': 'state',
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        attrs = {
+            'unit_of_measurement': 'foobars',
+        }
+        state = mock.MagicMock(
+            state='foo', domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes=attrs)
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        body = [{
+            'measurement': 'state',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'entity',
+            },
+            'time': 12345,
+            'fields': {
+                'state': 'foo',
+                'unit_of_measurement_str': 'foobars',
+            },
+        }]
+        self.handler_method(event)
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
+
     def test_event_listener_tags_attributes(self, mock_client):
         """Test the event listener when some attributes should be tags."""
         config = {
