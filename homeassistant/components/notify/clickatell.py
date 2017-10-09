@@ -6,10 +6,9 @@ This platform is to enable the sending of SMS notfiy messages with Clickatell
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.clickatell/
 """
-import json
+
 import logging
 import requests
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -45,7 +44,9 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = {'apiKey': self.api_key, 'to': self.recipient, 'content': message}
+        data = {'apiKey': self.api_key, 
+                'to': self.recipient, 
+                'content': message}
 
         try:
             resp = requests.get(BASE_API_URL, params=data, timeout=5)
@@ -53,5 +54,3 @@ class ClickatellNotificationService(BaseNotificationService):
                 _LOGGER.error("Error %s : %s", resp.status_code, resp.text)
         except Exception as err:
             _LOGGER.error("Error %s : %s", type(err), err.message)
-            
-
