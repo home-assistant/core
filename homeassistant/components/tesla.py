@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.16']
+REQUIREMENTS = ['teslajsonpy==0.0.17']
 
 DOMAIN = 'tesla'
 
