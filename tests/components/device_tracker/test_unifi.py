@@ -124,7 +124,7 @@ def test_config_error():
             CONF_VERIFY_SSL: 5555,  # Invalid ssl_verify
             'port': 123,
         })
-    
+
 
 def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
     """Test for controller failure."""
