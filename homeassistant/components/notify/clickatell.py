@@ -50,4 +50,3 @@ class ClickatellNotificationService(BaseNotificationService):
         resp = requests.get(BASE_API_URL, params=data, timeout=5)
         if (resp.status_code != 200) or (resp.status_code != 201):
             _LOGGER.error("Error %s : %s", resp.status_code, resp.text)
-        _LOGGER.error("Error %s : %s", type(err), err.message)
