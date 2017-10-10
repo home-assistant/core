@@ -103,10 +103,9 @@ class TradfriGroup(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
-        transition = float(kwargs.get(ATTR_TRANSITION, 0.5)) * 10
-        keys = {
-            'transition_time': int(transition)
-        }
+        keys = {}
+        if ATTR_TRANSITION in kwargs:
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(
@@ -258,10 +257,9 @@ class TradfriLight(Light):
             self.hass.async_add_job(self._api(
                 self._light_control.set_kelvin_color(kelvin)))
 
-        transition = float(kwargs.get(ATTR_TRANSITION, 0.5)) * 10
-        keys = {
-            'transition_time': int(transition)
-        }
+        keys = {}
+        if ATTR_TRANSITION in kwargs:
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(
