@@ -80,6 +80,9 @@ omit =
     homeassistant/components/hdmi_cec.py
     homeassistant/components/*/hdmi_cec.py
 
+    homeassistant/components/hive.py
+    homeassistant/components/*/hive.py
+
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
