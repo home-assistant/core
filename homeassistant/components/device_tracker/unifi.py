@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
+from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -13,7 +14,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 import homeassistant.util.dt as dt_util
-from datetime import timedelta
 
 REQUIREMENTS = ['pyunifi==2.13']
 
@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
-                     cv.time_period, cv.positive_timedelta)
+        cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -94,7 +94,7 @@ class UnifiScanner(DeviceScanner):
             for client in clients
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
                 client['last_seen']))) < self._detection_time
-                }
+            }
 
     def scan_devices(self):
         """Scan for devices."""
