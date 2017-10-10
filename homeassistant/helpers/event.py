@@ -66,15 +66,13 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
            event.data.get('entity_id') not in entity_ids:
             return
 
-        if event.data.get('old_state') is not None:
-            old_state = event.data['old_state'].state
-        else:
-            old_state = None
+        old_state = event.data.get('old_state')
+        if old_state is not None:
+            old_state = old_state.state
 
-        if event.data.get('new_state') is not None:
-            new_state = event.data['new_state'].state
-        else:
-            new_state = None
+        new_state = event.data.get('new_state')
+        if new_state is not None:
+            new_state = new_state.state
 
         if match_from_state(old_state) and match_to_state(new_state):
             hass.async_run_job(action, event.data.get('entity_id'),
@@ -344,8 +342,8 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
             now = dt_util.as_local(now)
 
         # pylint: disable=too-many-boolean-expressions
-        if year(now.year) and month(now.month) and day(now.day) and \
-           hour(now.hour) and minute(now.minute) and second(now.second):
+        if second(now.second) and minute(now.minute) and hour(now.hour) and \
+           day(now.day) and month(now.month) and year(now.year):
 
             hass.async_run_job(action, now)
 
