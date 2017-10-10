@@ -111,12 +111,11 @@ def async_reload_core_config(hass):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up general services related to Home Assistant."""
-    
     descriptions = yield from hass.async_add_job(
         conf_util.load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
     )
-    
+
     @asyncio.coroutine
     def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
