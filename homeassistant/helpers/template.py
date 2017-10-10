@@ -28,6 +28,10 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
     re.I | re.M
 )
+_RE_GET_POSSIBLE_ENTITIES = re.compile(
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+)|([\w]+))",
+    re.I | re.M
+)
 
 
 @bind_hass
@@ -54,6 +58,29 @@ def extract_entities(template):
     return MATCH_ALL
 
 
+def extract_entities_with_variables(template, variables):
+    """Extract all entities for state_changed listener from template string."""
+    if template is None or _RE_NONE_ENTITIES.search(template):
+        return MATCH_ALL
+
+    extraction = _RE_GET_POSSIBLE_ENTITIES.findall(template)
+    extraction_final = []
+
+    for result in extraction:
+        if result[0] == 'trigger.entity_id' and 'trigger' in variables and \
+           'entity_id' in variables['trigger']:
+            extraction_final.append(variables['trigger']['entity_id'])
+        elif result[0]:
+            extraction_final.append(result[0])
+
+        if result[1] in variables and isinstance(variables[result[1]], str) :
+            extraction_final.append(variables[result[1]])
+
+    if extraction_final:
+        return list(set(extraction_final))
+    return MATCH_ALL
+
+
 class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
@@ -77,9 +104,12 @@ class Template(object):
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self):
+    def extract_entities(self, variables=None):
         """Extract all entities for state_changed listener."""
-        return extract_entities(self.template)
+        if not variables:
+            return extract_entities(self.template)
+        else:
+            return extract_entities_with_variables(self.template, variables)
 
     def render(self, variables=None, **kwargs):
         """Render given template."""
