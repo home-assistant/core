@@ -12,8 +12,11 @@ from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
     STATE_AUTO, STATE_ON, STATE_OFF,
 )
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
-    CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
+    CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE,
+    STATE_UNKNOWN)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -31,8 +34,11 @@ ATTR_STATE_LOCKED = 'is_locked'
 ATTR_STATE_LOW_BAT = 'low_battery'
 ATTR_STATE_AWAY_END = 'away_end'
 
+CONF_TEMPERATURE_SENSOR = 'sensor'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_TEMPERATURE_SENSOR): cv.entity_id,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -47,7 +53,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for name, device_cfg in config[CONF_DEVICES].items():
         mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name))
+        temperature_sensor = device_cfg.get(CONF_TEMPERATURE_SENSOR)
+
+        thermostat = EQ3BTSmartThermostat(mac, name, temperature_sensor)
+        devices.append(thermostat)
+
+        if temperature_sensor is not None:
+            async_track_state_change(hass, [temperature_sensor],
+                                     thermostat.temperature_state_changed)
 
     add_devices(devices)
 
@@ -56,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EQ3BTSmartThermostat(ClimateDevice):
     """Representation of a eQ-3 Bluetooth Smart thermostat."""
 
-    def __init__(self, _mac, _name):
+    def __init__(self, _mac, _name, _sensor):
         """Initialize the thermostat."""
         # we want to avoid name clash with this module..
         import eq3bt as eq3
@@ -72,6 +85,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+        self._temperature_sensor = _sensor
+        self._sensor_temperature = STATE_UNKNOWN
 
     @property
     def available(self) -> bool:
@@ -93,9 +108,26 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return eq3bt's precision 0.5."""
         return PRECISION_HALVES
 
+    @callback
+    def temperature_state_changed(self, entity_id, _, new_state):
+        """Update the temperature status.
+
+        This callback is triggered, when the sensor state changes.
+        """
+        new_value = new_state.state
+
+        if new_value != STATE_UNKNOWN:
+            # Force 0.5 precision from the temperature sensor
+            new_value = round(float(new_value) * 2) / 2
+
+        self._sensor_temperature = new_value
+
     @property
     def current_temperature(self):
-        """Can not report temperature, so return target_temperature."""
+        """If no sensor is specified, just return target_temperature."""
+        if self._temperature_sensor is not None:
+            return self._sensor_temperature
+
         return self.target_temperature
 
     @property
