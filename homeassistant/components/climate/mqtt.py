@@ -18,7 +18,8 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_MODE)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME)
-from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN)
+from homeassistant.components.mqtt import (CONF_QOS, CONF_RETAIN,
+                                           MQTT_BASE_PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
@@ -57,7 +58,8 @@ CONF_SWING_MODE_LIST = 'swing_modes'
 CONF_INITIAL = 'initial'
 CONF_SEND_IF_OFF = 'send_if_off'
 
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({
+SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
+PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
