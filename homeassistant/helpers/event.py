@@ -118,8 +118,8 @@ track_template = threaded_listener_factory(async_track_template)
 
 @callback
 @bind_hass
-def async_track_same_state(hass, orig_value, period, action,
-                           async_check_func=None, entity_ids=MATCH_ALL):
+def async_track_same_state(hass, period, action, async_check_same_func,
+                           entity_ids=MATCH_ALL):
     """Track the state of entities for a period and run a action.
 
     If async_check_func is None it use the state of orig_value.
@@ -152,14 +152,8 @@ def async_track_same_state(hass, orig_value, period, action,
     @callback
     def state_for_cancel_listener(entity, from_state, to_state):
         """Fire on changes and cancel for listener if changed."""
-        if async_check_func:
-            value = async_check_func(entity, from_state, to_state)
-        else:
-            value = to_state.state
-
-        if orig_value == value:
-            return
-        clear_listener()
+        if not async_check_same_func(entity, from_state, to_state):
+            clear_listener()
 
     async_remove_state_for_listener = async_track_point_in_utc_time(
         hass, state_for_listener, dt_util.utcnow() + period)
