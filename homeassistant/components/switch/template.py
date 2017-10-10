@@ -10,11 +10,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (ENTITY_ID_FORMAT, SwitchDevice,
+                                             PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, STATE_OFF,
-    STATE_ON, ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
+    CONF_ENTITY_PICTURE_TEMPLATE, STATE_OFF, STATE_ON, ATTR_ENTITY_ID,
+    CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -31,6 +32,7 @@ OFF_ACTION = 'turn_off'
 SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -38,7 +40,9 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES): vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
 })
 
 
@@ -52,21 +56,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      state_template.extract_entities())
+        entity_ids = (device_config.get(ATTR_ENTITY_ID)
+                      or state_template.extract_entities())
 
         state_template.hass = hass
 
         if icon_template is not None:
             icon_template.hass = hass
 
+        if entity_picture_template is not None:
+            entity_picture_template.hass = hass
+
         switches.append(
-            SwitchTemplate(
-                hass, device, friendly_name, state_template, icon_template,
-                on_action, off_action, entity_ids)
-            )
+            SwitchTemplate(hass, device, friendly_name, state_template,
+                           icon_template, entity_picture_template, on_action,
+                           off_action, entity_ids))
     if not switches:
         _LOGGER.error("No switches added")
         return False
@@ -79,7 +87,8 @@ class SwitchTemplate(SwitchDevice):
     """Representation of a Template switch."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 icon_template, on_action, off_action, entity_ids):
+                 icon_template, entity_picture_template, on_action, off_action,
+                 entity_ids):
         """Initialize the Template switch."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -90,7 +99,9 @@ class SwitchTemplate(SwitchDevice):
         self._off_script = Script(hass, off_action)
         self._state = False
         self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._icon = None
+        self._entity_picture = None
         self._entities = entity_ids
 
     @asyncio.coroutine
@@ -108,13 +119,13 @@ class SwitchTemplate(SwitchDevice):
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_switch_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_switch_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_switch_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_switch_startup)
 
     @property
     def name(self):
@@ -140,6 +151,11 @@ class SwitchTemplate(SwitchDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the entity_picture to use in the frontend, if any."""
+        return self._entity_picture
 
     def turn_on(self, **kwargs):
         """Fire the on action."""
@@ -167,16 +183,27 @@ class SwitchTemplate(SwitchDevice):
             _LOGGER.error(ex)
             self._state = None
 
+        icon_picture_template = None
         if self._icon_template is not None:
+            property_name = 'icon'
+            icon_picture_template = self._icon_template
+        elif self._entity_picture_template is not None:
+            property_name = 'entity_picture'
+            icon_picture_template = self._entity_picture_template
+
+        if icon_picture_template is not None:
             try:
-                self._icon = self._icon_template.async_render()
+                setattr(self, '_{0}'.format(property_name),
+                        icon_picture_template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render icon template %s,'
-                                    ' the state is unknown.', self._name)
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.', property_name,
+                                    self._name)
                     return
-                self._icon = super().icon
-                _LOGGER.error('Could not render icon template %s: %s',
-                              self._name, ex)
+                setattr(self, '_{0}'.format(property_name),
+                        getattr(super(), property_name))
+                _LOGGER.error('Could not render %s template %s: %s',
+                              property_name, self._name, ex)
