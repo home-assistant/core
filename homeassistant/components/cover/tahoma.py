@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma covers."""
     add_devices(
         TahomaCover(device, hass.data['TAHOMA_CONTROLLER']) for
-        device in hass.data['cover'])
+        device in hass.data['tahomacover'])
 
 
 class TahomaCover(TahomaDevice, CoverDevice):

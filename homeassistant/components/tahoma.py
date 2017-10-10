@@ -54,8 +54,8 @@ def setup(hass, config):
         _LOGGER.exception("Cannot fetch informations from Tahoma API")
         return False
 
-    hass.data['cover'] = []
-    hass.data['sensor'] = []
+    hass.data['tahomacover'] = []
+    hass.data['tahomasensor'] = []
 
     for device in devices:
         _device = api.get_device(device)
@@ -71,9 +71,9 @@ def setup(hass, config):
 def map_tahoma_device(tahoma_device):
     """Map tahoma classes to Home Assistant types."""
     if tahoma_device.type.lower().find("shutter") != -1:
-        return 'cover'
+        return 'tahomacover'
     elif tahoma_device.type == 'io:LightIOSystemSensor':
-        return 'sensor'
+        return 'tahomasensor'
     return None
 
 

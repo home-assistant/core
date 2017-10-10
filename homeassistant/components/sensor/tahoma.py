@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma controller devices."""
     add_devices(
         TahomaSensor(device, hass.data['TAHOMA_CONTROLLER'])
-        for device in hass.data['sensor'])
+        for device in hass.data['tahomasensor'])
 
 
 class TahomaSensor(TahomaDevice, Entity):
