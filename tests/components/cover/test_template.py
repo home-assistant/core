@@ -44,7 +44,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template': "{{ states.cover.test_state.state }}",
+                            'value_template':
+                            "{{ states.cover.test_state.state }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -109,7 +110,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template': "{{ states.cover.test.attributes.position }}",
+                            'position_template':
+                            "{{ states.cover.test.attributes.position }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test'
@@ -219,8 +221,10 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template': "{{ 1 == 1 }}",
-                            'position_template': "{{ 42 }}",
+                            'value_template':
+                            "{{ 1 == 1 }}",
+                            'position_template':
+                            "{{ 42 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -229,7 +233,8 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'icon_template': "{% if states.cover.test_state.state %}"
+                            'icon_template':
+                            "{% if states.cover.test_state.state %}"
                             "mdi:check"
                             "{% endif %}"
                         }
@@ -292,8 +297,10 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template': "{{ on }}",
-                            'tilt_template': "{% if states.cover.test_state.state %}"
+                            'position_template':
+                            "{{ on }}",
+                            'tilt_template':
+                            "{% if states.cover.test_state.state %}"
                             "on"
                             "{% else %}"
                             "off"
@@ -405,7 +412,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template': "{{ states.input_number.test.state | int }}",
+                            'position_template':
+                            "{{ states.input_number.test.state | int }}",
                             'set_cover_position': {
                                 'service': 'input_number.set_value',
                                 'entity_id': 'input_number.test',
@@ -626,7 +634,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template': "{{ states.cover.test_state.state }}",
+                            'value_template':
+                            "{{ states.cover.test_state.state }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -635,7 +644,8 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'icon_template': "{% if states.cover.test_state.state %}"
+                            'icon_template':
+                            "{% if states.cover.test_state.state %}"
                             "mdi:check"
                             "{% endif %}"
                         }
@@ -664,7 +674,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template': "{{ states.cover.test_state.state }}",
+                            'value_template':
+                            "{{ states.cover.test_state.state }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -673,7 +684,8 @@ class TestTemplateCover(unittest.TestCase):
                                 'service': 'cover.close_cover',
                                 'entity_id': 'cover.test_state'
                             },
-                            'entity_picture_template': "{% if states.cover.test_state.state %}"
+                            'entity_picture_template':
+                            "{% if states.cover.test_state.state %}"
                             "/local/myimage.png"
                             "{% endif %}"
                         }
