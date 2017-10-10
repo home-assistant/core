@@ -163,7 +163,7 @@ class RememberTheMilkConfiguration(object):
                               os.path.abspath(CONFIG_FILE_NAME))
                 with open(CONFIG_FILE_NAME, 'r') as config_file:
                     self._config = json.load(config_file)
-            except json.decoder.JSONDecodeError:
+            except json.JSONDecodeError:
                 _LOGGER.error('failed to load configuration file, creating a '
                               'new one: %s', os.path.abspath(CONFIG_FILE_NAME))
                 self._config = dict()
