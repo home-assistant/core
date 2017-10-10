@@ -48,8 +48,8 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 
     Must be run within the event loop.
     """
-    from_state = _process_state_match(from_state)
-    to_state = _process_state_match(to_state)
+    match_from_state = _process_state_match(from_state)
+    match_to_state = _process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
@@ -66,17 +66,15 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
            event.data.get('entity_id') not in entity_ids:
             return
 
-        if event.data.get('old_state') is not None:
-            old_state = event.data['old_state'].state
-        else:
-            old_state = None
+        old_state = event.data.get('old_state')
+        if old_state is not None:
+            old_state = old_state.state
 
-        if event.data.get('new_state') is not None:
-            new_state = event.data['new_state'].state
-        else:
-            new_state = None
+        new_state = event.data.get('new_state')
+        if new_state is not None:
+            new_state = new_state.state
 
-        if _matcher(old_state, from_state) and _matcher(new_state, to_state):
+        if match_from_state(old_state) and match_to_state(new_state):
             hass.async_run_job(action, event.data.get('entity_id'),
                                event.data.get('old_state'),
                                event.data.get('new_state'))
@@ -336,15 +334,10 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
 
         if local:
             now = dt_util.as_local(now)
-        mat = _matcher
 
         # pylint: disable=too-many-boolean-expressions
-        if mat(now.year, year) and \
-           mat(now.month, month) and \
-           mat(now.day, day) and \
-           mat(now.hour, hour) and \
-           mat(now.minute, minute) and \
-           mat(now.second, second):
+        if second(now.second) and minute(now.minute) and hour(now.hour) and \
+           day(now.day) and month(now.month) and year(now.year):
 
             hass.async_run_job(action, now)
 
@@ -368,34 +361,28 @@ track_time_change = threaded_listener_factory(async_track_time_change)
 
 
 def _process_state_match(parameter):
-    """Wrap parameter in a tuple if it is not one and returns it."""
+    """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
-        return MATCH_ALL
+        return lambda _: True
+
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
-        return (parameter,)
-    return tuple(parameter)
+        return lambda state: state == parameter
+
+    parameter = tuple(parameter)
+    return lambda state: state in parameter
 
 
 def _process_time_match(parameter):
     """Wrap parameter in a tuple if it is not one and returns it."""
     if parameter is None or parameter == MATCH_ALL:
-        return MATCH_ALL
+        return lambda _: True
+
     elif isinstance(parameter, str) and parameter.startswith('/'):
-        return parameter
+        parameter = float(parameter[1:])
+        return lambda time: time % parameter == 0
+
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
-        return (parameter,)
-    return tuple(parameter)
+        return lambda time: time == parameter
 
-
-def _matcher(subject, pattern):
-    """Return True if subject matches the pattern.
-
-    Pattern is either a tuple of allowed subjects or a `MATCH_ALL`.
-    """
-    if isinstance(pattern, str) and pattern.startswith('/'):
-        try:
-            return subject % float(pattern.lstrip('/')) == 0
-        except ValueError:
-            return False
-
-    return MATCH_ALL == pattern or subject in pattern
+    parameter = tuple(parameter)
+    return lambda time: time in parameter
