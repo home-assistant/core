@@ -105,7 +105,7 @@ class TradfriGroup(Light):
         """Instruct the group lights to turn on, or dim."""
         keys = {}
         if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(
@@ -259,7 +259,7 @@ class TradfriLight(Light):
 
         keys = {}
         if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(
