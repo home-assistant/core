@@ -4,6 +4,7 @@ ADS Component.
 For more details about this component, please refer to the documentation.
 
 """
+import threading
 import struct
 import time
 import logging
@@ -14,7 +15,8 @@ from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 import pyads
-from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE
+from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE, \
+    ADSError
 
 REQUIREMENTS = ['pyads']
 
@@ -52,6 +54,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_IP_ADDRESS): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
+
+MAX_RETRIES = 5
+RETRY_SLEEPTIME_S = 0.1
 
 
 def setup(hass, config):
@@ -93,6 +98,7 @@ class AdsHub:
         # all ADS devices are registered here
         self._devices = []
         self._notification_items = {}
+        self._lock = threading.Lock()
 
     def shutdown(self, *args, **kwargs):
         _LOGGER.debug('Shutting down ADS')
@@ -111,28 +117,22 @@ class AdsHub:
         self._devices.append(device)
 
     def write_by_name(self, name, value, plc_datatype):
-        return self._client.write_by_name(name, value, plc_datatype)
+        with self._lock:
+            return self._client.write_by_name(name, value, plc_datatype)
 
     def read_by_name(self, name, plc_datatype):
-        return self._client.read_by_name(name, plc_datatype)
+        with self._lock:
+            return self._client.read_by_name(name, plc_datatype)
 
     def add_device_notification(self, name, plc_datatype, callback):
         """ Add a notification to the ADS devices. """
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
-        for i in range(5):
-            try:
-                hnotify, huser = self._client.add_device_notification(
-                    name, attr, self._device_notification_callback
-                )
-                hnotify = int(hnotify)
-                break
-            except pyads.pyads.ADSError:
-                _LOGGER.debug('Could not add notification for "{0}". Retrying...'
-                              .format(name))
-                time.sleep(0.1)
-        else:
-            return False
+        with self._lock:
+            hnotify, huser = self._client.add_device_notification(
+                name, attr, self._device_notification_callback
+            )
+            hnotify = int(hnotify)
 
         _LOGGER.debug('Added Device Notification {0} for variable {1}'
                       .format(hnotify, name))
