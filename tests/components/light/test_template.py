@@ -46,7 +46,8 @@ class TestTemplateLight:
                     'platform': 'template',
                     'lights': {
                         'test_template_light': {
-                            'value_template': "{{ states.light.test_state.state }}",
+                            'value_template':
+                            "{{ states.light.test_state.state }}",
                             'turn_on': {
                                 'service': 'light.turn_on',
                                 'entity_id': 'light.test_state'
@@ -634,7 +635,8 @@ class TestTemplateLight:
                     'platform': 'template',
                     'lights': {
                         'test_template_light': {
-                            'value_template': "{{ states.light.test_state.state }}",
+                            'value_template':
+                            "{{ states.light.test_state.state }}",
                             'turn_on': {
                                 'service': 'light.turn_on',
                                 'entity_id': 'light.test_state'
@@ -643,7 +645,8 @@ class TestTemplateLight:
                                 'service': 'light.turn_off',
                                 'entity_id': 'light.test_state'
                             },
-                            'icon_template': "{% if states.light.test_state.state %}"
+                            'icon_template':
+                            "{% if states.light.test_state.state %}"
                             "mdi:check"
                             "{% endif %}"
                         }
@@ -671,7 +674,8 @@ class TestTemplateLight:
                     'platform': 'template',
                     'lights': {
                         'test_template_light': {
-                            'value_template': "{{ states.light.test_state.state }}",
+                            'value_template':
+                            "{{ states.light.test_state.state }}",
                             'turn_on': {
                                 'service': 'light.turn_on',
                                 'entity_id': 'light.test_state'
@@ -680,7 +684,8 @@ class TestTemplateLight:
                                 'service': 'light.turn_off',
                                 'entity_id': 'light.test_state'
                             },
-                            'entity_picture_template': "{% if states.light.test_state.state %}"
+                            'entity_picture_template':
+                            "{% if states.light.test_state.state %}"
                             "/local/myimage.png"
                             "{% endif %}"
                         }
