@@ -45,10 +45,12 @@ homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/history_graph.py @andrey-git
+homeassistant/components/hue.py @robmarkcole
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/sensor/airvisual.py @bachya
+homeassistant/components/sensor/hue.py @robmarkcole
 homeassistant/components/sensor/miflora.py @danielhiversen
 homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/waqi.py @andrey-git
