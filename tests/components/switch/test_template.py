@@ -43,7 +43,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template': "{{ states.switch.test_state.state }}",
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -136,7 +137,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template': "{{ states.switch.test_state.state }}",
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -145,7 +147,8 @@ class TestTemplateSwitch:
                                 'service': 'switch.turn_off',
                                 'entity_id': 'switch.test_state'
                             },
-                            'icon_template': "{% if states.switch.test_state.state %}"
+                            'icon_template':
+                            "{% if states.switch.test_state.state %}"
                             "mdi:check"
                             "{% endif %}"
                         }
@@ -173,7 +176,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template': "{{ states.switch.test_state.state }}",
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -182,7 +186,8 @@ class TestTemplateSwitch:
                                 'service': 'switch.turn_off',
                                 'entity_id': 'switch.test_state'
                             },
-                            'entity_picture_template': "{% if states.switch.test_state.state %}"
+                            'entity_picture_template':
+                            "{% if states.switch.test_state.state %}"
                             "/local/myimage.png"
                             "{% endif %}"
                         }
@@ -294,7 +299,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'not_value_template': "{{ states.switch.test_state.state }}",
+                            'not_value_template':
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -321,7 +327,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template': "{{ states.switch.test_state.state }}",
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
                             'not_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -348,7 +355,8 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template': "{{ states.switch.test_state.state }}",
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -374,7 +382,8 @@ class TestTemplateSwitch:
                 'platform': 'template',
                 'switches': {
                     'test_template_switch': {
-                        'value_template': "{{ states.switch.test_state.state }}",
+                        'value_template':
+                        "{{ states.switch.test_state.state }}",
                         'turn_on': {
                             'service': 'test.automation'
                         },
@@ -408,7 +417,8 @@ class TestTemplateSwitch:
                 'platform': 'template',
                 'switches': {
                     'test_template_switch': {
-                        'value_template': "{{ states.switch.test_state.state }}",
+                        'value_template':
+                        "{{ states.switch.test_state.state }}",
                         'turn_on': {
                             'service': 'switch.turn_on',
                             'entity_id': 'switch.test_state'

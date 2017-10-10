@@ -32,7 +32,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "It {{ states.sensor.test_state.state }}."
+                            'value_template':
+                            "It {{ states.sensor.test_state.state }}."
                         }
                     }
                 }
@@ -57,8 +58,10 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
-                            'icon_template': "{% if states.sensor.test_state.state == "
+                            'value_template':
+                            "State",
+                            'icon_template':
+                            "{% if states.sensor.test_state.state == "
                             "'Works' %}"
                             "mdi:check"
                             "{% endif %}"
@@ -86,8 +89,10 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': "State",
-                            'entity_picture_template': "{% if states.sensor.test_state.state == "
+                            'value_template':
+                            "State",
+                            'entity_picture_template':
+                            "{% if states.sensor.test_state.state == "
                             "'Works' %}"
                             "/local/myimage.png"
                             "{% endif %}"
@@ -133,7 +138,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template': 'It {{ states.sensor.test_state'
+                            'value_template':
+                            'It {{ states.sensor.test_state'
                             '.attributes.missing }}.'
                         }
                     }
@@ -154,7 +160,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test INVALID sensor': {
-                            'value_template': "{{ states.sensor.test_state.state }}"
+                            'value_template':
+                            "{{ states.sensor.test_state.state }}"
                         }
                     }
                 }
@@ -202,7 +209,8 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'not_value_template': "{{ states.sensor.test_state.state }}"
+                            'not_value_template':
+                            "{{ states.sensor.test_state.state }}"
                         }
                     }
                 }
@@ -218,8 +226,8 @@ class TestTemplateSensor:
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     hass.data[DATA_RESTORE_CACHE] = {
-        'sensor.test_template_sensor': State('sensor.test_template_sensor',
-                                             'It Test.'),
+        'sensor.test_template_sensor':
+        State('sensor.test_template_sensor', 'It Test.'),
     }
 
     hass.state = CoreState.starting
@@ -230,7 +238,8 @@ def test_restore_state(hass):
             'platform': 'template',
             'sensors': {
                 'test_template_sensor': {
-                    'value_template': "It {{ states.sensor.test_state.state }}."
+                    'value_template':
+                    "It {{ states.sensor.test_state.state }}."
                 }
             }
         }
