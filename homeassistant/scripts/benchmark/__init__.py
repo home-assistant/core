@@ -80,6 +80,7 @@ def async_million_events(hass):
 
 @benchmark
 @asyncio.coroutine
+# pylint: disable=invalid-name
 def async_million_time_changed_helper(hass):
     """Run a million events through time changed helper."""
     count = 0
@@ -96,8 +97,8 @@ def async_million_time_changed_helper(hass):
 
     hass.helpers.event.async_track_time_change(listener, minute=0, second=0)
     event_data = {
-            ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)
-        }
+        ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)
+    }
 
     for _ in range(10**6):
         hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
@@ -111,6 +112,7 @@ def async_million_time_changed_helper(hass):
 
 @benchmark
 @asyncio.coroutine
+# pylint: disable=invalid-name
 def async_million_state_changed_helper(hass):
     """Run a million events through state changed helper."""
     count = 0
@@ -118,7 +120,7 @@ def async_million_state_changed_helper(hass):
     event = asyncio.Event(loop=hass.loop)
 
     @core.callback
-    def listener(_, _2, _3):
+    def listener(*args):
         """Handle event."""
         nonlocal count
         count += 1
