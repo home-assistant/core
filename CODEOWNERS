@@ -39,3 +39,5 @@ homeassistant/components/*/zwave.py @home-assistant/z-wave
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/media_player/kodi.py @armills
+
+homeassistant/components/sensor/sytadin.py @gautric
