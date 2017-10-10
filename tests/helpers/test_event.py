@@ -274,7 +274,8 @@ class TestEventHelpers(unittest.TestCase):
             thread_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, thread_run_callback,
+            self.hass, period, thread_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         @ha.callback
@@ -282,7 +283,8 @@ class TestEventHelpers(unittest.TestCase):
             callback_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         @asyncio.coroutine
@@ -290,7 +292,8 @@ class TestEventHelpers(unittest.TestCase):
             coroutine_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, coroutine_run_callback)
+            self.hass, period, coroutine_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on')
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
@@ -317,7 +320,8 @@ class TestEventHelpers(unittest.TestCase):
             callback_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         # Adding state to state machine
@@ -349,11 +353,11 @@ class TestEventHelpers(unittest.TestCase):
         @ha.callback
         def async_check_func(entity, from_s, to_s):
             check_func.append((entity, from_s, to_s))
-            return 'on'
+            return True
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
-            entity_ids='light.Bowl', async_check_func=async_check_func)
+            self.hass, period, callback_run_callback,
+            entity_ids='light.Bowl', async_check_same_func=async_check_func)
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
