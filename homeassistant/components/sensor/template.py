@@ -163,17 +163,18 @@ class SensorTemplate(Entity):
             self._state = None
             _LOGGER.error('Could not render template %s: %s', self._name, ex)
 
+        icon_picture_template = None
         if self._icon_template is not None:
             property_name = 'icon'
-            template = self._icon_template
+            icon_picture_template = self._icon_template
         elif self._entity_picture_template is not None:
             property_name = 'entity_picture'
-            template = self._entity_picture_template
+            icon_picture_template = self._entity_picture_template
 
-        if template is not None:
+        if icon_picture_template is not None:
             try:
                 setattr(self, '_{0}'.format(property_name),
-                        template.async_render())
+                        icon_picture_template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
