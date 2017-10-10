@@ -11,14 +11,13 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA,
-    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
-    SUPPORT_SET_POSITION, ATTR_POSITION, ATTR_TILT_POSITION)
+    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN_TILT,
+    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
+    ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START, MATCH_ALL,
-    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
+    CONF_FRIENDLY_NAME, CONF_ENTITY_ID, EVENT_HOMEASSISTANT_START, MATCH_ALL,
+    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -44,20 +43,21 @@ CONF_TILT_OPTIMISTIC = 'tilt_optimistic'
 CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
 CONF_OPEN_OR_CLOSE = 'open_or_close'
 
-TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
-                 SUPPORT_SET_TILT_POSITION)
+TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+                 | SUPPORT_SET_TILT_POSITION)
 
 COVER_SCHEMA = vol.Schema({
     vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
     vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
     vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Exclusive(CONF_POSITION_TEMPLATE,
-                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
-    vol.Exclusive(CONF_VALUE_TEMPLATE,
-                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
+    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
+    template,
+    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
+    template,
     vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
@@ -67,7 +67,9 @@ COVER_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS): vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 
@@ -82,6 +84,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
         stop_action = device_config.get(STOP_ACTION)
@@ -115,21 +119,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if entity_picture_template is not None:
+            temp_ids = entity_picture_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if not template_entity_ids:
             template_entity_ids = MATCH_ALL
 
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
         covers.append(
-            CoverTemplate(
-                hass,
-                device, friendly_name, state_template,
-                position_template, tilt_template, icon_template,
-                open_action, close_action, stop_action,
-                position_action, tilt_action,
-                optimistic, tilt_optimistic, entity_ids
-            )
-        )
+            CoverTemplate(hass, device, friendly_name, state_template,
+                          position_template, tilt_template, icon_template,
+                          entity_picture_template, open_action, close_action,
+                          stop_action, position_action, tilt_action,
+                          optimistic, tilt_optimistic, entity_ids))
     if not covers:
         _LOGGER.error("No covers added")
         return False
@@ -143,9 +148,9 @@ class CoverTemplate(CoverDevice):
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  position_template, tilt_template, icon_template,
-                 open_action, close_action, stop_action,
-                 position_action, tilt_action,
-                 optimistic, tilt_optimistic, entity_ids):
+                 entity_picture_template, open_action, close_action,
+                 stop_action, position_action, tilt_action, optimistic,
+                 tilt_optimistic, entity_ids):
         """Initialize the Template cover."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -155,6 +160,7 @@ class CoverTemplate(CoverDevice):
         self._position_template = position_template
         self._tilt_template = tilt_template
         self._icon_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._open_script = None
         if open_action is not None:
             self._open_script = Script(hass, open_action)
@@ -170,10 +176,11 @@ class CoverTemplate(CoverDevice):
         self._tilt_script = None
         if tilt_action is not None:
             self._tilt_script = Script(hass, tilt_action)
-        self._optimistic = (optimistic or
-                            (not state_template and not position_template))
+        self._optimistic = (optimistic
+                            or (not state_template and not position_template))
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
+        self._entity_picture = None
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
@@ -186,6 +193,8 @@ class CoverTemplate(CoverDevice):
             self._tilt_template.hass = self.hass
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
+        if self._entity_picture_template is not None:
+            self._entity_picture_template.hass = self.hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -202,13 +211,13 @@ class CoverTemplate(CoverDevice):
         @callback
         def template_cover_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_cover_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_cover_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_cover_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_cover_startup)
 
     @property
     def name(self):
@@ -240,6 +249,11 @@ class CoverTemplate(CoverDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._entity_picture
 
     @property
     def supported_features(self):
@@ -294,8 +308,9 @@ class CoverTemplate(CoverDevice):
     def async_set_cover_position(self, **kwargs):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        yield from self._position_script.async_run(
-            {"position": self._position})
+        yield from self._position_script.async_run({
+            "position": self._position
+        })
         if self._optimistic:
             self.async_schedule_update_ha_state()
 
@@ -311,8 +326,7 @@ class CoverTemplate(CoverDevice):
     def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         self._tilt_value = 0
-        yield from self._tilt_script.async_run(
-            {"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
@@ -374,16 +388,40 @@ class CoverTemplate(CoverDevice):
             except ValueError as ex:
                 _LOGGER.error(ex)
                 self._tilt_value = None
+
         if self._icon_template is not None:
+            property_name = 'icon'
+            template = self._icon_template
+        elif self._entity_picture_template is not None:
+            property_name = 'entity_picture'
+            template = self._entity_picture_template
+
+        if template is not None:
             try:
-                self._icon = self._icon_template.async_render()
+                setattr(self, '_{0}'.format(property_name),
+                        template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render icon template %s,'
-                                    ' the state is unknown.', self._name)
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.', property_name,
+                                    self._name)
                     return
-                self._icon = super().icon
-                _LOGGER.error('Could not render icon template %s: %s',
-                              self._name, ex)
+                setattr(self, '_{0}'.format(property_name),
+                        getattr(super(), property_name))
+                _LOGGER.error('Could not render %s template %s: %s',
+                              property_name, self._name, ex)
+        # if self._icon_template is not None:
+        #     try:
+        #         self._icon = self._icon_template.async_render()
+        #     except TemplateError as ex:
+        #         if ex.args and ex.args[0].startswith(
+        #                 "UndefinedError: 'None' has no attribute"):
+        #             # Common during HA startup - so just a warning
+        #             _LOGGER.warning('Could not render icon template %s,'
+        #                             ' the state is unknown.', self._name)
+        #             return
+        #         self._icon = super().icon
+        #         _LOGGER.error('Could not render icon template %s: %s',
+        #                       self._name, ex)
