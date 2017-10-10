@@ -6,7 +6,8 @@ from datetime import datetime
 import logging
 from timeit import default_timer as timer
 
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_NOW
+from homeassistant.const import (
+    EVENT_TIME_CHANGED, ATTR_NOW, EVENT_STATE_CHANGED)
 from homeassistant import core
 from homeassistant.util import dt as dt_util
 
@@ -80,7 +81,7 @@ def async_million_events(hass):
 @benchmark
 @asyncio.coroutine
 def async_million_time_changed_helper(hass):
-    """Run a million events."""
+    """Run a million events through time changed helper."""
     count = 0
     event = asyncio.Event(loop=hass.loop)
 
@@ -100,6 +101,41 @@ def async_million_time_changed_helper(hass):
 
     for _ in range(10**6):
         hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
+
+    start = timer()
+
+    yield from event.wait()
+
+    return timer() - start
+
+
+@benchmark
+@asyncio.coroutine
+def async_million_state_changed_helper(hass):
+    """Run a million events through state changed helper."""
+    count = 0
+    entity_id = 'light.kitchen'
+    event = asyncio.Event(loop=hass.loop)
+
+    @core.callback
+    def listener(_, _2, _3):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+        if count == 10**6:
+            event.set()
+
+    hass.helpers.event.async_track_state_change(
+        entity_id, listener, 'off', 'on')
+    event_data = {
+        'entity_id': entity_id,
+        'old_state': core.State(entity_id, 'off'),
+        'new_state': core.State(entity_id, 'on'),
+    }
+
+    for _ in range(10**6):
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
     start = timer()
 
