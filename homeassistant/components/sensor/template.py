@@ -11,10 +11,10 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE, ATTR_ENTITY_ID, CONF_SENSORS,
-    EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT,
+                                 CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
+                                 CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
+                                 CONF_SENSORS, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -26,13 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS):
+    vol.Schema({
+        cv.slug: SENSOR_SCHEMA
+    }),
 })
 
 
@@ -45,8 +49,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      state_template.extract_entities())
+        entity_picture_template = device_config.get(
+            CONF_ENTITY_PICTURE_TEMPLATE)
+        entity_ids = (device_config.get(ATTR_ENTITY_ID)
+                      or state_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -55,16 +61,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if icon_template is not None:
             icon_template.hass = hass
 
+        if entity_picture_template is not None:
+            entity_picture_template.hass = hass
+
         sensors.append(
-            SensorTemplate(
-                hass,
-                device,
-                friendly_name,
-                unit_of_measurement,
-                state_template,
-                icon_template,
-                entity_ids)
-            )
+            SensorTemplate(hass, device, friendly_name, unit_of_measurement,
+                           state_template, icon_template,
+                           entity_picture_template, entity_ids))
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
@@ -77,17 +80,20 @@ class SensorTemplate(Entity):
     """Representation of a Template Sensor."""
 
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
-                 state_template, icon_template, entity_ids):
+                 state_template, icon_template, entity_picture_template,
+                 entity_ids):
         """Initialize the sensor."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                                  hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, device_id, hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
         self._icon_template = icon_template
         self._icon = None
+        self._entity_picture_template = entity_picture_template
+        self._entity_picture = None
         self._entities = entity_ids
 
     @asyncio.coroutine
@@ -105,13 +111,13 @@ class SensorTemplate(Entity):
         @callback
         def template_sensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_sensor_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_sensor_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_sensor_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_sensor_startup)
 
     @property
     def name(self):
@@ -127,6 +133,11 @@ class SensorTemplate(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def entity_picture(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._entity_picture
 
     @property
     def unit_of_measurement(self):
@@ -154,15 +165,25 @@ class SensorTemplate(Entity):
             _LOGGER.error('Could not render template %s: %s', self._name, ex)
 
         if self._icon_template is not None:
+            property_name = 'icon'
+            template = self._icon_template
+        elif self._entity_picture_template is not None:
+            property_name = 'entity_picture'
+            template = self._entity_picture_template
+
+        if template is not None:
             try:
-                self._icon = self._icon_template.async_render()
+                setattr(self, '_{0}'.format(property_name),
+                        template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
                     # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render icon template %s,'
-                                    ' the state is unknown.', self._name)
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.', property_name,
+                                    self._name)
                     return
-                self._icon = super().icon
-                _LOGGER.error('Could not render icon template %s: %s',
-                              self._name, ex)
+                setattr(self, '_{0}'.format(property_name),
+                        getattr(super(), property_name))
+                _LOGGER.error('Could not render %s template %s: %s',
+                              property_name, self._name, ex)
