@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['googlemaps==2.4.6']
+REQUIREMENTS = ['googlemaps==2.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,8 +109,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         origin = config.get(CONF_ORIGIN)
         destination = config.get(CONF_DESTINATION)
 
-        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
-                                        destination, options)
+        sensor = GoogleTravelTimeSensor(
+            hass, name, api_key, origin, destination, options)
 
         if sensor.valid_api_connection:
             add_devices_callback([sensor])

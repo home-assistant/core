@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
         config.get(CONF_VOLUME_STEP),
-    )])
+    )], True)
 
 
 class NADtcp(MediaPlayerDevice):
@@ -69,8 +69,6 @@ class NADtcp(MediaPlayerDevice):
         self._volume = None
         self._source = None
         self._source_list = self.nad_device.available_sources()
-
-        self.update()
 
     @property
     def name(self):

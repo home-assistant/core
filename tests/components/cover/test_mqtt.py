@@ -2,7 +2,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
+from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN,\
+    STATE_UNAVAILABLE
 import homeassistant.components.cover as cover
 from homeassistant.components.cover.mqtt import MqttCover
 
@@ -570,71 +571,149 @@ class TestCoverMQTT(unittest.TestCase):
     def test_find_percentage_in_range_defaults(self):
         """Test find percentage in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, False, None, None)
 
         self.assertEqual(44, mqtt_cover.find_percentage_in_range(44))
 
     def test_find_percentage_in_range_altered(self):
         """Test find percentage in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, False, None, None)
 
         self.assertEqual(40, mqtt_cover.find_percentage_in_range(120))
 
     def test_find_percentage_in_range_defaults_inverted(self):
         """Test find percentage in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, True, None, None)
 
         self.assertEqual(56, mqtt_cover.find_percentage_in_range(44))
 
     def test_find_percentage_in_range_altered_inverted(self):
         """Test find percentage in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, True, None, None)
 
         self.assertEqual(60, mqtt_cover.find_percentage_in_range(120))
 
     def test_find_in_range_defaults(self):
         """Test find in range with default range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, False, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(44))
 
     def test_find_in_range_altered(self):
         """Test find in range with altered range."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, False, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, False, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(40))
 
     def test_find_in_range_defaults_inverted(self):
         """Test find in range with default range but inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            100, 0, 0, 100, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 100, 0, 0, 100, False, True, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(56))
 
     def test_find_in_range_altered_inverted(self):
         """Test find in range with altered range and inverted."""
         mqtt_cover = MqttCover(
-            'cover.test', 'foo', 'bar', 'fooBar', "fooBarBaz", 0, False,
-            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', False, None,
-            180, 80, 80, 180, False, True, None, None)
+            'cover.test', 'state-topic', 'command-topic', None,
+            'tilt-command-topic', 'tilt-status-topic', 0, False,
+            'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
+            False, None, 180, 80, 80, 180, False, True, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(60))
+
+    def test_availability_without_topic(self):
+        """Test availability without defined availability topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_defaults(self):
+        """Test availability by defaults with defined topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_availability_by_custom_payload(self):
+        """Test availability by custom payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'availability_topic': 'availability-topic',
+                'payload_available': 'good',
+                'payload_not_available': 'nogood'
+            }
+        }))
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'good')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)

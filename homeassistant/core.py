@@ -30,6 +30,7 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
+from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
@@ -128,6 +129,8 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
+        self.components = loader.Components(self)
+        self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = CoreState.not_running
@@ -216,7 +219,7 @@ class HomeAssistant(object):
         else:
             task = self.loop.run_in_executor(None, target, *args)
 
-        # If a task is sheduled
+        # If a task is scheduled
         if self._track_task and task is not None:
             self._pending_tasks.append(task)
 
@@ -335,9 +338,9 @@ class Event(object):
             return "<Event {}[{}]: {}>".format(
                 self.event_type, str(self.origin)[0],
                 util.repr_helper(self.data))
-        else:
-            return "<Event {}[{}]>".format(self.event_type,
-                                           str(self.origin)[0])
+
+        return "<Event {}[{}]>".format(self.event_type,
+                                       str(self.origin)[0])
 
     def __eq__(self, other):
         """Return the comparison."""
@@ -783,8 +786,8 @@ class ServiceCall(object):
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
-        else:
-            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+
+        return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
 class ServiceRegistry(object):
@@ -912,7 +915,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -935,7 +938,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -1077,9 +1080,11 @@ class Config(object):
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
+        assert path is not None
+
         parent = pathlib.Path(path).parent
         try:
-            parent.resolve()  # pylint: disable=no-member
+            parent = parent.resolve()  # pylint: disable=no-member
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 

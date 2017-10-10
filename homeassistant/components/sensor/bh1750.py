@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['i2csense==0.0.3',
+REQUIREMENTS = ['i2csense==0.0.4',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,10 +92,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = [BH1750Sensor(sensor, name, SENSOR_UNIT,
                         config.get(CONF_MULTIPLIER))]
-    _LOGGER.info("Setup of BH1750 light sensor at %s in mode %s is complete.",
+    _LOGGER.info("Setup of BH1750 light sensor at %s in mode %s is complete",
                  i2c_address, operation_mode)
 
-    async_add_devices(dev)
+    async_add_devices(dev, True)
 
 
 class BH1750Sensor(Entity):

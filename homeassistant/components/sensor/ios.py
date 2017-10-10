@@ -6,6 +6,7 @@ https://home-assistant.io/ecosystem/ios/
 """
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['ios']
 
@@ -27,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class IOSSensor(Entity):
@@ -41,7 +42,6 @@ class IOSSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -84,45 +84,21 @@ class IOSSensor(Entity):
         device_battery = self._device[ios.ATTR_BATTERY]
         battery_state = device_battery[ios.ATTR_BATTERY_STATE]
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
-        rounded_level = round(battery_level, -1)
-        returning_icon_level = DEFAULT_ICON_LEVEL
-        if battery_state == ios.ATTR_BATTERY_STATE_FULL:
-            returning_icon_level = DEFAULT_ICON_LEVEL
-            if battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
-                returning_icon_state = DEFAULT_ICON_STATE
-            else:
-                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-        elif battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
-            # Why is MDI missing 10, 50, 70?
-            if rounded_level in (20, 30, 40, 60, 80, 90, 100):
-                returning_icon_level = "{}-charging-{}".format(
-                    DEFAULT_ICON_LEVEL, str(rounded_level))
-                returning_icon_state = DEFAULT_ICON_STATE
-            else:
-                returning_icon_level = "{}-charging".format(
-                    DEFAULT_ICON_LEVEL)
-                returning_icon_state = DEFAULT_ICON_STATE
-        elif battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED:
-            if rounded_level < 10:
-                returning_icon_level = "{}-outline".format(
-                    DEFAULT_ICON_LEVEL)
-                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-            elif battery_level > 95:
-                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-                returning_icon_level = "{}-outline".format(
-                    DEFAULT_ICON_LEVEL)
-            else:
-                returning_icon_level = "{}-{}".format(DEFAULT_ICON_LEVEL,
-                                                      str(rounded_level))
-                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+        charging = True
+        icon_state = DEFAULT_ICON_STATE
+        if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
+                battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
+            charging = False
+            icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
-            returning_icon_level = "{}-unknown".format(DEFAULT_ICON_LEVEL)
-            returning_icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
+            battery_level = None
+            charging = False
+            icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
 
         if self.type == "state":
-            return returning_icon_state
-        else:
-            return returning_icon_level
+            return icon_state
+        return icon_for_battery_level(battery_level=battery_level,
+                                      charging=charging)
 
     def update(self):
         """Get the latest state of the sensor."""

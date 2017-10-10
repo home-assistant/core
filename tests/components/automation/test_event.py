@@ -74,6 +74,34 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_event_with_nested_data(self):
+        """Test the firing of events with nested data."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                    'event_data': {
+                        'parent_attr': {
+                            'some_attr': 'some_value'
+                        }
+                    }
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event', {
+            'parent_attr': {
+                'some_attr': 'some_value',
+                'another': 'value'
+            }
+        })
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_not_fires_if_event_data_not_matches(self):
         """Test firing of event if no match."""
         assert setup_component(self.hass, automation.DOMAIN, {

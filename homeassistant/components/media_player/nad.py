@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
         config.get(CONF_SOURCE_DICT)
-    )])
+    )], True)
 
 
 class NAD(MediaPlayerDevice):
@@ -73,12 +73,7 @@ class NAD(MediaPlayerDevice):
         self._reverse_mapping = {value: key for key, value in
                                  self._source_dict.items()}
 
-        self._volume = None
-        self._state = None
-        self._mute = None
-        self._source = None
-
-        self.update()
+        self._volume = self._state = self._mute = self._source = None
 
     def calc_volume(self, decibel):
         """

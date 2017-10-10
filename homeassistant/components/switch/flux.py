@@ -6,8 +6,9 @@ The idea was taken from https://github.com/KpaBap/hue-flux/
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.flux/
 """
-from datetime import time
+import datetime
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.light import is_on, turn_on
@@ -15,6 +16,7 @@ from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
@@ -37,6 +39,7 @@ CONF_MODE = 'mode'
 
 MODE_XY = 'xy'
 MODE_MIRED = 'mired'
+MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -44,7 +47,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
     vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=time(22, 0)): cv.time,
+    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_SUNSET_CT, default=3000):
@@ -55,7 +58,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-        vol.Any(MODE_XY, MODE_MIRED)
+        vol.Any(MODE_XY, MODE_MIRED, MODE_RGB)
 })
 
 
@@ -76,6 +79,15 @@ def set_lights_temp(hass, lights, mired, brightness):
             turn_on(hass, light,
                     color_temp=int(mired),
                     brightness=brightness,
+                    transition=30)
+
+
+def set_lights_rgb(hass, lights, rgb):
+    """Set color of array of lights."""
+    for light in lights:
+        if is_on(hass, light):
+            turn_on(hass, light,
+                    rgb_color=rgb,
                     transition=30)
 
 
@@ -101,7 +113,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update lights."""
         flux.flux_update()
 
-    hass.services.register(DOMAIN, name + '_update', update)
+    service_name = slugify("{} {}".format(name, 'update'))
+    hass.services.register(DOMAIN, service_name, update)
 
 
 class FluxSwitch(SwitchDevice):
@@ -159,11 +172,21 @@ class FluxSwitch(SwitchDevice):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
+
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
         stop_time = now.replace(
             hour=self._stop_time.hour, minute=self._stop_time.minute,
             second=0)
+
+        if stop_time <= start_time:
+            # stop_time does not happen in the same day as start_time
+            if start_time < now:
+                # stop time is tomorrow
+                stop_time += datetime.timedelta(days=1)
+        elif now < start_time:
+            # stop_time was yesterday since the new start_time is not reached
+            stop_time -= datetime.timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -180,21 +203,31 @@ class FluxSwitch(SwitchDevice):
         else:
             # Nightime
             time_state = 'night'
-            if now < stop_time and now > start_time:
-                now_time = now
+
+            if now < stop_time:
+                if stop_time < start_time and stop_time.day == sunset.day:
+                    # we need to use yesterday's sunset time
+                    sunset_time = sunset - datetime.timedelta(days=1)
+                else:
+                    sunset_time = sunset
+
+                # pylint: disable=no-member
+                night_length = int(stop_time.timestamp() -
+                                   sunset_time.timestamp())
+                seconds_from_sunset = int(now.timestamp() -
+                                          sunset_time.timestamp())
+                percentage_complete = seconds_from_sunset / night_length
             else:
-                now_time = stop_time
+                percentage_complete = 1
+
             temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
-            night_length = int(stop_time.timestamp() - sunset.timestamp())
-            seconds_from_sunset = int(now_time.timestamp() -
-                                      sunset.timestamp())
-            percentage_complete = seconds_from_sunset / night_length
             temp_offset = temp_range * percentage_complete
             if self._sunset_colortemp > self._stop_colortemp:
                 temp = self._sunset_colortemp - temp_offset
             else:
                 temp = self._sunset_colortemp + temp_offset
-        x_val, y_val, b_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+        rgb = color_temperature_to_rgb(temp)
+        x_val, y_val, b_val = color_RGB_to_xy(*rgb)
         brightness = self._brightness if self._brightness else b_val
         if self._disable_brightness_adjust:
             brightness = None
@@ -205,6 +238,11 @@ class FluxSwitch(SwitchDevice):
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
+        elif self._mode == MODE_RGB:
+            set_lights_rgb(self.hass, self._lights, rgb)
+            _LOGGER.info("Lights updated to rgb:%s, %s%% "
+                         "of %s cycle complete at %s", rgb,
+                         round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)

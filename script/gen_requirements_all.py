@@ -33,42 +33,47 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
-    'pydispatch',
-    'influxdb',
-    'nx584',
-    'uvcclient',
-    'somecomfort',
     'aioautomatic',
-    'SoCo',
-    'libsoundtouch',
-    'libpurecoollink',
-    'rxv',
-    'apns2',
-    'sqlalchemy',
-    'forecastio',
     'aiohttp_cors',
-    'pilight',
+    'apns2',
+    'dsmr_parser',
+    'ephem',
+    'evohomeclient',
+    'feedparser',
     'fuzzywuzzy',
+    'gTTS-token',
+    'ha-ffmpeg',
+    'haversine',
+    'hbmqtt',
+    'holidays',
+    'influxdb',
+    'libpurecoollink',
+    'libsoundtouch',
+    'mficlient',
+    'paho-mqtt',
+    'pexpect',
+    'pilight',
+    'pmsensor',
+    'prometheus_client',
+    'pydispatcher',
+    'PyJWT',
+    'pylitejet',
+    'pynx584',
+    'python-forecastio',
+    'pyunifi',
+    'pywebpush',
+    'restrictedpython',
     'rflink',
     'ring_doorbell',
+    'rxv',
     'sleepyq',
+    'SoCo',
+    'somecomfort',
+    'sqlalchemy',
     'statsd',
-    'pylitejet',
-    'holidays',
-    'evohomeclient',
-    'pexpect',
-    'hbmqtt',
-    'paho',
-    'dsmr_parser',
-    'mficlient',
-    'pmsensor',
+    'uvcclient',
+    'warrant',
     'yahoo-finance',
-    'ha-ffmpeg',
-    'gTTS-token',
-    'pywebpush',
-    'PyJWT',
-    'restrictedpython',
-    'pyunifi',
 )
 
 IGNORE_PACKAGES = (
@@ -87,6 +92,10 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
+CONSTRAINT_BASE = """
+# Breaks Python 3.6 and is not needed for our supported Pythons
+enum34==1000000000.0.0
+"""
 
 
 def explore_module(package, explore_children):
@@ -192,11 +201,13 @@ def requirements_test_output(reqs):
     output = []
     output.append('# Home Assistant test')
     output.append('\n')
-    with open('requirements_test.txt') as fp:
-        output.append(fp.read())
+    with open('requirements_test.txt') as test_file:
+        output.append(test_file.read())
     output.append('\n')
     filtered = {key: value for key, value in reqs.items()
-                if any(ign in key for ign in TEST_REQUIREMENTS)}
+                if any(
+                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                              key) is not None for ign in TEST_REQUIREMENTS)}
     output.append(generate_requirements_list(filtered))
 
     return ''.join(output)
@@ -222,25 +233,25 @@ def write_test_requirements_file(data):
 def write_constraints_file(data):
     """Write constraints to a file."""
     with open(CONSTRAINT_PATH, 'w+', newline="\n") as req_file:
-        req_file.write(data)
+        req_file.write(data + CONSTRAINT_BASE)
 
 
 def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
-        return data == ''.join(req_file)
+        return data == req_file.read()
 
 
 def validate_requirements_test_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_test_all.txt', 'r') as req_file:
-        return data == ''.join(req_file)
+        return data == req_file.read()
 
 
 def validate_constraints_file(data):
     """Validate if constraints is up to date."""
     with open(CONSTRAINT_PATH, 'r') as req_file:
-        return data == ''.join(req_file)
+        return data + CONSTRAINT_BASE == req_file.read()
 
 
 def main():

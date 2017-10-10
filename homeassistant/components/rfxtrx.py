@@ -4,6 +4,7 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
+
 import logging
 from collections import OrderedDict
 import voluptuous as vol
@@ -11,13 +12,14 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     ATTR_ENTITY_ID, TEMP_CELSIUS,
     CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
 )
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyRFXtrx==0.18.0']
+REQUIREMENTS = ['pyRFXtrx==0.20.1']
 
 DOMAIN = 'rfxtrx'
 
@@ -54,7 +56,7 @@ DATA_TYPES = OrderedDict([
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
-RFXOBJECT = None
+RFXOBJECT = 'rfxobject'
 
 
 def _valid_device(value, device_type):
@@ -76,10 +78,6 @@ def _valid_device(value, device_type):
         key = str(key)
         if not len(key) % 2 == 0:
             key = '0' + key
-
-        if get_rfx_object(key) is None:
-            raise vol.Invalid('Rfxtrx device {} is invalid: '
-                              'Invalid device id for {}'.format(key, value))
 
         if device_type == 'sensor':
             config[key] = DEVICE_SCHEMA_SENSOR(device)
@@ -171,24 +169,24 @@ def setup(hass, config):
     # Try to load the RFXtrx module.
     import RFXtrx as rfxtrxmod
 
-    # Init the rfxtrx module.
-    global RFXOBJECT
-
     device = config[DOMAIN][ATTR_DEVICE]
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
 
     if dummy_connection:
-        RFXOBJECT =\
-            rfxtrxmod.Connect(device, handle_receive, debug=debug,
+        hass.data[RFXOBJECT] =\
+            rfxtrxmod.Connect(device, None, debug=debug,
                               transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        RFXOBJECT = rfxtrxmod.Connect(device, handle_receive, debug=debug)
+        hass.data[RFXOBJECT] = rfxtrxmod.Connect(device, None, debug=debug)
+
+    def _start_rfxtrx(event):
+        hass.data[RFXOBJECT].event_callback = handle_receive
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
-        RFXOBJECT.close_connection()
-
+        hass.data[RFXOBJECT].close_connection()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
@@ -247,10 +245,8 @@ def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
         try:
-            if (device.is_pt2262 and
-                    device.masked_id == get_pt2262_deviceid(
-                        device_id,
-                        device.data_bits)):
+            if device.masked_id == get_pt2262_deviceid(device_id,
+                                                       device.data_bits):
                 _LOGGER.info("rfxtrx: found matching device %s for %s",
                              device_id,
                              get_pt2262_deviceid(device_id, device.data_bits))
@@ -287,13 +283,16 @@ def find_possible_pt2262_device(device_id):
     return None
 
 
-def get_devices_from_config(config, device, hass):
+def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
     devices = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
+        if event is None:
+            _LOGGER.error("Invalid device: %s", packet_id)
+            continue
         device_id = slugify(event.device.id_string.lower())
         if device_id in RFX_DEVICES:
             continue
@@ -305,13 +304,12 @@ def get_devices_from_config(config, device, hass):
 
         new_device = device(entity_info[ATTR_NAME], event, datas,
                             signal_repetitions)
-        new_device.hass = hass
         RFX_DEVICES[device_id] = new_device
         devices.append(new_device)
     return devices
 
 
-def get_new_device(event, config, device, hass):
+def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id in RFX_DEVICES:
@@ -332,7 +330,6 @@ def get_new_device(event, config, device, hass):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
                         signal_repetitions)
-    new_device.hass = hass
     RFX_DEVICES[device_id] = new_device
     return new_device
 
@@ -415,11 +412,6 @@ class RfxtrxDevice(Entity):
         return self._should_fire_event
 
     @property
-    def is_pt2262(self):
-        """Return true if the device is PT2262-based."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -445,31 +437,36 @@ class RfxtrxDevice(Entity):
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_on(RFXOBJECT.transport)
+                self._event.device.send_on(self.hass.data[RFXOBJECT]
+                                           .transport)
             self._state = True
 
         elif command == "dim":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_dim(RFXOBJECT.transport,
-                                            brightness)
+                self._event.device.send_dim(self.hass.data[RFXOBJECT]
+                                            .transport, brightness)
             self._state = True
 
         elif command == 'turn_off':
             for _ in range(self.signal_repetitions):
-                self._event.device.send_off(RFXOBJECT.transport)
+                self._event.device.send_off(self.hass.data[RFXOBJECT]
+                                            .transport)
             self._state = False
             self._brightness = 0
 
         elif command == "roll_up":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_open(RFXOBJECT.transport)
+                self._event.device.send_open(self.hass.data[RFXOBJECT]
+                                             .transport)
 
         elif command == "roll_down":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_close(RFXOBJECT.transport)
+                self._event.device.send_close(self.hass.data[RFXOBJECT]
+                                              .transport)
 
         elif command == "stop_roll":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_stop(RFXOBJECT.transport)
+                self._event.device.send_stop(self.hass.data[RFXOBJECT]
+                                             .transport)
 
         self.schedule_update_ha_state()

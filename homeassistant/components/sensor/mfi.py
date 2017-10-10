@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     use_tls = config.get(CONF_SSL)
     verify_tls = config.get(CONF_VERIFY_SSL)
-    default_port = use_tls and 6443 or 6080
+    default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
 
     from mficlient.client import FailedToLogin, MFiClient
@@ -97,10 +97,9 @@ class MfiSensor(Entity):
         if tag is None:
             return STATE_OFF
         elif self._port.model == 'Input Digital':
-            return self._port.value > 0 and STATE_ON or STATE_OFF
-        else:
-            digits = DIGITS.get(self._port.tag, 0)
-            return round(self._port.value, digits)
+            return STATE_ON if self._port.value > 0 else STATE_OFF
+        digits = DIGITS.get(self._port.tag, 0)
+        return round(self._port.value, digits)
 
     @property
     def unit_of_measurement(self):

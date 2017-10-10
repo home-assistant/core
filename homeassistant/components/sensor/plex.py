@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
     add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server)])
+        name, plex_url, plex_user, plex_password, plex_server)], True)
 
 
 class PlexSensor(Entity):
@@ -72,8 +72,6 @@ class PlexSensor(Entity):
             self._server = user.resource(server).connect()
         else:
             self._server = PlexServer(plex_url)
-
-        self.update()
 
     @property
     def name(self):

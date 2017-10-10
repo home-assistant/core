@@ -46,12 +46,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the fritzbox monitor sensors."""
+    """Set up the FRITZ!Box monitor sensors."""
     # pylint: disable=import-error
     import fritzconnection as fc
     from fritzconnection.fritzconnection import FritzConnectionException
 
-    host = config[CONF_HOST]
+    host = config.get(CONF_HOST)
 
     try:
         fstatus = fc.FritzStatus(address=host)
@@ -59,15 +59,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         fstatus = None
 
     if fstatus is None:
-        _LOGGER.error('Failed to establish connection to FRITZ!Box '
-                      'with IP: %s', host)
+        _LOGGER.error("Failed to establish connection to FRITZ!Box: %s", host)
         return 1
     else:
-        _LOGGER.info('Successfully connected to FRITZ!Box')
+        _LOGGER.info("Successfully connected to FRITZ!Box")
 
-    sensor = FritzboxMonitorSensor(fstatus)
-    devices = [sensor]
-    add_devices(devices)
+    add_devices([FritzboxMonitorSensor(fstatus)], True)
 
 
 class FritzboxMonitorSensor(Entity):
@@ -78,7 +75,10 @@ class FritzboxMonitorSensor(Entity):
         self._name = 'fritz_netmonitor'
         self._fstatus = fstatus
         self._state = STATE_UNAVAILABLE
-        self.update()
+        self._is_linked = self._is_connected = self._wan_access_type = None
+        self._external_ip = self._uptime = None
+        self._bytes_sent = self._bytes_received = None
+        self._max_byte_rate_up = self._max_byte_rate_down = None
 
     @property
     def name(self):
@@ -130,4 +130,4 @@ class FritzboxMonitorSensor(Entity):
             self._state = STATE_ONLINE if self._is_connected else STATE_OFFLINE
         except RequestException as err:
             self._state = STATE_UNAVAILABLE
-            _LOGGER.warning('Could not reach Fritzbox: %s', err)
+            _LOGGER.warning("Could not reach FRITZ!Box: %s", err)

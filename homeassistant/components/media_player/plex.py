@@ -23,7 +23,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['plexapi==2.0.2']
 
@@ -82,8 +81,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if file_config:
         # Setup a configured PlexServer
-        host, token = file_config.popitem()
-        token = token['token']
+        host, host_config = file_config.popitem()
+        token = host_config['token']
+        try:
+            has_ssl = host_config['ssl']
+        except KeyError:
+            has_ssl = False
+        try:
+            verify_ssl = host_config['verify']
+        except KeyError:
+            verify_ssl = True
+
     # Via discovery
     elif discovery_info is not None:
         # Parse discovery data
@@ -95,19 +103,34 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if host in _CONFIGURING:
             return
         token = None
+        has_ssl = False
+        verify_ssl = True
     else:
         return
 
-    setup_plexserver(host, token, hass, config, add_devices_callback)
+    setup_plexserver(
+        host, token, has_ssl, verify_ssl,
+        hass, config, add_devices_callback
+    )
 
 
-def setup_plexserver(host, token, hass, config, add_devices_callback):
+def setup_plexserver(
+        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
+    cert_session = None
+    http_prefix = 'https' if has_ssl else 'http'
+    if has_ssl and (verify_ssl is False):
+        _LOGGER.info("Ignoring SSL verification")
+        cert_session = requests.Session()
+        cert_session.verify = False
     try:
-        plexserver = plexapi.server.PlexServer('http://%s' % host, token)
+        plexserver = plexapi.server.PlexServer(
+            '%s://%s' % (http_prefix, host),
+            token, cert_session
+        )
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
@@ -119,18 +142,20 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
     # Save config
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
-                'token': token
+                'token': token,
+                'ssl': has_ssl,
+                'verify': verify_ssl,
             }}):
         _LOGGER.error("Failed to save configuration file")
 
-    _LOGGER.info('Connected to: http://%s', host)
+    _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
     plex_clients = {}
     plex_sessions = {}
@@ -144,9 +169,9 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-        except OSError:
-            _LOGGER.error("Could not connect to plex server at http://%s",
-                          host)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
             return
 
         new_plex_clients = []
@@ -193,6 +218,10 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
             return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Could not connect to plex server at http://%s (%s)",
+                          host, ex)
+            return
 
         plex_sessions.clear()
         for session in sessions:
@@ -206,7 +235,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
 
 def request_configuration(host, hass, config, add_devices_callback):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
@@ -217,10 +246,13 @@ def request_configuration(host, hass, config, add_devices_callback):
     def plex_configuration_callback(data):
         """Handle configuration changes."""
         setup_plexserver(
-            host, data.get('token'), hass, config, add_devices_callback)
+            host, data.get('token'),
+            cv.boolean(data.get('has_ssl')),
+            cv.boolean(data.get('do_not_verify')),
+            hass, config, add_devices_callback
+        )
 
     _CONFIGURING[host] = configurator.request_config(
-        hass,
         'Plex Media Server',
         plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
@@ -229,6 +261,14 @@ def request_configuration(host, hass, config, add_devices_callback):
         fields=[{
             'id': 'token',
             'name': 'X-Plex-Token',
+            'type': ''
+        }, {
+            'id': 'has_ssl',
+            'name': 'Use SSL',
+            'type': ''
+        }, {
+            'id': 'do_not_verify_ssl',
+            'name': 'Do not verify SSL',
             'type': ''
         }])
 
@@ -247,12 +287,6 @@ class PlexClient(MediaPlayerDevice):
         self._is_player_available = False
         self._machine_identifier = None
         self._make = ''
-        self._media_content_id = None
-        self._media_content_rating = None
-        self._media_content_type = None
-        self._media_duration = None
-        self._media_image_url = None
-        self._media_title = None
         self._name = None
         self._player_state = 'idle'
         self._previous_volume_level = 1  # Used in fake muting
@@ -268,16 +302,7 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices = update_devices
         self.update_sessions = update_sessions
 
-        # Music
-        self._media_album_artist = None
-        self._media_album_name = None
-        self._media_artist = None
-        self._media_track = None
-
-        # TV Show
-        self._media_episode = None
-        self._media_season = None
-        self._media_series_title = None
+        self._clear_media()
 
         self.refresh(device, session)
 
@@ -299,10 +324,32 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
+    def _clear_media(self):
+        """Set all Media Items to None."""
+        # General
+        self._media_content_id = None
+        self._media_content_rating = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_title = None
+        self._media_position = None
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
+
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
-        if session:
+        self._clear_media()
+
+        if session:  # Not being triggered by Chrome or FireTablet Plex App
             self._session = session
         if device:
             self._device = device
@@ -329,9 +376,6 @@ class PlexClient(MediaPlayerDevice):
                 self._session.ratingKey)
             self._media_content_rating = self._convert_na_to_none(
                 self._session.contentRating)
-        else:
-            self._media_position = None
-            self._media_content_id = None
 
         # player dependent data
         if self._session and self._session.player:
@@ -365,7 +409,6 @@ class PlexClient(MediaPlayerDevice):
                 self._session.duration)
         else:
             self._session_type = None
-            self._media_duration = None
 
         # media type
         if self._session_type == 'clip':
@@ -378,11 +421,9 @@ class PlexClient(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_VIDEO
         elif self._session_type == 'track':
             self._media_content_type = MEDIA_TYPE_MUSIC
-        else:
-            self._media_content_type = None
 
         # title (movie name, tv episode name, music song name)
-        if self._session:
+        if self._session and self._is_player_active:
             self._media_title = self._convert_na_to_none(self._session.title)
 
         # Movies
@@ -391,9 +432,7 @@ class PlexClient(MediaPlayerDevice):
             self._media_title += ' (' + str(self._session.year) + ')'
 
         # TV Show
-        if (self._is_player_active and
-                self._media_content_type is MEDIA_TYPE_TVSHOW):
-
+        if self._media_content_type is MEDIA_TYPE_TVSHOW:
             # season number (00)
             if callable(self._convert_na_to_none(self._session.seasons)):
                 self._media_season = self._convert_na_to_none(
@@ -403,23 +442,15 @@ class PlexClient(MediaPlayerDevice):
                 self._media_season = self._session.parentIndex.zfill(2)
             else:
                 self._media_season = None
-
             # show name
             self._media_series_title = self._convert_na_to_none(
                 self._session.grandparentTitle)
-
             # episode number (00)
-            if self._convert_na_to_none(
-                    self._session.index) is not None:
+            if self._convert_na_to_none(self._session.index) is not None:
                 self._media_episode = str(self._session.index).zfill(2)
-        else:
-            self._media_season = None
-            self._media_series_title = None
-            self._media_episode = None
 
         # Music
-        if (self._is_player_active and
-                self._media_content_type == MEDIA_TYPE_MUSIC):
+        if self._media_content_type == MEDIA_TYPE_MUSIC:
             self._media_album_name = self._convert_na_to_none(
                 self._session.parentTitle)
             self._media_album_artist = self._convert_na_to_none(
@@ -429,14 +460,9 @@ class PlexClient(MediaPlayerDevice):
                 self._session.originalTitle)
             # use album artist if track artist is missing
             if self._media_artist is None:
-                _LOGGER.debug("Using album artist because track artist was "
-                              "not found: %s", self.entity_id)
+                _LOGGER.debug("Using album artist because track artist "
+                              "was not found: %s", self.entity_id)
                 self._media_artist = self._media_album_artist
-        else:
-            self._media_album_name = None
-            self._media_album_artist = None
-            self._media_track = None
-            self._media_artist = None
 
         # set app name to library name
         if (self._session is not None
@@ -461,8 +487,6 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self._get_thumbnail_url(self._session.art)
 
             self._media_image_url = thumb_url
-        else:
-            self._media_image_url = None
 
     def _get_thumbnail_url(self, property_value):
         """Return full URL (if exists) for a thumbnail property."""
@@ -481,6 +505,7 @@ class PlexClient(MediaPlayerDevice):
         """Force client to idle."""
         self._state = STATE_IDLE
         self._session = None
+        self._clear_media()
 
     @property
     def unique_id(self):
@@ -531,16 +556,16 @@ class PlexClient(MediaPlayerDevice):
         # type so that lower layers don't think it's a URL and choke on it
         if value is self.na_type:
             return None
-        else:
-            return value
+
+        return value
 
     @property
     def _active_media_plexapi_type(self):
         """Get the active media type required by PlexAPI commands."""
         if self.media_content_type is MEDIA_TYPE_MUSIC:
             return 'music'
-        else:
-            return 'video'
+
+        return 'video'
 
     @property
     def media_content_id(self):
@@ -560,8 +585,8 @@ class PlexClient(MediaPlayerDevice):
             return MEDIA_TYPE_VIDEO
         elif self._session_type == 'track':
             return MEDIA_TYPE_MUSIC
-        else:
-            return None
+
+        return None
 
     @property
     def media_artist(self):
@@ -657,8 +682,8 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
-        else:
-            return None
+
+        return None
 
     def _local_client_control_fix(self):
         """Detect if local client and adjust url to allow control."""
@@ -671,7 +696,7 @@ class PlexClient(MediaPlayerDevice):
             if ("127.0.0.1" in client.baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
-                # playback is occuring
+                # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)

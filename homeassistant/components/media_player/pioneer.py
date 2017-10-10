@@ -47,9 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if pioneer.update():
         add_devices([pioneer])
-        return True
-    else:
-        return False
 
 
 class PioneerDevice(MediaPlayerDevice):
@@ -88,14 +85,13 @@ class PioneerDevice(MediaPlayerDevice):
         return None
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
+        """Establish a telnet connection and sends command."""
         try:
             try:
-                telnet = telnetlib.Telnet(self._host,
-                                          self._port,
-                                          self._timeout)
-            except ConnectionRefusedError:
-                _LOGGER.debug("Pioneer %s refused connection", self._name)
+                telnet = telnetlib.Telnet(
+                    self._host, self._port, self._timeout)
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
@@ -108,8 +104,8 @@ class PioneerDevice(MediaPlayerDevice):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except ConnectionRefusedError:
-            _LOGGER.debug("Pioneer %s refused connection", self._name)
+        except (ConnectionRefusedError, OSError):
+            _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 
         pwstate = self.telnet_request(telnet, "?P", "PWR")

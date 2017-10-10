@@ -821,17 +821,20 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(('/home',))
+            self.config.whitelist_external_dirs = set(('/home', '/var'))
 
             unvalid = [
                 "/hass/config/secure",
                 "/etc/passwd",
                 "/root/secure_file",
-                "/hass/config/test/../../../etc/passwd",
+                "/var/../etc/passwd",
                 test_file,
             ]
             for path in unvalid:
                 assert not self.config.is_allowed_path(path)
+
+            with self.assertRaises(AssertionError):
+                self.config.is_allowed_path(None)
 
 
 @patch('homeassistant.core.monotonic')

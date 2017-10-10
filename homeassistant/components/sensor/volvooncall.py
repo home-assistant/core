@@ -28,8 +28,7 @@ class VolvoSensor(VolvoEntity):
         val = getattr(self.vehicle, self._attribute)
         if self._attribute == 'odometer':
             return round(val / 1000)  # km
-        else:
-            return val
+        return val
 
     @property
     def unit_of_measurement(self):

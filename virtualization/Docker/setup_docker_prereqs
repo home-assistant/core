@@ -9,7 +9,7 @@ INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
-INSTALL_COAP_CLIENT="${INSTALL_COAP_CLIENT:-yes}"
+INSTALL_COAP="${INSTALL_COAP:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
@@ -30,8 +30,8 @@ PACKAGES=(
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
-  cmake git
-  # libcec
+  cmake
+  git
   swig
 )
 
@@ -59,8 +59,8 @@ if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
   virtualization/Docker/scripts/phantomjs
 fi
 
-if [ "$INSTALL_COAP_CLIENT" == "yes" ]; then
-  virtualization/Docker/scripts/coap_client
+if [ "$INSTALL_COAP" == "yes" ]; then
+  virtualization/Docker/scripts/aiocoap
 fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then
@@ -73,4 +73,4 @@ apt-get -y --purge autoremove
 
 # Cleanup
 apt-get clean
-rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/src/app/build/
