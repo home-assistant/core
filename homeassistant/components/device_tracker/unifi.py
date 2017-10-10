@@ -90,7 +90,8 @@ class UnifiScanner(DeviceScanner):
             clients = []
 
         new_enough = dt_util.utcnow() - self._detection_time
-        self._clients = {c['mac']: c for c in clients if c['last_seen'] > new_enough}
+        self._clients = {c['mac']: c for c in clients
+                         if c['last_seen'] > new_enough}
 
     def scan_devices(self):
         """Scan for devices."""
