@@ -4,10 +4,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-from tests.common import (assert_setup_component, fire_mqtt_message, mock_coro,
-                          get_test_home_assistant, mock_mqtt_component,
-                          mock_component)
-
+from tests.common import (
+    assert_setup_component, fire_mqtt_message, mock_coro, mock_component,
+    get_test_home_assistant, mock_mqtt_component)
 import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
@@ -154,10 +153,12 @@ WAYPOINTS_UPDATED_MESSAGE = {
     ]
 }
 
-WAYPOINT_ENTITY_NAMES = ['zone.greg_phone__exp_wayp1',
-                         'zone.greg_phone__exp_wayp2',
-                         'zone.ram_phone__exp_wayp1',
-                         'zone.ram_phone__exp_wayp2']
+WAYPOINT_ENTITY_NAMES = [
+    'zone.greg_phone__exp_wayp1',
+    'zone.greg_phone__exp_wayp2',
+    'zone.ram_phone__exp_wayp1',
+    'zone.ram_phone__exp_wayp2',
+]
 
 REGION_ENTER_ZERO_MESSAGE = {
     'lon': 1.0,
@@ -194,7 +195,8 @@ ENCRYPTED_LOCATION_MESSAGE = {
              '9pOw75Lo4gHcyy2wV5CmkjrpKEBR7Qhye4AR0y7hOvlx6U/a3GuY1+W8'
              'I4smrLkwMvGgBOzXSNdVTzbFTHDvG3gRRaNHFkt2+5MsbH2Dd6CXmpzq'
              'DIfSN7QzwOevuvNIElii5MlFxI6ZnYIDYA/ZdnAXHEVsNIbyT2N0CXt3'
-             'fTPzgGtFzsufx40EEUkC06J7QTJl7lLG6qaLW1cCWp86Vp0eL3vtZ6xq')}
+             'fTPzgGtFzsufx40EEUkC06J7QTJl7lLG6qaLW1cCWp86Vp0eL3vtZ6xq')
+}
 
 MOCK_ENCRYPTED_LOCATION_MESSAGE = {
     # Mock-encrypted version of LOCATION_MESSAGE using pickle
