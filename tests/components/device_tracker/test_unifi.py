@@ -28,8 +28,10 @@ def mock_scanner():
 @mock.patch('os.access', return_value=True)
 @mock.patch('os.path.isfile', mock.Mock(return_value=True))
 def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
-    """Test the setup with a string for ssl_verify representing the absolute
-    path to a CA certificate bundle"""
+    """Test the setup with a string for ssl_verify.
+
+    Representing the absolute path to a CA certificate bundle.
+    """
     config = {
         DOMAIN: unifi.PLATFORM_SCHEMA({
             CONF_PLATFORM: unifi.DOMAIN,
