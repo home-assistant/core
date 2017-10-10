@@ -252,7 +252,7 @@ class CoverTemplate(CoverDevice):
 
     @property
     def entity_picture(self):
-        """Return the icon to use in the frontend, if any."""
+        """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
 
     @property
@@ -389,17 +389,18 @@ class CoverTemplate(CoverDevice):
                 _LOGGER.error(ex)
                 self._tilt_value = None
 
+        icon_picture_template = None
         if self._icon_template is not None:
             property_name = 'icon'
-            template = self._icon_template
+            icon_picture_template = self._icon_template
         elif self._entity_picture_template is not None:
             property_name = 'entity_picture'
-            template = self._entity_picture_template
+            icon_picture_template = self._entity_picture_template
 
-        if template is not None:
+        if icon_picture_template is not None:
             try:
                 setattr(self, '_{0}'.format(property_name),
-                        template.async_render())
+                        icon_picture_template.async_render())
             except TemplateError as ex:
                 if ex.args and ex.args[0].startswith(
                         "UndefinedError: 'None' has no attribute"):
@@ -412,16 +413,3 @@ class CoverTemplate(CoverDevice):
                         getattr(super(), property_name))
                 _LOGGER.error('Could not render %s template %s: %s',
                               property_name, self._name, ex)
-        # if self._icon_template is not None:
-        #     try:
-        #         self._icon = self._icon_template.async_render()
-        #     except TemplateError as ex:
-        #         if ex.args and ex.args[0].startswith(
-        #                 "UndefinedError: 'None' has no attribute"):
-        #             # Common during HA startup - so just a warning
-        #             _LOGGER.warning('Could not render icon template %s,'
-        #                             ' the state is unknown.', self._name)
-        #             return
-        #         self._icon = super().icon
-        #         _LOGGER.error('Could not render icon template %s: %s',
-        #                       self._name, ex)
