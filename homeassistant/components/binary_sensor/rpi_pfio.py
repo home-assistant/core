@@ -27,17 +27,14 @@ DEFAULT_SETTLE_TIME = 20
 DEPENDENCIES = ['rpi_pfio']
 
 PORT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None):
-    cv.string,
-    vol.Optional(ATTR_SETTLE_TIME, default=DEFAULT_SETTLE_TIME):
-    cv.positive_int,
-    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC):
-    cv.boolean
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_SETTLE_TIME, default=DEFAULT_SETTLE_TIME): cv.
+    positive_int,
+    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORTS, default={}):
-    vol.Schema({
+    vol.Optional(CONF_PORTS, default={}): vol.Schema({
         cv.positive_int: PORT_SCHEMA
     })
 })

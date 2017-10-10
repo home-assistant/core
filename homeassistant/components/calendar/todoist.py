@@ -79,16 +79,11 @@ TASKS = 'items'
 
 SERVICE_NEW_TASK = 'new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CONTENT):
-    cv.string,
-    vol.Optional(PROJECT_NAME, default='inbox'):
-    vol.All(cv.string, vol.Lower),
-    vol.Optional(LABELS):
-    cv.ensure_list_csv,
-    vol.Optional(PRIORITY):
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-    vol.Optional(DUE_DATE):
-    cv.string
+    vol.Required(CONTENT): cv.string,
+    vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
+    vol.Optional(LABELS): cv.ensure_list_csv,
+    vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Optional(DUE_DATE): cv.string
 })
 
 CONF_EXTRA_PROJECTS = 'custom_projects'
@@ -97,22 +92,19 @@ CONF_PROJECT_WHITELIST = 'include_projects'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN):
-    cv.string,
-    vol.Optional(CONF_EXTRA_PROJECTS, default=[]):
-    vol.All(cv.ensure_list,
-            vol.Schema([
-                vol.Schema({
-                    vol.Required(CONF_NAME):
-                    cv.string,
-                    vol.Optional(CONF_PROJECT_DUE_DATE):
-                    vol.Coerce(int),
-                    vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
-                    vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
-                    vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
-                    vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
-                })
-            ]))
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
+        cv.ensure_list,
+        vol.Schema([
+            vol.Schema({
+                vol.Required(CONF_NAME): cv.string,
+                vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
+                vol.Optional(CONF_PROJECT_WHITELIST, default=[]): vol.All(
+                    cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
+                vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]): vol.
+                All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
+            })
+        ]))
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)

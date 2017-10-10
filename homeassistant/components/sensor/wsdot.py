@@ -34,8 +34,7 @@ ATTRIBUTION = "Data provided by WSDOT"
 SCAN_INTERVAL = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_TRAVEL_TIMES): [{
         vol.Required(CONF_ID): cv.string,
         vol.Optional(CONF_NAME): cv.string

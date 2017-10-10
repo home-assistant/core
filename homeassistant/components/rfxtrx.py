@@ -98,53 +98,42 @@ def _valid_light_switch(value):
 
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME):
-    cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False):
-    cv.boolean,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
 DEVICE_SCHEMA_SENSOR = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None):
-    cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False):
-    cv.boolean,
-    vol.Optional(ATTR_DATA_TYPE, default=[]):
-    vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_DATA_TYPE, default=[]): vol.All(
+        cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
 })
 
 DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS, default=None):
-    cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False):
-    cv.boolean,
-    vol.Optional(ATTR_OFF_DELAY, default=None):
-    vol.Any(cv.time_period, cv.positive_timedelta),
-    vol.Optional(ATTR_DATA_BITS, default=None):
-    cv.positive_int,
-    vol.Optional(CONF_COMMAND_ON, default=None):
-    cv.byte,
-    vol.Optional(CONF_COMMAND_OFF, default=None):
-    cv.byte
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS, default=None): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_OFF_DELAY, default=None): vol.Any(
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(ATTR_DATA_BITS, default=None): cv.positive_int,
+    vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
+    vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
 })
 
-DEFAULT_SCHEMA = vol.Schema({
-    vol.Required("platform"):
-    DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}):
-    vol.All(dict, _valid_light_switch),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):
-    cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-    vol.Coerce(int),
-})
+DEFAULT_SCHEMA = vol.Schema(
+    {
+        vol.Required("platform"): DOMAIN,
+        vol.Optional(CONF_DEVICES, default={}): vol.All(
+            dict, _valid_light_switch),
+        vol.Optional(ATTR_AUTOMATIC_ADD, default=False): cv.boolean,
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS): vol.
+        Coerce(int),
+    })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(ATTR_DEVICE): cv.string,
             vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
             vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
@@ -363,10 +352,8 @@ def apply_received_command(event):
     # Fire event
     if RFX_DEVICES[device_id].should_fire_event:
         RFX_DEVICES[device_id].hass.bus.fire(EVENT_BUTTON_PRESSED, {
-            ATTR_ENTITY_ID:
-            RFX_DEVICES[device_id].entity_id,
-            ATTR_STATE:
-            event.values['Command'].lower()
+            ATTR_ENTITY_ID: RFX_DEVICES[device_id].entity_id,
+            ATTR_STATE: event.values['Command'].lower()
         })
         _LOGGER.info("Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
                      EVENT_BUTTON_PRESSED, ATTR_ENTITY_ID,

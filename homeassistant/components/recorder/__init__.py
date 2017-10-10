@@ -46,8 +46,7 @@ SERVICE_PURGE = 'purge'
 ATTR_KEEP_DAYS = 'keep_days'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_KEEP_DAYS):
-    vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Required(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0))
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -61,34 +60,28 @@ CONF_EVENT_TYPES = 'event_types'
 CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_EXCLUDE, default={}):
-    vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]):
-        cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES, default=[]):
-        vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EVENT_TYPES, default=[]): vol.All(
+            cv.ensure_list, [cv.string])
     }),
-    vol.Optional(CONF_INCLUDE, default={}):
-    vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]):
-        cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-        vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+            cv.ensure_list, [cv.string])
     })
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        FILTER_SCHEMA.extend({
-            vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_DB_URL):
-            cv.string,
+        DOMAIN: FILTER_SCHEMA.extend({
+            vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'): vol.All(
+                vol.Coerce(int), vol.Range(min=1)),
+            vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'): vol.All(
+                vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(CONF_DB_URL): cv.string,
         })
     },
     extra=vol.ALLOW_EXTRA)

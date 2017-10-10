@@ -40,18 +40,14 @@ DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_HOST):
-            cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-            cv.string,
-            vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
-            vol.Length(min=32, max=32, msg='invalid token'),
-            vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT):
-            cv.string,
-            vol.Optional(CONF_PIN, default=DEFAULT_PIN):
-            cv.positive_int,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN): vol.Length(
+                min=32, max=32, msg='invalid token'),
+            vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.
+            string,
+            vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
         }),
     },
     extra=vol.ALLOW_EXTRA)

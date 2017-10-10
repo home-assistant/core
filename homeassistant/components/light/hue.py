@@ -67,16 +67,12 @@ CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_ALLOW_UNREACHABLE):
-    cv.boolean,
-    vol.Optional(CONF_FILENAME):
-    cv.string,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE):
-    cv.boolean,
-    vol.Optional(CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS):
-    cv.boolean,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
+    vol.Optional(CONF_FILENAME): cv.string,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS): cv.
+    boolean,
 })
 
 ATTR_GROUP_NAME = "group_name"

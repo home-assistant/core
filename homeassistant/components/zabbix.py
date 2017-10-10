@@ -24,8 +24,7 @@ DOMAIN = 'zabbix'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,

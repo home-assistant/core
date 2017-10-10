@@ -51,26 +51,21 @@ SIGNAL_PANEL_DISARM = 'satel_integra.panel_disarm'
 SIGNAL_ZONES_UPDATED = 'satel_integra.zones_updated'
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE_NAME):
-    cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE):
-    cv.string
+    vol.Required(CONF_ZONE_NAME): cv.string,
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_DEVICE_HOST):
-            cv.string,
-            vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT):
-            cv.port,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_DEVICE_HOST): cv.string,
+            vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(
-                CONF_DEVICE_PARTITION, default=DEFAULT_DEVICE_PARTITION):
-            cv.positive_int,
+                CONF_DEVICE_PARTITION, default=DEFAULT_DEVICE_PARTITION): cv.
+            positive_int,
             vol.Optional(
-                CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE):
-            vol.In([1, 2, 3]),
+                CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.
+            In([1, 2, 3]),
             vol.Optional(CONF_ZONES): {
                 vol.Coerce(int): ZONE_SCHEMA
             },

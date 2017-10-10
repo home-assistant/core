@@ -30,17 +30,13 @@ SERVICE_CREATE = 'create'
 SERVICE_DISMISS = 'dismiss'
 
 SCHEMA_SERVICE_CREATE = vol.Schema({
-    vol.Required(ATTR_MESSAGE):
-    cv.template,
-    vol.Optional(ATTR_TITLE):
-    cv.template,
-    vol.Optional(ATTR_NOTIFICATION_ID):
-    cv.string,
+    vol.Required(ATTR_MESSAGE): cv.template,
+    vol.Optional(ATTR_TITLE): cv.template,
+    vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
 })
 
 SCHEMA_SERVICE_DISMISS = vol.Schema({
-    vol.Required(ATTR_NOTIFICATION_ID):
-    cv.string,
+    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
 })
 
 DEFAULT_OBJECT_ID = 'notification'

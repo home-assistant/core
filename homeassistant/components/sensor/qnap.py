@@ -64,14 +64,16 @@ _MEMORY_MON_COND = {
     'memory_percent_used': ['Memory Usage', '%', 'mdi:memory'],
 }
 _NETWORK_MON_COND = {
-    'network_link_status':
-    ['Network Link', None, 'mdi:checkbox-marked-circle-outline'],
+    'network_link_status': [
+        'Network Link', None, 'mdi:checkbox-marked-circle-outline'
+    ],
     'network_tx': ['Network Up', 'MB/s', 'mdi:upload'],
     'network_rx': ['Network Down', 'MB/s', 'mdi:download'],
 }
 _DRIVE_MON_COND = {
-    'drive_smart_status':
-    ['SMART Status', None, 'mdi:checkbox-marked-circle-outline'],
+    'drive_smart_status': [
+        'SMART Status', None, 'mdi:checkbox-marked-circle-outline'
+    ],
     'drive_temp': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _VOLUME_MON_COND = {
@@ -88,28 +90,18 @@ _MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
                         list(_VOLUME_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_SSL, default=False):
-    cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=True):
-    cv.boolean,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NICS, default=None):
-    cv.ensure_list,
-    vol.Optional(CONF_DRIVES, default=None):
-    cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None):
-    cv.ensure_list,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
+        cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_NICS, default=None): cv.ensure_list,
+    vol.Optional(CONF_DRIVES, default=None): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
 })
 
 
@@ -357,14 +349,11 @@ class QNAPSystemSensor(QNAPSensor):
             minutes = int(data['uptime']['minutes'])
 
             return {
-                ATTR_NAME:
-                data['system']['name'],
-                ATTR_MODEL:
-                data['system']['model'],
-                ATTR_SERIAL:
-                data['system']['serial_number'],
-                ATTR_UPTIME:
-                '{:0>2d}d {:0>2d}h {:0>2d}m'.format(days, hours, minutes)
+                ATTR_NAME: data['system']['name'],
+                ATTR_MODEL: data['system']['model'],
+                ATTR_SERIAL: data['system']['serial_number'],
+                ATTR_UPTIME: '{:0>2d}d {:0>2d}h {:0>2d}m'.format(
+                    days, hours, minutes)
             }
 
 

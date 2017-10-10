@@ -32,31 +32,22 @@ ATTR_HOME_MODE = 'home_mode'
 ATTR_STRUCTURE = 'structure'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list)
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
 })
 
 AWAY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HOME_MODE):
-    cv.string,
-    vol.Optional(ATTR_STRUCTURE):
-    vol.All(cv.ensure_list, cv.string)
+    vol.Required(ATTR_HOME_MODE): cv.string,
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_CLIENT_ID):
-            cv.string,
-            vol.Required(CONF_CLIENT_SECRET):
-            cv.string,
-            vol.Optional(CONF_STRUCTURE):
-            vol.All(cv.ensure_list, cv.string),
-            vol.Optional(CONF_SENSORS):
-            SENSOR_SCHEMA,
-            vol.Optional(CONF_BINARY_SENSORS):
-            SENSOR_SCHEMA
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_CLIENT_ID): cv.string,
+            vol.Required(CONF_CLIENT_SECRET): cv.string,
+            vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+            vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+            vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
         })
     },
     extra=vol.ALLOW_EXTRA)

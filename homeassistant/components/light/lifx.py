@@ -45,10 +45,8 @@ CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SERVER, default='0.0.0.0'):
-    cv.string,
-    vol.Optional(CONF_BROADCAST, default='255.255.255.255'):
-    cv.string,
+    vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+    vol.Optional(CONF_BROADCAST, default='255.255.255.255'): cv.string,
 })
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
@@ -58,12 +56,9 @@ ATTR_ZONES = 'zones'
 ATTR_POWER = 'power'
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
-    ATTR_INFRARED:
-    vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    ATTR_ZONES:
-    vol.All(cv.ensure_list, [cv.positive_int]),
-    ATTR_POWER:
-    cv.boolean,
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_POWER: cv.boolean,
 })
 
 SERVICE_EFFECT_PULSE = 'lifx_effect_pulse'
@@ -89,51 +84,34 @@ PULSE_MODES = [
 ]
 
 LIFX_EFFECT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_POWER_ON, default=True):
-    cv.boolean,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
 })
 
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS:
-    VALID_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT:
-    VALID_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME:
-    cv.string,
-    ATTR_RGB_COLOR:
-    vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP:
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
-    ATTR_KELVIN:
-    vol.All(vol.Coerce(int), vol.Range(min=0)),
-    ATTR_PERIOD:
-    vol.All(vol.Coerce(float), vol.Range(min=0.05)),
-    ATTR_CYCLES:
-    vol.All(vol.Coerce(float), vol.Range(min=1)),
-    ATTR_MODE:
-    vol.In(PULSE_MODES),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    ATTR_COLOR_NAME: cv.string,
+    ATTR_RGB_COLOR: vol.All(
+        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)),
+    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
+    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
+    ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
+    ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
+    ATTR_MODE: vol.In(PULSE_MODES),
 })
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS:
-    VALID_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT:
-    VALID_BRIGHTNESS_PCT,
-    ATTR_PERIOD:
-    vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
-    ATTR_CHANGE:
-    vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
-    ATTR_SPREAD:
-    vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
-    ATTR_TRANSITION:
-    vol.All(vol.Coerce(float), vol.Range(min=0)),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
+    ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Range(min=0)),
 })
 
 LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 

@@ -33,25 +33,17 @@ CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
 
 LIGHT_SCHEMA = vol.Schema({
-    vol.Required(CONF_ON_ACTION):
-    cv.SCRIPT_SCHEMA,
-    vol.Required(CONF_OFF_ACTION):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE, default=None):
-    cv.template,
-    vol.Optional(CONF_LEVEL_ACTION, default=None):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LEVEL_TEMPLATE, default=None):
-    cv.template,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None):
-    cv.string,
-    vol.Optional(CONF_ENTITY_ID):
-    cv.entity_ids
+    vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LIGHTS):
-    vol.Schema({
+    vol.Required(CONF_LIGHTS): vol.Schema({
         cv.slug: LIGHT_SCHEMA
     }),
 })
@@ -199,8 +191,7 @@ class LightTemplate(Light):
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
             self.hass.async_add_job(
                 self._level_script.async_run({
-                    "brightness":
-                    kwargs[ATTR_BRIGHTNESS]
+                    "brightness": kwargs[ATTR_BRIGHTNESS]
                 }))
         else:
             self.hass.async_add_job(self._on_script.async_run())

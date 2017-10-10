@@ -57,62 +57,39 @@ CONF_INITIAL = 'initial'
 CONF_SEND_IF_OFF = 'send_if_off'
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_POWER_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_MODE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_HOLD_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_AUX_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_POWER_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_MODE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_TEMPERATURE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_FAN_MODE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_SWING_MODE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_AWAY_MODE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_HOLD_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_AUX_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC):
-    mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_CURRENT_TEMPERATURE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(
         CONF_FAN_MODE_LIST,
-        default=[STATE_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]):
-    cv.ensure_list,
-    vol.Optional(CONF_SWING_MODE_LIST, default=[STATE_ON, STATE_OFF]):
-    cv.ensure_list,
+        default=[STATE_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]): cv.
+    ensure_list,
+    vol.Optional(CONF_SWING_MODE_LIST, default=[STATE_ON, STATE_OFF]): cv.
+    ensure_list,
     vol.Optional(
         CONF_MODE_LIST,
         default=[
             STATE_AUTO, STATE_OFF, STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY
-        ]):
-    cv.ensure_list,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_INITIAL, default=21):
-    cv.positive_int,
-    vol.Optional(CONF_SEND_IF_OFF, default=True):
-    cv.boolean,
-    vol.Optional(CONF_PAYLOAD_ON, default="ON"):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default="OFF"):
-    cv.string,
+        ]): cv.ensure_list,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
+    vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+    vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
 })
 
 

@@ -50,31 +50,21 @@ SERVICE_REMOVE = 'remove'
 CONTROL_TYPES = vol.In(['hidden', None])
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_VISIBLE):
-    cv.boolean
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VISIBLE): cv.boolean
 })
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 SET_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_OBJECT_ID):
-    cv.slug,
-    vol.Optional(ATTR_NAME):
-    cv.string,
-    vol.Optional(ATTR_VIEW):
-    cv.boolean,
-    vol.Optional(ATTR_ICON):
-    cv.string,
-    vol.Optional(ATTR_CONTROL):
-    CONTROL_TYPES,
-    vol.Optional(ATTR_VISIBLE):
-    cv.boolean,
-    vol.Exclusive(ATTR_ENTITIES, 'entities'):
-    cv.entity_ids,
-    vol.Exclusive(ATTR_ADD_ENTITIES, 'entities'):
-    cv.entity_ids,
+    vol.Required(ATTR_OBJECT_ID): cv.slug,
+    vol.Optional(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_VIEW): cv.boolean,
+    vol.Optional(ATTR_ICON): cv.string,
+    vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
+    vol.Optional(ATTR_VISIBLE): cv.boolean,
+    vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
+    vol.Exclusive(ATTR_ADD_ENTITIES, 'entities'): cv.entity_ids,
 })
 
 REMOVE_SERVICE_SCHEMA = vol.Schema({
@@ -93,23 +83,17 @@ def _conf_preprocess(value):
 
 
 GROUP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ENTITIES):
-    vol.Any(cv.entity_ids, None),
-    CONF_VIEW:
-    cv.boolean,
-    CONF_NAME:
-    cv.string,
-    CONF_ICON:
-    cv.icon,
-    CONF_CONTROL:
-    CONTROL_TYPES,
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+    CONF_VIEW: cv.boolean,
+    CONF_NAME: cv.string,
+    CONF_ICON: cv.icon,
+    CONF_CONTROL: CONTROL_TYPES,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
-            cv.match_all:
-            vol.All(_conf_preprocess, GROUP_SCHEMA)
+            cv.match_all: vol.All(_conf_preprocess, GROUP_SCHEMA)
         })
     },
     extra=vol.ALLOW_EXTRA)

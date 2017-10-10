@@ -34,18 +34,12 @@ EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
 SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_RADIUS):
-    vol.Coerce(float),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'):
-    cv.longitude,
-    vol.Optional(CONF_INCLUDE):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_EXCLUDE):
-    vol.All(cv.ensure_list, [cv.string])
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_RADIUS): vol.Coerce(float),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
+    vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string])
 })
 
 

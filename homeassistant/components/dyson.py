@@ -27,20 +27,15 @@ DOMAIN = "dyson"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Required(CONF_LANGUAGE):
-            cv.string,
-            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-            cv.positive_int,
-            vol.Optional(CONF_RETRY, default=DEFAULT_RETRY):
-            cv.positive_int,
-            vol.Optional(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [dict]),
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_LANGUAGE): cv.string,
+            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.
+            positive_int,
+            vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
+            vol.Optional(CONF_DEVICES, default=[]): vol.All(
+                cv.ensure_list, [dict]),
         })
     },
     extra=vol.ALLOW_EXTRA)

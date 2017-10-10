@@ -26,14 +26,10 @@ ATTR_HOURS_TO_SHOW = CONF_HOURS_TO_SHOW
 ATTR_REFRESH = CONF_REFRESH
 
 GRAPH_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITIES):
-    cv.entity_ids,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_HOURS_TO_SHOW, default=24):
-    vol.Range(min=1),
-    vol.Optional(CONF_REFRESH, default=0):
-    vol.Range(min=0),
+    vol.Required(CONF_ENTITIES): cv.entity_ids,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOURS_TO_SHOW, default=24): vol.Range(min=1),
+    vol.Optional(CONF_REFRESH, default=0): vol.Range(min=0),
 })
 
 CONFIG_SCHEMA = vol.Schema(

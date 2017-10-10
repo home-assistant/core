@@ -36,10 +36,8 @@ DEFAULT_NAME = 'Philips TV'
 BASE_URL = 'http://{0}:1925/1/{1}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

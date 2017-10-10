@@ -33,19 +33,15 @@ CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
 
 _QUERY_SCHEME = vol.Schema({
-    vol.Required(CONF_MODE):
-    vol.All(cv.ensure_list, [vol.In(list(['bus', 'train']))]),
-    vol.Required(CONF_ORIGIN):
-    cv.string,
-    vol.Required(CONF_DESTINATION):
-    cv.string,
+    vol.Required(CONF_MODE): vol.All(cv.ensure_list,
+                                     [vol.In(list(['bus', 'train']))]),
+    vol.Required(CONF_ORIGIN): cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_APP_ID):
-    cv.string,
-    vol.Required(CONF_API_APP_KEY):
-    cv.string,
+    vol.Required(CONF_API_APP_ID): cv.string,
+    vol.Required(CONF_API_APP_KEY): cv.string,
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
 })
 
@@ -172,14 +168,10 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 for departure in departures:
                     if self._destination_re.search(departure['direction']):
                         self._next_buses.append({
-                            'route':
-                            route,
-                            'direction':
-                            departure['direction'],
-                            'scheduled':
-                            departure['aimed_departure_time'],
-                            'estimated':
-                            departure['best_departure_estimate']
+                            'route': route,
+                            'direction': departure['direction'],
+                            'scheduled': departure['aimed_departure_time'],
+                            'estimated': departure['best_departure_estimate']
                         })
 
             if self._next_buses:
@@ -238,20 +230,13 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
             else:
                 for departure in self._data['departures']['all']:
                     self._next_trains.append({
-                        'origin_name':
-                        departure['origin_name'],
-                        'destination_name':
-                        departure['destination_name'],
-                        'status':
-                        departure['status'],
-                        'scheduled':
-                        departure['aimed_departure_time'],
-                        'estimated':
-                        departure['expected_departure_time'],
-                        'platform':
-                        departure['platform'],
-                        'operator_name':
-                        departure['operator_name']
+                        'origin_name': departure['origin_name'],
+                        'destination_name': departure['destination_name'],
+                        'status': departure['status'],
+                        'scheduled': departure['aimed_departure_time'],
+                        'estimated': departure['expected_departure_time'],
+                        'platform': departure['platform'],
+                        'operator_name': departure['operator_name']
                     })
 
                 if self._next_trains:

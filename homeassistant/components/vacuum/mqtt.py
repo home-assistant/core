@@ -100,60 +100,42 @@ DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START_PAUSE = 'start_pause'
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS):
-    vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-    vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN):
-    cv.boolean,
-    vol.Optional(mqtt.CONF_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_PAYLOAD_TURN_ON, default=DEFAULT_PAYLOAD_TURN_ON):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_TURN_OFF, default=DEFAULT_PAYLOAD_TURN_OFF):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS): vol.
+    All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
+    vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_PAYLOAD_TURN_ON, default=DEFAULT_PAYLOAD_TURN_ON): cv.
+    string,
+    vol.Optional(CONF_PAYLOAD_TURN_OFF, default=DEFAULT_PAYLOAD_TURN_OFF): cv.
+    string,
     vol.Optional(
-        CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE):
-    cv.string,
+        CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE): cv.
+    string,
+    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+    vol.Optional(CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT): cv.
+    string,
+    vol.Optional(CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE): cv.
+    string,
     vol.Optional(
-        CONF_PAYLOAD_START_PAUSE, default=DEFAULT_PAYLOAD_START_PAUSE):
-    cv.string,
-    vol.Optional(CONF_BATTERY_LEVEL_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_CHARGING_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_CHARGING_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_CLEANING_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_CLEANING_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_DOCKED_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_DOCKED_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_STATE_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_STATE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_FAN_SPEED_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_SET_FAN_SPEED_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SEND_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
+        CONF_PAYLOAD_START_PAUSE, default=DEFAULT_PAYLOAD_START_PAUSE): cv.
+    string,
+    vol.Optional(CONF_BATTERY_LEVEL_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+    vol.Optional(CONF_CHARGING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CHARGING_TEMPLATE): cv.template,
+    vol.Optional(CONF_CLEANING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CLEANING_TEMPLATE): cv.template,
+    vol.Optional(CONF_DOCKED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_DOCKED_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+    vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
+        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
 })
 
 

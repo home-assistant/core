@@ -23,14 +23,10 @@ REQUIREMENTS = ['beautifulsoup4==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=True):
-    cv.boolean,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 

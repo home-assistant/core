@@ -32,20 +32,14 @@ CONF_STILL_IMAGE_URL = 'still_image_url'
 DEFAULT_NAME = 'Generic Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STILL_IMAGE_URL):
-    cv.template,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-    vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False):
-    cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE):
-    cv.string,
+    vol.Required(CONF_STILL_IMAGE_URL): cv.template,
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.
+    In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
 })
 
 

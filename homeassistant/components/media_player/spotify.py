@@ -51,14 +51,10 @@ CONFIGURATOR_DESCRIPTION = 'To link your Spotify account, ' \
                            'click the link, login, and authorize:'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID):
-    cv.string,
-    vol.Required(CONF_CLIENT_SECRET):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_CACHE_PATH):
-    cv.string,
+    vol.Required(CONF_CLIENT_ID): cv.string,
+    vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_CACHE_PATH): cv.string,
     vol.Optional(CONF_ALIASES, default={}): {
         cv.string: cv.string
     }

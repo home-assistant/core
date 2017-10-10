@@ -20,8 +20,7 @@ DEPENDENCIES = ['zigbee']
 STATES = ['high', 'low']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ON_STATE):
-    vol.In(STATES),
+    vol.Optional(CONF_ON_STATE): vol.In(STATES),
 })
 
 

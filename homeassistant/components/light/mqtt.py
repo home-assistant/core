@@ -60,60 +60,35 @@ DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_EFFECT_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_EFFECT_LIST):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_EFFECT_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_EFFECT_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
-    cv.string,
-    vol.Optional(CONF_RGB_COMMAND_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_RGB_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_RGB_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_RGB_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_STATE_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_WHITE_VALUE_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_WHITE_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_XY_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_XY_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_XY_VALUE_TEMPLATE):
-    cv.template,
+    vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE): vol.
+    All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
+    vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE): vol.
+    All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_WHITE_VALUE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -153,8 +128,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
                 CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
                 CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
-                CONF_RGB_COMMAND_TEMPLATE:
-                config.get(CONF_RGB_COMMAND_TEMPLATE),
+                CONF_RGB_COMMAND_TEMPLATE: config.get(
+                    CONF_RGB_COMMAND_TEMPLATE),
                 CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
                 CONF_WHITE_VALUE: config.get(CONF_WHITE_VALUE_TEMPLATE),
                 CONF_XY: config.get(CONF_XY_VALUE_TEMPLATE),

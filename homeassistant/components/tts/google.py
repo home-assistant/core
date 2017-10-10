@@ -81,8 +81,7 @@ SUPPORT_LANGUAGES = [
 DEFAULT_LANG = 'en'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
 })
 
 
@@ -100,8 +99,7 @@ class GoogleProvider(Provider):
         self.hass = hass
         self._lang = lang
         self.headers = {
-            'Referer':
-            "http://translate.google.com/",
+            'Referer': "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")

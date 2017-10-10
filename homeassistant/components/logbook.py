@@ -35,21 +35,16 @@ CONF_DOMAINS = 'domains'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            CONF_EXCLUDE:
-            vol.Schema({
-                vol.Optional(CONF_ENTITIES, default=[]):
-                cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+        DOMAIN: vol.Schema({
+            CONF_EXCLUDE: vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string])
             }),
-            CONF_INCLUDE:
-            vol.Schema({
-                vol.Optional(CONF_ENTITIES, default=[]):
-                cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+            CONF_INCLUDE: vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string])
             })
         }),
     },

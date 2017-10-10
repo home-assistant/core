@@ -34,30 +34,26 @@ REGISTER_TYPE_INPUT = 'input'
 DATA_TYPE_INT = 'int'
 DATA_TYPE_FLOAT = 'float'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_REGISTERS): [{
-        vol.Required(CONF_NAME):
-        cv.string,
-        vol.Required(CONF_REGISTER):
-        cv.positive_int,
-        vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
-        vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
-        vol.Optional(CONF_COUNT, default=1):
-        cv.positive_int,
-        vol.Optional(CONF_OFFSET, default=0):
-        vol.Coerce(float),
-        vol.Optional(CONF_PRECISION, default=0):
-        cv.positive_int,
-        vol.Optional(CONF_SCALE, default=1):
-        vol.Coerce(float),
-        vol.Optional(CONF_SLAVE):
-        cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT):
-        vol.In([DATA_TYPE_INT, DATA_TYPE_FLOAT]),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-        cv.string
-    }]
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_REGISTERS): [
+            {
+                vol.Required(CONF_NAME): cv.string,
+                vol.Required(CONF_REGISTER): cv.positive_int,
+                vol.Optional(
+                    CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING): vol.In(
+                    [REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
+                vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+                vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+                vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+                vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+                vol.Optional(CONF_SLAVE): cv.positive_int,
+                vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
+                    [DATA_TYPE_INT, DATA_TYPE_FLOAT]),
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
+            }
+        ]
+    })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

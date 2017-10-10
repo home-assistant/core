@@ -37,16 +37,11 @@ DEFAULT_VOICE = 'cmu-slt-hsmm'
 DEFAULT_CODEC = 'wav'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-    vol.In(SUPPORT_VOICES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC):
-    vol.In(SUPPORT_CODEC)
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
 })
 
 

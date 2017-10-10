@@ -24,14 +24,10 @@ CONF_PROFILE_NAME = 'profile_name'
 ATTR_CREDENTIALS = 'credentials'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION, default='us-east-1'):
-    cv.string,
-    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS):
-    cv.string,
-    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS):
-    cv.string,
-    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS):
-    cv.string,
+    vol.Optional(CONF_REGION, default='us-east-1'): cv.string,
+    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
 })
 
 

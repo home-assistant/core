@@ -24,10 +24,8 @@ ICON = 'mdi:clock'
 TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TIME_ZONE):
-    cv.time_zone,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_TIME_ZONE): cv.time_zone,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

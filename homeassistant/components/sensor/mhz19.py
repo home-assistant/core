@@ -35,12 +35,10 @@ SENSOR_TYPES = {
     SENSOR_CO2: ['CO2', 'ppm']
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Required(CONF_SERIAL_DEVICE):
-    cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_SERIAL_DEVICE): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

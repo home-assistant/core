@@ -479,40 +479,29 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 
 STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema({
-        vol.Required(CONF_CONDITION):
-        'state',
-        vol.Required(CONF_ENTITY_ID):
-        entity_id,
-        vol.Required('state'):
-        str,
-        vol.Optional('for'):
-        vol.All(time_period, positive_timedelta),
+        vol.Required(CONF_CONDITION): 'state',
+        vol.Required(CONF_ENTITY_ID): entity_id,
+        vol.Required('state'): str,
+        vol.Optional('for'): vol.All(time_period, positive_timedelta),
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
-        vol.Optional('from'):
-        str,
+        vol.Optional('from'): str,
     }),
     key_dependency('for', 'state'))
 
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema({
-        vol.Required(CONF_CONDITION):
-        'sun',
-        vol.Optional('before'):
-        sun_event,
-        vol.Optional('before_offset'):
-        time_period,
-        vol.Optional('after'):
-        vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
-        vol.Optional('after_offset'):
-        time_period,
+        vol.Required(CONF_CONDITION): 'sun',
+        vol.Optional('before'): sun_event,
+        vol.Optional('before_offset'): time_period,
+        vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset',
+                                                          'sunrise')),
+        vol.Optional('after_offset'): time_period,
     }), has_at_least_one_key('before', 'after'))
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_CONDITION):
-    'template',
-    vol.Required(CONF_VALUE_TEMPLATE):
-    template,
+    vol.Required(CONF_CONDITION): 'template',
+    vol.Required(CONF_VALUE_TEMPLATE): template,
 })
 
 TIME_CONDITION_SCHEMA = vol.All(
@@ -524,33 +513,25 @@ TIME_CONDITION_SCHEMA = vol.All(
     }), has_at_least_one_key('before', 'after', 'weekday'))
 
 ZONE_CONDITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_CONDITION):
-    'zone',
-    vol.Required(CONF_ENTITY_ID):
-    entity_id,
-    'zone':
-    entity_id,
+    vol.Required(CONF_CONDITION): 'zone',
+    vol.Required(CONF_ENTITY_ID): entity_id,
+    'zone': entity_id,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
-    vol.Optional('event'):
-    vol.Any('enter', 'leave'),
+    vol.Optional('event'): vol.Any('enter', 'leave'),
 })
 
 AND_CONDITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_CONDITION):
-    'and',
-    vol.Required('conditions'):
-    vol.All(
+    vol.Required(CONF_CONDITION): 'and',
+    vol.Required('conditions'): vol.All(
         ensure_list,
         # pylint: disable=unnecessary-lambda
         [lambda value: CONDITION_SCHEMA(value)], )
 })
 
 OR_CONDITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_CONDITION):
-    'or',
-    vol.Required('conditions'):
-    vol.All(
+    vol.Required(CONF_CONDITION): 'or',
+    vol.Required('conditions'): vol.All(
         ensure_list,
         # pylint: disable=unnecessary-lambda
         [lambda value: CONDITION_SCHEMA(value)], )
@@ -567,19 +548,15 @@ CONDITION_SCHEMA = vol.Any(
     OR_CONDITION_SCHEMA, )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALIAS):
-    string,
-    vol.Required("delay"):
-    vol.Any(vol.All(time_period, positive_timedelta), template)
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("delay"): vol.Any(
+        vol.All(time_period, positive_timedelta), template)
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALIAS):
-    string,
-    vol.Required("wait_template"):
-    template,
-    vol.Optional(CONF_TIMEOUT):
-    vol.All(time_period, positive_timedelta),
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("wait_template"): template,
+    vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
 })
 
 SCRIPT_SCHEMA = vol.All(

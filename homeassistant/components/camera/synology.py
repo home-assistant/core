@@ -26,20 +26,13 @@ DEFAULT_NAME = 'Synology Camera'
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_URL):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_WHITELIST, default=[]):
-    cv.ensure_list,
-    vol.Optional(CONF_VERIFY_SSL, default=True):
-    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_URL): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 

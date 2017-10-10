@@ -28,16 +28,11 @@ DEFAULT_PORT = 993
 ICON = 'mdi:email-outline'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_SERVER):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_SERVER): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 

@@ -34,10 +34,12 @@ DEFAULT_NAME = 'Dark Sky'
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
     'summary': ['Summary', None, None, None, None, None, None, []],
-    'minutely_summary':
-    ['Minutely Summary', None, None, None, None, None, None, []],
-    'hourly_summary':
-    ['Hourly Summary', None, None, None, None, None, None, []],
+    'minutely_summary': [
+        'Minutely Summary', None, None, None, None, None, None, []
+    ],
+    'hourly_summary': [
+        'Hourly Summary', None, None, None, None, None, None, []
+    ],
     'daily_summary': ['Daily Summary', None, None, None, None, None, None, []],
     'icon': [
         'Icon', None, None, None, None, None, None,
@@ -139,22 +141,19 @@ CONDITION_PICTURES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNITS):
-    vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.longitude,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)):
-    (vol.All(cv.time_period, cv.positive_timedelta)),
-    vol.Optional(CONF_FORECAST):
-    vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
+    vol.Required(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list,
+                                                     [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    longitude,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_FORECAST): vol.All(cv.ensure_list,
+                                         [vol.Range(min=1, max=7)]),
 })
 
 

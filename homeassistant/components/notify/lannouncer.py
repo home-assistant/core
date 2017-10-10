@@ -22,10 +22,8 @@ ATTR_METHOD_ALLOWED = ['speak', 'alarm']
 DEFAULT_PORT = 1035
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 _LOGGER = logging.getLogger(__name__)

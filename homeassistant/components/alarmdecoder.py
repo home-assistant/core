@@ -53,45 +53,38 @@ SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
 SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
 
 DEVICE_SOCKET_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICE_TYPE):
-    'socket',
-    vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST):
-    cv.string,
-    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT):
-    cv.port
+    vol.Required(CONF_DEVICE_TYPE): 'socket',
+    vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
+    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port
 })
 
 DEVICE_SERIAL_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICE_TYPE):
-    'serial',
-    vol.Optional(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH):
-    cv.string,
-    vol.Optional(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD):
-    cv.string
+    vol.Required(CONF_DEVICE_TYPE): 'serial',
+    vol.Optional(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): cv.string,
+    vol.Optional(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): cv.string
 })
 
 DEVICE_USB_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_TYPE): 'usb'})
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE_NAME):
-    cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE):
-    cv.string
+    vol.Required(CONF_ZONE_NAME): cv.string,
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_DEVICE):
-            vol.Any(DEVICE_SOCKET_SCHEMA, DEVICE_SERIAL_SCHEMA,
-                    DEVICE_USB_SCHEMA),
-            vol.Optional(CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY):
-            cv.boolean,
-            vol.Optional(CONF_ZONES): {
-                vol.Coerce(int): ZONE_SCHEMA
-            },
-        }),
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DEVICE): vol.Any(DEVICE_SOCKET_SCHEMA,
+                                                   DEVICE_SERIAL_SCHEMA,
+                                                   DEVICE_USB_SCHEMA),
+                vol.Optional(
+                    CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY): cv.
+                boolean,
+                vol.Optional(CONF_ZONES): {
+                    vol.Coerce(int): ZONE_SCHEMA
+                },
+            }),
     },
     extra=vol.ALLOW_EXTRA)
 

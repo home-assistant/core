@@ -37,14 +37,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.string,
-    vol.Optional(CONF_HOST, default=None):
-    cv.string,
-    vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION):
-    vol.All(cv.string, vol.In(['5', '4', '2.2'])),
-    vol.Optional(CONF_RECONNECT_INTERVAL, default=30):
-    int,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_HOST, default=None): cv.string,
+    vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
+        cv.string, vol.In(['5', '4', '2.2'])),
+    vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
 })
 
 

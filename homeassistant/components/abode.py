@@ -58,20 +58,13 @@ ABODE_DEVICE_ID_LIST_SCHEMA = vol.Schema([str])
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_NAME):
-            cv.string,
-            vol.Optional(CONF_POLLING, default=False):
-            cv.boolean,
-            vol.Optional(CONF_EXCLUDE, default=[]):
-            ABODE_DEVICE_ID_LIST_SCHEMA,
-            vol.Optional(CONF_LIGHTS, default=[]):
-            ABODE_DEVICE_ID_LIST_SCHEMA
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_POLLING, default=False): cv.boolean,
+            vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
+            vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA
         }),
     },
     extra=vol.ALLOW_EXTRA)

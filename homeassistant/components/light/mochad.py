@@ -20,8 +20,7 @@ DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM):
-    mochad.DOMAIN,
+    vol.Required(CONF_PLATFORM): mochad.DOMAIN,
     CONF_DEVICES: [{
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.x10_address,

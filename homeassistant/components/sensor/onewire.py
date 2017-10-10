@@ -59,8 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAMES): {
         cv.string: cv.string
     },
-    vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR):
-    cv.string,
+    vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
 })
 
 

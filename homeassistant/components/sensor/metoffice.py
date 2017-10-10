@@ -68,12 +68,10 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None):
-    cv.string,
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

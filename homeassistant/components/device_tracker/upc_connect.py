@@ -23,8 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_IP = '192.168.0.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_IP):
-    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
 })
 
 CMD_DEVICES = 123
@@ -51,10 +50,8 @@ class UPCDeviceScanner(DeviceScanner):
         self.token = None
 
         self.headers = {
-            'X-Requested-With':
-            'XMLHttpRequest',
-            'Referer':
-            "http://{}/index.html".format(self.host),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Referer': "http://{}/index.html".format(self.host),
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")

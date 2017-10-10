@@ -19,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_IP = '192.168.1.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_IP):
-    cv.string
+    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string
 })
 
 

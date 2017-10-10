@@ -20,23 +20,16 @@ DEFAULT_PORT = 80
 DEFAULT_PATH = "/cgi-bin/json.cgi"
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_PATH, default=DEFAULT_PATH):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES):
-    vol.Schema({
+    vol.Required(CONF_SWITCHES): vol.Schema({
         cv.slug: SWITCH_SCHEMA
     }),
 })

@@ -23,12 +23,9 @@ BASE_API_URL = 'https://rest.clicksend.com/v3'
 HEADERS = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_RECIPIENT):
-    cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_RECIPIENT): cv.string,
 })
 
 

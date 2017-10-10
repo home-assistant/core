@@ -37,14 +37,10 @@ ATTR_FILE_AUTH = 'auth'
 ATTR_FILE_AUTH_DIGEST = 'digest'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_CHANNEL):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_ICON):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_CHANNEL): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_ICON): cv.string,
 })
 
 

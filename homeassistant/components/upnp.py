@@ -42,16 +42,11 @@ UNITS = {
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True):
-            cv.boolean,
-            vol.Optional(CONF_UNITS, default="MBytes"):
-            vol.In(UNITS),
-            vol.Optional(CONF_LOCAL_IP):
-            ip_address,
-            vol.Optional(CONF_PORTS):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
+            vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
+            vol.Optional(CONF_LOCAL_IP): ip_address,
+            vol.Optional(CONF_PORTS): vol.Schema({
                 vol.Any(CONF_HASS, cv.positive_int): cv.positive_int
             })
         }),

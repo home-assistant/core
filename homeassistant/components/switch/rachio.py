@@ -21,10 +21,9 @@ MIN_UPDATE_INTERVAL = timedelta(seconds=30)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN):
-    cv.string,
-    vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS):
-    cv.positive_int
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS): cv.
+    positive_int
 })
 
 

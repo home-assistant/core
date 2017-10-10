@@ -47,17 +47,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL):
-    cv.string,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM):
-    vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_CATEGORIES, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_URL): cv.string,
+    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_CATEGORIES, default=[]): vol.All(cv.ensure_list,
+                                                       [cv.string]),
     vol.Optional(
-        CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT):
-    cv.string,
+        CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT_OF_MEASUREMENT): cv.
+    string,
 })
 
 
@@ -196,13 +193,11 @@ class GeoRssServiceData(object):
                 distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
                     event = {
-                        ATTR_CATEGORY:
-                        None
+                        ATTR_CATEGORY: None
                         if not hasattr(entry, 'category') else entry.category,
-                        ATTR_TITLE:
-                        None if not hasattr(entry, 'title') else entry.title,
-                        ATTR_DISTANCE:
-                        distance
+                        ATTR_TITLE: None
+                        if not hasattr(entry, 'title') else entry.title,
+                        ATTR_DISTANCE: distance
                     }
                     events.append(event)
         _LOGGER.debug("%s events found nearby", len(events))

@@ -20,10 +20,10 @@ DEPENDENCIES = ['raincloud']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)):
-    vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-    vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
-    vol.All(vol.In(ALLOWED_WATERING_TIME)),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)): vol.All(
+        cv.ensure_list, [vol.In(SWITCHES)]),
+    vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME): vol.All(
+        vol.In(ALLOWED_WATERING_TIME)),
 })
 
 

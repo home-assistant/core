@@ -61,12 +61,10 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CACHE, default=DEFAULT_CACHE):
-    cv.boolean,
-    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR):
-    cv.string,
-    vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
-    vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
+    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
+    vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
+        vol.Coerce(int), vol.Range(min=60, max=57600)),
 })
 
 SCHEMA_SERVICE_SAY = vol.Schema({

@@ -36,12 +36,9 @@ MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
 MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_API_SECRET):
-    cv.string,
-    vol.Optional(CONF_SENSOR_ID):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_API_SECRET): cv.string,
+    vol.Optional(CONF_SENSOR_ID): cv.string,
 })
 
 

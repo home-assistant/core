@@ -37,16 +37,14 @@ CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 OWNTRACKS_TOPIC = 'owntracks/#'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY):
-    vol.Coerce(float),
-    vol.Optional(CONF_WAYPOINT_IMPORT, default=True):
-    cv.boolean,
-    vol.Optional(CONF_WAYPOINT_WHITELIST):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SECRET):
-    vol.Any(vol.Schema({
-        vol.Optional(cv.string): cv.string
-    }), cv.string)
+    vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
+    vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list,
+                                                   [cv.string]),
+    vol.Optional(CONF_SECRET): vol.Any(
+        vol.Schema({
+            vol.Optional(cv.string): cv.string
+        }), cv.string)
 })
 
 

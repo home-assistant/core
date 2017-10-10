@@ -47,31 +47,23 @@ SET_VOLUME_SCHEMA = vol.Schema({
 })
 
 SET_SIREN_TONE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_TONE):
-    vol.In(TONES)
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TONE): vol.In(TONES)
 })
 
 SET_CHIME_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_TONE):
-    vol.In(CHIME_TONES)
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TONE): vol.In(CHIME_TONES)
 })
 
 SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_AUTO_SHUTOFF):
-    vol.In(AUTO_SHUTOFF_TIMES)
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)
 })
 
 SET_STROBE_ENABLED_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_ENABLED):
-    cv.boolean
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENABLED): cv.boolean
 })
 
 

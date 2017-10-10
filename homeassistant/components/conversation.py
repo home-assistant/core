@@ -34,10 +34,8 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional('intents'):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional('intents'): vol.Schema({
                 cv.string: vol.All(cv.ensure_list, [cv.string])
             })
         })

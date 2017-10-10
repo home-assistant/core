@@ -29,21 +29,14 @@ ZM = {}
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_HOST):
-            cv.string,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-            cv.boolean,
-            vol.Optional(CONF_PATH, default=DEFAULT_PATH):
-            cv.string,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             # This should match PATH_ZMS in ZoneMinder settings.
-            vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS):
-            cv.string,
-            vol.Optional(CONF_USERNAME):
-            cv.string,
-            vol.Optional(CONF_PASSWORD):
-            cv.string
+            vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
+            vol.Optional(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string
         })
     },
     extra=vol.ALLOW_EXTRA)

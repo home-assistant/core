@@ -21,14 +21,11 @@ DEFAULT_NAME = 'DuneHD'
 CONF_SOURCES = 'sources'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_SOURCES):
-    vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_SOURCES): vol.Schema({
         cv.string: cv.string
     }),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 DUNEHD_PLAYER_SUPPORT = \

@@ -85,10 +85,8 @@ FAN_OSCILLATE_SCHEMA = vol.Schema({
 FAN_TOGGLE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 FAN_SET_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_DIRECTION):
-    cv.string
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
 SERVICE_TO_METHOD = {

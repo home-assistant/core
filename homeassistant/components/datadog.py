@@ -26,16 +26,12 @@ DOMAIN = 'datadog'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_HOST, default=DEFAULT_HOST):
-            cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
-            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX):
-            cv.string,
-            vol.Optional(CONF_RATE, default=DEFAULT_RATE):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+            vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
+                vol.Coerce(int), vol.Range(min=1)),
         }),
     },
     extra=vol.ALLOW_EXTRA)

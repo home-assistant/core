@@ -58,12 +58,11 @@ ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_RC_VELOCITY):
-    vol.All(vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)),
-    vol.Optional(ATTR_RC_ROTATION):
-    vol.All(vol.Coerce(int), vol.Clamp(min=-179, max=179)),
-    vol.Optional(ATTR_RC_DURATION):
-    cv.positive_int,
+    vol.Optional(ATTR_RC_VELOCITY): vol.All(
+        vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)),
+    vol.Optional(ATTR_RC_ROTATION): vol.All(
+        vol.Coerce(int), vol.Clamp(min=-179, max=179)),
+    vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 
 SERVICE_TO_METHOD = {
@@ -213,28 +212,25 @@ class MiroboVacuum(VacuumDevice):
         attrs = {}
         if self.vacuum_state is not None:
             attrs.update({
-                ATTR_DO_NOT_DISTURB:
-                STATE_ON if self.vacuum_state.dnd else STATE_OFF,
+                ATTR_DO_NOT_DISTURB: STATE_ON
+                if self.vacuum_state.dnd else STATE_OFF,
                 # Not working --> 'Cleaning mode':
                 #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                ATTR_CLEANING_TIME:
-                int(self.vacuum_state.clean_time.total_seconds() / 60),
-                ATTR_CLEANED_AREA:
-                int(self.vacuum_state.clean_area),
-                ATTR_CLEANING_COUNT:
-                int(self.clean_history.count),
-                ATTR_CLEANED_TOTAL_AREA:
-                int(self.clean_history.total_area),
-                ATTR_CLEANING_TOTAL_TIME:
-                int(self.clean_history.total_duration.total_seconds() / 60),
-                ATTR_MAIN_BRUSH_LEFT:
-                int(self.consumable_state.main_brush_left.total_seconds() /
+                ATTR_CLEANING_TIME: int(
+                    self.vacuum_state.clean_time.total_seconds() / 60),
+                ATTR_CLEANED_AREA: int(self.vacuum_state.clean_area),
+                ATTR_CLEANING_COUNT: int(self.clean_history.count),
+                ATTR_CLEANED_TOTAL_AREA: int(self.clean_history.total_area),
+                ATTR_CLEANING_TOTAL_TIME: int(
+                    self.clean_history.total_duration.total_seconds() / 60),
+                ATTR_MAIN_BRUSH_LEFT: int(
+                    self.consumable_state.main_brush_left.total_seconds() /
                     3600),
-                ATTR_SIDE_BRUSH_LEFT:
-                int(self.consumable_state.side_brush_left.total_seconds() /
+                ATTR_SIDE_BRUSH_LEFT: int(
+                    self.consumable_state.side_brush_left.total_seconds() /
                     3600),
-                ATTR_FILTER_LEFT:
-                int(self.consumable_state.filter_left.total_seconds() / 3600)
+                ATTR_FILTER_LEFT: int(
+                    self.consumable_state.filter_left.total_seconds() / 3600)
             })
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error

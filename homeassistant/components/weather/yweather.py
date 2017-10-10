@@ -49,10 +49,8 @@ CONDITION_CLASSES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -157,14 +155,11 @@ class YahooWeatherWeather(WeatherEntity):
         """Return the forecast array."""
         try:
             return [{
-                ATTR_FORECAST_TIME:
-                v['date'],
-                ATTR_FORECAST_TEMP:
-                int(v['high']),
-                ATTR_FORECAST_TEMP_LOW:
-                int(v['low']),
-                ATTR_FORECAST_CONDITION:
-                self.hass.data[DATA_CONDITION][int(v['code'])]
+                ATTR_FORECAST_TIME: v['date'],
+                ATTR_FORECAST_TEMP: int(v['high']),
+                ATTR_FORECAST_TEMP_LOW: int(v['low']),
+                ATTR_FORECAST_CONDITION: self.hass.data[DATA_CONDITION][int(
+                    v['code'])]
             } for v in self._data.yahoo.Forecast]
         except (ValueError, IndexError):
             return STATE_UNKNOWN

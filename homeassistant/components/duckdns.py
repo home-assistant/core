@@ -20,8 +20,7 @@ ATTR_TXT = 'txt'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_DOMAIN): cv.string,
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
         })
@@ -29,8 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 SERVICE_TXT_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TXT):
-    vol.Any(None, cv.string)
+    vol.Required(ATTR_TXT): vol.Any(None, cv.string)
 })
 
 

@@ -56,18 +56,13 @@ DEFAULT_FORECAST = 0
 DEFAULT_NAME = 'yr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ELEVATION):
-    vol.Coerce(int),
-    vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST):
-    vol.Coerce(int),
-    vol.Optional(CONF_LATITUDE):
-    cv.latitude,
-    vol.Optional(CONF_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol']):
-    vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_ELEVATION): vol.Coerce(int),
+    vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol']): vol.All(
+        cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

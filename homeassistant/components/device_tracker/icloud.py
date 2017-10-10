@@ -61,21 +61,15 @@ DEVICESTATUSCODES = {
 }
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ACCOUNTNAME):
-    vol.All(cv.ensure_list, [cv.slugify]),
-    vol.Optional(ATTR_DEVICENAME):
-    cv.slugify,
-    vol.Optional(ATTR_INTERVAL):
-    cv.positive_int,
+    vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
+    vol.Optional(ATTR_DEVICENAME): cv.slugify,
+    vol.Optional(ATTR_INTERVAL): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(ATTR_ACCOUNTNAME):
-    cv.slugify,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
 })
 
 

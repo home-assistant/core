@@ -31,14 +31,10 @@ CONF_DEVICE_CACHE = 'harmony_device_cache'
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(ATTR_ACTIVITY, default=None):
-    cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
 
 HARMONY_SYNC_SCHEMA = vol.Schema({

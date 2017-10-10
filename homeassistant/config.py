@@ -118,46 +118,33 @@ http_password: welcome
 """
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug:
-    vol.Schema(  # Package names are slugs
+    cv.slug: vol.Schema(  # Package names are slugs
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
 })
 
 CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(CONF_CUSTOMIZE, default={}):
-    vol.Schema({
+    vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema({
         cv.entity_id: dict
     }),
-    vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
-    vol.Schema({
+    vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}): vol.Schema({
         cv.string: dict
     }),
-    vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-    vol.Schema({
+    vol.Optional(CONF_CUSTOMIZE_GLOB, default={}): vol.Schema({
         cv.string: OrderedDict
     }),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
-    CONF_NAME:
-    vol.Coerce(str),
-    CONF_LATITUDE:
-    cv.latitude,
-    CONF_LONGITUDE:
-    cv.longitude,
-    CONF_ELEVATION:
-    vol.Coerce(int),
-    vol.Optional(CONF_TEMPERATURE_UNIT):
-    cv.temperature_unit,
-    CONF_UNIT_SYSTEM:
-    cv.unit_system,
-    CONF_TIME_ZONE:
-    cv.time_zone,
-    vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
-    # pylint: disable=no-value-for-parameter
+    CONF_NAME: vol.Coerce(str),
+    CONF_LATITUDE: cv.latitude,
+    CONF_LONGITUDE: cv.longitude,
+    CONF_ELEVATION: vol.Coerce(int),
+    vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+    CONF_UNIT_SYSTEM: cv.unit_system,
+    CONF_TIME_ZONE: cv.time_zone,
+    vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):  # pylint: disable=no-value-for-parameter
     vol.All(cv.ensure_list, [vol.IsDir()]),
-    vol.Optional(CONF_PACKAGES, default={}):
-    PACKAGES_CONFIG_SCHEMA,
+    vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
 

@@ -73,8 +73,9 @@ SENSOR_TYPES = {
     'battery.charge.low': ['Low Battery Setpoint', '%', 'mdi:gauge'],
     'battery.charge.restart': ['Minimum Battery to Start', '%', 'mdi:gauge'],
     'battery.charge.warning': ['Warning Battery Setpoint', '%', 'mdi:gauge'],
-    'battery.charger.status':
-    ['Charging Status', '', 'mdi:information-outline'],
+    'battery.charger.status': [
+        'Charging Status', '', 'mdi:information-outline'
+    ],
     'battery.voltage': ['Battery Voltage', 'V', 'mdi:flash'],
     'battery.voltage.nominal': ['Nominal Battery Voltage', 'V', 'mdi:flash'],
     'battery.voltage.low': ['Low Battery Voltage', 'V', 'mdi:flash'],
@@ -82,12 +83,14 @@ SENSOR_TYPES = {
     'battery.capacity': ['Battery Capacity', 'Ah', 'mdi:flash'],
     'battery.current': ['Battery Current', 'A', 'mdi:flash'],
     'battery.current.total': ['Total Battery Current', 'A', 'mdi:flash'],
-    'battery.temperature':
-    ['Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'battery.temperature': [
+        'Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'
+    ],
     'battery.runtime': ['Battery Runtime', 's', 'mdi:timer'],
     'battery.runtime.low': ['Low Battery Runtime', 's', 'mdi:timer'],
-    'battery.runtime.restart':
-    ['Minimum Battery Runtime to Start', 's', 'mdi:timer'],
+    'battery.runtime.restart': [
+        'Minimum Battery Runtime to Start', 's', 'mdi:timer'
+    ],
     'battery.alarm.threshold': [
         'Battery Alarm Threshold', '', 'mdi:information-outline'
     ],
@@ -127,20 +130,14 @@ STATE_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_ALIAS, default=None):
-    cv.string,
-    vol.Optional(CONF_USERNAME, default=None):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=None):
-    cv.string,
-    vol.Required(CONF_RESOURCES, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_ALIAS, default=None): cv.string,
+    vol.Optional(CONF_USERNAME, default=None): cv.string,
+    vol.Optional(CONF_PASSWORD, default=None): cv.string,
+    vol.Required(CONF_RESOURCES, default=[]): vol.All(cv.ensure_list,
+                                                      [vol.In(SENSOR_TYPES)]),
 })
 
 

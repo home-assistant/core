@@ -26,14 +26,10 @@ NOTIFICATION_ID = 'simplisafe_notification'
 NOTIFICATION_TITLE = 'SimpliSafe Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_CODE):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CODE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

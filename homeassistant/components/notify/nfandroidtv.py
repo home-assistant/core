@@ -69,20 +69,15 @@ COLORS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP):
-    cv.string,
-    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION):
-    vol.Coerce(int),
-    vol.Optional(CONF_POSITION, default=DEFAULT_POSITION):
-    vol.In(POSITIONS.keys()),
-    vol.Optional(CONF_TRANSPARENCY, default=DEFAULT_TRANSPARENCY):
-    vol.In(TRANSPARENCIES.keys()),
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
-    vol.In(COLORS.keys()),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    vol.Coerce(int),
-    vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT):
-    cv.boolean,
+    vol.Required(CONF_IP): cv.string,
+    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Coerce(int),
+    vol.Optional(CONF_POSITION, default=DEFAULT_POSITION): vol.In(
+        POSITIONS.keys()),
+    vol.Optional(CONF_TRANSPARENCY, default=DEFAULT_TRANSPARENCY): vol.In(
+        TRANSPARENCIES.keys()),
+    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): vol.In(COLORS.keys()),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+    vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
 })
 
 

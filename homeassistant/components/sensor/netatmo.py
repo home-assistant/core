@@ -54,15 +54,13 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(cv.string, default=[]): vol.All(cv.ensure_list,
+                                                 [vol.In(SENSOR_TYPES)]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_STATION):
-    cv.string,
-    vol.Optional(CONF_MODULES):
-    MODULE_SCHEMA,
+    vol.Optional(CONF_STATION): cv.string,
+    vol.Optional(CONF_MODULES): MODULE_SCHEMA,
 })
 
 

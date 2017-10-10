@@ -31,16 +31,11 @@ DEFAULT_LANGUAGE = 'en-us'
 DEFAULT_VOICE = 'female'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_RECIPIENT):
-    cv.string,
-    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE):
-    cv.string,
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-    cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
 })
 
 

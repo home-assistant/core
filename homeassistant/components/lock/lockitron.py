@@ -18,10 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'lockitron'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN):
-    cv.string,
-    vol.Required(CONF_ID):
-    cv.string
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_ID): cv.string
 })
 BASE_URL = 'https://api.lockitron.com'
 API_STATE_URL = BASE_URL + '/v2/locks/{}?access_token={}'

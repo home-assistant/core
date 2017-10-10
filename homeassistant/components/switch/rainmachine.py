@@ -33,22 +33,15 @@ PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
         {
-            vol.Required(CONF_PLATFORM):
-            cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL):
-            cv.time_period,
-            vol.Exclusive(CONF_IP_ADDRESS, 'auth'):
-            cv.string,
-            vol.Exclusive(CONF_EMAIL, 'auth'):
-            vol.Email(),  # pylint: disable=no-value-for-parameter
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-            cv.boolean,
-            vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-            cv.positive_int
+            vol.Required(CONF_PLATFORM): cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+            vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
+            vol.Exclusive(CONF_EMAIL, 'auth'): vol.Email(),  # pylint: disable=no-value-for-parameter
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS): cv.
+            positive_int
         }),
     extra=vol.ALLOW_EXTRA)
 
@@ -266,10 +259,8 @@ class RainMachineZone(RainMachineEntity):
         super().__init__(client, zone_json, **kwargs)
         self._run_time = zone_run_time
         self._attrs.update({
-            ATTR_CYCLES:
-            self._entity_json.get('noOfCycles'),
-            ATTR_TOTAL_DURATION:
-            self._entity_json.get('userDuration')
+            ATTR_CYCLES: self._entity_json.get('noOfCycles'),
+            ATTR_TOTAL_DURATION: self._entity_json.get('userDuration')
         })
 
     @property

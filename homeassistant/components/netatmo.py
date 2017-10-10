@@ -35,18 +35,13 @@ MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_API_KEY):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Required(CONF_SECRET_KEY):
-            cv.string,
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY):
-            cv.boolean,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_SECRET_KEY): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.
+            boolean,
         })
     },
     extra=vol.ALLOW_EXTRA)

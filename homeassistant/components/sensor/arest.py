@@ -29,25 +29,18 @@ CONF_PINS = 'pins'
 DEFAULT_NAME = 'aREST sensor'
 
 PIN_VARIABLE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PINS, default={}):
-    vol.Schema({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PINS, default={}): vol.Schema({
         cv.string: PIN_VARIABLE_SCHEMA
     }),
-    vol.Optional(CONF_MONITORED_VARIABLES, default={}):
-    vol.Schema({
+    vol.Optional(CONF_MONITORED_VARIABLES, default={}): vol.Schema({
         cv.string: PIN_VARIABLE_SCHEMA
     }),
 })

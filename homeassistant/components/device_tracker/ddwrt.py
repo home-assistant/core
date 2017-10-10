@@ -21,12 +21,9 @@ _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
 })
 
 

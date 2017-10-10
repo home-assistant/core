@@ -148,16 +148,11 @@ class Template(object):
         location_methods = LocationMethods(self.hass)
 
         global_vars = ENV.make_globals({
-            'closest':
-            location_methods.closest,
-            'distance':
-            location_methods.distance,
-            'is_state':
-            self.hass.states.is_state,
-            'is_state_attr':
-            self.hass.states.is_state_attr,
-            'states':
-            AllStates(self.hass),
+            'closest': location_methods.closest,
+            'distance': location_methods.distance,
+            'is_state': self.hass.states.is_state,
+            'is_state_attr': self.hass.states.is_state_attr,
+            'states': AllStates(self.hass),
         })
 
         self._compiled = jinja2.Template.from_code(ENV, self._compiled_code,

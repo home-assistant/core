@@ -24,8 +24,7 @@ SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 DEFAULT_NAME = 'Piglow'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

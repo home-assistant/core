@@ -25,12 +25,10 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_NAME):
-            cv.string,
-            vol.Required(CONF_WHITELIST, default=[]):
-            vol.All(cv.ensure_list, [cv.entity_id]),
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_WHITELIST, default=[]): vol.All(
+                cv.ensure_list, [cv.entity_id]),
         }),
     },
     extra=vol.ALLOW_EXTRA)

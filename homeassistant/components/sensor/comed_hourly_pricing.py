@@ -39,12 +39,9 @@ SENSOR_TYPES = {
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSOR_TYPE):
-    TYPES_SCHEMA,
-    vol.Optional(CONF_OFFSET, default=0.0):
-    vol.Coerce(float),
-    vol.Optional(CONF_NAME):
-    cv.string
+    vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+    vol.Optional(CONF_OFFSET, default=0.0): vol.Coerce(float),
+    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

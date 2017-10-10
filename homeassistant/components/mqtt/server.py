@@ -17,25 +17,21 @@ REQUIREMENTS = ['hbmqtt==0.8']
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
-HBMQTT_CONFIG_SCHEMA = vol.Any(None,
-                               vol.Schema(
-                                   {
-                                       vol.Optional('auth'):
-                                       vol.Schema(
-                                           {
-                                               vol.Optional('password-file'):
-                                               cv.isfile,
-                                           },
-                                           extra=vol.ALLOW_EXTRA),
-                                       vol.Optional('listeners'):
-                                       vol.Schema({
-                                           vol.Required('default'):
-                                           vol.Schema(dict),
-                                           str:
-                                           vol.Schema(dict)
-                                       })
-                                   },
-                                   extra=vol.ALLOW_EXTRA))
+HBMQTT_CONFIG_SCHEMA = vol.Any(
+    None,
+    vol.Schema(
+        {
+            vol.Optional('auth'): vol.Schema(
+                {
+                    vol.Optional('password-file'): cv.isfile,
+                },
+                extra=vol.ALLOW_EXTRA),
+            vol.Optional('listeners'): vol.Schema({
+                vol.Required('default'): vol.Schema(dict),
+                str: vol.Schema(dict)
+            })
+        },
+        extra=vol.ALLOW_EXTRA))
 
 
 @asyncio.coroutine

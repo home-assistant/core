@@ -22,8 +22,7 @@ REQUIREMENTS = ['pybluez==0.22']
 BT_PREFIX = 'BT_'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TRACK_NEW):
-    cv.boolean
+    vol.Optional(CONF_TRACK_NEW): cv.boolean
 })
 
 

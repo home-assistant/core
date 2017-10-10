@@ -26,16 +26,11 @@ CONF_BASEOID = 'baseoid'
 DEFAULT_COMMUNITY = 'public'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY):
-    cv.string,
-    vol.Inclusive(CONF_AUTHKEY, 'keys'):
-    cv.string,
-    vol.Inclusive(CONF_PRIVKEY, 'keys'):
-    cv.string,
-    vol.Required(CONF_BASEOID):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Inclusive(CONF_AUTHKEY, 'keys'): cv.string,
+    vol.Inclusive(CONF_PRIVKEY, 'keys'): cv.string,
+    vol.Required(CONF_BASEOID): cv.string
 })
 
 

@@ -43,14 +43,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]):
-    vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_ENTITY_IDS):
-    cv.entity_ids,
-    vol.Optional(CONF_ROUND_DIGITS, default=2):
-    vol.Coerce(int),
+    vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
+        cv.string, vol.In(SENSOR_TYPES.values())),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+    vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
 })
 
 

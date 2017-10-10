@@ -19,10 +19,8 @@ from homeassistant.components.sensor.bom import \
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_STATION):
-    validate_station,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_STATION): validate_station,
 })
 
 

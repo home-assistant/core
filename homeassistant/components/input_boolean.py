@@ -35,10 +35,8 @@ SERVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.Any({
+        DOMAIN: vol.Schema({
+            cv.slug: vol.Any({
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_INITIAL): cv.boolean,
                 vol.Optional(CONF_ICON): cv.icon,

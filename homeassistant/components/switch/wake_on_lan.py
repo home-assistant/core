@@ -27,16 +27,11 @@ DEFAULT_NAME = 'Wake on LAN'
 DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_BROADCAST_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_OFF_ACTION):
-    cv.SCRIPT_SCHEMA,
+    vol.Required(CONF_MAC_ADDRESS): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 

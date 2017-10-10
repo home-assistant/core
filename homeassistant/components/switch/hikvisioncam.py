@@ -24,16 +24,11 @@ DEFAULT_PORT = 80
 DEFAULT_USERNAME = 'admin'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_PORT):
-    cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
 })
 
 

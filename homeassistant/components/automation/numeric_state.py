@@ -19,18 +19,12 @@ from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema({
-        vol.Required(CONF_PLATFORM):
-        'numeric_state',
-        vol.Required(CONF_ENTITY_ID):
-        cv.entity_ids,
-        vol.Optional(CONF_BELOW):
-        vol.Coerce(float),
-        vol.Optional(CONF_ABOVE):
-        vol.Coerce(float),
-        vol.Optional(CONF_VALUE_TEMPLATE):
-        cv.template,
-        vol.Optional(CONF_FOR):
-        vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Required(CONF_PLATFORM): 'numeric_state',
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_BELOW): vol.Coerce(float),
+        vol.Optional(CONF_ABOVE): vol.Coerce(float),
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
     }), cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
 
 _LOGGER = logging.getLogger(__name__)

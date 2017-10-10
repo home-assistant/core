@@ -38,20 +38,17 @@ DEFAULT_REGION = 'eu'
 REGIONS = ['eu', 'us']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE):
-    vol.Coerce(float),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE): vol.
+    Coerce(float),
     vol.Optional(
-        CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE):
-    vol.Coerce(float),
+        CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.
+    Coerce(float),
     vol.Optional(
-        CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE):
-    vol.Coerce(float),
-    vol.Optional(CONF_REGION, default=DEFAULT_REGION):
-    vol.In(REGIONS),
+        CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.
+    Coerce(float),
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
 })
 
 

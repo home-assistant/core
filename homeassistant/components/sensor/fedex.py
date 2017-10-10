@@ -33,14 +33,11 @@ ICON = 'mdi:package-variant-closed'
 STATUS_DELIVERED = 'delivered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
-    vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)): vol.
+    All(cv.time_period, cv.positive_timedelta),
 })
 
 

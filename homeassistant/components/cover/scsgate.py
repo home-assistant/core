@@ -18,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['scsgate']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-    vol.Schema({
+    vol.Required(CONF_DEVICES): vol.Schema({
         cv.slug: scsgate.SCSGATE_SCHEMA
     }),
 })

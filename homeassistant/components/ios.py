@@ -102,24 +102,19 @@ ATTR_DEVICES = 'devices'
 
 ACTION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER):
-        vol.Upper,
-        vol.Required(CONF_PUSH_ACTIONS_TITLE):
-        cv.string,
+        vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
+        vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
         vol.Optional(
-            CONF_PUSH_ACTIONS_ACTIVATION_MODE, default=ATTR_BACKGROUND):
-        vol.In(ACTIVATION_MODES),
-        vol.Optional(CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED, default=False):
-        cv.boolean,
-        vol.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False):
-        cv.boolean,
+            CONF_PUSH_ACTIONS_ACTIVATION_MODE, default=ATTR_BACKGROUND): vol.
+        In(ACTIVATION_MODES),
+        vol.Optional(CONF_PUSH_ACTIONS_AUTHENTICATION_REQUIRED, default=False): cv.
+        boolean,
+        vol.Optional(CONF_PUSH_ACTIONS_DESTRUCTIVE, default=False): cv.boolean,
         vol.Optional(
-            CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR):
-        vol.In(BEHAVIORS),
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE):
-        cv.string,
-        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER):
-        cv.string,
+            CONF_PUSH_ACTIONS_BEHAVIOR, default=ATTR_DEFAULT_BEHAVIOR): vol.In(
+            BEHAVIORS),
+        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
+        vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
     },
     extra=vol.ALLOW_EXTRA)
 
@@ -129,14 +124,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             CONF_PUSH: {
-                CONF_PUSH_CATEGORIES:
-                vol.All(cv.ensure_list, [{
-                    vol.Required(CONF_PUSH_CATEGORIES_NAME):
-                    cv.string,
-                    vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER):
-                    vol.Lower,
-                    vol.Required(CONF_PUSH_CATEGORIES_ACTIONS):
-                    ACTION_SCHEMA_LIST
+                CONF_PUSH_CATEGORIES: vol.All(cv.ensure_list, [{
+                    vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+                    vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+                    vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): ACTION_SCHEMA_LIST
                 }])
             }
         }
@@ -178,22 +169,15 @@ IDENTIFY_BATTERY_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_BATTERY_SCHEMA)
 
 IDENTIFY_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE):
-        IDENTIFY_DEVICE_SCHEMA_CONTAINER,
-        vol.Required(ATTR_BATTERY):
-        IDENTIFY_BATTERY_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PUSH_TOKEN):
-        cv.string,
-        vol.Required(ATTR_APP):
-        IDENTIFY_APP_SCHEMA_CONTAINER,
-        vol.Required(ATTR_PERMISSIONS):
-        vol.All(cv.ensure_list, [vol.In(PERMISSIONS)]),
-        vol.Required(ATTR_PUSH_ID):
-        cv.string,
-        vol.Required(ATTR_DEVICE_ID):
-        cv.string,
-        vol.Optional(ATTR_PUSH_SOUNDS):
-        list
+        vol.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
+        vol.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
+        vol.Required(ATTR_PUSH_TOKEN): cv.string,
+        vol.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
+        vol.Required(ATTR_PERMISSIONS): vol.All(cv.ensure_list,
+                                                [vol.In(PERMISSIONS)]),
+        vol.Required(ATTR_PUSH_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_PUSH_SOUNDS): list
     },
     extra=vol.ALLOW_EXTRA)
 

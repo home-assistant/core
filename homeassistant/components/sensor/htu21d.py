@@ -33,10 +33,8 @@ SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS):
-    vol.Coerce(int),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
 })
 
 

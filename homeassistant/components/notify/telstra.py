@@ -21,12 +21,9 @@ CONF_CONSUMER_SECRET = 'consumer_secret'
 CONF_PHONE_NUMBER = 'phone_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CONSUMER_KEY):
-    cv.string,
-    vol.Required(CONF_CONSUMER_SECRET):
-    cv.string,
-    vol.Required(CONF_PHONE_NUMBER):
-    cv.string,
+    vol.Required(CONF_CONSUMER_KEY): cv.string,
+    vol.Required(CONF_CONSUMER_SECRET): cv.string,
+    vol.Required(CONF_PHONE_NUMBER): cv.string,
 })
 
 

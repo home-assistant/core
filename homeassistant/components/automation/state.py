@@ -19,17 +19,12 @@ CONF_TO = 'to'
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema({
-        vol.Required(CONF_PLATFORM):
-        'state',
-        vol.Required(CONF_ENTITY_ID):
-        cv.entity_ids,
+        vol.Required(CONF_PLATFORM): 'state',
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
         # These are str on purpose. Want to catch YAML conversions
-        vol.Optional(CONF_FROM):
-        str,
-        vol.Optional(CONF_TO):
-        str,
-        vol.Optional(CONF_FOR):
-        vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_FROM): str,
+        vol.Optional(CONF_TO): str,
+        vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
     }),
     cv.key_dependency(CONF_FOR, CONF_TO))
 

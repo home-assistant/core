@@ -31,10 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: DEVICE_SCHEMA
     },
-    vol.Optional(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
 })
 
 

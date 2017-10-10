@@ -19,12 +19,9 @@ _RESOURCE = 'https://llamalab.com/automate/cloud/message'
 CONF_TO = 'to'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_TO):
-    cv.string,
-    vol.Optional(CONF_DEVICE):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_TO): cv.string,
+    vol.Optional(CONF_DEVICE): cv.string,
 })
 
 

@@ -38,8 +38,7 @@ ICON = 'mdi:currency-usd'
 SCAN_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY):
-    cv.string,
+    vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
 })
 
 

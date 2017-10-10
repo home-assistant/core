@@ -47,18 +47,14 @@ DEFAULT_EMOTION = 'neutral'
 DEFAULT_SPEED = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC):
-    vol.In(SUPPORT_CODECS),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-    vol.In(SUPPORT_VOICES),
-    vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION):
-    vol.In(SUPPORTED_EMOTION),
-    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-    vol.Range(min=MIN_SPEED, max=MAX_SPEED)
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+    vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): vol.In(
+        SUPPORTED_EMOTION),
+    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): vol.Range(
+        min=MIN_SPEED, max=MAX_SPEED)
 })
 
 

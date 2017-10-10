@@ -29,14 +29,10 @@ HTTP_HEADER_APPID = 'x-instapush-appid'
 HTTP_HEADER_APPSECRET = 'x-instapush-appsecret'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_APP_SECRET):
-    cv.string,
-    vol.Required(CONF_EVENT):
-    cv.string,
-    vol.Required(CONF_TRACKER):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_APP_SECRET): cv.string,
+    vol.Required(CONF_EVENT): cv.string,
+    vol.Required(CONF_TRACKER): cv.string,
 })
 
 

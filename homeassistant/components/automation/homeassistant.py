@@ -18,10 +18,8 @@ EVENT_SHUTDOWN = 'shutdown'
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'homeassistant',
-    vol.Required(CONF_EVENT):
-    vol.Any(EVENT_START, EVENT_SHUTDOWN),
+    vol.Required(CONF_PLATFORM): 'homeassistant',
+    vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),
 })
 
 

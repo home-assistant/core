@@ -28,8 +28,8 @@ TUBE_LINES = [
 URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LINE):
-    vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))]),
+    vol.Required(CONF_LINE): vol.All(cv.ensure_list,
+                                     [vol.In(list(TUBE_LINES))]),
 })
 
 

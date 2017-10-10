@@ -26,8 +26,7 @@ RECEIVED_DATA = '{}_data_received'.format(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_ACCOUNT_SID): cv.string,
             vol.Required(CONF_AUTH_TOKEN): cv.string
         }),

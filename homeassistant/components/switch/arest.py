@@ -26,16 +26,12 @@ PIN_FUNCTION_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PINS, default={}):
-    vol.Schema({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PINS, default={}): vol.Schema({
         cv.string: PIN_FUNCTION_SCHEMA
     }),
-    vol.Optional(CONF_FUNCTIONS, default={}):
-    vol.Schema({
+    vol.Optional(CONF_FUNCTIONS, default={}): vol.Schema({
         cv.string: PIN_FUNCTION_SCHEMA
     }),
 })

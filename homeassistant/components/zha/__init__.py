@@ -24,20 +24,15 @@ CONF_DEVICE_CONFIG = 'device_config'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(ha_const.CONF_TYPE):
-    cv.string,
+    vol.Optional(ha_const.CONF_TYPE): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            CONF_USB_PATH:
-            cv.string,
-            CONF_DATABASE:
-            cv.string,
-            vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            CONF_USB_PATH: cv.string,
+            CONF_DATABASE: cv.string,
+            vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema({
                 cv.string: DEVICE_CONFIG_SCHEMA_ENTRY
             }),
         })
@@ -59,10 +54,9 @@ SERVICE_DESCRIPTIONS = {
     },
 }
 SERVICE_SCHEMAS = {
-    SERVICE_PERMIT:
-    vol.Schema({
-        vol.Optional(ATTR_DURATION, default=60):
-        vol.All(vol.Coerce(int), vol.Range(1, 254)),
+    SERVICE_PERMIT: vol.Schema({
+        vol.Optional(ATTR_DURATION, default=60): vol.All(
+            vol.Coerce(int), vol.Range(1, 254)),
     }),
 }
 

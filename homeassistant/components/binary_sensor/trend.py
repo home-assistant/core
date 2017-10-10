@@ -26,21 +26,15 @@ CONF_ATTRIBUTE = 'attribute'
 CONF_INVERT = 'invert'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID):
-    cv.entity_id,
-    vol.Optional(CONF_ATTRIBUTE):
-    cv.string,
-    vol.Optional(ATTR_FRIENDLY_NAME):
-    cv.string,
-    vol.Optional(CONF_INVERT, default=False):
-    cv.boolean,
-    vol.Optional(CONF_DEVICE_CLASS):
-    DEVICE_CLASSES_SCHEMA,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_ATTRIBUTE): cv.string,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_INVERT, default=False): cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS):
-    vol.Schema({
+    vol.Required(CONF_SENSORS): vol.Schema({
         cv.slug: SENSOR_SCHEMA
     }),
 })

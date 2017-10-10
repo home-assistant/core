@@ -35,8 +35,7 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 KNOWN_HOSTS_KEY = 'cast_known_hosts'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST):
-    cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_IGNORE_CEC): [cv.string],
 })
 

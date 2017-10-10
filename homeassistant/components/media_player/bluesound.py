@@ -48,14 +48,10 @@ NODE_RETRY_INITIATION = timedelta(minutes=3)
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOSTS):
-    vol.All(cv.ensure_list, [{
-        vol.Required(CONF_HOST):
-        cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-        cv.port,
-        vol.Optional(CONF_NAME):
-        cv.string,
+    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [{
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_NAME): cv.string,
     }])
 })
 
@@ -362,16 +358,11 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         def _create_capture_item(item):
             self._capture_items.append({
-                'title':
-                item.get('@text', ''),
-                'name':
-                item.get('@text', ''),
-                'type':
-                item.get('@serviceType', 'Capture'),
-                'image':
-                item.get('@image', ''),
-                'url':
-                item.get('@URL', '')
+                'title': item.get('@text', ''),
+                'name': item.get('@text', ''),
+                'type': item.get('@serviceType', 'Capture'),
+                'image': item.get('@image', ''),
+                'url': item.get('@URL', '')
             })
 
         if 'radiotime' in resp and 'item' in resp['radiotime']:

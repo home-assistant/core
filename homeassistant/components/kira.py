@@ -40,27 +40,22 @@ CODE_SCHEMA = vol.Schema({
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=DOMAIN):
-    vol.Exclusive(cv.string, "sensors"),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_NAME, default=DOMAIN): vol.Exclusive(
+        cv.string, "sensors"),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 REMOTE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=DOMAIN):
-    vol.Exclusive(cv.string, "remotes"),
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_NAME, default=DOMAIN): vol.Exclusive(
+        cv.string, "remotes"),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Optional(CONF_SENSORS): [SENSOR_SCHEMA],
             vol.Optional(CONF_REMOTES): [REMOTE_SCHEMA]
         })

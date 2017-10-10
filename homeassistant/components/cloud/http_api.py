@@ -203,12 +203,9 @@ class CloudConfirmForgotPasswordView(HomeAssistantView):
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema({
-            vol.Required('confirmation_code'):
-            str,
-            vol.Required('email'):
-            str,
-            vol.Required('new_password'):
-            vol.All(str, vol.Length(min=6))
+            vol.Required('confirmation_code'): str,
+            vol.Required('email'): str,
+            vol.Required('new_password'): vol.All(str, vol.Length(min=6))
         }))
     def post(self, request, data):
         """Handle forgot password confirm request."""

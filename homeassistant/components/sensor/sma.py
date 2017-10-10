@@ -51,18 +51,13 @@ def _check_sensor_schema(conf):
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_HOST):
-            str,
-            vol.Required(CONF_PASSWORD):
-            str,
-            vol.Optional(CONF_GROUP, default=GROUPS[0]):
-            vol.In(GROUPS),
-            vol.Required(CONF_SENSORS):
-            vol.Schema({
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
+            vol.Required(CONF_SENSORS): vol.Schema({
                 cv.slug: cv.ensure_list
             }),
-            vol.Optional(CONF_CUSTOM, default={}):
-            vol.Schema({
+            vol.Optional(CONF_CUSTOM, default={}): vol.Schema({
                 cv.slug: {
                     vol.Required('key'): vol.All(str,
                                                  vol.Length(min=13, max=13)),

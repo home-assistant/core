@@ -31,10 +31,13 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # Sensor types are defined like so: Name, unit, icon
 SENSOR_TYPES = {
-    'down_max_bandwidth':
-    ['Maximum Download Bandwidth', BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
-    'up_max_bandwidth':
-    ['Maximum Upload Bandwidth', BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'],
+    'down_max_bandwidth': [
+        'Maximum Download Bandwidth', BANDWIDTH_MEGABITS_SECONDS,
+        'mdi:download'
+    ],
+    'up_max_bandwidth': [
+        'Maximum Upload Bandwidth', BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'
+    ],
     'current_down_bandwidth': [
         'Currently Used Download Bandwidth', BANDWIDTH_MEGABITS_SECONDS,
         'mdi:download'
@@ -46,10 +49,9 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_MONITORED_VARIABLES): vol.All(cv.ensure_list,
+                                                    [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

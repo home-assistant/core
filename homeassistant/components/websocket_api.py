@@ -62,34 +62,23 @@ AUTH_MESSAGE_SCHEMA = vol.Schema({
 })
 
 SUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'):
-    cv.positive_int,
-    vol.Required('type'):
-    TYPE_SUBSCRIBE_EVENTS,
-    vol.Optional('event_type', default=MATCH_ALL):
-    str,
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
+    vol.Optional('event_type', default=MATCH_ALL): str,
 })
 
 UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'):
-    cv.positive_int,
-    vol.Required('type'):
-    TYPE_UNSUBSCRIBE_EVENTS,
-    vol.Required('subscription'):
-    cv.positive_int,
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
+    vol.Required('subscription'): cv.positive_int,
 })
 
 CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'):
-    cv.positive_int,
-    vol.Required('type'):
-    TYPE_CALL_SERVICE,
-    vol.Required('domain'):
-    str,
-    vol.Required('service'):
-    str,
-    vol.Optional('service_data', default=None):
-    dict
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_CALL_SERVICE,
+    vol.Required('domain'): str,
+    vol.Required('service'): str,
+    vol.Optional('service_data', default=None): dict
 })
 
 GET_STATES_MESSAGE_SCHEMA = vol.Schema({
@@ -98,10 +87,8 @@ GET_STATES_MESSAGE_SCHEMA = vol.Schema({
 })
 
 GET_SERVICES_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'):
-    cv.positive_int,
-    vol.Required('type'):
-    TYPE_GET_SERVICES,
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_GET_SERVICES,
 })
 
 GET_CONFIG_MESSAGE_SCHEMA = vol.Schema({
@@ -121,12 +108,11 @@ PING_MESSAGE_SCHEMA = vol.Schema({
 
 BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema(
     {
-        vol.Required('id'):
-        cv.positive_int,
-        vol.Required('type'):
-        vol.Any(TYPE_CALL_SERVICE, TYPE_SUBSCRIBE_EVENTS,
-                TYPE_UNSUBSCRIBE_EVENTS, TYPE_GET_STATES, TYPE_GET_SERVICES,
-                TYPE_GET_CONFIG, TYPE_GET_PANELS, TYPE_PING)
+        vol.Required('id'): cv.positive_int,
+        vol.Required('type'): vol.Any(TYPE_CALL_SERVICE, TYPE_SUBSCRIBE_EVENTS,
+                                      TYPE_UNSUBSCRIBE_EVENTS, TYPE_GET_STATES,
+                                      TYPE_GET_SERVICES, TYPE_GET_CONFIG,
+                                      TYPE_GET_PANELS, TYPE_PING)
     },
     extra=vol.ALLOW_EXTRA)
 

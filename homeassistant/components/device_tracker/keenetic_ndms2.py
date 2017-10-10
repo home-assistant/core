@@ -25,14 +25,10 @@ CONF_INTERFACE = 'interface'
 DEFAULT_INTERFACE = 'Home'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
 })
 
 

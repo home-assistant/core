@@ -28,20 +28,13 @@ PANEL_DIR = 'panels'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.All(cv.ensure_list, [{
-            vol.Required(CONF_COMPONENT_NAME):
-            cv.slug,
-            vol.Optional(CONF_SIDEBAR_TITLE):
-            cv.string,
-            vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON):
-            cv.icon,
-            vol.Optional(CONF_URL_PATH):
-            cv.string,
-            vol.Optional(CONF_CONFIG):
-            cv.match_all,
-            vol.Optional(CONF_WEBCOMPONENT_PATH):
-            cv.isfile,
+        DOMAIN: vol.All(cv.ensure_list, [{
+            vol.Required(CONF_COMPONENT_NAME): cv.slug,
+            vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
+            vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
+            vol.Optional(CONF_URL_PATH): cv.string,
+            vol.Optional(CONF_CONFIG): cv.match_all,
+            vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         }])
     },
     extra=vol.ALLOW_EXTRA)

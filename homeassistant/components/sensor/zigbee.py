@@ -25,10 +25,8 @@ DEPENDENCIES = ['zigbee']
 TYPES = ['analog', 'temperature']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE):
-    vol.In(TYPES),
-    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS):
-    vol.Coerce(float),
+    vol.Required(CONF_TYPE): vol.In(TYPES),
+    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS): vol.Coerce(float),
 })
 
 

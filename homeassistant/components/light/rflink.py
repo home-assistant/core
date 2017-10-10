@@ -31,40 +31,30 @@ TYPE_HYBRID = 'hybrid'
 TYPE_TOGGLE = 'toggle'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    DOMAIN,
-    vol.Optional(CONF_IGNORE_DEVICES):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True):
-    cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}):
-    vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
-            vol.Optional(CONF_NAME):
-            cv.string,
-            vol.Optional(CONF_TYPE):
-            vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE),
-            vol.Optional(CONF_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT):
-            cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS):
-            vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True):
-            cv.boolean,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
+                                             TYPE_HYBRID, TYPE_TOGGLE),
+            vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FIRE_EVENT): cv.boolean,
+            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+            vol.Optional(CONF_GROUP, default=True): cv.boolean,
             # deprecated config options
-            vol.Optional(CONF_ALIASSES):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASSES):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASSES):
-            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_ALIASSES): vol.All(cv.ensure_list,
+                                                       [cv.string]),
+            vol.Optional(CONF_NOGROUP_ALIASSES): vol.All(
+                cv.ensure_list, [cv.string]),
         },
     }),
 })

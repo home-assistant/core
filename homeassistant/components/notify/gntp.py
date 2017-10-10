@@ -30,16 +30,11 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 23053
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_APP_NAME, default=DEFAULT_APP_NAME):
-    cv.string,
-    vol.Optional(CONF_APP_ICON):
-    vol.Url,
-    vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_APP_NAME, default=DEFAULT_APP_NAME): cv.string,
+    vol.Optional(CONF_APP_ICON): vol.Url,
+    vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 

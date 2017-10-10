@@ -32,24 +32,15 @@ CONF_Y_POS = 'y_position'
 DEFAULT_BINARY = 'ssocr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_EXTRA_ARGUMENTS, default=''):
-    cv.string,
-    vol.Optional(CONF_DIGITS, default=-1):
-    cv.positive_int,
-    vol.Optional(CONF_HEIGHT, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY):
-    cv.string,
-    vol.Optional(CONF_THRESHOLD, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_ROTATE, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_WIDTH, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_X_POS, default=0):
-    cv.string,
-    vol.Optional(CONF_Y_POS, default=0):
-    cv.positive_int,
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
+    vol.Optional(CONF_DIGITS, default=-1): cv.positive_int,
+    vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
+    vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
+    vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
+    vol.Optional(CONF_ROTATE, default=0): cv.positive_int,
+    vol.Optional(CONF_WIDTH, default=0): cv.positive_int,
+    vol.Optional(CONF_X_POS, default=0): cv.string,
+    vol.Optional(CONF_Y_POS, default=0): cv.positive_int,
 })
 
 

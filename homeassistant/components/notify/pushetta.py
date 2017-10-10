@@ -20,12 +20,9 @@ CONF_CHANNEL_NAME = 'channel_name'
 CONF_SEND_TEST_MSG = 'send_test_msg'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_CHANNEL_NAME):
-    cv.string,
-    vol.Optional(CONF_SEND_TEST_MSG, default=False):
-    cv.boolean,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_CHANNEL_NAME): cv.string,
+    vol.Optional(CONF_SEND_TEST_MSG, default=False): cv.boolean,
 })
 
 

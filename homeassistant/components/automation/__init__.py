@@ -81,20 +81,13 @@ _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.Schema({
     # str on purpose
-    CONF_ID:
-    str,
-    CONF_ALIAS:
-    cv.string,
-    vol.Optional(CONF_INITIAL_STATE):
-    cv.boolean,
-    vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY):
-    cv.boolean,
-    vol.Required(CONF_TRIGGER):
-    _TRIGGER_SCHEMA,
-    vol.Optional(CONF_CONDITION):
-    _CONDITION_SCHEMA,
-    vol.Required(CONF_ACTION):
-    cv.SCRIPT_SCHEMA,
+    CONF_ID: str,
+    CONF_ALIAS: cv.string,
+    vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+    vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
+    vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+    vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 SERVICE_SCHEMA = vol.Schema({
@@ -102,10 +95,8 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 TRIGGER_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_VARIABLES, default={}):
-    dict,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_VARIABLES, default={}): dict,
 })
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})

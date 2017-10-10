@@ -40,12 +40,9 @@ SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(LOGGER_DEFAULT):
-            _VALID_LOG_LEVEL,
-            vol.Optional(LOGGER_LOGS):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+            vol.Optional(LOGGER_LOGS): vol.Schema({
                 cv.string: _VALID_LOG_LEVEL
             }),
         }),

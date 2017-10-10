@@ -81,18 +81,13 @@ PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM):
-    cv.string,
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_ALLOWED_CHAT_IDS):
-    vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(ATTR_PARSER, default=PARSER_MD):
-    cv.string,
-    vol.Optional(CONF_PROXY_URL):
-    cv.string,
-    vol.Optional(CONF_PROXY_PARAMS):
-    dict,
+    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(cv.ensure_list,
+                                                 [vol.Coerce(int)]),
+    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+    vol.Optional(CONF_PROXY_URL): cv.string,
+    vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
 BASE_SERVICE_SCHEMA = vol.Schema(
@@ -107,62 +102,46 @@ BASE_SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MESSAGE):
-    cv.template,
-    vol.Optional(ATTR_TITLE):
-    cv.template,
+    vol.Required(ATTR_MESSAGE): cv.template,
+    vol.Optional(ATTR_TITLE): cv.template,
 })
 
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_URL):
-    cv.template,
-    vol.Optional(ATTR_FILE):
-    cv.template,
-    vol.Optional(ATTR_CAPTION):
-    cv.template,
-    vol.Optional(ATTR_USERNAME):
-    cv.string,
-    vol.Optional(ATTR_PASSWORD):
-    cv.string,
-    vol.Optional(ATTR_AUTHENTICATION):
-    cv.string,
+    vol.Optional(ATTR_URL): cv.template,
+    vol.Optional(ATTR_FILE): cv.template,
+    vol.Optional(ATTR_CAPTION): cv.template,
+    vol.Optional(ATTR_USERNAME): cv.string,
+    vol.Optional(ATTR_PASSWORD): cv.string,
+    vol.Optional(ATTR_AUTHENTICATION): cv.string,
 })
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_LONGITUDE):
-    cv.template,
-    vol.Required(ATTR_LATITUDE):
-    cv.template,
+    vol.Required(ATTR_LONGITUDE): cv.template,
+    vol.Required(ATTR_LATITUDE): cv.template,
 })
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
-    vol.Required(ATTR_MESSAGEID):
-    vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-    vol.Required(ATTR_CHAT_ID):
-    vol.Coerce(int),
+    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int,
+                                          vol.All(cv.string, 'last')),
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
 })
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
-        vol.Required(ATTR_MESSAGEID):
-        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-        vol.Required(ATTR_CHAT_ID):
-        vol.Coerce(int),
-        vol.Required(ATTR_CAPTION):
-        cv.template,
-        vol.Optional(ATTR_KEYBOARD_INLINE):
-        cv.ensure_list,
+        vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int,
+                                              vol.All(cv.string, 'last')),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_CAPTION): cv.template,
+        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
     },
     extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
-        vol.Required(ATTR_MESSAGEID):
-        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-        vol.Required(ATTR_CHAT_ID):
-        vol.Coerce(int),
-        vol.Required(ATTR_KEYBOARD_INLINE):
-        cv.ensure_list,
+        vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int,
+                                              vol.All(cv.string, 'last')),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
     },
     extra=vol.ALLOW_EXTRA)
 
@@ -176,10 +155,9 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
     {
-        vol.Required(ATTR_CHAT_ID):
-        vol.Coerce(int),
-        vol.Required(ATTR_MESSAGEID):
-        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int,
+                                              vol.All(cv.string, 'last')),
     },
     extra=vol.ALLOW_EXTRA)
 

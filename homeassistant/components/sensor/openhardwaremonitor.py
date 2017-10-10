@@ -31,10 +31,8 @@ OHM_CHILDREN = 'Children'
 OHM_NAME = 'Text'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=8085):
-    cv.port
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=8085): cv.port
 })
 
 
@@ -91,12 +89,9 @@ class OpenHardwareMonitorDevice(Entity):
             if path_index == len(self.path) - 1:
                 self.value = values[OHM_VALUE].split(' ')[0]
                 _attributes.update({
-                    'name':
-                    values[OHM_NAME],
-                    STATE_MIN_VALUE:
-                    values[OHM_MIN].split(' ')[0],
-                    STATE_MAX_VALUE:
-                    values[OHM_MAX].split(' ')[0]
+                    'name': values[OHM_NAME],
+                    STATE_MIN_VALUE: values[OHM_MIN].split(' ')[0],
+                    STATE_MAX_VALUE: values[OHM_MAX].split(' ')[0]
                 })
 
                 self.attributes = _attributes

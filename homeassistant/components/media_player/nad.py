@@ -35,16 +35,11 @@ CONF_SOURCE_DICT = 'sources'
 SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=10): cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL_PORT):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME):
-    int,
-    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME):
-    int,
-    vol.Optional(CONF_SOURCE_DICT, default={}):
-    SOURCE_DICT_SCHEMA,
+    vol.Required(CONF_SERIAL_PORT): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
+    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
+    vol.Optional(CONF_SOURCE_DICT, default={}): SOURCE_DICT_SCHEMA,
 })
 
 

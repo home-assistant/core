@@ -41,16 +41,12 @@ DEFAULT_TOPIC = 'room_presence'
 STATE_AWAY = 'away'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_ID):
-    cv.string,
-    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC):
-    cv.string,
-    vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string
+    vol.Required(CONF_DEVICE_ID): cv.string,
+    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
+    vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.
+    positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 MQTT_PAYLOAD = vol.Schema(

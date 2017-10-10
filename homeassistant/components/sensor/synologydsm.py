@@ -58,13 +58,16 @@ _STORAGE_VOL_MON_COND = {
 _STORAGE_DSK_MON_COND = {
     'disk_name': ['Name', None, 'mdi:harddisk'],
     'disk_device': ['Device', None, 'mdi:dots-horizontal'],
-    'disk_smart_status':
-    ['Status (Smart)', None, 'mdi:checkbox-marked-circle-outline'],
+    'disk_smart_status': [
+        'Status (Smart)', None, 'mdi:checkbox-marked-circle-outline'
+    ],
     'disk_status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
-    'disk_exceed_bad_sector_thr':
-    ['Exceeded Max Bad Sectors', None, 'mdi:test-tube'],
-    'disk_below_remain_life_thr':
-    ['Below Min Remaining Life', None, 'mdi:test-tube'],
+    'disk_exceed_bad_sector_thr': [
+        'Exceeded Max Bad Sectors', None, 'mdi:test-tube'
+    ],
+    'disk_below_remain_life_thr': [
+        'Below Min Remaining Life', None, 'mdi:test-tube'
+    ],
     'disk_temp': ['Temperature', None, 'mdi:thermometer'],
 }
 
@@ -73,20 +76,14 @@ _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
     list(_STORAGE_DSK_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_DISKS, default=None):
-    cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None):
-    cv.ensure_list,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
+        cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_DISKS, default=None): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
 })
 
 

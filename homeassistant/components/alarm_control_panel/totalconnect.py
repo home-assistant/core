@@ -23,12 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Total Connect'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

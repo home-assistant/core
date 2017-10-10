@@ -37,8 +37,8 @@ def validate_attributes(list_attributes):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ATTRIBUTES, default=DEFAULT_ATTRIBUTES):
-    vol.All(cv.ensure_list, validate_attributes),
+    vol.Optional(CONF_ATTRIBUTES, default=DEFAULT_ATTRIBUTES): vol.All(
+        cv.ensure_list, validate_attributes),
 })
 
 

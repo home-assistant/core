@@ -26,18 +26,12 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 

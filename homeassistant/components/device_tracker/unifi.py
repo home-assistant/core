@@ -27,18 +27,12 @@ NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_SITE_ID, default='default'):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-    cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_SITE_ID, default='default'): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 

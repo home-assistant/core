@@ -18,12 +18,9 @@ REQUIREMENTS = ['proliphix==0.4.1']
 ATTR_FAN = 'fan'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
 })
 
 

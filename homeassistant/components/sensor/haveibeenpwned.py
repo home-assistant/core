@@ -27,8 +27,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
 })
 
 

@@ -33,12 +33,9 @@ ICON = 'mdi:currency'
 SCAN_INTERVAL = timedelta(days=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TARGET):
-    cv.string,
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_TARGET): cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

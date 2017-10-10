@@ -19,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_X10 = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-    vol.All(cv.ensure_list, [{
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
         vol.Required(CONF_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
     }]),

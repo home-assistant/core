@@ -26,8 +26,7 @@ TTN_DATA_STORAGE_URL = \
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_APP_ID): cv.string,
             vol.Required(CONF_ACCESS_KEY): cv.string,
         }),

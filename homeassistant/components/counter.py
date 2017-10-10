@@ -43,18 +43,13 @@ SERVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.Any({
-                vol.Optional(CONF_ICON):
-                cv.icon,
-                vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
-                cv.positive_int,
-                vol.Optional(CONF_NAME):
-                cv.string,
-                vol.Optional(CONF_STEP, default=DEFAULT_STEP):
-                cv.positive_int,
+        DOMAIN: vol.Schema({
+            cv.slug: vol.Any({
+                vol.Optional(CONF_ICON): cv.icon,
+                vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.
+                positive_int,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
             }, None)
         })
     },

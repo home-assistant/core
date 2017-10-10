@@ -93,19 +93,17 @@ SET_AUX_HEAT_SCHEMA = vol.Schema({
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema(
     vol.All(
-        cv.has_at_least_one_key(
-            ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW), {
-                vol.Exclusive(ATTR_TEMPERATURE, 'temperature'):
-                vol.Coerce(float),
-                vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'):
-                vol.Coerce(float),
-                vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'):
-                vol.Coerce(float),
-                vol.Optional(ATTR_ENTITY_ID):
-                cv.entity_ids,
-                vol.Optional(ATTR_OPERATION_MODE):
-                cv.string,
-            }))
+        cv.has_at_least_one_key(ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH,
+                                ATTR_TARGET_TEMP_LOW),
+        {
+            vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(
+                float),
+            vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(
+                float),
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(ATTR_OPERATION_MODE): cv.string,
+        }))
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
@@ -115,22 +113,16 @@ SET_HOLD_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOLD_MODE): cv.string,
 })
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_OPERATION_MODE):
-    cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_HUMIDITY):
-    vol.Coerce(float),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
 })
 SET_SWING_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_SWING_MODE):
-    cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_SWING_MODE): cv.string,
 })
 
 
@@ -451,14 +443,12 @@ class ClimateDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
-            ATTR_CURRENT_TEMPERATURE:
-            self._convert_for_display(self.current_temperature),
-            ATTR_MIN_TEMP:
-            self._convert_for_display(self.min_temp),
-            ATTR_MAX_TEMP:
-            self._convert_for_display(self.max_temp),
-            ATTR_TEMPERATURE:
-            self._convert_for_display(self.target_temperature),
+            ATTR_CURRENT_TEMPERATURE: self._convert_for_display(
+                self.current_temperature),
+            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
+            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
+            ATTR_TEMPERATURE: self._convert_for_display(
+                self.target_temperature),
         }
 
         if self.target_temperature_step is not None:

@@ -48,14 +48,11 @@ CMD_DICT = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME):
-    cv.isdevice,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT):
-    cv.positive_int,
+    vol.Required(CONF_FILENAME): cv.isdevice,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT): cv.
+    positive_int,
 })
 
 

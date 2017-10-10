@@ -26,18 +26,12 @@ DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.string,
-    vol.Required(CONF_SELECT):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-    cv.boolean,
+    vol.Required(CONF_RESOURCE): cv.string,
+    vol.Required(CONF_SELECT): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 

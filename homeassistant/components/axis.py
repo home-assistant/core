@@ -44,22 +44,15 @@ AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_INCLUDE):
-    vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_TRIGGER_TIME, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_PORT, default=80):
-    cv.positive_int,
-    vol.Optional(ATTR_LOCATION, default=''):
-    cv.string,
+    vol.Required(CONF_INCLUDE): vol.All(cv.ensure_list,
+                                        [vol.In(AXIS_INCLUDE)]),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
+    vol.Optional(CONF_PORT, default=80): cv.positive_int,
+    vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema(
@@ -78,14 +71,10 @@ SERVICE_DEFAULT_CGI = 'param.cgi'
 SERVICE_DEFAULT_ACTION = 'update'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(SERVICE_PARAM):
-    cv.string,
-    vol.Optional(SERVICE_CGI, default=SERVICE_DEFAULT_CGI):
-    cv.string,
-    vol.Optional(SERVICE_ACTION, default=SERVICE_DEFAULT_ACTION):
-    cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(SERVICE_PARAM): cv.string,
+    vol.Optional(SERVICE_CGI, default=SERVICE_DEFAULT_CGI): cv.string,
+    vol.Optional(SERVICE_ACTION, default=SERVICE_DEFAULT_ACTION): cv.string,
 })
 
 

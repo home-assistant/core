@@ -32,28 +32,23 @@ DEFAULT_NAME = 'KNX Binary Sensor'
 DEPENDENCIES = ['knx']
 
 AUTOMATION_SCHEMA = vol.Schema({
-    vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK):
-    cv.string,
-    vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER):
-    cv.port,
-    vol.Required(CONF_ACTION, default=None):
-    cv.SCRIPT_SCHEMA
+    vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
+    vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
+    vol.Required(CONF_ACTION, default=None): cv.SCRIPT_SCHEMA
 })
 
 AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    cv.string,
-    vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
-    cv.positive_int,
-    vol.Optional(CONF_AUTOMATION, default=None):
-    AUTOMATIONS_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): cv.string,
+        vol.Optional(
+            CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT): cv.
+        positive_int,
+        vol.Optional(CONF_AUTOMATION, default=None): AUTOMATIONS_SCHEMA,
+    })
 
 
 @asyncio.coroutine

@@ -28,20 +28,13 @@ DEFAULT_NAME = 'Pilight Binary Sensor'
 DEPENDENCIES = ['pilight']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_VARIABLE):
-    cv.string,
-    vol.Required(CONF_PAYLOAD):
-    vol.Schema(dict),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default='on'):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default='off'):
-    cv.string,
-    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False):
-    cv.boolean,
-    vol.Optional(CONF_RESET_DELAY_SEC, default=30):
-    cv.positive_int
+    vol.Required(CONF_VARIABLE): cv.string,
+    vol.Required(CONF_PAYLOAD): vol.Schema(dict),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default='on'): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default='off'): cv.string,
+    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean,
+    vol.Optional(CONF_RESET_DELAY_SEC, default=30): cv.positive_int
 })
 
 

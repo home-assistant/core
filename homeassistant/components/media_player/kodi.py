@@ -81,28 +81,19 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                SUPPORT_PLAY | SUPPORT_VOLUME_STEP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT):
-    cv.port,
-    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL):
-    cv.boolean,
-    vol.Optional(CONF_TURN_ON_ACTION, default=None):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_TURN_OFF_ACTION):
-    vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Inclusive(CONF_USERNAME, 'auth'):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'auth'):
-    cv.string,
-    vol.Optional(CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET):
-    cv.boolean,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
+    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+    vol.Optional(CONF_TURN_ON_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TURN_OFF_ACTION): vol.Any(
+        cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
+    vol.Optional(CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET): cv.
+    boolean,
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
@@ -117,14 +108,10 @@ ATTR_MEDIA_ID = 'media_id'
 ATTR_METHOD = 'method'
 
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_TYPE):
-    cv.string,
-    vol.Optional(ATTR_MEDIA_ID):
-    cv.string,
-    vol.Optional(ATTR_MEDIA_NAME):
-    cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME):
-    cv.string,
+    vol.Required(ATTR_MEDIA_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 MEDIA_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
     {
@@ -776,10 +763,8 @@ class KodiDevice(MediaPlayerDevice):
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle({
-            "playerid":
-            self._players[0]['playerid'],
-            "shuffle":
-            shuffle
+            "playerid": self._players[0]['playerid'],
+            "shuffle": shuffle
         })
 
     @asyncio.coroutine

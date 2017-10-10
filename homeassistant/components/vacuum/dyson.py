@@ -92,26 +92,16 @@ class Dyson360EyeDevice(VacuumDevice):
         """Return the status of the vacuum cleaner."""
         from libpurecoollink.const import Dyson360EyeMode
         dyson_labels = {
-            Dyson360EyeMode.INACTIVE_CHARGING:
-            "Stopped - Charging",
-            Dyson360EyeMode.INACTIVE_CHARGED:
-            "Stopped - Charged",
-            Dyson360EyeMode.FULL_CLEAN_PAUSED:
-            "Paused",
-            Dyson360EyeMode.FULL_CLEAN_RUNNING:
-            "Cleaning",
-            Dyson360EyeMode.FULL_CLEAN_ABORTED:
-            "Returning home",
-            Dyson360EyeMode.FULL_CLEAN_INITIATED:
-            "Start cleaning",
-            Dyson360EyeMode.FAULT_USER_RECOVERABLE:
-            "Error - device blocked",
-            Dyson360EyeMode.FAULT_REPLACE_ON_DOCK:
-            "Error - Replace device on dock",
-            Dyson360EyeMode.FULL_CLEAN_FINISHED:
-            "Finished",
-            Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE:
-            "Need charging"
+            Dyson360EyeMode.INACTIVE_CHARGING: "Stopped - Charging",
+            Dyson360EyeMode.INACTIVE_CHARGED: "Stopped - Charged",
+            Dyson360EyeMode.FULL_CLEAN_PAUSED: "Paused",
+            Dyson360EyeMode.FULL_CLEAN_RUNNING: "Cleaning",
+            Dyson360EyeMode.FULL_CLEAN_ABORTED: "Returning home",
+            Dyson360EyeMode.FULL_CLEAN_INITIATED: "Start cleaning",
+            Dyson360EyeMode.FAULT_USER_RECOVERABLE: "Error - device blocked",
+            Dyson360EyeMode.FAULT_REPLACE_ON_DOCK: "Error - Replace device on dock",
+            Dyson360EyeMode.FULL_CLEAN_FINISHED: "Finished",
+            Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: "Need charging"
         }
         return dyson_labels.get(self._device.state.state,
                                 self._device.state.state)

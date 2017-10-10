@@ -58,12 +58,10 @@ SYSLOG_PRIORITY = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FACILITY, default='syslog'):
-    vol.In(SYSLOG_FACILITY.keys()),
-    vol.Optional(CONF_OPTION, default='pid'):
-    vol.In(SYSLOG_OPTION.keys()),
-    vol.Optional(CONF_PRIORITY, default=-1):
-    vol.In(SYSLOG_PRIORITY.keys()),
+    vol.Optional(CONF_FACILITY, default='syslog'): vol.In(
+        SYSLOG_FACILITY.keys()),
+    vol.Optional(CONF_OPTION, default='pid'): vol.In(SYSLOG_OPTION.keys()),
+    vol.Optional(CONF_PRIORITY, default=-1): vol.In(SYSLOG_PRIORITY.keys()),
 })
 
 

@@ -24,12 +24,9 @@ HOME_ASSISTANT_ICON_PATH = os.path.join(
     'favicon-1024x1024.png')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE):
-    cv.string,
-    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
+    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string
 })
 
 

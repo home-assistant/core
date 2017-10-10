@@ -21,16 +21,11 @@ CONF_BED = 'bed'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_API_KEY):
-            cv.string,
-            vol.Required(CONF_HOST):
-            cv.string,
-            vol.Optional(CONF_NUMBER_OF_TOOLS, default=0):
-            cv.positive_int,
-            vol.Optional(CONF_BED, default=False):
-            cv.boolean
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
+            vol.Optional(CONF_BED, default=False): cv.boolean
         }),
     },
     extra=vol.ALLOW_EXTRA)

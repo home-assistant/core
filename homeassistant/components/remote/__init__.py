@@ -52,19 +52,16 @@ REMOTE_SERVICE_SCHEMA = vol.Schema({
 })
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_ACTIVITY):
-    cv.string
+    vol.Optional(ATTR_ACTIVITY): cv.string
 })
 
 REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_COMMAND):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_DEVICE):
-    cv.string,
-    vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS):
-    cv.positive_int,
-    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
-    vol.Coerce(float)
+    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DEVICE): cv.string,
+    vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.
+    positive_int,
+    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(
+        float)
 })
 
 

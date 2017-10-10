@@ -34,10 +34,8 @@ ATTR_PATTERN = 'pattern'
 SERVICE_SET_VALUE = 'set_value'
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_VALUE):
-    cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): cv.string,
 })
 
 
@@ -57,10 +55,8 @@ def _cv_input_text(cfg):
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.All({
+        DOMAIN: vol.Schema({
+            cv.slug: vol.All({
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
                 vol.Optional(CONF_MAX, default=100): vol.Coerce(int),

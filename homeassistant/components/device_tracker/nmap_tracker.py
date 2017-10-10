@@ -29,14 +29,11 @@ CONF_OPTIONS = 'scan_options'
 DEFAULT_OPTIONS = '-F --host-timeout 5s'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS):
-    cv.ensure_list,
-    vol.Required(CONF_HOME_INTERVAL, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_EXCLUDE, default=[]):
-    vol.All(cv.ensure_list, vol.Length(min=1)),
-    vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
-    cv.string
+    vol.Required(CONF_HOSTS): cv.ensure_list,
+    vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
+    vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+        cv.ensure_list, vol.Length(min=1)),
+    vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string
 })
 
 

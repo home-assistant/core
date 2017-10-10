@@ -25,12 +25,9 @@ DEFAULT_NAME = 'NX584'
 DEFAULT_PORT = 5007
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
 })
 
 

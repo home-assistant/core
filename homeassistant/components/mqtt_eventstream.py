@@ -29,14 +29,11 @@ CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_PUBLISH_TOPIC):
-            valid_publish_topic,
-            vol.Optional(CONF_SUBSCRIBE_TOPIC):
-            valid_subscribe_topic,
-            vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
-            cv.boolean,
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
+            vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False): cv.
+            boolean,
         }),
     },
     extra=vol.ALLOW_EXTRA)

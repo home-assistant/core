@@ -33,19 +33,14 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_PUBLIC_KEY):
-            cv.string,
-            vol.Required(CONF_PRIVATE_KEY):
-            cv.string,
-            vol.Required(CONF_TOKEN):
-            cv.string,
-            vol.Required(CONF_TOKEN_SECRET):
-            cv.string,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_PUBLIC_KEY): cv.string,
+            vol.Required(CONF_PRIVATE_KEY): cv.string,
+            vol.Required(CONF_TOKEN): cv.string,
+            vol.Required(CONF_TOKEN_SECRET): cv.string,
             vol.Optional(
-                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
-            (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
+                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
         }),
     },
     extra=vol.ALLOW_EXTRA)

@@ -28,24 +28,16 @@ DEFAULT_NAME = 'TCP Sensor'
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PORT):
-    cv.port,
-    vol.Required(CONF_PAYLOAD):
-    cv.string,
-    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
-    cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_VALUE_ON):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_PAYLOAD): cv.string,
+    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.
+    positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_ON): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 

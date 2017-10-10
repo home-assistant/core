@@ -29,8 +29,7 @@ DEFAULT_NAME = 'None'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Optional(CONF_MAC): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
         }),
@@ -41,12 +40,9 @@ SERVICE_NUIMO = 'led_matrix'
 DEFAULT_INTERVAL = 2.0
 
 SERVICE_NUIMO_SCHEMA = vol.Schema({
-    vol.Required('matrix'):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional('interval', default=DEFAULT_INTERVAL):
-    float
+    vol.Required('matrix'): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional('interval', default=DEFAULT_INTERVAL): float
 })
 
 DEFAULT_ADAPTER = 'hci0'

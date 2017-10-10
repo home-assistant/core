@@ -30,14 +30,10 @@ SUPPORT_CMUS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF |  \
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Inclusive(CONF_HOST, 'remote'):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'remote'):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Inclusive(CONF_HOST, 'remote'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'remote'): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

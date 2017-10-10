@@ -20,10 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_USER_KEY = 'user_key'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USER_KEY):
-    cv.string,
-    vol.Required(CONF_API_KEY):
-    cv.string,
+    vol.Required(CONF_USER_KEY): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
 })
 
 

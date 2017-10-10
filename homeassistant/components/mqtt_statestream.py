@@ -22,14 +22,10 @@ DOMAIN = 'mqtt_statestream'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_BASE_TOPIC):
-            valid_publish_topic,
-            vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False):
-            cv.boolean,
-            vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False):
-            cv.boolean
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
+            vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean
         })
     },
     extra=vol.ALLOW_EXTRA)

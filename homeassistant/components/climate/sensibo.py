@@ -29,10 +29,8 @@ ALL = 'all'
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_ID, default=ALL):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
 })
 
 _FETCH_FIELDS = ','.join([

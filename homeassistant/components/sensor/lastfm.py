@@ -24,10 +24,8 @@ CONF_USERS = 'users'
 ICON = 'mdi:lastfm'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_USERS, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
 })
 
 

@@ -38,19 +38,19 @@ CONF_REGION_NAME = 'region_name'
 SCAN_INTERVAL = timedelta(minutes=15)
 
 MONITORED_CONDITIONS = {
-    'current_warning_level':
-    ['Current Warning Level', None, 'mdi:close-octagon-outline'],
-    'advance_warning_level':
-    ['Advance Warning Level', None, 'mdi:close-octagon-outline'],
+    'current_warning_level': [
+        'Current Warning Level', None, 'mdi:close-octagon-outline'
+    ],
+    'advance_warning_level': [
+        'Advance Warning Level', None, 'mdi:close-octagon-outline'
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION_NAME):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_REGION_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS): vol.
+    All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 

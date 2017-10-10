@@ -23,17 +23,13 @@ CONF_INITIAL = 'initial'
 CONF_INVERT_LOGIC = 'invert_logic'
 
 PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_INITIAL, default=False):
-    cv.boolean,
-    vol.Optional(CONF_INVERT_LOGIC, default=False):
-    cv.boolean,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+    vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-    vol.Schema({
+    vol.Required(CONF_PINS, default={}): vol.Schema({
         cv.string: PIN_SCHEMA
     }),
 })

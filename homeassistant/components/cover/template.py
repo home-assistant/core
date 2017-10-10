@@ -47,39 +47,26 @@ TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
                  | SUPPORT_SET_TILT_POSITION)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE):
-    cv.SCRIPT_SCHEMA,
-    vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(STOP_ACTION):
-    cv.SCRIPT_SCHEMA,
-    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
-    cv.template,
-    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_POSITION_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_TILT_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(CONF_TILT_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(POSITION_ACTION):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(TILT_ACTION):
-    cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None):
-    cv.string,
-    vol.Optional(CONF_ENTITY_ID):
-    cv.entity_ids
+    vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+    vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+    vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
+    template,
+    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
+    template,
+    vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
+    vol.Optional(CONF_TILT_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+    vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    vol.Schema({
+    vol.Required(CONF_COVERS): vol.Schema({
         cv.slug: COVER_SCHEMA
     }),
 })

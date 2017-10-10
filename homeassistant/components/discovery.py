@@ -70,10 +70,9 @@ CONF_IGNORE = 'ignore'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(DOMAIN):
-        vol.Schema({
-            vol.Optional(CONF_IGNORE, default=[]):
-            vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
+        vol.Required(DOMAIN): vol.Schema({
+            vol.Optional(CONF_IGNORE, default=[]): vol.All(
+                cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
         }),
     },
     extra=vol.ALLOW_EXTRA)

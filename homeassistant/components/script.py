@@ -54,10 +54,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_VARIABLES):
-    dict,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_VARIABLES): dict,
 })
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 

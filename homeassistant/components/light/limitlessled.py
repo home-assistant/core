@@ -47,25 +47,18 @@ SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
                               | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BRIDGES):
-    vol.All(cv.ensure_list, [
+    vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
         {
-            vol.Required(CONF_HOST):
-            cv.string,
-            vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-            cv.positive_int,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
-            vol.Required(CONF_GROUPS):
-            vol.All(cv.ensure_list, [{
-                vol.Required(CONF_NAME):
-                cv.string,
-                vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
-                vol.In(LED_TYPE),
-                vol.Required(CONF_NUMBER):
-                cv.positive_int,
-                vol.Optional(CONF_FADE, default=DEFAULT_FADE):
-                cv.boolean,
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.
+            positive_int,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Required(CONF_GROUPS): vol.All(cv.ensure_list, [{
+                vol.Required(CONF_NAME): cv.string,
+                vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE): vol.In(
+                    LED_TYPE),
+                vol.Required(CONF_NUMBER): cv.positive_int,
+                vol.Optional(CONF_FADE, default=DEFAULT_FADE): cv.boolean,
             }]),
         },
     ]),
@@ -86,12 +79,10 @@ def rewrite_legacy(config):
                 name_key = 'group_%d_name' % i
                 if name_key in bridge_conf:
                     groups.append({
-                        'number':
-                        i,
-                        'type':
-                        bridge_conf.get('group_%d_type' % i, DEFAULT_LED_TYPE),
-                        'name':
-                        bridge_conf.get(name_key)
+                        'number': i,
+                        'type': bridge_conf.get('group_%d_type' % i,
+                                                DEFAULT_LED_TYPE),
+                        'name': bridge_conf.get(name_key)
                     })
         new_bridges.append({
             'host': bridge_conf.get(CONF_HOST),

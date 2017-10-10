@@ -45,20 +45,14 @@ MIN_TIME_PHONEBOOK_UPDATE = datetime.timedelta(hours=6)
 SCAN_INTERVAL = datetime.timedelta(hours=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_PASSWORD, default='admin'):
-    cv.string,
-    vol.Optional(CONF_USERNAME, default=''):
-    cv.string,
-    vol.Optional(CONF_PHONEBOOK, default=0):
-    cv.positive_int,
-    vol.Optional(CONF_PREFIXES, default=[]):
-    vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
+    vol.Optional(CONF_USERNAME, default=''): cv.string,
+    vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
+    vol.Optional(CONF_PREFIXES, default=[]): vol.All(cv.ensure_list,
+                                                     [cv.string])
 })
 
 

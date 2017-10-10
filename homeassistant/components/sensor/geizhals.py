@@ -26,19 +26,14 @@ ICON = 'mdi:coin'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_PRODUCT_ID):
-    cv.positive_int,
-    vol.Optional(CONF_DESCRIPTION, default='Price'):
-    cv.string,
-    vol.Optional(CONF_DOMAIN, default='geizhals.de'):
-    vol.In([
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_PRODUCT_ID): cv.positive_int,
+    vol.Optional(CONF_DESCRIPTION, default='Price'): cv.string,
+    vol.Optional(CONF_DOMAIN, default='geizhals.de'): vol.In([
         'geizhals.at', 'geizhals.eu', 'geizhals.de', 'skinflint.co.uk',
         'cenowarka.pl'
     ]),
-    vol.Optional(CONF_REGEX, default=r'\D\s(\d*)[\,|\.](\d*)'):
-    cv.string,
+    vol.Optional(CONF_REGEX, default=r'\D\s(\d*)[\,|\.](\d*)'): cv.string,
 })
 
 

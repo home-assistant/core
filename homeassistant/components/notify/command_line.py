@@ -17,10 +17,8 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 

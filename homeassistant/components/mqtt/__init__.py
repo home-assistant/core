@@ -117,45 +117,33 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_CLIENT_ID):
-            cv.string,
-            vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
-            vol.All(vol.Coerce(int), vol.Range(min=15)),
-            vol.Optional(CONF_BROKER):
-            cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
-            vol.Optional(CONF_USERNAME):
-            cv.string,
-            vol.Optional(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_CERTIFICATE):
-            vol.Any('auto', cv.isfile),
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_CLIENT_ID): cv.string,
+            vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
+                vol.Coerce(int), vol.Range(min=15)),
+            vol.Optional(CONF_BROKER): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_CERTIFICATE): vol.Any('auto', cv.isfile),
             vol.Inclusive(
-                CONF_CLIENT_KEY, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG):
-            cv.isfile,
+                CONF_CLIENT_KEY, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG): cv.
+            isfile,
             vol.Inclusive(
-                CONF_CLIENT_CERT, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG):
-            cv.isfile,
-            vol.Optional(CONF_TLS_INSECURE):
-            cv.boolean,
-            vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
-            vol.Any('auto', '1.0', '1.1', '1.2'),
-            vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
-            vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
-            vol.Optional(CONF_EMBEDDED):
-            HBMQTT_CONFIG_SCHEMA,
-            vol.Optional(CONF_WILL_MESSAGE):
-            MQTT_WILL_BIRTH_SCHEMA,
-            vol.Optional(CONF_BIRTH_MESSAGE):
-            MQTT_WILL_BIRTH_SCHEMA,
-            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY):
-            cv.boolean,
+                CONF_CLIENT_CERT, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG): cv.
+            isfile,
+            vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+            vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.
+            Any('auto', '1.0', '1.1', '1.2'),
+            vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+                cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
+            vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
+            vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+            vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.
+            boolean,
             vol.Optional(
-                CONF_DISCOVERY_PREFIX, default=DEFAULT_DISCOVERY_PREFIX):
-            valid_discovery_topic,
+                CONF_DISCOVERY_PREFIX, default=DEFAULT_DISCOVERY_PREFIX): valid_discovery_topic,
         }),
     },
     extra=vol.ALLOW_EXTRA)
@@ -168,22 +156,16 @@ MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATE_TOPIC):
-    valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 # Switch type platforms publish to MQTT and may subscribe
 MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_TOPIC):
-    valid_publish_topic,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN):
-    cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC):
-    valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 # Service call validation schema

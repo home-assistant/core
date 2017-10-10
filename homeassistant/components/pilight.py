@@ -45,17 +45,14 @@ SERVICE_NAME = 'send'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-            cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_WHITELIST, default={}): {
                 cv.string: [cv.string]
             },
-            vol.Optional(CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY):
-            vol.Coerce(float),
+            vol.Optional(CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY): vol.
+            Coerce(float),
         }),
     },
     extra=vol.ALLOW_EXTRA)

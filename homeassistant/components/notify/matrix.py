@@ -26,16 +26,11 @@ CONF_HOMESERVER = 'homeserver'
 CONF_DEFAULT_ROOM = 'default_room'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOMESERVER):
-    cv.url,
-    vol.Optional(CONF_VERIFY_SSL, default=True):
-    cv.boolean,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_DEFAULT_ROOM):
-    cv.string,
+    vol.Required(CONF_HOMESERVER): cv.url,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_DEFAULT_ROOM): cv.string,
 })
 
 

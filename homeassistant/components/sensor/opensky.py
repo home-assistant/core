@@ -40,14 +40,10 @@ OPENSKY_API_FIELDS = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RADIUS):
-    vol.Coerce(float),
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'):
-    cv.longitude
+    vol.Required(CONF_RADIUS): vol.Coerce(float),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude
 })
 
 

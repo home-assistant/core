@@ -42,12 +42,9 @@ ICON = 'mdi:bus'
 SCAN_INTERVAL = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DESTINATION):
-    cv.string,
-    vol.Required(CONF_START):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_START): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

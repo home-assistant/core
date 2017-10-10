@@ -27,14 +27,10 @@ DOMAIN = 'graphite'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-            cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            cv.port,
-            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX):
-            cv.string,
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
         }),
     },
     extra=vol.ALLOW_EXTRA)

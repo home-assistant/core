@@ -48,36 +48,24 @@ CONF_FLASH_TIME_SHORT = 'flash_time_short'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS):
-    cv.boolean,
-    vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP):
-    cv.boolean,
-    vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT):
-    cv.boolean,
-    vol.Optional(CONF_EFFECT_LIST):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
-    cv.positive_int,
-    vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
-    cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
-    vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN):
-    cv.boolean,
-    vol.Optional(CONF_RGB, default=DEFAULT_RGB):
-    cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE):
-    cv.boolean,
-    vol.Optional(CONF_XY, default=DEFAULT_XY):
-    cv.boolean,
-    vol.Required(CONF_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
+    vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
+    vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
+    vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT): cv.
+    positive_int,
+    vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG): cv.
+    positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS): vol.All(
+        vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
+    vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
 })
 
 

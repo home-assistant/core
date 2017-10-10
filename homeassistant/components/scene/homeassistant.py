@@ -18,10 +18,8 @@ from homeassistant.helpers.state import async_reproduce_state, HASS_DOMAIN
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM):
-        HASS_DOMAIN,
-        vol.Required(STATES):
-        vol.All(cv.ensure_list, [{
+        vol.Required(CONF_PLATFORM): HASS_DOMAIN,
+        vol.Required(STATES): vol.All(cv.ensure_list, [{
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_ENTITIES): {
                 cv.entity_id: vol.Any(str, bool, dict)

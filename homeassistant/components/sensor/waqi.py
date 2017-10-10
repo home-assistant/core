@@ -53,12 +53,9 @@ SCAN_INTERVAL = timedelta(minutes=5)
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_STATIONS):
-    cv.ensure_list,
-    vol.Required(CONF_TOKEN):
-    cv.string,
-    vol.Required(CONF_LOCATIONS):
-    cv.ensure_list,
+    vol.Optional(CONF_STATIONS): cv.ensure_list,
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Required(CONF_LOCATIONS): cv.ensure_list,
 })
 
 

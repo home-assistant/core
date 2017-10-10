@@ -50,14 +50,11 @@ DEFAULT_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_API_KEY):
-            cv.string,
-            vol.Optional(CONF_AZURE_REGION, default="westus"):
-            cv.string,
-            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-            cv.positive_int,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
+            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.
+            positive_int,
         }),
     },
     extra=vol.ALLOW_EXTRA)
@@ -67,17 +64,13 @@ SCHEMA_GROUP_SERVICE = vol.Schema({
 })
 
 SCHEMA_PERSON_SERVICE = SCHEMA_GROUP_SERVICE.extend({
-    vol.Required(ATTR_GROUP):
-    cv.slugify,
+    vol.Required(ATTR_GROUP): cv.slugify,
 })
 
 SCHEMA_FACE_SERVICE = vol.Schema({
-    vol.Required(ATTR_PERSON):
-    cv.string,
-    vol.Required(ATTR_GROUP):
-    cv.slugify,
-    vol.Required(ATTR_CAMERA_ENTITY):
-    cv.entity_id,
+    vol.Required(ATTR_PERSON): cv.string,
+    vol.Required(ATTR_GROUP): cv.slugify,
+    vol.Required(ATTR_CAMERA_ENTITY): cv.entity_id,
 })
 
 SCHEMA_TRAIN_SERVICE = vol.Schema({

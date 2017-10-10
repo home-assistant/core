@@ -42,16 +42,12 @@ _COVERS_SCHEMA = vol.All(cv.ensure_list, [
 ])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    _COVERS_SCHEMA,
-    vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE):
-    cv.string,
-    vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME):
-    cv.positive_int,
-    vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE):
-    cv.boolean,
-    vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY):
-    cv.boolean,
+    vol.Required(CONF_COVERS): _COVERS_SCHEMA,
+    vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE): cv.
+    string,
+    vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
+    vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
+    vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
 })
 
 

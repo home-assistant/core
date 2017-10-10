@@ -33,20 +33,13 @@ DEFAULT_NAME = 'MQTT Alarm'
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Required(CONF_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_CODE):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM):
-    cv.string,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_CODE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
 })
 
 

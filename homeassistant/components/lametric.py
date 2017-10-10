@@ -25,8 +25,7 @@ LAMETRIC_DEVICES = 'LAMETRIC_DEVICES'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_CLIENT_ID): cv.string,
             vol.Required(CONF_CLIENT_SECRET): cv.string,
         }),

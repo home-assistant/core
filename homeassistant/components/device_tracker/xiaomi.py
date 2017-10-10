@@ -17,12 +17,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME, default='admin'):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME, default='admin'): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string
 })
 
 

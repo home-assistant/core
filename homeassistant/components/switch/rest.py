@@ -33,24 +33,16 @@ DEFAULT_TIMEOUT = 10
 SUPPORT_REST_METHODS = ['post', 'put']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF):
-    cv.template,
-    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON):
-    cv.template,
-    vol.Optional(CONF_IS_ON_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
-    vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Inclusive(CONF_USERNAME, 'authentication'):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'):
-    cv.string,
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+    vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
+        vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
 })
 
 

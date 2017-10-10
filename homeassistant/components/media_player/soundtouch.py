@@ -43,10 +43,8 @@ DATA_SOUNDTOUCH = "soundtouch"
 SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({vol.Required('master'): cv.entity_id})
 
 SOUNDTOUCH_CREATE_ZONE_SCHEMA = vol.Schema({
-    vol.Required('master'):
-    cv.entity_id,
-    vol.Required('slaves'):
-    cv.entity_ids
+    vol.Required('master'): cv.entity_id,
+    vol.Required('slaves'): cv.entity_ids
 })
 
 SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema({
@@ -55,10 +53,8 @@ SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema({
 })
 
 SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
-    vol.Required('master'):
-    cv.entity_id,
-    vol.Required('slaves'):
-    cv.entity_ids
+    vol.Required('master'): cv.entity_id,
+    vol.Required('slaves'): cv.entity_ids
 })
 
 DEFAULT_NAME = 'Bose Soundtouch'
@@ -70,12 +66,9 @@ SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port
 })
 
 

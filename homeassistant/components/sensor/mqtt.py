@@ -30,14 +30,10 @@ DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_EXPIRE_AFTER):
-    cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE):
-    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
 

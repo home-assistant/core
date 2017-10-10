@@ -36,8 +36,8 @@ SENSOR_UNITS = {
 FORMAT_NUMBERS = ['Temperature', 'Pressure', 'Voltage']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

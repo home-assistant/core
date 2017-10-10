@@ -43,20 +43,14 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEXT_DEPARTURE): [{
-        vol.Required(CONF_STATION):
-        cv.string,
-        vol.Optional(CONF_DESTINATIONS, default=['']):
-        cv.ensure_list_csv,
-        vol.Optional(CONF_DIRECTIONS, default=['']):
-        cv.ensure_list_csv,
-        vol.Optional(CONF_LINES, default=['']):
-        cv.ensure_list_csv,
-        vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
-        cv.ensure_list_csv,
-        vol.Optional(CONF_TIMEOFFSET, default=0):
-        cv.positive_int,
-        vol.Optional(CONF_NAME):
-        cv.string
+        vol.Required(CONF_STATION): cv.string,
+        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT): cv.
+        ensure_list_csv,
+        vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+        vol.Optional(CONF_NAME): cv.string
     }]
 })
 

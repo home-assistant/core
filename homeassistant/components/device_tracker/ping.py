@@ -26,8 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(const.CONF_HOSTS): {
         cv.string: cv.string
     },
-    vol.Optional(CONF_PING_COUNT, default=1):
-    cv.positive_int,
+    vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
 })
 
 

@@ -23,10 +23,8 @@ STATE_RING = 'ring'
 STATE_CALLERID = 'callerid'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-    cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string
 })
 
 

@@ -32,19 +32,14 @@ SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
 SERVICE_UNLATCH = 'nuki_unlatch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(CONF_TOKEN):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_TOKEN): cv.string
 })
 
 LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_UNLATCH, default=False):
-    cv.boolean
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_UNLATCH, default=False): cv.boolean
 })
 
 UNLATCH_SERVICE_SCHEMA = vol.Schema({

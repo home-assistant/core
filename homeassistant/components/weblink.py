@@ -21,12 +21,9 @@ DOMAIN = 'weblink'
 
 ENTITIES_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL):
-    vol.Url(),
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_ICON):
-    cv.icon,
+    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
 })
 
 CONFIG_SCHEMA = vol.Schema(

@@ -44,10 +44,8 @@ DEFAULT_PATH = '/sys/class/power_supply'
 ICON = 'mdi:battery'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY):
-    cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

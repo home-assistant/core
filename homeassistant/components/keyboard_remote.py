@@ -37,14 +37,11 @@ TYPE = 'type'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP):
-            cv.string,
-            vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP):
-            cv.string,
-            vol.Optional(TYPE, default='key_up'):
-            vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
+        DOMAIN: vol.Schema({
+            vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
+            vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+            vol.Optional(TYPE, default='key_up'): vol.All(
+                cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
         }),
     },
     extra=vol.ALLOW_EXTRA)

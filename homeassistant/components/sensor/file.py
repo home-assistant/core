@@ -25,14 +25,10 @@ DEFAULT_NAME = 'File'
 ICON = 'mdi:file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
+    vol.Required(CONF_FILE_PATH): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 

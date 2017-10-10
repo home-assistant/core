@@ -31,20 +31,14 @@ ICON = 'mdi:taxi'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID):
-    cv.string,
-    vol.Required(CONF_CLIENT_SECRET):
-    cv.string,
-    vol.Required(CONF_START_LATITUDE):
-    cv.latitude,
-    vol.Required(CONF_START_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_END_LATITUDE):
-    cv.latitude,
-    vol.Optional(CONF_END_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS, default=None):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_CLIENT_ID): cv.string,
+    vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Required(CONF_START_LATITUDE): cv.latitude,
+    vol.Required(CONF_START_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_END_LATITUDE): cv.latitude,
+    vol.Optional(CONF_END_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_PRODUCT_IDS, default=None): vol.All(
+        cv.ensure_list, [cv.string]),
 })
 
 

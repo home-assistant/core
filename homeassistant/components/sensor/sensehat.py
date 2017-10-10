@@ -32,12 +32,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
-    [vol.In(SENSOR_TYPES)],
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_IS_HAT_ATTACHED, default=True):
-    cv.boolean
+    vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES): [
+        vol.In(SENSOR_TYPES)
+    ],
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean
 })
 
 

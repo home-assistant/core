@@ -32,8 +32,7 @@ CONF_DEVICE_ID = 'device_id'
 CONF_VALUES = 'values'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_ID):
-    cv.string,
+    vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_VALUES): {
         cv.string: cv.string
     },

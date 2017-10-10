@@ -342,11 +342,8 @@ class XiaomiCube(XiaomiBinarySensor):
 
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
-                'entity_id':
-                self.entity_id,
-                'action_type':
-                'rotate',
-                'action_value':
-                float(data['rotate'].replace(",", "."))
+                'entity_id': self.entity_id,
+                'action_type': 'rotate',
+                'action_value': float(data['rotate'].replace(",", "."))
             })
         return False

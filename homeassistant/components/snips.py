@@ -23,8 +23,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
 INTENT_SCHEMA = vol.Schema(
     {
-        vol.Required('input'):
-        str,
+        vol.Required('input'): str,
         vol.Required('intent'): {
             vol.Required('intentName'): str
         },

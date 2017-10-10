@@ -52,24 +52,16 @@ ENDPOINTS = {
 # Support to Yottabytes for the future, why not
 BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_DAYS, default=DEFAULT_DAYS):
-    cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_INCLUDED, default=[]):
-    cv.ensure_list,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['movies']):
-    vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_SSL, default=False):
-    cv.boolean,
-    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT):
-    vol.In(BYTE_SIZES),
-    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['movies']): vol.All(
+        cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
+    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
 })
 
 

@@ -158,90 +158,64 @@ DEFAULT_DEVICES = True
 DEFAULT_PRIMARY = False
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'homematic',
-    vol.Required(ATTR_NAME):
-    cv.string,
-    vol.Required(ATTR_ADDRESS):
-    cv.string,
-    vol.Required(ATTR_PROXY):
-    cv.string,
-    vol.Optional(ATTR_CHANNEL, default=1):
-    vol.Coerce(int),
-    vol.Optional(ATTR_PARAM):
-    cv.string,
+    vol.Required(CONF_PLATFORM): 'homematic',
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_ADDRESS): cv.string,
+    vol.Required(ATTR_PROXY): cv.string,
+    vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
+    vol.Optional(ATTR_PARAM): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_HOSTS): {
                 cv.match_all: {
-                    vol.Required(CONF_IP):
-                    cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-                    cv.port,
-                    vol.Optional(CONF_PATH, default=DEFAULT_PATH):
-                    cv.string,
-                    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-                    cv.string,
-                    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-                    cv.string,
-                    vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES):
-                    cv.boolean,
+                    vol.Required(CONF_IP): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+                    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.
+                    string,
+                    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.
+                    string,
+                    vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES): cv.
+                    boolean,
                     vol.Optional(
-                        CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
-                    vol.In(CONF_RESOLVENAMES_OPTIONS),
-                    vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES):
-                    cv.boolean,
-                    vol.Optional(CONF_PRIMARY, default=DEFAULT_PRIMARY):
-                    cv.boolean,
-                    vol.Optional(CONF_CALLBACK_IP):
-                    cv.string,
-                    vol.Optional(CONF_CALLBACK_PORT):
-                    cv.port,
+                        CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES): vol.
+                    In(CONF_RESOLVENAMES_OPTIONS),
+                    vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.
+                    boolean,
+                    vol.Optional(CONF_PRIMARY, default=DEFAULT_PRIMARY): cv.
+                    boolean,
+                    vol.Optional(CONF_CALLBACK_IP): cv.string,
+                    vol.Optional(CONF_CALLBACK_PORT): cv.port,
                 }
             },
-            vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP):
-            cv.string,
-            vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT):
-            cv.port,
+            vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
+            vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
         }),
     },
     extra=vol.ALLOW_EXTRA)
 
 SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
-    vol.Required(ATTR_ADDRESS):
-    vol.All(cv.string, vol.Upper),
-    vol.Required(ATTR_CHANNEL):
-    vol.Coerce(int),
-    vol.Required(ATTR_PARAM):
-    cv.string,
-    vol.Optional(ATTR_PROXY):
-    cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_CHANNEL): vol.Coerce(int),
+    vol.Required(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_PROXY): cv.string,
 })
 
 SCHEMA_SERVICE_SET_VAR_VALUE = vol.Schema({
-    vol.Required(ATTR_NAME):
-    cv.string,
-    vol.Required(ATTR_VALUE):
-    cv.match_all,
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_VALUE): cv.match_all,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 SCHEMA_SERVICE_SET_DEV_VALUE = vol.Schema({
-    vol.Required(ATTR_ADDRESS):
-    vol.All(cv.string, vol.Upper),
-    vol.Required(ATTR_CHANNEL):
-    vol.Coerce(int),
-    vol.Required(ATTR_PARAM):
-    vol.All(cv.string, vol.Upper),
-    vol.Required(ATTR_VALUE):
-    cv.match_all,
-    vol.Optional(ATTR_PROXY):
-    cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_CHANNEL): vol.Coerce(int),
+    vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_VALUE): cv.match_all,
+    vol.Optional(ATTR_PROXY): cv.string,
 })
 
 SCHEMA_SERVICE_RECONNECT = vol.Schema({})
@@ -489,8 +463,7 @@ def _system_callback_handler(hass, config, src, *args):
                 # they are setup in HASS and an discovery event is fired
                 if found_devices:
                     discovery.load_platform(hass, component_name, DOMAIN, {
-                        ATTR_DISCOVER_DEVICES:
-                        found_devices
+                        ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
 
     # Homegear error message

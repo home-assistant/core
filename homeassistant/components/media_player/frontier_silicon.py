@@ -34,12 +34,9 @@ DEFAULT_PASSWORD = '1234'
 DEVICE_URL = 'http://{0}:{1}/device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
 })
 
 

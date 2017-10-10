@@ -42,16 +42,11 @@ SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_PORT, default=None):
-    cv.port,
-    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE):
-    cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_PORT, default=None): cv.port,
+    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
 })
 
 

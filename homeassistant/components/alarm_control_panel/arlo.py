@@ -29,8 +29,7 @@ DISARMED = 'disarmed'
 ICON = 'mdi:security'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOME_MODE_NAME, default=ARMED):
-    cv.string,
+    vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
 })
 
 

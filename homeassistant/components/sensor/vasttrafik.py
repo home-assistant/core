@@ -40,19 +40,13 @@ ICON = 'mdi:train'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_KEY):
-    cv.string,
-    vol.Required(CONF_SECRET):
-    cv.string,
+    vol.Required(CONF_KEY): cv.string,
+    vol.Required(CONF_SECRET): cv.string,
     vol.Optional(CONF_DEPARTURES): [{
-        vol.Required(CONF_FROM):
-        cv.string,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY):
-        cv.positive_int,
-        vol.Optional(CONF_HEADING):
-        cv.string,
-        vol.Optional(CONF_NAME):
-        cv.string
+        vol.Required(CONF_FROM): cv.string,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
+        vol.Optional(CONF_HEADING): cv.string,
+        vol.Optional(CONF_NAME): cv.string
     }]
 })
 

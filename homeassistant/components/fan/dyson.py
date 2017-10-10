@@ -22,10 +22,8 @@ DYSON_FAN_DEVICES = "dyson_fan_devices"
 SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
 
 DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
-    vol.Required('entity_id'):
-    cv.entity_id,
-    vol.Required('night_mode'):
-    cv.boolean
+    vol.Required('entity_id'): cv.entity_id,
+    vol.Required('night_mode'): cv.boolean
 })
 
 

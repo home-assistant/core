@@ -135,29 +135,22 @@ SENSORS = [
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.All(cv.ensure_list, [
+        DOMAIN: vol.All(cv.ensure_list, [
             vol.Schema({
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-                cv.string,
-                vol.Required(CONF_HOST):
-                cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-                cv.port,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-                cv.positive_int,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-                cv.time_period,
-                vol.Inclusive(CONF_USERNAME, 'authentication'):
-                cv.string,
-                vol.Inclusive(CONF_PASSWORD, 'authentication'):
-                cv.string,
-                vol.Optional(CONF_SWITCHES, default=None):
-                vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-                vol.Optional(CONF_SENSORS, default=None):
-                vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-                vol.Optional(CONF_MOTION_SENSOR, default=None):
-                cv.boolean,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.
+                positive_int,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.
+                time_period,
+                vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+                vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+                vol.Optional(CONF_SWITCHES, default=None): vol.All(
+                    cv.ensure_list, [vol.In(SWITCHES)]),
+                vol.Optional(CONF_SENSORS, default=None): vol.All(
+                    cv.ensure_list, [vol.In(SENSORS)]),
+                vol.Optional(CONF_MOTION_SENSOR, default=None): cv.boolean,
             })
         ])
     },

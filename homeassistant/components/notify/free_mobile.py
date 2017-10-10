@@ -18,10 +18,8 @@ REQUIREMENTS = ['freesms==0.1.1']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_ACCESS_TOKEN):
-    cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
 })
 
 

@@ -28,19 +28,14 @@ SERVICE_REMOTE_COMMAND = 'remote_command'
 COOKIE_FILE = 'mopar_cookies.pickle'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_PIN):
-    cv.positive_int
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_PIN): cv.positive_int
 })
 
 REMOTE_COMMAND_SCHEMA = vol.Schema({
-    vol.Required(ATTR_COMMAND):
-    cv.string,
-    vol.Required(ATTR_VEHICLE_INDEX):
-    cv.positive_int
+    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Required(ATTR_VEHICLE_INDEX): cv.positive_int
 })
 
 

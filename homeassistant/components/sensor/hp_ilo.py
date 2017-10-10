@@ -34,8 +34,9 @@ SENSOR_TYPES = {
     'server_oa_info': ['Server Onboard Administrator Info', 'get_oa_info'],
     'server_power_status': ['Server Power state', 'get_host_power_status'],
     'server_power_readings': ['Server Power readings', 'get_power_readings'],
-    'server_power_on_time':
-    ['Server Power On time', 'get_server_power_on_time'],
+    'server_power_on_time': [
+        'Server Power On time', 'get_server_power_on_time'
+    ],
     'server_asset_tag': ['Server Asset Tag', 'get_asset_tag'],
     'server_uid_status': ['Server UID light', 'get_uid_status'],
     'server_health': ['Server Health', 'get_embedded_health'],
@@ -43,29 +44,21 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
-    vol.All(cv.ensure_list, [
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.
+    All(cv.ensure_list, [
         vol.Schema({
-            vol.Required(CONF_NAME):
-            cv.string,
-            vol.Required(CONF_SENSOR_TYPE):
-            vol.All(cv.string, vol.In(SENSOR_TYPES)),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None):
-            cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE, default=None):
-            cv.template
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_SENSOR_TYPE): vol.All(cv.string,
+                                                    vol.In(SENSOR_TYPES)),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template
         })
     ]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 

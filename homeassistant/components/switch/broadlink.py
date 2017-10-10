@@ -47,12 +47,9 @@ MP1_TYPES = ["mp1"]
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default=None):
-    cv.string,
-    vol.Optional(CONF_COMMAND_ON, default=None):
-    cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME):
-    cv.string,
+    vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
+    vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
 MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
@@ -63,22 +60,15 @@ MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SWITCHES, default={}):
-    vol.Schema({
+    vol.Optional(CONF_SWITCHES, default={}): vol.Schema({
         cv.slug: SWITCH_SCHEMA
     }),
-    vol.Optional(CONF_SLOTS, default={}):
-    MP1_SWITCH_SLOT_SCHEMA,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_MAC):
-    cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]):
-    vol.In(SWITCH_TYPES),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int
+    vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
 

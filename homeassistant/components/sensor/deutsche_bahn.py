@@ -26,10 +26,8 @@ ICON = 'mdi:train'
 SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DESTINATION):
-    cv.string,
-    vol.Required(CONF_START):
-    cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_START): cv.string,
 })
 
 

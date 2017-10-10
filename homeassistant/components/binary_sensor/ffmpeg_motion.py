@@ -31,22 +31,18 @@ DEFAULT_NAME = 'FFmpeg Motion'
 DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INPUT):
-    cv.string,
-    vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE):
-    cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_EXTRA_ARGUMENTS):
-    cv.string,
-    vol.Optional(CONF_RESET, default=10):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_CHANGES, default=10):
-    vol.All(vol.Coerce(float), vol.Range(min=0, max=99)),
-    vol.Inclusive(CONF_REPEAT, 'repeat'):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Inclusive(CONF_REPEAT_TIME, 'repeat'):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Required(CONF_INPUT): cv.string,
+    vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
+    vol.Optional(CONF_RESET, default=10): vol.All(
+        vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_CHANGES, default=10): vol.All(
+        vol.Coerce(float), vol.Range(min=0, max=99)),
+    vol.Inclusive(CONF_REPEAT, 'repeat'): vol.All(
+        vol.Coerce(int), vol.Range(min=1)),
+    vol.Inclusive(CONF_REPEAT_TIME, 'repeat'): vol.All(
+        vol.Coerce(int), vol.Range(min=1)),
 })
 
 

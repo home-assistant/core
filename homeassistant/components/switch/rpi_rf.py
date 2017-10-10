@@ -27,24 +27,22 @@ CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 DEFAULT_PROTOCOL = 1
 DEFAULT_SIGNAL_REPETITIONS = 10
 
-SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_CODE_OFF):
-    vol.All(cv.ensure_list_csv, [cv.positive_int]),
-    vol.Required(CONF_CODE_ON):
-    vol.All(cv.ensure_list_csv, [cv.positive_int]),
-    vol.Optional(CONF_PULSELENGTH):
-    cv.positive_int,
-    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-    cv.positive_int,
-    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
-    cv.positive_int,
-})
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CODE_OFF): vol.All(cv.ensure_list_csv,
+                                             [cv.positive_int]),
+        vol.Required(CONF_CODE_ON): vol.All(cv.ensure_list_csv,
+                                            [cv.positive_int]),
+        vol.Optional(CONF_PULSELENGTH): cv.positive_int,
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS): cv.
+        positive_int,
+        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.positive_int,
+    })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_GPIO):
-    cv.positive_int,
-    vol.Required(CONF_SWITCHES):
-    vol.Schema({
+    vol.Required(CONF_GPIO): cv.positive_int,
+    vol.Required(CONF_SWITCHES): vol.Schema({
         cv.string: SWITCH_SCHEMA
     }),
 })

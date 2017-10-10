@@ -79,14 +79,10 @@ SERVICE_EIGHT_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER):
-            cv.boolean,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER): cv.boolean,
         }),
     },
     extra=vol.ALLOW_EXTRA)

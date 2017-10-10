@@ -23,12 +23,9 @@ LIFX_API_URL = 'https://api.lifx.com/v1/{0}'
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'lifx_cloud',
-    vol.Required(CONF_TOKEN):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
+    vol.Required(CONF_PLATFORM): 'lifx_cloud',
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 

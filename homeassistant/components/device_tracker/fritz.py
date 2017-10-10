@@ -20,12 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default='admin'):
-    cv.string,
-    vol.Optional(CONF_USERNAME, default=''):
-    cv.string
+    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+    vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
+    vol.Optional(CONF_USERNAME, default=''): cv.string
 })
 
 

@@ -28,14 +28,10 @@ DEFAULT_NAME = 'Command Sensor'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 

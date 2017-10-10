@@ -42,20 +42,15 @@ MOD_REGEX = r"index: ([0-9]+)\s+name: <module-loopback>" \
 UNLOAD_CMD = "unload-module {0}"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SINK_NAME):
-    cv.string,
-    vol.Required(CONF_SOURCE_NAME):
-    cv.string,
-    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
-    cv.positive_int,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_TCP_TIMEOUT, default=DEFAULT_TCP_TIMEOUT):
-    cv.positive_int,
+    vol.Required(CONF_SINK_NAME): cv.string,
+    vol.Required(CONF_SOURCE_NAME): cv.string,
+    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.
+    positive_int,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TCP_TIMEOUT, default=DEFAULT_TCP_TIMEOUT): cv.
+    positive_int,
 })
 
 

@@ -34,10 +34,12 @@ SENSOR_TYPES = {
     'memory_buffers': ['RAM Buffers', 'MiB', 'system.ram', 'buffers', 1],
     'swap_free': ['Swap Free', 'MiB', 'system.swap', 'free', 1],
     'swap_used': ['Swap Used', 'MiB', 'system.swap', 'used', 1],
-    'processes_running':
-    ['Processes Running', 'Count', 'system.processes', 'running', 0],
-    'processes_blocked':
-    ['Processes Blocked', 'Count', 'system.processes', 'blocked', 0],
+    'processes_running': [
+        'Processes Running', 'Count', 'system.processes', 'running', 0
+    ],
+    'processes_blocked': [
+        'Processes Blocked', 'Count', 'system.processes', 'blocked', 0
+    ],
     'system_load': ['System Load', '15 min', 'system.load', 'load15', 2],
     'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
     'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
@@ -50,8 +52,9 @@ SENSOR_TYPES = {
     'cpu_softirq': ['CPU SoftIRQ', '%', 'system.cpu', 'softirq', 1],
     'cpu_guest': ['CPU Guest', '%', 'system.cpu', 'guest', 1],
     'uptime': ['Uptime', 's', 'system.uptime', 'uptime', 0],
-    'packets_received':
-    ['Packets Received', 'packets/s', 'ipv4.packets', 'received', 0],
+    'packets_received': [
+        'Packets Received', 'packets/s', 'ipv4.packets', 'received', 0
+    ],
     'packets_sent': ['Packets Sent', 'packets/s', 'ipv4.packets', 'sent', 0],
     'connections': [
         'Active Connections', 'Count', 'netfilter.conntrack_sockets',
@@ -60,14 +63,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_RESOURCES, default=['memory_free']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_RESOURCES, default=['memory_free']): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

@@ -42,8 +42,7 @@ HUB = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Required(CONF_USERNAME): cv.string,
             vol.Optional(CONF_ALARM, default=True): cv.boolean,

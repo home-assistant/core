@@ -75,12 +75,9 @@ ATTR_IS_COORDINATOR = 'is_coordinator'
 UPNP_ERRORS_TO_IGNORE = ['701']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ADVERTISE_ADDR):
-    cv.string,
-    vol.Optional(CONF_INTERFACE_ADDR):
-    cv.string,
-    vol.Optional(CONF_HOSTS):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
+    vol.Optional(CONF_INTERFACE_ADDR): cv.string,
+    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 SONOS_SCHEMA = vol.Schema({
@@ -88,31 +85,24 @@ SONOS_SCHEMA = vol.Schema({
 })
 
 SONOS_JOIN_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Required(ATTR_MASTER):
-    cv.entity_id,
+    vol.Required(ATTR_MASTER): cv.entity_id,
 })
 
 SONOS_STATES_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Optional(ATTR_WITH_GROUP, default=True):
-    cv.boolean,
+    vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean,
 })
 
 SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Required(ATTR_SLEEP_TIME):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=86399))
+    vol.Required(ATTR_SLEEP_TIME): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=86399))
 })
 
 SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Required(ATTR_ALARM_ID):
-    cv.positive_int,
-    vol.Optional(ATTR_TIME):
-    cv.time,
-    vol.Optional(ATTR_VOLUME):
-    cv.small_float,
-    vol.Optional(ATTR_ENABLED):
-    cv.boolean,
-    vol.Optional(ATTR_INCLUDE_LINKED_ZONES):
-    cv.boolean,
+    vol.Required(ATTR_ALARM_ID): cv.positive_int,
+    vol.Optional(ATTR_TIME): cv.time,
+    vol.Optional(ATTR_VOLUME): cv.small_float,
+    vol.Optional(ATTR_ENABLED): cv.boolean,
+    vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
 })
 
 

@@ -30,10 +30,9 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['status']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['status']): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

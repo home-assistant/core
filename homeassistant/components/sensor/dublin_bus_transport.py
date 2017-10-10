@@ -39,12 +39,9 @@ SCAN_INTERVAL = timedelta(minutes=1)
 TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_ROUTE, default=""):
-    cv.string,
+    vol.Required(CONF_STOP_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_ROUTE, default=""): cv.string,
 })
 
 

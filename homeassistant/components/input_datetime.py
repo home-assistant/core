@@ -33,28 +33,23 @@ ATTR_TIME = 'time'
 SERVICE_SET_DATETIME = 'set_datetime'
 
 SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_DATE):
-    cv.date,
-    vol.Optional(ATTR_TIME):
-    cv.time,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_DATE): cv.date,
+    vol.Optional(ATTR_TIME): cv.time,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.All({
+        DOMAIN: vol.Schema({
+            cv.slug: vol.All({
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Required(CONF_HAS_DATE): cv.boolean,
                 vol.Required(CONF_HAS_TIME): cv.boolean,
                 vol.Optional(CONF_ICON): cv.icon,
                 vol.Optional(CONF_INITIAL): cv.datetime,
             },
-                    cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
-                                                  (CONF_HAS_TIME, True)))
+                             cv.has_at_least_one_key_value(
+                                 (CONF_HAS_DATE, True), (CONF_HAS_TIME, True)))
         })
     },
     extra=vol.ALLOW_EXTRA)

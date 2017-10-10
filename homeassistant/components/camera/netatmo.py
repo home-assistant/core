@@ -23,12 +23,10 @@ CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_VERIFY_SSL, default=True):
-    cv.boolean,
-    vol.Optional(CONF_HOME):
-    cv.string,
-    vol.Optional(CONF_CAMERAS, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Optional(CONF_HOME): cv.string,
+    vol.Optional(CONF_CAMERAS, default=[]): vol.All(cv.ensure_list,
+                                                    [cv.string]),
 })
 
 

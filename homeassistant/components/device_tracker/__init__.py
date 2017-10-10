@@ -81,12 +81,10 @@ SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL):
-    cv.time_period,
-    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW):
-    cv.boolean,
-    vol.Optional(CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME):
-    vol.All(cv.time_period, cv.positive_timedelta)
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME): vol.All(
+        cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -673,24 +671,19 @@ def async_load_config(path: str, hass: HomeAssistantType,
     This method is a coroutine.
     """
     dev_schema = vol.Schema({
-        vol.Required(CONF_NAME):
-        cv.string,
-        vol.Optional(CONF_ICON, default=False):
-        vol.Any(None, cv.icon),
-        vol.Optional('track', default=False):
-        cv.boolean,
-        vol.Optional(CONF_MAC, default=None):
-        vol.Any(None, vol.All(cv.string, vol.Upper)),
-        vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE):
-        cv.boolean,
-        vol.Optional('gravatar', default=None):
-        vol.Any(None, cv.string),
-        vol.Optional('picture', default=None):
-        vol.Any(None, cv.string),
-        vol.Optional(CONF_CONSIDER_HOME, default=consider_home):
-        vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional('vendor', default=None):
-        vol.Any(None, cv.string),
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ICON, default=False): vol.Any(None, cv.icon),
+        vol.Optional('track', default=False): cv.boolean,
+        vol.Optional(CONF_MAC, default=None): vol.Any(None,
+                                                      vol.All(
+                                                          cv.string,
+                                                          vol.Upper)),
+        vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+        vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
+        vol.Optional('picture', default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+            cv.time_period, cv.positive_timedelta),
+        vol.Optional('vendor', default=None): vol.Any(None, cv.string),
     })
     try:
         result = []

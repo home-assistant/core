@@ -27,16 +27,11 @@ DEFAULT_PROXY_SSL = False
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL):
-    cv.boolean,
-    vol.Inclusive(CONF_USERNAME, 'auth'):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'auth'):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
 })
 
 ATTR_DISPLAYTIME = 'displaytime'

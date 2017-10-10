@@ -25,8 +25,7 @@ TIMEOUT = 5
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_API_KEY): cv.string,
             vol.Required(CONF_ID): int,
             vol.Required(CONF_WHITELIST): cv.string

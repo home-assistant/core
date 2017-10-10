@@ -27,11 +27,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             cv.string: {
-                vol.Optional(CONF_ACTION):
-                cv.SCRIPT_SCHEMA,
+                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
                 vol.Optional(
-                    CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION):
-                cv.boolean,
+                    CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION): cv.
+                boolean,
                 vol.Optional(CONF_CARD): {
                     vol.Optional(CONF_TYPE, default='simple'): cv.string,
                     vol.Required(CONF_TITLE): cv.template,

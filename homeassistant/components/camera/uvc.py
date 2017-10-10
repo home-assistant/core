@@ -26,14 +26,10 @@ DEFAULT_PASSWORD = 'ubnt'
 DEFAULT_PORT = 7080
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NVR):
-    cv.string,
-    vol.Required(CONF_KEY):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Required(CONF_NVR): cv.string,
+    vol.Required(CONF_KEY): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 

@@ -17,10 +17,9 @@ DEFAULT_MODE = MODE_DEV
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-            vol.In([MODE_DEV, MODE_STAGING, MODE_PRODUCTION]),
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(
+                [MODE_DEV, MODE_STAGING, MODE_PRODUCTION]),
         }),
     },
     extra=vol.ALLOW_EXTRA)

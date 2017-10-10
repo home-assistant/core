@@ -25,18 +25,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
-                cv.string:
-                vol.All(cv.ensure_list, [{
-                    vol.Optional(CONF_UID):
-                    cv.string,
-                    vol.Required(CONF_TITLE):
-                    cv.template,
-                    vol.Optional(CONF_AUDIO):
-                    cv.template,
-                    vol.Required(CONF_TEXT, default=""):
-                    cv.template,
-                    vol.Optional(CONF_DISPLAY_URL):
-                    cv.template,
+                cv.string: vol.All(cv.ensure_list, [{
+                    vol.Optional(CONF_UID): cv.string,
+                    vol.Required(CONF_TITLE): cv.template,
+                    vol.Optional(CONF_AUDIO): cv.template,
+                    vol.Required(CONF_TEXT, default=""): cv.template,
+                    vol.Optional(CONF_DISPLAY_URL): cv.template,
                 }]),
             }
         }

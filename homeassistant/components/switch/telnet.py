@@ -22,25 +22,17 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 23
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_COMMAND_ON):
-    cv.string,
-    vol.Required(CONF_COMMAND_OFF):
-    cv.string,
-    vol.Optional(CONF_COMMAND_STATE):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(CONF_RESOURCE):
-    cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Required(CONF_COMMAND_ON): cv.string,
+    vol.Required(CONF_COMMAND_OFF): cv.string,
+    vol.Optional(CONF_COMMAND_STATE): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_RESOURCE): cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES):
-    vol.Schema({
+    vol.Required(CONF_SWITCHES): vol.Schema({
         cv.slug: SWITCH_SCHEMA
     }),
 })

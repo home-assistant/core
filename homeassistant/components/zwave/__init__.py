@@ -68,51 +68,36 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 RENAME_NODE_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_NAME):
-    cv.string,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_NAME): cv.string,
 })
 
 RENAME_VALUE_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_VALUE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_NAME):
-    cv.string,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_NAME): cv.string,
 })
 
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_PARAMETER):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_VALUE):
-    vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(const.ATTR_CONFIG_SIZE, default=2):
-    vol.Coerce(int)
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(const.ATTR_CONFIG_SIZE, default=2): vol.Coerce(int)
 })
 
 SET_POLL_INTENSITY_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_VALUE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_POLL_INTENSITY):
-    vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_POLL_INTENSITY): vol.Coerce(int),
 })
 
 PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_PARAMETER):
-    vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
 })
 
 NODE_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
 })
 
 REFRESH_ENTITY_SCHEMA = vol.Schema({
@@ -120,81 +105,62 @@ REFRESH_ENTITY_SCHEMA = vol.Schema({
 })
 
 RESET_NODE_METERS_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Optional(const.ATTR_INSTANCE, default=1):
-    vol.Coerce(int)
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Optional(const.ATTR_INSTANCE, default=1): vol.Coerce(int)
 })
 
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_ASSOCIATION):
-    cv.string,
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_TARGET_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_GROUP):
-    vol.Coerce(int),
-    vol.Optional(const.ATTR_INSTANCE, default=0x00):
-    vol.Coerce(int)
+    vol.Required(const.ATTR_ASSOCIATION): cv.string,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_TARGET_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_GROUP): vol.Coerce(int),
+    vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
 SET_WAKEUP_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_VALUE):
-    vol.All(vol.Coerce(int), cv.positive_int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.All(
+        vol.Coerce(int), cv.positive_int),
 })
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(CONF_POLLING_INTENSITY):
-    cv.positive_int,
-    vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED):
-    cv.boolean,
+    vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
+    vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(
         CONF_INVERT_OPENCLOSE_BUTTONS,
-        default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS):
-    cv.boolean,
-    vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
-    cv.boolean,
-    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-    cv.positive_int
+        default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
+    vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE): cv.
+    boolean,
+    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY): cv.
+    positive_int
 })
 
 SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL):
-            cv.boolean,
-            vol.Optional(CONF_CONFIG_PATH):
-            cv.string,
-            vol.Optional(CONF_NETWORK_KEY):
-            cv.string,
-            vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.
+            boolean,
+            vol.Optional(CONF_CONFIG_PATH): cv.string,
+            vol.Optional(CONF_NETWORK_KEY): cv.string,
+            vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema({
                 cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY
             }),
-            vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
-            vol.Schema({
+            vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}): vol.Schema({
                 cv.string: DEVICE_CONFIG_SCHEMA_ENTRY
             }),
-            vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
-            vol.Schema({
+            vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}): vol.Schema({
                 cv.string: DEVICE_CONFIG_SCHEMA_ENTRY
             }),
-            vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG):
-            cv.boolean,
+            vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
             vol.Optional(
-                CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
-            cv.positive_int,
+                CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL): cv.
+            positive_int,
             vol.Optional(
-                CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
-            cv.string,
-            vol.Optional(CONF_NEW_ENTITY_IDS, default=True):
-            cv.boolean,
+                CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH): cv.
+            string,
+            vol.Optional(CONF_NEW_ENTITY_IDS, default=True): cv.boolean,
         }),
     },
     extra=vol.ALLOW_EXTRA)

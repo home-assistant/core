@@ -52,10 +52,9 @@ OPTION_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=[]):
-    vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
-    vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY):
-    cv.string,
+    vol.Required(CONF_DISPLAY_OPTIONS, default=[]): vol.All(
+        cv.ensure_list, [vol.In(OPTION_TYPES)]),
+    vol.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
 })
 
 

@@ -19,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_INDEX = 'index'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INDEX, default=0):
-    cv.positive_int,
+    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
 })
 
 

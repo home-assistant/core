@@ -113,37 +113,30 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 })
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL):
-    cv.small_float,
+    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
 })
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED):
-    cv.boolean,
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
 })
 
 MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SEEK_POSITION):
-    vol.All(vol.Coerce(float), vol.Range(min=0)),
+    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
+        vol.Coerce(float), vol.Range(min=0)),
 })
 
 MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_INPUT_SOURCE):
-    cv.string,
+    vol.Required(ATTR_INPUT_SOURCE): cv.string,
 })
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE):
-    cv.string,
-    vol.Required(ATTR_MEDIA_CONTENT_ID):
-    cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE):
-    cv.boolean,
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SHUFFLE):
-    cv.boolean,
+    vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
 SERVICE_TO_METHOD = {

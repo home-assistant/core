@@ -24,14 +24,10 @@ CONF_EVENT = 'event'
 CONF_SALT = 'salt'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_KEY):
-    cv.string,
-    vol.Optional(CONF_EVENT):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED):
-    cv.string,
-    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED):
-    cv.string,
+    vol.Required(CONF_DEVICE_KEY): cv.string,
+    vol.Optional(CONF_EVENT): cv.string,
+    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
+    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
 })
 
 

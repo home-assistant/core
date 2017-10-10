@@ -27,12 +27,9 @@ DEFAULT_STREAM_QUERY = 'best'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_DEFAULT_STREAM_QUERY):
-            cv.string,
-            vol.Optional(CONF_CUSTOMIZE_ENTITIES):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_DEFAULT_STREAM_QUERY): cv.string,
+            vol.Optional(CONF_CUSTOMIZE_ENTITIES): vol.Schema({
                 cv.entity_id: vol.Schema({
                     cv.string: cv.string
                 })

@@ -80,20 +80,18 @@ FLUX_EFFECT_LIST = [
 ].extend(EFFECT_MAP.keys())
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(ATTR_MODE, default=MODE_RGBW):
-    vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
-    vol.Optional(CONF_PROTOCOL, default=None):
-    vol.All(cv.string, vol.In(['ledenet'])),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
+        cv.string, vol.In([MODE_RGBW, MODE_RGB])),
+    vol.Optional(CONF_PROTOCOL, default=None): vol.All(cv.string,
+                                                       vol.In(['ledenet'])),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: DEVICE_SCHEMA
     },
-    vol.Optional(CONF_AUTOMATIC_ADD, default=False):
-    cv.boolean,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
 })
 
 

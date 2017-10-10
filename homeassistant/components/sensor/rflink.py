@@ -28,24 +28,17 @@ SENSOR_ICONS = {
 CONF_SENSOR_TYPE = 'sensor_type'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    DOMAIN,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True):
-    cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}):
-    vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
-            vol.Optional(CONF_NAME):
-            cv.string,
-            vol.Required(CONF_SENSOR_TYPE):
-            cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None):
-            cv.string,
-            vol.Optional(CONF_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_SENSOR_TYPE): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
             # deprecated config options
-            vol.Optional(CONF_ALIASSES):
-            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
         },
     }),
 })

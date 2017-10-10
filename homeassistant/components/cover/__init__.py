@@ -62,13 +62,13 @@ COVER_SERVICE_SCHEMA = vol.Schema({
 })
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_POSITION):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.Required(ATTR_POSITION): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_TILT_POSITION):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.Required(ATTR_TILT_POSITION): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 SERVICE_TO_METHOD = {

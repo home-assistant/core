@@ -23,16 +23,11 @@ DEFAULT_NAME = 'KNX Light'
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_STATE_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_BRIGHTNESS_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS):
-    cv.string,
+    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+    vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
 })
 
 

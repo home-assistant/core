@@ -22,14 +22,12 @@ from homeassistant.components.sensor.zamg import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_STATION_ID):
-    cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.longitude,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_STATION_ID): cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    longitude,
 })
 
 

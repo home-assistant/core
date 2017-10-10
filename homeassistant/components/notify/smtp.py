@@ -43,26 +43,17 @@ ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT):
-    vol.All(cv.ensure_list, [vol.Email()]),
-    vol.Required(CONF_SENDER):
-    vol.Email(),
-    vol.Optional(CONF_SERVER, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION):
-    vol.In(ENCRYPTION_OPTIONS),
-    vol.Optional(CONF_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_SENDER_NAME):
-    cv.string,
-    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG):
-    cv.boolean,
+    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
+    vol.Required(CONF_SENDER): vol.Email(),
+    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+        ENCRYPTION_OPTIONS),
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_SENDER_NAME): cv.string,
+    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
 })
 
 

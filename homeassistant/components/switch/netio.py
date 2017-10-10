@@ -41,14 +41,10 @@ REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 URL_API_NETIO_EP = '/api/netio/{host}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_OUTLETS): {
         cv.string: cv.string
     },

@@ -39,38 +39,25 @@ CONF_MEASUREMENT_NAME = 'measurement'
 CONF_WHERE = 'where'
 
 _QUERY_SCHEME = vol.Schema({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_MEASUREMENT_NAME):
-    cv.string,
-    vol.Required(CONF_WHERE):
-    cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE):
-    cv.string,
-    vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION):
-    cv.string,
-    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD):
-    cv.string
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_MEASUREMENT_NAME): cv.string,
+    vol.Required(CONF_WHERE): cv.template,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+    vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION): cv.
+    string,
+    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Inclusive(CONF_USERNAME, 'authentication'):
-    cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'):
-    cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-    cv.boolean
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
 })
 
 # Return cached results if last scan was less then this time ago

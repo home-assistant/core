@@ -116,29 +116,24 @@ SERVICE_STANDBY = 'standby'
 
 # pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA = vol.Schema({
-    vol.All(cv.positive_int):
-    vol.Any(lambda devices: DEVICE_SCHEMA(devices), cv.string)
+    vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices),
+                                      cv.string)
 })
 
 CONF_DISPLAY_NAME = 'osd_name'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_DEVICES):
-            vol.Any(DEVICE_SCHEMA,
-                    vol.Schema({
-                        vol.All(cv.string): vol.Any(cv.string)
-                    })),
-            vol.Optional(CONF_PLATFORM):
-            vol.Any(SWITCH, MEDIA_PLAYER),
-            vol.Optional(CONF_HOST):
-            cv.string,
-            vol.Optional(CONF_DISPLAY_NAME):
-            cv.string,
-            vol.Optional(CONF_TYPES, default={}):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_DEVICES): vol.Any(
+                DEVICE_SCHEMA,
+                vol.Schema({
+                    vol.All(cv.string): vol.Any(cv.string)
+                })),
+            vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_DISPLAY_NAME): cv.string,
+            vol.Optional(CONF_TYPES, default={}): vol.Schema({
                 cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)
             })
         })

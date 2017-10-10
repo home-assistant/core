@@ -45,18 +45,13 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']): vol.
+    All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 

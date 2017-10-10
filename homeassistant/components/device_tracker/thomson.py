@@ -26,12 +26,9 @@ _DEVICES_REGEX = re.compile(r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s'
                             r'(?P<host>([^\s]+))')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
 })
 
 

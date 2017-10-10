@@ -25,10 +25,8 @@ CONF_BROADCAST_ADDRESS = 'broadcast_address'
 SERVICE_SEND_MAGIC_PACKET = 'send_magic_packet'
 
 WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema({
-    vol.Required(CONF_MAC):
-    cv.string,
-    vol.Optional(CONF_BROADCAST_ADDRESS):
-    cv.string,
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
 })
 
 

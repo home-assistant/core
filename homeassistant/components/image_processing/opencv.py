@@ -44,18 +44,16 @@ SCAN_INTERVAL = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CLASSIFIER, default=None): {
-        cv.string:
-        vol.Any(cv.isfile,
-                vol.Schema({
-                    vol.Required(CONF_FILE):
-                    cv.isfile,
-                    vol.Optional(CONF_SCALE, DEFAULT_SCALE):
-                    float,
-                    vol.Optional(CONF_NEIGHBORS, DEFAULT_NEIGHBORS):
-                    cv.positive_int,
-                    vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE):
-                    vol.Schema((int, int))
-                }))
+        cv.string: vol.Any(
+            cv.isfile,
+            vol.Schema({
+                vol.Required(CONF_FILE): cv.isfile,
+                vol.Optional(CONF_SCALE, DEFAULT_SCALE): float,
+                vol.Optional(CONF_NEIGHBORS, DEFAULT_NEIGHBORS): cv.
+                positive_int,
+                vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE): vol.Schema(
+                    (int, int))
+            }))
     }
 })
 

@@ -16,8 +16,7 @@ DEFAULT_NAME = 'UPS Online Status'
 DEPENDENCIES = [apcupsd.DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

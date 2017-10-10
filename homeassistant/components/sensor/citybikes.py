@@ -54,28 +54,20 @@ CITYBIKES_ATTRIBUTION = "Information provided by the CityBikes Project "\
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
     PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_NAME, default=''):
-        cv.string,
-        vol.Optional(CONF_NETWORK):
-        cv.string,
-        vol.Inclusive(CONF_LATITUDE, 'coordinates'):
-        cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, 'coordinates'):
-        cv.longitude,
-        vol.Optional(CONF_RADIUS, 'station_filter'):
-        cv.positive_int,
-        vol.Optional(CONF_STATIONS_LIST, 'station_filter'):
-        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string])
+        vol.Optional(CONF_NAME, default=''): cv.string,
+        vol.Optional(CONF_NETWORK): cv.string,
+        vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
+        vol.Optional(CONF_RADIUS, 'station_filter'): cv.positive_int,
+        vol.Optional(CONF_STATIONS_LIST, 'station_filter'): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string])
     }))
 
 NETWORK_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ID):
-        cv.string,
-        vol.Required(ATTR_NAME):
-        cv.string,
-        vol.Required(ATTR_LOCATION):
-        vol.Schema(
+        vol.Required(ATTR_ID): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Required(ATTR_LOCATION): vol.Schema(
             {
                 vol.Required(ATTR_LATITUDE): cv.latitude,
                 vol.Required(ATTR_LONGITUDE): cv.longitude,
@@ -90,22 +82,14 @@ NETWORKS_RESPONSE_SCHEMA = vol.Schema({
 
 STATION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_FREE_BIKES):
-        cv.positive_int,
-        vol.Required(ATTR_EMPTY_SLOTS):
-        vol.Any(cv.positive_int, None),
-        vol.Required(ATTR_LATITUDE):
-        cv.latitude,
-        vol.Required(ATTR_LONGITUDE):
-        cv.longitude,
-        vol.Required(ATTR_ID):
-        cv.string,
-        vol.Required(ATTR_NAME):
-        cv.string,
-        vol.Required(ATTR_TIMESTAMP):
-        cv.string,
-        vol.Optional(ATTR_EXTRA):
-        vol.Schema(
+        vol.Required(ATTR_FREE_BIKES): cv.positive_int,
+        vol.Required(ATTR_EMPTY_SLOTS): vol.Any(cv.positive_int, None),
+        vol.Required(ATTR_LATITUDE): cv.latitude,
+        vol.Required(ATTR_LONGITUDE): cv.longitude,
+        vol.Required(ATTR_ID): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Required(ATTR_TIMESTAMP): cv.string,
+        vol.Optional(ATTR_EXTRA): vol.Schema(
             {
                 vol.Optional(ATTR_UID): cv.string
             }, extra=vol.REMOVE_EXTRA)
@@ -113,8 +97,7 @@ STATION_SCHEMA = vol.Schema(
     extra=vol.REMOVE_EXTRA)
 
 STATIONS_RESPONSE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NETWORK):
-    vol.Schema(
+    vol.Required(ATTR_NETWORK): vol.Schema(
         {
             vol.Required(ATTR_STATIONS_LIST): [STATION_SCHEMA]
         },

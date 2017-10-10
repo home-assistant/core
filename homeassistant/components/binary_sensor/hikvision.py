@@ -51,27 +51,18 @@ DEVICE_CLASS_MAP = {
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED):
-    cv.boolean,
-    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY):
-    cv.positive_int
+    vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
+    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None):
-    cv.string,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_SSL, default=False):
-    cv.boolean,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_CUSTOMIZE, default={}):
-    vol.Schema({
+    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema({
         cv.string: CUSTOMIZE_SCHEMA
     }),
 })

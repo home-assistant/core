@@ -39,16 +39,13 @@ DOMAIN = 'proximity'
 UNITS = ['km', 'm', 'mi', 'ft']
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE):
-    cv.string,
-    vol.Optional(CONF_DEVICES, default=[]):
-    vol.All(cv.ensure_list, [cv.entity_id]),
-    vol.Optional(CONF_IGNORED_ZONES, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE):
-    cv.positive_int,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    vol.All(cv.string, vol.In(UNITS)),
+    vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE): cv.string,
+    vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list,
+                                                    [cv.entity_id]),
+    vol.Optional(CONF_IGNORED_ZONES, default=[]): vol.All(
+        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): cv.positive_int,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.string, vol.In(UNITS)),
 })
 
 CONFIG_SCHEMA = vol.Schema(

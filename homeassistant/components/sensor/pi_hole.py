@@ -35,12 +35,15 @@ DEFAULT_VERIFY_SSL = True
 SCAN_INTERVAL = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
-    'dns_queries_today':
-    ['DNS Queries Today', 'queries', 'mdi:comment-question-outline'],
-    'ads_blocked_today':
-    ['Ads Blocked Today', 'ads', 'mdi:close-octagon-outline'],
-    'ads_percentage_today':
-    ['Ads Percentage Blocked Today', '%', 'mdi:close-octagon-outline'],
+    'dns_queries_today': [
+        'DNS Queries Today', 'queries', 'mdi:comment-question-outline'
+    ],
+    'ads_blocked_today': [
+        'Ads Blocked Today', 'ads', 'mdi:close-octagon-outline'
+    ],
+    'ads_percentage_today': [
+        'Ads Percentage Blocked Today', '%', 'mdi:close-octagon-outline'
+    ],
     'domains_being_blocked': [
         'Domains Blocked', 'domains', 'mdi:block-helper'
     ],
@@ -55,18 +58,13 @@ MONITORED_CONDITIONS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
-    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION):
-    cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-    cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS): vol.
+    All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 

@@ -21,14 +21,10 @@ MTK_DEFAULT_API_PORT = '8728'
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT):
-    cv.port
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port
 })
 
 

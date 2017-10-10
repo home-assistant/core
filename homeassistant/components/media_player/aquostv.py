@@ -37,22 +37,14 @@ SUPPORT_SHARPTV = SUPPORT_TURN_OFF | \
     SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.string,
-    vol.Optional('retries', default=DEFAULT_RETRIES):
-    cv.string,
-    vol.Optional('power_on_enabled', default=False):
-    cv.boolean,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
+    vol.Optional('retries', default=DEFAULT_RETRIES): cv.string,
+    vol.Optional('power_on_enabled', default=False): cv.boolean,
 })
 
 SOURCES = {

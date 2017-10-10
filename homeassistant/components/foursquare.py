@@ -42,8 +42,7 @@ CHECKIN_SERVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
             vol.Required(CONF_PUSH_SECRET): cv.string,
         }),

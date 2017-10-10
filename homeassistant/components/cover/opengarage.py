@@ -35,19 +35,14 @@ STATE_STOPPED = "stopped"
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
 COVER_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICEKEY):
-    cv.string,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_NAME):
-    cv.string
+    vol.Required(CONF_DEVICEKEY): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    vol.Schema({
+    vol.Required(CONF_COVERS): vol.Schema({
         cv.slug: COVER_SCHEMA
     }),
 })

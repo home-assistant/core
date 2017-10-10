@@ -25,8 +25,7 @@ DOMAIN = 'mochad'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Optional(CONF_HOST, default='localhost'): cv.string,
             vol.Optional(CONF_PORT, default=1099): cv.port,
         })

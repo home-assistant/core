@@ -31,12 +31,9 @@ ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
 })
 
 

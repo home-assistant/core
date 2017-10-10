@@ -39,10 +39,9 @@ DEFAULT_TRUSTED_NETWORKS = [
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL):
-    vol.Url(),
-    vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
-    vol.All(cv.ensure_list, [ip_network])
+    vol.Optional(CONF_URL): vol.Url(),
+    vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS): vol.
+    All(cv.ensure_list, [ip_network])
 })
 
 

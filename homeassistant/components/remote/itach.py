@@ -28,22 +28,14 @@ CONF_COMMANDS = 'commands'
 CONF_DATA = 'data'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAC):
-    cv.string,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Required(CONF_DEVICES):
-    vol.All(cv.ensure_list, [{
-        vol.Optional(CONF_NAME):
-        cv.string,
-        vol.Optional(CONF_MODADDR):
-        vol.Coerce(int),
-        vol.Required(CONF_CONNADDR):
-        vol.Coerce(int),
-        vol.Required(CONF_COMMANDS):
-        vol.All(cv.ensure_list, [{
+    vol.Optional(CONF_MAC): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_MODADDR): vol.Coerce(int),
+        vol.Required(CONF_CONNADDR): vol.Coerce(int),
+        vol.Required(CONF_COMMANDS): vol.All(cv.ensure_list, [{
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_DATA): cv.string
         }])

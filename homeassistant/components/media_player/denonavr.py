@@ -42,23 +42,17 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
     SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 DENON_ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE):
-    vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
-    cv.boolean,
-    vol.Optional(CONF_ZONES):
-    vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): cv.
+    boolean,
+    vol.Optional(CONF_ZONES): vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 NewHost = namedtuple('NewHost', ['host', 'name'])

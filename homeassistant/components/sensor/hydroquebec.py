@@ -39,12 +39,15 @@ SENSOR_TYPES = {
     'period_total_bill': ['Period total bill', PRICE, 'mdi:square-inc-cash'],
     'period_length': ['Period length', DAYS, 'mdi:calendar-today'],
     'period_total_days': ['Period total days', DAYS, 'mdi:calendar-today'],
-    'period_mean_daily_bill':
-    ['Period mean daily bill', PRICE, 'mdi:square-inc-cash'],
-    'period_mean_daily_consumption':
-    ['Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_total_consumption':
-    ['Period total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_mean_daily_bill': [
+        'Period mean daily bill', PRICE, 'mdi:square-inc-cash'
+    ],
+    'period_mean_daily_consumption': [
+        'Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'
+    ],
+    'period_total_consumption': [
+        'Period total consumption', KILOWATT_HOUR, 'mdi:flash'
+    ],
     'period_lower_price_consumption': [
         'Period lower price consumption', KILOWATT_HOUR, 'mdi:flash'
     ],
@@ -69,16 +72,12 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_CONTRACT):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_MONITORED_VARIABLES): vol.All(cv.ensure_list,
+                                                    [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_CONTRACT): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 HOST = 'https://www.hydroquebec.com'

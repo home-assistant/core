@@ -39,16 +39,12 @@ SUPPORTED_COMMANDS = SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
                      | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_ACCESS_TOKEN):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_SUPPRESS_WARNING, default=False):
-    cv.boolean,
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
+    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=10)),
 })
 
 

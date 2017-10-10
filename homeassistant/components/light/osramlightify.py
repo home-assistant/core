@@ -37,11 +37,10 @@ SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
                          | SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(
-        CONF_ALLOW_LIGHTIFY_GROUPS, default=DEFAULT_ALLOW_LIGHTIFY_GROUPS):
-    cv.boolean,
+        CONF_ALLOW_LIGHTIFY_GROUPS, default=DEFAULT_ALLOW_LIGHTIFY_GROUPS): cv.
+    boolean,
 })
 
 

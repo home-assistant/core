@@ -62,22 +62,18 @@ DEFAULT_TEXT_TYPE = 'text'
 DEFAULT_SAMPLE_RATES = {'mp3': '22050', 'ogg_vorbis': '22050', 'pcm': '16000'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION, default=DEFAULT_REGION):
-    vol.In(SUPPORTED_REGIONS),
-    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS):
-    cv.string,
-    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS):
-    cv.string,
-    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS):
-    cv.string,
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-    vol.In(SUPPORTED_VOICES),
-    vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
-    vol.In(SUPPORTED_OUTPUT_FORMATS),
-    vol.Optional(CONF_SAMPLE_RATE):
-    vol.All(cv.string, vol.In(SUPPORTED_SAMPLE_RATES)),
-    vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE):
-    vol.In(SUPPORTED_TEXT_TYPES),
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(
+        SUPPORTED_REGIONS),
+    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
+    vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT): vol.In(
+        SUPPORTED_OUTPUT_FORMATS),
+    vol.Optional(CONF_SAMPLE_RATE): vol.All(cv.string,
+                                            vol.In(SUPPORTED_SAMPLE_RATES)),
+    vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE): vol.In(
+        SUPPORTED_TEXT_TYPES),
 })
 
 

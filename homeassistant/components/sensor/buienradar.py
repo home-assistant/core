@@ -46,8 +46,9 @@ SENSOR_TYPES = {
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'groundtemperature':
-    ['Ground temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'groundtemperature': [
+        'Ground temperature', TEMP_CELSIUS, 'mdi:thermometer'
+    ],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
     'winddirection': ['Wind direction', None, 'mdi:compass-outline'],
@@ -57,10 +58,12 @@ SENSOR_TYPES = {
     'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
-    'precipitation_forecast_average':
-    ['Precipitation forecast average', 'mm/h', 'mdi:weather-pouring'],
-    'precipitation_forecast_total':
-    ['Precipitation forecast total', 'mm', 'mdi:weather-pouring'],
+    'precipitation_forecast_average': [
+        'Precipitation forecast average', 'mm/h', 'mdi:weather-pouring'
+    ],
+    'precipitation_forecast_total': [
+        'Precipitation forecast total', 'mm', 'mdi:weather-pouring'
+    ],
     'temperature_1d': ['Temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_2d': ['Temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_3d': ['Temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -126,14 +129,14 @@ SENSOR_TYPES = {
 CONF_TIMEFRAME = 'timeframe'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol', 'temperature']):
-    vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.longitude,
-    vol.Optional(CONF_TIMEFRAME, default=60):
-    vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol', 'temperature']): vol.
+    All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    longitude,
+    vol.Optional(CONF_TIMEFRAME, default=60): vol.All(
+        vol.Coerce(int), vol.Range(min=5, max=120)),
 })
 
 

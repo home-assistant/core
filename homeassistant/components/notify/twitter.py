@@ -30,16 +30,11 @@ CONF_ACCESS_TOKEN_SECRET = 'access_token_secret'
 ATTR_MEDIA = 'media'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN):
-    cv.string,
-    vol.Required(CONF_ACCESS_TOKEN_SECRET):
-    cv.string,
-    vol.Required(CONF_CONSUMER_KEY):
-    cv.string,
-    vol.Required(CONF_CONSUMER_SECRET):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
+    vol.Required(CONF_CONSUMER_KEY): cv.string,
+    vol.Required(CONF_CONSUMER_SECRET): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 

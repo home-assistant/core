@@ -102,24 +102,16 @@ SENSOR_TYPES = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
-    vol.Optional(CONF_CITY):
-    cv.string,
-    vol.Optional(CONF_COUNTRY):
-    cv.string,
-    vol.Optional(CONF_LATITUDE):
-    cv.latitude,
-    vol.Optional(CONF_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_RADIUS, default=1000):
-    cv.positive_int,
-    vol.Optional(CONF_SHOW_ON_MAP, default=True):
-    cv.boolean,
-    vol.Optional(CONF_STATE):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list,
+                                                     [vol.In(SENSOR_LOCALES)]),
+    vol.Optional(CONF_CITY): cv.string,
+    vol.Optional(CONF_COUNTRY): cv.string,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_RADIUS, default=1000): cv.positive_int,
+    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
+    vol.Optional(CONF_STATE): cv.string,
 })
 
 

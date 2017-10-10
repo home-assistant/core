@@ -33,16 +33,11 @@ MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INDOOR_TEMP):
-    cv.entity_id,
-    vol.Required(CONF_OUTDOOR_TEMP):
-    cv.entity_id,
-    vol.Required(CONF_INDOOR_HUMIDITY):
-    cv.entity_id,
-    vol.Optional(CONF_CALIBRATION_FACTOR):
-    vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
+    vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
+    vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
+    vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -248,8 +243,8 @@ class MoldIndicator(Entity):
                 ATTR_CRITICAL_TEMP: self._crit_temp,
             }
         return {
-            ATTR_DEWPOINT:
-            util.temperature.celsius_to_fahrenheit(self._dewpoint),
-            ATTR_CRITICAL_TEMP:
-            util.temperature.celsius_to_fahrenheit(self._crit_temp),
+            ATTR_DEWPOINT: util.temperature.celsius_to_fahrenheit(
+                self._dewpoint),
+            ATTR_CRITICAL_TEMP: util.temperature.celsius_to_fahrenheit(
+                self._crit_temp),
         }

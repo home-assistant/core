@@ -27,8 +27,7 @@ DEFAULT_NAME = 'HASS'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_TOKEN): cv.string,
             vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

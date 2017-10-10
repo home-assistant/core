@@ -42,21 +42,16 @@ ELEC_SCHEMA = vol.Schema({
 GAS_TYPE_SCHEMA = vol.In([CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL])
 
 GAS_SCHEMA = vol.Schema({
-    vol.Required(CONF_GAS_SERIAL):
-    cv.string,
-    vol.Required(CONF_GAS_SECRET):
-    cv.string,
-    vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC):
-    GAS_TYPE_SCHEMA,
-    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC):
-    vol.Coerce(float)
+    vol.Required(CONF_GAS_SERIAL): cv.string,
+    vol.Required(CONF_GAS_SECRET): cv.string,
+    vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC): GAS_TYPE_SCHEMA,
+    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC): vol.Coerce(
+        float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ELEC):
-    vol.All(dict, ELEC_SCHEMA),
-    vol.Optional(CONF_GAS, default={}):
-    vol.All(dict, GAS_SCHEMA)
+    vol.Required(CONF_ELEC): vol.All(dict, ELEC_SCHEMA),
+    vol.Optional(CONF_GAS, default={}): vol.All(dict, GAS_SCHEMA)
 })
 
 

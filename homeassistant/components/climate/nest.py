@@ -20,8 +20,8 @@ DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL):
-    vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SCAN_INTERVAL): vol.All(
+        vol.Coerce(int), vol.Range(min=1)),
 })
 
 STATE_ECO = 'eco'

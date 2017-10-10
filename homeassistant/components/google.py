@@ -64,8 +64,7 @@ TOKEN_FILE = '.{}.token'.format(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_CLIENT_ID): cv.string,
             vol.Required(CONF_CLIENT_SECRET): cv.string,
             vol.Optional(CONF_TRACK_NEW): cv.boolean,
@@ -74,24 +73,18 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 _SINGLE_CALSEARCH_CONFIG = vol.Schema({
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_DEVICE_ID):
-    cv.string,
-    vol.Optional(CONF_TRACK):
-    cv.boolean,
-    vol.Optional(CONF_SEARCH):
-    vol.Any(cv.string, None),
-    vol.Optional(CONF_OFFSET):
-    cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_DEVICE_ID): cv.string,
+    vol.Optional(CONF_TRACK): cv.boolean,
+    vol.Optional(CONF_SEARCH): vol.Any(cv.string, None),
+    vol.Optional(CONF_OFFSET): cv.string,
 })
 
 DEVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CAL_ID):
-        cv.string,
-        vol.Required(CONF_ENTITIES, None):
-        vol.All(cv.ensure_list, [_SINGLE_CALSEARCH_CONFIG]),
+        vol.Required(CONF_CAL_ID): cv.string,
+        vol.Required(CONF_ENTITIES, None): vol.All(cv.ensure_list,
+                                                   [_SINGLE_CALSEARCH_CONFIG]),
     },
     extra=vol.ALLOW_EXTRA)
 
@@ -256,15 +249,12 @@ class GoogleCalendarService(object):
 def get_calendar_info(hass, calendar):
     """Convert data from Google into DEVICE_SCHEMA."""
     calendar_info = DEVICE_SCHEMA({
-        CONF_CAL_ID:
-        calendar['id'],
+        CONF_CAL_ID: calendar['id'],
         CONF_ENTITIES: [{
-            CONF_TRACK:
-            calendar['track'],
-            CONF_NAME:
-            calendar['summary'],
-            CONF_DEVICE_ID:
-            generate_entity_id('{}', calendar['summary'], hass=hass),
+            CONF_TRACK: calendar['track'],
+            CONF_NAME: calendar['summary'],
+            CONF_DEVICE_ID: generate_entity_id(
+                '{}', calendar['summary'], hass=hass),
         }]
     })
     return calendar_info
@@ -279,8 +269,7 @@ def load_config(path):
             for calendar in data:
                 try:
                     calendars.update({
-                        calendar[CONF_CAL_ID]:
-                        DEVICE_SCHEMA(calendar)
+                        calendar[CONF_CAL_ID]: DEVICE_SCHEMA(calendar)
                     })
                 except VoluptuousError as exception:
                     # keep going

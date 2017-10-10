@@ -21,14 +21,10 @@ CONF_DEVICE_IDS = 'device_ids'
 CONF_DEVICE_NAMES = 'device_names'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_DEVICE_ID):
-    cv.string,
-    vol.Optional(CONF_DEVICE_IDS):
-    cv.string,
-    vol.Optional(CONF_DEVICE_NAMES):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_DEVICE_ID): cv.string,
+    vol.Optional(CONF_DEVICE_IDS): cv.string,
+    vol.Optional(CONF_DEVICE_NAMES): cv.string,
 })
 
 

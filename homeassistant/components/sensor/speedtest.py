@@ -42,22 +42,21 @@ SENSOR_TYPES = {
     'upload': ['Upload', 'Mbit/s'],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_SERVER_ID):
-    cv.positive_int,
-    vol.Optional(CONF_SECOND, default=[0]):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_MINUTE, default=[0]):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_HOUR):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
-    vol.Optional(CONF_DAY):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
-    vol.Optional(CONF_MANUAL, default=False):
-    cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
+            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+        vol.Optional(CONF_SERVER_ID): cv.positive_int,
+        vol.Optional(CONF_SECOND, default=[0]): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+        vol.Optional(CONF_MINUTE, default=[0]): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+        vol.Optional(CONF_HOUR): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+        vol.Optional(CONF_DAY): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+        vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+    })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

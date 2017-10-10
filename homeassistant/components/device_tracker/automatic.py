@@ -48,14 +48,11 @@ DATA_CONFIGURING = 'automatic_configurator_clients'
 DATA_REFRESH_TOKEN = 'refresh_token'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID):
-    cv.string,
-    vol.Required(CONF_SECRET):
-    cv.string,
-    vol.Optional(CONF_CURRENT_LOCATION, default=False):
-    cv.boolean,
-    vol.Optional(CONF_DEVICES, default=None):
-    vol.All(cv.ensure_list, [cv.string])
+    vol.Required(CONF_CLIENT_ID): cv.string,
+    vol.Required(CONF_SECRET): cv.string,
+    vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
+    vol.Optional(CONF_DEVICES, default=None): vol.All(cv.ensure_list,
+                                                      [cv.string])
 })
 
 

@@ -46,12 +46,15 @@ SENSOR_TYPES = {
     'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
     'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
     'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
-    'text_int_used':
-    ['International text used', MESSAGES, 'mdi:message-alert'],
-    'text_int_limit':
-    ['International text limit', MESSAGES, 'mdi:message-alart'],
-    'text_int_remaining':
-    ['Internaltional remaining', MESSAGES, 'mdi:message-alert'],
+    'text_int_used': [
+        'International text used', MESSAGES, 'mdi:message-alert'
+    ],
+    'text_int_limit': [
+        'International text limit', MESSAGES, 'mdi:message-alart'
+    ],
+    'text_int_remaining': [
+        'Internaltional remaining', MESSAGES, 'mdi:message-alert'
+    ],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
     'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
     'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
@@ -61,14 +64,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_MONITORED_VARIABLES): vol.All(cv.ensure_list,
+                                                    [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

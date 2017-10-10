@@ -19,12 +19,9 @@ CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME):
-    vol.Coerce(str),
-    vol.Optional(CONF_SCALE, default=1):
-    vol.Coerce(float),
-    vol.Optional(CONF_OFFSET, default=0):
-    vol.Coerce(float)
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+    vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float)
 })
 
 TEMPER_SENSORS = []

@@ -23,8 +23,7 @@ DEFAULT_DEVICE_CLASS = 'moving'
 DEPENDENCIES = ['digital_ocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DROPLETS):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 

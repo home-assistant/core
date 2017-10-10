@@ -22,8 +22,7 @@ ATTR_GROUP = 'group'
 DEFAULT_URL = 'http://localhost:9001/RPC2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL, default=DEFAULT_URL):
-    cv.url,
+    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
 })
 
 

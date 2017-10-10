@@ -25,18 +25,18 @@ CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 CONF_MANUAL = 'manual'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SECOND, default=[0]):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_MINUTE, default=[0]):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_HOUR):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
-    vol.Optional(CONF_DAY):
-    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
-    vol.Optional(CONF_MANUAL, default=False):
-    cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_SECOND, default=[0]): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+        vol.Optional(CONF_MINUTE, default=[0]): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+        vol.Optional(CONF_HOUR): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+        vol.Optional(CONF_DAY): vol.All(
+            cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+        vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+    })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

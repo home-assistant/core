@@ -192,10 +192,8 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
 
             face_ids = [data['faceId'] for data in face_data]
             detect = yield from self._api.call_api('post', 'identify', {
-                'faceIds':
-                face_ids,
-                'personGroupId':
-                self._face_group
+                'faceIds': face_ids,
+                'personGroupId': self._face_group
             })
 
         except HomeAssistantError as err:

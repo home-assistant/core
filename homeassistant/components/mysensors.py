@@ -145,38 +145,29 @@ NODE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema(
+        DOMAIN: vol.Schema(
             vol.All(
                 deprecated(CONF_DEBUG), {
-                    vol.Required(CONF_GATEWAYS):
-                    vol.All(cv.ensure_list, has_all_unique_files, [{
-                        vol.Required(CONF_DEVICE):
-                        vol.Any(MQTT_COMPONENT, is_socket_address,
-                                is_serial_port),
-                        vol.Optional(CONF_PERSISTENCE_FILE):
-                        vol.All(cv.string, is_persistence_file,
-                                has_parent_dir),
+                    vol.Required(CONF_GATEWAYS): vol.
+                    All(cv.ensure_list, has_all_unique_files, [{
+                        vol.Required(CONF_DEVICE): vol.Any(
+                            MQTT_COMPONENT, is_socket_address, is_serial_port),
+                        vol.Optional(CONF_PERSISTENCE_FILE): vol.All(
+                            cv.string, is_persistence_file, has_parent_dir),
                         vol.Optional(
-                            CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE):
-                        cv.positive_int,
-                        vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT):
-                        cv.port,
-                        vol.Optional(CONF_TOPIC_IN_PREFIX, default=''):
-                        valid_subscribe_topic,
-                        vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''):
-                        valid_publish_topic,
-                        vol.Optional(CONF_NODES, default={}):
-                        NODE_SCHEMA,
+                            CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.
+                        positive_int,
+                        vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.
+                        port,
+                        vol.Optional(CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
+                        vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+                        vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
                     }]),
-                    vol.Optional(CONF_OPTIMISTIC, default=False):
-                    cv.boolean,
-                    vol.Optional(CONF_PERSISTENCE, default=True):
-                    cv.boolean,
-                    vol.Optional(CONF_RETAIN, default=True):
-                    cv.boolean,
-                    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-                    cv.string,
+                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
+                    vol.Optional(CONF_RETAIN, default=True): cv.boolean,
+                    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.
+                    string,
                 }))
     },
     extra=vol.ALLOW_EXTRA)
@@ -240,16 +231,18 @@ MYSENSORS_CONST_SCHEMA = {
         PLATFORM: 'switch',
         TYPE: 'V_ARMED'
     }],
-    'S_SPRINKLER':
-    [BINARY_SENSOR_SCHEMA, {
-        PLATFORM: 'switch',
-        TYPE: 'V_STATUS'
-    }],
-    'S_WATER_LEAK':
-    [BINARY_SENSOR_SCHEMA, {
-        PLATFORM: 'switch',
-        TYPE: 'V_ARMED'
-    }],
+    'S_SPRINKLER': [
+        BINARY_SENSOR_SCHEMA, {
+            PLATFORM: 'switch',
+            TYPE: 'V_STATUS'
+        }
+    ],
+    'S_WATER_LEAK': [
+        BINARY_SENSOR_SCHEMA, {
+            PLATFORM: 'switch',
+            TYPE: 'V_ARMED'
+        }
+    ],
     'S_SOUND': [
         BINARY_SENSOR_SCHEMA, {
             PLATFORM: 'sensor',
@@ -453,10 +446,8 @@ MYSENSORS_CONST_SCHEMA = {
         PLATFORM: 'switch',
         TYPE: 'V_STATUS'
     }],
-    'S_AIR_QUALITY':
-    DUST_SCHEMA,
-    'S_DUST':
-    DUST_SCHEMA,
+    'S_AIR_QUALITY': DUST_SCHEMA,
+    'S_DUST': DUST_SCHEMA,
     'S_LIGHT': [SWITCH_LIGHT_SCHEMA],
     'S_BINARY': [SWITCH_STATUS_SCHEMA],
     'S_LOCK': [{

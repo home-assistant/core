@@ -19,12 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_SENDER):
-    vol.Email(),
-    vol.Required(CONF_RECIPIENT):
-    vol.Email(),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_SENDER): vol.Email(),
+    vol.Required(CONF_RECIPIENT): vol.Email(),
 })
 
 

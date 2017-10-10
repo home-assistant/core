@@ -35,8 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'Inside Temperature', TEMP_CELSIUS, 'mdi:thermometer',
             SENSOR_TEMPERATURE_EXTRACT
         ],
-        ATTR_CURRENT_HUMIDITY:
-        ['Inside Humidity', '%', 'mdi:water-percent', SENSOR_HUMIDITY_EXTRACT],
+        ATTR_CURRENT_HUMIDITY: [
+            'Inside Humidity', '%', 'mdi:water-percent',
+            SENSOR_HUMIDITY_EXTRACT
+        ],
         ATTR_OUTSIDE_TEMPERATURE: [
             'Outside Temperature', TEMP_CELSIUS, 'mdi:thermometer',
             SENSOR_TEMPERATURE_OUTDOOR

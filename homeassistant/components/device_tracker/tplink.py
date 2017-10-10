@@ -21,12 +21,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
 })
 
 
@@ -371,28 +368,18 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         base_url = 'http://{}'.format(self.host)
 
         header = {
-            "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
             " rv:53.0) Gecko/20100101 Firefox/53.0",
-            "Accept":
-            "application/json, text/javascript, */*; q=0.01",
-            "Accept-Language":
-            "Accept-Language: en-US,en;q=0.5",
-            "Accept-Encoding":
-            "gzip, deflate",
-            "Content-Type":
-            "application/x-www-form-urlencoded; "
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "Accept-Language: en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+            "Content-Type": "application/x-www-form-urlencoded; "
             "charset=UTF-8",
-            "X-Requested-With":
-            "XMLHttpRequest",
-            "Referer":
-            "http://" + self.host + "/",
-            "Connection":
-            "keep-alive",
-            "Pragma":
-            "no-cache",
-            "Cache-Control":
-            "no-cache"
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": "http://" + self.host + "/",
+            "Connection": "keep-alive",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache"
         }
 
         password_md5 = hashlib.md5(

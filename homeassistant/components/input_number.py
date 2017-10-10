@@ -40,10 +40,8 @@ ATTR_MODE = 'mode'
 SERVICE_SET_VALUE = 'set_value'
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_VALUE):
-    vol.Coerce(float),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
 
@@ -63,26 +61,18 @@ def _cv_input_number(cfg):
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.All({
-                vol.Optional(CONF_NAME):
-                cv.string,
-                vol.Required(CONF_MIN):
-                vol.Coerce(float),
-                vol.Required(CONF_MAX):
-                vol.Coerce(float),
-                vol.Optional(CONF_INITIAL):
-                vol.Coerce(float),
-                vol.Optional(CONF_STEP, default=1):
-                vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
-                vol.Optional(CONF_ICON):
-                cv.icon,
-                vol.Optional(ATTR_UNIT_OF_MEASUREMENT):
-                cv.string,
-                vol.Optional(CONF_MODE, default=MODE_SLIDER):
-                vol.In([MODE_BOX, MODE_SLIDER]),
+        DOMAIN: vol.Schema({
+            cv.slug: vol.All({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Required(CONF_MIN): vol.Coerce(float),
+                vol.Required(CONF_MAX): vol.Coerce(float),
+                vol.Optional(CONF_INITIAL): vol.Coerce(float),
+                vol.Optional(CONF_STEP, default=1): vol.All(
+                    vol.Coerce(float), vol.Range(min=1e-3)),
+                vol.Optional(CONF_ICON): cv.icon,
+                vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In(
+                    [MODE_BOX, MODE_SLIDER]),
             }, _cv_input_number)
         })
     },

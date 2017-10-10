@@ -37,8 +37,7 @@ HEMISPHERE_SEASON_SWAP = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL):
-    vol.In(VALID_TYPES)
+    vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)
 })
 
 

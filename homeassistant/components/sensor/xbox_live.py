@@ -22,10 +22,8 @@ CONF_XUID = 'xuid'
 ICON = 'mdi:xbox'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_XUID):
-    vol.All(cv.ensure_list, [cv.string])
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_XUID): vol.All(cv.ensure_list, [cv.string])
 })
 
 

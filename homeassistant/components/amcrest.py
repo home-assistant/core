@@ -63,35 +63,40 @@ SENSORS = {
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.All(cv.ensure_list, [
-            vol.Schema({
-                vol.Required(CONF_HOST):
-                cv.string,
-                vol.Required(CONF_USERNAME):
-                cv.string,
-                vol.Required(CONF_PASSWORD):
-                cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-                cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-                cv.port,
-                vol.Optional(
-                    CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-                vol.All(vol.In(AUTHENTICATION_LIST)),
-                vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-                vol.All(vol.In(RESOLUTION_LIST)),
-                vol.Optional(
-                    CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
-                vol.All(vol.In(STREAM_SOURCE_LIST)),
-                vol.Optional(CONF_FFMPEG_ARGUMENTS):
-                cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-                cv.time_period,
-                vol.Optional(CONF_SENSORS, default=None):
-                vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-            })
-        ])
+        DOMAIN: vol.All(cv.ensure_list,
+                        [
+                            vol.Schema(
+                                {
+                                    vol.Required(CONF_HOST): cv.string,
+                                    vol.Required(CONF_USERNAME): cv.string,
+                                    vol.Required(CONF_PASSWORD): cv.string,
+                                    vol.Optional(
+                                        CONF_NAME, default=DEFAULT_NAME): cv.
+                                    string,
+                                    vol.Optional(
+                                        CONF_PORT, default=DEFAULT_PORT): cv.
+                                    port,
+                                    vol.Optional(
+                                        CONF_AUTHENTICATION,
+                                        default=HTTP_BASIC_AUTHENTICATION): vol.
+                                    All(vol.In(AUTHENTICATION_LIST)),
+                                    vol.Optional(
+                                        CONF_RESOLUTION,
+                                        default=DEFAULT_RESOLUTION): vol.All(
+                                        vol.In(RESOLUTION_LIST)),
+                                    vol.Optional(
+                                        CONF_STREAM_SOURCE,
+                                        default=DEFAULT_STREAM_SOURCE): vol.
+                                    All(vol.In(STREAM_SOURCE_LIST)),
+                                    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.
+                                    string,
+                                    vol.Optional(
+                                        CONF_SCAN_INTERVAL,
+                                        default=SCAN_INTERVAL): cv.time_period,
+                                    vol.Optional(CONF_SENSORS, default=None): vol.
+                                    All(cv.ensure_list, [vol.In(SENSORS)]),
+                                })
+                        ])
     },
     extra=vol.ALLOW_EXTRA)
 

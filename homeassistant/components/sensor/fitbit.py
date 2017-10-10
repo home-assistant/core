@@ -57,12 +57,15 @@ FITBIT_RESOURCES_LIST = {
     'activities/elevation': ['Elevation', '', 'walk'],
     'activities/floors': ['Floors', 'floors', 'walk'],
     'activities/heart': ['Resting Heart Rate', 'bpm', 'heart-pulse'],
-    'activities/minutesFairlyActive':
-    ['Minutes Fairly Active', 'minutes', 'walk'],
-    'activities/minutesLightlyActive':
-    ['Minutes Lightly Active', 'minutes', 'walk'],
-    'activities/minutesSedentary':
-    ['Minutes Sedentary', 'minutes', 'seat-recline-normal'],
+    'activities/minutesFairlyActive': [
+        'Minutes Fairly Active', 'minutes', 'walk'
+    ],
+    'activities/minutesLightlyActive': [
+        'Minutes Lightly Active', 'minutes', 'walk'
+    ],
+    'activities/minutesSedentary': [
+        'Minutes Sedentary', 'minutes', 'seat-recline-normal'
+    ],
     'activities/minutesVeryActive': ['Minutes Very Active', 'minutes', 'run'],
     'activities/steps': ['Steps', 'steps', 'walk'],
     'activities/tracker/activityCalories': [
@@ -139,12 +142,13 @@ FITBIT_MEASUREMENTS = {
 
 BATTERY_LEVELS = {'High': 100, 'Medium': 50, 'Low': 20, 'Empty': 0}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
-    vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
-    vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
-    vol.In(['12H', '24H'])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES): vol.
+        All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
+        vol.Optional(CONF_CLOCK_FORMAT, default='24H'): vol.In(['12H', '24H'])
+    })
 
 
 def config_from_file(filename, config=None):

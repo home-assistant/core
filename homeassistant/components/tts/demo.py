@@ -15,8 +15,7 @@ SUPPORT_LANGUAGES = ['en', 'de']
 DEFAULT_LANG = 'en'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
 })
 
 

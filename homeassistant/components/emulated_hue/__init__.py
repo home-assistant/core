@@ -52,26 +52,18 @@ DEFAULT_TYPE = TYPE_GOOGLE
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_HOST_IP):
-            cv.string,
-            vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
-            cv.port,
-            vol.Optional(CONF_ADVERTISE_IP):
-            cv.string,
-            vol.Optional(CONF_ADVERTISE_PORT):
-            cv.port,
-            vol.Optional(CONF_UPNP_BIND_MULTICAST):
-            cv.boolean,
-            vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS):
-            cv.ensure_list,
-            vol.Optional(CONF_EXPOSE_BY_DEFAULT):
-            cv.boolean,
-            vol.Optional(CONF_EXPOSED_DOMAINS):
-            cv.ensure_list,
-            vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
-            vol.Any(TYPE_ALEXA, TYPE_GOOGLE)
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_HOST_IP): cv.string,
+            vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.
+            port,
+            vol.Optional(CONF_ADVERTISE_IP): cv.string,
+            vol.Optional(CONF_ADVERTISE_PORT): cv.port,
+            vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
+            vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
+            vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
+            vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
+            vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.Any(
+                TYPE_ALEXA, TYPE_GOOGLE)
         })
     },
     extra=vol.ALLOW_EXTRA)

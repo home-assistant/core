@@ -52,17 +52,13 @@ SET_ENABLED_SCHEMA = vol.Schema({
 })
 
 SET_SENSITIVITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_SENSITIVITY):
-    vol.In(ALARM_SENSITIVITY_MAP)
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_SENSITIVITY): vol.In(ALARM_SENSITIVITY_MAP)
 })
 
 SET_ALARM_MODES_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_MODE):
-    vol.In(ALARM_MODES_MAP)
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_MODE): vol.In(ALARM_MODES_MAP)
 })
 
 ADD_KEY_SCHEMA = vol.Schema({

@@ -27,10 +27,8 @@ DEFAULT_THRESHOLD = 75
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD):
-    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): cv.positive_int,
 })
 
 

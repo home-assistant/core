@@ -69,8 +69,9 @@ def async_setup(hass, config):
         bootstrap.async_setup_component(hass, 'input_select', {
             'input_select': {
                 'living_room_preset': {
-                    'options':
-                    ['Visitors', 'Visitors with kids', 'Home Alone']
+                    'options': [
+                        'Visitors', 'Visitors with kids', 'Home Alone'
+                    ]
                 },
                 'who_cooks': {
                     'icon': 'mdi:panda',
@@ -139,8 +140,7 @@ def async_setup(hass, config):
         bootstrap.async_setup_component(hass, 'script', {
             'script': {
                 'demo': {
-                    'alias':
-                    'Toggle {}'.format(lights[0].split('.')[1]),
+                    'alias': 'Toggle {}'.format(lights[0].split('.')[1]),
                     'sequence': [{
                         'service': 'light.turn_off',
                         'data': {

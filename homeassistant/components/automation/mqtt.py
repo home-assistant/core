@@ -19,12 +19,9 @@ DEPENDENCIES = ['mqtt']
 CONF_TOPIC = 'topic'
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    mqtt.DOMAIN,
-    vol.Required(CONF_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_PAYLOAD):
-    cv.string,
+    vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
+    vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD): cv.string,
 })
 
 

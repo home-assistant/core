@@ -36,8 +36,7 @@ DATA_API = 'spc_api'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_WS_URL): cv.string,
             vol.Required(CONF_API_URL): cv.string
         }),

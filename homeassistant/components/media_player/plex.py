@@ -40,12 +40,9 @@ CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
-    cv.boolean,
-    vol.Optional(CONF_USE_EPISODE_ART, default=False):
-    cv.boolean,
-    vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
-    cv.boolean,
+    vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False): cv.boolean,
+    vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
+    vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False): cv.boolean,
 })
 
 
@@ -865,20 +862,16 @@ class PlexClient(MediaPlayerDevice):
         self._local_client_control_fix()
 
         server_url = self.device.server.baseurl.split(':')
-        self.device.sendCommand('playback/playMedia',
-                                **dict({
-                                    'machineIdentifier':
-                                    self.device.server.machineIdentifier,
-                                    'address':
-                                    server_url[1].strip('/'),
-                                    'port':
-                                    server_url[-1],
-                                    'key':
-                                    media.key,
-                                    'containerKey':
-                                    '/playQueues/{}?window=100&own=1'.format(
-                                        playqueue.playQueueID),
-                                }, **params))
+        self.device.sendCommand(
+            'playback/playMedia',
+            **dict({
+                'machineIdentifier': self.device.server.machineIdentifier,
+                'address': server_url[1].strip('/'),
+                'port': server_url[-1],
+                'key': media.key,
+                'containerKey': '/playQueues/{}?window=100&own=1'.format(
+                    playqueue.playQueueID),
+            }, **params))
 
     @property
     def device_state_attributes(self):

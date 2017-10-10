@@ -48,12 +48,9 @@ DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_BAUD, default=DEFAULT_BAUD):
-            cv.string,
-            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-            cv.string,
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
         }),
     },
     extra=vol.ALLOW_EXTRA)

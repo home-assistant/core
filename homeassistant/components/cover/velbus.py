@@ -26,8 +26,7 @@ COVER_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    vol.Schema({
+    vol.Required(CONF_COVERS): vol.Schema({
         cv.slug: COVER_SCHEMA
     }),
 })

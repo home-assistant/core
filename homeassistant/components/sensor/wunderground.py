@@ -102,8 +102,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
             entity_picture=
             lambda wu: wu.data['current_observation']['icon_url'] if icon is None else None,
             device_state_attributes={
-                'date':
-                lambda wu: wu.data['current_observation']['observation_time']
+                'date': lambda wu: wu.data['current_observation']['observation_time']
             })
 
 
@@ -166,8 +165,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
             lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period]['icon_url'] if not icon else None,
             icon=icon,
             device_state_attributes={
-                'date':
-                lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period]['date']['pretty']
+                'date': lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period]['date']['pretty']
             })
 
 
@@ -189,34 +187,20 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
             entity_picture=
             lambda wu: wu.data['hourly_forecast'][period]["icon_url"],
             device_state_attributes={
-                'temp_c':
-                lambda wu: wu.data['hourly_forecast'][period]['temp']['metric'],
-                'temp_f':
-                lambda wu: wu.data['hourly_forecast'][period]['temp']['english'],
-                'dewpoint_c':
-                lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['metric'],
-                'dewpoint_f':
-                lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['english'],
-                'precip_prop':
-                lambda wu: wu.data['hourly_forecast'][period]['pop'],
-                'sky':
-                lambda wu: wu.data['hourly_forecast'][period]['sky'],
-                'precip_mm':
-                lambda wu: wu.data['hourly_forecast'][period]['qpf']['metric'],
-                'precip_in':
-                lambda wu: wu.data['hourly_forecast'][period]['qpf']['english'],
-                'humidity':
-                lambda wu: wu.data['hourly_forecast'][period]['humidity'],
-                'wind_kph':
-                lambda wu: wu.data['hourly_forecast'][period]['wspd']['metric'],
-                'wind_mph':
-                lambda wu: wu.data['hourly_forecast'][period]['wspd']['english'],
-                'pressure_mb':
-                lambda wu: wu.data['hourly_forecast'][period]['mslp']['metric'],
-                'pressure_inHg':
-                lambda wu: wu.data['hourly_forecast'][period]['mslp']['english'],
-                'date':
-                lambda wu: wu.data['hourly_forecast'][period]['FCTTIME']['pretty'],
+                'temp_c': lambda wu: wu.data['hourly_forecast'][period]['temp']['metric'],
+                'temp_f': lambda wu: wu.data['hourly_forecast'][period]['temp']['english'],
+                'dewpoint_c': lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['metric'],
+                'dewpoint_f': lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['english'],
+                'precip_prop': lambda wu: wu.data['hourly_forecast'][period]['pop'],
+                'sky': lambda wu: wu.data['hourly_forecast'][period]['sky'],
+                'precip_mm': lambda wu: wu.data['hourly_forecast'][period]['qpf']['metric'],
+                'precip_in': lambda wu: wu.data['hourly_forecast'][period]['qpf']['english'],
+                'humidity': lambda wu: wu.data['hourly_forecast'][period]['humidity'],
+                'wind_kph': lambda wu: wu.data['hourly_forecast'][period]['wspd']['metric'],
+                'wind_mph': lambda wu: wu.data['hourly_forecast'][period]['wspd']['english'],
+                'pressure_mb': lambda wu: wu.data['hourly_forecast'][period]['mslp']['metric'],
+                'pressure_inHg': lambda wu: wu.data['hourly_forecast'][period]['mslp']['english'],
+                'date': lambda wu: wu.data['hourly_forecast'][period]['FCTTIME']['pretty'],
             }, )
 
 
@@ -685,18 +669,15 @@ LANG_CODES = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_PWS_ID):
-    cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.All(vol.In(LANG_CODES)),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
-    cv.longitude,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_PWS_ID): cv.string,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.All(vol.In(LANG_CODES)),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.
+    longitude,
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+        cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

@@ -58,8 +58,8 @@ def _state_validator(config):
 
 
 STATE_SETTING_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PENDING_TIME):
-    vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Optional(CONF_PENDING_TIME): vol.All(
+        vol.Coerce(int), vol.Range(min=0))
 })
 
 DEPENDENCIES = ['mqtt']
@@ -67,40 +67,30 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-            vol.Required(CONF_PLATFORM):
-            'manual_mqtt',
-            vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME):
-            cv.string,
-            vol.Optional(CONF_CODE):
-            cv.string,
-            vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=0)),
-            vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Required(CONF_PLATFORM): 'manual_mqtt',
+            vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+            vol.Optional(CONF_CODE): cv.string,
+            vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME): vol.
+            All(vol.Coerce(int), vol.Range(min=0)),
+            vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.
+            All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(
                 CONF_DISARM_AFTER_TRIGGER,
-                default=DEFAULT_DISARM_AFTER_TRIGGER):
-            cv.boolean,
-            vol.Optional(STATE_ALARM_ARMED_AWAY, default={}):
-            STATE_SETTING_SCHEMA,
-            vol.Optional(STATE_ALARM_ARMED_HOME, default={}):
-            STATE_SETTING_SCHEMA,
-            vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}):
-            STATE_SETTING_SCHEMA,
-            vol.Optional(STATE_ALARM_TRIGGERED, default={}):
-            STATE_SETTING_SCHEMA,
-            vol.Required(mqtt.CONF_COMMAND_TOPIC):
-            mqtt.valid_publish_topic,
-            vol.Required(mqtt.CONF_STATE_TOPIC):
-            mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY):
-            cv.string,
-            vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME):
-            cv.string,
-            vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT):
-            cv.string,
-            vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM):
-            cv.string,
+                default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
+            vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
+            vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
+            vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
+            vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
+            vol.Required(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Required(mqtt.CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.
+            string,
+            vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.
+            string,
+            vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.
+            string,
+            vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.
+            string,
         }), _state_validator))
 
 _LOGGER = logging.getLogger(__name__)

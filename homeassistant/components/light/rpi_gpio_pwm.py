@@ -39,20 +39,13 @@ SUPPORT_SIMPLE_LED = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_RGB_LED = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LEDS):
-    vol.All(cv.ensure_list, [{
-        vol.Required(CONF_NAME):
-        cv.string,
-        vol.Required(CONF_DRIVER):
-        vol.In(CONF_DRIVER_TYPES),
-        vol.Required(CONF_PINS):
-        vol.All(cv.ensure_list, [cv.positive_int]),
-        vol.Required(CONF_TYPE):
-        vol.In(CONF_LED_TYPES),
-        vol.Optional(CONF_FREQUENCY):
-        cv.positive_int,
-        vol.Optional(CONF_ADDRESS):
-        cv.byte
+    vol.Required(CONF_LEDS): vol.All(cv.ensure_list, [{
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
+        vol.Required(CONF_PINS): vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Required(CONF_TYPE): vol.In(CONF_LED_TYPES),
+        vol.Optional(CONF_FREQUENCY): cv.positive_int,
+        vol.Optional(CONF_ADDRESS): cv.byte
     }])
 })
 

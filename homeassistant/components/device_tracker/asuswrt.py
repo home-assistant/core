@@ -34,22 +34,14 @@ SECRET_GROUP = 'Password or SSH Key'
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
     PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_HOST):
-        cv.string,
-        vol.Required(CONF_USERNAME):
-        cv.string,
-        vol.Optional(CONF_PROTOCOL, default='ssh'):
-        vol.In(['ssh', 'telnet']),
-        vol.Optional(CONF_MODE, default='router'):
-        vol.In(['router', 'ap']),
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT):
-        cv.port,
-        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP):
-        cv.string,
-        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP):
-        cv.isfile,
-        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP):
-        cv.isfile
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
+        vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
+        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
+        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
     }))
 
 _LEASES_CMD = 'cat /var/lib/misc/dnsmasq.leases'
@@ -310,7 +302,7 @@ class SshConnection(_Connection):
 
         super(SshConnection, self).connect()
 
-    def disconnect(self):           \
+    def disconnect(self):                           \
             # pylint: disable=broad-except
         """Disconnect the current SSH connection."""
         try:
@@ -388,7 +380,7 @@ class TelnetConnection(_Connection):
 
         super(TelnetConnection, self).connect()
 
-    def disconnect(self):           \
+    def disconnect(self):                           \
             # pylint: disable=broad-except
         """Disconnect the current Telnet connection."""
         try:

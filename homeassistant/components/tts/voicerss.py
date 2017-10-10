@@ -126,14 +126,10 @@ DEFAULT_CODEC = 'mp3'
 DEFAULT_FORMAT = '8khz_8bit_mono'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-    vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC):
-    vol.In(SUPPORT_CODECS),
-    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT):
-    vol.In(SUPPORT_FORMATS),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
+    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT): vol.In(SUPPORT_FORMATS),
 })
 
 

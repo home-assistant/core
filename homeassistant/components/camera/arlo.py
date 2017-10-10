@@ -43,8 +43,7 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS):
-    cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
 })
 
 

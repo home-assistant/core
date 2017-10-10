@@ -20,28 +20,20 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['raspihats']
 
 _CHANNELS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_INDEX):
-    cv.positive_int,
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_INVERT_LOGIC, default=False):
-    cv.boolean,
-    vol.Optional(CONF_INITIAL_STATE, default=None):
-    cv.boolean,
+    vol.Required(CONF_INDEX): cv.positive_int,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
+    vol.Optional(CONF_INITIAL_STATE, default=None): cv.boolean,
 }])
 
 _I2C_HATS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_BOARD):
-    vol.In(I2C_HAT_NAMES),
-    vol.Required(CONF_ADDRESS):
-    vol.Coerce(int),
-    vol.Required(CONF_CHANNELS):
-    _CHANNELS_SCHEMA
+    vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
+    vol.Required(CONF_ADDRESS): vol.Coerce(int),
+    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_I2C_HATS):
-    _I2C_HATS_SCHEMA,
+    vol.Optional(CONF_I2C_HATS): _I2C_HATS_SCHEMA,
 })
 
 

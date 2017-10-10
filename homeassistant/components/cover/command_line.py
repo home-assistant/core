@@ -18,23 +18,16 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_CLOSE, default='true'):
-    cv.string,
-    vol.Optional(CONF_COMMAND_OPEN, default='true'):
-    cv.string,
-    vol.Optional(CONF_COMMAND_STATE):
-    cv.string,
-    vol.Optional(CONF_COMMAND_STOP, default='true'):
-    cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_STATE): cv.string,
+    vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    vol.Schema({
+    vol.Required(CONF_COVERS): vol.Schema({
         cv.slug: COVER_SCHEMA
     }),
 })

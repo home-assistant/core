@@ -64,12 +64,14 @@ class PushBulletNotificationService(BaseNotificationService):
         """
         self.pushbullet.refresh()
         self.pbtargets = {
-            'device':
-            {tgt.nickname.lower(): tgt
-             for tgt in self.pushbullet.devices},
-            'channel':
-            {tgt.channel_tag.lower(): tgt
-             for tgt in self.pushbullet.channels},
+            'device': {
+                tgt.nickname.lower(): tgt
+                for tgt in self.pushbullet.devices
+            },
+            'channel': {
+                tgt.channel_tag.lower(): tgt
+                for tgt in self.pushbullet.channels
+            },
         }
 
     def send_message(self, message=None, **kwargs):

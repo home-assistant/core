@@ -26,10 +26,8 @@ ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC):
-    cv.string,
-    vol.Optional(CONF_NAME, default=""):
-    cv.string,
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_NAME, default=""): cv.string,
 })
 
 BLE_TEMP_UUID = '0000ff92-0000-1000-8000-00805f9b34fb'

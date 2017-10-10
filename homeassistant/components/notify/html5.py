@@ -37,10 +37,8 @@ ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_GCM_SENDER_ID):
-    cv.string,
-    vol.Optional(ATTR_GCM_API_KEY):
-    cv.string,
+    vol.Optional(ATTR_GCM_SENDER_ID): cv.string,
+    vol.Optional(ATTR_GCM_API_KEY): cv.string,
 })
 
 ATTR_SUBSCRIPTION = 'subscription'
@@ -74,32 +72,22 @@ SUBSCRIPTION_SCHEMA = vol.All(
     dict,
     vol.Schema({
         # pylint: disable=no-value-for-parameter
-        vol.Required(ATTR_ENDPOINT):
-        vol.Url(),
-        vol.Required(ATTR_KEYS):
-        KEYS_SCHEMA,
-        vol.Optional(ATTR_EXPIRATIONTIME):
-        vol.Any(None, cv.positive_int)
+        vol.Required(ATTR_ENDPOINT): vol.Url(),
+        vol.Required(ATTR_KEYS): KEYS_SCHEMA,
+        vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int)
     }))
 
 REGISTER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SUBSCRIPTION):
-    SUBSCRIPTION_SCHEMA,
-    vol.Required(ATTR_BROWSER):
-    vol.In(['chrome', 'firefox'])
+    vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
+    vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
 })
 
 CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TAG):
-    cv.string,
-    vol.Required(ATTR_TYPE):
-    vol.In(['received', 'clicked', 'closed']),
-    vol.Required(ATTR_TARGET):
-    cv.string,
-    vol.Optional(ATTR_ACTION):
-    cv.string,
-    vol.Optional(ATTR_DATA):
-    dict,
+    vol.Required(ATTR_TAG): cv.string,
+    vol.Required(ATTR_TYPE): vol.In(['received', 'clicked', 'closed']),
+    vol.Required(ATTR_TARGET): cv.string,
+    vol.Optional(ATTR_ACTION): cv.string,
+    vol.Optional(ATTR_DATA): dict,
 })
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'

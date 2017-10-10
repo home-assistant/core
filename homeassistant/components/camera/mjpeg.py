@@ -31,18 +31,13 @@ CONTENT_TYPE_HEADER = 'Content-Type'
 DEFAULT_NAME = 'Mjpeg Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MJPEG_URL):
-    cv.url,
-    vol.Optional(CONF_STILL_IMAGE_URL):
-    cv.url,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-    vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
+    vol.Required(CONF_MJPEG_URL): cv.url,
+    vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.
+    In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 

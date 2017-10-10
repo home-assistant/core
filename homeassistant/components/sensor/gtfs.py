@@ -37,16 +37,12 @@ ICON = 'mdi:train'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ORIGIN):
-    cv.string,
-    vol.Required(CONF_DESTINATION):
-    cv.string,
-    vol.Required(CONF_DATA):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)):
-    cv.time_period_dict,
+    vol.Required(CONF_ORIGIN): cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_DATA): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.
+    time_period_dict,
 })
 
 

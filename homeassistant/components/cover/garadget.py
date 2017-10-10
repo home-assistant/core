@@ -39,21 +39,15 @@ STATES_MAP = {
 }
 
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ACCESS_TOKEN):
-    cv.string,
-    vol.Optional(CONF_DEVICE):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_USERNAME):
-    cv.string,
+    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_DEVICE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS):
-    vol.Schema({
+    vol.Required(CONF_COVERS): vol.Schema({
         cv.slug: COVER_SCHEMA
     }),
 })

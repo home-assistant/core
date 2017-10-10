@@ -33,28 +33,19 @@ DEFAULT_NAME = 'KNX Cover'
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_MOVE_LONG_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_MOVE_SHORT_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_POSITION_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_POSITION_STATE_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_ANGLE_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_ANGLE_STATE_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME):
-    cv.positive_int,
-    vol.Optional(CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME):
-    cv.positive_int,
-    vol.Optional(CONF_INVERT_POSITION, default=False):
-    cv.boolean,
-    vol.Optional(CONF_INVERT_ANGLE, default=False):
-    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
+    vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
+    vol.Optional(CONF_POSITION_ADDRESS): cv.string,
+    vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
+    vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME): cv.
+    positive_int,
+    vol.Optional(CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME): cv.
+    positive_int,
+    vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+    vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
 })
 
 

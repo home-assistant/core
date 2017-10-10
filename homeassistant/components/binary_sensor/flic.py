@@ -38,16 +38,12 @@ EVENT_DATA_TYPE = 'click_type'
 EVENT_DATA_QUEUED_TIME = 'queued_time'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_DISCOVERY, default=True):
-    cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    cv.positive_int,
-    vol.Optional(CONF_IGNORED_CLICK_TYPES):
-    vol.All(cv.ensure_list, [vol.In(CLICK_TYPES)])
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_IGNORED_CLICK_TYPES): vol.All(cv.ensure_list,
+                                                    [vol.In(CLICK_TYPES)])
 })
 
 

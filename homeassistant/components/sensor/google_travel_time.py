@@ -50,38 +50,24 @@ TRAVEL_MODEL = ['best_guess', 'pessimistic', 'optimistic']
 UNITS = ['metric', 'imperial']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_DESTINATION):
-    cv.string,
-    vol.Required(CONF_ORIGIN):
-    cv.string,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_TRAVEL_MODE):
-    vol.In(TRAVEL_MODE),
-    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}):
-    vol.All(dict,
-            vol.Schema({
-                vol.Optional(CONF_MODE, default='driving'):
-                vol.In(TRAVEL_MODE),
-                vol.Optional('language'):
-                vol.In(ALL_LANGUAGES),
-                vol.Optional('avoid'):
-                vol.In(AVOID),
-                vol.Optional('units'):
-                vol.In(UNITS),
-                vol.Exclusive('arrival_time', 'time'):
-                cv.string,
-                vol.Exclusive('departure_time', 'time'):
-                cv.string,
-                vol.Optional('traffic_model'):
-                vol.In(TRAVEL_MODEL),
-                vol.Optional('transit_mode'):
-                vol.In(TRANSPORT_TYPE),
-                vol.Optional('transit_routing_preference'):
-                vol.In(TRANSIT_PREFS)
-            }))
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_ORIGIN): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
+    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
+        dict,
+        vol.Schema({
+            vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
+            vol.Optional('language'): vol.In(ALL_LANGUAGES),
+            vol.Optional('avoid'): vol.In(AVOID),
+            vol.Optional('units'): vol.In(UNITS),
+            vol.Exclusive('arrival_time', 'time'): cv.string,
+            vol.Exclusive('departure_time', 'time'): cv.string,
+            vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
+            vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
+            vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
+        }))
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']

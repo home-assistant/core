@@ -20,8 +20,8 @@ DEPENDENCIES = ['raincloud']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)):
-    vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)): vol.
+    All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
 })
 
 

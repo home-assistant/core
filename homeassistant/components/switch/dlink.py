@@ -28,16 +28,11 @@ ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TEMPERATURE = 'temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False):
-    cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

@@ -18,10 +18,8 @@ ATTR_IR_CODE = 'V_IR_SEND'
 SERVICE_SEND_IR_CODE = 'mysensors_send_ir_code'
 
 SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_IR_CODE):
-    cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_IR_CODE): cv.string,
 })
 
 

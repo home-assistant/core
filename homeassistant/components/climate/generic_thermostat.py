@@ -39,26 +39,17 @@ CONF_TOLERANCE = 'tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HEATER):
-    cv.entity_id,
-    vol.Required(CONF_SENSOR):
-    cv.entity_id,
-    vol.Optional(CONF_AC_MODE):
-    cv.boolean,
-    vol.Optional(CONF_MAX_TEMP):
-    vol.Coerce(float),
-    vol.Optional(CONF_MIN_DUR):
-    vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_MIN_TEMP):
-    vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE):
-    vol.Coerce(float),
-    vol.Optional(CONF_TARGET_TEMP):
-    vol.Coerce(float),
-    vol.Optional(CONF_KEEP_ALIVE):
-    vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Required(CONF_HEATER): cv.entity_id,
+    vol.Required(CONF_SENSOR): cv.entity_id,
+    vol.Optional(CONF_AC_MODE): cv.boolean,
+    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_KEEP_ALIVE): vol.All(cv.time_period,
+                                           cv.positive_timedelta),
 })
 
 

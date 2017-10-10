@@ -29,10 +29,9 @@ STATE_TRADE = 'Trade'
 STATE_PLAY = 'Play'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_ACCOUNTS, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_ACCOUNTS, default=[]): vol.All(cv.ensure_list,
+                                                     [cv.string]),
 })
 
 

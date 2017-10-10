@@ -22,10 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DISPLAY_TIME = "display_time"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default="i555"):
-    cv.string,
-    vol.Optional(CONF_DISPLAY_TIME, default=10):
-    cv.positive_int,
+    vol.Optional(CONF_ICON, default="i555"): cv.string,
+    vol.Optional(CONF_DISPLAY_TIME, default=10): cv.positive_int,
 })
 
 

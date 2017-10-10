@@ -66,29 +66,27 @@ DOMAIN = 'rflink'
 
 SERVICE_SEND_COMMAND = 'send_command'
 
-DEVICE_DEFAULTS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FIRE_EVENT, default=False):
-    cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-    vol.Coerce(int),
-})
+DEVICE_DEFAULTS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        vol.Optional(
+            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS): vol.
+        Coerce(int),
+    })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_PORT):
-            vol.Any(cv.port, cv.string),
-            vol.Optional(CONF_HOST, default=None):
-            cv.string,
-            vol.Optional(CONF_WAIT_FOR_ACK, default=True):
-            cv.boolean,
-            vol.Optional(
-                CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL):
-            int,
-            vol.Optional(CONF_IGNORE_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-        }),
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
+                vol.Optional(CONF_HOST, default=None): cv.string,
+                vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+                vol.Optional(
+                    CONF_RECONNECT_INTERVAL,
+                    default=DEFAULT_RECONNECT_INTERVAL): int,
+                vol.Optional(CONF_IGNORE_DEVICES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]),
+            }),
     },
     extra=vol.ALLOW_EXTRA)
 

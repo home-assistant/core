@@ -31,16 +31,11 @@ CONF_VOLUME_STEP = 'volume_step'
 CONF_HOST = 'host'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME):
-    int,
-    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME):
-    int,
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
-    int,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
+    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
+    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): int,
 })
 
 

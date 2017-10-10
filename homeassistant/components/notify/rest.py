@@ -25,27 +25,26 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_TARGET_PARAM_NAME = None
 DEFAULT_TITLE_PARAM_NAME = None
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(
-        CONF_MESSAGE_PARAMETER_NAME, default=DEFAULT_MESSAGE_PARAM_NAME):
-    cv.string,
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
-    vol.In(['POST', 'GET', 'POST_JSON']),
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(
-        CONF_TARGET_PARAMETER_NAME, default=DEFAULT_TARGET_PARAM_NAME):
-    cv.string,
-    vol.Optional(CONF_TITLE_PARAMETER_NAME, default=DEFAULT_TITLE_PARAM_NAME):
-    cv.string,
-    vol.Optional(CONF_DATA, default=None):
-    dict,
-    vol.Optional(CONF_DATA_TEMPLATE, default=None): {
-        cv.match_all: cv.template_complex
-    }
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RESOURCE): cv.url,
+        vol.Optional(
+            CONF_MESSAGE_PARAMETER_NAME, default=DEFAULT_MESSAGE_PARAM_NAME): cv.
+        string,
+        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(
+            ['POST', 'GET', 'POST_JSON']),
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(
+            CONF_TARGET_PARAMETER_NAME, default=DEFAULT_TARGET_PARAM_NAME): cv.
+        string,
+        vol.Optional(
+            CONF_TITLE_PARAMETER_NAME, default=DEFAULT_TITLE_PARAM_NAME): cv.
+        string,
+        vol.Optional(CONF_DATA, default=None): dict,
+        vol.Optional(CONF_DATA_TEMPLATE, default=None): {
+            cv.match_all: cv.template_complex
+        }
+    })
 
 _LOGGER = logging.getLogger(__name__)
 

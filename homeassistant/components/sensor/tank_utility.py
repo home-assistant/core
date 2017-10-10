@@ -24,12 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(hours=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_DEVICES):
-    vol.All(cv.ensure_list, vol.Length(min=1))
+    vol.Required(CONF_EMAIL): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, vol.Length(min=1))
 })
 
 SENSOR_TYPE = "tank"

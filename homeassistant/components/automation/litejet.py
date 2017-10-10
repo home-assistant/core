@@ -24,14 +24,12 @@ CONF_HELD_MORE_THAN = 'held_more_than'
 CONF_HELD_LESS_THAN = 'held_less_than'
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'litejet',
-    vol.Required(CONF_NUMBER):
-    cv.positive_int,
-    vol.Optional(CONF_HELD_MORE_THAN):
-    vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_HELD_LESS_THAN):
-    vol.All(cv.time_period, cv.positive_timedelta)
+    vol.Required(CONF_PLATFORM): 'litejet',
+    vol.Required(CONF_NUMBER): cv.positive_int,
+    vol.Optional(CONF_HELD_MORE_THAN): vol.All(cv.time_period,
+                                               cv.positive_timedelta),
+    vol.Optional(CONF_HELD_LESS_THAN): vol.All(cv.time_period,
+                                               cv.positive_timedelta)
 })
 
 

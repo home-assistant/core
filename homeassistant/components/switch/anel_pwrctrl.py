@@ -29,16 +29,11 @@ CONF_PORT_SEND = 'port_send'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT_RECV):
-    cv.port,
-    vol.Required(CONF_PORT_SEND):
-    cv.port,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
+    vol.Required(CONF_PORT_RECV): cv.port,
+    vol.Required(CONF_PORT_SEND): cv.port,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
 })
 
 

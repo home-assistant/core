@@ -30,8 +30,7 @@ LOCATION_EXIT = '0'
 URL = '/api/geofency'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MOBILE_BEACONS):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_MOBILE_BEACONS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 

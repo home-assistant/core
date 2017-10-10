@@ -18,16 +18,12 @@ CONF_URL = 'url'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             cv.slug: {
-                vol.Optional(CONF_TITLE):
-                cv.string,
-                vol.Optional(CONF_ICON):
-                cv.icon,
+                vol.Optional(CONF_TITLE): cv.string,
+                vol.Optional(CONF_ICON): cv.icon,
                 # pylint: disable=no-value-for-parameter
-                vol.Required(CONF_URL):
-                vol.Url(),
+                vol.Required(CONF_URL): vol.Url(),
             }
         })
     },

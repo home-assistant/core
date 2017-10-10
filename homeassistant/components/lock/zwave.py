@@ -93,26 +93,19 @@ LOCK_STATUS = {
 ALARM_TYPE_STD = ['18', '19', '33', '112', '113']
 
 SET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT):
-    vol.Coerce(int),
-    vol.Required(ATTR_USERCODE):
-    cv.string,
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    vol.Required(ATTR_USERCODE): cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT):
-    vol.Coerce(int),
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
 })
 
 CLEAR_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID):
-    vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT):
-    vol.Coerce(int),
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
 })
 
 

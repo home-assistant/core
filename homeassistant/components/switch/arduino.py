@@ -31,8 +31,7 @@ PIN_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-    vol.Schema({
+    vol.Required(CONF_PINS, default={}): vol.Schema({
         cv.positive_int: PIN_SCHEMA
     }),
 })

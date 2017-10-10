@@ -43,19 +43,14 @@ SENSOR_TYPES = {
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSOR_TYPE):
-    TYPES_SCHEMA,
-    vol.Optional(CONF_CURRENCY, default=''):
-    cv.string,
-    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD):
-    cv.string,
+    vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+    vol.Optional(CONF_CURRENCY, default=''): cv.string,
+    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_APPTOKEN):
-    cv.string,
-    vol.Optional(CONF_UTC_OFFSET):
-    cv.string,
+    vol.Required(CONF_APPTOKEN): cv.string,
+    vol.Optional(CONF_UTC_OFFSET): cv.string,
     vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
 })
 

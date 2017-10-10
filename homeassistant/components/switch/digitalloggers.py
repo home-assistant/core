@@ -30,18 +30,14 @@ DEFAULT_CYCLETIME = 2
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
-    cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-    vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME):
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=600)),
+    vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=600)),
 })
 
 

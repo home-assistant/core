@@ -34,17 +34,14 @@ LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_DEVICE_GROUP):
-            cv.entity_id,
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
             vol.Optional(
-                CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF):
-            cv.boolean,
-            vol.Optional(CONF_LIGHT_GROUP):
-            cv.string,
-            vol.Optional(CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE):
-            cv.string,
+                CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF): cv.
+            boolean,
+            vol.Optional(CONF_LIGHT_GROUP): cv.string,
+            vol.Optional(CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE): cv.
+            string,
         }),
     },
     extra=vol.ALLOW_EXTRA)

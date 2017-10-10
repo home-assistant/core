@@ -40,19 +40,16 @@ CONDITION_CLASSES = {
     'sunny': [800],
     'windy': [905, 951, 952, 953, 954, 955, 956, 957],
     'windy-variant': [958, 959, 960, 961],
-    'exceptional':
-    [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
+    'exceptional': [
+        711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Optional(CONF_LATITUDE):
-    cv.latitude,
-    vol.Optional(CONF_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -143,10 +140,8 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         return [{
-            ATTR_FORECAST_TIME:
-            entry.get_reference_time('iso'),
-            ATTR_FORECAST_TEMP:
-            entry.get_temperature('celsius').get('temp')
+            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
+            ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')
         } for entry in self.forecast_data.get_weathers()]
 
     def update(self):

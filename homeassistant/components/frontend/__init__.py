@@ -45,12 +45,9 @@ MANIFEST_JSON = {
 
 for size in (192, 384, 512, 1024):
     MANIFEST_JSON['icons'].append({
-        'src':
-        '/static/icons/favicon-{}x{}.png'.format(size, size),
-        'sizes':
-        '{}x{}'.format(size, size),
-        'type':
-        'image/png'
+        'src': '/static/icons/favicon-{}x{}.png'.format(size, size),
+        'sizes': '{}x{}'.format(size, size),
+        'type': 'image/png'
     })
 
 DATA_PANELS = 'frontend_panels'
@@ -68,16 +65,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(ATTR_THEMES):
-            vol.Schema({
+        DOMAIN: vol.Schema({
+            vol.Optional(ATTR_THEMES): vol.Schema({
                 cv.string: {
                     cv.string: cv.string
                 }
             }),
-            vol.Optional(ATTR_EXTRA_HTML_URL):
-            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_EXTRA_HTML_URL): vol.All(cv.ensure_list,
+                                                       [cv.string]),
         }),
     },
     extra=vol.ALLOW_EXTRA)

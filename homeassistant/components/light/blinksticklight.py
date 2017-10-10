@@ -24,10 +24,8 @@ DEFAULT_NAME = 'Blinkstick'
 SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_SERIAL): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

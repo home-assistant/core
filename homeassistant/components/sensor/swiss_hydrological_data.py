@@ -44,10 +44,8 @@ ATTR_TEMPERATURE_MAX = 'temperature_max'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION):
-    vol.Coerce(int),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_STATION): vol.Coerce(int),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

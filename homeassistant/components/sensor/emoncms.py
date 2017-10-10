@@ -41,24 +41,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 ONLY_INCL_EXCL_NONE = 'only_include_exclude_or_none'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_URL):
-    cv.string,
-    vol.Required(CONF_ID):
-    cv.positive_int,
-    vol.Exclusive(CONF_ONLY_INCLUDE_FEEDID, ONLY_INCL_EXCL_NONE):
-    vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Exclusive(CONF_EXCLUDE_FEEDID, ONLY_INCL_EXCL_NONE):
-    vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(CONF_SENSOR_NAMES):
-    vol.All({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_URL): cv.string,
+    vol.Required(CONF_ID): cv.positive_int,
+    vol.Exclusive(CONF_ONLY_INCLUDE_FEEDID, ONLY_INCL_EXCL_NONE): vol.All(
+        cv.ensure_list, [cv.positive_int]),
+    vol.Exclusive(CONF_EXCLUDE_FEEDID, ONLY_INCL_EXCL_NONE): vol.All(
+        cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_SENSOR_NAMES): vol.All({
         cv.positive_int: vol.All(cv.string, vol.Length(min=1))
     }),
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT):
-    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT): cv.string,
 })
 
 
@@ -156,20 +150,14 @@ class EmonCmsSensor(Entity):
     def device_state_attributes(self):
         """Return the atrributes of the sensor."""
         return {
-            ATTR_FEEDID:
-            self._elem["id"],
-            ATTR_TAG:
-            self._elem["tag"],
-            ATTR_FEEDNAME:
-            self._elem["name"],
-            ATTR_SIZE:
-            self._elem["size"],
-            ATTR_USERID:
-            self._elem["userid"],
-            ATTR_LASTUPDATETIME:
-            self._elem["time"],
-            ATTR_LASTUPDATETIMESTR:
-            template.timestamp_local(float(self._elem["time"])),
+            ATTR_FEEDID: self._elem["id"],
+            ATTR_TAG: self._elem["tag"],
+            ATTR_FEEDNAME: self._elem["name"],
+            ATTR_SIZE: self._elem["size"],
+            ATTR_USERID: self._elem["userid"],
+            ATTR_LASTUPDATETIME: self._elem["time"],
+            ATTR_LASTUPDATETIMESTR: template.timestamp_local(
+                float(self._elem["time"])),
         }
 
     def update(self):

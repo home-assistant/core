@@ -35,16 +35,11 @@ DEVICE_LIST_URL = '{0}://{1}:{2}/devices/list'
 DEVICE_STATE_URL = '{0}://{1}:{2}/devices/state/{3}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-    cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 

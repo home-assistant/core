@@ -67,56 +67,36 @@ TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
                  | SUPPORT_SET_TILT_POSITION)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_COMMAND_TOPIC, default=None):
-    valid_publish_topic,
-    vol.Optional(CONF_POSITION_TOPIC, default=None):
-    valid_publish_topic,
-    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None):
-    cv.template,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN):
-    cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC):
-    valid_subscribe_topic,
-    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None):
-    valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE):
-    cv.string,
+    vol.Optional(CONF_COMMAND_TOPIC, default=None): valid_publish_topic,
+    vol.Optional(CONF_POSITION_TOPIC, default=None): valid_publish_topic,
+    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
+    vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
+    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE): cv.
+    string,
     vol.Optional(
-        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE):
-    cv.string,
-    vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN):
-    cv.string,
-    vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED):
-    cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None):
-    valid_publish_topic,
-    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None):
-    valid_subscribe_topic,
+        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.
+    string,
+    vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
+    vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None): valid_publish_topic,
+    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None): valid_subscribe_topic,
     vol.Optional(
-        CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION):
-    int,
-    vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION):
-    int,
-    vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN):
-    int,
-    vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX):
-    int,
-    vol.Optional(CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC):
-    cv.boolean,
-    vol.Optional(CONF_TILT_INVERT_STATE, default=DEFAULT_TILT_INVERT_STATE):
-    cv.boolean,
+        CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION): int,
+    vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION): int,
+    vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
+    vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
+    vol.Optional(CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC): cv.
+    boolean,
+    vol.Optional(CONF_TILT_INVERT_STATE, default=DEFAULT_TILT_INVERT_STATE): cv.
+    boolean,
 })
 
 

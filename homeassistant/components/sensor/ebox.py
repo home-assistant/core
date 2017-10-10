@@ -37,8 +37,9 @@ SENSOR_TYPES = {
     'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
     'limit': ['Data limit', GIGABITS, 'mdi:download'],
     'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
-    'before_offpeak_download':
-    ['Download before offpeak', GIGABITS, 'mdi:download'],
+    'before_offpeak_download': [
+        'Download before offpeak', GIGABITS, 'mdi:download'
+    ],
     'before_offpeak_upload': ['Upload before offpeak', GIGABITS, 'mdi:upload'],
     'before_offpeak_total': ['Total before offpeak', GIGABITS, 'mdi:download'],
     'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
@@ -50,14 +51,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_MONITORED_VARIABLES): vol.All(cv.ensure_list,
+                                                    [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 

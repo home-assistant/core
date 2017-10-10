@@ -38,10 +38,8 @@ CONF_STATIC = 'static'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_STATIC, default=[]):
-            vol.Schema([cv.string])
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_STATIC, default=[]): vol.Schema([cv.string])
         }),
     },
     extra=vol.ALLOW_EXTRA)

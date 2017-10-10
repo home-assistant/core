@@ -22,14 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_PIN):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    DEVICE_CLASSES_SCHEMA,
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_PIN): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 

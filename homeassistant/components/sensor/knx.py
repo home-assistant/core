@@ -21,12 +21,9 @@ DEFAULT_NAME = 'KNX Sensor'
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_TYPE):
-    cv.string,
+    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TYPE): cv.string,
 })
 
 

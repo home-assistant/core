@@ -41,10 +41,8 @@ CONF_REGION = 'region'
 DEFAULT_BINARY = 'alpr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_REGION):
-    vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
-    vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY):
-    cv.string,
+    vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY): cv.string,
 })
 
 
@@ -200,8 +198,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
             if new_result:
                 try:
                     result.update({
-                        new_result.group(1):
-                        float(new_result.group(2))
+                        new_result.group(1): float(new_result.group(2))
                     })
                 except ValueError:
                     continue

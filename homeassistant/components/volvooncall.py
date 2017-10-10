@@ -51,23 +51,18 @@ RESOURCES = {
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(
-                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
-            (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
-            vol.Optional(CONF_NAME, default={}):
-            vol.Schema({
+                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
+            vol.Optional(CONF_NAME, default={}): vol.Schema({
                 cv.slug: cv.string
             }),
-            vol.Optional(CONF_RESOURCES):
-            vol.All(cv.ensure_list, [vol.In(RESOURCES)]),
-            vol.Optional(CONF_SERVICE_URL):
-            cv.string,
+            vol.Optional(CONF_RESOURCES): vol.All(cv.ensure_list,
+                                                  [vol.In(RESOURCES)]),
+            vol.Optional(CONF_SERVICE_URL): cv.string,
         }),
     },
     extra=vol.ALLOW_EXTRA)

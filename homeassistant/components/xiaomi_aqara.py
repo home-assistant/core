@@ -54,18 +54,14 @@ def _validate_conf(config):
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Optional(
                 CONF_GATEWAYS, default=[{
                     CONF_MAC: None,
                     "key": None
-                }]):
-            vol.All(cv.ensure_list, _validate_conf),
-            vol.Optional(CONF_INTERFACE, default='any'):
-            cv.string,
-            vol.Optional(CONF_DISCOVERY_RETRY, default=3):
-            cv.positive_int
+                }]): vol.All(cv.ensure_list, _validate_conf),
+            vol.Optional(CONF_INTERFACE, default='any'): cv.string,
+            vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
         })
     },
     extra=vol.ALLOW_EXTRA)

@@ -28,14 +28,15 @@ DEFAULT_DATATYPE_MASK = 127
 DEFAULT_ONLY_NAMED = False
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ONLY_NAMED, default=DEFAULT_ONLY_NAMED):
-    cv.boolean,
-    vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
-    cv.string,
-    vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
-    cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_ONLY_NAMED, default=DEFAULT_ONLY_NAMED): cv.boolean,
+        vol.Optional(
+            CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE): cv.
+        string,
+        vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK): cv.
+        positive_int,
+    })
 
 
 # pylint: disable=unused-argument
@@ -45,20 +46,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import tellcore.constants as tellcore_constants
 
     sensor_value_descriptions = {
-        tellcore_constants.TELLSTICK_TEMPERATURE:
-        DatatypeDescription('temperature', config.get(CONF_TEMPERATURE_SCALE)),
-        tellcore_constants.TELLSTICK_HUMIDITY:
-        DatatypeDescription('humidity', '%'),
-        tellcore_constants.TELLSTICK_RAINRATE:
-        DatatypeDescription('rain rate', ''),
-        tellcore_constants.TELLSTICK_RAINTOTAL:
-        DatatypeDescription('rain total', ''),
-        tellcore_constants.TELLSTICK_WINDDIRECTION:
-        DatatypeDescription('wind direction', ''),
-        tellcore_constants.TELLSTICK_WINDAVERAGE:
-        DatatypeDescription('wind average', ''),
-        tellcore_constants.TELLSTICK_WINDGUST:
-        DatatypeDescription('wind gust', '')
+        tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(
+            'temperature', config.get(CONF_TEMPERATURE_SCALE)),
+        tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription(
+            'humidity', '%'),
+        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription(
+            'rain rate', ''),
+        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription(
+            'rain total', ''),
+        tellcore_constants.TELLSTICK_WINDDIRECTION: DatatypeDescription(
+            'wind direction', ''),
+        tellcore_constants.TELLSTICK_WINDAVERAGE: DatatypeDescription(
+            'wind average', ''),
+        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription(
+            'wind gust', '')
     }
 
     try:

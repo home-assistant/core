@@ -50,42 +50,28 @@ OSCILLATE_OFF_PAYLOAD = 'oscillate_off'
 OSCILLATION = 'oscillation'
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_STATE_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_SPEED_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_SPEED_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_SPEED_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_OSCILLATION_STATE_TOPIC):
-    mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC):
-    mqtt.valid_publish_topic,
-    vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_ON):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OFF):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_ON): cv.
+    string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OFF): cv.
+    string,
+    vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+    vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
+    vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
     vol.Optional(
         CONF_SPEED_LIST,
-        default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]):
-    cv.ensure_list,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
-    cv.boolean,
+        default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]): cv.
+    ensure_list,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
 
 
@@ -119,8 +105,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 STATE_ON: config.get(CONF_PAYLOAD_ON),
                 STATE_OFF: config.get(CONF_PAYLOAD_OFF),
                 OSCILLATE_ON_PAYLOAD: config.get(CONF_PAYLOAD_OSCILLATION_ON),
-                OSCILLATE_OFF_PAYLOAD:
-                config.get(CONF_PAYLOAD_OSCILLATION_OFF),
+                OSCILLATE_OFF_PAYLOAD: config.get(
+                    CONF_PAYLOAD_OSCILLATION_OFF),
                 SPEED_LOW: config.get(CONF_PAYLOAD_LOW_SPEED),
                 SPEED_MEDIUM: config.get(CONF_PAYLOAD_MEDIUM_SPEED),
                 SPEED_HIGH: config.get(CONF_PAYLOAD_HIGH_SPEED),

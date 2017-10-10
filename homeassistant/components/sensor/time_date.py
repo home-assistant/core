@@ -32,8 +32,8 @@ OPTION_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
-    vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
+    vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']): vol.All(
+        cv.ensure_list, [vol.In(OPTION_TYPES)]),
 })
 
 

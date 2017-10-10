@@ -21,8 +21,8 @@ DEPENDENCIES = ['twilio']
 CONF_FROM_NUMBER = 'from_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FROM_NUMBER):
-    vol.All(cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")),
+    vol.Required(CONF_FROM_NUMBER): vol.All(cv.string,
+                                            vol.Match(r"^\+?[1-9]\d{1,14}$")),
 })
 
 

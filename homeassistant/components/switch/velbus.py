@@ -24,8 +24,7 @@ SWITCH_SCHEMA = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-    vol.All(cv.ensure_list, [SWITCH_SCHEMA])
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [SWITCH_SCHEMA])
 })
 
 DEPENDENCIES = ['velbus']

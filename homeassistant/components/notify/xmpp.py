@@ -24,16 +24,11 @@ CONF_TLS = 'tls'
 CONF_VERIFY = 'verify'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENDER):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_RECIPIENT):
-    cv.string,
-    vol.Optional(CONF_TLS, default=True):
-    cv.boolean,
-    vol.Optional(CONF_VERIFY, default=True):
-    cv.boolean,
+    vol.Required(CONF_SENDER): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Optional(CONF_TLS, default=True): cv.boolean,
+    vol.Optional(CONF_VERIFY, default=True): cv.boolean,
 })
 
 

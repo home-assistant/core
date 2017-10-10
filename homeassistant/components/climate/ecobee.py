@@ -35,17 +35,13 @@ SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
 SERVICE_RESUME_PROGRAM = 'ecobee_resume_program'
 
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_FAN_MIN_ON_TIME):
-    vol.Coerce(int),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
 })
 
 RESUME_PROGRAM_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL):
-    cv.boolean,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
 })
 
 

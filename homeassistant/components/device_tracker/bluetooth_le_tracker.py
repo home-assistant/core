@@ -24,10 +24,8 @@ CONF_SCAN_DURATION = 'scan_duration'
 CONF_BLUETOOTH_DEVICE = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10):
-    cv.positive_int,
-    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'):
-    cv.string
+    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
+    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
 })
 
 

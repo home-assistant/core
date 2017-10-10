@@ -34,12 +34,12 @@ TELLCORE_REGISTRY = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(
-                ATTR_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-            vol.Coerce(int),
-        }),
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(
+                    ATTR_SIGNAL_REPETITIONS,
+                    default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+            }),
     },
     extra=vol.ALLOW_EXTRA)
 

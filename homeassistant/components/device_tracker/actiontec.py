@@ -24,12 +24,9 @@ _LEASES_REGEX = re.compile(
     r'\svalid\sfor:\s(?P<timevalid>(-?\d+))' + r'\ssec')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
 })
 
 

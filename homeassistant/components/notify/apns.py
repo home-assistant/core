@@ -30,23 +30,16 @@ ATTR_PUSH_ID = 'push_id'
 ATTR_NAME = 'name'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'apns',
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_CERTFILE):
-    cv.isfile,
-    vol.Required(CONF_TOPIC):
-    cv.string,
-    vol.Optional(CONF_SANDBOX, default=False):
-    cv.boolean,
+    vol.Required(CONF_PLATFORM): 'apns',
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_CERTFILE): cv.isfile,
+    vol.Required(CONF_TOPIC): cv.string,
+    vol.Optional(CONF_SANDBOX, default=False): cv.boolean,
 })
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_PUSH_ID):
-    cv.string,
-    vol.Optional(ATTR_NAME, default=None):
-    cv.string,
+    vol.Required(ATTR_PUSH_ID): cv.string,
+    vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
 

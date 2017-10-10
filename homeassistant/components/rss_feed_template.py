@@ -21,20 +21,14 @@ DOMAIN = 'rss_feed_template'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.match_all:
-            vol.Schema({
-                vol.Optional('requires_api_password', default=True):
-                cv.boolean,
-                vol.Optional('title'):
-                cv.template,
-                vol.Required('items'):
-                vol.All(cv.ensure_list, [{
-                    vol.Optional('title'):
-                    cv.template,
-                    vol.Optional('description'):
-                    cv.template,
+        DOMAIN: vol.Schema({
+            cv.match_all: vol.Schema({
+                vol.Optional('requires_api_password', default=True): cv.
+                boolean,
+                vol.Optional('title'): cv.template,
+                vol.Required('items'): vol.All(cv.ensure_list, [{
+                    vol.Optional('title'): cv.template,
+                    vol.Optional('description'): cv.template,
                 }])
             })
         })

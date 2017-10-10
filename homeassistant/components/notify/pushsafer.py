@@ -21,8 +21,7 @@ CONF_DEVICE_KEY = 'private_key'
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_KEY):
-    cv.string,
+    vol.Required(CONF_DEVICE_KEY): cv.string,
 })
 
 

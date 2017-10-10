@@ -46,14 +46,10 @@ CONDITION_CLASSES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_LATITUDE):
-    cv.latitude,
-    vol.Optional(CONF_LONGITUDE):
-    cv.longitude,
-    vol.Optional(CONF_FORECAST, default=True):
-    cv.boolean,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_FORECAST, default=True): cv.boolean,
 })
 
 

@@ -28,14 +28,11 @@ TESLA_ID_LIST_SCHEMA = vol.Schema([int])
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL, default=300):
-            vol.All(cv.positive_int, vol.Clamp(min=300)),
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL, default=300): vol.All(
+                cv.positive_int, vol.Clamp(min=300)),
         }),
     },
     extra=vol.ALLOW_EXTRA)

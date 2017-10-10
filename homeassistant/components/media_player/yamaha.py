@@ -32,14 +32,12 @@ DEFAULT_NAME = 'Yamaha Receiver'
 KNOWN = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_SOURCE_IGNORE, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_ZONE_IGNORE, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_ZONE_IGNORE, default=[]): vol.All(
+        cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {
         cv.string: cv.string
     },

@@ -27,14 +27,11 @@ CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
-            vol.Coerce(str),
-            vol.Optional(CONF_DIMMER_ADJUST, default=1):
-            CV_DIM_VALUE,
-            vol.Optional(CONF_BUTTON_EVENTS):
-            vol.Coerce(str)
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_URL, default='http://127.0.0.1:2020'): vol.
+            Coerce(str),
+            vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
+            vol.Optional(CONF_BUTTON_EVENTS): vol.Coerce(str)
         })
     },
     extra=vol.ALLOW_EXTRA)

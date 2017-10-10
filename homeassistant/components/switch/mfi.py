@@ -29,18 +29,12 @@ SWITCH_MODELS = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_PORT):
-    cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
-    cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-    cv.boolean,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 

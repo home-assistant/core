@@ -23,28 +23,20 @@ DEFAULT_INVERT_LOGIC = False
 DEFAULT_DEVICE_CLASS = None
 
 _CHANNELS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_INDEX):
-    cv.positive_int,
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC):
-    cv.boolean,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
-    cv.string,
+    vol.Required(CONF_INDEX): cv.positive_int,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): cv.string,
 }])
 
 _I2C_HATS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_BOARD):
-    vol.In(I2C_HAT_NAMES),
-    vol.Required(CONF_ADDRESS):
-    vol.Coerce(int),
-    vol.Required(CONF_CHANNELS):
-    _CHANNELS_SCHEMA
+    vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
+    vol.Required(CONF_ADDRESS): vol.Coerce(int),
+    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_I2C_HATS):
-    _I2C_HATS_SCHEMA,
+    vol.Optional(CONF_I2C_HATS): _I2C_HATS_SCHEMA,
 })
 
 

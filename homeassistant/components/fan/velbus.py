@@ -20,8 +20,7 @@ DEPENDENCIES = ['velbus']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-    vol.All(cv.ensure_list, [{
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
         vol.Required('module'): cv.positive_int,
         vol.Required('channel_low'): cv.positive_int,
         vol.Required('channel_medium'): cv.positive_int,

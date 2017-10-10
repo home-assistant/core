@@ -52,20 +52,15 @@ DEFAULT_DELAY_MS = 120
 DEFAULT_SENSITIVITY = 69  # from 31 to 254
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS):
-    vol.Coerce(int),
-    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_MODE):
-    vol.In(OPERATION_MODES),
-    vol.Optional(CONF_SENSITIVITY, default=DEFAULT_SENSITIVITY):
-    cv.positive_int,
-    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY_MS):
-    cv.positive_int,
-    vol.Optional(CONF_MULTIPLIER, default=1.):
-    vol.Range(min=0.1, max=10),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
+    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_MODE): vol.In(
+        OPERATION_MODES),
+    vol.Optional(CONF_SENSITIVITY, default=DEFAULT_SENSITIVITY): cv.
+    positive_int,
+    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY_MS): cv.positive_int,
+    vol.Optional(CONF_MULTIPLIER, default=1.): vol.Range(min=0.1, max=10),
 })
 
 

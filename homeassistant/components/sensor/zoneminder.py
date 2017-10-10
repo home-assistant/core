@@ -23,8 +23,8 @@ CONF_INCLUDE_ARCHIVED = "include_archived"
 DEFAULT_INCLUDE_ARCHIVED = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED):
-    cv.boolean,
+    vol.Optional(CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED): cv.
+    boolean,
 })
 
 

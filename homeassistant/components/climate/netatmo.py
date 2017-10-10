@@ -30,10 +30,9 @@ DEFAULT_TIME_OFFSET = 7200
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RELAY):
-    cv.string,
-    vol.Optional(CONF_THERMOSTAT, default=[]):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_RELAY): cv.string,
+    vol.Optional(CONF_THERMOSTAT, default=[]): vol.All(cv.ensure_list,
+                                                       [cv.string]),
 })
 
 

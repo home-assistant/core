@@ -53,18 +53,13 @@ STATE_SCHEMA = vol.Schema(
     required=True)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    cv.string,
-    vol.Required(CONF_OBSERVATIONS):
-    vol.Schema(
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): cv.string,
+    vol.Required(CONF_OBSERVATIONS): vol.Schema(
         vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA)
                                  ])),
-    vol.Required(CONF_PRIOR):
-    vol.Coerce(float),
-    vol.Optional(CONF_PROBABILITY_THRESHOLD):
-    vol.Coerce(float),
+    vol.Required(CONF_PRIOR): vol.Coerce(float),
+    vol.Optional(CONF_PROBABILITY_THRESHOLD): vol.Coerce(float),
 })
 
 

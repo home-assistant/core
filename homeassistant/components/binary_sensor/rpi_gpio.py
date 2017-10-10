@@ -32,14 +32,10 @@ _SENSORS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS):
-    _SENSORS_SCHEMA,
-    vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME):
-    cv.positive_int,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC):
-    cv.boolean,
-    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE):
-    cv.string,
+    vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
+    vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
+    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
 })
 
 

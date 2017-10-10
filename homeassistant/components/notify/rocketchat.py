@@ -21,14 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL):
-    vol.Url(),
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_ROOM):
-    cv.string,
+    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_ROOM): cv.string,
 })
 
 

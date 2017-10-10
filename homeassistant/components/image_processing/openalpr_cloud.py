@@ -33,10 +33,8 @@ OPENALPR_REGIONS = [
 CONF_REGION = 'region'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY):
-    cv.string,
-    vol.Required(CONF_REGION):
-    vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
 })
 
 

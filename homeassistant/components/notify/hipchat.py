@@ -31,18 +31,12 @@ VALID_COLORS = {'yellow', 'green', 'red', 'purple', 'gray', 'random'}
 VALID_FORMATS = {'text', 'html'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ROOM):
-    vol.Coerce(int),
-    vol.Required(CONF_TOKEN):
-    cv.string,
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
-    vol.In(VALID_COLORS),
-    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT):
-    vol.In(VALID_FORMATS),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NOTIFY, default=DEFAULT_NOTIFY):
-    cv.boolean,
+    vol.Required(CONF_ROOM): vol.Coerce(int),
+    vol.Required(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): vol.In(VALID_COLORS),
+    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT): vol.In(VALID_FORMATS),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NOTIFY, default=DEFAULT_NOTIFY): cv.boolean,
 })
 
 

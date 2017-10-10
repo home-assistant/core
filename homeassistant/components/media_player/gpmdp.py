@@ -41,12 +41,9 @@ PLAYBACK_DICT = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
@@ -207,10 +204,8 @@ class GPMDP(MediaPlayerDevice):
             try:
                 self._ws = self._connection((self._url), timeout=1)
                 msg = json.dumps({
-                    'namespace':
-                    'connect',
-                    'method':
-                    'connect',
+                    'namespace': 'connect',
+                    'method': 'connect',
                     'arguments': ['Home Assistant', self._authorization_code]
                 })
                 self._ws.send(msg)

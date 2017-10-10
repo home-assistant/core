@@ -49,39 +49,24 @@ CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
 SCHEMA_SENSORS = vol.Schema({
-    vol.Optional(CONF_SENSOR_BATTERY_LEVEL):
-    cv.entity_id,
-    vol.Optional(CONF_SENSOR_MOISTURE):
-    cv.entity_id,
-    vol.Optional(CONF_SENSOR_CONDUCTIVITY):
-    cv.entity_id,
-    vol.Optional(CONF_SENSOR_TEMPERATURE):
-    cv.entity_id,
-    vol.Optional(CONF_SENSOR_BRIGHTNESS):
-    cv.entity_id,
+    vol.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
+    vol.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
+    vol.Optional(CONF_SENSOR_CONDUCTIVITY): cv.entity_id,
+    vol.Optional(CONF_SENSOR_TEMPERATURE): cv.entity_id,
+    vol.Optional(CONF_SENSOR_BRIGHTNESS): cv.entity_id,
 })
 
 PLANT_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSORS):
-    vol.Schema(SCHEMA_SENSORS),
-    vol.Optional(CONF_MIN_BATTERY_LEVEL):
-    cv.positive_int,
-    vol.Optional(CONF_MIN_TEMPERATURE):
-    vol.Coerce(float),
-    vol.Optional(CONF_MAX_TEMPERATURE):
-    vol.Coerce(float),
-    vol.Optional(CONF_MIN_MOISTURE):
-    cv.positive_int,
-    vol.Optional(CONF_MAX_MOISTURE):
-    cv.positive_int,
-    vol.Optional(CONF_MIN_CONDUCTIVITY):
-    cv.positive_int,
-    vol.Optional(CONF_MAX_CONDUCTIVITY):
-    cv.positive_int,
-    vol.Optional(CONF_MIN_BRIGHTNESS):
-    cv.positive_int,
-    vol.Optional(CONF_MAX_BRIGHTNESS):
-    cv.positive_int,
+    vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
+    vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.positive_int,
+    vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
+    vol.Optional(CONF_MIN_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MAX_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MIN_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
+    vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
 })
 
 DOMAIN = 'plant'

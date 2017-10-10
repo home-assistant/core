@@ -18,10 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zoneminder']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_ON):
-    cv.string,
-    vol.Required(CONF_COMMAND_OFF):
-    cv.string,
+    vol.Required(CONF_COMMAND_ON): cv.string,
+    vol.Required(CONF_COMMAND_OFF): cv.string,
 })
 
 

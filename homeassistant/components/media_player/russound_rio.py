@@ -27,12 +27,9 @@ SUPPORT_RUSSOUND = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_NAME):
-    cv.string,
-    vol.Optional(CONF_PORT, default=9621):
-    cv.port,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=9621): cv.port,
 })
 
 

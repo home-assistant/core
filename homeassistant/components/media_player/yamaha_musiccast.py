@@ -34,12 +34,9 @@ DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
 })
 
 

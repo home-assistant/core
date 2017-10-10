@@ -26,12 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required("platform"):
-        rfxtrx.DOMAIN,
-        vol.Optional(CONF_DEVICES, default={}):
-        vol.All(dict, rfxtrx.valid_binary_sensor),
-        vol.Optional(ATTR_AUTOMATIC_ADD, default=False):
-        cv.boolean,
+        vol.Required("platform"): rfxtrx.DOMAIN,
+        vol.Optional(CONF_DEVICES, default={}): vol.All(
+            dict, rfxtrx.valid_binary_sensor),
+        vol.Optional(ATTR_AUTOMATIC_ADD, default=False): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA)
 

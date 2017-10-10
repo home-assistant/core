@@ -32,8 +32,7 @@ VALUE_ONLINE = 'ONLINE'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         }),

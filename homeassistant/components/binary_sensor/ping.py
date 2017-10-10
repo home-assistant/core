@@ -42,12 +42,9 @@ WIN32_PING_MATCHER = re.compile(
     r'(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT):
-    cv.positive_int,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): cv.positive_int,
 })
 
 

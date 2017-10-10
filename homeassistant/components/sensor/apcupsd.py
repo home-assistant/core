@@ -98,8 +98,8 @@ INFERRED_UNITS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCES, default=[]):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_RESOURCES, default=[]): vol.All(cv.ensure_list,
+                                                      [vol.In(SENSOR_TYPES)]),
 })
 
 

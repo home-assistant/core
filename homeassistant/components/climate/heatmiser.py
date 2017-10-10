@@ -26,12 +26,9 @@ TSTATS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IPADDRESS):
-    cv.string,
-    vol.Required(CONF_PORT):
-    cv.port,
-    vol.Required(CONF_TSTATS, default={}):
-    vol.Schema({
+    vol.Required(CONF_IPADDRESS): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_TSTATS, default={}): vol.Schema({
         cv.string: TSTATS_SCHEMA
     }),
 })

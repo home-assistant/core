@@ -34,25 +34,19 @@ CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}):
-    vol.Schema({
+    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
-            vol.Optional(CONF_NAME):
-            cv.string,
-            vol.Optional(CONF_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False):
-            cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS):
-            vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True):
-            cv.boolean,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+            vol.Optional(CONF_GROUP, default=True): cv.boolean,
         },
     }),
 })

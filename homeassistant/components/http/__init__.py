@@ -80,32 +80,22 @@ DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 
 HTTP_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_API_PASSWORD, default=None):
-        cv.string,
-        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST):
-        cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-        cv.port,
-        vol.Optional(CONF_BASE_URL):
-        cv.string,
-        vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT):
-        cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE, default=None):
-        cv.isfile,
-        vol.Optional(CONF_SSL_KEY, default=None):
-        cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False):
-        cv.boolean,
-        vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
-        vol.All(cv.ensure_list, [ip_network]),
+        vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+        vol.Optional(CONF_BASE_URL): cv.string,
+        vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
+        vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
+        vol.Optional(CONF_TRUSTED_NETWORKS, default=[]): vol.All(
+            cv.ensure_list, [ip_network]),
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD,
-            default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD):
-        cv.positive_int,
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True):
-        cv.boolean
+            default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
+        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
     })
 
 CONFIG_SCHEMA = vol.Schema(

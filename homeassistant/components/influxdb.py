@@ -37,64 +37,47 @@ DOMAIN = 'influxdb'
 TIMEOUT = 5
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(CONF_OVERRIDE_MEASUREMENT):
-    cv.string,
+    vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_HOST):
-            cv.string,
-            vol.Inclusive(CONF_USERNAME, 'authentication'):
-            cv.string,
-            vol.Inclusive(CONF_PASSWORD, 'authentication'):
-            cv.string,
-            vol.Optional(CONF_EXCLUDE, default={}):
-            vol.Schema({
-                vol.Optional(CONF_ENTITIES, default=[]):
-                cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+            vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+            vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string])
             }),
-            vol.Optional(CONF_INCLUDE, default={}):
-            vol.Schema({
-                vol.Optional(CONF_ENTITIES, default=[]):
-                cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+            vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string])
             }),
-            vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE):
-            cv.string,
-            vol.Optional(CONF_PORT):
-            cv.port,
-            vol.Optional(CONF_SSL):
-            cv.boolean,
-            vol.Optional(CONF_DEFAULT_MEASUREMENT):
-            cv.string,
-            vol.Optional(CONF_OVERRIDE_MEASUREMENT):
-            cv.string,
-            vol.Optional(CONF_TAGS, default={}):
-            vol.Schema({
+            vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+            vol.Optional(CONF_PORT): cv.port,
+            vol.Optional(CONF_SSL): cv.boolean,
+            vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+            vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+            vol.Optional(CONF_TAGS, default={}): vol.Schema({
                 cv.string: cv.string
             }),
-            vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
-            cv.boolean,
-            vol.Optional(CONF_COMPONENT_CONFIG, default={}):
-            vol.Schema({
+            vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
+                cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.
+            boolean,
+            vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema({
                 cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY
             }),
-            vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
-            vol.Schema({
+            vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema({
                 cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY
             }),
-            vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
-            vol.Schema({
-                cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY
-            }),
+            vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
+                {
+                    cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY
+                }),
         }),
     },
     extra=vol.ALLOW_EXTRA)

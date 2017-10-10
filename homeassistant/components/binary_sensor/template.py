@@ -29,23 +29,18 @@ CONF_DELAY_ON = 'delay_on'
 CONF_DELAY_OFF = 'delay_off'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(ATTR_FRIENDLY_NAME):
-    cv.string,
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Optional(CONF_DEVICE_CLASS):
-    DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_DELAY_ON):
-    vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_DELAY_OFF):
-    vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period,
+                                         cv.positive_timedelta),
+    vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period,
+                                          cv.positive_timedelta),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS):
-    vol.Schema({
+    vol.Required(CONF_SENSORS): vol.Schema({
         cv.slug: SENSOR_SCHEMA
     }),
 })

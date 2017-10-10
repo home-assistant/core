@@ -34,10 +34,8 @@ BEACON_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BT_DEVICE_ID, default=0):
-    cv.positive_int,
-    vol.Required(CONF_BEACONS):
-    vol.Schema({
+    vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
+    vol.Required(CONF_BEACONS): vol.Schema({
         cv.string: BEACON_SCHEMA
     }),
 })

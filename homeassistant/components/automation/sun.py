@@ -19,12 +19,9 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM):
-    'sun',
-    vol.Required(CONF_EVENT):
-    cv.sun_event,
-    vol.Required(CONF_OFFSET, default=timedelta(0)):
-    cv.time_period,
+    vol.Required(CONF_PLATFORM): 'sun',
+    vol.Required(CONF_EVENT): cv.sun_event,
+    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
 })
 
 

@@ -43,33 +43,26 @@ def _state_validator(config):
 
 
 STATE_SETTING_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PENDING_TIME):
-    vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Optional(CONF_PENDING_TIME): vol.All(
+        vol.Coerce(int), vol.Range(min=0))
 })
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All({
-        vol.Required(CONF_PLATFORM):
-        'manual',
-        vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME):
-        cv.string,
-        vol.Optional(CONF_CODE):
-        cv.string,
-        vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required(CONF_PLATFORM): 'manual',
+        vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+        vol.Optional(CONF_CODE): cv.string,
+        vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME): vol.All(
+            vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
+            vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(
-            CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER):
-        cv.boolean,
-        vol.Optional(STATE_ALARM_ARMED_AWAY, default={}):
-        STATE_SETTING_SCHEMA,
-        vol.Optional(STATE_ALARM_ARMED_HOME, default={}):
-        STATE_SETTING_SCHEMA,
-        vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}):
-        STATE_SETTING_SCHEMA,
-        vol.Optional(STATE_ALARM_TRIGGERED, default={}):
-        STATE_SETTING_SCHEMA,
+            CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER): cv.
+        boolean,
+        vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
     }, _state_validator))
 
 _LOGGER = logging.getLogger(__name__)

@@ -53,8 +53,7 @@ SCHEMA_ADDON = vol.Schema({
 })
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
-    vol.Required(ATTR_INPUT):
-    vol.Any(dict, cv.string)
+    vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)
 })
 
 MAP_SERVICE_API = {

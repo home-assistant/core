@@ -22,8 +22,7 @@ CONF_DEVICE_NAMES = 'device_names'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.All(cv.ensure_list, [{
+        DOMAIN: vol.All(cv.ensure_list, [{
             vol.Required(CONF_API_KEY): cv.string,
             vol.Optional(CONF_DEVICE_ID): cv.string,
             vol.Optional(CONF_DEVICE_IDS): cv.string,

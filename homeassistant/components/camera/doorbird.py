@@ -25,8 +25,7 @@ _TIMEOUT = 10  # seconds
 CONF_SHOW_LAST_VISITOR = 'last_visitor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SHOW_LAST_VISITOR, default=False):
-    cv.boolean
+    vol.Optional(CONF_SHOW_LAST_VISITOR, default=False): cv.boolean
 })
 
 

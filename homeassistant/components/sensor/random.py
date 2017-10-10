@@ -24,14 +24,10 @@ DEFAULT_MAX = 20
 ICON = 'mdi:hanger'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX):
-    cv.positive_int,
-    vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN):
-    cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
+    vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
+    vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 

@@ -44,23 +44,16 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SOURCES):
-    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCES): vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_CUSTOMIZE, default={}):
-    CUSTOMIZE_SCHEMA,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE):
-    cv.string,
-    vol.Optional(CONF_TIMEOUT, default=10):
-    cv.positive_int,
-    vol.Optional(CONF_ON_ACTION):
-    cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
+    vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 

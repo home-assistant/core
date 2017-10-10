@@ -20,21 +20,15 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default='true'):
-    cv.string,
-    vol.Optional(CONF_COMMAND_ON, default='true'):
-    cv.string,
-    vol.Optional(CONF_COMMAND_STATE):
-    cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME):
-    cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Optional(CONF_COMMAND_OFF, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_ON, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_STATE): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES):
-    vol.Schema({
+    vol.Required(CONF_SWITCHES): vol.Schema({
         cv.slug: SWITCH_SCHEMA
     }),
 })

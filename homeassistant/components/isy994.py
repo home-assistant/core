@@ -39,21 +39,19 @@ KEY_STATUS = 'status'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Required(CONF_HOST):
-            cv.url,
-            vol.Required(CONF_USERNAME):
-            cv.string,
-            vol.Required(CONF_PASSWORD):
-            cv.string,
-            vol.Optional(CONF_TLS_VER):
-            vol.Coerce(float),
-            vol.Optional(CONF_HIDDEN_STRING, default=DEFAULT_HIDDEN_STRING):
-            cv.string,
-            vol.Optional(CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING):
-            cv.string
-        })
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.url,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_TLS_VER): vol.Coerce(float),
+                vol.Optional(
+                    CONF_HIDDEN_STRING, default=DEFAULT_HIDDEN_STRING): cv.
+                string,
+                vol.Optional(
+                    CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING): cv.
+                string
+            })
     },
     extra=vol.ALLOW_EXTRA)
 

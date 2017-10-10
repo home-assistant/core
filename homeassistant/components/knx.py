@@ -49,27 +49,21 @@ ROUTING_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            vol.Optional(CONF_KNX_CONFIG):
-            cv.string,
-            vol.Exclusive(CONF_KNX_ROUTING, 'connection_type'):
-            ROUTING_SCHEMA,
-            vol.Exclusive(CONF_KNX_TUNNELING, 'connection_type'):
-            TUNNELING_SCHEMA,
-            vol.Inclusive(CONF_KNX_FIRE_EVENT, 'fire_ev'):
-            cv.boolean,
-            vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'):
-            vol.All(cv.ensure_list, [cv.string])
+        DOMAIN: vol.Schema({
+            vol.Optional(CONF_KNX_CONFIG): cv.string,
+            vol.Exclusive(CONF_KNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
+            vol.Exclusive(CONF_KNX_TUNNELING, 'connection_type'): TUNNELING_SCHEMA,
+            vol.Inclusive(CONF_KNX_FIRE_EVENT, 'fire_ev'): cv.boolean,
+            vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'): vol.All(
+                cv.ensure_list, [cv.string])
         })
     },
     extra=vol.ALLOW_EXTRA)
 
 SERVICE_KNX_SEND_SCHEMA = vol.Schema({
-    vol.Required(SERVICE_KNX_ATTR_ADDRESS):
-    cv.string,
-    vol.Required(SERVICE_KNX_ATTR_PAYLOAD):
-    vol.Any(cv.positive_int, [cv.positive_int]),
+    vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+    vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(cv.positive_int,
+                                                    [cv.positive_int]),
 })
 
 

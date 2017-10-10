@@ -34,21 +34,16 @@ DEFAULT_PAYLOAD_NOT_AVAILABLE = 'offline'
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
-    cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
-    cv.string,
-    vol.Optional(CONF_DEVICE_CLASS):
-    DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_AVAILABILITY_TOPIC):
-    valid_subscribe_topic,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE):
-    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE): cv.
+    string,
     vol.Optional(
-        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE):
-    cv.string,
+        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.
+    string,
 })
 
 

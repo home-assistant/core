@@ -40,32 +40,19 @@ class MySensorsSensor(mysensors.MySensorsEntity):
         unit_map = {
             set_req.V_TEMP: (TEMP_CELSIUS
                              if self.gateway.metric else TEMP_FAHRENHEIT),
-            set_req.V_HUM:
-            '%',
-            set_req.V_DIMMER:
-            '%',
-            set_req.V_LIGHT_LEVEL:
-            '%',
-            set_req.V_DIRECTION:
-            '°',
-            set_req.V_WEIGHT:
-            'kg',
-            set_req.V_DISTANCE:
-            'm',
-            set_req.V_IMPEDANCE:
-            'ohm',
-            set_req.V_WATT:
-            'W',
-            set_req.V_KWH:
-            'kWh',
-            set_req.V_FLOW:
-            'm',
-            set_req.V_VOLUME:
-            'm³',
-            set_req.V_VOLTAGE:
-            'V',
-            set_req.V_CURRENT:
-            'A',
+            set_req.V_HUM: '%',
+            set_req.V_DIMMER: '%',
+            set_req.V_LIGHT_LEVEL: '%',
+            set_req.V_DIRECTION: '°',
+            set_req.V_WEIGHT: 'kg',
+            set_req.V_DISTANCE: 'm',
+            set_req.V_IMPEDANCE: 'ohm',
+            set_req.V_WATT: 'W',
+            set_req.V_KWH: 'kWh',
+            set_req.V_FLOW: 'm',
+            set_req.V_VOLUME: 'm³',
+            set_req.V_VOLTAGE: 'V',
+            set_req.V_CURRENT: 'A',
         }
         if float(self.gateway.protocol_version) >= 1.5:
             if set_req.V_UNIT_PREFIX in self._values:

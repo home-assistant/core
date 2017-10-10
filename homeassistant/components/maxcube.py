@@ -26,8 +26,7 @@ MAXCUBE_HANDLE = 'maxcube'
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
+        DOMAIN: vol.Schema({
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         }),

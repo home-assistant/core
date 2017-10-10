@@ -49,10 +49,9 @@ SOURCE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SOURCE):
-    vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-    vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+    vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE): vol.All(
+        vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({

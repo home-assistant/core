@@ -30,18 +30,12 @@ ATTR_SUBJECT = 'subject'
 DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME):
-    cv.string,
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Required(CONF_SERVER):
-    cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-    cv.port,
-    vol.Optional(CONF_VALUE_TEMPLATE):
-    cv.template,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_SERVER): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -234,7 +228,7 @@ class EmailContentSensor(Entity):
             self._message = message_body
             self._state_attributes = {
                 ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
-                ATTR_SUBJECT:
-                EmailContentSensor.get_msg_subject(email_message),
+                ATTR_SUBJECT: EmailContentSensor.get_msg_subject(
+                    email_message),
                 ATTR_DATE: email_message['Date']
             }

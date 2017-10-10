@@ -57,28 +57,24 @@ SENSOR_TYPES = {
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS):
-    vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_TEMP, default=DEFAULT_OVERSAMPLING_TEMP):
-    vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_PRES, default=DEFAULT_OVERSAMPLING_PRES):
-    vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_HUM, default=DEFAULT_OVERSAMPLING_HUM):
-    vol.Coerce(int),
-    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_OPERATION_MODE):
-    vol.Coerce(int),
-    vol.Optional(CONF_T_STANDBY, default=DEFAULT_T_STANDBY):
-    vol.Coerce(int),
-    vol.Optional(CONF_FILTER_MODE, default=DEFAULT_FILTER_MODE):
-    vol.Coerce(int),
-    vol.Optional(CONF_DELTA_TEMP, default=DEFAULT_DELTA_TEMP):
-    vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED): vol.
+    All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_TEMP, default=DEFAULT_OVERSAMPLING_TEMP): vol.
+    Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_PRES, default=DEFAULT_OVERSAMPLING_PRES): vol.
+    Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_HUM, default=DEFAULT_OVERSAMPLING_HUM): vol.
+    Coerce(int),
+    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_OPERATION_MODE): vol.
+    Coerce(int),
+    vol.Optional(CONF_T_STANDBY, default=DEFAULT_T_STANDBY): vol.Coerce(int),
+    vol.Optional(CONF_FILTER_MODE, default=DEFAULT_FILTER_MODE): vol.Coerce(
+        int),
+    vol.Optional(CONF_DELTA_TEMP, default=DEFAULT_DELTA_TEMP): vol.Coerce(
+        float),
 })
 
 

@@ -42,16 +42,11 @@ SENSORS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-    cv.string,
-    vol.Required(CONF_PASSWORD):
-    cv.string,
-    vol.Optional(CONF_HOST):
-    cv.string,
-    vol.Optional(CONF_PORT):
-    cv.port,
-    vol.Optional(CONF_SENSORS):
-    vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
 })
 
 

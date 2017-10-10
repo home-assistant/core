@@ -27,14 +27,10 @@ DEFAULT_NAME = 'Dweet.io Sensor'
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE):
-    cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE):
-    cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
-    cv.string,
+    vol.Required(CONF_DEVICE): cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 

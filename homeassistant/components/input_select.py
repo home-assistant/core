@@ -30,33 +30,28 @@ ATTR_OPTIONS = 'options'
 SERVICE_SELECT_OPTION = 'select_option'
 
 SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_OPTION):
-    cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPTION): cv.string,
 })
 
 SERVICE_SELECT_NEXT = 'select_next'
 
 SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 SERVICE_SELECT_PREVIOUS = 'select_previous'
 
 SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID):
-    cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 SERVICE_SET_OPTIONS = 'set_options'
 
 SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID):
-    cv.entity_ids,
-    vol.Required(ATTR_OPTIONS):
-    vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), [cv.string]),
 })
 
 
@@ -72,18 +67,13 @@ def _cv_input_select(cfg):
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema({
-            cv.slug:
-            vol.All({
-                vol.Optional(CONF_NAME):
-                cv.string,
-                vol.Required(CONF_OPTIONS):
-                vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-                vol.Optional(CONF_INITIAL):
-                cv.string,
-                vol.Optional(CONF_ICON):
-                cv.icon,
+        DOMAIN: vol.Schema({
+            cv.slug: vol.All({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Required(CONF_OPTIONS): vol.All(
+                    cv.ensure_list, vol.Length(min=1), [cv.string]),
+                vol.Optional(CONF_INITIAL): cv.string,
+                vol.Optional(CONF_ICON): cv.icon,
             }, _cv_input_select)
         })
     },
