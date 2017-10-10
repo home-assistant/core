@@ -88,13 +88,9 @@ class UnifiScanner(DeviceScanner):
         except APIError as ex:
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
-
-        self._clients = {
-            client['mac']: client
-            for client in clients
-            if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self._detection_time
-            }
+            
+        new_enough = dt_util.utcnow() - self._detection_time
+        self._clients = {c['mac']: c for c in clients if c['last_seen'] > new_enough}
 
     def scan_devices(self):
         """Scan for devices."""
