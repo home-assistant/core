@@ -5,18 +5,19 @@ from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+from tests.common import (get_test_home_assistant, assert_setup_component,
+                          mock_component)
 
 
 class TestTemplateSensor:
     """Test the Template sensor."""
 
     hass = None
+
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -31,8 +32,7 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template':
-                                "It {{ states.sensor.test_state.state }}."
+                            'value_template': "It {{ states.sensor.test_state.state }}."
                         }
                     }
                 }
@@ -58,11 +58,10 @@ class TestTemplateSensor:
                     'sensors': {
                         'test_template_sensor': {
                             'value_template': "State",
-                            'icon_template':
-                                "{% if states.sensor.test_state.state == "
-                                "'Works' %}"
-                                "mdi:check"
-                                "{% endif %}"
+                            'icon_template': "{% if states.sensor.test_state.state == "
+                            "'Works' %}"
+                            "mdi:check"
+                            "{% endif %}"
                         }
                     }
                 }
@@ -79,6 +78,35 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.attributes['icon'] == 'mdi:check'
 
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'entity_picture_template': "{% if states.sensor.test_state.state == "
+                            "'Works' %}"
+                            "/local/myimage.png"
+                            "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes.get('entity_picture') == ''
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['entity_picture'] == '/local/myimage.png'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0):
@@ -87,8 +115,7 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template':
-                                "{% if rubbish %}"
+                            'value_template': "{% if rubbish %}"
                         }
                     }
                 }
@@ -107,7 +134,7 @@ class TestTemplateSensor:
                     'sensors': {
                         'test_template_sensor': {
                             'value_template': 'It {{ states.sensor.test_state'
-                                              '.attributes.missing }}.'
+                            '.attributes.missing }}.'
                         }
                     }
                 }
@@ -127,8 +154,7 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test INVALID sensor': {
-                            'value_template':
-                                "{{ states.sensor.test_state.state }}"
+                            'value_template': "{{ states.sensor.test_state.state }}"
                         }
                     }
                 }
@@ -158,11 +184,10 @@ class TestTemplateSensor:
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
         with assert_setup_component(0):
-            assert setup_component(self.hass, 'sensor', {
-                'sensor': {
-                    'platform': 'template'
-                }
-            })
+            assert setup_component(self.hass, 'sensor',
+                                   {'sensor': {
+                                       'platform': 'template'
+                                   }})
 
         self.hass.start()
         self.hass.block_till_done()
@@ -177,8 +202,7 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'not_value_template':
-                                "{{ states.sensor.test_state.state }}"
+                            'not_value_template': "{{ states.sensor.test_state.state }}"
                         }
                     }
                 }
@@ -194,8 +218,8 @@ class TestTemplateSensor:
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     hass.data[DATA_RESTORE_CACHE] = {
-        'sensor.test_template_sensor':
-            State('sensor.test_template_sensor', 'It Test.'),
+        'sensor.test_template_sensor': State('sensor.test_template_sensor',
+                                             'It Test.'),
     }
 
     hass.state = CoreState.starting
@@ -206,8 +230,7 @@ def test_restore_state(hass):
             'platform': 'template',
             'sensors': {
                 'test_template_sensor': {
-                    'value_template':
-                        "It {{ states.sensor.test_state.state }}."
+                    'value_template': "It {{ states.sensor.test_state.state }}."
                 }
             }
         }
