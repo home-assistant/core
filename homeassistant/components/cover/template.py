@@ -50,10 +50,10 @@ COVER_SCHEMA = vol.Schema({
     vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
     vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
     vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
-    template,
-    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE): cv.
-    template,
+    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
+    cv.template,
+    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
+    cv.template,
     vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
