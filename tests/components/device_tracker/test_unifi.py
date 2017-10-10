@@ -25,6 +25,8 @@ def mock_scanner():
         yield scanner
 
 
+@mock.patch('os.access', return_value=True)
+@mock.patch('os.path.isfile', mock.Mock(return_value=True))
 def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
     """Test the setup with a string for ssl_verify representing the absolute
     path to a CA certificate bundle"""
@@ -110,19 +112,10 @@ def test_config_error():
         })
     with pytest.raises(vol.Invalid):
         unifi.PLATFORM_SCHEMA({
-            CONF_USERNAME: 'foo',
             CONF_PLATFORM: unifi.DOMAIN,
-            CONF_HOST: 'myhost',
-            CONF_VERIFY_SSL: None,  # Invalid ssl_verify
-            'port': 123,
-        })
-    with pytest.raises(vol.Invalid):
-        unifi.PLATFORM_SCHEMA({
             CONF_USERNAME: 'foo',
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_HOST: 'myhost',
-            CONF_VERIFY_SSL: 5555,  # Invalid ssl_verify
-            'port': 123,
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "dfdsfsdfsd",  # Invalid ssl_verify (no file)
         })
 
 
