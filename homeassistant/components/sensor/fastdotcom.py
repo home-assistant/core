@@ -27,14 +27,15 @@ CONF_MANUAL = 'manual'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SECOND, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
     vol.Optional(CONF_MINUTE, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
     vol.Optional(CONF_HOUR):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_DAY):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
-    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+    vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+    vol.Optional(CONF_MANUAL, default=False):
+    cv.boolean,
 })
 
 
@@ -102,8 +103,11 @@ class SpeedtestData(object):
         self.data = None
         if not config.get(CONF_MANUAL):
             track_time_change(
-                hass, self.update, second=config.get(CONF_SECOND),
-                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
+                hass,
+                self.update,
+                second=config.get(CONF_SECOND),
+                minute=config.get(CONF_MINUTE),
+                hour=config.get(CONF_HOUR),
                 day=config.get(CONF_DAY))
 
     def update(self, now):

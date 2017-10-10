@@ -16,27 +16,21 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 YANDEX_API_URL = "https://tts.voicetech.yandex.net/generate?"
 
-SUPPORT_LANGUAGES = [
-    'ru-RU', 'en-US', 'tr-TR', 'uk-UK'
-]
+SUPPORT_LANGUAGES = ['ru-RU', 'en-US', 'tr-TR', 'uk-UK']
 
 SUPPORT_CODECS = [
-    'mp3', 'wav', 'opus',
+    'mp3',
+    'wav',
+    'opus',
 ]
 
-SUPPORT_VOICES = [
-    'jane', 'oksana', 'alyss', 'omazh',
-    'zahar', 'ermil'
-]
+SUPPORT_VOICES = ['jane', 'oksana', 'alyss', 'omazh', 'zahar', 'ermil']
 
-SUPPORTED_EMOTION = [
-    'good', 'evil', 'neutral'
-]
+SUPPORTED_EMOTION = ['good', 'evil', 'neutral']
 
 MIN_SPEED = 0.1
 MAX_SPEED = 3
@@ -53,14 +47,18 @@ DEFAULT_EMOTION = 'neutral'
 DEFAULT_SPEED = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
+    vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC):
+    vol.In(SUPPORT_CODECS),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+    vol.In(SUPPORT_VOICES),
     vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION):
-        vol.In(SUPPORTED_EMOTION),
+    vol.In(SUPPORTED_EMOTION),
     vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-        vol.Range(min=MIN_SPEED, max=MAX_SPEED)
+    vol.Range(min=MIN_SPEED, max=MAX_SPEED)
 })
 
 
@@ -116,8 +114,8 @@ class YandexSpeechKitProvider(Provider):
                     YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load URL %s",
-                                  request.status, request.url)
+                    _LOGGER.error("Error %d on load URL %s", request.status,
+                                  request.url)
                     return (None, None)
                 data = yield from request.read()
 

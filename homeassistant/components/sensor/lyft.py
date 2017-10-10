@@ -31,14 +31,20 @@ ICON = 'mdi:taxi'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
-    vol.Required(CONF_START_LATITUDE): cv.latitude,
-    vol.Required(CONF_START_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_END_LATITUDE): cv.latitude,
-    vol.Optional(CONF_END_LONGITUDE): cv.longitude,
+    vol.Required(CONF_CLIENT_ID):
+    cv.string,
+    vol.Required(CONF_CLIENT_SECRET):
+    cv.string,
+    vol.Required(CONF_START_LATITUDE):
+    cv.latitude,
+    vol.Required(CONF_START_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_END_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_END_LONGITUDE):
+    cv.longitude,
     vol.Optional(CONF_PRODUCT_IDS, default=None):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -47,17 +53,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from lyft_rides.auth import ClientCredentialGrant
     from lyft_rides.errors import APIError
 
-    auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
-                                      client_secret=config.get(
-                                          CONF_CLIENT_SECRET),
-                                      scopes="public",
-                                      is_sandbox_mode=False)
+    auth_flow = ClientCredentialGrant(
+        client_id=config.get(CONF_CLIENT_ID),
+        client_secret=config.get(CONF_CLIENT_SECRET),
+        scopes="public",
+        is_sandbox_mode=False)
     try:
         session = auth_flow.get_session()
 
-        timeandpriceest = LyftEstimate(
-            session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
-            config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
+        timeandpriceest = LyftEstimate(session, config[CONF_START_LATITUDE],
+                                       config[CONF_START_LONGITUDE],
+                                       config.get(CONF_END_LATITUDE),
+                                       config.get(CONF_END_LONGITUDE))
         timeandpriceest.fetch_data()
     except APIError as exc:
         _LOGGER.error("Error setting up Lyft platform: %s", exc)
@@ -72,8 +79,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             continue
         dev.append(LyftSensor('time', timeandpriceest, product_id, product))
         if product.get('estimate') is not None:
-            dev.append(LyftSensor(
-                'price', timeandpriceest, product_id, product))
+            dev.append(
+                LyftSensor('price', timeandpriceest, product_id, product))
     add_devices(dev, True)
 
 
@@ -86,8 +93,8 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(
-            self._product['display_name'], self._sensortype)
+        self._name = '{} {}'.format(self._product['display_name'],
+                                    self._sensortype)
         if 'lyft' not in self._name.lower():
             self._name = 'Lyft{}'.format(self._name)
         if self._sensortype == 'time':
@@ -179,15 +186,19 @@ class LyftSensor(Entity):
             if (estimate is not None) and \
                estimate.get('is_valid_estimate'):
                 self._state = (int(
-                    (estimate.get('estimated_cost_cents_min', 0) +
-                     estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
+                    (estimate.get('estimated_cost_cents_min', 0) + estimate.
+                     get('estimated_cost_cents_max', 0)) / 2) / 100)
 
 
 class LyftEstimate(object):
     """The class for handling the time and price estimate."""
 
-    def __init__(self, session, start_latitude, start_longitude,
-                 end_latitude=None, end_longitude=None):
+    def __init__(self,
+                 session,
+                 start_latitude,
+                 start_longitude,
+                 end_latitude=None,
+                 end_longitude=None):
         """Initialize the LyftEstimate object."""
         self._session = session
         self.start_latitude = start_latitude
@@ -212,8 +223,8 @@ class LyftEstimate(object):
 
         self.products = {}
 
-        products_response = client.get_ride_types(
-            self.start_latitude, self.start_longitude)
+        products_response = client.get_ride_types(self.start_latitude,
+                                                  self.start_longitude)
 
         products = products_response.json.get('ride_types')
 
@@ -222,8 +233,8 @@ class LyftEstimate(object):
 
         if self.end_latitude is not None and self.end_longitude is not None:
             price_response = client.get_cost_estimates(
-                self.start_latitude, self.start_longitude,
-                self.end_latitude, self.end_longitude)
+                self.start_latitude, self.start_longitude, self.end_latitude,
+                self.end_longitude)
 
             prices = price_response.json.get('cost_estimates', [])
 

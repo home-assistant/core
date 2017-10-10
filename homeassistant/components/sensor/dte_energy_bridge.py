@@ -24,10 +24,12 @@ DEFAULT_VERSION = 1
 ICON = 'mdi:flash'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_IP_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-        vol.All(vol.Coerce(int), vol.Any(1, 2))
+    vol.All(vol.Coerce(int), vol.Any(1, 2))
 })
 
 

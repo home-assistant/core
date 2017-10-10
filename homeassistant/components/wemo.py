@@ -20,11 +20,11 @@ DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  'light',
+    'Bridge': 'light',
     'Insight': 'switch',
-    'Maker':   'switch',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch',
+    'Maker': 'switch',
+    'Sensor': 'binary_sensor',
+    'Socket': 'switch',
     'LightSwitch': 'switch',
     'CoffeeMaker': 'switch'
 }
@@ -36,11 +36,15 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_STATIC = 'static'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_STATIC, default=[]): vol.Schema([cv.string])
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_STATIC, default=[]):
+            vol.Schema([cv.string])
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=unused-argument, too-many-function-args

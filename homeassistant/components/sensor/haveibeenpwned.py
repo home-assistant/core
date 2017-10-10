@@ -27,7 +27,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_EMAIL):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -83,11 +84,11 @@ class HaveIBeenPwnedSensor(Entity):
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx+1)
+            tmpname = "breach {}".format(idx + 1)
             tmpvalue = "{} {}".format(
                 value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(
-                    value["AddedDate"])).strftime(DATE_STR_FORMAT))
+                dt_util.as_local(dt_util.parse_datetime(value[
+                    "AddedDate"])).strftime(DATE_STR_FORMAT))
             val[tmpname] = tmpvalue
 
         return val
@@ -148,8 +149,11 @@ class HaveIBeenPwnedData(object):
 
             _LOGGER.info("Checking for breaches for email %s", self._email)
 
-            req = requests.get(url, headers={"User-agent": USER_AGENT},
-                               allow_redirects=True, timeout=5)
+            req = requests.get(
+                url,
+                headers={"User-agent": USER_AGENT},
+                allow_redirects=True,
+                timeout=5)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching HaveIBeenPwned Data for %s",
@@ -157,9 +161,8 @@ class HaveIBeenPwnedData(object):
             return
 
         if req.status_code == 200:
-            self.data[self._email] = sorted(req.json(),
-                                            key=lambda k: k["AddedDate"],
-                                            reverse=True)
+            self.data[self._email] = sorted(
+                req.json(), key=lambda k: k["AddedDate"], reverse=True)
 
             # only goto next email if we had data so that
             # the forced updates try this current email again

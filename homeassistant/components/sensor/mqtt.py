@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
+                                 CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -30,10 +30,14 @@ DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
+    vol.Optional(CONF_EXPIRE_AFTER):
+    cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE):
+    cv.boolean,
 })
 
 
@@ -47,15 +51,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttSensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_UNIT_OF_MEASUREMENT),
-        config.get(CONF_FORCE_UPDATE),
-        config.get(CONF_EXPIRE_AFTER),
-        value_template,
-    )])
+    async_add_devices([
+        MqttSensor(
+            config.get(CONF_NAME),
+            config.get(CONF_STATE_TOPIC),
+            config.get(CONF_QOS),
+            config.get(CONF_UNIT_OF_MEASUREMENT),
+            config.get(CONF_FORCE_UPDATE),
+            config.get(CONF_EXPIRE_AFTER),
+            value_template, )
+    ])
 
 
 class MqttSensor(Entity):
@@ -79,6 +84,7 @@ class MqttSensor(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
+
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
@@ -102,8 +108,8 @@ class MqttSensor(Entity):
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        return mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, self._qos)
+        return mqtt.async_subscribe(self.hass, self._state_topic,
+                                    message_received, self._qos)
 
     @callback
     def value_is_expired(self, *_):

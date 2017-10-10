@@ -9,9 +9,9 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+from homeassistant.const import (STATE_OK, STATE_PROBLEM, STATE_UNKNOWN,
+                                 TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_SENSORS,
+                                 ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
 from homeassistant.components import group
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -49,24 +49,39 @@ CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
 SCHEMA_SENSORS = vol.Schema({
-    vol.Optional(CONF_SENSOR_BATTERY_LEVEL): cv.entity_id,
-    vol.Optional(CONF_SENSOR_MOISTURE): cv.entity_id,
-    vol.Optional(CONF_SENSOR_CONDUCTIVITY): cv.entity_id,
-    vol.Optional(CONF_SENSOR_TEMPERATURE): cv.entity_id,
-    vol.Optional(CONF_SENSOR_BRIGHTNESS): cv.entity_id,
+    vol.Optional(CONF_SENSOR_BATTERY_LEVEL):
+    cv.entity_id,
+    vol.Optional(CONF_SENSOR_MOISTURE):
+    cv.entity_id,
+    vol.Optional(CONF_SENSOR_CONDUCTIVITY):
+    cv.entity_id,
+    vol.Optional(CONF_SENSOR_TEMPERATURE):
+    cv.entity_id,
+    vol.Optional(CONF_SENSOR_BRIGHTNESS):
+    cv.entity_id,
 })
 
 PLANT_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSORS): vol.Schema(SCHEMA_SENSORS),
-    vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.positive_int,
-    vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_MIN_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MAX_MOISTURE): cv.positive_int,
-    vol.Optional(CONF_MIN_CONDUCTIVITY): cv.positive_int,
-    vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
-    vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
-    vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
+    vol.Required(CONF_SENSORS):
+    vol.Schema(SCHEMA_SENSORS),
+    vol.Optional(CONF_MIN_BATTERY_LEVEL):
+    cv.positive_int,
+    vol.Optional(CONF_MIN_TEMPERATURE):
+    vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMPERATURE):
+    vol.Coerce(float),
+    vol.Optional(CONF_MIN_MOISTURE):
+    cv.positive_int,
+    vol.Optional(CONF_MAX_MOISTURE):
+    cv.positive_int,
+    vol.Optional(CONF_MIN_CONDUCTIVITY):
+    cv.positive_int,
+    vol.Optional(CONF_MAX_CONDUCTIVITY):
+    cv.positive_int,
+    vol.Optional(CONF_MIN_BRIGHTNESS):
+    cv.positive_int,
+    vol.Optional(CONF_MAX_BRIGHTNESS):
+    cv.positive_int,
 })
 
 DOMAIN = 'plant'
@@ -75,18 +90,19 @@ DEPENDENCIES = ['zone', 'group']
 GROUP_NAME_ALL_PLANTS = 'all plants'
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        cv.string: PLANT_SCHEMA
-    },
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            cv.string: PLANT_SCHEMA
+        },
+    }, extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass,
-                                group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(
+        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -111,7 +127,7 @@ class Plant(Entity):
 
     READINGS = {
         READING_BATTERY: {
-            ATTR_UNIT_OF_MEASUREMENT:  '%',
+            ATTR_UNIT_OF_MEASUREMENT: '%',
             'min': CONF_MIN_BATTERY_LEVEL,
             'icon': 'mdi:battery-outline'
         },
@@ -164,8 +180,8 @@ class Plant(Entity):
         This callback is triggered, when the sensor state changes.
         """
         value = new_state.state
-        _LOGGER.debug("Received callback from %s with value %s",
-                      entity_id, value)
+        _LOGGER.debug("Received callback from %s with value %s", entity_id,
+                      value)
         if value == STATE_UNKNOWN:
             return
 

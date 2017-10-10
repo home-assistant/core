@@ -15,13 +15,11 @@ import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
-    HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
-    MATCH_ALL, URL_API, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG,
-    URL_API_EVENTS, URL_API_SERVICES,
-    URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM, URL_API_TEMPLATE,
-    __version__)
+    EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, HTTP_BAD_REQUEST,
+    HTTP_CREATED, HTTP_NOT_FOUND, MATCH_ALL, URL_API, URL_API_COMPONENTS,
+    URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG, URL_API_EVENTS,
+    URL_API_SERVICES, URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM,
+    URL_API_TEMPLATE, __version__)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import AsyncTrackStates
 from homeassistant.helpers import template
@@ -120,16 +118,16 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    with async_timeout.timeout(STREAM_PING_INTERVAL,
-                                               loop=hass.loop):
+                    with async_timeout.timeout(
+                            STREAM_PING_INTERVAL, loop=hass.loop):
                         payload = yield from to_write.get()
 
                     if payload is stop_obj:
                         break
 
                     msg = "data: {}\n\n".format(payload)
-                    _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
-                                  msg.strip())
+                    _LOGGER.debug('STREAM %s WRITING %s',
+                                  id(stop_obj), msg.strip())
                     response.write(msg.encode("UTF-8"))
                     yield from response.drain()
                 except asyncio.TimeoutError:
@@ -349,11 +347,15 @@ class APITemplateView(HomeAssistantView):
 
 def async_services_json(hass):
     """Generate services data to JSONify."""
-    return [{"domain": key, "services": value}
-            for key, value in hass.services.async_services().items()]
+    return [{
+        "domain": key,
+        "services": value
+    } for key, value in hass.services.async_services().items()]
 
 
 def async_events_json(hass):
     """Generate event data to JSONify."""
-    return [{"event": key, "listener_count": value}
-            for key, value in hass.bus.async_listeners().items()]
+    return [{
+        "event": key,
+        "listener_count": value
+    } for key, value in hass.bus.async_listeners().items()]

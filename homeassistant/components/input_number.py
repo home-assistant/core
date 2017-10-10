@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+                                 CONF_ICON, CONF_NAME)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -40,8 +40,10 @@ ATTR_MODE = 'mode'
 SERVICE_SET_VALUE = 'set_value'
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): vol.Coerce(float),
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_VALUE):
+    vol.Coerce(float),
 })
 
 
@@ -59,22 +61,33 @@ def _cv_input_number(cfg):
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_MIN): vol.Coerce(float),
-            vol.Required(CONF_MAX): vol.Coerce(float),
-            vol.Optional(CONF_INITIAL): vol.Coerce(float),
-            vol.Optional(CONF_STEP, default=1):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            cv.slug:
+            vol.All({
+                vol.Optional(CONF_NAME):
+                cv.string,
+                vol.Required(CONF_MIN):
+                vol.Coerce(float),
+                vol.Required(CONF_MAX):
+                vol.Coerce(float),
+                vol.Optional(CONF_INITIAL):
+                vol.Coerce(float),
+                vol.Optional(CONF_STEP, default=1):
                 vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MODE, default=MODE_SLIDER):
+                vol.Optional(CONF_ICON):
+                cv.icon,
+                vol.Optional(ATTR_UNIT_OF_MEASUREMENT):
+                cv.string,
+                vol.Optional(CONF_MODE, default=MODE_SLIDER):
                 vol.In([MODE_BOX, MODE_SLIDER]),
-        }, _cv_input_number)
-    })
-}, required=True, extra=vol.ALLOW_EXTRA)
+            }, _cv_input_number)
+        })
+    },
+    required=True,
+    extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -103,9 +116,9 @@ def async_setup(hass, config):
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         mode = cfg.get(CONF_MODE)
 
-        entities.append(InputNumber(
-            object_id, name, initial, minimum, maximum, step, icon, unit,
-            mode))
+        entities.append(
+            InputNumber(object_id, name, initial, minimum, maximum, step, icon,
+                        unit, mode))
 
     if not entities:
         return False
@@ -115,13 +128,17 @@ def async_setup(hass, config):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_number.async_set_value(call.data[ATTR_VALUE])
-                 for input_number in target_inputs]
+        tasks = [
+            input_number.async_set_value(call.data[ATTR_VALUE])
+            for input_number in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        async_set_value_service,
         schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)
@@ -199,8 +216,8 @@ class InputNumber(Entity):
         """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
-            _LOGGER.warning("Invalid value: %s (range %s - %s)",
-                            num_value, self._minimum, self._maximum)
+            _LOGGER.warning("Invalid value: %s (range %s - %s)", num_value,
+                            self._minimum, self._maximum)
             return
         self._current_value = num_value
         yield from self.async_update_ha_state()

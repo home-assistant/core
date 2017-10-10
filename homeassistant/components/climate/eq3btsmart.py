@@ -9,11 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
-    STATE_AUTO, STATE_ON, STATE_OFF,
-)
-from homeassistant.const import (
-    CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
+    ClimateDevice,
+    PLATFORM_SCHEMA,
+    PRECISION_HALVES,
+    STATE_AUTO,
+    STATE_ON,
+    STATE_OFF, )
+from homeassistant.const import (CONF_MAC, TEMP_CELSIUS, CONF_DEVICES,
+                                 ATTR_TEMPERATURE)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -37,7 +40,9 @@ DEVICE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):
-        vol.Schema({cv.string: DEVICE_SCHEMA}),
+    vol.Schema({
+        cv.string: DEVICE_SCHEMA
+    }),
 })
 
 
@@ -61,12 +66,14 @@ class EQ3BTSmartThermostat(ClimateDevice):
         # we want to avoid name clash with this module..
         import eq3bt as eq3
 
-        self.modes = {eq3.Mode.Open: STATE_ON,
-                      eq3.Mode.Closed: STATE_OFF,
-                      eq3.Mode.Auto: STATE_AUTO,
-                      eq3.Mode.Manual: STATE_MANUAL,
-                      eq3.Mode.Boost: STATE_BOOST,
-                      eq3.Mode.Away: STATE_AWAY}
+        self.modes = {
+            eq3.Mode.Open: STATE_ON,
+            eq3.Mode.Closed: STATE_OFF,
+            eq3.Mode.Auto: STATE_AUTO,
+            eq3.Mode.Manual: STATE_MANUAL,
+            eq3.Mode.Boost: STATE_BOOST,
+            eq3.Mode.Away: STATE_AWAY
+        }
 
         self.reverse_modes = {v: k for k, v in self.modes.items()}
 

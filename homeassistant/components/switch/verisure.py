@@ -23,7 +23,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     switches.extend([
         VerisureSmartplug(device_label)
-        for device_label in hub.get('$.smartPlugs[*].deviceLabel')])
+        for device_label in hub.get('$.smartPlugs[*].deviceLabel')
+    ])
     add_devices(switches)
 
 
@@ -39,9 +40,8 @@ class VerisureSmartplug(SwitchDevice):
     @property
     def name(self):
         """Return the name or location of the smartplug."""
-        return hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')].area",
-            self._device_label)
+        return hub.get_first("$.smartPlugs[?(@.deviceLabel == '%s')].area",
+                             self._device_label)
 
     @property
     def is_on(self):
@@ -56,9 +56,8 @@ class VerisureSmartplug(SwitchDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')]",
-            self._device_label) is not None
+        return hub.get_first("$.smartPlugs[?(@.deviceLabel == '%s')]",
+                             self._device_label) is not None
 
     def turn_on(self):
         """Set smartplug status on."""

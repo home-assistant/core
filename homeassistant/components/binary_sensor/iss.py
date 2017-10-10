@@ -11,10 +11,10 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, CONF_SHOW_ON_MAP)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE,
+                                 CONF_SHOW_ON_MAP)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyiss==1.0.1']
@@ -30,8 +30,10 @@ DEFAULT_DEVICE_CLASS = 'visible'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_SHOW_ON_MAP, default=False):
+    cv.boolean,
 })
 
 
@@ -85,8 +87,9 @@ class IssBinarySensor(BinarySensorDevice):
         if self.iss_data:
             attrs = {
                 ATTR_ISS_NUMBER_PEOPLE_SPACE:
-                    self.iss_data.number_of_people_in_space,
-                ATTR_ISS_NEXT_RISE: self.iss_data.next_rise,
+                self.iss_data.number_of_people_in_space,
+                ATTR_ISS_NEXT_RISE:
+                self.iss_data.next_rise,
             }
             if self._show_on_map:
                 attrs[ATTR_LONGITUDE] = self.iss_data.position.get('longitude')

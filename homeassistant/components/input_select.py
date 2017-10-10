@@ -30,29 +30,33 @@ ATTR_OPTIONS = 'options'
 SERVICE_SELECT_OPTION = 'select_option'
 
 SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_OPTION): cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_OPTION):
+    cv.string,
 })
 
 SERVICE_SELECT_NEXT = 'select_next'
 
 SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
 })
 
 SERVICE_SELECT_PREVIOUS = 'select_previous'
 
 SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
 })
-
 
 SERVICE_SET_OPTIONS = 'set_options'
 
 SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID):
+    cv.entity_ids,
     vol.Required(ATTR_OPTIONS):
-        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
 })
 
 
@@ -66,16 +70,25 @@ def _cv_input_select(cfg):
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_OPTIONS):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            cv.slug:
+            vol.All({
+                vol.Optional(CONF_NAME):
+                cv.string,
+                vol.Required(CONF_OPTIONS):
                 vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-            vol.Optional(CONF_INITIAL): cv.string,
-            vol.Optional(CONF_ICON): cv.icon,
-        }, _cv_input_select)})
-}, required=True, extra=vol.ALLOW_EXTRA)
+                vol.Optional(CONF_INITIAL):
+                cv.string,
+                vol.Optional(CONF_ICON):
+                cv.icon,
+            }, _cv_input_select)
+        })
+    },
+    required=True,
+    extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -134,13 +147,17 @@ def async_setup(hass, config):
         """Handle a calls to the input select option service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_select_option(call.data[ATTR_OPTION])
-                 for input_select in target_inputs]
+        tasks = [
+            input_select.async_select_option(call.data[ATTR_OPTION])
+            for input_select in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        async_select_option_service,
         schema=SERVICE_SELECT_OPTION_SCHEMA)
 
     @asyncio.coroutine
@@ -148,13 +165,17 @@ def async_setup(hass, config):
         """Handle a calls to the input select next service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_offset_index(1)
-                 for input_select in target_inputs]
+        tasks = [
+            input_select.async_offset_index(1)
+            for input_select in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        async_select_next_service,
         schema=SERVICE_SELECT_NEXT_SCHEMA)
 
     @asyncio.coroutine
@@ -162,13 +183,17 @@ def async_setup(hass, config):
         """Handle a calls to the input select previous service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_offset_index(-1)
-                 for input_select in target_inputs]
+        tasks = [
+            input_select.async_offset_index(-1)
+            for input_select in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        async_select_previous_service,
         schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
     @asyncio.coroutine
@@ -176,13 +201,17 @@ def async_setup(hass, config):
         """Handle a calls to the set options service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_set_options(call.data[ATTR_OPTIONS])
-                 for input_select in target_inputs]
+        tasks = [
+            input_select.async_set_options(call.data[ATTR_OPTIONS])
+            for input_select in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_OPTIONS, async_set_options_service,
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
+        async_set_options_service,
         schema=SERVICE_SET_OPTIONS_SCHEMA)
 
     yield from component.async_add_entities(entities)

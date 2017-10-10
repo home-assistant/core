@@ -12,15 +12,14 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-)
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
-from .hue_api import (
-    HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
-    HueOneLightChangeView)
+from .hue_api import (HueUsernameView, HueAllLightsStateView,
+                      HueOneLightStateView, HueOneLightChangeView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
@@ -51,20 +50,31 @@ DEFAULT_EXPOSED_DOMAINS = [
 ]
 DEFAULT_TYPE = TYPE_GOOGLE
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST_IP): cv.string,
-        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
-        vol.Optional(CONF_ADVERTISE_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_PORT): cv.port,
-        vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
-        vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
-        vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
-        vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_HOST_IP):
+            cv.string,
+            vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
+            cv.port,
+            vol.Optional(CONF_ADVERTISE_IP):
+            cv.string,
+            vol.Optional(CONF_ADVERTISE_PORT):
+            cv.port,
+            vol.Optional(CONF_UPNP_BIND_MULTICAST):
+            cv.boolean,
+            vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS):
+            cv.ensure_list,
+            vol.Optional(CONF_EXPOSE_BY_DEFAULT):
+            cv.boolean,
+            vol.Optional(CONF_EXPOSED_DOMAINS):
+            cv.ensure_list,
+            vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
             vol.Any(TYPE_ALEXA, TYPE_GOOGLE)
-    })
-}, extra=vol.ALLOW_EXTRA)
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
@@ -86,8 +96,7 @@ def setup(hass, yaml_config):
         use_x_forwarded_for=False,
         trusted_networks=[],
         login_threshold=0,
-        is_ban_enabled=False
-    )
+        is_ban_enabled=False)
 
     server.register_view(DescriptionXmlView(config))
     server.register_view(HueUsernameView)
@@ -96,9 +105,8 @@ def setup(hass, yaml_config):
     server.register_view(HueOneLightChangeView(config))
 
     upnp_listener = UPNPResponderThread(
-        config.host_ip_addr, config.listen_port,
-        config.upnp_bind_multicast, config.advertise_ip,
-        config.advertise_port)
+        config.host_ip_addr, config.listen_port, config.upnp_bind_multicast,
+        config.advertise_ip, config.advertise_port)
 
     @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
@@ -111,8 +119,8 @@ def setup(hass, yaml_config):
         """Start the emulated hue bridge."""
         upnp_listener.start()
         yield from server.start()
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   stop_emulated_hue_bridge)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
@@ -145,9 +153,8 @@ class Config(object):
         self.listen_port = conf.get(CONF_LISTEN_PORT)
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
-            _LOGGER.warning(
-                "Listen port not specified, defaulting to %s",
-                self.listen_port)
+            _LOGGER.warning("Listen port not specified, defaulting to %s",
+                            self.listen_port)
 
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
             _LOGGER.warning("When targeting Google Home, listening port has "
@@ -155,8 +162,8 @@ class Config(object):
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
-        self.upnp_bind_multicast = conf.get(
-            CONF_UPNP_BIND_MULTICAST, DEFAULT_UPNP_BIND_MULTICAST)
+        self.upnp_bind_multicast = conf.get(CONF_UPNP_BIND_MULTICAST,
+                                            DEFAULT_UPNP_BIND_MULTICAST)
 
         # Get domains that cause both "on" and "off" commands to map to "on"
         # This is primarily useful for things like scenes or scripts, which
@@ -167,20 +174,18 @@ class Config(object):
 
         # Get whether or not entities should be exposed by default, or if only
         # explicitly marked ones will be exposed
-        self.expose_by_default = conf.get(
-            CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT)
+        self.expose_by_default = conf.get(CONF_EXPOSE_BY_DEFAULT,
+                                          DEFAULT_EXPOSE_BY_DEFAULT)
 
         # Get domains that are exposed by default when expose_by_default is
         # True
-        self.exposed_domains = conf.get(
-            CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+        self.exposed_domains = conf.get(CONF_EXPOSED_DOMAINS,
+                                        DEFAULT_EXPOSED_DOMAINS)
 
         # Calculated effective advertised IP and port for network isolation
-        self.advertise_ip = conf.get(
-            CONF_ADVERTISE_IP) or self.host_ip_addr
+        self.advertise_ip = conf.get(CONF_ADVERTISE_IP) or self.host_ip_addr
 
-        self.advertise_port = conf.get(
-            CONF_ADVERTISE_PORT) or self.listen_port
+        self.advertise_port = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
@@ -248,8 +253,9 @@ class Config(object):
     def _load_numbers_json(self):
         """Set up helper method to load numbers json."""
         try:
-            with open(self.hass.config.path(NUMBERS_FILE),
-                      encoding='utf-8') as fil:
+            with open(
+                    self.hass.config.path(NUMBERS_FILE),
+                    encoding='utf-8') as fil:
                 return json.loads(fil.read())
         except (OSError, ValueError) as err:
             # OSError if file not found or unaccessible/no permissions
@@ -261,8 +267,9 @@ class Config(object):
     def _save_numbers_json(self):
         """Set up helper method to save numbers json."""
         try:
-            with open(self.hass.config.path(NUMBERS_FILE), 'w',
-                      encoding='utf-8') as fil:
+            with open(
+                    self.hass.config.path(NUMBERS_FILE), 'w',
+                    encoding='utf-8') as fil:
                 fil.write(json.dumps(self.numbers))
         except OSError as err:
             # OSError if file write permissions

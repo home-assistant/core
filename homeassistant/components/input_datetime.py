@@ -10,14 +10,13 @@ import datetime
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,
+                                 STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.util import dt as dt_util
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,22 +33,31 @@ ATTR_TIME = 'time'
 SERVICE_SET_DATETIME = 'set_datetime'
 
 SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DATE): cv.date,
-    vol.Optional(ATTR_TIME): cv.time,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Optional(ATTR_DATE):
+    cv.date,
+    vol.Optional(ATTR_TIME):
+    cv.time,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_HAS_DATE): cv.boolean,
-            vol.Required(CONF_HAS_TIME): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL): cv.datetime,
-        }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
-                                         (CONF_HAS_TIME, True)))})
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            cv.slug:
+            vol.All({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Required(CONF_HAS_DATE): cv.boolean,
+                vol.Required(CONF_HAS_TIME): cv.boolean,
+                vol.Optional(CONF_ICON): cv.icon,
+                vol.Optional(CONF_INITIAL): cv.datetime,
+            },
+                    cv.has_at_least_one_key_value((CONF_HAS_DATE, True),
+                                                  (CONF_HAS_TIME, True)))
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -75,8 +83,8 @@ def async_setup(hass, config):
         has_date = cfg.get(CONF_HAS_DATE)
         icon = cfg.get(CONF_ICON)
         initial = cfg.get(CONF_INITIAL)
-        entities.append(InputDatetime(object_id, name,
-                                      has_date, has_time, icon, initial))
+        entities.append(
+            InputDatetime(object_id, name, has_date, has_time, icon, initial))
 
     if not entities:
         return False
@@ -103,7 +111,9 @@ def async_setup(hass, config):
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_DATETIME, async_set_datetime_service,
+        DOMAIN,
+        SERVICE_SET_DATETIME,
+        async_set_datetime_service,
         schema=SERVICE_SET_DATETIME_SCHEMA)
 
     yield from component.async_add_entities(entities)
@@ -134,8 +144,8 @@ class InputDatetime(Entity):
 
         # Priority 2: Old state
         if restore_val is None:
-            old_state = yield from async_get_last_state(self.hass,
-                                                        self.entity_id)
+            old_state = yield from async_get_last_state(
+                self.hass, self.entity_id)
             if old_state is not None:
                 restore_val = dt_util.parse_datetime(old_state.state)
 
@@ -217,8 +227,8 @@ class InputDatetime(Entity):
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
         if self._has_date and self._has_time and date_val and time_val:
-            self._current_datetime = datetime.datetime.combine(date_val,
-                                                               time_val)
+            self._current_datetime = datetime.datetime.combine(
+                date_val, time_val)
         elif self._has_date and not self._has_time and date_val:
             self._current_datetime = date_val
         if self._has_time and not self._has_date and time_val:

@@ -6,8 +6,8 @@ https://home-assistant.io/components/bbb_gpio/
 """
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['Adafruit_BBIO==1.0.0']
 
@@ -36,6 +36,7 @@ def setup(hass, config):
 
 # noqa: F821
 
+
 def setup_output(pin):
     """Set up a GPIO as output."""
     # pylint: disable=import-error,undefined-variable
@@ -47,9 +48,11 @@ def setup_input(pin, pull_mode):
     """Set up a GPIO as input."""
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
-    GPIO.setup(pin, GPIO.IN,                            # noqa: F821
-               GPIO.PUD_DOWN if pull_mode == 'DOWN'     # noqa: F821
-               else GPIO.PUD_UP)                        # noqa: F821
+    GPIO.setup(
+        pin,
+        GPIO.IN,  # noqa: F821
+        GPIO.PUD_DOWN if pull_mode == 'DOWN'  # noqa: F821
+        else GPIO.PUD_UP)  # noqa: F821
 
 
 def write_output(pin, value):

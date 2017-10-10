@@ -9,9 +9,9 @@ import logging
 import os
 from datetime import timedelta
 
-from homeassistant.components.fan import (
-    ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED, FanEntity)
+from homeassistant.components.fan import (ATTR_SPEED, SPEED_OFF, SPEED_LOW,
+                                          SPEED_MEDIUM, SPEED_HIGH,
+                                          SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.util as util
 
@@ -43,14 +43,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         linked = insteonhub.get_linked()
 
         for device_id in linked:
-            if (linked[device_id]['cat_type'] == 'dimmer' and
-                    linked[device_id]['sku'] == '2475F' and
-                    device_id not in conf_fans):
-                request_configuration(device_id,
-                                      insteonhub,
-                                      linked[device_id]['model_name'] + ' ' +
-                                      linked[device_id]['sku'],
-                                      hass, add_devices)
+            if (linked[device_id]['cat_type'] == 'dimmer'
+                    and linked[device_id]['sku'] == '2475F'
+                    and device_id not in conf_fans):
+                request_configuration(
+                    device_id, insteonhub, linked[device_id]['model_name'] +
+                    ' ' + linked[device_id]['sku'], hass, add_devices)
 
 
 def request_configuration(device_id, insteonhub, model, hass,
@@ -60,15 +58,15 @@ def request_configuration(device_id, insteonhub, model, hass,
 
     # We got an error if this method is called while we are configuring
     if device_id in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[device_id], 'Failed to register, please try again.')
+        configurator.notify_errors(_CONFIGURING[device_id],
+                                   'Failed to register, please try again.')
 
         return
 
     def insteon_fan_config_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_fan(device_id, data.get('name'), insteonhub, hass,
-                  add_devices_callback)
+        setup_fan(device_id,
+                  data.get('name'), insteonhub, hass, add_devices_callback)
 
     _CONFIGURING[device_id] = configurator.request_config(
         'Insteon  ' + model + ' addr: ' + device_id,
@@ -76,8 +74,11 @@ def request_configuration(device_id, insteonhub, model, hass,
         description=('Enter a name for ' + model + ' Fan addr: ' + device_id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
-        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
-    )
+        fields=[{
+            'id': 'name',
+            'name': 'Name',
+            'type': ''
+        }])
 
 
 def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
@@ -93,8 +94,7 @@ def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
         conf_fans[device_id] = name
 
     if not config_from_file(
-            hass.config.path(INSTEON_LOCAL_FANS_CONF),
-            conf_fans):
+            hass.config.path(INSTEON_LOCAL_FANS_CONF), conf_fans):
         _LOGGER.error("Failed to save configuration file")
 
     device = insteonhub.fan(device_id)
@@ -174,7 +174,7 @@ class InsteonLocalFanDevice(FanEntity):
         """Flag supported features."""
         return SUPPORT_INSTEON_LOCAL
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
             if ATTR_SPEED in kwargs:

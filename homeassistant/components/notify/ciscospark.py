@@ -29,8 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the CiscoSpark notification service."""
     return CiscoSparkNotificationService(
-        config.get(CONF_TOKEN),
-        config.get(CONF_ROOMID))
+        config.get(CONF_TOKEN), config.get(CONF_ROOMID))
 
 
 class CiscoSparkNotificationService(BaseNotificationService):
@@ -50,8 +49,8 @@ class CiscoSparkNotificationService(BaseNotificationService):
             title = ""
             if kwargs.get(ATTR_TITLE) is not None:
                 title = kwargs.get(ATTR_TITLE) + ": "
-            self._spark.messages.create(roomId=self._default_room,
-                                        text=title + message)
+            self._spark.messages.create(
+                roomId=self._default_room, text=title + message)
         except SparkApiError as api_error:
             _LOGGER.error("Could not send CiscoSpark notification. Error: %s",
                           api_error)

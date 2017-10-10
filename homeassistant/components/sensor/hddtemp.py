@@ -13,9 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    STATE_UNKNOWN)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, TEMP_CELSIUS,
+                                 TEMP_FAHRENHEIT, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +29,12 @@ DEFAULT_TIMEOUT = 5
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -114,6 +116,6 @@ class HddTempData(object):
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
             self.data = connection.read_all().decode('ascii')
         except ConnectionRefusedError:
-            _LOGGER.error(
-                "HDDTemp is not available at %s:%s", self.host, self.port)
+            _LOGGER.error("HDDTemp is not available at %s:%s", self.host,
+                          self.port)
             self.data = None

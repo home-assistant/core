@@ -13,8 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME, \
     CONF_USERNAME, CONF_PASSWORD
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['avion==0.7']
@@ -29,9 +28,13 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
+    vol.Optional(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
 })
 
 

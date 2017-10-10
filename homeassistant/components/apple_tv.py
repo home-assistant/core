@@ -57,15 +57,25 @@ def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     return value if isinstance(value, list) else [value]
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(ensure_list, [vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_LOGIN_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CREDENTIALS, default=None): cv.string,
-        vol.Optional(CONF_START_OFF, default=False): cv.boolean
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.All(ensure_list, [
+            vol.Schema({
+                vol.Required(CONF_HOST):
+                cv.string,
+                vol.Required(CONF_LOGIN_ID):
+                cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+                cv.string,
+                vol.Optional(CONF_CREDENTIALS, default=None):
+                cv.string,
+                vol.Optional(CONF_START_OFF, default=False):
+                cv.boolean
+            })
+        ])
+    },
+    extra=vol.ALLOW_EXTRA)
 
 # Currently no attributes but it might change later
 APPLE_TV_SCAN_SCHEMA = vol.Schema({})
@@ -103,11 +113,15 @@ def request_configuration(hass, config, atv, credentials):
         hass.async_add_job(configurator.request_done, instance)
 
     instance = configurator.request_config(
-        'Apple TV Authentication', configuration_callback,
+        'Apple TV Authentication',
+        configuration_callback,
         description='Please enter PIN code shown on screen.',
         submit_caption='Confirm',
-        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
-    )
+        fields=[{
+            'id': 'pin',
+            'name': 'PIN Code',
+            'type': 'password'
+        }])
 
 
 @asyncio.coroutine
@@ -150,8 +164,10 @@ def async_setup(hass, config):
             return
 
         if entity_ids:
-            devices = [device for device in hass.data[DATA_ENTITIES]
-                       if device.entity_id in entity_ids]
+            devices = [
+                device for device in hass.data[DATA_ENTITIES]
+                if device.entity_id in entity_ids
+            ]
         else:
             devices = hass.data[DATA_ENTITIES]
 
@@ -164,8 +180,8 @@ def async_setup(hass, config):
             yield from atv.airplay.load_credentials(credentials)
             _LOGGER.debug('Generated new credentials: %s', credentials)
             yield from atv.airplay.start_authentication()
-            hass.async_add_job(request_configuration,
-                               hass, config, atv, credentials)
+            hass.async_add_job(request_configuration, hass, config, atv,
+                               credentials)
 
     @asyncio.coroutine
     def atv_discovered(service, info):
@@ -183,17 +199,22 @@ def async_setup(hass, config):
     if tasks:
         yield from asyncio.wait(tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_service_handler,
+        DOMAIN,
+        SERVICE_SCAN,
+        async_service_handler,
         descriptions.get(SERVICE_SCAN),
         schema=APPLE_TV_SCAN_SCHEMA)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
+        DOMAIN,
+        SERVICE_AUTHENTICATE,
+        async_service_handler,
         descriptions.get(SERVICE_AUTHENTICATE),
         schema=APPLE_TV_AUTHENTICATE_SCHEMA)
 
@@ -220,16 +241,14 @@ def _setup_atv(hass, atv_config):
         yield from atv.airplay.load_credentials(credentials)
 
     power = AppleTVPowerManager(hass, atv, start_off)
-    hass.data[DATA_APPLE_TV][host] = {
-        ATTR_ATV: atv,
-        ATTR_POWER: power
-    }
+    hass.data[DATA_APPLE_TV][host] = {ATTR_ATV: atv, ATTR_POWER: power}
 
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'media_player', DOMAIN, atv_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'media_player', DOMAIN,
+                                      atv_config))
 
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'remote', DOMAIN, atv_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'remote', DOMAIN, atv_config))
 
 
 class AppleTVPowerManager:

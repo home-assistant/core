@@ -11,8 +11,7 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
-    SUPPORT_STOP)
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
 from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import (CONF_COVERS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +26,10 @@ COVER_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS):
+    vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 DEPENDENCIES = ['velbus']
@@ -41,14 +43,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     velbus = hass.data[DOMAIN]
     for device_name, device_config in devices.items():
         covers.append(
-            VelbusCover(
-                velbus,
-                device_config.get(CONF_NAME, device_name),
-                device_config.get('module'),
-                device_config.get('open_channel'),
-                device_config.get('close_channel')
-            )
-        )
+            VelbusCover(velbus,
+                        device_config.get(CONF_NAME, device_name),
+                        device_config.get('module'),
+                        device_config.get('open_channel'),
+                        device_config.get('close_channel')))
 
     if not covers:
         _LOGGER.error("No covers added")
@@ -73,6 +72,7 @@ class VelbusCover(CoverDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
+
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)

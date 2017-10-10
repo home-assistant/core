@@ -10,8 +10,8 @@ import logging
 import requests
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.skybell import (
-    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+from homeassistant.components.skybell import (DOMAIN as SKYBELL_DOMAIN,
+                                              SkybellDevice)
 
 DEPENDENCIES = ['skybell']
 

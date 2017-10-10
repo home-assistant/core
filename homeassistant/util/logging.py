@@ -79,8 +79,8 @@ class AsyncHandler(object):
     def _process(self):
         """Process log in a thread."""
         while True:
-            record = run_coroutine_threadsafe(
-                self._queue.get(), self.loop).result()
+            record = run_coroutine_threadsafe(self._queue.get(),
+                                              self.loop).result()
 
             if record is None:
                 self.handler.close()

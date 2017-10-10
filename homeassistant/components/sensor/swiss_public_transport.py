@@ -42,9 +42,12 @@ ICON = 'mdi:bus'
 SCAN_INTERVAL = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_START): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_DESTINATION):
+    cv.string,
+    vol.Required(CONF_START):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -79,8 +82,8 @@ class SwissPublicTransportSensor(Entity):
         self._from = start
         self._to = destination
         self._websession = async_get_clientsession(self.hass)
-        self._opendata = OpendataTransport(
-            self._from, self._to, self.hass.loop, self._websession)
+        self._opendata = OpendataTransport(self._from, self._to,
+                                           self.hass.loop, self._websession)
 
     @property
     def name(self):

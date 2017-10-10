@@ -12,8 +12,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_ZONE, CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (CONF_ZONE, CONF_DEVICES,
+                                 CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert
@@ -39,20 +39,24 @@ DOMAIN = 'proximity'
 UNITS = ['km', 'm', 'mi', 'ft']
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE): cv.string,
+    vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE):
+    cv.string,
     vol.Optional(CONF_DEVICES, default=[]):
-        vol.All(cv.ensure_list, [cv.entity_id]),
+    vol.All(cv.ensure_list, [cv.entity_id]),
     vol.Optional(CONF_IGNORED_ZONES, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): cv.positive_int,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.string, vol.In(UNITS)),
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE):
+    cv.positive_int,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    vol.All(cv.string, vol.In(UNITS)),
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: ZONE_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: ZONE_SCHEMA,
+        }),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup_proximity_component(hass, name, config):
@@ -61,20 +65,20 @@ def setup_proximity_component(hass, name, config):
     proximity_devices = config.get(CONF_DEVICES)
     tolerance = config.get(CONF_TOLERANCE)
     proximity_zone = name
-    unit_of_measurement = config.get(
-        CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit)
+    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT,
+                                     hass.config.units.length_unit)
     zone_id = 'zone.{}'.format(config.get(CONF_ZONE))
 
     proximity = Proximity(hass, proximity_zone, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
-                          ignored_zones, proximity_devices, tolerance,
-                          zone_id, unit_of_measurement)
+                          ignored_zones, proximity_devices, tolerance, zone_id,
+                          unit_of_measurement)
     proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
     proximity.schedule_update_ha_state()
 
-    track_state_change(
-        hass, proximity_devices, proximity.check_proximity_state_change)
+    track_state_change(hass, proximity_devices,
+                       proximity.check_proximity_state_change)
 
     return True
 
@@ -189,8 +193,7 @@ class Proximity(Entity):
                 continue
 
             # Calculate the distance to the proximity zone.
-            dist_to_zone = distance(proximity_latitude,
-                                    proximity_longitude,
+            dist_to_zone = distance(proximity_latitude, proximity_longitude,
                                     device_state.attributes['latitude'],
                                     device_state.attributes['longitude'])
 
@@ -252,7 +255,7 @@ class Proximity(Entity):
         self.nearest = entity_name
         self.schedule_update_ha_state()
         _LOGGER.debug('proximity.%s update entity: distance=%s: direction=%s: '
-                      'device=%s', self.friendly_name, round(dist_to_zone),
-                      direction_of_travel, entity_name)
+                      'device=%s', self.friendly_name,
+                      round(dist_to_zone), direction_of_travel, entity_name)
 
         _LOGGER.info('%s: proximity calculation complete', entity_name)

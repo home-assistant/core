@@ -7,7 +7,6 @@ https://home-assistant.io/components/binary_sensor.velbus/
 import asyncio
 import logging
 
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_DEVICES
@@ -16,20 +15,18 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.velbus import DOMAIN
 import homeassistant.helpers.config_validation as cv
 
-
 DEPENDENCIES = ['velbus']
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
-        {
-            vol.Required('module'): cv.positive_int,
-            vol.Required('channel'): cv.positive_int,
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional('is_pushbutton'): cv.boolean
-        }
-    ])
+    vol.Required(CONF_DEVICES):
+    vol.All(cv.ensure_list, [{
+        vol.Required('module'): cv.positive_int,
+        vol.Required('channel'): cv.positive_int,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional('is_pushbutton'): cv.boolean
+    }])
 })
 
 
@@ -37,8 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
     velbus = hass.data[DOMAIN]
 
-    add_devices(VelbusBinarySensor(sensor, velbus)
-                for sensor in config[CONF_DEVICES])
+    add_devices(
+        VelbusBinarySensor(sensor, velbus) for sensor in config[CONF_DEVICES])
 
 
 class VelbusBinarySensor(BinarySensorDevice):
@@ -57,8 +54,8 @@ class VelbusBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        yield from self.hass.async_add_job(
-            self._velbus.subscribe, self._on_message)
+        yield from self.hass.async_add_job(self._velbus.subscribe,
+                                           self._on_message)
 
     def _on_message(self, message):
         import velbus

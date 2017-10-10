@@ -40,21 +40,24 @@ SERVICE_CAPTURE_SMARTCAM = 'capture_smartcam'
 
 HUB = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_ALARM, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
-        vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
-        vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
-        vol.Optional(CONF_LOCKS, default=True): cv.boolean,
-        vol.Optional(CONF_MOUSE, default=True): cv.boolean,
-        vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
-        vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
-        vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_ALARM, default=True): cv.boolean,
+            vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
+            vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
+            vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
+            vol.Optional(CONF_LOCKS, default=True): cv.boolean,
+            vol.Optional(CONF_MOUSE, default=True): cv.boolean,
+            vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
+            vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
+            vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 CAPTURE_IMAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE_SERIAL): cv.string
@@ -68,8 +71,7 @@ def setup(hass, config):
     HUB = VerisureHub(config[DOMAIN], verisure)
     if not HUB.login():
         return False
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                         lambda event: HUB.logout())
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
     HUB.update_overview()
 
     for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
@@ -85,10 +87,12 @@ def setup(hass, config):
         HUB.smartcam_capture(device_id)
         _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
 
-    hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
-                           capture_smartcam,
-                           descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
-                           schema=CAPTURE_IMAGE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_CAPTURE_SMARTCAM,
+        capture_smartcam,
+        descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
+        schema=CAPTURE_IMAGE_SCHEMA)
 
     return True
 
@@ -106,9 +110,8 @@ class VerisureHub(object):
 
         self._lock = threading.Lock()
 
-        self.session = verisure.Session(
-            domain_config[CONF_USERNAME],
-            domain_config[CONF_PASSWORD])
+        self.session = verisure.Session(domain_config[CONF_USERNAME],
+                                        domain_config[CONF_PASSWORD])
 
         import jsonpath
         self.jsonpath = jsonpath.jsonpath

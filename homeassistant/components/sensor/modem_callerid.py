@@ -6,10 +6,8 @@ https://home-assistant.io/components/sensor.modem_callerid/
 """
 import logging
 import voluptuous as vol
-from homeassistant.const import (STATE_IDLE,
-                                 EVENT_HOMEASSISTANT_STOP,
-                                 CONF_NAME,
-                                 CONF_DEVICE)
+from homeassistant.const import (STATE_IDLE, EVENT_HOMEASSISTANT_STOP,
+                                 CONF_NAME, CONF_DEVICE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -25,8 +23,10 @@ STATE_RING = 'ring'
 STATE_CALLERID = 'callerid'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+    cv.string
 })
 
 
@@ -101,16 +101,20 @@ class ModemCalleridSensor(Entity):
         """Handle new states."""
         if newstate == self.modem.STATE_RING:
             if self.state == self.modem.STATE_IDLE:
-                att = {"cid_time": self.modem.get_cidtime,
-                       "cid_number": '',
-                       "cid_name": ''}
+                att = {
+                    "cid_time": self.modem.get_cidtime,
+                    "cid_number": '',
+                    "cid_name": ''
+                }
                 self.set_attributes(att)
             self._state = STATE_RING
             self.schedule_update_ha_state()
         elif newstate == self.modem.STATE_CALLERID:
-            att = {"cid_time": self.modem.get_cidtime,
-                   "cid_number": self.modem.get_cidnumber,
-                   "cid_name": self.modem.get_cidname}
+            att = {
+                "cid_time": self.modem.get_cidtime,
+                "cid_number": self.modem.get_cidnumber,
+                "cid_name": self.modem.get_cidname
+            }
             self.set_attributes(att)
             self._state = STATE_CALLERID
             self.schedule_update_ha_state()

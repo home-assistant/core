@@ -13,8 +13,8 @@ from homeassistant.components import ios
 import homeassistant.util.dt as dt_util
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_MESSAGE,
-    ATTR_DATA, BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_MESSAGE, ATTR_DATA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +33,7 @@ def log_rate_limits(target, resp, level=20):
                       "%d sent, %d allowed, %d errors, "
                       "resets in %s")
     _LOGGER.log(level, rate_limit_msg,
-                ios.device_name_for_push_id(target),
-                rate_limits["successful"],
+                ios.device_name_for_push_id(target), rate_limits["successful"],
                 rate_limits["maximum"], rate_limits["errors"],
                 str(resetsAtTime).split(".")[0])
 

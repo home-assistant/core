@@ -26,7 +26,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = discovery_info['unit']
     add_devices([
         IGDSensor(upnp, t, unit if SENSOR_TYPES[t][1] else None)
-        for t in SENSOR_TYPES], True)
+        for t in SENSOR_TYPES
+    ], True)
 
 
 class IGDSensor(Entity):

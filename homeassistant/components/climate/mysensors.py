@@ -41,8 +41,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return (TEMP_CELSIUS
-                if self.gateway.metric else TEMP_FAHRENHEIT)
+        return (TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT)
 
     @property
     def current_temperature(self):
@@ -121,12 +120,11 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             if heat is not None or cool is not None:
                 updates = [(value_type, temp)]
         elif all(val is not None for val in (low, high, heat, cool)):
-            updates = [
-                (set_req.V_HVAC_SETPOINT_HEAT, low),
-                (set_req.V_HVAC_SETPOINT_COOL, high)]
+            updates = [(set_req.V_HVAC_SETPOINT_HEAT, low),
+                       (set_req.V_HVAC_SETPOINT_COOL, high)]
         for value_type, value in updates:
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, value_type, value)
+            self.gateway.set_child_value(self.node_id, self.child_id,
+                                         value_type, value)
             if self.gateway.optimistic:
                 # optimistically assume that device has changed state
                 self._values[value_type] = value
@@ -135,8 +133,8 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_HVAC_SPEED, fan)
         if self.gateway.optimistic:
             # optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
@@ -144,9 +142,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type,
-            DICT_HA_TO_MYS[operation_mode])
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     self.value_type,
+                                     DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
             # optimistically assume that device has changed state
             self._values[self.value_type] = operation_mode
@@ -155,5 +153,5 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     def update(self):
         """Update the controller with the latest value from a sensor."""
         super().update()
-        self._values[self.value_type] = DICT_MYS_TO_HA[
-            self._values[self.value_type]]
+        self._values[self.value_type] = DICT_MYS_TO_HA[self._values[
+            self.value_type]]

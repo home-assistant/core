@@ -10,9 +10,9 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, STATE_ON)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,
+                                 SERVICE_TURN_OFF, SERVICE_TURN_ON,
+                                 SERVICE_TOGGLE, STATE_ON)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
@@ -33,15 +33,19 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_INITIAL): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
-        }, None)
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            cv.slug:
+            vol.Any({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_INITIAL): cv.boolean,
+                vol.Optional(CONF_ICON): cv.icon,
+            }, None)
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -104,21 +108,27 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handler_service,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handler_service,
         descriptions[DOMAIN][SERVICE_TURN_OFF],
         schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handler_service,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handler_service,
         descriptions[DOMAIN][SERVICE_TURN_ON],
         schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handler_service,
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handler_service,
         descriptions[DOMAIN][SERVICE_TOGGLE],
         schema=SERVICE_SCHEMA)
 

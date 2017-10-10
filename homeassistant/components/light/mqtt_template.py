@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
@@ -42,24 +42,40 @@ CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
-    vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
-    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
-    vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_RED_TEMPLATE): cv.template,
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_BLUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_BRIGHTNESS_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_COLOR_TEMP_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_EFFECT_LIST):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EFFECT_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_GREEN_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
+    cv.boolean,
+    vol.Optional(CONF_RED_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN):
+    cv.boolean,
+    vol.Optional(CONF_STATE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_STATE_TOPIC):
+    mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_WHITE_VALUE_TEMPLATE):
+    cv.template,
+    vol.Required(CONF_COMMAND_OFF_TEMPLATE):
+    cv.template,
+    vol.Required(CONF_COMMAND_ON_TEMPLATE):
+    cv.template,
+    vol.Required(CONF_COMMAND_TOPIC):
+    mqtt.valid_publish_topic,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
-        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
 })
 
 
@@ -69,34 +85,29 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    async_add_devices([MqttTemplate(
-        hass,
-        config.get(CONF_NAME),
-        config.get(CONF_EFFECT_LIST),
-        {
-            key: config.get(key) for key in (
-                CONF_STATE_TOPIC,
-                CONF_COMMAND_TOPIC
-            )
-        },
-        {
-            key: config.get(key) for key in (
-                CONF_BLUE_TEMPLATE,
-                CONF_BRIGHTNESS_TEMPLATE,
-                CONF_COLOR_TEMP_TEMPLATE,
-                CONF_COMMAND_OFF_TEMPLATE,
-                CONF_COMMAND_ON_TEMPLATE,
-                CONF_EFFECT_TEMPLATE,
-                CONF_GREEN_TEMPLATE,
-                CONF_RED_TEMPLATE,
-                CONF_STATE_TEMPLATE,
-                CONF_WHITE_VALUE_TEMPLATE,
-            )
-        },
-        config.get(CONF_OPTIMISTIC),
-        config.get(CONF_QOS),
-        config.get(CONF_RETAIN)
-    )])
+    async_add_devices([
+        MqttTemplate(hass,
+                     config.get(CONF_NAME),
+                     config.get(CONF_EFFECT_LIST), {
+                         key: config.get(key)
+                         for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
+                     }, {
+                         key: config.get(key)
+                         for key in (
+                             CONF_BLUE_TEMPLATE,
+                             CONF_BRIGHTNESS_TEMPLATE,
+                             CONF_COLOR_TEMP_TEMPLATE,
+                             CONF_COMMAND_OFF_TEMPLATE,
+                             CONF_COMMAND_ON_TEMPLATE,
+                             CONF_EFFECT_TEMPLATE,
+                             CONF_GREEN_TEMPLATE,
+                             CONF_RED_TEMPLATE,
+                             CONF_STATE_TEMPLATE,
+                             CONF_WHITE_VALUE_TEMPLATE, )
+                     },
+                     config.get(CONF_OPTIMISTIC),
+                     config.get(CONF_QOS), config.get(CONF_RETAIN))
+    ])
 
 
 class MqttTemplate(Light):
@@ -131,9 +142,9 @@ class MqttTemplate(Light):
         else:
             self._white_value = None
 
-        if (self._templates[CONF_RED_TEMPLATE] is not None and
-                self._templates[CONF_GREEN_TEMPLATE] is not None and
-                self._templates[CONF_BLUE_TEMPLATE] is not None):
+        if (self._templates[CONF_RED_TEMPLATE] is not None
+                and self._templates[CONF_GREEN_TEMPLATE] is not None
+                and self._templates[CONF_BLUE_TEMPLATE] is not None):
             self._rgb = [0, 0, 0]
         else:
             self._rgb = None
@@ -149,6 +160,7 @@ class MqttTemplate(Light):
 
         This method is a coroutine.
         """
+
         @callback
         def state_received(topic, payload, qos):
             """Handle new MQTT messages."""
@@ -164,41 +176,38 @@ class MqttTemplate(Light):
             if self._brightness is not None:
                 try:
                     self._brightness = int(
-                        self._templates[CONF_BRIGHTNESS_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
-                    )
+                        self._templates[CONF_BRIGHTNESS_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
                 try:
                     self._color_temp = int(
-                        self._templates[CONF_COLOR_TEMP_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
-                    )
+                        self._templates[CONF_COLOR_TEMP_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
             if self._rgb is not None:
                 try:
                     self._rgb[0] = int(
-                        self._templates[CONF_RED_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        self._templates[CONF_RED_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                     self._rgb[1] = int(
-                        self._templates[CONF_GREEN_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        self._templates[CONF_GREEN_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                     self._rgb[2] = int(
-                        self._templates[CONF_BLUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        self._templates[CONF_BLUE_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
             if self._white_value is not None:
                 try:
                     self._white_value = int(
-                        self._templates[CONF_WHITE_VALUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
-                    )
+                        self._templates[CONF_WHITE_VALUE_TEMPLATE]
+                        .async_render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning('Invalid white value received')
 
@@ -214,9 +223,9 @@ class MqttTemplate(Light):
             self.async_schedule_update_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            yield from mqtt.async_subscribe(
-                self.hass, self._topics[CONF_STATE_TOPIC], state_received,
-                self._qos)
+            yield from mqtt.async_subscribe(self.hass,
+                                            self._topics[CONF_STATE_TOPIC],
+                                            state_received, self._qos)
 
     @property
     def brightness(self):
@@ -318,9 +327,8 @@ class MqttTemplate(Light):
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
-            self._qos, self._retain
-        )
+            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
+                **values), self._qos, self._retain)
 
         if self._optimistic:
             self.async_schedule_update_ha_state()
@@ -340,9 +348,8 @@ class MqttTemplate(Light):
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
-            self._qos, self._retain
-        )
+            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
+                **values), self._qos, self._retain)
 
         if self._optimistic:
             self.async_schedule_update_ha_state()

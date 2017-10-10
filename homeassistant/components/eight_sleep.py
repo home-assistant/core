@@ -13,13 +13,13 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS, CONF_BINARY_SENSORS,
-    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
+                                 CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+from homeassistant.helpers.dispatcher import (async_dispatcher_send,
+                                              async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -59,11 +59,9 @@ NAME_MAP = {
     'room_temp': 'Room Temperature',
 }
 
-SENSORS = ['current_sleep',
-           'last_sleep',
-           'bed_state',
-           'bed_temp',
-           'sleep_stage']
+SENSORS = [
+    'current_sleep', 'last_sleep', 'bed_state', 'bed_temp', 'sleep_stage'
+]
 
 SERVICE_HEAT_SET = 'heat_set'
 
@@ -77,15 +75,21 @@ SERVICE_EIGHT_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TARGET_HEAT: VALID_TARGET_HEAT,
     ATTR_HEAT_DURATION: VALID_DURATION,
-    })
+})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER):
+            cv.boolean,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -120,8 +124,8 @@ def async_setup(hass, config):
         yield from eight.update_device_data()
         async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
 
-        async_track_point_in_utc_time(
-            hass, async_update_heat_data, utcnow() + HEAT_SCAN_INTERVAL)
+        async_track_point_in_utc_time(hass, async_update_heat_data,
+                                      utcnow() + HEAT_SCAN_INTERVAL)
 
     @asyncio.coroutine
     def async_update_user_data(now):
@@ -129,8 +133,8 @@ def async_setup(hass, config):
         yield from eight.update_user_data()
         async_dispatcher_send(hass, SIGNAL_UPDATE_USER)
 
-        async_track_point_in_utc_time(
-            hass, async_update_user_data, utcnow() + USER_SCAN_INTERVAL)
+        async_track_point_in_utc_time(hass, async_update_user_data,
+                                      utcnow() + USER_SCAN_INTERVAL)
 
     yield from async_update_heat_data(None)
     yield from async_update_user_data(None)
@@ -149,19 +153,20 @@ def async_setup(hass, config):
         # No users, cannot continue
         return False
 
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'sensor', DOMAIN, {
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'sensor', DOMAIN, {
             CONF_SENSORS: sensors,
         }, config))
 
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'binary_sensor', DOMAIN, {
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, {
             CONF_BINARY_SENSORS: binary_sensors,
         }, config))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -182,7 +187,9 @@ def async_setup(hass, config):
 
     # Register services
     hass.services.async_register(
-        DOMAIN, SERVICE_HEAT_SET, async_service_handler,
+        DOMAIN,
+        SERVICE_HEAT_SET,
+        async_service_handler,
         descriptions[DOMAIN].get(SERVICE_HEAT_SET),
         schema=SERVICE_EIGHT_SCHEMA)
 
@@ -206,13 +213,14 @@ class EightSleepUserEntity(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update dispatcher."""
+
         @callback
         def async_eight_user_update():
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_USER,
+                                 async_eight_user_update)
 
     @property
     def should_poll(self):
@@ -230,13 +238,14 @@ class EightSleepHeatEntity(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update dispatcher."""
+
         @callback
         def async_eight_heat_update():
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_HEAT,
+                                 async_eight_heat_update)
 
     @property
     def should_poll(self):

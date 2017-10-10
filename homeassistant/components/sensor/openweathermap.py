@@ -10,9 +10,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, TEMP_CELSIUS,
+                                 TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
+                                 ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -42,12 +42,16 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=False): cv.boolean,
-    vol.Optional(CONF_LANGUAGE, default=None): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_FORECAST, default=False):
+    cv.boolean,
+    vol.Optional(CONF_LANGUAGE, default=None):
+    cv.string,
 })
 
 
@@ -77,13 +81,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                        hass.config.longitude)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(OpenWeatherMapSensor(
-            name, data, variable, SENSOR_TYPES[variable][1]))
+        dev.append(
+            OpenWeatherMapSensor(name, data, variable, SENSOR_TYPES[variable][
+                1]))
 
     if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(
-            name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
+        dev.append(
+            OpenWeatherMapSensor(name, data, 'forecast', SENSOR_TYPES[
+                'temperature'][1]))
 
     add_devices(dev, True)
 
@@ -138,8 +144,8 @@ class OpenWeatherMapSensor(Entity):
             if self.temp_unit == TEMP_CELSIUS:
                 self._state = round(data.get_temperature('celsius')['temp'], 1)
             elif self.temp_unit == TEMP_FAHRENHEIT:
-                self._state = round(data.get_temperature('fahrenheit')['temp'],
-                                    1)
+                self._state = round(
+                    data.get_temperature('fahrenheit')['temp'], 1)
             else:
                 self._state = round(data.get_temperature()['temp'], 1)
         elif self.type == 'wind_speed':

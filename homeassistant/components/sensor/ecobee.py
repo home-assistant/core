@@ -73,10 +73,10 @@ class EcobeeSensor(Entity):
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
             for item in sensor['capability']:
-                if (item['type'] == self.type and
-                        self.sensor_name == sensor['name']):
-                    if (self.type == 'temperature' and
-                            item['value'] != 'unknown'):
+                if (item['type'] == self.type
+                        and self.sensor_name == sensor['name']):
+                    if (self.type == 'temperature'
+                            and item['value'] != 'unknown'):
                         self._state = float(item['value']) / 10
                     else:
                         self._state = item['value']

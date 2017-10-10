@@ -27,9 +27,7 @@ DEFAULT_CONF_ASYNC_ACTION = False
 DOMAIN = 'apiai'
 DEPENDENCIES = ['http']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {}
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -58,8 +56,8 @@ class ApiaiIntentsView(HomeAssistantView):
 
         if req is None:
             _LOGGER.error("Received invalid data from api.ai: %s", data)
-            return self.json_message(
-                "Expected result value not received", HTTP_BAD_REQUEST)
+            return self.json_message("Expected result value not received",
+                                     HTTP_BAD_REQUEST)
 
         action_incomplete = req['actionIncomplete']
 
@@ -79,8 +77,10 @@ class ApiaiIntentsView(HomeAssistantView):
         try:
             intent_response = yield from intent.async_handle(
                 hass, DOMAIN, action,
-                {key: {'value': value} for key, value
-                 in parameters.items()})
+                {key: {
+                    'value': value
+                }
+                 for key, value in parameters.items()})
 
         except intent.UnknownIntent as err:
             _LOGGER.warning('Received unknown intent %s', action)

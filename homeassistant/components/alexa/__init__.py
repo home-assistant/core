@@ -11,31 +11,37 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DOMAIN, CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT, CONF_DISPLAY_URL)
+from .const import (DOMAIN, CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT,
+                    CONF_DISPLAY_URL)
 from . import flash_briefings, intent
 
 _LOGGER = logging.getLogger(__name__)
-
 
 DEPENDENCIES = ['http']
 
 CONF_FLASH_BRIEFINGS = 'flash_briefings'
 
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        CONF_FLASH_BRIEFINGS: {
-            cv.string: vol.All(cv.ensure_list, [{
-                vol.Optional(CONF_UID): cv.string,
-                vol.Required(CONF_TITLE): cv.template,
-                vol.Optional(CONF_AUDIO): cv.template,
-                vol.Required(CONF_TEXT, default=""): cv.template,
-                vol.Optional(CONF_DISPLAY_URL): cv.template,
-            }]),
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            CONF_FLASH_BRIEFINGS: {
+                cv.string:
+                vol.All(cv.ensure_list, [{
+                    vol.Optional(CONF_UID):
+                    cv.string,
+                    vol.Required(CONF_TITLE):
+                    cv.template,
+                    vol.Optional(CONF_AUDIO):
+                    cv.template,
+                    vol.Required(CONF_TEXT, default=""):
+                    cv.template,
+                    vol.Optional(CONF_DISPLAY_URL):
+                    cv.template,
+                }]),
+            }
         }
-    }
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine

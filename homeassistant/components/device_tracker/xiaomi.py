@@ -10,16 +10,19 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME, default='admin'): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME, default='admin'):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string
 })
 
 
@@ -58,10 +61,8 @@ class XiaomiDeviceScanner(DeviceScanner):
         if self.mac2name is None:
             result = self._retrieve_list_with_retry()
             if result:
-                hosts = [x for x in result
-                         if 'mac' in x and 'name' in x]
-                mac2name_list = [
-                    (x['mac'].upper(), x['name']) for x in hosts]
+                hosts = [x for x in result if 'mac' in x and 'name' in x]
+                mac2name_list = [(x['mac'].upper(), x['name']) for x in hosts]
                 self.mac2name = dict(mac2name_list)
             else:
                 # Error, handled in the _retrieve_list_with_retry
@@ -112,12 +113,11 @@ def _retrieve_list(host, token, **kwargs):
     try:
         res = requests.get(url, timeout=5, **kwargs)
     except requests.exceptions.Timeout:
-        _LOGGER.exception(
-            "Connection to the router timed out at URL %s", url)
+        _LOGGER.exception("Connection to the router timed out at URL %s", url)
         return
     if res.status_code != 200:
-        _LOGGER.exception(
-            "Connection failed with http code %s", res.status_code)
+        _LOGGER.exception("Connection failed with http code %s",
+                          res.status_code)
         return
     try:
         result = res.json()
@@ -128,8 +128,8 @@ def _retrieve_list(host, token, **kwargs):
     try:
         xiaomi_code = result['code']
     except KeyError:
-        _LOGGER.exception(
-            "No field code in response from mi router. %s", result)
+        _LOGGER.exception("No field code in response from mi router. %s",
+                          result)
         return
     if xiaomi_code == 0:
         try:
@@ -138,9 +138,8 @@ def _retrieve_list(host, token, **kwargs):
             _LOGGER.exception("No list in response from mi router. %s", result)
             return
     else:
-        _LOGGER.info(
-            "Receive wrong Xiaomi code %s, expected 0 in response %s",
-            xiaomi_code, result)
+        _LOGGER.info("Receive wrong Xiaomi code %s, expected 0 in response %s",
+                     xiaomi_code, result)
         return
 
 

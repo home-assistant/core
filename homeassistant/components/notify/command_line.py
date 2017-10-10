@@ -10,15 +10,17 @@ import subprocess
 import voluptuous as vol
 
 from homeassistant.const import (CONF_COMMAND, CONF_NAME)
-from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA)
+from homeassistant.components.notify import (BaseNotificationService,
+                                             PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_COMMAND):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
 })
 
 
@@ -39,8 +41,11 @@ class CommandLineNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a command line."""
         try:
-            proc = subprocess.Popen(self.command, universal_newlines=True,
-                                    stdin=subprocess.PIPE, shell=True)
+            proc = subprocess.Popen(
+                self.command,
+                universal_newlines=True,
+                stdin=subprocess.PIPE,
+                shell=True)
             proc.communicate(input=message)
             if proc.returncode != 0:
                 _LOGGER.error("Command failed: %s", self.command)

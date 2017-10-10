@@ -34,9 +34,7 @@ DANALOCK_V2_BTZE = 0x2
 POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
 WORKAROUND_V2BTZE = 'v2btze'
 
-DEVICE_MAPPINGS = {
-    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE
-}
+DEVICE_MAPPINGS = {POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE}
 
 LOCK_NOTIFICATION = {
     '1': 'Manual Lock',
@@ -73,10 +71,7 @@ MANUAL_LOCK_ALARM_LEVEL = {
     '2': 'by Touch function (lock and leave)'
 }
 
-TAMPER_ALARM_LEVEL = {
-    '1': 'Too many keypresses',
-    '2': 'Cover removed'
-}
+TAMPER_ALARM_LEVEL = {'1': 'Too many keypresses', '2': 'Cover removed'}
 
 LOCK_STATUS = {
     '1': True,
@@ -95,36 +90,37 @@ LOCK_STATUS = {
     '27': True
 }
 
-ALARM_TYPE_STD = [
-    '18',
-    '19',
-    '33',
-    '112',
-    '113'
-]
+ALARM_TYPE_STD = ['18', '19', '33', '112', '113']
 
 SET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-    vol.Required(ATTR_USERCODE): cv.string,
+    vol.Required(zwave.const.ATTR_NODE_ID):
+    vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT):
+    vol.Coerce(int),
+    vol.Required(ATTR_USERCODE):
+    cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    vol.Required(zwave.const.ATTR_NODE_ID):
+    vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT):
+    vol.Coerce(int),
 })
 
 CLEAR_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
-    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    vol.Required(zwave.const.ATTR_NODE_ID):
+    vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT):
+    vol.Coerce(int),
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Z-Wave Lock platform."""
-    yield from zwave.async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+    yield from zwave.async_setup_platform(hass, config, async_add_devices,
+                                          discovery_info)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -144,8 +140,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if len(str(usercode)) < 4:
                 _LOGGER.error("Invalid code provided: (%s) "
                               "usercode must be atleast 4 and at most"
-                              " %s digits",
-                              usercode, len(value.data))
+                              " %s digits", usercode, len(value.data))
                 break
             value.data = str(usercode)
             break
@@ -183,14 +178,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             break
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_USERCODE, set_usercode,
-        descriptions.get(SERVICE_SET_USERCODE), schema=SET_USERCODE_SCHEMA)
+        DOMAIN,
+        SERVICE_SET_USERCODE,
+        set_usercode,
+        descriptions.get(SERVICE_SET_USERCODE),
+        schema=SET_USERCODE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_GET_USERCODE, get_usercode,
-        descriptions.get(SERVICE_GET_USERCODE), schema=GET_USERCODE_SCHEMA)
+        DOMAIN,
+        SERVICE_GET_USERCODE,
+        get_usercode,
+        descriptions.get(SERVICE_GET_USERCODE),
+        schema=GET_USERCODE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR_USERCODE, clear_usercode,
-        descriptions.get(SERVICE_CLEAR_USERCODE), schema=CLEAR_USERCODE_SCHEMA)
+        DOMAIN,
+        SERVICE_CLEAR_USERCODE,
+        clear_usercode,
+        descriptions.get(SERVICE_CLEAR_USERCODE),
+        schema=CLEAR_USERCODE_SCHEMA)
 
 
 def get_device(node, values, **kwargs):
@@ -211,10 +215,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
-        if (self.node.manufacturer_id.strip() and
-                self.node.product_id.strip()):
-            specific_sensor_key = (int(self.node.manufacturer_id, 16),
-                                   int(self.node.product_id, 16))
+        if (self.node.manufacturer_id.strip()
+                and self.node.product_id.strip()):
+            specific_sensor_key = (int(self.node.manufacturer_id, 16), int(
+                self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_V2BTZE:
                     self._v2btze = 1

@@ -16,8 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     REQUIRED_PYTHON_VER,
     REQUIRED_PYTHON_VER_WIN,
-    RESTART_EXIT_CODE,
-)
+    RESTART_EXIT_CODE, )
 
 
 def attempt_use_uvloop():
@@ -92,7 +91,8 @@ def get_arguments() -> argparse.Namespace:
         description="Home Assistant: Observe, Control, Automate.")
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument(
-        '-c', '--config',
+        '-c',
+        '--config',
         metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
@@ -113,7 +113,8 @@ def get_arguments() -> argparse.Namespace:
         action='store_true',
         help='Skips pip install of required packages on startup')
     parser.add_argument(
-        '-v', '--verbose',
+        '-v',
+        '--verbose',
         action='store_true',
         help="Enable verbose logging to file.")
     parser.add_argument(
@@ -131,7 +132,7 @@ def get_arguments() -> argparse.Namespace:
         type=str,
         default=None,
         help='Log file to write to.  If not set, CONFIG/home-assistant.log '
-             'is used')
+        'is used')
     parser.add_argument(
         '--runner',
         action='store_true',
@@ -233,8 +234,8 @@ def cmdline() -> List[str]:
     if sys.argv[0].endswith(os.path.sep + '__main__.py'):
         modulepath = os.path.dirname(sys.argv[0])
         os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
-        return [sys.executable] + [arg for arg in sys.argv if
-                                   arg != '--daemon']
+        return [sys.executable
+                ] + [arg for arg in sys.argv if arg != '--daemon']
 
     return [arg for arg in sys.argv if arg != '--daemon']
 
@@ -256,20 +257,23 @@ def setup_and_run_hass(config_dir: str,
                     sys.exit(exc.returncode)
 
     if args.demo_mode:
-        config = {
-            'frontend': {},
-            'demo': {}
-        }
+        config = {'frontend': {}, 'demo': {}}
         hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
+            config,
+            config_dir=config_dir,
+            verbose=args.verbose,
+            skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days,
             log_file=args.log_file)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
-            config_file, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days, log_file=args.log_file)
+            config_file,
+            verbose=args.verbose,
+            skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days,
+            log_file=args.log_file)
 
     if hass is None:
         return None
@@ -284,11 +288,8 @@ def setup_and_run_hass(config_dir: str,
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
 
-        run_callback_threadsafe(
-            hass.loop,
-            hass.bus.async_listen_once,
-            EVENT_HOMEASSISTANT_START, open_browser
-        )
+        run_callback_threadsafe(hass.loop, hass.bus.async_listen_once,
+                                EVENT_HOMEASSISTANT_START, open_browser)
 
     return hass.start()
 

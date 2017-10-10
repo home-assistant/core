@@ -24,15 +24,19 @@ _CONF_INDIVIDUAL = 'individual'
 
 _ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
 _ZABBIX_TRIGGER_SCHEMA = vol.Schema({
-    vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
-    vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(_CONF_HOSTIDS, default=[]):
+    _ZABBIX_ID_LIST_SCHEMA,
+    vol.Optional(_CONF_INDIVIDUAL, default=False):
+    cv.boolean(True),
+    vol.Optional(CONF_NAME, default=None):
+    cv.string,
 })
 
 # SCAN_INTERVAL = 30
 #
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(_CONF_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)
+    vol.Required(_CONF_TRIGGERS):
+    vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)
 })
 
 
@@ -142,7 +146,10 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            hostids=self._hostid, output="extend", only_true=1, monitored=1,
+            hostids=self._hostid,
+            output="extend",
+            only_true=1,
+            monitored=1,
             filter={"value": 1})
 
 
@@ -161,5 +168,8 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            hostids=self._hostids, output="extend", only_true=1,
-            monitored=1, filter={"value": 1})
+            hostids=self._hostids,
+            output="extend",
+            only_true=1,
+            monitored=1,
+            filter={"value": 1})

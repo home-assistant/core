@@ -11,14 +11,14 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
-    SUPPORT_SEEK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    CONF_PORT, CONF_PASSWORD, CONF_HOST, CONF_NAME)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_VOLUME_SET,
+    SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST, SUPPORT_SELECT_SOURCE,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, MediaPlayerDevice)
+from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+                                 CONF_PORT, CONF_PASSWORD, CONF_HOST,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -38,10 +38,14 @@ SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
     SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -199,7 +203,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level."""
-        return int(self._status['volume'])/100
+        return int(self._status['volume']) / 100
 
     @property
     def supported_features(self):
@@ -282,8 +286,8 @@ class MpdDevice(MediaPlayerDevice):
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
-                _LOGGER.warning(str.format("Unknown playlist name %s.",
-                                           media_id))
+                _LOGGER.warning(
+                    str.format("Unknown playlist name %s.", media_id))
             self._client.clear()
             self._client.load(media_id)
             self._client.play()

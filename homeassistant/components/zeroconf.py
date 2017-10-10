@@ -21,9 +21,10 @@ REQUIREMENTS = ['zeroconf==0.19.1']
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({}),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

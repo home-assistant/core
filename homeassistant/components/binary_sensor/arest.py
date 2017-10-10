@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import (
-    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_DEVICE_CLASS)
+from homeassistant.const import (CONF_RESOURCE, CONF_PIN, CONF_NAME,
+                                 CONF_DEVICE_CLASS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -22,10 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_PIN): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_PIN):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
 })
 
 
@@ -47,9 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     arest = ArestData(resource, pin)
 
-    add_devices([ArestBinarySensor(
-        arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-        device_class, pin)], True)
+    add_devices([
+        ArestBinarySensor(arest, resource,
+                          config.get(CONF_NAME, response[CONF_NAME]),
+                          device_class, pin)
+    ], True)
 
 
 class ArestBinarySensor(BinarySensorDevice):
@@ -102,8 +108,8 @@ class ArestData(object):
     def update(self):
         """Get the latest data from aREST device."""
         try:
-            response = requests.get('{}/digital/{}'.format(
-                self._resource, self._pin), timeout=10)
+            response = requests.get(
+                '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
             self.data = {'state': response.json()['return_value']}
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device '%s'", self._resource)

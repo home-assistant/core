@@ -9,8 +9,7 @@ from os import path
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (FanEntity, SUPPORT_OSCILLATE,
-                                          SUPPORT_SET_SPEED,
-                                          DOMAIN)
+                                          SUPPORT_SET_SPEED, DOMAIN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.config import load_yaml_config_file
@@ -19,13 +18,14 @@ DEPENDENCIES = ['dyson']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DYSON_FAN_DEVICES = "dyson_fan_devices"
 SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
 
 DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
-    vol.Required('entity_id'): cv.entity_id,
-    vol.Required('night_mode'): cv.boolean
+    vol.Required('entity_id'):
+    cv.entity_id,
+    vol.Required('night_mode'):
+    cv.boolean
 })
 
 
@@ -37,8 +37,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get Dyson Devices from parent component
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    for device in [d for d in hass.data[DYSON_DEVICES] if
-                   isinstance(d, DysonPureCoolLink)]:
+    for device in [
+            d for d in hass.data[DYSON_DEVICES]
+            if isinstance(d, DysonPureCoolLink)
+    ]:
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
@@ -51,8 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Handle dyson services."""
         entity_id = service.data.get('entity_id')
         night_mode = service.data.get('night_mode')
-        fan_device = next([fan for fan in hass.data[DYSON_FAN_DEVICES] if
-                           fan.entity_id == entity_id].__iter__(), None)
+        fan_device = next([
+            fan for fan in hass.data[DYSON_FAN_DEVICES]
+            if fan.entity_id == entity_id
+        ].__iter__(), None)
         if fan_device is None:
             _LOGGER.warning("Unable to find Dyson fan device %s",
                             str(entity_id))
@@ -62,10 +66,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             fan_device.night_mode(night_mode)
 
     # Register dyson service(s)
-    hass.services.register(DOMAIN, SERVICE_SET_NIGHT_MODE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_NIGHT_MODE),
-                           schema=DYSON_SET_NIGHT_MODE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_NIGHT_MODE,
+        service_handle,
+        descriptions.get(SERVICE_SET_NIGHT_MODE),
+        schema=DYSON_SET_NIGHT_MODE_SCHEMA)
 
 
 class DysonPureCoolLinkDevice(FanEntity):
@@ -80,8 +86,8 @@ class DysonPureCoolLinkDevice(FanEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
-        self.hass.async_add_job(
-            self._device.add_message_listener, self.on_message)
+        self.hass.async_add_job(self._device.add_message_listener,
+                                self.on_message)
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
@@ -109,10 +115,10 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(fan_mode=FanMode.AUTO)
         else:
             fan_speed = FanSpeed('{0:04d}'.format(int(speed)))
-            self._device.set_configuration(fan_mode=FanMode.FAN,
-                                           fan_speed=fan_speed)
+            self._device.set_configuration(
+                fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         from libpurecoollink.const import FanSpeed, FanMode
@@ -121,8 +127,8 @@ class DysonPureCoolLinkDevice(FanEntity):
                 self._device.set_configuration(fan_mode=FanMode.AUTO)
             else:
                 fan_speed = FanSpeed('{0:04d}'.format(int(speed)))
-                self._device.set_configuration(fan_mode=FanMode.FAN,
-                                               fan_speed=fan_speed)
+                self._device.set_configuration(
+                    fan_mode=FanMode.FAN, fan_speed=fan_speed)
         else:
             # Speed not set, just turn on
             self._device.set_configuration(fan_mode=FanMode.FAN)
@@ -205,17 +211,19 @@ class DysonPureCoolLinkDevice(FanEntity):
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         from libpurecoollink.const import FanSpeed
-        supported_speeds = [FanSpeed.FAN_SPEED_AUTO.value,
-                            int(FanSpeed.FAN_SPEED_1.value),
-                            int(FanSpeed.FAN_SPEED_2.value),
-                            int(FanSpeed.FAN_SPEED_3.value),
-                            int(FanSpeed.FAN_SPEED_4.value),
-                            int(FanSpeed.FAN_SPEED_5.value),
-                            int(FanSpeed.FAN_SPEED_6.value),
-                            int(FanSpeed.FAN_SPEED_7.value),
-                            int(FanSpeed.FAN_SPEED_8.value),
-                            int(FanSpeed.FAN_SPEED_9.value),
-                            int(FanSpeed.FAN_SPEED_10.value)]
+        supported_speeds = [
+            FanSpeed.FAN_SPEED_AUTO.value,
+            int(FanSpeed.FAN_SPEED_1.value),
+            int(FanSpeed.FAN_SPEED_2.value),
+            int(FanSpeed.FAN_SPEED_3.value),
+            int(FanSpeed.FAN_SPEED_4.value),
+            int(FanSpeed.FAN_SPEED_5.value),
+            int(FanSpeed.FAN_SPEED_6.value),
+            int(FanSpeed.FAN_SPEED_7.value),
+            int(FanSpeed.FAN_SPEED_8.value),
+            int(FanSpeed.FAN_SPEED_9.value),
+            int(FanSpeed.FAN_SPEED_10.value)
+        ]
 
         return supported_speeds
 

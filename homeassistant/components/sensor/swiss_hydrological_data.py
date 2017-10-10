@@ -11,8 +11,8 @@ import voluptuous as vol
 import requests
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
+from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN,
+                                 ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,8 +44,10 @@ ATTR_TEMPERATURE_MAX = 'temperature_max'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION): vol.Coerce(int),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_STATION):
+    vol.Coerce(int),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -58,8 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         response = requests.get(_RESOURCE, timeout=5)
-        if any(str(station) == location.get('@StrNr') for location in
-               xmltodict.parse(response.text)['AKT_Data']['MesPar']) is False:
+        if any(
+                str(station) == location.get('@StrNr')
+                for location in xmltodict.parse(
+                    response.text)['AKT_Data']['MesPar']) is False:
             _LOGGER.error("The given station does not exist: %s", station)
             return False
     except requests.exceptions.ConnectionError:
@@ -178,7 +182,8 @@ class HydrologicalData(object):
                         details[data] = {
                             'current': values[0],
                             'max': list(values[4].items())[1][1],
-                            'mean': list(values[3].items())[1][1]}
+                            'mean': list(values[3].items())[1][1]
+                        }
 
                     details['location'] = station.get('Name')
                     details['update_time'] = station.get('Zeit')

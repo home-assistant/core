@@ -12,8 +12,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_BASE,
+                                 CONF_QUOTE, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,10 +29,14 @@ ICON = 'mdi:currency'
 SCAN_INTERVAL = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_QUOTE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_QUOTE):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -95,8 +99,8 @@ class CurrencylayerSensor(Entity):
         self.rest.update()
         value = self.rest.data
         if value is not None:
-            self._state = round(
-                value['{}{}'.format(self._base, self._quote)], 4)
+            self._state = round(value['{}{}'.format(self._base, self._quote)],
+                                4)
 
 
 class CurrencylayerData(object):

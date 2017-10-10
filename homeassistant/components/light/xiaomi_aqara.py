@@ -18,8 +18,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['light']:
             model = device['model']
             if model == 'gateway':
-                devices.append(XiaomiGatewayLight(device, 'Gateway Light',
-                                                  gateway))
+                devices.append(
+                    XiaomiGatewayLight(device, 'Gateway Light', gateway))
     add_devices(devices)
 
 
@@ -91,7 +91,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
 
-        rgba = (self._brightness,) + self._rgb
+        rgba = (self._brightness, ) + self._rgb
         rgbhex = binascii.hexlify(struct.pack('BBBB', *rgba)).decode("ASCII")
         rgbhex = int(rgbhex, 16)
 

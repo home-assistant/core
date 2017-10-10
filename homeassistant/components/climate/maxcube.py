@@ -42,8 +42,9 @@ class MaxCubeClimate(ClimateDevice):
         """Initialize MAX! Cube ClimateDevice."""
         self._name = name
         self._unit_of_measurement = TEMP_CELSIUS
-        self._operation_list = [STATE_AUTO, STATE_MANUAL, STATE_BOOST,
-                                STATE_VACATION]
+        self._operation_list = [
+            STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_VACATION
+        ]
         self._rf_address = rf_address
         self._cubehandle = hass.data[MAXCUBE_HANDLE]
 

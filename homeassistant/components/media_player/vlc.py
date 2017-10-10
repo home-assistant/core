@@ -27,16 +27,20 @@ SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ARGUMENTS, default=''): cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_ARGUMENTS, default=''):
+    cv.string,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the vlc platform."""
-    add_devices([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
-                           config.get(CONF_ARGUMENTS))])
+    add_devices([
+        VlcDevice(
+            config.get(CONF_NAME, DEFAULT_NAME), config.get(CONF_ARGUMENTS))
+    ])
 
 
 class VlcDevice(MediaPlayerDevice):
@@ -65,7 +69,7 @@ class VlcDevice(MediaPlayerDevice):
             self._state = STATE_PAUSED
         else:
             self._state = STATE_IDLE
-        self._media_duration = self._vlc.get_length()/1000
+        self._media_duration = self._vlc.get_length() / 1000
         position = self._vlc.get_position() * self._media_duration
         if position != self._media_position:
             self._media_position_updated_at = dt_util.utcnow()
@@ -123,8 +127,8 @@ class VlcDevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length()/1000
-        self._vlc.set_position(position/track_length)
+        track_length = self._vlc.get_length() / 1000
+        self._vlc.set_position(position / track_length)
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -149,9 +153,8 @@ class VlcDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL or file."""
         if not media_type == MEDIA_TYPE_MUSIC:
-            _LOGGER.error(
-                "Invalid media type %s. Only %s is supported",
-                media_type, MEDIA_TYPE_MUSIC)
+            _LOGGER.error("Invalid media type %s. Only %s is supported",
+                          media_type, MEDIA_TYPE_MUSIC)
             return
         self._vlc.set_media(self._instance.media_new(media_id))
         self._vlc.play()

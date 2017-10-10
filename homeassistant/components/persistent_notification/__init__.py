@@ -30,15 +30,18 @@ SERVICE_CREATE = 'create'
 SERVICE_DISMISS = 'dismiss'
 
 SCHEMA_SERVICE_CREATE = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.template,
-    vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+    vol.Required(ATTR_MESSAGE):
+    cv.template,
+    vol.Optional(ATTR_TITLE):
+    cv.template,
+    vol.Optional(ATTR_NOTIFICATION_ID):
+    cv.string,
 })
 
 SCHEMA_SERVICE_DISMISS = vol.Schema({
-    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
+    vol.Required(ATTR_NOTIFICATION_ID):
+    cv.string,
 })
-
 
 DEFAULT_OBJECT_ID = 'notification'
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +64,8 @@ def dismiss(hass, notification_id):
 def async_create(hass, message, title=None, notification_id=None):
     """Generate a notification."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_TITLE, title),
             (ATTR_MESSAGE, message),
             (ATTR_NOTIFICATION_ID, notification_id),
@@ -83,6 +87,7 @@ def async_dismiss(hass, notification_id):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the persistent notification component."""
+
     @callback
     def create_service(call):
         """Handle a create notification service call."""
@@ -123,10 +128,10 @@ def async_setup(hass, config):
 
         hass.states.async_remove(entity_id)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
                                  descriptions[SERVICE_CREATE],

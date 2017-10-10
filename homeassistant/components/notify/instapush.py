@@ -13,8 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (
-    CONF_API_KEY, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+from homeassistant.const import (CONF_API_KEY, HTTP_HEADER_CONTENT_TYPE,
+                                 CONTENT_TYPE_JSON)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.instapush.im/v1/'
@@ -29,10 +29,14 @@ HTTP_HEADER_APPID = 'x-instapush-appid'
 HTTP_HEADER_APPSECRET = 'x-instapush-appsecret'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_APP_SECRET): cv.string,
-    vol.Required(CONF_EVENT): cv.string,
-    vol.Required(CONF_TRACKER): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_APP_SECRET):
+    cv.string,
+    vol.Required(CONF_EVENT):
+    cv.string,
+    vol.Required(CONF_TRACKER):
+    cv.string,
 })
 
 
@@ -45,7 +49,8 @@ def get_service(hass, config, discovery_info=None):
 
     try:
         response = requests.get(
-            '{}{}'.format(_RESOURCE, 'events/list'), headers=headers,
+            '{}{}'.format(_RESOURCE, 'events/list'),
+            headers=headers,
             timeout=DEFAULT_TIMEOUT).json()
     except ValueError:
         _LOGGER.error("Unexpected answer from Instapush API")
@@ -60,7 +65,8 @@ def get_service(hass, config, discovery_info=None):
         return None
 
     return InstapushNotificationService(
-        config.get(CONF_API_KEY), config.get(CONF_APP_SECRET),
+        config.get(CONF_API_KEY),
+        config.get(CONF_APP_SECRET),
         config.get(CONF_EVENT), config.get(CONF_TRACKER))
 
 
@@ -84,12 +90,16 @@ class InstapushNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = {
             'event': self._event,
-            'trackers': {self._tracker: '{} : {}'.format(title, message)}
+            'trackers': {
+                self._tracker: '{} : {}'.format(title, message)
+            }
         }
 
         response = requests.post(
-            '{}{}'.format(_RESOURCE, 'post'), data=json.dumps(data),
-            headers=self._headers, timeout=DEFAULT_TIMEOUT)
+            '{}{}'.format(_RESOURCE, 'post'),
+            data=json.dumps(data),
+            headers=self._headers,
+            timeout=DEFAULT_TIMEOUT)
 
         if response.json()['status'] == 401:
             _LOGGER.error(response.json()['msg'],

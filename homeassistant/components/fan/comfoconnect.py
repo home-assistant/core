@@ -8,9 +8,9 @@ import logging
 
 from homeassistant.components.comfoconnect import (
     DOMAIN, ComfoConnectBridge, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED)
-from homeassistant.components.fan import (
-    FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+from homeassistant.components.fan import (FanEntity, SPEED_OFF, SPEED_LOW,
+                                          SPEED_MEDIUM, SPEED_HIGH,
+                                          SUPPORT_SET_SPEED)
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import (dispatcher_connect)
 
@@ -18,12 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['comfoconnect']
 
-SPEED_MAPPING = {
-    0: SPEED_OFF,
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH
-}
+SPEED_MAPPING = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,8 +48,8 @@ class ComfoConnectFan(FanEntity):
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
-        dispatcher_connect(
-            hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+        dispatcher_connect(hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED,
+                           _handle_update)
 
     @property
     def name(self):
@@ -87,7 +82,7 @@ class ComfoConnectFan(FanEntity):
         """List of available fan modes."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW
@@ -101,9 +96,8 @@ class ComfoConnectFan(FanEntity):
         """Set fan speed."""
         _LOGGER.debug('Changing fan mode to %s.', mode)
 
-        from pycomfoconnect import (
-            CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
-            CMD_FAN_MODE_HIGH)
+        from pycomfoconnect import (CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW,
+                                    CMD_FAN_MODE_MEDIUM, CMD_FAN_MODE_HIGH)
 
         if mode == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)

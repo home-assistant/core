@@ -10,12 +10,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
+from homeassistant.components.ring import (CONF_ATTRIBUTION,
+                                           DEFAULT_ENTITY_NAMESPACE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_ENTITY_NAMESPACE,
+                                 CONF_MONITORED_CONDITIONS, STATE_UNKNOWN,
+                                 ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -36,9 +36,9 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -71,8 +71,8 @@ class RingSensor(Entity):
         self._extra = None
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[3])
         self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
-        self._name = "{0} {1}".format(
-            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
+        self._name = "{0} {1}".format(self._data.name,
+                                      SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = STATE_UNKNOWN
         self._tz = str(hass.config.time_zone)
 
@@ -110,8 +110,8 @@ class RingSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if self._sensor_type == 'battery' and self._state is not STATE_UNKNOWN:
-            return icon_for_battery_level(battery_level=int(self._state),
-                                          charging=False)
+            return icon_for_battery_level(
+                battery_level=int(self._state), charging=False)
         return self._icon
 
     @property
@@ -132,10 +132,9 @@ class RingSensor(Entity):
             self._state = self._data.battery_life
 
         if self._sensor_type.startswith('last_'):
-            history = self._data.history(timezone=self._tz,
-                                         kind=self._kind)
+            history = self._data.history(timezone=self._tz, kind=self._kind)
             if history:
                 self._extra = history[0]
                 created_at = self._extra['created_at']
-                self._state = '{0:0>2}:{1:0>2}'.format(
-                    created_at.hour, created_at.minute)
+                self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
+                                                       created_at.minute)

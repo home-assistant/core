@@ -25,8 +25,10 @@ CONF_BROADCAST_ADDRESS = 'broadcast_address'
 SERVICE_SEND_MAGIC_PACKET = 'send_magic_packet'
 
 WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+    vol.Required(CONF_MAC):
+    cv.string,
+    vol.Optional(CONF_BROADCAST_ADDRESS):
+    cv.string,
 })
 
 
@@ -44,18 +46,23 @@ def async_setup(hass, config):
                      mac_address, broadcast_address)
         if broadcast_address is not None:
             yield from hass.async_add_job(
-                partial(wol.send_magic_packet, mac_address,
-                        ip_address=broadcast_address))
+                partial(
+                    wol.send_magic_packet,
+                    mac_address,
+                    ip_address=broadcast_address))
         else:
             yield from hass.async_add_job(
                 partial(wol.send_magic_packet, mac_address))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND_MAGIC_PACKET, send_magic_packet,
+        DOMAIN,
+        SERVICE_SEND_MAGIC_PACKET,
+        send_magic_packet,
         description=descriptions.get(DOMAIN).get(SERVICE_SEND_MAGIC_PACKET),
         schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA)
 

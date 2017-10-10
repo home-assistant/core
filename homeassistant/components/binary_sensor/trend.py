@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID,
+                                 CONF_DEVICE_CLASS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 
@@ -26,15 +26,23 @@ CONF_ATTRIBUTE = 'attribute'
 CONF_INVERT = 'invert'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_ATTRIBUTE): cv.string,
-    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_INVERT, default=False): cv.boolean,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Required(ATTR_ENTITY_ID):
+    cv.entity_id,
+    vol.Optional(CONF_ATTRIBUTE):
+    cv.string,
+    vol.Optional(ATTR_FRIENDLY_NAME):
+    cv.string,
+    vol.Optional(CONF_INVERT, default=False):
+    cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS):
+    vol.Schema({
+        cv.slug: SENSOR_SCHEMA
+    }),
 })
 
 
@@ -51,10 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         invert = device_config[CONF_INVERT]
 
         sensors.append(
-            SensorTrend(
-                hass, device, friendly_name, entity_id, attribute,
-                device_class, invert)
-            )
+            SensorTrend(hass, device, friendly_name, entity_id, attribute,
+                        device_class, invert))
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
@@ -65,8 +71,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SensorTrend(BinarySensorDevice):
     """Representation of a trend Sensor."""
 
-    def __init__(self, hass, device_id, friendly_name,
-                 target_entity, attribute, device_class, invert):
+    def __init__(self, hass, device_id, friendly_name, target_entity,
+                 attribute, device_class, invert):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(
@@ -87,8 +93,7 @@ class SensorTrend(BinarySensorDevice):
             self.to_state = new_state
             hass.async_add_job(self.async_update_ha_state(True))
 
-        track_state_change(hass, target_entity,
-                           trend_sensor_state_listener)
+        track_state_change(hass, target_entity, trend_sensor_state_listener)
 
     @property
     def name(self):
@@ -115,15 +120,14 @@ class SensorTrend(BinarySensorDevice):
         """Get the latest data and update the states."""
         if self.from_state is None or self.to_state is None:
             return
-        if (self.from_state.state == STATE_UNKNOWN or
-                self.to_state.state == STATE_UNKNOWN):
+        if (self.from_state.state == STATE_UNKNOWN
+                or self.to_state.state == STATE_UNKNOWN):
             return
         try:
             if self._attribute:
                 from_value = float(
                     self.from_state.attributes.get(self._attribute))
-                to_value = float(
-                    self.to_state.attributes.get(self._attribute))
+                to_value = float(self.to_state.attributes.get(self._attribute))
             else:
                 from_value = float(self.from_state.state)
                 to_value = float(self.to_state.state)

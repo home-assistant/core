@@ -64,14 +64,14 @@ _MEMORY_MON_COND = {
     'memory_percent_used': ['Memory Usage', '%', 'mdi:memory'],
 }
 _NETWORK_MON_COND = {
-    'network_link_status': ['Network Link', None,
-                            'mdi:checkbox-marked-circle-outline'],
+    'network_link_status':
+    ['Network Link', None, 'mdi:checkbox-marked-circle-outline'],
     'network_tx': ['Network Up', 'MB/s', 'mdi:upload'],
     'network_rx': ['Network Down', 'MB/s', 'mdi:download'],
 }
 _DRIVE_MON_COND = {
-    'drive_smart_status': ['SMART Status', None,
-                           'mdi:checkbox-marked-circle-outline'],
+    'drive_smart_status':
+    ['SMART Status', None, 'mdi:checkbox-marked-circle-outline'],
     'drive_temp': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _VOLUME_MON_COND = {
@@ -88,18 +88,28 @@ _MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
                         list(_VOLUME_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_SSL, default=False):
+    cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True):
+    cv.boolean,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NICS, default=None): cv.ensure_list,
-    vol.Optional(CONF_DRIVES, default=None): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
+    vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_NICS, default=None):
+    cv.ensure_list,
+    vol.Optional(CONF_DRIVES, default=None):
+    cv.ensure_list,
+    vol.Optional(CONF_VOLUMES, default=None):
+    cv.ensure_list,
 })
 
 
@@ -123,14 +133,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Basic sensors
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in _SYSTEM_MON_COND:
-            sensors.append(QNAPSystemSensor(
-                api, variable, _SYSTEM_MON_COND[variable]))
+            sensors.append(
+                QNAPSystemSensor(api, variable, _SYSTEM_MON_COND[variable]))
         if variable in _CPU_MON_COND:
-            sensors.append(QNAPCPUSensor(
-                api, variable, _CPU_MON_COND[variable]))
+            sensors.append(
+                QNAPCPUSensor(api, variable, _CPU_MON_COND[variable]))
         if variable in _MEMORY_MON_COND:
-            sensors.append(QNAPMemorySensor(
-                api, variable, _MEMORY_MON_COND[variable]))
+            sensors.append(
+                QNAPMemorySensor(api, variable, _MEMORY_MON_COND[variable]))
 
     # Network sensors
     nics = config[CONF_NICS]
@@ -138,10 +148,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         nics = api.data["system_stats"]["nics"].keys()
 
     for nic in nics:
-        sensors += [QNAPNetworkSensor(api, variable,
-                                      _NETWORK_MON_COND[variable], nic)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _NETWORK_MON_COND]
+        sensors += [
+            QNAPNetworkSensor(api, variable, _NETWORK_MON_COND[variable], nic)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _NETWORK_MON_COND
+        ]
 
     # Drive sensors
     drives = config[CONF_DRIVES]
@@ -149,10 +160,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         drives = api.data["smart_drive_health"].keys()
 
     for drive in drives:
-        sensors += [QNAPDriveSensor(api, variable,
-                                    _DRIVE_MON_COND[variable], drive)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _DRIVE_MON_COND]
+        sensors += [
+            QNAPDriveSensor(api, variable, _DRIVE_MON_COND[variable], drive)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _DRIVE_MON_COND
+        ]
 
     # Volume sensors
     volumes = config[CONF_VOLUMES]
@@ -160,10 +172,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         volumes = api.data["volumes"].keys()
 
     for volume in volumes:
-        sensors += [QNAPVolumeSensor(api, variable,
-                                     _VOLUME_MON_COND[variable], volume)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _VOLUME_MON_COND]
+        sensors += [
+            QNAPVolumeSensor(api, variable, _VOLUME_MON_COND[variable], volume)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _VOLUME_MON_COND
+        ]
 
     add_devices(sensors)
 
@@ -192,8 +205,7 @@ class QNAPStatsAPI(object):
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
             verify_ssl=config.get(CONF_VERIFY_SSL),
-            timeout=config.get(CONF_TIMEOUT),
-        )
+            timeout=config.get(CONF_TIMEOUT), )
 
         self.data = {}
 
@@ -229,8 +241,8 @@ class QNAPSensor(Entity):
         server_name = self._api.data['system_stats']['system']['name']
 
         if self.monitor_device is not None:
-            return "{} {} ({})".format(
-                server_name, self.var_name, self.monitor_device)
+            return "{} {} ({})".format(server_name, self.var_name,
+                                       self.monitor_device)
         return "{} {}".format(server_name, self.var_name)
 
     @property
@@ -345,11 +357,14 @@ class QNAPSystemSensor(QNAPSensor):
             minutes = int(data['uptime']['minutes'])
 
             return {
-                ATTR_NAME: data['system']['name'],
-                ATTR_MODEL: data['system']['model'],
-                ATTR_SERIAL: data['system']['serial_number'],
-                ATTR_UPTIME: '{:0>2d}d {:0>2d}h {:0>2d}m'.format(
-                    days, hours, minutes)
+                ATTR_NAME:
+                data['system']['name'],
+                ATTR_MODEL:
+                data['system']['model'],
+                ATTR_SERIAL:
+                data['system']['serial_number'],
+                ATTR_UPTIME:
+                '{:0>2d}d {:0>2d}h {:0>2d}m'.format(days, hours, minutes)
             }
 
 
@@ -372,11 +387,8 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data['system_stats']['system']['name']
 
-        return "{} {} (Drive {})".format(
-            server_name,
-            self.var_name,
-            self.monitor_device
-        )
+        return "{} {} (Drive {})".format(server_name, self.var_name,
+                                         self.monitor_device)
 
     @property
     def device_state_attributes(self):

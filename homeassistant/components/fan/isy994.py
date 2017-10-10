@@ -8,8 +8,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
-                                          SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH)
+                                          SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
@@ -19,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 # Define term used for medium speed. This must be set as the fan component uses
 # 'medium' which the ISY does not understand
 ISY_SPEED_MEDIUM = 'med'
-
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -38,8 +36,10 @@ STATES = [SPEED_OFF, SPEED_LOW, ISY_SPEED_MEDIUM, SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 fan platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")
@@ -87,7 +87,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
         else:
             self.speed = self.state
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
         self.set_speed(speed)
 

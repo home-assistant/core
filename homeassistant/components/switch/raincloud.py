@@ -13,8 +13,7 @@ from homeassistant.components.raincloud import (
     ALLOWED_WATERING_TIME, CONF_ATTRIBUTION, CONF_WATERING_TIME,
     DATA_RAINCLOUD, DEFAULT_WATERING_TIME, RainCloudEntity, SWITCHES)
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 
 DEPENDENCIES = ['raincloud']
 
@@ -22,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)):
-        vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+    vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
     vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
-        vol.All(vol.In(ALLOWED_WATERING_TIME)),
+    vol.All(vol.In(ALLOWED_WATERING_TIME)),
 })
 
 
@@ -38,9 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # create an sensor for each zone managed by faucet
         for zone in raincloud.controller.faucet.zones:
             sensors.append(
-                RainCloudSwitch(default_watering_timer,
-                                zone,
-                                sensor_type))
+                RainCloudSwitch(default_watering_timer, zone, sensor_type))
 
     add_devices(sensors, True)
     return True

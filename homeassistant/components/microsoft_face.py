@@ -48,26 +48,36 @@ ATTR_NAME = 'name'
 
 DEFAULT_TIMEOUT = 10
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY):
+            cv.string,
+            vol.Optional(CONF_AZURE_REGION, default="westus"):
+            cv.string,
+            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+            cv.positive_int,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SCHEMA_GROUP_SERVICE = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
 })
 
 SCHEMA_PERSON_SERVICE = SCHEMA_GROUP_SERVICE.extend({
-    vol.Required(ATTR_GROUP): cv.slugify,
+    vol.Required(ATTR_GROUP):
+    cv.slugify,
 })
 
 SCHEMA_FACE_SERVICE = vol.Schema({
-    vol.Required(ATTR_PERSON): cv.string,
-    vol.Required(ATTR_GROUP): cv.slugify,
-    vol.Required(ATTR_CAMERA_ENTITY): cv.entity_id,
+    vol.Required(ATTR_PERSON):
+    cv.string,
+    vol.Required(ATTR_GROUP):
+    cv.slugify,
+    vol.Required(ATTR_CAMERA_ENTITY):
+    cv.entity_id,
 })
 
 SCHEMA_TRAIN_SERVICE = vol.Schema({
@@ -107,8 +117,11 @@ def delete_person(hass, group, name):
 
 def face_person(hass, group, person, camera_entity):
     """Add a new face picture to a person."""
-    data = {ATTR_GROUP: group, ATTR_PERSON: person,
-            ATTR_CAMERA_ENTITY: camera_entity}
+    data = {
+        ATTR_GROUP: group,
+        ATTR_PERSON: person,
+        ATTR_CAMERA_ENTITY: camera_entity
+    }
     hass.services.call(DOMAIN, SERVICE_FACE_PERSON, data)
 
 
@@ -116,13 +129,9 @@ def face_person(hass, group, person, camera_entity):
 def async_setup(hass, config):
     """Set up microsoft face."""
     entities = {}
-    face = MicrosoftFace(
-        hass,
-        config[DOMAIN].get(CONF_AZURE_REGION),
-        config[DOMAIN].get(CONF_API_KEY),
-        config[DOMAIN].get(CONF_TIMEOUT),
-        entities
-    )
+    face = MicrosoftFace(hass, config[DOMAIN].get(CONF_AZURE_REGION),
+                         config[DOMAIN].get(CONF_API_KEY),
+                         config[DOMAIN].get(CONF_TIMEOUT), entities)
 
     try:
         # read exists group/person from cloud and create entities
@@ -133,9 +142,10 @@ def async_setup(hass, config):
 
     hass.data[DATA_MICROSOFT_FACE] = face
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_create_group(service):
@@ -144,8 +154,8 @@ def async_setup(hass, config):
         g_id = slugify(name)
 
         try:
-            yield from face.call_api(
-                'put', "persongroups/{0}".format(g_id), {'name': name})
+            yield from face.call_api('put', "persongroups/{0}".format(g_id),
+                                     {'name': name})
             face.store[g_id] = {}
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
@@ -154,7 +164,9 @@ def async_setup(hass, config):
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CREATE_GROUP, async_create_group,
+        DOMAIN,
+        SERVICE_CREATE_GROUP,
+        async_create_group,
         descriptions[DOMAIN].get(SERVICE_CREATE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
@@ -173,7 +185,9 @@ def async_setup(hass, config):
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_GROUP, async_delete_group,
+        DOMAIN,
+        SERVICE_DELETE_GROUP,
+        async_delete_group,
         descriptions[DOMAIN].get(SERVICE_DELETE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
@@ -183,13 +197,15 @@ def async_setup(hass, config):
         g_id = service.data[ATTR_GROUP]
 
         try:
-            yield from face.call_api(
-                'post', "persongroups/{0}/train".format(g_id))
+            yield from face.call_api('post',
+                                     "persongroups/{0}/train".format(g_id))
         except HomeAssistantError as err:
             _LOGGER.error("Can't train group '%s' with error: %s", g_id, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TRAIN_GROUP, async_train_group,
+        DOMAIN,
+        SERVICE_TRAIN_GROUP,
+        async_train_group,
         descriptions[DOMAIN].get(SERVICE_TRAIN_GROUP),
         schema=SCHEMA_TRAIN_SERVICE)
 
@@ -201,8 +217,8 @@ def async_setup(hass, config):
 
         try:
             user_data = yield from face.call_api(
-                'post', "persongroups/{0}/persons".format(g_id), {'name': name}
-            )
+                'post', "persongroups/{0}/persons".format(g_id),
+                {'name': name})
 
             face.store[g_id][name] = user_data['personId']
             yield from entities[g_id].async_update_ha_state()
@@ -210,7 +226,9 @@ def async_setup(hass, config):
             _LOGGER.error("Can't create person '%s' with error: %s", name, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CREATE_PERSON, async_create_person,
+        DOMAIN,
+        SERVICE_CREATE_PERSON,
+        async_create_person,
         descriptions[DOMAIN].get(SERVICE_CREATE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
@@ -222,8 +240,9 @@ def async_setup(hass, config):
         p_id = face.store[g_id].get(name)
 
         try:
-            yield from face.call_api(
-                'delete', "persongroups/{0}/persons/{1}".format(g_id, p_id))
+            yield from face.call_api('delete',
+                                     "persongroups/{0}/persons/{1}".format(
+                                         g_id, p_id))
 
             face.store[g_id].pop(name)
             yield from entities[g_id].async_update_ha_state()
@@ -231,7 +250,9 @@ def async_setup(hass, config):
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_PERSON, async_delete_person,
+        DOMAIN,
+        SERVICE_DELETE_PERSON,
+        async_delete_person,
         descriptions[DOMAIN].get(SERVICE_DELETE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
@@ -252,13 +273,14 @@ def async_setup(hass, config):
                 "persongroups/{0}/persons/{1}/persistedFaces".format(
                     g_id, p_id),
                 image,
-                binary=True
-            )
+                binary=True)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_FACE_PERSON, async_face_person,
+        DOMAIN,
+        SERVICE_FACE_PERSON,
+        async_face_person,
         descriptions[DOMAIN].get(SERVICE_FACE_PERSON),
         schema=SCHEMA_FACE_SERVICE)
 
@@ -347,8 +369,7 @@ class MicrosoftFace(object):
             yield from asyncio.wait(tasks, loop=self.hass.loop)
 
     @asyncio.coroutine
-    def call_api(self, method, function, data=None, binary=False,
-                 params=None):
+    def call_api(self, method, function, data=None, binary=False, params=None):
         """Make a api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
         url = self._server_url.format(function)
@@ -375,8 +396,8 @@ class MicrosoftFace(object):
             if response.status < 300:
                 return answer
 
-            _LOGGER.warning("Error %d microsoft face api %s",
-                            response.status, response.url)
+            _LOGGER.warning("Error %d microsoft face api %s", response.status,
+                            response.url)
             raise HomeAssistantError(answer['error']['message'])
 
         except aiohttp.ClientError:

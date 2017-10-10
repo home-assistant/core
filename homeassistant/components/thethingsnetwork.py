@@ -24,12 +24,15 @@ TTN_APP_ID = 'ttn_app_id'
 TTN_DATA_STORAGE_URL = \
     'https://{app_id}.data.thethingsnetwork.org/{endpoint}/{device_id}'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_ACCESS_KEY): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_APP_ID): cv.string,
+            vol.Required(CONF_ACCESS_KEY): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine

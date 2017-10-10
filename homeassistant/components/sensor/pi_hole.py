@@ -13,8 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_SSL,
+                                 CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = '/api.php'
@@ -35,32 +35,38 @@ DEFAULT_VERIFY_SSL = True
 SCAN_INTERVAL = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
-    'dns_queries_today': ['DNS Queries Today',
-                          'queries', 'mdi:comment-question-outline'],
-    'ads_blocked_today': ['Ads Blocked Today',
-                          'ads', 'mdi:close-octagon-outline'],
-    'ads_percentage_today': ['Ads Percentage Blocked Today',
-                             '%', 'mdi:close-octagon-outline'],
-    'domains_being_blocked': ['Domains Blocked',
-                              'domains', 'mdi:block-helper'],
-    'queries_cached': ['DNS Queries Cached',
-                       'queries', 'mdi:comment-question-outline'],
-    'queries_forwarded': ['DNS Queries Forwarded',
-                          'queries', 'mdi:comment-question-outline'],
-    'unique_clients': ['DNS Unique Clients',
-                       'clients', 'mdi:account-outline'],
-    'unique_domains': ['DNS Unique Domains',
-                       'domains', 'mdi:domain'],
+    'dns_queries_today':
+    ['DNS Queries Today', 'queries', 'mdi:comment-question-outline'],
+    'ads_blocked_today':
+    ['Ads Blocked Today', 'ads', 'mdi:close-octagon-outline'],
+    'ads_percentage_today':
+    ['Ads Percentage Blocked Today', '%', 'mdi:close-octagon-outline'],
+    'domains_being_blocked': [
+        'Domains Blocked', 'domains', 'mdi:block-helper'
+    ],
+    'queries_cached': [
+        'DNS Queries Cached', 'queries', 'mdi:comment-question-outline'
+    ],
+    'queries_forwarded': [
+        'DNS Queries Forwarded', 'queries', 'mdi:comment-question-outline'
+    ],
+    'unique_clients': ['DNS Unique Clients', 'clients', 'mdi:account-outline'],
+    'unique_domains': ['DNS Unique Domains', 'domains', 'mdi:domain'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
+    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION):
+    cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
@@ -74,8 +80,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     api = PiHoleAPI('{}/{}'.format(host, location), use_ssl, verify_ssl)
 
-    sensors = [PiHoleSensor(hass, api, name, condition)
-               for condition in config[CONF_MONITORED_CONDITIONS]]
+    sensors = [
+        PiHoleSensor(hass, api, name, condition)
+        for condition in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     add_devices(sensors, True)
 

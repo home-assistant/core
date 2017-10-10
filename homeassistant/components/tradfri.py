@@ -27,14 +27,21 @@ KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
-        vol.Inclusive(CONF_API_KEY, 'gateway'): cv.string,
-        vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
-                     default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Inclusive(CONF_HOST, 'gateway'):
+            cv.string,
+            vol.Inclusive(CONF_API_KEY, 'gateway'):
+            cv.string,
+            vol.Optional(
+                CONF_ALLOW_TRADFRI_GROUPS,
+                default=DEFAULT_ALLOW_TRADFRI_GROUPS):
+            cv.boolean,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,12 +77,16 @@ def request_configuration(hass, config, host):
         hass.async_add_job(success)
 
     instance = configurator.request_config(
-        "IKEA Trådfri", configuration_callback,
+        "IKEA Trådfri",
+        configuration_callback,
         description='Please enter the security code written at the bottom of '
-                    'your IKEA Trådfri Gateway.',
+        'your IKEA Trådfri Gateway.',
         submit_caption="Confirm",
-        fields=[{'id': 'key', 'name': 'Security Code', 'type': 'password'}]
-    )
+        fields=[{
+            'id': 'key',
+            'name': 'Security Code',
+            'type': 'password'
+        }])
 
 
 @asyncio.coroutine
@@ -140,10 +151,12 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
         return True
 
     gateways[gateway_id] = gateway
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'light', DOMAIN,
+                                      {'gateway': gateway_id}, hass_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'sensor', DOMAIN,
+                                      {'gateway': gateway_id}, hass_config))
     return True
 
 

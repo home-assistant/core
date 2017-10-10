@@ -21,11 +21,16 @@ DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): rfxtrx.DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, rfxtrx.valid_sensor),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM):
+        rfxtrx.DOMAIN,
+        vol.Optional(CONF_DEVICES, default={}):
+        vol.All(dict, rfxtrx.valid_sensor),
+        vol.Optional(ATTR_AUTOMATIC_ADD, default=False):
+        cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -48,8 +53,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     data_types = [data_type]
                     break
         for _data_type in data_types:
-            new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
-                                      _data_type, entity_info[ATTR_FIREEVENT])
+            new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME], _data_type,
+                                      entity_info[ATTR_FIREEVENT])
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
@@ -69,12 +74,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 sensor.event = event
                 # Fire event
                 if sensors[key].should_fire_event:
-                    sensor.hass.bus.fire(
-                        "signal_received", {
-                            ATTR_ENTITY_ID:
-                                sensors[key].entity_id,
-                        }
-                    )
+                    sensor.hass.bus.fire("signal_received", {
+                        ATTR_ENTITY_ID:
+                        sensors[key].entity_id,
+                    })
             return
 
         # Add entity if not exist and the automatic_add is True

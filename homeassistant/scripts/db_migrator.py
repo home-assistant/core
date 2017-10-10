@@ -23,8 +23,12 @@ def ts_to_dt(timestamp: Optional[float]) -> Optional[datetime]:
 
 # Based on code at
 # http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
-                   decimals: int=2, bar_length: int=68) -> None:
+def print_progress(iteration: int,
+                   total: int,
+                   prefix: str = '',
+                   suffix: str = '',
+                   decimals: int = 2,
+                   bar_length: int = 68) -> None:
     """Print progress bar.
 
     Call in a loop to create terminal progress bar
@@ -39,8 +43,8 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
     filled_length = int(round(bar_length * iteration / float(total)))
     percents = round(100.00 * (iteration / float(total)), decimals)
     line = '#' * filled_length + '-' * (bar_length - filled_length)
-    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line,
-                                            percents, '%', suffix))
+    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line, percents, '%',
+                                            suffix))
     sys.stdout.flush()
     if iteration == total:
         print("\n")
@@ -56,12 +60,14 @@ def run(script_args: List) -> int:
     parser = argparse.ArgumentParser(
         description="Migrate legacy DB to SQLAlchemy format.")
     parser.add_argument(
-        '-c', '--config',
+        '-c',
+        '--config',
         metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
-        '-a', '--append',
+        '-a',
+        '--append',
         action='store_true',
         default=False,
         help="Append to existing new format SQLite database")
@@ -69,10 +75,8 @@ def run(script_args: List) -> int:
         '--uri',
         type=str,
         help="Connect to URI and import (implies --append)"
-             "eg: mysql://localhost/homeassistant")
-    parser.add_argument(
-        '--script',
-        choices=['db_migrator'])
+        "eg: mysql://localhost/homeassistant")
+    parser.add_argument('--script', choices=['db_migrator'])
 
     args = parser.parse_args()
 
@@ -119,12 +123,12 @@ def run(script_args: List) -> int:
     n = 0
     for row in c.execute("SELECT * FROM recorder_runs"):  # type: ignore
         n += 1
-        session.add(models.RecorderRuns(
-            start=ts_to_dt(row[1]),
-            end=ts_to_dt(row[2]),
-            closed_incorrect=row[3],
-            created=ts_to_dt(row[4])
-        ))
+        session.add(
+            models.RecorderRuns(
+                start=ts_to_dt(row[1]),
+                end=ts_to_dt(row[2]),
+                closed_incorrect=row[3],
+                created=ts_to_dt(row[4])))
         if n % 1000 == 0:
             session.commit()
             print_progress(n, num_rows)
@@ -149,8 +153,7 @@ def run(script_args: List) -> int:
             event_data=row[2],
             origin=row[3],
             created=ts_to_dt(row[4]),
-            time_fired=ts_to_dt(row[5]),
-        )
+            time_fired=ts_to_dt(row[5]), )
         session.add(o)
         if append:
             session.flush()
@@ -172,15 +175,15 @@ def run(script_args: List) -> int:
     n = 0
     for row in c.execute("SELECT * FROM states"):  # type: ignore
         n += 1
-        session.add(models.States(
-            entity_id=row[1],
-            state=row[2],
-            attributes=row[3],
-            last_changed=ts_to_dt(row[4]),
-            last_updated=ts_to_dt(row[5]),
-            event_id=id_mapping.get(row[6], row[6]),
-            domain=row[7]
-        ))
+        session.add(
+            models.States(
+                entity_id=row[1],
+                state=row[2],
+                attributes=row[3],
+                last_changed=ts_to_dt(row[4]),
+                last_updated=ts_to_dt(row[5]),
+                event_id=id_mapping.get(row[6], row[6]),
+                domain=row[7]))
         if n % 1000 == 0:
             session.commit()
             print_progress(n, num_rows)

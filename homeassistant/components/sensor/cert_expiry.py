@@ -27,14 +27,18 @@ SCAN_INTERVAL = timedelta(hours=12)
 TIMEOUT = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up certificate expiry sensor."""
+
     def run_setup(event):
         """Wait until Home Assistant is fully initialized before creating.
 
@@ -93,8 +97,8 @@ class SSLCertificate(Entity):
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
             return
         except socket.timeout:
-            _LOGGER.error(
-                "Connection timeout with server: %s", self.server_name)
+            _LOGGER.error("Connection timeout with server: %s",
+                          self.server_name)
             return
         except OSError:
             _LOGGER.error("Cannot connect to %s", self.server_name)

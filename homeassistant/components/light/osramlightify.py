@@ -18,9 +18,9 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR, ATTR_TRANSITION, EFFECT_RANDOM, SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT, SUPPORT_XY_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, PLATFORM_SCHEMA)
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired,
-    color_xy_brightness_to_RGB)
+from homeassistant.util.color import (color_temperature_mired_to_kelvin,
+                                      color_temperature_kelvin_to_mired,
+                                      color_xy_brightness_to_RGB)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['lightify==1.0.6']
@@ -32,14 +32,16 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 CONF_ALLOW_LIGHTIFY_GROUPS = "allow_lightify_groups"
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
 
-SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                         SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
-                         SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+                         | SUPPORT_EFFECT | SUPPORT_RGB_COLOR
+                         | SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ALLOW_LIGHTIFY_GROUPS,
-                 default=DEFAULT_ALLOW_LIGHTIFY_GROUPS): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(
+        CONF_ALLOW_LIGHTIFY_GROUPS, default=DEFAULT_ALLOW_LIGHTIFY_GROUPS):
+    cv.boolean,
 })
 
 
@@ -170,16 +172,14 @@ class Luminary(Light):
             _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
                           self._name, self._brightness)
             self._luminary.set_luminance(
-                int(self._brightness / 2.55),
-                transition)
+                int(self._brightness / 2.55), transition)
         else:
             self._luminary.set_onoff(1)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
             _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light:"
-                          " %s is: %s %s %s ",
-                          self._name, red, green, blue)
+                          " %s is: %s %s %s ", self._name, red, green, blue)
             self._luminary.set_rgb(red, green, blue, transition)
 
         if ATTR_XY_COLOR in kwargs:
@@ -187,8 +187,7 @@ class Luminary(Light):
             _LOGGER.debug("turn_on requested ATTR_XY_COLOR for light:"
                           " %s is: %s,%s", self._name, x_mired, y_mired)
             red, green, blue = color_xy_brightness_to_RGB(
-                x_mired, y_mired, self._brightness
-            )
+                x_mired, y_mired, self._brightness)
             self._luminary.set_rgb(red, green, blue, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -201,10 +200,10 @@ class Luminary(Light):
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
             if effect == EFFECT_RANDOM:
-                self._luminary.set_rgb(random.randrange(0, 255),
-                                       random.randrange(0, 255),
-                                       random.randrange(0, 255),
-                                       transition)
+                self._luminary.set_rgb(
+                    random.randrange(0, 255),
+                    random.randrange(0, 255),
+                    random.randrange(0, 255), transition)
                 _LOGGER.debug("turn_on requested random effect for light: "
                               "%s with transition %s", self._name, transition)
 
@@ -212,19 +211,16 @@ class Luminary(Light):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.debug("turn_off Attempting to turn off light: %s ",
-                      self._name)
+        _LOGGER.debug("turn_off Attempting to turn off light: %s ", self._name)
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+                          " %s is: %s ", self._name, transition)
             self._luminary.set_luminance(0, transition)
         else:
             transition = 0
             _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+                          " %s is: %s ", self._name, transition)
         self._luminary.set_onoff(0)
         self.schedule_update_ha_state()
 
@@ -252,8 +248,7 @@ class OsramLightifyLight(Luminary):
             self._temperature = None
         else:
             self._temperature = color_temperature_kelvin_to_mired(
-                self._luminary.temp()
-            )
+                self._luminary.temp())
         self._brightness = int(self._luminary.lum() * 2.55)
 
 

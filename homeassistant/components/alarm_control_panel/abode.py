@@ -6,12 +6,11 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 """
 import logging
 
-from homeassistant.components.abode import (
-    AbodeDevice, DOMAIN as ABODE_DOMAIN, CONF_ATTRIBUTION)
+from homeassistant.components.abode import (AbodeDevice, DOMAIN as
+                                            ABODE_DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
 from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
-
 
 DEPENDENCIES = ['abode']
 

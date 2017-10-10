@@ -29,34 +29,39 @@ CONF_ECHO = 'echo'
 
 DEPENDENCIES = ['pilight']
 
-COMMAND_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PROTOCOL): cv.string,
-    vol.Optional('on'): cv.positive_int,
-    vol.Optional('off'): cv.positive_int,
-    vol.Optional(CONF_UNIT): cv.positive_int,
-    vol.Optional(CONF_UNITCODE): cv.positive_int,
-    vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-    vol.Optional(CONF_STATE): cv.string,
-    vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
-}, extra=vol.ALLOW_EXTRA)
+COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_PROTOCOL): cv.string,
+        vol.Optional('on'): cv.positive_int,
+        vol.Optional('off'): cv.positive_int,
+        vol.Optional(CONF_UNIT): cv.positive_int,
+        vol.Optional(CONF_UNITCODE): cv.positive_int,
+        vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
+        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
+    },
+    extra=vol.ALLOW_EXTRA)
 
-RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({
-    vol.Optional(CONF_ECHO): cv.boolean
-})
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({vol.Optional(CONF_ECHO): cv.boolean})
 
 SWITCHES_SCHEMA = vol.Schema({
-    vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
-    vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
-                                                             [COMMAND_SCHEMA]),
-    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
-                                                            [COMMAND_SCHEMA])
+    vol.Required(CONF_ON_CODE):
+    COMMAND_SCHEMA,
+    vol.Required(CONF_OFF_CODE):
+    COMMAND_SCHEMA,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]):
+    vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
+    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]):
+    vol.All(cv.ensure_list, [COMMAND_SCHEMA])
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES):
-        vol.Schema({cv.string: SWITCHES_SCHEMA}),
+    vol.Schema({
+        cv.string: SWITCHES_SCHEMA
+    }),
 })
 
 
@@ -67,15 +72,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for dev_name, properties in switches.items():
         devices.append(
-            PilightSwitch(
-                hass,
-                properties.get(CONF_NAME, dev_name),
-                properties.get(CONF_ON_CODE),
-                properties.get(CONF_OFF_CODE),
-                properties.get(CONF_ON_CODE_RECIEVE),
-                properties.get(CONF_OFF_CODE_RECIEVE)
-            )
-        )
+            PilightSwitch(hass,
+                          properties.get(CONF_NAME, dev_name),
+                          properties.get(CONF_ON_CODE),
+                          properties.get(CONF_OFF_CODE),
+                          properties.get(CONF_ON_CODE_RECIEVE),
+                          properties.get(CONF_OFF_CODE_RECIEVE)))
 
     add_devices(devices)
 
@@ -179,11 +181,17 @@ class PilightSwitch(SwitchDevice):
         """
         if send_code:
             if turn_on:
-                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                         self._code_on, blocking=True)
+                self._hass.services.call(
+                    pilight.DOMAIN,
+                    pilight.SERVICE_NAME,
+                    self._code_on,
+                    blocking=True)
             else:
-                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                         self._code_off, blocking=True)
+                self._hass.services.call(
+                    pilight.DOMAIN,
+                    pilight.SERVICE_NAME,
+                    self._code_off,
+                    blocking=True)
 
         self._state = turn_on
         self.schedule_update_ha_state()

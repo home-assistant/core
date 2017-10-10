@@ -9,12 +9,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
+from homeassistant.components.skybell import (DEFAULT_ENTITY_NAMESPACE, DOMAIN
+                                              as SKYBELL_DOMAIN, SkybellDevice)
+from homeassistant.const import (CONF_ENTITY_NAMESPACE,
+                                 CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['skybell']
@@ -31,9 +31,9 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

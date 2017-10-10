@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
+from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['russound==0.1.7']
@@ -34,11 +34,18 @@ SOURCE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_PORT):
+    cv.port,
+    vol.Required(CONF_ZONES):
+    vol.Schema({
+        cv.positive_int: ZONE_SCHEMA
+    }),
+    vol.Required(CONF_SOURCES):
+    vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
 })
 
 
@@ -48,8 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
 
     if host is None or port is None:
-        _LOGGER.error("Invalid config. Expected %s and %s",
-                      CONF_HOST, CONF_PORT)
+        _LOGGER.error("Invalid config. Expected %s and %s", CONF_HOST,
+                      CONF_PORT)
         return False
 
     from russound import russound
@@ -63,8 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
-            add_devices([RussoundRNETDevice(
-                hass, russ, sources, zone_id, extra)], True)
+            add_devices(
+                [RussoundRNETDevice(hass, russ, sources, zone_id,
+                                    extra)], True)
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)
 

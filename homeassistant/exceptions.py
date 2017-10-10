@@ -24,8 +24,8 @@ class TemplateError(HomeAssistantError):
 
     def __init__(self, exception):
         """Init the error."""
-        super().__init__('{}: {}'.format(exception.__class__.__name__,
-                                         exception))
+        super().__init__(
+            '{}: {}'.format(exception.__class__.__name__, exception))
 
 
 class PlatformNotReady(HomeAssistantError):

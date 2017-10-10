@@ -13,9 +13,9 @@ from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.0.1',)
+REQUIREMENTS = ('colorlog==3.0.1', )
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
-    REQUIREMENTS += ('colorama<=1',)
+    REQUIREMENTS += ('colorama<=1', )
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -38,8 +38,7 @@ SILENCE = (
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.warning',
-    'homeassistant.util.yaml._LOGGER.debug',
-)
+    'homeassistant.util.yaml._LOGGER.debug', )
 PATCHES = {}
 
 C_HEAD = 'bold'
@@ -63,24 +62,21 @@ def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
         description=("Check Home Assistant configuration."))
+    parser.add_argument('--script', choices=['check_config'])
     parser.add_argument(
-        '--script', choices=['check_config'])
-    parser.add_argument(
-        '-c', '--config',
+        '-c',
+        '--config',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
-        '-i', '--info',
-        default=None,
-        help="Show a portion of the config")
+        '-i', '--info', default=None, help="Show a portion of the config")
     parser.add_argument(
-        '-f', '--files',
+        '-f',
+        '--files',
         action='store_true',
         help="Show used configuration files")
     parser.add_argument(
-        '-s', '--secrets',
-        action='store_true',
-        help="Show secret information")
+        '-s', '--secrets', action='store_true', help="Show secret information")
 
     args = parser.parse_args()
 
@@ -98,11 +94,13 @@ def run(script_args: List) -> int:
 
     res = check(config_path)
     if args.files:
-        print(color(C_HEAD, 'yaml files'), '(used /',
-              color('red', 'not used') + ')')
+        print(
+            color(C_HEAD, 'yaml files'), '(used /',
+            color('red', 'not used') + ')')
         # Python 3.5 gets a recursive, but not in 3.4
-        for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
-                          glob(os.path.join(config_dir, '*/*.yaml'))):
+        for yfn in sorted(
+                glob(os.path.join(config_dir, '*.yaml')) +
+                glob(os.path.join(config_dir, '*/*.yaml'))):
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
@@ -110,7 +108,8 @@ def run(script_args: List) -> int:
         print(color('bold_white', 'Failed config'))
         for domain, config in res['except'].items():
             domain_info.append(domain)
-            print(' ', color('bold_red', domain + ':'),
+            print(' ',
+                  color('bold_red', domain + ':'),
                   color('red', '', reset='red'))
             dump_dict(config, reset='red')
             print(color('reset'))
@@ -139,14 +138,15 @@ def run(script_args: List) -> int:
                     _LOGGER.error('Duplicated secrets in files %s and %s',
                                   flatsecret[skey], sfn)
                 flatsecret[skey] = sfn
-                sss.append(color('green', skey) if skey in res['secrets']
-                           else skey)
+                sss.append(
+                    color('green', skey) if skey in res['secrets'] else skey)
             print(color(C_HEAD, 'Secrets from', sfn + ':'), ', '.join(sss))
 
         print(color(C_HEAD, 'Used Secrets:'))
         for skey, sval in res['secrets'].items():
-            print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
-                                                .get(skey, 'keyring') + ']'))
+            print(' -', skey + ':', sval,
+                  color('cyan', '[from:',
+                        flatsecret.get(skey, 'keyring') + ']'))
 
     return len(res['except'])
 
@@ -170,18 +170,20 @@ def check(config_path):
     # pylint: disable=unused-variable
     def mock_get(comp_name):
         """Mock hass.loader.get_component to replace setup & setup_platform."""
+
         def mock_setup(*kwargs):
             """Mock setup, only record the component name & config."""
             assert comp_name not in res['components'], \
                 "Components should contain a list of platforms"
             res['components'][comp_name] = kwargs[1].get(comp_name)
             return True
+
         module = MOCKS['get'][1](comp_name)
 
         if module is None:
             # Ensure list
-            msg = '{} not found: {}'.format(
-                'Platform' if '.' in comp_name else 'Component', comp_name)
+            msg = '{} not found: {}'.format('Platform' if '.' in comp_name else
+                                            'Component', comp_name)
             res['except'].setdefault(ERROR_STR, []).append(msg)
             return None
 
@@ -209,8 +211,11 @@ def check(config_path):
         res['secrets'][node.value] = val
         return val
 
-    def mock_except(ex, domain, config,  # pylint: disable=unused-variable
-                    hass=None):
+    def mock_except(
+            ex,
+            domain,
+            config,  # pylint: disable=unused-variable
+            hass=None):
         """Mock config.log_exception."""
         MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
@@ -267,9 +272,8 @@ def check(config_path):
 def line_info(obj, **kwargs):
     """Display line config source."""
     if hasattr(obj, '__config_file__'):
-        return color('cyan', "[source {}:{}]"
-                     .format(obj.__config_file__, obj.__line__ or '?'),
-                     **kwargs)
+        return color('cyan', "[source {}:{}]".format(
+            obj.__config_file__, obj.__line__ or '?'), **kwargs)
     return '?'
 
 
@@ -278,6 +282,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
 
     A friendly version of print yaml.yaml.dump(config).
     """
+
     def sort_dict_key(val):
         """Return the dict key for sorting."""
         key = str.lower(val[0])

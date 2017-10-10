@@ -12,10 +12,9 @@ from homeassistant.components.vacuum import (
     VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
     SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PASSWORD,
+                                 CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['roombapy==1.3.1']
 
@@ -48,14 +47,16 @@ FAN_SPEED_ECO = 'Eco'
 FAN_SPEED_PERFORMANCE = 'Performance'
 FAN_SPEEDS = [FAN_SPEED_AUTOMATIC, FAN_SPEED_ECO, FAN_SPEED_PERFORMANCE]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_CERT, default=DEFAULT_CERT): cv.string,
-    vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CERT, default=DEFAULT_CERT): cv.string,
+        vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA)
 
 # Commonly supported features
 SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
@@ -86,8 +87,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         blid=username,
         password=password,
         cert_name=certificate,
-        continuous=continuous
-    )
+        continuous=continuous)
     _LOGGER.info("Initializing communication with host %s (username: %s)",
                  host, username)
     yield from hass.async_add_job(roomba.connect)
@@ -236,18 +236,18 @@ class RoombaVacuum(VacuumDevice):
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
         # The set_preference method does only accept string values
-        yield from self.hass.async_add_job(
-            self.vacuum.set_preference, 'carpetBoost', str(carpet_boost))
-        yield from self.hass.async_add_job(
-            self.vacuum.set_preference, 'vacHigh', str(high_perf))
+        yield from self.hass.async_add_job(self.vacuum.set_preference,
+                                           'carpetBoost', str(carpet_boost))
+        yield from self.hass.async_add_job(self.vacuum.set_preference,
+                                           'vacHigh', str(high_perf))
 
     @asyncio.coroutine
     def async_send_command(self, command, params, **kwargs):
         """Send raw command."""
-        _LOGGER.debug("async_send_command %s (%s), %s",
-                      command, params, kwargs)
-        yield from self.hass.async_add_job(
-            self.vacuum.send_command, command, params)
+        _LOGGER.debug("async_send_command %s (%s), %s", command, params,
+                      kwargs)
+        yield from self.hass.async_add_job(self.vacuum.send_command, command,
+                                           params)
         return True
 
     @asyncio.coroutine
@@ -255,8 +255,7 @@ class RoombaVacuum(VacuumDevice):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:
-            _LOGGER.debug("Roomba %s has no data yet. Skip update.",
-                          self.name)
+            _LOGGER.debug("Roomba %s has no data yet. Skip update.", self.name)
             return
         state = self.vacuum.master_state.get('state', {}).get('reported', {})
         _LOGGER.debug("Got new state from the vacuum: %s", state)
@@ -270,7 +269,7 @@ class RoombaVacuum(VacuumDevice):
         cap_pos = capabilities.get('pose')
         # Store capabilities
         self._capabilities = {
-            CAP_BIN_FULL:  cap_bin_full == 1,
+            CAP_BIN_FULL: cap_bin_full == 1,
             CAP_CARPET_BOOST: cap_carpet_boost == 1,
             CAP_POSITION: cap_pos == 1,
         }

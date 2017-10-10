@@ -44,17 +44,18 @@ SCAN_INTERVAL = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CLASSIFIER, default=None): {
-        cv.string: vol.Any(
-            cv.isfile,
-            vol.Schema({
-                vol.Required(CONF_FILE): cv.isfile,
-                vol.Optional(CONF_SCALE, DEFAULT_SCALE): float,
-                vol.Optional(CONF_NEIGHBORS, DEFAULT_NEIGHBORS):
+        cv.string:
+        vol.Any(cv.isfile,
+                vol.Schema({
+                    vol.Required(CONF_FILE):
+                    cv.isfile,
+                    vol.Optional(CONF_SCALE, DEFAULT_SCALE):
+                    float,
+                    vol.Optional(CONF_NEIGHBORS, DEFAULT_NEIGHBORS):
                     cv.positive_int,
-                vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE):
+                    vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE):
                     vol.Schema((int, int))
-            })
-        )
+                }))
     }
 })
 
@@ -62,11 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def _create_processor_from_config(hass, camera_entity, config):
     """Create an OpenCV processor from configuration."""
     classifier_config = config[CONF_CLASSIFIER]
-    name = '{} {}'.format(
-        config[CONF_NAME], split_entity_id(camera_entity)[1].replace('_', ' '))
+    name = '{} {}'.format(config[CONF_NAME],
+                          split_entity_id(camera_entity)[1].replace('_', ' '))
 
-    processor = OpenCVImageProcessor(
-        hass, camera_entity, name, classifier_config)
+    processor = OpenCVImageProcessor(hass, camera_entity, name,
+                                     classifier_config)
 
     return processor
 
@@ -98,15 +99,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config[CONF_CLASSIFIER] is None:
         dest_path = hass.config.path(DEFAULT_CLASSIFIER_PATH)
         _get_default_classifier(dest_path)
-        config[CONF_CLASSIFIER] = {
-            'Face': dest_path
-        }
+        config[CONF_CLASSIFIER] = {'Face': dest_path}
 
     for camera in config[CONF_SOURCE]:
-        entities.append(OpenCVImageProcessor(
-            hass, camera[CONF_ENTITY_ID], camera.get(CONF_NAME),
-            config[CONF_CLASSIFIER]
-        ))
+        entities.append(
+            OpenCVImageProcessor(hass, camera[CONF_ENTITY_ID],
+                                 camera.get(CONF_NAME), config[
+                                     CONF_CLASSIFIER]))
 
     add_devices(entities)
 
@@ -121,8 +120,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenCV {0}".format(
-                split_entity_id(camera_entity)[1])
+            self._name = "OpenCV {0}".format(split_entity_id(camera_entity)[1])
         self._classifiers = classifiers
         self._matches = {}
         self._total_matches = 0
@@ -157,8 +155,8 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import numpy
 
         # pylint: disable=no-member
-        cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
-                                cv2.IMREAD_UNCHANGED)
+        cv_image = cv2.imdecode(
+            numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE

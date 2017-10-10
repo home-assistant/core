@@ -12,8 +12,8 @@ from homeassistant.components.weather import (
     WeatherEntity, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE,
+                                 CONF_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.zamg import (
@@ -22,12 +22,14 @@ from homeassistant.components.sensor.zamg import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_STATION_ID): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_STATION_ID):
+    cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.longitude,
 })
 
 

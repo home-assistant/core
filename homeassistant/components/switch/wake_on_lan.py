@@ -27,11 +27,16 @@ DEFAULT_NAME = 'Wake on LAN'
 DEFAULT_PING_TIMEOUT = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC_ADDRESS): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Required(CONF_MAC_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_BROADCAST_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_OFF_ACTION):
+    cv.SCRIPT_SCHEMA,
 })
 
 
@@ -43,15 +48,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     off_action = config.get(CONF_OFF_ACTION)
 
-    add_devices([WOLSwitch(hass, name, host, mac_address,
-                           off_action, broadcast_address)], True)
+    add_devices([
+        WOLSwitch(hass, name, host, mac_address, off_action, broadcast_address)
+    ], True)
 
 
 class WOLSwitch(SwitchDevice):
     """Representation of a wake on lan switch."""
 
-    def __init__(self, hass, name, host, mac_address,
-                 off_action, broadcast_address):
+    def __init__(self, hass, name, host, mac_address, off_action,
+                 broadcast_address):
         """Initialize the WOL switch."""
         from wakeonlan import wol
         self._hass = hass
@@ -94,11 +100,17 @@ class WOLSwitch(SwitchDevice):
     def update(self):
         """Check if device is on and update the state."""
         if platform.system().lower() == 'windows':
-            ping_cmd = ['ping', '-n', '1', '-w',
-                        str(DEFAULT_PING_TIMEOUT * 1000), str(self._host)]
+            ping_cmd = [
+                'ping', '-n', '1', '-w',
+                str(DEFAULT_PING_TIMEOUT * 1000),
+                str(self._host)
+            ]
         else:
-            ping_cmd = ['ping', '-c', '1', '-W',
-                        str(DEFAULT_PING_TIMEOUT), str(self._host)]
+            ping_cmd = [
+                'ping', '-c', '1', '-W',
+                str(DEFAULT_PING_TIMEOUT),
+                str(self._host)
+            ]
 
         status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)

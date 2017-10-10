@@ -22,8 +22,10 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 HUB_ADDRESS = 'address'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'hunterdouglas_powerview',
-    vol.Required(HUB_ADDRESS): cv.string,
+    vol.Required(CONF_PLATFORM):
+    'hunterdouglas_powerview',
+    vol.Required(HUB_ADDRESS):
+    cv.string,
 })
 
 SCENE_DATA = 'sceneData'

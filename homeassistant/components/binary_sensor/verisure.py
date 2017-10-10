@@ -22,7 +22,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.extend([
             VerisureDoorWindowSensor(device_label)
             for device_label in hub.get(
-                "$.doorWindow.doorWindowDevice[*].deviceLabel")])
+                "$.doorWindow.doorWindowDevice[*].deviceLabel")
+        ])
     add_devices(sensors)
 
 

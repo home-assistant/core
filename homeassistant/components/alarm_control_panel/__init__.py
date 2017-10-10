@@ -36,10 +36,7 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_TRIGGER: 'alarm_trigger'
 }
 
-ATTR_TO_PROPERTY = [
-    ATTR_CODE,
-    ATTR_CODE_FORMAT
-]
+ATTR_TO_PROPERTY = [ATTR_CODE, ATTR_CODE_FORMAT]
 
 ALARM_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -132,8 +129,7 @@ def async_setup(hass, config):
             if not alarm.should_poll:
                 continue
 
-            update_coro = hass.async_add_job(
-                alarm.async_update_ha_state(True))
+            update_coro = hass.async_add_job(alarm.async_update_ha_state(True))
             if hasattr(alarm, 'async_update'):
                 update_tasks.append(update_coro)
             else:
@@ -142,14 +138,18 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     for service in SERVICE_TO_METHOD:
         hass.services.async_register(
-            DOMAIN, service, async_alarm_service_handler,
-            descriptions.get(service), schema=ALARM_SERVICE_SCHEMA)
+            DOMAIN,
+            service,
+            async_alarm_service_handler,
+            descriptions.get(service),
+            schema=ALARM_SERVICE_SCHEMA)
 
     return True
 

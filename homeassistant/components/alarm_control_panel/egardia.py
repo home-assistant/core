@@ -13,10 +13,10 @@ import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.exceptions as exc
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN,
-    CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
+from homeassistant.const import (CONF_PORT, CONF_HOST, CONF_PASSWORD,
+                                 CONF_USERNAME, STATE_UNKNOWN, CONF_NAME,
+                                 STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+                                 STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
 
 REQUIREMENTS = ['pythonegardia==1.0.22']
 
@@ -46,16 +46,23 @@ STATES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_REPORT_SERVER_CODES): vol.All(cv.ensure_list),
-    vol.Optional(CONF_REPORT_SERVER_ENABLED,
-                 default=DEFAULT_REPORT_SERVER_ENABLED): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_REPORT_SERVER_CODES):
+    vol.All(cv.ensure_list),
+    vol.Optional(
+        CONF_REPORT_SERVER_ENABLED, default=DEFAULT_REPORT_SERVER_ENABLED):
+    cv.boolean,
     vol.Optional(CONF_REPORT_SERVER_PORT, default=DEFAULT_REPORT_SERVER_PORT):
-        cv.port,
+    cv.port,
 })
 
 
@@ -73,23 +80,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rs_codes = config.get(CONF_REPORT_SERVER_CODES)
 
     try:
-        egardiasystem = egardiadevice.EgardiaDevice(
-            host, port, username, password, '')
+        egardiasystem = egardiadevice.EgardiaDevice(host, port, username,
+                                                    password, '')
     except requests.exceptions.RequestException:
         raise exc.PlatformNotReady()
     except egardiadevice.UnauthorizedError:
         _LOGGER.error("Unable to authorize. Wrong password or username")
         return False
 
-    add_devices([EgardiaAlarm(
-        name, egardiasystem, hass, rs_enabled, rs_port, rs_codes)], True)
+    add_devices([
+        EgardiaAlarm(name, egardiasystem, hass, rs_enabled, rs_port, rs_codes)
+    ], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem, hass, rs_enabled=False,
-                 rs_port=None, rs_codes=None):
+    def __init__(self,
+                 name,
+                 egardiasystem,
+                 hass,
+                 rs_enabled=False,
+                 rs_port=None,
+                 rs_codes=None):
         """Initialize object."""
         self._name = name
         self._egardiasystem = egardiasystem
@@ -125,8 +138,8 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def listen_to_system_status(self):
         """Subscribe to egardia_system_status event."""
-        self._hass.bus.listen(
-            'egardia_system_status', self.handle_system_status_event)
+        self._hass.bus.listen('egardia_system_status',
+                              self.handle_system_status_event)
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""

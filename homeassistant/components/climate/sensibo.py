@@ -12,10 +12,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
+                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.components.climate import (ATTR_CURRENT_HUMIDITY,
+                                              ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,13 +29,16 @@ ALL = 'all'
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_ID, default=ALL):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 _FETCH_FIELDS = ','.join([
-    'room{name}', 'measurements', 'remoteCapabilities',
-    'acState', 'connectionStatus{isAlive}'])
+    'room{name}', 'measurements', 'remoteCapabilities', 'acState',
+    'connectionStatus{isAlive}'
+])
 _INITIAL_FETCH_FIELDS = 'id,' + _FETCH_FIELDS
 
 
@@ -45,12 +48,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     import pysensibo
 
     client = pysensibo.SensiboClient(
-        config[CONF_API_KEY], session=async_get_clientsession(hass),
+        config[CONF_API_KEY],
+        session=async_get_clientsession(hass),
         timeout=TIMEOUT)
     devices = []
     try:
-        for dev in (
-                yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
+        for dev in (yield from
+                    client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL or dev['id'] in config[CONF_ID]:
                 devices.append(SensiboClimate(client, dev))
     except (aiohttp.client_exceptions.ClientConnectorError,
@@ -82,13 +86,13 @@ class SensiboClimate(ClimateDevice):
         self._status = data['connectionStatus']['isAlive']
         capabilities = data['remoteCapabilities']
         self._operations = sorted(capabilities['modes'].keys())
-        self._current_capabilities = capabilities[
-            'modes'][self.current_operation]
+        self._current_capabilities = capabilities['modes'][
+            self.current_operation]
         temperature_unit_key = self._ac_states['temperatureUnit']
         self._temperature_unit = \
             TEMP_CELSIUS if temperature_unit_key == 'C' else TEMP_FAHRENHEIT
-        self._temperatures_list = self._current_capabilities[
-            'temperatures'][temperature_unit_key]['values']
+        self._temperatures_list = self._current_capabilities['temperatures'][
+            temperature_unit_key]['values']
 
     @property
     def device_state_attributes(self):
@@ -137,10 +141,8 @@ class SensiboClimate(ClimateDevice):
         # It is always in C / nativeTemperatureUnit
         if 'nativeTemperatureUnit' not in self._ac_states:
             return self._measurements['temperature']
-        return convert_temperature(
-            self._measurements['temperature'],
-            TEMP_CELSIUS,
-            self.temperature_unit)
+        return convert_temperature(self._measurements['temperature'],
+                                   TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def operation_list(self):

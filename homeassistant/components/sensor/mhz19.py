@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME,
+                                 CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -35,10 +35,12 @@ SENSOR_TYPES = {
     SENSOR_CO2: ['CO2', 'ppm']
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_SERIAL_DEVICE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_SERIAL_DEVICE):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

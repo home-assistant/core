@@ -12,9 +12,9 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT)
+from homeassistant.const import (CONF_HOST, CONF_MAC,
+                                 CONF_MONITORED_CONDITIONS, CONF_NAME,
+                                 TEMP_CELSIUS, CONF_TIMEOUT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -36,14 +36,18 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME):
+    vol.Coerce(str),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)):
+    (vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_MAC):
+    cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int
 })
 
 
@@ -109,12 +113,17 @@ class BroadlinkData(object):
         self._device = broadlink.a1((ip_addr, 80), mac_addr)
         self._device.timeout = timeout
         self._schema = vol.Schema({
-            vol.Optional('temperature'): vol.Range(min=-50, max=150),
-            vol.Optional('humidity'): vol.Range(min=0, max=100),
-            vol.Optional('light'): vol.Any(0, 1, 2, 3),
-            vol.Optional('air_quality'): vol.Any(0, 1, 2, 3),
-            vol.Optional('noise'): vol.Any(0, 1, 2),
-            })
+            vol.Optional('temperature'):
+            vol.Range(min=-50, max=150),
+            vol.Optional('humidity'):
+            vol.Range(min=0, max=100),
+            vol.Optional('light'):
+            vol.Any(0, 1, 2, 3),
+            vol.Optional('air_quality'):
+            vol.Any(0, 1, 2, 3),
+            vol.Optional('noise'):
+            vol.Any(0, 1, 2),
+        })
         self.update = Throttle(interval)(self._update)
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
@@ -132,7 +141,7 @@ class BroadlinkData(object):
         except vol.Invalid:
             pass  # Continue quietly if device returned malformed data
         if retry > 0 and self._auth():
-            self._update(retry-1)
+            self._update(retry - 1)
 
     def _auth(self, retry=3):
         try:
@@ -140,5 +149,5 @@ class BroadlinkData(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(retry-1)
+            return self._auth(retry - 1)
         return auth

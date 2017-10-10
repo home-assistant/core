@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
@@ -21,11 +21,13 @@ BOARD = None
 
 DOMAIN = 'arduino'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_PORT): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -74,20 +76,19 @@ class ArduinoBoard(object):
     def set_mode(self, pin, direction, mode):
         """Set the mode and the direction of a given pin."""
         if mode == 'analog' and direction == 'in':
-            self._board.set_pin_mode(
-                pin, self._board.INPUT, self._board.ANALOG)
+            self._board.set_pin_mode(pin, self._board.INPUT,
+                                     self._board.ANALOG)
         elif mode == 'analog' and direction == 'out':
-            self._board.set_pin_mode(
-                pin, self._board.OUTPUT, self._board.ANALOG)
+            self._board.set_pin_mode(pin, self._board.OUTPUT,
+                                     self._board.ANALOG)
         elif mode == 'digital' and direction == 'in':
-            self._board.set_pin_mode(
-                pin, self._board.INPUT, self._board.DIGITAL)
+            self._board.set_pin_mode(pin, self._board.INPUT,
+                                     self._board.DIGITAL)
         elif mode == 'digital' and direction == 'out':
-            self._board.set_pin_mode(
-                pin, self._board.OUTPUT, self._board.DIGITAL)
+            self._board.set_pin_mode(pin, self._board.OUTPUT,
+                                     self._board.DIGITAL)
         elif mode == 'pwm':
-            self._board.set_pin_mode(
-                pin, self._board.OUTPUT, self._board.PWM)
+            self._board.set_pin_mode(pin, self._board.OUTPUT, self._board.PWM)
 
     def get_analog_inputs(self):
         """Get the values from the pins."""

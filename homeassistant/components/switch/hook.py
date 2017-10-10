@@ -22,12 +22,20 @@ HOOK_ENDPOINT = 'https://api.gethook.io/v1/'
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Exclusive(CONF_PASSWORD, 'hook_secret', msg='hook: provide ' +
-                  'username/password OR token'): cv.string,
-    vol.Exclusive(CONF_TOKEN, 'hook_secret', msg='hook: provide ' +
-                  'username/password OR token'): cv.string,
-    vol.Inclusive(CONF_USERNAME, 'hook_auth'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'hook_auth'): cv.string,
+    vol.Exclusive(
+        CONF_PASSWORD,
+        'hook_secret',
+        msg='hook: provide ' + 'username/password OR token'):
+    cv.string,
+    vol.Exclusive(
+        CONF_TOKEN,
+        'hook_secret',
+        msg='hook: provide ' + 'username/password OR token'):
+    cv.string,
+    vol.Inclusive(CONF_USERNAME, 'hook_auth'):
+    cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'hook_auth'):
+    cv.string,
 })
 
 
@@ -44,9 +52,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             with async_timeout.timeout(TIMEOUT, loop=hass.loop):
                 response = yield from websession.post(
                     '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
-                    data={
-                        'username': username,
-                        'password': password})
+                    data={'username': username,
+                          'password': password})
             # The Hook API returns JSON but calls it 'text/html'.  Setting
             # content_type=None disables aiohttp's content-type validation.
             data = yield from response.json(content_type=None)
@@ -71,13 +78,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     async_add_devices(
-        HookSmartHome(
-            hass,
-            token,
-            d['device_id'],
-            d['device_name'])
-        for lst in data['data']
-        for d in lst)
+        HookSmartHome(hass, token, d['device_id'], d['device_name'])
+        for lst in data['data'] for d in lst)
 
 
 class HookSmartHome(SwitchDevice):
@@ -90,8 +92,8 @@ class HookSmartHome(SwitchDevice):
         self._state = False
         self._id = device_id
         self._name = device_name
-        _LOGGER.debug(
-            "Creating Hook object: ID: %s  Name: %s", self._id, self._name)
+        _LOGGER.debug("Creating Hook object: ID: %s  Name: %s", self._id,
+                      self._name)
 
     @property
     def name(self):
@@ -125,8 +127,8 @@ class HookSmartHome(SwitchDevice):
     def async_turn_on(self, **kwargs):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
-        url = '{}{}{}{}'.format(
-            HOOK_ENDPOINT, 'device/trigger/', self._id, '/On')
+        url = '{}{}{}{}'.format(HOOK_ENDPOINT, 'device/trigger/', self._id,
+                                '/On')
         success = yield from self._send(url)
         self._state = success
 
@@ -134,8 +136,8 @@ class HookSmartHome(SwitchDevice):
     def async_turn_off(self, **kwargs):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
-        url = '{}{}{}{}'.format(
-            HOOK_ENDPOINT, 'device/trigger/', self._id, '/Off')
+        url = '{}{}{}{}'.format(HOOK_ENDPOINT, 'device/trigger/', self._id,
+                                '/Off')
         success = yield from self._send(url)
         # If it wasn't successful, keep state as true
         self._state = not success

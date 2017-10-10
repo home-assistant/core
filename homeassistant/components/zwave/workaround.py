@@ -30,11 +30,11 @@ VIZIA_DIMMER = 0x1001
 
 # Mapping devices
 PHILIO_SLIM_SENSOR_MOTION_MTII = (PHILIO, PHILIO_SENSOR, PHILIO_SLIM_SENSOR, 0)
-PHILIO_3_IN_1_SENSOR_GEN_4_MOTION_MTII = (
-    PHILIO, PHILIO_SENSOR, PHILIO_3_IN_1_SENSOR_GEN_4, 0)
+PHILIO_3_IN_1_SENSOR_GEN_4_MOTION_MTII = (PHILIO, PHILIO_SENSOR,
+                                          PHILIO_3_IN_1_SENSOR_GEN_4, 0)
 PHILIO_PAN07_MTI_INSTANCE = (PHILIO, PHILIO_SWITCH, PHILIO_PAN07, 1)
-WENZHOU_SLIM_SENSOR_MOTION_MTII = (
-    WENZHOU, PHILIO_SENSOR, PHILIO_SLIM_SENSOR, 0)
+WENZHOU_SLIM_SENSOR_MOTION_MTII = (WENZHOU, PHILIO_SENSOR, PHILIO_SLIM_SENSOR,
+                                   0)
 
 # Workarounds
 WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
@@ -62,24 +62,22 @@ DEVICE_MAPPINGS_MT = {
 }
 
 # Component mapping devices
-FIBARO_FGFS101_SENSOR_ALARM = (
-    FIBARO, FGFS101_FLOOD_SENSOR_TYPE, const.COMMAND_CLASS_SENSOR_ALARM)
-FIBARO_FGRM222_BINARY = (
-    FIBARO, FGRM222_SHUTTER2, const.COMMAND_CLASS_SWITCH_BINARY)
-FIBARO_FGR222_BINARY = (
-    FIBARO, FGR222_SHUTTER2, const.COMMAND_CLASS_SWITCH_BINARY)
-GE_FAN_CONTROLLER_12730_MULTILEVEL = (
-    GE, GE_DIMMER, GE_FAN_CONTROLLER_12730,
-    const.COMMAND_CLASS_SWITCH_MULTILEVEL)
-GE_FAN_CONTROLLER_14287_MULTILEVEL = (
-    GE, GE_DIMMER, GE_FAN_CONTROLLER_14287,
-    const.COMMAND_CLASS_SWITCH_MULTILEVEL)
-JASCO_FAN_CONTROLLER_14314_MULTILEVEL = (
-    GE, GE_DIMMER, JASCO_FAN_CONTROLLER_14314,
-    const.COMMAND_CLASS_SWITCH_MULTILEVEL)
-VIZIA_FAN_CONTROLLER_VRF01_MULTILEVEL = (
-    VIZIA, VIZIA_DIMMER, VIZIA_FAN_CONTROLLER_VRF01,
-    const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+FIBARO_FGFS101_SENSOR_ALARM = (FIBARO, FGFS101_FLOOD_SENSOR_TYPE,
+                               const.COMMAND_CLASS_SENSOR_ALARM)
+FIBARO_FGRM222_BINARY = (FIBARO, FGRM222_SHUTTER2,
+                         const.COMMAND_CLASS_SWITCH_BINARY)
+FIBARO_FGR222_BINARY = (FIBARO, FGR222_SHUTTER2,
+                        const.COMMAND_CLASS_SWITCH_BINARY)
+GE_FAN_CONTROLLER_12730_MULTILEVEL = (GE, GE_DIMMER, GE_FAN_CONTROLLER_12730,
+                                      const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+GE_FAN_CONTROLLER_14287_MULTILEVEL = (GE, GE_DIMMER, GE_FAN_CONTROLLER_14287,
+                                      const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+JASCO_FAN_CONTROLLER_14314_MULTILEVEL = (GE, GE_DIMMER,
+                                         JASCO_FAN_CONTROLLER_14314,
+                                         const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+VIZIA_FAN_CONTROLLER_VRF01_MULTILEVEL = (VIZIA, VIZIA_DIMMER,
+                                         VIZIA_FAN_CONTROLLER_VRF01,
+                                         const.COMMAND_CLASS_SWITCH_MULTILEVEL)
 
 # List of component workarounds by
 # (manufacturer_id, product_type, command_class)
@@ -101,13 +99,13 @@ DEVICE_COMPONENT_MAPPING_MTI = {
 
 def get_device_component_mapping(value):
     """Get mapping of value to another component."""
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_type.strip()):
+    if (value.node.manufacturer_id.strip()
+            and value.node.product_type.strip()):
         manufacturer_id = int(value.node.manufacturer_id, 16)
         product_type = int(value.node.product_type, 16)
         product_id = int(value.node.product_id, 16)
-        result = DEVICE_COMPONENT_MAPPING.get(
-            (manufacturer_id, product_type, value.command_class))
+        result = DEVICE_COMPONENT_MAPPING.get((manufacturer_id, product_type,
+                                               value.command_class))
         if result:
             return result
 
@@ -121,14 +119,13 @@ def get_device_component_mapping(value):
 
 def get_device_mapping(value):
     """Get mapping of value to a workaround."""
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_id.strip() and
-            value.node.product_type.strip()):
+    if (value.node.manufacturer_id.strip() and value.node.product_id.strip()
+            and value.node.product_type.strip()):
         manufacturer_id = int(value.node.manufacturer_id, 16)
         product_type = int(value.node.product_type, 16)
         product_id = int(value.node.product_id, 16)
-        result = DEVICE_MAPPINGS_MTII.get(
-            (manufacturer_id, product_type, product_id, value.index))
+        result = DEVICE_MAPPINGS_MTII.get((manufacturer_id, product_type,
+                                           product_id, value.index))
         if result:
             return result
 

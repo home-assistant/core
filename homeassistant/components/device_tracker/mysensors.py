@@ -13,18 +13,20 @@ from homeassistant.util import slugify
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the MySensors device scanner."""
     new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsDeviceScanner,
+        hass,
+        DOMAIN,
+        discovery_info,
+        MySensorsDeviceScanner,
         device_args=(see, ))
     if not new_devices:
         return False
 
     for device in new_devices:
-        dev_id = (
-            id(device.gateway), device.node_id, device.child_id,
-            device.value_type)
-        dispatcher_connect(
-            hass, mysensors.SIGNAL_CALLBACK.format(*dev_id),
-            device.update_callback)
+        dev_id = (id(device.gateway), device.node_id, device.child_id,
+                  device.value_type)
+        dispatcher_connect(hass,
+                           mysensors.SIGNAL_CALLBACK.format(*dev_id),
+                           device.update_callback)
 
     return True
 
@@ -50,5 +52,4 @@ class MySensorsDeviceScanner(mysensors.MySensorsDevice):
             host_name=self.name,
             gps=(latitude, longitude),
             battery=node.battery_level,
-            attributes=self.device_state_attributes
-        )
+            attributes=self.device_state_attributes)

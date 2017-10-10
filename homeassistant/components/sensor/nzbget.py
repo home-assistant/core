@@ -11,9 +11,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
-    CONF_SSL, CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_NAME, CONF_PORT, CONF_SSL,
+                                 CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -38,14 +38,20 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=['download_rate']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=False):
+    cv.boolean,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
 })
 
 
@@ -74,7 +80,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for ng_type in monitored_types:
         new_sensor = NZBGetSensor(
-            api=nzbgetapi, sensor_type=SENSOR_TYPES.get(ng_type),
+            api=nzbgetapi,
+            sensor_type=SENSOR_TYPES.get(ng_type),
             client_name=name)
         devices.append(new_sensor)
 
@@ -161,8 +168,11 @@ class NZBGetAPI(object):
             payload['params'] = params
         try:
             response = requests.post(
-                self.api_url, json=payload, auth=self.auth,
-                headers=self.headers, timeout=5)
+                self.api_url,
+                json=payload,
+                auth=self.auth,
+                headers=self.headers,
+                timeout=5)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.ConnectionError as conn_exc:

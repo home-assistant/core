@@ -8,8 +8,8 @@ import logging
 import asyncio
 
 from homeassistant.components.eight_sleep import (
-    DATA_EIGHT, EightSleepHeatEntity, EightSleepUserEntity,
-    CONF_SENSORS, NAME_MAP)
+    DATA_EIGHT, EightSleepHeatEntity, EightSleepUserEntity, CONF_SENSORS,
+    NAME_MAP)
 
 DEPENDENCIES = ['eight_sleep']
 
@@ -80,8 +80,8 @@ class EightHeatSensor(EightSleepHeatEntity):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug("Heat Sensor: %s, Side: %s, User: %s",
-                      self._sensor, self._side, self._userid)
+        _LOGGER.debug("Heat Sensor: %s, Side: %s, User: %s", self._sensor,
+                      self._side, self._userid)
 
     @property
     def name(self):
@@ -134,8 +134,8 @@ class EightUserSensor(EightSleepUserEntity):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug("User Sensor: %s, Side: %s, User: %s",
-                      self._sensor, self._side, self._userid)
+        _LOGGER.debug("User Sensor: %s, Side: %s, User: %s", self._sensor,
+                      self._side, self._userid)
 
     @property
     def name(self):
@@ -179,7 +179,7 @@ class EightUserSensor(EightSleepUserEntity):
             if self._units == 'si':
                 self._state = round(temp, 2)
             else:
-                self._state = round((temp*1.8)+32, 2)
+                self._state = round((temp * 1.8) + 32, 2)
         elif 'sleep_stage' in self._sensor:
             self._state = self._usrobj.current_values['stage']
 
@@ -198,13 +198,13 @@ class EightUserSensor(EightSleepUserEntity):
             self._attr['breakdown']['awake']
         state_attr[ATTR_SLEEP_DUR] = sleep_time
         try:
-            state_attr[ATTR_LIGHT_PERC] = round((
-                self._attr['breakdown']['light'] / sleep_time) * 100, 2)
+            state_attr[ATTR_LIGHT_PERC] = round(
+                (self._attr['breakdown']['light'] / sleep_time) * 100, 2)
         except ZeroDivisionError:
             state_attr[ATTR_LIGHT_PERC] = 0
         try:
-            state_attr[ATTR_DEEP_PERC] = round((
-                self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
+            state_attr[ATTR_DEEP_PERC] = round(
+                (self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
         except ZeroDivisionError:
             state_attr[ATTR_DEEP_PERC] = 0
 
@@ -212,8 +212,8 @@ class EightUserSensor(EightSleepUserEntity):
             room_temp = round(self._attr['room_temp'], 2)
             bed_temp = round(self._attr['bed_temp'], 2)
         else:
-            room_temp = round((self._attr['room_temp']*1.8)+32, 2)
-            bed_temp = round((self._attr['bed_temp']*1.8)+32, 2)
+            room_temp = round((self._attr['room_temp'] * 1.8) + 32, 2)
+            bed_temp = round((self._attr['bed_temp'] * 1.8) + 32, 2)
 
         if 'current' in self._sensor_root:
             state_attr[ATTR_RESP_RATE] = round(self._attr['resp_rate'], 2)
@@ -223,8 +223,8 @@ class EightUserSensor(EightSleepUserEntity):
             state_attr[ATTR_BED_TEMP] = bed_temp
         elif 'last' in self._sensor_root:
             state_attr[ATTR_AVG_RESP_RATE] = round(self._attr['resp_rate'], 2)
-            state_attr[ATTR_AVG_HEART_RATE] = round(
-                self._attr['heart_rate'], 2)
+            state_attr[ATTR_AVG_HEART_RATE] = round(self._attr['heart_rate'],
+                                                    2)
             state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
 
@@ -263,7 +263,7 @@ class EightRoomSensor(EightSleepUserEntity):
         if self._units == 'si':
             self._state = round(temp, 2)
         else:
-            self._state = round((temp*1.8)+32, 2)
+            self._state = round((temp * 1.8) + 32, 2)
 
     @property
     def unit_of_measurement(self):

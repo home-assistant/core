@@ -7,8 +7,8 @@ https://home-assistant.io/components/cover.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
-from homeassistant.components.cover import (
-    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
+from homeassistant.components.cover import (DOMAIN, SUPPORT_OPEN,
+                                            SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import

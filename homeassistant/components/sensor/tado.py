@@ -18,8 +18,10 @@ ATTR_ID = 'id'
 ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
-SENSOR_TYPES = ['temperature', 'humidity', 'power',
-                'link', 'heating', 'tado mode', 'overlay']
+SENSOR_TYPES = [
+    'temperature', 'humidity', 'power', 'link', 'heating', 'tado mode',
+    'overlay'
+]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,14 +38,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for zone in zones:
         if zone['type'] == 'HEATING':
             for variable in SENSOR_TYPES:
-                sensor_items.append(create_zone_sensor(
-                    tado, zone, zone['name'], zone['id'],
-                    variable))
+                sensor_items.append(
+                    create_zone_sensor(tado, zone, zone['name'], zone['id'],
+                                       variable))
 
     me_data = tado.get_me()
-    sensor_items.append(create_device_sensor(
-        tado, me_data, me_data['homes'][0]['name'],
-        me_data['homes'][0]['id'], "tado bridge status"))
+    sensor_items.append(
+        create_device_sensor(tado, me_data, me_data['homes'][0]['name'],
+                             me_data['homes'][0]['id'], "tado bridge status"))
 
     if sensor_items:
         add_devices(sensor_items, True)
@@ -154,8 +156,7 @@ class TadoSensor(Entity):
                 self._state = self.hass.config.units.temperature(
                     temperature, unit)
                 self._state_attributes = {
-                    "time":
-                        sensor_data['insideTemperature']['timestamp'],
+                    "time": sensor_data['insideTemperature']['timestamp'],
                     "setting": 0  # setting is used in climate device
                 }
 
@@ -172,8 +173,7 @@ class TadoSensor(Entity):
         elif self.zone_variable == 'humidity':
             if 'sensorDataPoints' in data:
                 sensor_data = data['sensorDataPoints']
-                self._state = float(
-                    sensor_data['humidity']['percentage'])
+                self._state = float(sensor_data['humidity']['percentage'])
                 self._state_attributes = {
                     "time": sensor_data['humidity']['timestamp'],
                 }

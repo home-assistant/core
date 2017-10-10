@@ -11,11 +11,10 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
+from homeassistant.components.ffmpeg import (DATA_FFMPEG, CONF_INPUT,
+                                             CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import (
-    async_aiohttp_proxy_stream)
+from homeassistant.helpers.aiohttp_client import (async_aiohttp_proxy_stream)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +22,12 @@ DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'FFmpeg'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INPUT): cv.string,
-    vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_INPUT):
+    cv.string,
+    vol.Optional(CONF_EXTRA_ARGUMENTS):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -56,7 +58,8 @@ class FFmpegCamera(Camera):
         ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
 
         image = yield from ffmpeg.get_image(
-            self._input, output_format=IMAGE_JPEG,
+            self._input,
+            output_format=IMAGE_JPEG,
             extra_cmd=self._extra_arguments)
         return image
 

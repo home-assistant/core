@@ -7,10 +7,9 @@ https://home-assistant.io/components/light.abode/
 import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
-
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
 
 DEPENDENCIES = ['abode']
 
@@ -44,8 +43,8 @@ class AbodeLight(AbodeDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        if (ATTR_RGB_COLOR in kwargs and
-                self._device.is_dimmable and self._device.has_color):
+        if (ATTR_RGB_COLOR in kwargs and self._device.is_dimmable
+                and self._device.has_color):
             self._device.set_color(kwargs[ATTR_RGB_COLOR])
         elif ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             self._device.set_level(kwargs[ATTR_BRIGHTNESS])

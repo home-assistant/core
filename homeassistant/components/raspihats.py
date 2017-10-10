@@ -8,12 +8,10 @@ import logging
 import threading
 import time
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['raspihats==2.2.3',
-                'smbus-cffi==0.5.1']
+REQUIREMENTS = ['raspihats==2.2.3', 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +26,7 @@ CONF_INVERT_LOGIC = 'invert_logic'
 CONF_INITIAL_STATE = 'initial_state'
 
 I2C_HAT_NAMES = [
-    'Di16', 'Rly10', 'Di6Rly6',
-    'DI16ac', 'DQ10rly', 'DQ16oc', 'DI6acDQ6rly'
+    'Di16', 'Rly10', 'Di6Rly6', 'DI16ac', 'DQ10rly', 'DQ16oc', 'DI6acDQ6rly'
 ]
 
 I2C_HATS_MANAGER = 'I2CH_MNG'
@@ -96,7 +93,7 @@ class I2CHatsDIScanner(object):
             digital_inputs = getattr(i2c_hat, self._DIGITAL_INPUTS)
             callbacks = getattr(digital_inputs, self._CALLBACKS)
             old_value = getattr(digital_inputs, self._OLD_VALUE)
-            value = digital_inputs.value    # i2c data transfer
+            value = digital_inputs.value  # i2c data transfer
             if old_value is not None and value != old_value:
                 for channel in range(0, len(digital_inputs.channels)):
                     state = (value >> channel) & 0x01
@@ -141,17 +138,14 @@ class I2CHatsManager(threading.Thread):
                 self._i2c_hats[address] = i2c_hat
                 status_word = i2c_hat.status  # read status_word to reset bits
                 _LOGGER.info(
-                    log_message(self, i2c_hat, "registered", status_word)
-                )
+                    log_message(self, i2c_hat, "registered", status_word))
 
     def run(self):
         """Keep alive for I2C-HATs."""
         # pylint: disable=import-error
         from raspihats.i2c_hats import ResponseException
 
-        _LOGGER.info(
-            log_message(self, "starting")
-        )
+        _LOGGER.info(log_message(self, "starting"))
         while self._run:
             with self._lock:
                 for i2c_hat in list(self._i2c_hats.values()):
@@ -162,8 +156,7 @@ class I2CHatsManager(threading.Thread):
                         if hasattr(i2c_hat, self._EXCEPTION):
                             if getattr(i2c_hat, self._EXCEPTION) is not None:
                                 _LOGGER.warning(
-                                    log_message(self, i2c_hat, "online again")
-                                )
+                                    log_message(self, i2c_hat, "online again"))
                             delattr(i2c_hat, self._EXCEPTION)
                             # trigger online callbacks
                             callbacks = getattr(i2c_hat, self._CALLBACKS)
@@ -171,22 +164,16 @@ class I2CHatsManager(threading.Thread):
                                 callback()
                     except ResponseException as ex:
                         if not hasattr(i2c_hat, self._EXCEPTION):
-                            _LOGGER.error(
-                                log_message(self, i2c_hat, ex)
-                            )
+                            _LOGGER.error(log_message(self, i2c_hat, ex))
                         setattr(i2c_hat, self._EXCEPTION, ex)
             time.sleep(0.05)
-        _LOGGER.info(
-            log_message(self, "exiting")
-        )
+        _LOGGER.info(log_message(self, "exiting"))
 
     def _read_status(self, i2c_hat):
         """Read I2C-HATs status."""
         status_word = i2c_hat.status
         if status_word.value != 0x00:
-            _LOGGER.error(
-                log_message(self, i2c_hat, status_word)
-            )
+            _LOGGER.error(log_message(self, i2c_hat, status_word))
 
     def start_keep_alive(self):
         """Start keep alive mechanism."""

@@ -25,11 +25,13 @@ DOMAIN = 'scsgate'
 
 SCSGATE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_DEVICE): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SCSGATE_SCHEMA = vol.Schema({
     vol.Required(CONF_SCS_ID): cv.string,
@@ -77,7 +79,8 @@ class SCSGate(object):
 
         from scsgate.reactor import Reactor
         self._reactor = Reactor(
-            connection=connection, logger=self._logger,
+            connection=connection,
+            logger=self._logger,
             handle_message=self.handle_message)
 
     def handle_message(self, message):
@@ -87,8 +90,7 @@ class SCSGate(object):
         self._logger.debug("Received message {}".format(message))
         if not isinstance(message, StateMessage) and \
            not isinstance(message, ScenarioTriggeredMessage):
-            msg = "Ignored message {} - not releavant type".format(
-                message)
+            msg = "Ignored message {} - not releavant type".format(message)
             self._logger.debug(msg)
             return
 

@@ -30,12 +30,18 @@ ICON = 'mdi:taxi'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERVER_TOKEN): cv.string,
-    vol.Optional(CONF_START_LATITUDE): cv.latitude,
-    vol.Optional(CONF_START_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_END_LATITUDE): cv.latitude,
-    vol.Optional(CONF_END_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_SERVER_TOKEN):
+    cv.string,
+    vol.Optional(CONF_START_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_START_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_END_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_END_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_PRODUCT_IDS):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -51,8 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = UberEstimate(
-        session, start_latitude, start_longitude, end_latitude, end_longitude)
+    timeandpriceest = UberEstimate(session, start_latitude, start_longitude,
+                                   end_latitude, end_longitude)
 
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
@@ -62,8 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if product.get('price_details') is not None \
                 and product['display_name'] != 'TAXI':
-            dev.append(UberSensor(
-                'price', timeandpriceest, product_id, product))
+            dev.append(
+                UberSensor('price', timeandpriceest, product_id, product))
 
     add_devices(dev, True)
 
@@ -77,8 +83,8 @@ class UberSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(
-            self._product['display_name'], self._sensortype)
+        self._name = '{} {}'.format(self._product['display_name'],
+                                    self._sensortype)
         if self._sensortype == 'time':
             self._unit_of_measurement = 'min'
             time_estimate = self._product.get('time_estimate_seconds', 0)
@@ -178,8 +184,12 @@ class UberSensor(Entity):
 class UberEstimate(object):
     """The class for handling the time and price estimate."""
 
-    def __init__(self, session, start_latitude, start_longitude,
-                 end_latitude=None, end_longitude=None):
+    def __init__(self,
+                 session,
+                 start_latitude,
+                 start_longitude,
+                 end_latitude=None,
+                 end_longitude=None):
         """Initialize the UberEstimate object."""
         self._session = session
         self.start_latitude = start_latitude
@@ -197,8 +207,8 @@ class UberEstimate(object):
 
         self.products = {}
 
-        products_response = client.get_products(
-            self.start_latitude, self.start_longitude)
+        products_response = client.get_products(self.start_latitude,
+                                                self.start_longitude)
 
         products = products_response.json.get('products')
 
@@ -207,8 +217,8 @@ class UberEstimate(object):
 
         if self.end_latitude is not None and self.end_longitude is not None:
             price_response = client.get_price_estimates(
-                self.start_latitude, self.start_longitude,
-                self.end_latitude, self.end_longitude)
+                self.start_latitude, self.start_longitude, self.end_latitude,
+                self.end_longitude)
 
             prices = price_response.json.get('prices', [])
 

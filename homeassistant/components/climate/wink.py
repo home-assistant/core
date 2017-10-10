@@ -9,15 +9,12 @@ import asyncio
 
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, STATE_FAN_ONLY,
-    ATTR_CURRENT_HUMIDITY, STATE_ECO, STATE_ELECTRIC,
-    STATE_PERFORMANCE, STATE_HIGH_DEMAND,
-    STATE_HEAT_PUMP, STATE_GAS)
-from homeassistant.const import (
-    TEMP_CELSIUS, STATE_ON,
-    STATE_OFF, STATE_UNKNOWN)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice, ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW, ATTR_TEMPERATURE, STATE_FAN_ONLY,
+    ATTR_CURRENT_HUMIDITY, STATE_ECO, STATE_ELECTRIC, STATE_PERFORMANCE,
+    STATE_HIGH_DEMAND, STATE_HEAT_PUMP, STATE_GAS)
+from homeassistant.const import (TEMP_CELSIUS, STATE_ON, STATE_OFF,
+                                 STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,17 +24,19 @@ SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
-HA_STATE_TO_WINK = {STATE_AUTO: 'auto',
-                    STATE_ECO: 'eco',
-                    STATE_FAN_ONLY: 'fan_only',
-                    STATE_HEAT: 'heat_only',
-                    STATE_COOL: 'cool_only',
-                    STATE_PERFORMANCE: 'performance',
-                    STATE_HIGH_DEMAND: 'high_demand',
-                    STATE_HEAT_PUMP: 'heat_pump',
-                    STATE_ELECTRIC: 'electric_only',
-                    STATE_GAS: 'gas',
-                    STATE_OFF: 'off'}
+HA_STATE_TO_WINK = {
+    STATE_AUTO: 'auto',
+    STATE_ECO: 'eco',
+    STATE_FAN_ONLY: 'fan_only',
+    STATE_HEAT: 'heat_only',
+    STATE_COOL: 'cool_only',
+    STATE_PERFORMANCE: 'performance',
+    STATE_HIGH_DEMAND: 'high_demand',
+    STATE_HEAT_PUMP: 'heat_pump',
+    STATE_ELECTRIC: 'electric_only',
+    STATE_GAS: 'gas',
+    STATE_OFF: 'off'
+}
 WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
 ATTR_EXTERNAL_TEMPERATURE = "external_temperature"

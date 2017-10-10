@@ -26,35 +26,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['switch']:
             model = device['model']
             if model == 'plug':
-                devices.append(XiaomiGenericSwitch(device, "Plug", 'status',
-                                                   True, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, "Plug", 'status', True,
+                                        gateway))
             elif model == 'ctrl_neutral1':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
-                                                   'channel_0',
-                                                   False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch', 'channel_0',
+                                        False, gateway))
             elif model == 'ctrl_ln1':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch LN',
-                                                   'channel_0',
-                                                   False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch LN', 'channel_0',
+                                        False, gateway))
             elif model == 'ctrl_neutral2':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
-                                                   'channel_0',
-                                                   False, gateway))
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
-                                                   'channel_1',
-                                                   False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch Left',
+                                        'channel_0', False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch Right',
+                                        'channel_1', False, gateway))
             elif model == 'ctrl_ln2':
-                devices.append(XiaomiGenericSwitch(device,
-                                                   'Wall Switch LN Left',
-                                                   'channel_0',
-                                                   False, gateway))
-                devices.append(XiaomiGenericSwitch(device,
-                                                   'Wall Switch LN Right',
-                                                   'channel_1',
-                                                   False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch LN Left',
+                                        'channel_0', False, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Switch LN Right',
+                                        'channel_1', False, gateway))
             elif model == '86plug':
-                devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   'status', True, gateway))
+                devices.append(
+                    XiaomiGenericSwitch(device, 'Wall Plug', 'status', True,
+                                        gateway))
     add_devices(devices)
 
 
@@ -87,9 +87,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._supports_power_consumption:
-            attrs = {ATTR_IN_USE: self._in_use,
-                     ATTR_LOAD_POWER: self._load_power,
-                     ATTR_POWER_CONSUMED: self._power_consumed}
+            attrs = {
+                ATTR_IN_USE: self._in_use,
+                ATTR_LOAD_POWER: self._load_power,
+                ATTR_POWER_CONSUMED: self._power_consumed
+            }
         else:
             attrs = {}
         attrs.update(super().device_state_attributes)

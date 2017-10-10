@@ -29,7 +29,9 @@ PIN_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PINS):
-        vol.Schema({cv.positive_int: PIN_SCHEMA}),
+    vol.Schema({
+        cv.positive_int: PIN_SCHEMA
+    }),
 })
 
 

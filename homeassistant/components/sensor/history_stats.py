@@ -14,9 +14,8 @@ import homeassistant.components.history as history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE,
-    EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (CONF_NAME, CONF_ENTITY_ID, CONF_STATE,
+                                 CONF_TYPE, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
@@ -37,11 +36,7 @@ CONF_TYPE_COUNT = 'count'
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = 'unnamed statistics'
-UNITS = {
-    CONF_TYPE_TIME: 'h',
-    CONF_TYPE_RATIO: '%',
-    CONF_TYPE_COUNT: ''
-}
+UNITS = {CONF_TYPE_TIME: 'h', CONF_TYPE_RATIO: '%', CONF_TYPE_COUNT: ''}
 ICON = 'mdi:chart-line'
 
 ATTR_VALUE = 'value'
@@ -61,15 +56,23 @@ def exactly_two_period_keys(conf):
     return conf
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_STATE): cv.string,
-    vol.Optional(CONF_START, default=None): cv.template,
-    vol.Optional(CONF_END, default=None): cv.template,
-    vol.Optional(CONF_DURATION, default=None): cv.time_period,
-    vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-}), exactly_two_period_keys)
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Required(CONF_ENTITY_ID):
+        cv.entity_id,
+        vol.Required(CONF_STATE):
+        cv.string,
+        vol.Optional(CONF_START, default=None):
+        cv.template,
+        vol.Optional(CONF_END, default=None):
+        cv.template,
+        vol.Optional(CONF_DURATION, default=None):
+        cv.time_period,
+        vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME):
+        vol.In(CONF_TYPE_KEYS),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+        cv.string,
+    }), exactly_two_period_keys)
 
 
 # noinspection PyUnusedLocal
@@ -87,8 +90,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_devices([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+    add_devices([
+        HistoryStatsSensor(hass, entity_id, entity_state, start, end, duration,
+                           sensor_type, name)
+    ])
 
     return True
 
@@ -96,9 +101,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HistoryStatsSensor(Entity):
     """Representation of a HistoryStats sensor."""
 
-    def __init__(
-            self, hass, entity_id, entity_state, start, end, duration,
-            sensor_type, name):
+    def __init__(self, hass, entity_id, entity_state, start, end, duration,
+                 sensor_type, name):
         """Initialize the HistoryStats sensor."""
         self._hass = hass
 
@@ -204,8 +208,8 @@ class HistoryStatsSensor(Entity):
 
         # Get the first state
         last_state = history.get_state(self.hass, start, self._entity_id)
-        last_state = (last_state is not None and
-                      last_state == self._entity_state)
+        last_state = (last_state is not None
+                      and last_state == self._entity_state)
         last_time = start_timestamp
         elapsed = 0
         count = 0
@@ -249,8 +253,9 @@ class HistoryStatsSensor(Entity):
             start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
-                    start = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(start_rendered))))
+                    start = dt_util.as_local(
+                        dt_util.utc_from_timestamp(
+                            math.floor(float(start_rendered))))
                 except ValueError:
                     _LOGGER.error("Parsing error: start must be a datetime"
                                   "or a timestamp")
@@ -266,8 +271,9 @@ class HistoryStatsSensor(Entity):
             end = dt_util.parse_datetime(end_rendered)
             if end is None:
                 try:
-                    end = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(end_rendered))))
+                    end = dt_util.as_local(
+                        dt_util.utc_from_timestamp(
+                            math.floor(float(end_rendered))))
                 except ValueError:
                     _LOGGER.error("Parsing error: end must be a datetime "
                                   "or a timestamp")

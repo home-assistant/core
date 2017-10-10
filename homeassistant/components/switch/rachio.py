@@ -21,9 +21,10 @@ MIN_UPDATE_INTERVAL = timedelta(seconds=30)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN):
+    cv.string,
     vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS):
-        cv.positive_int
+    cv.positive_int
 })
 
 
@@ -77,8 +78,10 @@ def _get_person(rachio):
 
 def _list_devices(rachio, manual_run_mins):
     """Pull a list of devices on the account."""
-    return [RachioIro(rachio, d['id'], manual_run_mins)
-            for d in _get_person(rachio)['devices']]
+    return [
+        RachioIro(rachio, d['id'], manual_run_mins)
+        for d in _get_person(rachio)['devices']
+    ]
 
 
 class RachioIro(object):
@@ -130,9 +133,10 @@ class RachioIro(object):
     def list_zones(self, include_disabled=False):
         """A list of the zones connected to the device and their data."""
         if not self._zones:
-            self._zones = [RachioZone(self.rachio, self, zone['id'],
-                                      self.manual_run_mins)
-                           for zone in self._device['zones']]
+            self._zones = [
+                RachioZone(self.rachio, self, zone['id'], self.manual_run_mins)
+                for zone in self._device['zones']
+            ]
 
         if include_disabled:
             return self._zones
@@ -178,8 +182,7 @@ class RachioZone(SwitchDevice):
     def unique_id(self):
         """Generate a unique string ID for the zone."""
         return '{iro}-{zone}'.format(
-            iro=self._device.device_id,
-            zone=self.zone_id)
+            iro=self._device.device_id, zone=self.zone_id)
 
     @property
     def number(self):

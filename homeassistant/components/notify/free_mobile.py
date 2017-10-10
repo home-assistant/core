@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.components.notify import (PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -18,15 +18,17 @@ REQUIREMENTS = ['freesms==0.1.1']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_ACCESS_TOKEN):
+    cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Free Mobile SMS notification service."""
-    return FreeSMSNotificationService(
-        config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
+    return FreeSMSNotificationService(config[CONF_USERNAME],
+                                      config[CONF_ACCESS_TOKEN])
 
 
 class FreeSMSNotificationService(BaseNotificationService):

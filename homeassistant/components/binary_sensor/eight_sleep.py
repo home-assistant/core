@@ -50,8 +50,8 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug("Presence Sensor: %s, Side: %s, User: %s",
-                      self._sensor, self._side, self._userid)
+        _LOGGER.debug("Presence Sensor: %s, Side: %s, User: %s", self._sensor,
+                      self._side, self._userid)
 
     @property
     def name(self):

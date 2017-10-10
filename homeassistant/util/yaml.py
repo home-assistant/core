@@ -141,19 +141,19 @@ def _include_dir_merge_named_yaml(loader: SafeLineLoader,
     return _add_reference(mapping, loader, node)
 
 
-def _include_dir_list_yaml(loader: SafeLineLoader,
-                           node: yaml.nodes.Node):
+def _include_dir_list_yaml(loader: SafeLineLoader, node: yaml.nodes.Node):
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.name), node.value)
-    return [load_yaml(f) for f in _find_files(loc, '*.yaml')
-            if os.path.basename(f) != SECRET_YAML]
+    return [
+        load_yaml(f) for f in _find_files(loc, '*.yaml')
+        if os.path.basename(f) != SECRET_YAML
+    ]
 
 
 def _include_dir_merge_list_yaml(loader: SafeLineLoader,
                                  node: yaml.nodes.Node):
     """Load multiple files from directory as a merged list."""
-    loc = os.path.join(os.path.dirname(loader.name),
-                       node.value)  # type: str
+    loc = os.path.join(os.path.dirname(loader.name), node.value)  # type: str
     merged_list = []  # type: List
     for fname in _find_files(loc, '*.yaml'):
         if os.path.basename(fname) == SECRET_YAML:
@@ -180,14 +180,13 @@ def _ordered_dict(loader: SafeLineLoader,
             fname = getattr(loader.stream, 'name', '')
             raise yaml.MarkedYAMLError(
                 context="invalid key: \"{}\"".format(key),
-                context_mark=yaml.Mark(fname, 0, line, -1, None, None)
-            )
+                context_mark=yaml.Mark(fname, 0, line, -1, None, None))
 
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
-            _LOGGER.error(
-                'YAML file %s contains duplicate key "%s". '
-                'Check lines %d and %d.', fname, key, seen[key], line)
+            _LOGGER.error('YAML file %s contains duplicate key "%s". '
+                          'Check lines %d and %d.', fname, key, seen[key],
+                          line)
         seen[key] = line
 
     return _add_reference(OrderedDict(nodes), loader, node)
@@ -199,8 +198,7 @@ def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node):
     return _add_reference(obj, loader, node)
 
 
-def _env_var_yaml(loader: SafeLineLoader,
-                  node: yaml.nodes.Node):
+def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
     args = node.value.split()
 
@@ -238,8 +236,7 @@ def _load_secret_yaml(secret_path: str) -> Dict:
 
 
 # pylint: disable=protected-access
-def _secret_yaml(loader: SafeLineLoader,
-                 node: yaml.nodes.Node):
+def _secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
     while True:
@@ -313,8 +310,8 @@ def represent_odict(dump, tag, mapping, flow_style=None):
         node_value = dump.represent_data(item_value)
         if not (isinstance(node_key, yaml.ScalarNode) and not node_key.style):
             best_style = False
-        if not (isinstance(node_value, yaml.ScalarNode) and
-                not node_value.style):
+        if not (isinstance(node_value, yaml.ScalarNode)
+                and not node_value.style):
             best_style = False
         value.append((node_key, node_value))
     if flow_style is None:
@@ -327,10 +324,10 @@ def represent_odict(dump, tag, mapping, flow_style=None):
 
 yaml.SafeDumper.add_representer(
     OrderedDict,
-    lambda dumper, value:
-    represent_odict(dumper, 'tag:yaml.org,2002:map', value))
+    lambda dumper, value: represent_odict(dumper, 'tag:yaml.org,2002:map', value)
+)
 
 yaml.SafeDumper.add_representer(
     NodeListClass,
-    lambda dumper, value:
-    dumper.represent_sequence('tag:yaml.org,2002:seq', value))
+    lambda dumper, value: dumper.represent_sequence('tag:yaml.org,2002:seq', value)
+)

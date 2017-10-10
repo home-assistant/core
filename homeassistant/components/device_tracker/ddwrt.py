@@ -11,8 +11,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,9 +21,12 @@ _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string
 })
 
 
@@ -76,8 +79,9 @@ class DdWrtDeviceScanner(DeviceScanner):
                 return None
 
             # Remove leading and trailing quotes and spaces
-            cleaned_str = dhcp_leases.replace(
-                "\"", "").replace("\'", "").replace(" ", "")
+            cleaned_str = dhcp_leases.replace("\"", "").replace("\'",
+                                                                "").replace(
+                                                                    " ", "")
             elements = cleaned_str.split(',')
             num_clients = int(len(elements) / 5)
             self.mac2name = {}
@@ -117,8 +121,8 @@ class DdWrtDeviceScanner(DeviceScanner):
         clean_str = active_clients.strip().strip("'")
         elements = clean_str.split("','")
 
-        self.last_results.extend(item for item in elements
-                                 if _MAC_REGEX.match(item))
+        self.last_results.extend(
+            item for item in elements if _MAC_REGEX.match(item))
 
         return True
 
@@ -143,6 +147,4 @@ class DdWrtDeviceScanner(DeviceScanner):
 
 def _parse_ddwrt_response(data_str):
     """Parse the DD-WRT data format."""
-    return {
-        key: val for key, val in _DDWRT_DATA_REGEX
-        .findall(data_str)}
+    return {key: val for key, val in _DDWRT_DATA_REGEX.findall(data_str)}

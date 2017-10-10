@@ -6,37 +6,42 @@ https://home-assistant.io/components/switch.raspihats/
 """
 import logging
 import voluptuous as vol
-from homeassistant.const import (
-    CONF_NAME, DEVICE_DEFAULT_NAME
-)
+from homeassistant.const import (CONF_NAME, DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.raspihats import (
     CONF_I2C_HATS, CONF_BOARD, CONF_ADDRESS, CONF_CHANNELS, CONF_INDEX,
     CONF_INVERT_LOGIC, CONF_INITIAL_STATE, I2C_HAT_NAMES, I2C_HATS_MANAGER,
-    I2CHatsException
-)
+    I2CHatsException)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['raspihats']
 
 _CHANNELS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_INDEX): cv.positive_int,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
-    vol.Optional(CONF_INITIAL_STATE, default=None): cv.boolean,
+    vol.Required(CONF_INDEX):
+    cv.positive_int,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_INVERT_LOGIC, default=False):
+    cv.boolean,
+    vol.Optional(CONF_INITIAL_STATE, default=None):
+    cv.boolean,
 }])
 
 _I2C_HATS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
-    vol.Required(CONF_ADDRESS): vol.Coerce(int),
-    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
+    vol.Required(CONF_BOARD):
+    vol.In(I2C_HAT_NAMES),
+    vol.Required(CONF_ADDRESS):
+    vol.Coerce(int),
+    vol.Required(CONF_CHANNELS):
+    _CHANNELS_SCHEMA
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_I2C_HATS): _I2C_HATS_SCHEMA,
+    vol.Optional(CONF_I2C_HATS):
+    _I2C_HATS_SCHEMA,
 })
 
 
@@ -53,20 +58,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             I2CHatSwitch.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 switches.append(
-                    I2CHatSwitch(
-                        board,
-                        address,
-                        channel_config[CONF_INDEX],
-                        channel_config[CONF_NAME],
-                        channel_config[CONF_INVERT_LOGIC],
-                        channel_config[CONF_INITIAL_STATE]
-                    )
-                )
+                    I2CHatSwitch(board, address, channel_config[CONF_INDEX],
+                                 channel_config[CONF_NAME], channel_config[
+                                     CONF_INVERT_LOGIC], channel_config[
+                                         CONF_INITIAL_STATE]))
         except I2CHatsException as ex:
-            _LOGGER.error(
-                "Failed to register " + board + "I2CHat@" + hex(address) + " "
-                + str(ex)
-            )
+            _LOGGER.error("Failed to register " + board + "I2CHat@" +
+                          hex(address) + " " + str(ex))
     add_devices(switches)
 
 
@@ -75,14 +73,8 @@ class I2CHatSwitch(ToggleEntity):
 
     I2C_HATS_MANAGER = None
 
-    def __init__(
-            self,
-            board,
-            address,
-            channel,
-            name,
-            invert_logic,
-            initial_state):
+    def __init__(self, board, address, channel, name, invert_logic,
+                 initial_state):
         """Initialize switch."""
         self._board = board
         self._address = address
@@ -94,21 +86,14 @@ class I2CHatSwitch(ToggleEntity):
                 state = not initial_state
             else:
                 state = initial_state
-            self.I2C_HATS_MANAGER.write_dq(
-                self._address,
-                self._channel,
-                state
-            )
+            self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
 
         def online_callback():
             """Callback fired when board is online."""
             self.schedule_update_ha_state()
 
         self.I2C_HATS_MANAGER.register_online_callback(
-            self._address,
-            self._channel,
-            online_callback
-        )
+            self._address, self._channel, online_callback)
 
     def _log_message(self, message):
         string = self._name + " "
@@ -130,43 +115,26 @@ class I2CHatSwitch(ToggleEntity):
     def is_on(self):
         """Return true if device is on."""
         try:
-            state = self.I2C_HATS_MANAGER.read_dq(
-                self._address,
-                self._channel
-            )
+            state = self.I2C_HATS_MANAGER.read_dq(self._address, self._channel)
             return state != self._invert_logic
         except I2CHatsException as ex:
-            _LOGGER.error(
-                self._log_message("Is ON check failed, " + str(ex))
-            )
+            _LOGGER.error(self._log_message("Is ON check failed, " + str(ex)))
             return False
 
     def turn_on(self):
         """Turn the device on."""
         try:
             state = True if self._invert_logic is False else False
-            self.I2C_HATS_MANAGER.write_dq(
-                self._address,
-                self._channel,
-                state
-            )
+            self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
-            _LOGGER.error(
-                self._log_message("Turn ON failed, " + str(ex))
-            )
+            _LOGGER.error(self._log_message("Turn ON failed, " + str(ex)))
 
     def turn_off(self):
         """Turn the device off."""
         try:
             state = False if self._invert_logic is False else True
-            self.I2C_HATS_MANAGER.write_dq(
-                self._address,
-                self._channel,
-                state
-            )
+            self.I2C_HATS_MANAGER.write_dq(self._address, self._channel, state)
             self.schedule_update_ha_state()
         except I2CHatsException as ex:
-            _LOGGER.error(
-                self._log_message("Turn OFF failed, " + str(ex))
-            )
+            _LOGGER.error(self._log_message("Turn OFF failed, " + str(ex)))

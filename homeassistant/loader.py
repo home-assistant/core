@@ -31,7 +31,7 @@ if False:
 
 PREPARED = False
 
-DEPENDENCY_BLACKLIST = set(('config',))
+DEPENDENCY_BLACKLIST = set(('config', ))
 
 # List of available components
 AVAILABLE_COMPONENTS = []  # type: List[str]
@@ -55,8 +55,9 @@ def prepare(hass: 'HomeAssistant'):
     AVAILABLE_COMPONENTS.clear()
 
     AVAILABLE_COMPONENTS.extend(
-        item[1] for item in
-        pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
+        item[1]
+        for item in pkgutil.iter_modules(components.__path__,
+                                         'homeassistant.components.'))
 
     # Look for available custom components
     custom_path = hass.config.path("custom_components")
@@ -126,8 +127,10 @@ def get_component(comp_name) -> Optional[ModuleType]:
     # information to track down when debugging Home Assistant.
 
     # First check custom, then built-in
-    potential_paths = ['custom_components.{}'.format(comp_name),
-                       'homeassistant.components.{}'.format(comp_name)]
+    potential_paths = [
+        'custom_components.{}'.format(comp_name),
+        'homeassistant.components.{}'.format(comp_name)
+    ]
 
     for path in potential_paths:
         # Validate here that root component exists
@@ -162,9 +165,8 @@ def get_component(comp_name) -> Optional[ModuleType]:
             # This error happens if for example custom_components/switch
             # exists and we try to load switch.demo.
             if str(err) != "No module named '{}'".format(path):
-                _LOGGER.exception(
-                    ("Error loading %s. Make sure all "
-                     "dependencies are installed"), path)
+                _LOGGER.exception(("Error loading %s. Make sure all "
+                                   "dependencies are installed"), path)
 
     _LOGGER.error("Unable to find component %s", comp_name)
 
@@ -262,16 +264,16 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
 
         # If we are already loading it, we have a circular dependency.
         if dependency in loading:
-            _LOGGER.error("Circular dependency detected: %s -> %s",
-                          comp_name, dependency)
+            _LOGGER.error("Circular dependency detected: %s -> %s", comp_name,
+                          dependency)
             return OrderedSet()
 
         dep_load_order = _load_order_component(dependency, load_order, loading)
 
         # length == 0 means error loading dependency or children
         if not dep_load_order:
-            _LOGGER.error("Error loading %s dependency: %s",
-                          comp_name, dependency)
+            _LOGGER.error("Error loading %s dependency: %s", comp_name,
+                          dependency)
             return OrderedSet()
 
         load_order.update(dep_load_order)
@@ -288,6 +290,5 @@ def _check_prepared() -> None:
     Async friendly.
     """
     if not PREPARED:
-        _LOGGER.warning((
-            "You did not call loader.prepare() yet. "
-            "Certain functionality might not be working."))
+        _LOGGER.warning(("You did not call loader.prepare() yet. "
+                         "Certain functionality might not be working."))

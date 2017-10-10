@@ -14,9 +14,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
     PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, ATTR_ENTITY_ID)
+from homeassistant.const import (STATE_ON, STATE_OFF, STATE_IDLE,
+                                 STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
+                                 CONF_PORT, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 
@@ -61,8 +61,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def _handle_service(service):
         """Handle services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        devices = [device for device in hass.data[DOMAIN]
-                   if device.entity_id in entity_ids]
+        devices = [
+            device for device in hass.data[DOMAIN]
+            if device.entity_id in entity_ids
+        ]
         for device in devices:
             if service.service == SERVICE_SNAPSHOT:
                 device.snapshot()
@@ -72,18 +74,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, _handle_service,
-        descriptions.get(SERVICE_SNAPSHOT), schema=SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_SNAPSHOT,
+        _handle_service,
+        descriptions.get(SERVICE_SNAPSHOT),
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, _handle_service,
-        descriptions.get(SERVICE_RESTORE), schema=SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_RESTORE,
+        _handle_service,
+        descriptions.get(SERVICE_RESTORE),
+        schema=SERVICE_SCHEMA)
 
     try:
         server = yield from snapcast.control.create_server(
             hass.loop, host, port)
     except socket.gaierror:
-        _LOGGER.error('Could not connect to Snapcast server at %s:%d',
-                      host, port)
+        _LOGGER.error('Could not connect to Snapcast server at %s:%d', host,
+                      port)
         return False
     groups = [SnapcastGroupDevice(group) for group in server.groups]
     clients = [SnapcastClientDevice(client) for client in server.clients]
@@ -144,9 +152,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         name = '{} {}'.format(self._group.friendly_name, GROUP_SUFFIX)
-        return {
-            'friendly_name': name
-        }
+        return {'friendly_name': name}
 
     @property
     def should_poll(self):
@@ -222,9 +228,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         name = '{} {}'.format(self._client.friendly_name, CLIENT_SUFFIX)
-        return {
-            'friendly_name': name
-        }
+        return {'friendly_name': name}
 
     @property
     def should_poll(self):

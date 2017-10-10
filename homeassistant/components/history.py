@@ -13,8 +13,8 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
+from homeassistant.const import (HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES,
+                                 CONF_EXCLUDE, CONF_INCLUDE)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
 from homeassistant.components.frontend import register_built_in_panel
@@ -27,12 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: recorder.FILTER_SCHEMA,
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: recorder.FILTER_SCHEMA,
+    }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
-IGNORE_DOMAINS = ('zone', 'scene',)
+IGNORE_DOMAINS = (
+    'zone',
+    'scene', )
 
 
 def last_recorder_run(hass):
@@ -49,8 +52,12 @@ def last_recorder_run(hass):
         return res
 
 
-def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
-                           filters=None, include_start_time_state=True):
+def get_significant_states(hass,
+                           start_time,
+                           end_time=None,
+                           entity_ids=None,
+                           filters=None,
+                           include_start_time_state=True):
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -62,10 +69,10 @@ def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
     from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (States.domain.in_(SIGNIFICANT_DOMAINS) |
-             (States.last_changed == States.last_updated)) &
-            (States.last_updated > start_time))
+        query = session.query(
+            States).filter((States.domain.in_(SIGNIFICANT_DOMAINS) |
+                            (States.last_changed == States.last_updated)) &
+                           (States.last_updated > start_time))
 
         if filters:
             query = filters.apply(query, entity_ids)
@@ -75,30 +82,29 @@ def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
 
         query = query.order_by(States.last_updated)
 
-        states = (
-            state for state in execute(query)
-            if (_is_significant(state) and
-                not state.attributes.get(ATTR_HIDDEN, False)))
+        states = (state for state in execute(query)
+                  if (_is_significant(state)
+                      and not state.attributes.get(ATTR_HIDDEN, False)))
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug(
-            'get_significant_states took %fs', elapsed)
+        _LOGGER.debug('get_significant_states took %fs', elapsed)
 
-    return states_to_json(
-        hass, states, start_time, entity_ids, filters,
-        include_start_time_state)
+    return states_to_json(hass, states, start_time, entity_ids, filters,
+                          include_start_time_state)
 
 
-def state_changes_during_period(hass, start_time, end_time=None,
+def state_changes_during_period(hass,
+                                start_time,
+                                end_time=None,
                                 entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
     from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
-            (States.last_changed == States.last_updated) &
-            (States.last_updated > start_time))
+            (States.last_changed == States.last_updated) & (States.last_updated
+                                                            > start_time))
 
         if end_time is not None:
             query = query.filter(States.last_updated < end_time)
@@ -108,13 +114,15 @@ def state_changes_during_period(hass, start_time, end_time=None,
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        states = execute(
-            query.order_by(States.last_updated))
+        states = execute(query.order_by(States.last_updated))
 
     return states_to_json(hass, states, start_time, entity_ids)
 
 
-def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
+def get_states(hass,
+               utc_point_in_time,
+               entity_ids=None,
+               run=None,
                filters=None):
     """Return the states at a specific point in time."""
     from homeassistant.components.recorder.models import States
@@ -133,12 +141,10 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             # Use an entirely different (and extremely fast) query if we only
             # have a single entity id
             most_recent_state_ids = session.query(
-                States.state_id.label('max_state_id')
-            ).filter(
-                (States.last_updated < utc_point_in_time) &
-                (States.entity_id.in_(entity_ids))
-            ).order_by(
-                States.last_updated.desc())
+                States.state_id.label('max_state_id')).filter(
+                    (States.last_updated < utc_point_in_time) &
+                    (States.entity_id.in_(entity_ids))).order_by(
+                        States.last_updated.desc())
 
             most_recent_state_ids = most_recent_state_ids.limit(1)
 
@@ -150,10 +156,8 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_states_by_date = session.query(
                 States.entity_id.label('max_entity_id'),
                 func.max(States.last_updated).label('max_last_updated')
-            ).filter(
-                (States.last_updated >= run.start) &
-                (States.last_updated < utc_point_in_time)
-            )
+            ).filter((States.last_updated >= run.start) &
+                     (States.last_updated < utc_point_in_time))
 
             if entity_ids:
                 most_recent_states_by_date.filter(
@@ -165,11 +169,12 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
             most_recent_states_by_date = most_recent_states_by_date.subquery()
 
             most_recent_state_ids = session.query(
-                func.max(States.state_id).label('max_state_id')
-            ).join(most_recent_states_by_date, and_(
-                States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                States.last_updated == most_recent_states_by_date.c.
-                max_last_updated))
+                func.max(States.state_id).label('max_state_id')).join(
+                    most_recent_states_by_date,
+                    and_(States.entity_id ==
+                         most_recent_states_by_date.c.max_entity_id,
+                         States.last_updated ==
+                         most_recent_states_by_date.c.max_last_updated))
 
             most_recent_state_ids = most_recent_state_ids.group_by(
                 States.entity_id)
@@ -178,23 +183,24 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
 
         query = session.query(States).join(
             most_recent_state_ids,
-            States.state_id == most_recent_state_ids.c.max_state_id
-        ).filter((~States.domain.in_(IGNORE_DOMAINS)))
+            States.state_id == most_recent_state_ids.c.max_state_id).filter(
+                (~States.domain.in_(IGNORE_DOMAINS)))
 
         if filters:
             query = filters.apply(query, entity_ids)
 
-        return [state for state in execute(query)
-                if not state.attributes.get(ATTR_HIDDEN, False)]
+        return [
+            state for state in execute(query)
+            if not state.attributes.get(ATTR_HIDDEN, False)
+        ]
 
 
-def states_to_json(
-        hass,
-        states,
-        start_time,
-        entity_ids,
-        filters=None,
-        include_start_time_state=True):
+def states_to_json(hass,
+                   states,
+                   start_time,
+                   entity_ids,
+                   filters=None,
+                   include_start_time_state=True):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -216,8 +222,8 @@ def states_to_json(
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug(
-            'getting %d first datapoints took %fs', len(result), elapsed)
+        _LOGGER.debug('getting %d first datapoints took %fs',
+                      len(result), elapsed)
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
@@ -227,7 +233,7 @@ def states_to_json(
 
 def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
-    states = list(get_states(hass, utc_point_in_time, (entity_id,), run))
+    states = list(get_states(hass, utc_point_in_time, (entity_id, ), run))
     return states[0] if states else None
 
 
@@ -302,8 +308,8 @@ class HistoryPeriodView(HomeAssistantView):
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug(
-                'Extracted %d states in %fs', sum(map(len, result)), elapsed)
+            _LOGGER.debug('Extracted %d states in %fs',
+                          sum(map(len, result)), elapsed)
         return self.json(result)
 
 
@@ -353,8 +359,8 @@ class Filters(object):
                 filter_query &= (States.domain.in_(self.included_domains) |
                                  States.entity_id.in_(self.included_entities))
             else:
-                filter_query &= (States.domain.in_(self.included_domains) & ~
-                                 States.domain.in_(self.excluded_domains))
+                filter_query &= (States.domain.in_(self.included_domains) &
+                                 ~States.domain.in_(self.excluded_domains))
         # no domain filter just included entities
         elif not self.excluded_domains and not self.included_domains and \
                 self.included_entities:
@@ -373,5 +379,5 @@ def _is_significant(state):
     Will only test for things that are not filtered out in SQL.
     """
     # scripts that are not cancellable will never change state
-    return (state.domain != 'script' or
-            state.attributes.get(script.ATTR_CAN_CANCEL))
+    return (state.domain != 'script'
+            or state.attributes.get(script.ATTR_CAN_CANCEL))

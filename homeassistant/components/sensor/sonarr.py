@@ -13,8 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS, CONF_SSL)
+from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PORT,
+                                 CONF_MONITORED_CONDITIONS, CONF_SSL)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,7 @@ SENSOR_TYPES = {
 ENDPOINTS = {
     'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace',
     'queue': 'http{0}://{1}:{2}/{3}api/queue',
-    'upcoming':
-        'http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}',
+    'upcoming': 'http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}',
     'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing',
     'series': 'http{0}://{1}:{2}/{3}api/series',
     'commands': 'http{0}://{1}:{2}/{3}api/command',
@@ -54,24 +53,32 @@ ENDPOINTS = {
 # Support to Yottabytes for the future, why not
 BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_DAYS, default=DEFAULT_DAYS):
+    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_INCLUDED, default=[]):
+    cv.ensure_list,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['upcoming']):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
+    vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=False):
+    cv.boolean,
+    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT):
+    vol.In(BYTE_SIZES),
+    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE):
+    cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_devices(
-        [SonarrSensor(hass, config, sensor) for sensor in conditions], True)
+    add_devices([SonarrSensor(hass, config, sensor)
+                 for sensor in conditions], True)
 
 
 class SonarrSensor(Entity):
@@ -134,13 +141,13 @@ class SonarrSensor(Entity):
             for show in self.data:
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
                     show['episode']['seasonNumber'],
-                    show['episode']['episodeNumber']
-                )] = '{:.2f}%'.format(100*(1-(show['sizeleft']/show['size'])))
+                    show['episode']['episodeNumber'])] = '{:.2f}%'.format(
+                        100 * (1 - (show['sizeleft'] / show['size'])))
         elif self.type == 'wanted':
             for show in self.data:
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
-                    show['seasonNumber'], show['episodeNumber']
-                )] = show['airDate']
+                    show['seasonNumber'], show['episodeNumber'])] = show[
+                        'airDate']
         elif self.type == 'commands':
             for command in self.data:
                 attributes[command['name']] = command['state']
@@ -148,12 +155,9 @@ class SonarrSensor(Entity):
             for data in self.data:
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
                     to_unit(data['freeSpace'], self._unit),
-                    to_unit(data['totalSpace'], self._unit),
-                    self._unit, (
-                        to_unit(data['freeSpace'], self._unit) /
-                        to_unit(data['totalSpace'], self._unit) * 100
-                    )
-                )
+                    to_unit(data['totalSpace'], self._unit), self._unit,
+                    (to_unit(data['freeSpace'], self._unit) / to_unit(
+                        data['totalSpace'], self._unit) * 100))
         elif self.type == 'series':
             for show in self.data:
                 attributes[show['title']] = '{}/{} Episodes'.format(
@@ -173,9 +177,8 @@ class SonarrSensor(Entity):
         end = get_date(self._tz, self.days)
         try:
             res = requests.get(
-                ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port,
-                    self.urlbase, start, end),
+                ENDPOINTS[self.type].format(self.ssl, self.host, self.port,
+                                            self.urlbase, start, end),
                 headers={'X-Api-Key': self.apikey},
                 timeout=10)
         except OSError:
@@ -190,21 +193,17 @@ class SonarrSensor(Entity):
                     # Sonarr API returns an empty array if start and end dates
                     # are the same, so we need to filter to just today
                     self.data = list(
-                        filter(
-                            lambda x: x['airDate'] == str(start),
-                            res.json()
-                        )
-                    )
+                        filter(lambda x: x['airDate'] == str(start),
+                               res.json()))
                 else:
                     self.data = res.json()
                 self._state = len(self.data)
             elif self.type == 'wanted':
                 data = res.json()
                 res = requests.get(
-                    '{}?pageSize={}'.format(
-                        ENDPOINTS[self.type].format(
-                            self.ssl, self.host, self.port, self.urlbase),
-                        data['totalRecords']),
+                    '{}?pageSize={}'.format(ENDPOINTS[self.type].format(
+                        self.ssl, self.host, self.port, self.urlbase),
+                                            data['totalRecords']),
                     headers={'X-Api-Key': self.apikey},
                     timeout=10)
                 self.data = res.json()['records']
@@ -216,17 +215,12 @@ class SonarrSensor(Entity):
                 else:
                     # Filter to only show lists that are included
                     self.data = list(
-                        filter(
-                            lambda x: x['path'] in self.included,
-                            res.json()
-                        )
-                    )
+                        filter(lambda x: x['path'] in self.included,
+                               res.json()))
                 self._state = '{:.2f}'.format(
                     to_unit(
-                        sum([data['freeSpace'] for data in self.data]),
-                        self._unit
-                    )
-                )
+                        sum([data['freeSpace']
+                             for data in self.data]), self._unit))
             elif self.type == 'status':
                 self.data = res.json()
                 self._state = self.data['version']
@@ -237,8 +231,7 @@ def get_date(zone, offset=0):
     """Get date based on timezone and offset of days."""
     day = 60 * 60 * 24
     return datetime.date(
-        datetime.fromtimestamp(time.time() + day*offset, tz=zone)
-    )
+        datetime.fromtimestamp(time.time() + day * offset, tz=zone))
 
 
 def to_unit(value, unit):

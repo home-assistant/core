@@ -26,7 +26,8 @@ DEFAULT_NAME = 'CPU speed'
 ICON = 'mdi:pulse'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -70,7 +71,7 @@ class CpuSpeedSensor(Entity):
             return {
                 ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
-                ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
+                ATTR_HZ: round(self.info['hz_advertised_raw'][0] / 10**9, 2)
             }
 
     @property
@@ -83,4 +84,4 @@ class CpuSpeedSensor(Entity):
         from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
-        self._state = round(float(self.info['hz_actual_raw'][0])/10**9, 2)
+        self._state = round(float(self.info['hz_actual_raw'][0]) / 10**9, 2)

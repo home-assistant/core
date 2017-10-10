@@ -15,23 +15,27 @@ from homeassistant.core import callback
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_DEVICES, ATTR_GPS_ACCURACY, ATTR_LATITUDE,
-    ATTR_LONGITUDE, ATTR_BATTERY_LEVEL)
+from homeassistant.const import (CONF_DEVICES, ATTR_GPS_ACCURACY,
+                                 ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 
-GPS_JSON_PAYLOAD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_LATITUDE): vol.Coerce(float),
-    vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
-    vol.Optional(ATTR_GPS_ACCURACY, default=None): vol.Coerce(int),
-    vol.Optional(ATTR_BATTERY_LEVEL, default=None): vol.Coerce(str),
-}, extra=vol.ALLOW_EXTRA)
+GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+        vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+        vol.Optional(ATTR_GPS_ACCURACY, default=None): vol.Coerce(int),
+        vol.Optional(ATTR_BATTERY_LEVEL, default=None): vol.Coerce(str),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
-    vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
+    vol.Required(CONF_DEVICES): {
+        cv.string: mqtt.valid_subscribe_topic
+    },
 })
 
 
@@ -60,13 +64,12 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             return
 
         kwargs = _parse_see_args(dev_id, data)
-        hass.async_add_job(
-            async_see(**kwargs))
+        hass.async_add_job(async_see(**kwargs))
 
     for dev_id, topic in devices.items():
         dev_id_lookup[topic] = dev_id
-        yield from mqtt.async_subscribe(
-            hass, topic, async_tracker_message_received, qos)
+        yield from mqtt.async_subscribe(hass, topic,
+                                        async_tracker_message_received, qos)
 
     return True
 

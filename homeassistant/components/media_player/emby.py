@@ -14,9 +14,9 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK,
     MediaPlayerDevice, SUPPORT_PLAY, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    CONF_HOST, CONF_PORT, CONF_SSL, CONF_API_KEY, DEVICE_DEFAULT_NAME,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_PORT,
+    CONF_SSL, CONF_API_KEY, DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -42,11 +42,16 @@ SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=None): cv.port,
-    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_PORT, default=None):
+    cv.port,
+    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE):
+    cv.boolean,
 })
 
 
@@ -143,8 +148,8 @@ class EmbyDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callback."""
-        self.emby.add_update_callback(
-            self.async_update_callback, self.device_id)
+        self.emby.add_update_callback(self.async_update_callback,
+                                      self.device_id)
 
     @callback
     def async_update_callback(self, msg):

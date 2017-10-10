@@ -19,12 +19,12 @@ from typing import Optional, Dict
 
 import voluptuous as vol
 
-from homeassistant.core import (
-    HomeAssistant, callback, split_entity_id, CoreState)
+from homeassistant.core import (HomeAssistant, callback, split_entity_id,
+                                CoreState)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+    ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS, CONF_INCLUDE,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -47,7 +47,7 @@ ATTR_KEEP_DAYS = 'keep_days'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.All(vol.Coerce(int), vol.Range(min=0))
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -61,29 +61,37 @@ CONF_EVENT_TYPES = 'event_types'
 CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+    vol.Optional(CONF_EXCLUDE, default={}):
+    vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]):
+        cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
+        vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EVENT_TYPES, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.All(cv.ensure_list, [cv.string])
     }),
-    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+    vol.Optional(CONF_INCLUDE, default={}):
+    vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]):
+        cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.All(cv.ensure_list, [cv.string])
     })
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: FILTER_SCHEMA.extend({
-        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        FILTER_SCHEMA.extend({
+            vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
+            vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Optional(CONF_DB_URL): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_DB_URL):
+            cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def wait_connection_ready(hass):
@@ -95,7 +103,7 @@ def wait_connection_ready(hass):
     return hass.data[DATA_INSTANCE].async_db_ready
 
 
-def run_information(hass, point_in_time: Optional[datetime]=None):
+def run_information(hass, point_in_time: Optional[datetime] = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -109,8 +117,8 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 
     with session_scope(hass=hass) as session:
         res = session.query(recorder_runs).filter(
-            (recorder_runs.start < point_in_time) &
-            (recorder_runs.end > point_in_time)).first()
+            (recorder_runs.start < point_in_time) & (recorder_runs.end >
+                                                     point_in_time)).first()
         if res:
             session.expunge(res)
         return res
@@ -146,17 +154,19 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         instance.do_purge(service.data[ATTR_KEEP_DAYS])
 
     descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, path.join(
-            path.dirname(__file__), 'services.yaml'))
+        conf_util.load_yaml_config_file,
+        path.join(path.dirname(__file__), 'services.yaml'))
 
     if purge_interval and purge_days:
-        async_track_time_interval(hass, async_handle_purge_interval,
-                                  timedelta(days=purge_interval))
+        async_track_time_interval(
+            hass, async_handle_purge_interval, timedelta(days=purge_interval))
 
-    hass.services.async_register(DOMAIN, SERVICE_PURGE,
-                                 async_handle_purge_service,
-                                 descriptions.get(SERVICE_PURGE),
-                                 schema=SERVICE_PURGE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PURGE,
+        async_handle_purge_service,
+        descriptions.get(SERVICE_PURGE),
+        schema=SERVICE_PURGE_SCHEMA)
 
     return (yield from instance.async_db_ready)
 
@@ -164,8 +174,8 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, uri: str,
-                 include: Dict, exclude: Dict) -> None:
+    def __init__(self, hass: HomeAssistant, uri: str, include: Dict,
+                 exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
@@ -222,6 +232,7 @@ class Recorder(threading.Thread):
                 tries += 1
 
         if not connected:
+
             @callback
             def connection_failed():
                 """Connect failed tasks."""
@@ -249,12 +260,12 @@ class Recorder(threading.Thread):
                 self.queue.put(None)
                 self.join()
 
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                            shutdown)
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)
             else:
+
                 @callback
                 def notify_hass_started(event):
                     """Notify that hass has started."""
@@ -403,9 +414,7 @@ class Recorder(threading.Thread):
                 session.add(run)
 
             self.run_info = RecorderRuns(
-                start=self.recording_start,
-                created=dt_util.utcnow()
-            )
+                start=self.recording_start, created=dt_util.utcnow())
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)

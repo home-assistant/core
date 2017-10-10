@@ -29,8 +29,10 @@ _SWITCHES_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Required(CONF_PORTS):
+    _SWITCHES_SCHEMA,
+    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC):
+    cv.boolean,
 })
 
 

@@ -12,8 +12,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (CONF_VALUE_TEMPLATE, CONF_NAME,
+                                 CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,10 +25,14 @@ DEFAULT_NAME = 'File'
 ICON = 'mdi:file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Required(CONF_FILE_PATH):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
 })
 
 
@@ -43,8 +47,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices(
-        [FileSensor(name, file_path, unit, value_template)], True)
+    async_add_devices([FileSensor(name, file_path, unit, value_template)],
+                      True)
 
 
 class FileSensor(Entity):

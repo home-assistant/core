@@ -31,17 +31,7 @@ ATTR_PLATES = 'plates'
 ATTR_VEHICLES = 'vehicles'
 
 OPENALPR_REGIONS = [
-    'au',
-    'auwide',
-    'br',
-    'eu',
-    'fr',
-    'gb',
-    'kr',
-    'kr2',
-    'mx',
-    'sg',
-    'us',
+    'au', 'auwide', 'br', 'eu', 'fr', 'gb', 'kr', 'kr2', 'mx', 'sg', 'us',
     'vn2'
 ]
 
@@ -51,8 +41,10 @@ CONF_REGION = 'region'
 DEFAULT_BINARY = 'alpr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
-    vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY): cv.string,
+    vol.Required(CONF_REGION):
+    vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY):
+    cv.string,
 })
 
 
@@ -64,9 +56,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(OpenAlprLocalEntity(
-            camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
-        ))
+        entities.append(
+            OpenAlprLocalEntity(camera[CONF_ENTITY_ID], command, confidence,
+                                camera.get(CONF_NAME)))
 
     async_add_devices(entities)
 
@@ -100,18 +92,14 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
-        attr = {
-            ATTR_PLATES: self.plates,
-            ATTR_VEHICLES: self.vehicles
-        }
+        attr = {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
         return attr
 
     def process_plates(self, plates, vehicles):
         """Send event with new plates and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_plates, plates, vehicles
-        ).result()
+        run_callback_threadsafe(self.hass.loop, self.async_process_plates,
+                                plates, vehicles).result()
 
     @callback
     def async_process_plates(self, plates, vehicles):
@@ -122,19 +110,21 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         This method must be run in the event loop.
         """
-        plates = {plate: confidence for plate, confidence in plates.items()
-                  if confidence >= self.confidence}
+        plates = {
+            plate: confidence
+            for plate, confidence in plates.items()
+            if confidence >= self.confidence
+        }
         new_plates = set(plates) - set(self.plates)
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_FOUND_PLATE, {
-                    ATTR_PLATE: i_plate,
-                    ATTR_ENTITY_ID: self.entity_id,
-                    ATTR_CONFIDENCE: plates.get(i_plate),
-                }
-            )
+            self.hass.async_add_job(self.hass.bus.async_fire,
+                                    EVENT_FOUND_PLATE, {
+                                        ATTR_PLATE: i_plate,
+                                        ATTR_ENTITY_ID: self.entity_id,
+                                        ATTR_CONFIDENCE: plates.get(i_plate),
+                                    })
 
         # Update entity store
         self.plates = plates
@@ -187,8 +177,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
             loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL
-        )
+            stderr=asyncio.subprocess.DEVNULL)
 
         # Send image
         stdout, _ = yield from alpr.communicate(input=image)
@@ -210,8 +199,10 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
             # Found plate result
             if new_result:
                 try:
-                    result.update(
-                        {new_result.group(1): float(new_result.group(2))})
+                    result.update({
+                        new_result.group(1):
+                        float(new_result.group(2))
+                    })
                 except ValueError:
                     continue
 

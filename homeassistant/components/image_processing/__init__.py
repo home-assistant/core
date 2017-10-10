@@ -13,8 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -29,9 +28,9 @@ DEPENDENCIES = ['camera']
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DEVICE_CLASSES = [
-    'alpr',        # Automatic license plate recognition
-    'face',        # Face
-    'ocr',         # OCR
+    'alpr',  # Automatic license plate recognition
+    'face',  # Face
+    'ocr',  # OCR
 ]
 
 SERVICE_SCAN = 'scan'
@@ -50,9 +49,10 @@ SOURCE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Optional(CONF_SOURCE):
+    vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+    vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -74,23 +74,28 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_scan_service(service):
         """Service handler for scan."""
         image_entities = component.async_extract_from_service(service)
 
-        update_task = [entity.async_update_ha_state(True) for
-                       entity in image_entities]
+        update_task = [
+            entity.async_update_ha_state(True) for entity in image_entities
+        ]
         if update_task:
             yield from asyncio.wait(update_task, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_scan_service,
-        descriptions.get(SERVICE_SCAN), schema=SERVICE_SCAN_SCHEMA)
+        DOMAIN,
+        SERVICE_SCAN,
+        async_scan_service,
+        descriptions.get(SERVICE_SCAN),
+        schema=SERVICE_SCAN_SCHEMA)
 
     return True
 

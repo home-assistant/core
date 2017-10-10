@@ -11,15 +11,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA,
-    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
-    SUPPORT_SET_POSITION, ATTR_POSITION, ATTR_TILT_POSITION)
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START, MATCH_ALL,
-    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
-    CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED)
+    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN_TILT,
+    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
+    ATTR_POSITION, ATTR_TILT_POSITION)
+from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
+                                 EVENT_HOMEASSISTANT_START, MATCH_ALL,
+                                 CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
+                                 CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -44,30 +43,45 @@ CONF_TILT_OPTIMISTIC = 'tilt_optimistic'
 CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
 CONF_OPEN_OR_CLOSE = 'open_or_close'
 
-TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
-                 SUPPORT_SET_TILT_POSITION)
+TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+                 | SUPPORT_SET_TILT_POSITION)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-    vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-    vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Exclusive(CONF_POSITION_TEMPLATE,
-                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
-    vol.Exclusive(CONF_VALUE_TEMPLATE,
-                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
-    vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
-    vol.Optional(CONF_TILT_TEMPLATE): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
-    vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
-    vol.Optional(CONF_ENTITY_ID): cv.entity_ids
+    vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE):
+    cv.SCRIPT_SCHEMA,
+    vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE):
+    cv.SCRIPT_SCHEMA,
+    vol.Optional(STOP_ACTION):
+    cv.SCRIPT_SCHEMA,
+    vol.Exclusive(CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
+    cv.template,
+    vol.Exclusive(CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_POSITION_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_TILT_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_OPTIMISTIC):
+    cv.boolean,
+    vol.Optional(CONF_TILT_OPTIMISTIC):
+    cv.boolean,
+    vol.Optional(POSITION_ACTION):
+    cv.SCRIPT_SCHEMA,
+    vol.Optional(TILT_ACTION):
+    cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_FRIENDLY_NAME, default=None):
+    cv.string,
+    vol.Optional(CONF_ENTITY_ID):
+    cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS):
+    vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 
@@ -121,15 +135,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
         covers.append(
-            CoverTemplate(
-                hass,
-                device, friendly_name, state_template,
-                position_template, tilt_template, icon_template,
-                open_action, close_action, stop_action,
-                position_action, tilt_action,
-                optimistic, tilt_optimistic, entity_ids
-            )
-        )
+            CoverTemplate(hass, device, friendly_name, state_template,
+                          position_template, tilt_template, icon_template,
+                          open_action, close_action, stop_action,
+                          position_action, tilt_action, optimistic,
+                          tilt_optimistic, entity_ids))
     if not covers:
         _LOGGER.error("No covers added")
         return False
@@ -142,9 +152,8 @@ class CoverTemplate(CoverDevice):
     """Representation of a Template cover."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 position_template, tilt_template, icon_template,
-                 open_action, close_action, stop_action,
-                 position_action, tilt_action,
+                 position_template, tilt_template, icon_template, open_action,
+                 close_action, stop_action, position_action, tilt_action,
                  optimistic, tilt_optimistic, entity_ids):
         """Initialize the Template cover."""
         self.hass = hass
@@ -170,8 +179,8 @@ class CoverTemplate(CoverDevice):
         self._tilt_script = None
         if tilt_action is not None:
             self._tilt_script = Script(hass, tilt_action)
-        self._optimistic = (optimistic or
-                            (not state_template and not position_template))
+        self._optimistic = (optimistic
+                            or (not state_template and not position_template))
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
         self._position = None
@@ -202,13 +211,13 @@ class CoverTemplate(CoverDevice):
         @callback
         def template_cover_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_cover_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_cover_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_cover_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_cover_startup)
 
     @property
     def name(self):
@@ -294,8 +303,9 @@ class CoverTemplate(CoverDevice):
     def async_set_cover_position(self, **kwargs):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        yield from self._position_script.async_run(
-            {"position": self._position})
+        yield from self._position_script.async_run({
+            "position": self._position
+        })
         if self._optimistic:
             self.async_schedule_update_ha_state()
 
@@ -311,8 +321,7 @@ class CoverTemplate(CoverDevice):
     def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         self._tilt_value = 0
-        yield from self._tilt_script.async_run(
-            {"tilt": self._tilt_value})
+        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 

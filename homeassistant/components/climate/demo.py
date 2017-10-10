@@ -14,8 +14,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
                     'Auto Low', None, None, 'Auto', 'heat', None, None, None),
-        DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
-                    67, 54, 'Off', 'cool', False, None, None),
+        DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High', 67,
+                    54, 'Off', 'cool', False, None, None),
         DemoClimate('Ecobee', None, TEMP_CELSIUS, None, None, 23, 'Auto Low',
                     None, None, 'Auto', 'auto', None, 24, 21)
     ])
@@ -24,10 +24,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
-    def __init__(self, name, target_temperature, unit_of_measurement,
-                 away, hold, current_temperature, current_fan_mode,
-                 target_humidity, current_humidity, current_swing_mode,
-                 current_operation, aux, target_temp_high, target_temp_low):
+    def __init__(self, name, target_temperature, unit_of_measurement, away,
+                 hold, current_temperature, current_fan_mode, target_humidity,
+                 current_humidity, current_swing_mode, current_operation, aux,
+                 target_temp_high, target_temp_low):
         """Initialize the climate device."""
         self._name = name
         self._target_temperature = target_temperature

@@ -29,9 +29,10 @@ STATE_TRADE = 'Trade'
 STATE_PLAY = 'Play'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Required(CONF_ACCOUNTS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -40,9 +41,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
-    add_devices(
-        [SteamSensor(account,
-                     steamod) for account in config.get(CONF_ACCOUNTS)], True)
+    add_devices([
+        SteamSensor(account, steamod) for account in config.get(CONF_ACCOUNTS)
+    ], True)
 
 
 class SteamSensor(Entity):

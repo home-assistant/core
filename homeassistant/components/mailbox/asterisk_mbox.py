@@ -32,8 +32,8 @@ class AsteriskMailbox(Mailbox):
     def __init__(self, hass, name):
         """Initialie Asterisk mailbox."""
         super().__init__(hass, name)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_MESSAGE_UPDATE,
+                                 self._update_callback)
 
     @callback
     def _update_callback(self, msg):

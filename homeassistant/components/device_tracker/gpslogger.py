@@ -76,9 +76,12 @@ class GPSLoggerView(HomeAssistantView):
             attrs['activity'] = data['activity']
 
         yield from hass.async_add_job(
-            partial(self.see, dev_id=device,
-                    gps=gps_location, battery=battery,
-                    gps_accuracy=accuracy,
-                    attributes=attrs))
+            partial(
+                self.see,
+                dev_id=device,
+                gps=gps_location,
+                battery=battery,
+                gps_accuracy=accuracy,
+                attributes=attrs))
 
         return 'Setting location for {}'.format(device)

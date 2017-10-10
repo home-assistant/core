@@ -9,8 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import (config_validation as cv, discovery)
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
@@ -27,13 +26,16 @@ CACHE = 'usps_cache'
 
 USPS_TYPE = ['sensor', 'camera']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -47,8 +49,8 @@ def setup(hass, config):
     try:
         cookie = hass.config.path(COOKIE)
         cache = hass.config.path(CACHE)
-        session = myusps.get_session(username, password,
-                                     cookie_path=cookie, cache_path=cache)
+        session = myusps.get_session(
+            username, password, cookie_path=cookie, cache_path=cache)
     except myusps.USPSError:
         _LOGGER.exception('Could not connect to My USPS')
         return False

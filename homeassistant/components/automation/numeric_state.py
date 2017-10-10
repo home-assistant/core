@@ -10,21 +10,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
-    CONF_BELOW, CONF_ABOVE, CONF_FOR)
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_same_state)
+from homeassistant.const import (CONF_VALUE_TEMPLATE, CONF_PLATFORM,
+                                 CONF_ENTITY_ID, CONF_BELOW, CONF_ABOVE,
+                                 CONF_FOR)
+from homeassistant.helpers.event import (async_track_state_change,
+                                         async_track_same_state)
 from homeassistant.helpers import condition, config_validation as cv
 
-TRIGGER_SCHEMA = vol.All(vol.Schema({
-    vol.Required(CONF_PLATFORM): 'numeric_state',
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_BELOW): vol.Coerce(float),
-    vol.Optional(CONF_ABOVE): vol.Coerce(float),
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
-}), cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
+TRIGGER_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_PLATFORM):
+        'numeric_state',
+        vol.Required(CONF_ENTITY_ID):
+        cv.entity_ids,
+        vol.Optional(CONF_BELOW):
+        vol.Coerce(float),
+        vol.Optional(CONF_ABOVE):
+        vol.Coerce(float),
+        vol.Optional(CONF_VALUE_TEMPLATE):
+        cv.template,
+        vol.Optional(CONF_FOR):
+        vol.All(cv.time_period, cv.positive_timedelta),
+    }), cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,8 +65,8 @@ def async_trigger(hass, config, action):
         }
 
         # If new one doesn't match, nothing to do
-        if not condition.async_numeric_state(
-                hass, to_s, below, above, value_template, variables):
+        if not condition.async_numeric_state(hass, to_s, below, above,
+                                             value_template, variables):
             return False
 
         return True
@@ -99,11 +106,15 @@ def async_trigger(hass, config, action):
             return
 
         async_remove_track_same = async_track_same_state(
-            hass, True, time_delta, call_action, entity_ids=entity_id,
+            hass,
+            True,
+            time_delta,
+            call_action,
+            entity_ids=entity_id,
             async_check_func=check_numeric_state)
 
-    unsub = async_track_state_change(
-        hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change(hass, entity_id,
+                                     state_automation_listener)
 
     @callback
     def async_remove():

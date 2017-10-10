@@ -23,12 +23,15 @@ CONF_CLIENT_SECRET = 'client_secret'
 DOMAIN = 'lametric'
 LAMETRIC_DEVICES = 'LAMETRIC_DEVICES'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_CLIENT_ID): cv.string,
+            vol.Required(CONF_CLIENT_SECRET): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=broad-except
@@ -36,8 +39,8 @@ def setup(hass, config):
     """Set up the LaMetricManager."""
     _LOGGER.debug("Setting up LaMetric platform")
     conf = config[DOMAIN]
-    hlmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
-                               client_secret=conf[CONF_CLIENT_SECRET])
+    hlmn = HassLaMetricManager(
+        client_id=conf[CONF_CLIENT_ID], client_secret=conf[CONF_CLIENT_SECRET])
     devices = hlmn.manager().get_devices()
 
     found = False
@@ -75,8 +78,7 @@ class HassLaMetricManager():
         """
         from lmnotify import LaMetricManager
         _LOGGER.debug("Reconnecting to LaMetric")
-        self.lmn = LaMetricManager(self._client_id,
-                                   self._client_secret)
+        self.lmn = LaMetricManager(self._client_id, self._client_secret)
 
     def manager(self):
         """Return the global LaMetricManager instance."""

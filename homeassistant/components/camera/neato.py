@@ -8,8 +8,8 @@ import logging
 
 from datetime import timedelta
 from homeassistant.components.camera import Camera
-from homeassistant.components.neato import (
-    NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN)
+from homeassistant.components.neato import (NEATO_MAP_DATA, NEATO_ROBOTS,
+                                            NEATO_LOGIN)
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)

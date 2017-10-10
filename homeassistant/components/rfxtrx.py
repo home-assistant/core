@@ -12,11 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    ATTR_ENTITY_ID, TEMP_CELSIUS,
-    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
-)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, ATTR_ENTITY_ID,
+    TEMP_CELSIUS, CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyRFXtrx==0.20.1']
@@ -39,19 +36,12 @@ CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
-DATA_TYPES = OrderedDict([
-    ('Temperature', TEMP_CELSIUS),
-    ('Temperature2', TEMP_CELSIUS),
-    ('Humidity', '%'),
-    ('Barometer', ''),
-    ('Wind direction', ''),
-    ('Rain rate', ''),
-    ('Energy usage', 'W'),
-    ('Total usage', 'W'),
-    ('Sound', ''),
-    ('Sensor Status', ''),
-    ('Counter value', ''),
-    ('UV', 'uv')])
+DATA_TYPES = OrderedDict(
+    [('Temperature', TEMP_CELSIUS), ('Temperature2', TEMP_CELSIUS),
+     ('Humidity', '%'), ('Barometer', ''), ('Wind direction', ''),
+     ('Rain rate', ''), ('Energy usage', 'W'), ('Total usage', 'W'),
+     ('Sound', ''), ('Sensor Status', ''), ('Counter value', ''), ('UV',
+                                                                   'uv')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
@@ -108,47 +98,64 @@ def _valid_light_switch(value):
 
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Required(ATTR_NAME):
+    cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False):
+    cv.boolean,
 })
 
 DEVICE_SCHEMA_SENSOR = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_NAME, default=None):
+    cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False):
+    cv.boolean,
     vol.Optional(ATTR_DATA_TYPE, default=[]):
-        vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+    vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
 })
 
 DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS, default=None): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_NAME, default=None):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS, default=None):
+    cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False):
+    cv.boolean,
     vol.Optional(ATTR_OFF_DELAY, default=None):
-        vol.Any(cv.time_period, cv.positive_timedelta),
-    vol.Optional(ATTR_DATA_BITS, default=None): cv.positive_int,
-    vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
-    vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
+    vol.Any(cv.time_period, cv.positive_timedelta),
+    vol.Optional(ATTR_DATA_BITS, default=None):
+    cv.positive_int,
+    vol.Optional(CONF_COMMAND_ON, default=None):
+    cv.byte,
+    vol.Optional(CONF_COMMAND_OFF, default=None):
+    cv.byte
 })
 
 DEFAULT_SCHEMA = vol.Schema({
-    vol.Required("platform"): DOMAIN,
-    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, _valid_light_switch),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Required("platform"):
+    DOMAIN,
+    vol.Optional(CONF_DEVICES, default={}):
+    vol.All(dict, _valid_light_switch),
+    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):
+    cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
-        vol.Coerce(int),
+    vol.Coerce(int),
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
-        vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(ATTR_DEVICE): cv.string,
+            vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
+            vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the RFXtrx component."""
+
     # Declare the Handle event
     def handle_receive(event):
         """Handle revieved messgaes from RFXtrx gateway."""
@@ -158,8 +165,7 @@ def setup(hass, config):
         _LOGGER.debug("Receive RFXCOM event from "
                       "(Device_id: %s Class: %s Sub: %s, Pkt_id: %s)",
                       slugify(event.device.id_string.lower()),
-                      event.device.__class__.__name__,
-                      event.device.subtype,
+                      event.device.__class__.__name__, event.device.subtype,
                       "".join("{0:02x}".format(x) for x in event.data))
 
         # Callback to HA registered components.
@@ -182,11 +188,13 @@ def setup(hass, config):
 
     def _start_rfxtrx(event):
         hass.data[RFXOBJECT].event_callback = handle_receive
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_rfxtrx)
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
         hass.data[RFXOBJECT].close_connection()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
@@ -223,7 +231,7 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
 
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
 
-    data[len(data)-1] &= mask
+    data[len(data) - 1] &= mask
 
     return binascii.hexlify(data)
 
@@ -273,10 +281,7 @@ def find_possible_pt2262_device(device_id):
                              "with the following configuration:\n"
                              "data_bits=%d\n"
                              "command_on=0x%s\n"
-                             "command_off=0x%s\n",
-                             device_id,
-                             dev_id,
-                             size * 4,
+                             "command_off=0x%s\n", device_id, dev_id, size * 4,
                              dev_id[-size:], device_id[-size:])
                 return device
 
@@ -321,15 +326,11 @@ def get_new_device(event, config, device):
     pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     _LOGGER.info(
         "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
-        device_id,
-        event.device.__class__.__name__,
-        event.device.subtype,
-        pkt_id
-    )
+        device_id, event.device.__class__.__name__, event.device.subtype,
+        pkt_id)
     datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
-    new_device = device(pkt_id, event, datas,
-                        signal_repetitions)
+    new_device = device(pkt_id, event, datas, signal_repetitions)
     RFX_DEVICES[device_id] = new_device
     return new_device
 
@@ -341,11 +342,8 @@ def apply_received_command(event):
     if device_id not in RFX_DEVICES:
         return
 
-    _LOGGER.debug(
-        "Device_id: %s device_update. Command: %s",
-        device_id,
-        event.values['Command']
-    )
+    _LOGGER.debug("Device_id: %s device_update. Command: %s", device_id,
+                  event.values['Command'])
 
     if event.values['Command'] == 'On'\
             or event.values['Command'] == 'Off':
@@ -364,21 +362,16 @@ def apply_received_command(event):
 
     # Fire event
     if RFX_DEVICES[device_id].should_fire_event:
-        RFX_DEVICES[device_id].hass.bus.fire(
-            EVENT_BUTTON_PRESSED, {
-                ATTR_ENTITY_ID:
-                    RFX_DEVICES[device_id].entity_id,
-                ATTR_STATE: event.values['Command'].lower()
-            }
-        )
-        _LOGGER.info(
-            "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
-            EVENT_BUTTON_PRESSED,
-            ATTR_ENTITY_ID,
+        RFX_DEVICES[device_id].hass.bus.fire(EVENT_BUTTON_PRESSED, {
+            ATTR_ENTITY_ID:
             RFX_DEVICES[device_id].entity_id,
-            ATTR_STATE,
+            ATTR_STATE:
             event.values['Command'].lower()
-        )
+        })
+        _LOGGER.info("Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
+                     EVENT_BUTTON_PRESSED, ATTR_ENTITY_ID,
+                     RFX_DEVICES[device_id].entity_id, ATTR_STATE,
+                     event.values['Command'].lower())
 
 
 class RfxtrxDevice(Entity):
@@ -437,8 +430,7 @@ class RfxtrxDevice(Entity):
 
         if command == "turn_on":
             for _ in range(self.signal_repetitions):
-                self._event.device.send_on(self.hass.data[RFXOBJECT]
-                                           .transport)
+                self._event.device.send_on(self.hass.data[RFXOBJECT].transport)
             self._state = True
 
         elif command == "dim":

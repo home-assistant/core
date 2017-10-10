@@ -21,13 +21,13 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
-    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              dispatcher_send)
+from homeassistant.util.async import (run_coroutine_threadsafe,
+                                      run_callback_threadsafe)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
+                                 CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.3.0']
@@ -106,40 +106,59 @@ _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
                       'the MQTT broker configuration'
 
-MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TOPIC): valid_publish_topic,
-    vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-    vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-    vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-}, required=True)
+MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TOPIC): valid_publish_topic,
+        vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    },
+    required=True)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_CLIENT_ID):
+            cv.string,
+            vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(CONF_BROKER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERTIFICATE): vol.Any('auto', cv.isfile),
-        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
-                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
-        vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
-                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
-        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
+            vol.Optional(CONF_BROKER):
+            cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_USERNAME):
+            cv.string,
+            vol.Optional(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_CERTIFICATE):
+            vol.Any('auto', cv.isfile),
+            vol.Inclusive(
+                CONF_CLIENT_KEY, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG):
+            cv.isfile,
+            vol.Inclusive(
+                CONF_CLIENT_CERT, 'client_key_auth', msg=CLIENT_KEY_AUTH_MSG):
+            cv.isfile,
+            vol.Optional(CONF_TLS_INSECURE):
+            cv.boolean,
+            vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
             vol.Any('auto', '1.0', '1.1', '1.2'),
-        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
+            vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
-        vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
-        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-        vol.Optional(CONF_DISCOVERY_PREFIX,
-                     default=DEFAULT_DISCOVERY_PREFIX): valid_discovery_topic,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_EMBEDDED):
+            HBMQTT_CONFIG_SCHEMA,
+            vol.Optional(CONF_WILL_MESSAGE):
+            MQTT_WILL_BIRTH_SCHEMA,
+            vol.Optional(CONF_BIRTH_MESSAGE):
+            MQTT_WILL_BIRTH_SCHEMA,
+            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY):
+            cv.boolean,
+            vol.Optional(
+                CONF_DISCOVERY_PREFIX, default=DEFAULT_DISCOVERY_PREFIX):
+            valid_discovery_topic,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SCHEMA_BASE = {
     vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
@@ -149,27 +168,34 @@ MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(CONF_STATE_TOPIC):
+    valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 # Switch type platforms publish to MQTT and may subscribe
 MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_TOPIC):
+    valid_publish_topic,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN):
+    cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC):
+    valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
-
 # Service call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TOPIC): valid_publish_topic,
-    vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
-    vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-    vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-    vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-}, required=True)
+MQTT_PUBLISH_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TOPIC): valid_publish_topic,
+        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
+        vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    },
+    required=True)
 
 
 def _build_publish_data(topic, qos, retain):
@@ -207,9 +233,13 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 @asyncio.coroutine
 @bind_hass
-def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+def async_subscribe(hass,
+                    topic,
+                    msg_callback,
+                    qos=DEFAULT_QOS,
                     encoding='utf-8'):
     """Subscribe to an MQTT topic."""
+
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
         """Match subscribed MQTT topic."""
@@ -222,8 +252,8 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                 _LOGGER.debug("Received message on %s: %s", dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
-                              "MQTT topic: %s, Payload: %s",
-                              encoding, dp_topic, dp_payload)
+                              "MQTT topic: %s, Payload: %s", encoding,
+                              dp_topic, dp_payload)
                 return
         else:
             _LOGGER.debug("Received binary message on %s", dp_topic)
@@ -231,20 +261,19 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
 
         hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
 
-    async_remove = async_dispatcher_connect(
-        hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
+    async_remove = async_dispatcher_connect(hass, SIGNAL_MQTT_MESSAGE_RECEIVED,
+                                            async_mqtt_topic_subscriber)
 
     yield from hass.data[DATA_MQTT].async_subscribe(topic, qos)
     return async_remove
 
 
 @bind_hass
-def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
-              encoding='utf-8'):
+def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS, encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
-    ).result()
+        async_subscribe(hass, topic, msg_callback, qos, encoding),
+        hass.loop).result()
 
     def remove():
         """Remove listener convert."""
@@ -261,8 +290,8 @@ def _async_setup_server(hass, config):
     """
     conf = config.get(DOMAIN, {})
 
-    server = yield from async_prepare_setup_platform(
-        hass, config, DOMAIN, 'server')
+    server = yield from async_prepare_setup_platform(hass, config, DOMAIN,
+                                                     'server')
 
     if server is None:
         _LOGGER.error("Unable to load embedded server")
@@ -341,8 +370,8 @@ def async_setup(hass, config):
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
        broker.endswith('.cloudmqtt.com'):
-        certificate = os.path.join(os.path.dirname(__file__),
-                                   'addtrustexternalcaroot.crt')
+        certificate = os.path.join(
+            os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
     if certificate == 'auto':
@@ -403,20 +432,23 @@ def async_setup(hass, config):
             except template.jinja2.TemplateError as exc:
                 _LOGGER.error(
                     "Unable to publish to '%s': rendering payload template of "
-                    "'%s' failed because %s",
-                    msg_topic, payload_template, exc)
+                    "'%s' failed because %s", msg_topic, payload_template, exc)
                 return
 
-        yield from hass.data[DATA_MQTT].async_publish(
-            msg_topic, payload, qos, retain)
+        yield from hass.data[DATA_MQTT].async_publish(msg_topic, payload, qos,
+                                                      retain)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service,
-        descriptions.get(SERVICE_PUBLISH), schema=MQTT_PUBLISH_SCHEMA)
+        DOMAIN,
+        SERVICE_PUBLISH,
+        async_publish_service,
+        descriptions.get(SERVICE_PUBLISH),
+        schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
         yield from _async_setup_discovery(hass, config)
@@ -428,9 +460,8 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, client_key, client_cert,
-                 tls_insecure, protocol, will_message, birth_message,
-                 tls_version):
+                 password, certificate, client_key, client_cert, tls_insecure,
+                 protocol, will_message, birth_message, tls_version):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -459,8 +490,10 @@ class MQTT(object):
 
         if certificate is not None:
             self._mqttc.tls_set(
-                certificate, certfile=client_cert,
-                keyfile=client_key, tls_version=tls_version)
+                certificate,
+                certfile=client_cert,
+                keyfile=client_key,
+                tls_version=tls_version)
 
             if tls_insecure is not None:
                 self._mqttc.tls_insecure_set(tls_insecure)
@@ -472,10 +505,10 @@ class MQTT(object):
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message:
-            self._mqttc.will_set(will_message.get(ATTR_TOPIC),
-                                 will_message.get(ATTR_PAYLOAD),
-                                 will_message.get(ATTR_QOS),
-                                 will_message.get(ATTR_RETAIN))
+            self._mqttc.will_set(
+                will_message.get(ATTR_TOPIC),
+                will_message.get(ATTR_PAYLOAD),
+                will_message.get(ATTR_QOS), will_message.get(ATTR_RETAIN))
 
     @asyncio.coroutine
     def async_publish(self, topic, payload, qos, retain):
@@ -484,8 +517,8 @@ class MQTT(object):
         This method must be run in the event loop and returns a coroutine.
         """
         with (yield from self._paho_lock):
-            yield from self.hass.async_add_job(
-                self._mqttc.publish, topic, payload, qos, retain)
+            yield from self.hass.async_add_job(self._mqttc.publish, topic,
+                                               payload, qos, retain)
 
     @asyncio.coroutine
     def async_connect(self):
@@ -509,6 +542,7 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
+
         def stop():
             """Stop the MQTT client."""
             self._mqttc.disconnect()
@@ -564,8 +598,10 @@ class MQTT(object):
 
         old_topics = self.topics
 
-        self.topics = {key: value for key, value in self.topics.items()
-                       if value is None}
+        self.topics = {
+            key: value
+            for key, value in self.topics.items() if value is None
+        }
 
         for topic, qos in old_topics.items():
             # qos is None if we were in process of subscribing
@@ -573,11 +609,12 @@ class MQTT(object):
                 self.hass.add_job(self.async_subscribe, topic, qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(
-                self.birth_message.get(ATTR_TOPIC),
-                self.birth_message.get(ATTR_PAYLOAD),
-                self.birth_message.get(ATTR_QOS),
-                self.birth_message.get(ATTR_RETAIN)))
+            self.hass.add_job(
+                self.async_publish(
+                    self.birth_message.get(ATTR_TOPIC),
+                    self.birth_message.get(ATTR_PAYLOAD),
+                    self.birth_message.get(ATTR_QOS),
+                    self.birth_message.get(ATTR_RETAIN)))
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
@@ -588,10 +625,8 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        dispatcher_send(
-            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
-            msg.qos
-        )
+        dispatcher_send(self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic,
+                        msg.payload, msg.qos)
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
@@ -603,8 +638,10 @@ class MQTT(object):
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code):
         """Disconnected callback."""
         self.progress = {}
-        self.topics = {key: value for key, value in self.topics.items()
-                       if value is not None}
+        self.topics = {
+            key: value
+            for key, value in self.topics.items() if value is not None
+        }
 
         # Remove None values from topic list
         for key in list(self.topics):

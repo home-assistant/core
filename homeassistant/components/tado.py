@@ -24,16 +24,17 @@ DOMAIN = 'tado'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-TADO_COMPONENTS = [
-    'sensor', 'climate'
-]
+TADO_COMPONENTS = ['sensor', 'climate']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

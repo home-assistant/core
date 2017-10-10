@@ -78,5 +78,5 @@ class WemoBinarySensor(BinarySensorDevice):
         try:
             self._state = self.wemo.get_state(force_update)
         except AttributeError as err:
-            _LOGGER.warning(
-                "Could not update status for %s (%s)", self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name,
+                            err)

@@ -37,13 +37,16 @@ CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 OWNTRACKS_TOPIC = 'owntracks/#'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-    vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
-        cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SECRET): vol.Any(
-        vol.Schema({vol.Optional(cv.string): cv.string}),
-        cv.string)
+    vol.Optional(CONF_MAX_GPS_ACCURACY):
+    vol.Coerce(float),
+    vol.Optional(CONF_WAYPOINT_IMPORT, default=True):
+    cv.boolean,
+    vol.Optional(CONF_WAYPOINT_WHITELIST):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SECRET):
+    vol.Any(vol.Schema({
+        vol.Optional(cv.string): cv.string
+    }), cv.string)
 })
 
 
@@ -58,6 +61,7 @@ def get_cipher():
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
         return SecretBox(key).decrypt(ciphertext)
+
     return (KEYLEN, decrypt)
 
 
@@ -79,8 +83,8 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         yield from async_handle_message(hass, context, message)
 
-    yield from mqtt.async_subscribe(
-        hass, OWNTRACKS_TOPIC, async_handle_mqtt_message, 1)
+    yield from mqtt.async_subscribe(hass, OWNTRACKS_TOPIC,
+                                    async_handle_mqtt_message, 1)
 
     return True
 
@@ -128,9 +132,8 @@ def _set_gps_from_zone(kwargs, location, zone):
     Async friendly.
     """
     if zone is not None:
-        kwargs['gps'] = (
-            zone.attributes['latitude'],
-            zone.attributes['longitude'])
+        kwargs['gps'] = (zone.attributes['latitude'],
+                         zone.attributes['longitude'])
         kwargs['gps_accuracy'] = zone.attributes['radius']
         kwargs['location_name'] = location
     return kwargs
@@ -220,9 +223,8 @@ class OwnTracksContext:
         if self.max_gps_accuracy is not None and \
                 acc > self.max_gps_accuracy:
             _LOGGER.info("Ignoring %s update because expected GPS "
-                         "accuracy %s is not met: %s",
-                         message['_type'], self.max_gps_accuracy,
-                         message)
+                         "accuracy %s is not met: %s", message['_type'],
+                         self.max_gps_accuracy, message)
             return False
 
         return True
@@ -249,9 +251,8 @@ def async_handle_location_message(hass, context, message):
     dev_id, kwargs = _parse_see_args(message)
 
     if context.regions_entered[dev_id]:
-        _LOGGER.debug(
-            "Location update ignored, inside region %s",
-            context.regions_entered[-1])
+        _LOGGER.debug("Location update ignored, inside region %s",
+                      context.regions_entered[-1])
         return
 
     yield from context.async_see(**kwargs)
@@ -295,8 +296,7 @@ def _async_transition_message_leave(hass, context, message, location):
 
     if new_region:
         # Exit to previous region
-        zone = hass.states.get(
-            "zone.{}".format(slugify(new_region)))
+        zone = hass.states.get("zone.{}".format(slugify(new_region)))
         _set_gps_from_zone(kwargs, new_region, zone)
         _LOGGER.info("Exit to %s", new_region)
         yield from context.async_see(**kwargs)
@@ -322,9 +322,8 @@ def _async_transition_message_leave(hass, context, message, location):
 def async_handle_transition_message(hass, context, message):
     """Handle a transition message."""
     if message.get('desc') is None:
-        _LOGGER.error(
-            "Location missing from `Entering/Leaving` message - "
-            "please turn `Share` on in OwnTracks app")
+        _LOGGER.error("Location missing from `Entering/Leaving` message - "
+                      "please turn `Share` on in OwnTracks app")
         return
     # OwnTracks uses - at the start of a beacon zone
     # to switch on 'hold mode' - ignore this
@@ -333,15 +332,14 @@ def async_handle_transition_message(hass, context, message):
         location = STATE_HOME
 
     if message['event'] == 'enter':
-        yield from _async_transition_message_enter(
-            hass, context, message, location)
+        yield from _async_transition_message_enter(hass, context, message,
+                                                   location)
     elif message['event'] == 'leave':
-        yield from _async_transition_message_leave(
-            hass, context, message, location)
+        yield from _async_transition_message_leave(hass, context, message,
+                                                   location)
     else:
-        _LOGGER.error(
-            "Misformatted mqtt msgs, _type=transition, event=%s",
-            message['event'])
+        _LOGGER.error("Misformatted mqtt msgs, _type=transition, event=%s",
+                      message['event'])
 
 
 @HANDLERS.register('waypoints')

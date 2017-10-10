@@ -9,7 +9,6 @@ https://home-assistant.io/components/satel_integra/
 import asyncio
 import logging
 
-
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -52,20 +51,32 @@ SIGNAL_PANEL_DISARM = 'satel_integra.panel_disarm'
 SIGNAL_ZONES_UPDATED = 'satel_integra.zones_updated'
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE_NAME): cv.string,
-    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string})
+    vol.Required(CONF_ZONE_NAME):
+    cv.string,
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE):
+    cv.string
+})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_HOST): cv.string,
-        vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DEVICE_PARTITION,
-                     default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
-        vol.Optional(CONF_ARM_HOME_MODE,
-                     default=DEFAULT_CONF_ARM_HOME_MODE): vol.In([1, 2, 3]),
-        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_DEVICE_HOST):
+            cv.string,
+            vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(
+                CONF_DEVICE_PARTITION, default=DEFAULT_DEVICE_PARTITION):
+            cv.positive_int,
+            vol.Optional(
+                CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE):
+            vol.In([1, 2, 3]),
+            vol.Optional(CONF_ZONES): {
+                vol.Coerce(int): ZONE_SCHEMA
+            },
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -95,16 +106,15 @@ def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
 
-    _LOGGER.debug("Arm home config: %s, mode: %s ",
-                  conf,
+    _LOGGER.debug("Arm home config: %s, mode: %s ", conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
     task_control_panel = hass.async_add_job(
         async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config))
 
     task_zones = hass.async_add_job(
-        async_load_platform(hass, 'binary_sensor', DOMAIN,
-                            {CONF_ZONES: zones}, config))
+        async_load_platform(hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones},
+                            config))
 
     yield from asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
 
@@ -118,10 +128,8 @@ def async_setup(hass, config):
             hass_alarm_status = STATE_ALARM_ARMED_AWAY
 
         elif status in [
-                AlarmState.ARMED_MODE0,
-                AlarmState.ARMED_MODE1,
-                AlarmState.ARMED_MODE2,
-                AlarmState.ARMED_MODE3
+                AlarmState.ARMED_MODE0, AlarmState.ARMED_MODE1,
+                AlarmState.ARMED_MODE2, AlarmState.ARMED_MODE3
         ]:
             hass_alarm_status = STATE_ALARM_ARMED_HOME
 
@@ -144,9 +152,7 @@ def async_setup(hass, config):
     # run until the connection to satel_integra is closed.
     hass.loop.create_task(controller.keep_alive())
     hass.loop.create_task(
-        controller.monitor_status(
-            alarm_status_update_callback,
-            zones_update_callback)
-    )
+        controller.monitor_status(alarm_status_update_callback,
+                                  zones_update_callback))
 
     return True

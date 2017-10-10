@@ -6,8 +6,8 @@ https://home-assistant.io/components/binary_sensor.apcupsd/
 """
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import apcupsd
@@ -16,7 +16,8 @@ DEFAULT_NAME = 'UPS Online Status'
 DEPENDENCIES = [apcupsd.DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

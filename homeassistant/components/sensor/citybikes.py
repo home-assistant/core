@@ -14,9 +14,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION, ATTR_LOCATION,
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, STATE_UNKNOWN,
+    LENGTH_METERS, LENGTH_FEET)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
@@ -51,53 +51,75 @@ ATTR_TIMESTAMP = 'timestamp'
 CITYBIKES_ATTRIBUTION = "Information provided by the CityBikes Project "\
                         "(https://citybik.es/#about)"
 
-
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
     PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_NAME, default=''): cv.string,
-        vol.Optional(CONF_NETWORK): cv.string,
-        vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-        vol.Optional(CONF_RADIUS, 'station_filter'): cv.positive_int,
+        vol.Optional(CONF_NAME, default=''):
+        cv.string,
+        vol.Optional(CONF_NETWORK):
+        cv.string,
+        vol.Inclusive(CONF_LATITUDE, 'coordinates'):
+        cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, 'coordinates'):
+        cv.longitude,
+        vol.Optional(CONF_RADIUS, 'station_filter'):
+        cv.positive_int,
         vol.Optional(CONF_STATIONS_LIST, 'station_filter'):
-            vol.All(
-                cv.ensure_list,
-                vol.Length(min=1),
-                [cv.string])
+        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string])
     }))
 
-NETWORK_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ID): cv.string,
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_LOCATION): vol.Schema({
-        vol.Required(ATTR_LATITUDE): cv.latitude,
-        vol.Required(ATTR_LONGITUDE): cv.longitude,
-        }, extra=vol.REMOVE_EXTRA),
-    }, extra=vol.REMOVE_EXTRA)
+NETWORK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ID):
+        cv.string,
+        vol.Required(ATTR_NAME):
+        cv.string,
+        vol.Required(ATTR_LOCATION):
+        vol.Schema(
+            {
+                vol.Required(ATTR_LATITUDE): cv.latitude,
+                vol.Required(ATTR_LONGITUDE): cv.longitude,
+            },
+            extra=vol.REMOVE_EXTRA),
+    },
+    extra=vol.REMOVE_EXTRA)
 
 NETWORKS_RESPONSE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NETWORKS_LIST): [NETWORK_SCHEMA],
-    })
+})
 
-STATION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_FREE_BIKES): cv.positive_int,
-    vol.Required(ATTR_EMPTY_SLOTS): vol.Any(cv.positive_int, None),
-    vol.Required(ATTR_LATITUDE): cv.latitude,
-    vol.Required(ATTR_LONGITUDE): cv.longitude,
-    vol.Required(ATTR_ID): cv.string,
-    vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_TIMESTAMP): cv.string,
-    vol.Optional(ATTR_EXTRA): vol.Schema({
-        vol.Optional(ATTR_UID): cv.string
-        }, extra=vol.REMOVE_EXTRA)
-    }, extra=vol.REMOVE_EXTRA)
+STATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_FREE_BIKES):
+        cv.positive_int,
+        vol.Required(ATTR_EMPTY_SLOTS):
+        vol.Any(cv.positive_int, None),
+        vol.Required(ATTR_LATITUDE):
+        cv.latitude,
+        vol.Required(ATTR_LONGITUDE):
+        cv.longitude,
+        vol.Required(ATTR_ID):
+        cv.string,
+        vol.Required(ATTR_NAME):
+        cv.string,
+        vol.Required(ATTR_TIMESTAMP):
+        cv.string,
+        vol.Optional(ATTR_EXTRA):
+        vol.Schema(
+            {
+                vol.Optional(ATTR_UID): cv.string
+            }, extra=vol.REMOVE_EXTRA)
+    },
+    extra=vol.REMOVE_EXTRA)
 
 STATIONS_RESPONSE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_NETWORK): vol.Schema({
-        vol.Required(ATTR_STATIONS_LIST): [STATION_SCHEMA]
-        }, extra=vol.REMOVE_EXTRA)
-    })
+    vol.Required(ATTR_NETWORK):
+    vol.Schema(
+        {
+            vol.Required(ATTR_STATIONS_LIST): [STATION_SCHEMA]
+        },
+        extra=vol.REMOVE_EXTRA)
+})
 
 
 class CityBikesRequestError(Exception):
@@ -129,8 +151,7 @@ def async_citybikes_request(hass, uri, schema):
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the CityBikes platform."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {MONITORED_NETWORKS: {}}
@@ -152,8 +173,7 @@ def async_setup_platform(hass, config, async_add_devices,
         network = CityBikesNetwork(hass, network_id)
         hass.data[DOMAIN][MONITORED_NETWORKS][network_id] = network
         hass.async_add_job(network.async_refresh)
-        async_track_time_interval(hass, network.async_refresh,
-                                  SCAN_INTERVAL)
+        async_track_time_interval(hass, network.async_refresh, SCAN_INTERVAL)
     else:
         network = hass.data[DOMAIN][MONITORED_NETWORKS][network_id]
 
@@ -161,14 +181,13 @@ def async_setup_platform(hass, config, async_add_devices,
 
     devices = []
     for station in network.stations:
-        dist = location.distance(latitude, longitude,
-                                 station[ATTR_LATITUDE],
+        dist = location.distance(latitude, longitude, station[ATTR_LATITUDE],
                                  station[ATTR_LONGITUDE])
         station_id = station[ATTR_ID]
         station_uid = str(station.get(ATTR_EXTRA, {}).get(ATTR_UID, ''))
 
-        if radius > dist or stations_list.intersection((station_id,
-                                                        station_uid)):
+        if radius > dist or stations_list.intersection(
+            (station_id, station_uid)):
             devices.append(CityBikesStation(network, station_id, name))
 
     async_add_devices(devices, True)
@@ -194,14 +213,13 @@ class CityBikesNetwork:
             network = networks_list[0]
             result = network[ATTR_ID]
             minimum_dist = location.distance(
-                latitude, longitude,
-                network[ATTR_LOCATION][ATTR_LATITUDE],
+                latitude, longitude, network[ATTR_LOCATION][ATTR_LATITUDE],
                 network[ATTR_LOCATION][ATTR_LONGITUDE])
             for network in networks_list[1:]:
                 network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
                 network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
-                dist = location.distance(latitude, longitude,
-                                         network_latitude, network_longitude)
+                dist = location.distance(latitude, longitude, network_latitude,
+                                         network_longitude)
                 if dist < minimum_dist:
                     minimum_dist = dist
                     result = network[ATTR_ID]
@@ -224,7 +242,8 @@ class CityBikesNetwork:
         """Refresh the state of the network."""
         try:
             network = yield from async_citybikes_request(
-                self.hass, STATIONS_URI.format(uid=self.network_id),
+                self.hass,
+                STATIONS_URI.format(uid=self.network_id),
                 STATIONS_RESPONSE_SCHEMA)
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()

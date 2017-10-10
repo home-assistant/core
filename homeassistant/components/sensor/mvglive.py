@@ -12,9 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
-    )
+from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN)
 
 REQUIREMENTS = ['PyMVGLive==1.1.4']
 
@@ -45,14 +43,21 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEXT_DEPARTURE): [{
-        vol.Required(CONF_STATION): cv.string,
-        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
+        vol.Required(CONF_STATION):
+        cv.string,
+        vol.Optional(CONF_DESTINATIONS, default=['']):
+        cv.ensure_list_csv,
+        vol.Optional(CONF_DIRECTIONS, default=['']):
+        cv.ensure_list_csv,
+        vol.Optional(CONF_LINES, default=['']):
+        cv.ensure_list_csv,
         vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
-            cv.ensure_list_csv,
-        vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-        vol.Optional(CONF_NAME): cv.string}]
+        cv.ensure_list_csv,
+        vol.Optional(CONF_TIMEOFFSET, default=0):
+        cv.positive_int,
+        vol.Optional(CONF_NAME):
+        cv.string
+    }]
 })
 
 
@@ -76,13 +81,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MVGLiveSensor(Entity):
     """Implementation of an MVG Live sensor."""
 
-    def __init__(self, station, destinations, directions,
-                 lines, products, timeoffset, name):
+    def __init__(self, station, destinations, directions, lines, products,
+                 timeoffset, name):
         """Initialize the sensor."""
         self._station = station
         self._name = name
-        self.data = MVGLiveData(station, destinations, directions,
-                                lines, products, timeoffset)
+        self.data = MVGLiveData(station, destinations, directions, lines,
+                                products, timeoffset)
         self._state = STATE_UNKNOWN
         self._icon = ICONS['-']
 
@@ -127,8 +132,8 @@ class MVGLiveSensor(Entity):
 class MVGLiveData(object):
     """Pull data from the mvg-live.de web page."""
 
-    def __init__(self, station, destinations, directions,
-                 lines, products, timeoffset):
+    def __init__(self, station, destinations, directions, lines, products,
+                 timeoffset):
         """Initialize the sensor."""
         import MVGLive
         self._station = station
@@ -148,8 +153,10 @@ class MVGLiveData(object):
         """Update the connection data."""
         try:
             _departures = self.mvg.getlivedata(
-                station=self._station, ubahn=self._include_ubahn,
-                tram=self._include_tram, bus=self._include_bus,
+                station=self._station,
+                ubahn=self._include_ubahn,
+                tram=self._include_tram,
+                bus=self._include_bus,
                 sbahn=self._include_sbahn)
         except ValueError:
             self.departures = {}
@@ -157,21 +164,22 @@ class MVGLiveData(object):
             return
         for _departure in _departures:
             # find the first departure meeting the criteria
-            if ('' not in self._destinations[:1] and
-                    _departure['destination'] not in self._destinations):
+            if ('' not in self._destinations[:1]
+                    and _departure['destination'] not in self._destinations):
                 continue
-            elif ('' not in self._directions[:1] and
-                  _departure['direction'] not in self._directions):
+            elif ('' not in self._directions[:1]
+                  and _departure['direction'] not in self._directions):
                 continue
-            elif ('' not in self._lines[:1] and
-                  _departure['linename'] not in self._lines):
+            elif ('' not in self._lines[:1]
+                  and _departure['linename'] not in self._lines):
                 continue
             elif _departure['time'] < self._timeoffset:
                 continue
             # now select the relevant data
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for k in ['destination', 'linename', 'time', 'direction',
-                      'product']:
+            for k in [
+                    'destination', 'linename', 'time', 'direction', 'product'
+            ]:
                 _nextdep[k] = _departure.get(k, '')
             _nextdep['time'] = int(_nextdep['time'])
             self.departures = _nextdep

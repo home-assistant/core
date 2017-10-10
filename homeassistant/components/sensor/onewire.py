@@ -22,16 +22,32 @@ CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
 
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
-DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
-                  '12': {'temperature': 'TAI8570/temperature',
-                         'pressure': 'TAI8570/pressure'},
-                  '22': {'temperature': 'temperature'},
-                  '26': {'temperature': 'temperature',
-                         'humidity': 'humidity',
-                         'pressure': 'B1-R1-A/pressure'},
-                  '28': {'temperature': 'temperature'},
-                  '3B': {'temperature': 'temperature'},
-                  '42': {'temperature': 'temperature'}}
+DEVICE_SENSORS = {
+    '10': {
+        'temperature': 'temperature'
+    },
+    '12': {
+        'temperature': 'TAI8570/temperature',
+        'pressure': 'TAI8570/pressure'
+    },
+    '22': {
+        'temperature': 'temperature'
+    },
+    '26': {
+        'temperature': 'temperature',
+        'humidity': 'humidity',
+        'pressure': 'B1-R1-A/pressure'
+    },
+    '28': {
+        'temperature': 'temperature'
+    },
+    '3B': {
+        'temperature': 'temperature'
+    },
+    '42': {
+        'temperature': 'temperature'
+    }
+}
 
 SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
@@ -40,8 +56,11 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAMES): {cv.string: cv.string},
-    vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
+    vol.Optional(CONF_NAMES): {
+        cv.string: cv.string
+    },
+    vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR):
+    cv.string,
 })
 
 
@@ -57,13 +76,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if base_dir == DEFAULT_MOUNT_DIR:
         for device_family in DEVICE_SENSORS:
-            for device_folder in glob(os.path.join(base_dir, device_family +
-                                                   '[.-]*')):
+            for device_folder in glob(
+                    os.path.join(base_dir, device_family + '[.-]*')):
                 sensor_id = os.path.split(device_folder)[1]
                 device_file = os.path.join(device_folder, 'w1_slave')
-                devs.append(OneWireDirect(device_names.get(sensor_id,
-                                                           sensor_id),
-                                          device_file, 'temperature'))
+                devs.append(
+                    OneWireDirect(
+                        device_names.get(sensor_id, sensor_id), device_file,
+                        'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
@@ -74,9 +94,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         os.path.split(family_file_path)[0])[1]
                     device_file = os.path.join(
                         os.path.split(family_file_path)[0], sensor_value)
-                    devs.append(OneWireOWFS(device_names.get(sensor_id,
-                                                             sensor_id),
-                                            device_file, sensor_key))
+                    devs.append(
+                        OneWireOWFS(
+                            device_names.get(sensor_id, sensor_id),
+                            device_file, sensor_key))
 
     if devs == []:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
@@ -92,7 +113,7 @@ class OneWire(Entity):
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        self._name = name+' '+sensor_type.capitalize()
+        self._name = name + ' ' + sensor_type.capitalize()
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None

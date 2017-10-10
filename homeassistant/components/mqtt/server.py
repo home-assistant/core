@@ -17,15 +17,25 @@ REQUIREMENTS = ['hbmqtt==0.8']
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
-HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
-    vol.Optional('auth'): vol.Schema({
-        vol.Optional('password-file'): cv.isfile,
-    }, extra=vol.ALLOW_EXTRA),
-    vol.Optional('listeners'): vol.Schema({
-        vol.Required('default'): vol.Schema(dict),
-        str: vol.Schema(dict)
-    })
-}, extra=vol.ALLOW_EXTRA))
+HBMQTT_CONFIG_SCHEMA = vol.Any(None,
+                               vol.Schema(
+                                   {
+                                       vol.Optional('auth'):
+                                       vol.Schema(
+                                           {
+                                               vol.Optional('password-file'):
+                                               cv.isfile,
+                                           },
+                                           extra=vol.ALLOW_EXTRA),
+                                       vol.Optional('listeners'):
+                                       vol.Schema({
+                                           vol.Required('default'):
+                                           vol.Schema(dict),
+                                           str:
+                                           vol.Schema(dict)
+                                       })
+                                   },
+                                   extra=vol.ALLOW_EXTRA))
 
 
 @asyncio.coroutine
@@ -57,8 +67,8 @@ def async_start(hass, server_config):
         """Shut down the MQTT server."""
         yield from broker.shutdown()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_shutdown_mqtt_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                               async_shutdown_mqtt_server)
 
     return True, client_config
 
@@ -91,10 +101,9 @@ def generate_config(hass, passwd):
         # Encrypt with what hbmqtt uses to verify
         from passlib.apps import custom_app_context
 
-        passwd.write(
-            'homeassistant:{}\n'.format(
-                custom_app_context.encrypt(
-                    hass.config.api.api_password)).encode('utf-8'))
+        passwd.write('homeassistant:{}\n'.format(
+            custom_app_context.encrypt(hass.config.api.api_password)).encode(
+                'utf-8'))
         passwd.flush()
 
         config['auth']['password-file'] = passwd.name

@@ -10,8 +10,8 @@ from urllib.parse import urlencode
 import socket
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, ATTR_DATA, BaseNotificationService)
+from homeassistant.components.notify import (PLATFORM_SCHEMA, ATTR_DATA,
+                                             BaseNotificationService)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -22,8 +22,10 @@ ATTR_METHOD_ALLOWED = ['speak', 'alarm']
 DEFAULT_PORT = 1035
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 _LOGGER = logging.getLogger(__name__)

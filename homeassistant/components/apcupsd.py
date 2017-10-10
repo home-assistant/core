@@ -30,12 +30,15 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 VALUE_ONLINE = 'ONLINE'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

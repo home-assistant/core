@@ -24,11 +24,13 @@ DEFAULT_NAME = 'ted'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=80): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=80):
+    cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -110,10 +112,10 @@ class Ted5000Gateway(object):
             mtus = int(doc["LiveData"]["System"]["NumberMTU"])
 
             for mtu in range(1, mtus + 1):
-                power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]
-                            ["PowerNow"])
-                voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]
-                              ["VoltageNow"])
+                power = int(
+                    doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
+                voltage = int(
+                    doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
 
                 if power == 0 or voltage == 0:
                     continue

@@ -20,9 +20,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELSIUS)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON,
+                                 STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS)
 
 DOMAIN = 'climate'
 
@@ -92,17 +91,21 @@ SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
-SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
-    cv.has_at_least_one_key(
-        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
-    {
-        vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
-        vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
-        vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(ATTR_OPERATION_MODE): cv.string,
-    }
-))
+SET_TEMPERATURE_SCHEMA = vol.Schema(
+    vol.All(
+        cv.has_at_least_one_key(
+            ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW), {
+                vol.Exclusive(ATTR_TEMPERATURE, 'temperature'):
+                vol.Coerce(float),
+                vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'):
+                vol.Coerce(float),
+                vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'):
+                vol.Coerce(float),
+                vol.Optional(ATTR_ENTITY_ID):
+                cv.entity_ids,
+                vol.Optional(ATTR_OPERATION_MODE):
+                cv.string,
+            }))
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
@@ -112,25 +115,29 @@ SET_HOLD_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOLD_MODE): cv.string,
 })
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_OPERATION_MODE): cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_OPERATION_MODE):
+    cv.string,
 })
 SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_HUMIDITY):
+    vol.Coerce(float),
 })
 SET_SWING_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_SWING_MODE): cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_SWING_MODE):
+    cv.string,
 })
 
 
 @bind_hass
 def set_away_mode(hass, away_mode, entity_id=None):
     """Turn all or specified climate devices away mode on."""
-    data = {
-        ATTR_AWAY_MODE: away_mode
-    }
+    data = {ATTR_AWAY_MODE: away_mode}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -141,9 +148,7 @@ def set_away_mode(hass, away_mode, entity_id=None):
 @bind_hass
 def set_hold_mode(hass, hold_mode, entity_id=None):
     """Set new hold mode."""
-    data = {
-        ATTR_HOLD_MODE: hold_mode
-    }
+    data = {ATTR_HOLD_MODE: hold_mode}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -154,9 +159,7 @@ def set_hold_mode(hass, hold_mode, entity_id=None):
 @bind_hass
 def set_aux_heat(hass, aux_heat, entity_id=None):
     """Turn all or specified climate devices auxiliary heater on."""
-    data = {
-        ATTR_AUX_HEAT: aux_heat
-    }
+    data = {ATTR_AUX_HEAT: aux_heat}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -165,18 +168,21 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
 
 
 @bind_hass
-def set_temperature(hass, temperature=None, entity_id=None,
-                    target_temp_high=None, target_temp_low=None,
+def set_temperature(hass,
+                    temperature=None,
+                    entity_id=None,
+                    target_temp_high=None,
+                    target_temp_low=None,
                     operation_mode=None):
     """Set new target temperature."""
     kwargs = {
-        key: value for key, value in [
-            (ATTR_TEMPERATURE, temperature),
-            (ATTR_TARGET_TEMP_HIGH, target_temp_high),
-            (ATTR_TARGET_TEMP_LOW, target_temp_low),
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
-        ] if value is not None
+        key: value
+        for key, value in [(ATTR_TEMPERATURE, temperature), (
+            ATTR_TARGET_TEMP_HIGH,
+            target_temp_high), (ATTR_TARGET_TEMP_LOW, target_temp_low), (
+                ATTR_ENTITY_ID, entity_id), (ATTR_OPERATION_MODE,
+                                             operation_mode)]
+        if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
@@ -232,9 +238,10 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def _async_update_climate(target_climate):
@@ -270,7 +277,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
+        DOMAIN,
+        SERVICE_SET_AWAY_MODE,
+        async_away_mode_set_service,
         descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
 
@@ -287,7 +296,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_HOLD_MODE, async_hold_mode_set_service,
+        DOMAIN,
+        SERVICE_SET_HOLD_MODE,
+        async_hold_mode_set_service,
         descriptions.get(SERVICE_SET_HOLD_MODE),
         schema=SET_HOLD_MODE_SCHEMA)
 
@@ -307,7 +318,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
+        DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        async_aux_heat_set_service,
         descriptions.get(SERVICE_SET_AUX_HEAT),
         schema=SET_AUX_HEAT_SCHEMA)
 
@@ -321,10 +334,8 @@ def async_setup(hass, config):
             for value, temp in service.data.items():
                 if value in CONVERTIBLE_ATTRIBUTE:
                     kwargs[value] = convert_temperature(
-                        temp,
-                        hass.config.units.temperature_unit,
-                        climate.temperature_unit
-                    )
+                        temp, hass.config.units.temperature_unit,
+                        climate.temperature_unit)
                 else:
                     kwargs[value] = temp
 
@@ -333,7 +344,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        async_temperature_set_service,
         descriptions.get(SERVICE_SET_TEMPERATURE),
         schema=SET_TEMPERATURE_SCHEMA)
 
@@ -350,7 +363,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
+        DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        async_humidity_set_service,
         descriptions.get(SERVICE_SET_HUMIDITY),
         schema=SET_HUMIDITY_SCHEMA)
 
@@ -367,7 +382,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        async_fan_mode_set_service,
         descriptions.get(SERVICE_SET_FAN_MODE),
         schema=SET_FAN_MODE_SCHEMA)
 
@@ -384,7 +401,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
+        DOMAIN,
+        SERVICE_SET_OPERATION_MODE,
+        async_operation_set_service,
         descriptions.get(SERVICE_SET_OPERATION_MODE),
         schema=SET_OPERATION_MODE_SCHEMA)
 
@@ -401,7 +420,9 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
+        DOMAIN,
+        SERVICE_SET_SWING_MODE,
+        async_swing_set_service,
         descriptions.get(SERVICE_SET_SWING_MODE),
         schema=SET_SWING_MODE_SCHEMA)
 
@@ -432,8 +453,10 @@ class ClimateDevice(Entity):
         data = {
             ATTR_CURRENT_TEMPERATURE:
             self._convert_for_display(self.current_temperature),
-            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
-            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
+            ATTR_MIN_TEMP:
+            self._convert_for_display(self.min_temp),
+            ATTR_MAX_TEMP:
+            self._convert_for_display(self.max_temp),
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
         }
@@ -719,8 +742,8 @@ class ClimateDevice(Entity):
             raise TypeError("Temperature is not a number: %s" % temp)
 
         if self.temperature_unit != self.unit_of_measurement:
-            temp = convert_temperature(
-                temp, self.temperature_unit, self.unit_of_measurement)
+            temp = convert_temperature(temp, self.temperature_unit,
+                                       self.unit_of_measurement)
         # Round in the units appropriate
         if self.precision == PRECISION_HALVES:
             return round(temp * 2) / 2.0

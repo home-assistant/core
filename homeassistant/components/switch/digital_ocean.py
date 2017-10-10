@@ -22,7 +22,8 @@ DEPENDENCIES = ['digital_ocean']
 DEFAULT_NAME = 'Droplet'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_DROPLETS):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 

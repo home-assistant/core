@@ -23,8 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)
     return True

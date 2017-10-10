@@ -28,9 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         _LOGGER.info('Registered %s with switch platform.', name)
 
-        device_list.append(
-            InsteonPLMSwitchDevice(hass, plm, address, name)
-        )
+        device_list.append(InsteonPLMSwitchDevice(hass, plm, address, name))
 
     async_add_devices(device_list)
 
@@ -45,8 +43,8 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         self._address = address
         self._name = name
 
-        self._plm.add_update_callback(
-            self.async_switch_update, {'address': self._address})
+        self._plm.add_update_callback(self.async_switch_update,
+                                      {'address': self._address})
 
     @property
     def should_poll(self):

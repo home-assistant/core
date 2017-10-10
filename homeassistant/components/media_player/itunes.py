@@ -14,9 +14,9 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, PLATFORM_SCHEMA,
     SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, CONF_NAME,
-    CONF_HOST, CONF_PORT, CONF_SSL)
+from homeassistant.const import (STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
+                                 STATE_PLAYING, CONF_NAME, CONF_HOST,
+                                 CONF_PORT, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,10 +34,14 @@ SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
 })
 
 
@@ -159,11 +163,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ItunesDevice(
             config.get(CONF_NAME),
             config.get(CONF_HOST),
-            config.get(CONF_PORT),
-            config.get(CONF_SSL),
-
-            add_devices
-        )
+            config.get(CONF_PORT), config.get(CONF_SSL), add_devices)
     ])
 
 
@@ -263,7 +263,7 @@ class ItunesDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self.current_volume/100.0
+        return self.current_volume / 100.0
 
     @property
     def media_content_id(self):
@@ -417,7 +417,7 @@ class AirPlayDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume."""
-        return float(self.volume)/100.0
+        return float(self.volume) / 100.0
 
     @property
     def media_content_type(self):

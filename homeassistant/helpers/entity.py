@@ -15,25 +15,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import (run_coroutine_threadsafe,
+                                      run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 
 
-def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistant]=None) -> str:
+def generate_entity_id(entity_id_format: str,
+                       name: Optional[str],
+                       current_ids: Optional[List[str]] = None,
+                       hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
         else:
-            return run_callback_threadsafe(
-                hass.loop, async_generate_entity_id, entity_id_format, name,
-                current_ids, hass
-            ).result()
+            return run_callback_threadsafe(hass.loop, async_generate_entity_id,
+                                           entity_id_format, name, current_ids,
+                                           hass).result()
 
     name = (name or DEVICE_DEFAULT_NAME).lower()
 
@@ -41,9 +41,10 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None,
-                             hass: Optional[HomeAssistant]=None) -> str:
+def async_generate_entity_id(entity_id_format: str,
+                             name: Optional[str],
+                             current_ids: Optional[List[str]] = None,
+                             hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -204,8 +205,7 @@ class Entity(object):
             self._update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
                 "Update of %s is taking over %s seconds", self.entity_id,
-                SLOW_UPDATE_WARNING
-            )
+                SLOW_UPDATE_WARNING)
 
             try:
                 if hasattr(self, 'async_update'):
@@ -271,8 +271,8 @@ class Entity(object):
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+                    and unit_of_measure != units.temperature_unit):
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
@@ -281,8 +281,8 @@ class Entity(object):
             # Could not convert state to float
             pass
 
-        self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update)
+        self.hass.states.async_set(self.entity_id, state, attr,
+                                   self.force_update)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
@@ -297,9 +297,7 @@ class Entity(object):
 
     def remove(self) -> None:
         """Remove entity from HASS."""
-        run_coroutine_threadsafe(
-            self.async_remove(), self.hass.loop
-        ).result()
+        run_coroutine_threadsafe(self.async_remove(), self.hass.loop).result()
 
     @asyncio.coroutine
     def async_remove(self) -> None:
@@ -326,8 +324,8 @@ class Entity(object):
 
     def __eq__(self, other):
         """Return the comparison."""
-        return (isinstance(other, Entity) and
-                other.unique_id == self.unique_id)
+        return (isinstance(other, Entity)
+                and other.unique_id == self.unique_id)
 
     def __repr__(self):
         """Return the representation."""
@@ -357,8 +355,7 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
-            ft.partial(self.turn_on, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -369,8 +366,7 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
-            ft.partial(self.turn_off, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs) -> None:
         """Toggle the entity."""

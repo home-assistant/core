@@ -91,8 +91,10 @@ class DemoWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the weather condition."""
-        return [k for k, v in CONDITION_CLASSES.items() if
-                self._condition.lower() in v][0]
+        return [
+            k for k, v in CONDITION_CLASSES.items()
+            if self._condition.lower() in v
+        ][0]
 
     @property
     def attribution(self):

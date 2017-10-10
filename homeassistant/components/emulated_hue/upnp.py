@@ -48,8 +48,8 @@ class DescriptionXmlView(HomeAssistantView):
 </root>
 """
 
-        resp_text = xml_template.format(
-            self.config.advertise_ip, self.config.advertise_port)
+        resp_text = xml_template.format(self.config.advertise_ip,
+                                        self.config.advertise_port)
 
         return web.Response(text=resp_text, content_type='text/xml')
 
@@ -94,16 +94,12 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
         # Required for receiving multicast
         ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        ssdp_socket.setsockopt(
-            socket.SOL_IP,
-            socket.IP_MULTICAST_IF,
-            socket.inet_aton(self.host_ip_addr))
+        ssdp_socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF,
+                               socket.inet_aton(self.host_ip_addr))
 
-        ssdp_socket.setsockopt(
-            socket.SOL_IP,
-            socket.IP_ADD_MEMBERSHIP,
-            socket.inet_aton("239.255.255.250") +
-            socket.inet_aton(self.host_ip_addr))
+        ssdp_socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP,
+                               socket.inet_aton("239.255.255.250") +
+                               socket.inet_aton(self.host_ip_addr))
 
         if self.upnp_bind_multicast:
             ssdp_socket.bind(("", 1900))
@@ -116,9 +112,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 return
 
             try:
-                read, _, _ = select.select(
-                    [ssdp_socket], [],
-                    [ssdp_socket], 2)
+                read, _, _ = select.select([ssdp_socket], [], [ssdp_socket], 2)
 
                 if ssdp_socket in read:
                     data, addr = ssdp_socket.recvfrom(1024)
@@ -138,8 +132,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
             if "M-SEARCH" in data.decode('utf-8', errors='ignore'):
                 # SSDP M-SEARCH method received, respond to it with our info
-                resp_socket = socket.socket(
-                    socket.AF_INET, socket.SOCK_DGRAM)
+                resp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
                 resp_socket.sendto(self.upnp_response, addr)
                 resp_socket.close()

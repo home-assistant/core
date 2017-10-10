@@ -30,8 +30,7 @@ def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = vol.Schema(
-        config.get(CONF_EVENT_DATA),
-        extra=vol.ALLOW_EXTRA)
+        config.get(CONF_EVENT_DATA), extra=vol.ALLOW_EXTRA)
 
     @callback
     def handle_event(event):

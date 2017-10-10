@@ -25,8 +25,10 @@ DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
-SUPPORTED_PENDING_STATES = [STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-                            STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED]
+SUPPORTED_PENDING_STATES = [
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_TRIGGERED
+]
 
 ATTR_POST_PENDING_STATE = 'post_pending_state'
 
@@ -42,40 +44,47 @@ def _state_validator(config):
 
 STATE_SETTING_SCHEMA = vol.Schema({
     vol.Optional(CONF_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.All(vol.Coerce(int), vol.Range(min=0))
 })
 
-
-PLATFORM_SCHEMA = vol.Schema(vol.All({
-    vol.Required(CONF_PLATFORM): 'manual',
-    vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-    vol.Optional(CONF_CODE): cv.string,
-    vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All({
+        vol.Required(CONF_PLATFORM):
+        'manual',
+        vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME):
+        cv.string,
+        vol.Optional(CONF_CODE):
+        cv.string,
+        vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
+        vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_DISARM_AFTER_TRIGGER,
-                 default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
-    vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_HOME, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): STATE_SETTING_SCHEMA,
-    vol.Optional(STATE_ALARM_TRIGGERED, default={}): STATE_SETTING_SCHEMA,
-}, _state_validator))
+        vol.Optional(
+            CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER):
+        cv.boolean,
+        vol.Optional(STATE_ALARM_ARMED_AWAY, default={}):
+        STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_ARMED_HOME, default={}):
+        STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}):
+        STATE_SETTING_SCHEMA,
+        vol.Optional(STATE_ALARM_TRIGGERED, default={}):
+        STATE_SETTING_SCHEMA,
+    }, _state_validator))
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the manual alarm platform."""
-    add_devices([ManualAlarm(
-        hass,
-        config[CONF_NAME],
-        config.get(CONF_CODE),
-        config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
-        config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
-        config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
-        config
-        )])
+    add_devices([
+        ManualAlarm(hass, config[CONF_NAME],
+                    config.get(CONF_CODE),
+                    config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
+                    config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
+                    config.get(CONF_DISARM_AFTER_TRIGGER,
+                               DEFAULT_DISARM_AFTER_TRIGGER), config)
+    ])
 
 
 class ManualAlarm(alarm.AlarmControlPanel):
@@ -188,17 +197,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
         pending_time = self._pending_time_by_state[state]
 
         if state == STATE_ALARM_TRIGGERED and self._trigger_time:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self._state_ts + pending_time)
+            track_point_in_time(self._hass, self.async_update_ha_state,
+                                self._state_ts + pending_time)
 
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
                 self._state_ts + self._trigger_time + pending_time)
         elif state in SUPPORTED_PENDING_STATES and pending_time:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self._state_ts + pending_time)
+            track_point_in_time(self._hass, self.async_update_ha_state,
+                                self._state_ts + pending_time)
 
     def _validate_code(self, code, state):
         """Validate given code."""

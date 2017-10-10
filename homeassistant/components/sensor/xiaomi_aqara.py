@@ -14,23 +14,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['sensor']:
             if device['model'] == 'sensor_ht':
-                devices.append(XiaomiSensor(device, 'Temperature',
-                                            'temperature', gateway))
-                devices.append(XiaomiSensor(device, 'Humidity',
-                                            'humidity', gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Temperature', 'temperature',
+                                 gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Humidity', 'humidity', gateway))
             elif device['model'] == 'weather.v1':
-                devices.append(XiaomiSensor(device, 'Temperature',
-                                            'temperature', gateway))
-                devices.append(XiaomiSensor(device, 'Humidity',
-                                            'humidity', gateway))
-                devices.append(XiaomiSensor(device, 'Pressure',
-                                            'pressure', gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Temperature', 'temperature',
+                                 gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Humidity', 'humidity', gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Pressure', 'pressure', gateway))
             elif device['model'] == 'sensor_motion.aq2':
-                devices.append(XiaomiSensor(device, 'Illumination',
-                                            'lux', gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Illumination', 'lux', gateway))
             elif device['model'] == 'gateway':
-                devices.append(XiaomiSensor(device, 'Illumination',
-                                            'illumination', gateway))
+                devices.append(
+                    XiaomiSensor(device, 'Illumination', 'illumination',
+                                 gateway))
     add_devices(devices)
 
 

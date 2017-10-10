@@ -19,9 +19,12 @@ CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-    vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-    vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float)
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME):
+    vol.Coerce(str),
+    vol.Optional(CONF_SCALE, default=1):
+    vol.Coerce(float),
+    vol.Optional(CONF_OFFSET, default=0):
+    vol.Coerce(float)
 })
 
 TEMPER_SENSORS = []
@@ -95,15 +98,13 @@ class TemperSensor(Entity):
 
         # set calibration data
         self.temper_device.set_calibration_data(
-            scale=self.scale,
-            offset=self.offset
-        )
+            scale=self.scale, offset=self.offset)
 
     def update(self):
         """Retrieve latest state."""
         try:
-            format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
-                          else 'celsius')
+            format_str = ('fahrenheit'
+                          if self.temp_unit == TEMP_FAHRENHEIT else 'celsius')
             sensor_value = self.temper_device.get_temperature(format_str)
             self.current_value = round(sensor_value, 1)
         except IOError:

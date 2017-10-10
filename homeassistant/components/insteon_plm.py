@@ -10,8 +10,7 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
@@ -23,13 +22,17 @@ DOMAIN = 'insteon_plm'
 
 CONF_OVERRIDE = 'device_override'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
-            cv.ensure_list_csv, vol.Length(min=1))
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_PORT):
+            cv.string,
+            vol.Optional(CONF_OVERRIDE, default=[]):
+            vol.All(cv.ensure_list_csv, vol.Length(min=1))
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 PLM_PLATFORMS = {
     'binary_sensor': ['binary_sensor'],
@@ -54,8 +57,8 @@ def async_setup(hass, config):
         address = device.get('address_hex')
         capabilities = device.get('capabilities', [])
 
-        _LOGGER.info("New INSTEON PLM device: %s (%s) %r",
-                     name, address, capabilities)
+        _LOGGER.info("New INSTEON PLM device: %s (%s) %r", name, address,
+                     capabilities)
 
         loadlist = []
         for platform in PLM_PLATFORMS:
@@ -69,7 +72,10 @@ def async_setup(hass, config):
         for loadplatform in loadlist:
             hass.async_add_job(
                 discovery.async_load_platform(
-                    hass, loadplatform, DOMAIN, discovered=[device],
+                    hass,
+                    loadplatform,
+                    DOMAIN,
+                    discovered=[device],
                     hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)

@@ -18,22 +18,23 @@ REQUIREMENTS = ['restrictedpython==4.0a3']
 FOLDER = 'python_scripts'
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema(dict)
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
 
 ALLOWED_HASS = set(['bus', 'services', 'states'])
 ALLOWED_EVENTBUS = set(['fire'])
-ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
-                            'is_state_attr', 'remove', 'set'])
+ALLOWED_STATEMACHINE = set(
+    ['entity_ids', 'all', 'get', 'is_state', 'is_state_attr', 'remove', 'set'])
 ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
-ALLOWED_TIME = set(['sleep', 'strftime', 'strptime', 'gmtime', 'localtime',
-                    'ctime', 'time', 'mktime'])
+ALLOWED_TIME = set([
+    'sleep', 'strftime', 'strptime', 'gmtime', 'localtime', 'ctime', 'time',
+    'mktime'
+])
 ALLOWED_DATETIME = set(['date', 'time', 'datetime', 'timedelta', 'tzinfo'])
 ALLOWED_DT_UTIL = set([
     'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
     'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
-    'get_age'])
+    'get_age'
+])
 
 
 class ScriptError(HomeAssistantError):
@@ -55,6 +56,7 @@ def setup(hass, config):
     def reload_scripts_handler(call):
         """Handle reload service calls."""
         discover_scripts(hass)
+
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
 
     return True
@@ -117,13 +119,13 @@ def execute(hass, filename, source, data=None):
         # pylint: disable=too-many-boolean-expressions
         if name.startswith('async_'):
             raise ScriptError('Not allowed to access async methods')
-        elif (obj is hass and name not in ALLOWED_HASS or
-              obj is hass.bus and name not in ALLOWED_EVENTBUS or
-              obj is hass.states and name not in ALLOWED_STATEMACHINE or
-              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
-              obj is dt_util and name not in ALLOWED_DT_UTIL or
-              obj is datetime and name not in ALLOWED_DATETIME or
-              isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
+        elif (obj is hass and name not in ALLOWED_HASS
+              or obj is hass.bus and name not in ALLOWED_EVENTBUS
+              or obj is hass.states and name not in ALLOWED_STATEMACHINE
+              or obj is hass.services and name not in ALLOWED_SERVICEREGISTRY
+              or obj is dt_util and name not in ALLOWED_DT_UTIL
+              or obj is datetime and name not in ALLOWED_DATETIME
+              or isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
             raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))
 
@@ -145,11 +147,7 @@ def execute(hass, filename, source, data=None):
         '_unpack_sequence_': guarded_unpack_sequence,
     }
     logger = logging.getLogger('{}.{}'.format(__name__, filename))
-    local = {
-        'hass': hass,
-        'data': data or {},
-        'logger': logger
-    }
+    local = {'hass': hass, 'data': data or {}, 'logger': logger}
 
     try:
         _LOGGER.info('Executing %s: %s', filename, data)

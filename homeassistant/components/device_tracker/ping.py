@@ -23,8 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PING_COUNT = 'count'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(const.CONF_HOSTS): {cv.string: cv.string},
-    vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
+    vol.Required(const.CONF_HOSTS): {
+        cv.string: cv.string
+    },
+    vol.Optional(CONF_PING_COUNT, default=1):
+    cv.positive_int,
 })
 
 
@@ -40,14 +43,14 @@ class Host(object):
         if sys.platform == 'win32':
             self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
         else:
-            self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
-                              self.ip_address]
+            self._ping_cmd = [
+                'ping', '-n', '-q', '-c1', '-W1', self.ip_address
+            ]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(self._ping_cmd,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.DEVNULL)
+        pinger = subprocess.Popen(
+            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
             pinger.communicate()
             return pinger.returncode == 0
@@ -68,8 +71,10 @@ class Host(object):
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
-    hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
-             config[const.CONF_HOSTS].items()]
+    hosts = [
+        Host(ip, dev_id, hass, config)
+        for (dev_id, ip) in config[const.CONF_HOSTS].items()
+    ]
     interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + \
         DEFAULT_SCAN_INTERVAL
     _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",

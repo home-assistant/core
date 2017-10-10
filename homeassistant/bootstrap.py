@@ -11,8 +11,8 @@ from typing import Any, Optional, Dict
 
 import voluptuous as vol
 
-from homeassistant import (
-    core, config as conf_util, loader, components as core_components)
+from homeassistant import (core, config as conf_util, loader, components as
+                           core_components)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -29,9 +29,8 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-FIRST_INIT_COMPONENT = set((
-    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
-    'frontend', 'history'))
+FIRST_INIT_COMPONENT = set(('recorder', 'mqtt', 'mqtt_eventstream', 'logger',
+                            'introduction', 'frontend', 'history'))
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -57,10 +56,8 @@ def from_config_dict(config: Dict[str, Any],
 
     # run task
     hass = hass.loop.run_until_complete(
-        async_from_config_dict(
-            config, hass, config_dir, enable_log, verbose, skip_pip,
-            log_rotate_days, log_file)
-    )
+        async_from_config_dict(config, hass, config_dir, enable_log, verbose,
+                               skip_pip, log_rotate_days, log_file))
 
     return hass
 
@@ -90,8 +87,7 @@ def async_from_config_dict(config: Dict[str, Any],
             'Python 3.4 support has been deprecated and will be removed in '
             'the begining of 2018. Please upgrade Python or your operating '
             'system. More info: https://home-assistant.io/blog/2017/10/06/'
-            'deprecating-python-3.4-support/'
-        )
+            'deprecating-python-3.4-support/')
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -112,8 +108,9 @@ def async_from_config_dict(config: Dict[str, Any],
         yield from hass.async_add_job(loader.prepare, hass)
 
     # Merge packages
-    conf_util.merge_packages_config(
-        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+    conf_util.merge_packages_config(config,
+                                    core_config.get(conf_util.CONF_PACKAGES,
+                                                    {}))
 
     # Make a copy because we are mutating it.
     # Use OrderedDict in case original one was one.
@@ -124,8 +121,8 @@ def async_from_config_dict(config: Dict[str, Any],
     config = new_config
 
     # Filter out the repeating and common config section [homeassistant]
-    components = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
+    components = set(
+        key.split(' ')[0] for key in config.keys() if key != core.DOMAIN)
 
     # setup components
     # pylint: disable=not-an-iterable
@@ -156,18 +153,18 @@ def async_from_config_dict(config: Dict[str, Any],
     yield from hass.async_block_till_done()
 
     stop = time()
-    _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
+    _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
     async_register_signal_handling(hass)
     return hass
 
 
 def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant]=None,
-                     verbose: bool=False,
-                     skip_pip: bool=True,
-                     log_rotate_days: Any=None,
-                     log_file: Any=None):
+                     hass: Optional[core.HomeAssistant] = None,
+                     verbose: bool = False,
+                     skip_pip: bool = True,
+                     log_rotate_days: Any = None,
+                     log_file: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -178,9 +175,8 @@ def from_config_file(config_path: str,
 
     # run task
     hass = hass.loop.run_until_complete(
-        async_from_config_file(
-            config_path, hass, verbose, skip_pip, log_rotate_days, log_file)
-    )
+        async_from_config_file(config_path, hass, verbose, skip_pip,
+                               log_rotate_days, log_file))
 
     return hass
 
@@ -188,10 +184,10 @@ def from_config_file(config_path: str,
 @asyncio.coroutine
 def async_from_config_file(config_path: str,
                            hass: core.HomeAssistant,
-                           verbose: bool=False,
-                           skip_pip: bool=True,
-                           log_rotate_days: Any=None,
-                           log_file: Any=None):
+                           verbose: bool = False,
+                           skip_pip: bool = True,
+                           log_rotate_days: Any = None,
+                           log_file: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -219,8 +215,10 @@ def async_from_config_file(config_path: str,
 
 
 @core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                         log_rotate_days=None, log_file=None) -> None:
+def async_enable_logging(hass: core.HomeAssistant,
+                         verbose: bool = False,
+                         log_rotate_days=None,
+                         log_file=None) -> None:
     """Set up the logging.
 
     This method must be run in the event loop.
@@ -238,18 +236,18 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
 
     try:
         from colorlog import ColoredFormatter
-        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            colorfmt,
-            datefmt=datefmt,
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-            }
-        ))
+        logging.getLogger().handlers[0].setFormatter(
+            ColoredFormatter(
+                colorfmt,
+                datefmt=datefmt,
+                reset=True,
+                log_colors={
+                    'DEBUG': 'cyan',
+                    'INFO': 'green',
+                    'WARNING': 'yellow',
+                    'ERROR': 'red',
+                    'CRITICAL': 'red',
+                }))
     except ImportError:
         pass
 
@@ -285,8 +283,8 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
             logging.getLogger('').removeHandler(async_handler)
             yield from async_handler.async_close(blocking=True)
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE,
+                                   async_stop_async_handler)
 
         logger = logging.getLogger('')
         logger.addHandler(async_handler)
@@ -295,8 +293,8 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
     else:
-        _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+        _LOGGER.error("Unable to setup error log %s (access denied)",
+                      err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:

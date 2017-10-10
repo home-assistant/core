@@ -19,14 +19,21 @@ DOMAIN = 'octoprint'
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
-        vol.Optional(CONF_BED, default=False): cv.boolean
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY):
+            cv.string,
+            vol.Required(CONF_HOST):
+            cv.string,
+            vol.Optional(CONF_NUMBER_OF_TOOLS, default=0):
+            cv.positive_int,
+            vol.Optional(CONF_BED, default=False):
+            cv.boolean
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -55,8 +62,7 @@ class OctoPrintAPI(object):
     def __init__(self, api_url, key, bed, number_of_tools):
         """Initialize OctoPrint API and set headers needed later."""
         self.api_url = api_url
-        self.headers = {'content-type': CONTENT_TYPE_JSON,
-                        'X-Api-Key': key}
+        self.headers = {'content-type': CONTENT_TYPE_JSON, 'X-Api-Key': key}
         self.printer_last_reading = [{}, None]
         self.job_last_reading = [{}, None]
         self.job_available = False
@@ -99,8 +105,7 @@ class OctoPrintAPI(object):
 
         url = self.api_url + endpoint
         try:
-            response = requests.get(
-                url, headers=self.headers, timeout=9)
+            response = requests.get(url, headers=self.headers, timeout=9)
             response.raise_for_status()
             if endpoint == "job":
                 self.job_last_reading[0] = response.json()

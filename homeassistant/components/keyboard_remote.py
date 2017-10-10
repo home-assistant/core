@@ -13,8 +13,8 @@ import time
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['evdev==0.6.1']
 
@@ -35,14 +35,19 @@ KEYBOARD_REMOTE_DISCONNECTED = 'keyboard_remote_disconnected'
 
 TYPE = 'type'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-        vol.Optional(TYPE, default='key_up'):
-        vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP):
+            cv.string,
+            vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP):
+            cv.string,
+            vol.Optional(TYPE, default='key_up'):
+            vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -54,10 +59,7 @@ def setup(hass, config):
         _LOGGER.error("No device_descriptor or device_name found")
         return
 
-    keyboard_remote = KeyboardRemote(
-        hass,
-        config
-    )
+    keyboard_remote = KeyboardRemote(hass, config)
 
     def _start_keyboard_remote(_event):
         keyboard_remote.run()
@@ -65,14 +67,8 @@ def setup(hass, config):
     def _stop_keyboard_remote(_event):
         keyboard_remote.stopped.set()
 
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_START,
-        _start_keyboard_remote
-    )
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_keyboard_remote
-    )
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_keyboard_remote)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_keyboard_remote)
 
     return True
 
@@ -94,24 +90,19 @@ class KeyboardRemote(threading.Thread):
         if self.dev is not None:
             _LOGGER.debug("Keyboard connected, %s", self.device_id)
         else:
-            _LOGGER.debug(
-                'Keyboard not connected, %s.\n\
-                Check /dev/input/event* permissions.',
-                self.device_id
-                )
+            _LOGGER.debug('Keyboard not connected, %s.\n\
+                Check /dev/input/event* permissions.', self.device_id)
 
             id_folder = '/dev/input/by-id/'
 
             if os.path.isdir(id_folder):
-                device_names = [InputDevice(file_name).name
-                                for file_name in list_devices()]
-                _LOGGER.debug(
-                    'Possible device names are:\n %s.\n \
-                    Possible device descriptors are %s:\n %s',
-                    device_names,
-                    id_folder,
-                    os.listdir(id_folder)
-                    )
+                device_names = [
+                    InputDevice(file_name).name
+                    for file_name in list_devices()
+                ]
+                _LOGGER.debug('Possible device names are:\n %s.\n \
+                    Possible device descriptors are %s:\n %s', device_names,
+                              id_folder, os.listdir(id_folder))
 
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
@@ -151,9 +142,7 @@ class KeyboardRemote(threading.Thread):
                 self.dev = self._get_keyboard_device()
                 if self.dev is not None:
                     self.dev.grab()
-                    self.hass.bus.fire(
-                        KEYBOARD_REMOTE_CONNECTED
-                    )
+                    self.hass.bus.fire(KEYBOARD_REMOTE_CONNECTED)
                     _LOGGER.debug("Keyboard re-connected, %s", self.device_id)
                 else:
                     continue
@@ -162,9 +151,7 @@ class KeyboardRemote(threading.Thread):
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
                 self.dev = None
-                self.hass.bus.fire(
-                    KEYBOARD_REMOTE_DISCONNECTED
-                )
+                self.hass.bus.fire(KEYBOARD_REMOTE_DISCONNECTED)
                 _LOGGER.debug("Keyboard disconnected, %s", self.device_id)
                 continue
 
@@ -174,7 +161,5 @@ class KeyboardRemote(threading.Thread):
             # pylint: disable=no-member
             if event.type is ecodes.EV_KEY and event.value is self.key_value:
                 _LOGGER.debug(categorize(event))
-                self.hass.bus.fire(
-                    KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: event.code}
-                )
+                self.hass.bus.fire(KEYBOARD_REMOTE_COMMAND_RECEIVED,
+                                   {KEY_CODE: event.code})

@@ -7,8 +7,7 @@ https://home-assistant.io/components/light.isy994/
 import logging
 from typing import Callable
 
-from homeassistant.components.light import (
-    Light, SUPPORT_BRIGHTNESS)
+from homeassistant.components.light import (Light, SUPPORT_BRIGHTNESS)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
@@ -20,8 +19,10 @@ STATES = [STATE_OFF, STATE_ON, 'true', 'false', '%']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 light platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")

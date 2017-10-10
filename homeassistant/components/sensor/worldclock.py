@@ -24,8 +24,10 @@ ICON = 'mdi:clock'
 TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TIME_ZONE): cv.time_zone,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_TIME_ZONE):
+    cv.time_zone,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -65,5 +67,5 @@ class WorldClockSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the time and updates the states."""
-        self._state = dt_util.now(time_zone=self._time_zone).strftime(
-            TIME_STR_FORMAT)
+        self._state = dt_util.now(
+            time_zone=self._time_zone).strftime(TIME_STR_FORMAT)

@@ -68,12 +68,15 @@ SERVICE_HANDLERS = {
 
 CONF_IGNORE = 'ignore'
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): vol.Schema({
-        vol.Optional(CONF_IGNORE, default=[]):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(DOMAIN):
+        vol.Schema({
+            vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -118,8 +121,8 @@ def async_setup(hass, config):
         if platform is None:
             yield from async_discover(hass, service, info, component, config)
         else:
-            yield from async_load_platform(
-                hass, component, platform, info, config)
+            yield from async_load_platform(hass, component, platform, info,
+                                           config)
 
     @asyncio.coroutine
     def scan_devices(now):

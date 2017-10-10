@@ -11,13 +11,12 @@ def run(args):
         description=("Ensure a Home Assistant config exists, "
                      "creates one if necessary."))
     parser.add_argument(
-        '-c', '--config',
+        '-c',
+        '--config',
         metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
-    parser.add_argument(
-        '--script',
-        choices=['ensure_config'])
+    parser.add_argument('--script', choices=['ensure_config'])
 
     args = parser.parse_args()
 

@@ -10,12 +10,11 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
-from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON,
-    STATE_OFF, EVENT_HOMEASSISTANT_START, MATCH_ALL
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ENTITY_ID_FORMAT,
+                                            Light, SUPPORT_BRIGHTNESS)
+from homeassistant.const import (CONF_VALUE_TEMPLATE, CONF_ENTITY_ID,
+                                 CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
+                                 EVENT_HOMEASSISTANT_START, MATCH_ALL)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -33,19 +32,28 @@ CONF_OFF_ACTION = 'turn_off'
 CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
 
-
 LIGHT_SCHEMA = vol.Schema({
-    vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
-    vol.Optional(CONF_ENTITY_ID): cv.entity_ids
+    vol.Required(CONF_ON_ACTION):
+    cv.SCRIPT_SCHEMA,
+    vol.Required(CONF_OFF_ACTION):
+    cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE, default=None):
+    cv.template,
+    vol.Optional(CONF_LEVEL_ACTION, default=None):
+    cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_LEVEL_TEMPLATE, default=None):
+    cv.template,
+    vol.Optional(CONF_FRIENDLY_NAME, default=None):
+    cv.string,
+    vol.Optional(CONF_ENTITY_ID):
+    cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
+    vol.Required(CONF_LIGHTS):
+    vol.Schema({
+        cv.slug: LIGHT_SCHEMA
+    }),
 })
 
 
@@ -80,11 +88,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
         lights.append(
-            LightTemplate(
-                hass, device, friendly_name, state_template,
-                on_action, off_action, level_action, level_template,
-                entity_ids)
-        )
+            LightTemplate(hass, device, friendly_name, state_template,
+                          on_action, off_action, level_action, level_template,
+                          entity_ids))
 
     if not lights:
         _LOGGER.error("No lights added")
@@ -165,15 +171,15 @@ class LightTemplate(Light):
         @callback
         def template_light_startup(event):
             """Update template on startup."""
-            if (self._template is not None or
-                    self._level_template is not None):
-                async_track_state_change(
-                    self.hass, self._entities, template_light_state_listener)
+            if (self._template is not None
+                    or self._level_template is not None):
+                async_track_state_change(self.hass, self._entities,
+                                         template_light_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_light_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_light_startup)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -191,8 +197,11 @@ class LightTemplate(Light):
             optimistic_set = True
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self.hass.async_add_job(self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}))
+            self.hass.async_add_job(
+                self._level_script.async_run({
+                    "brightness":
+                    kwargs[ATTR_BRIGHTNESS]
+                }))
         else:
             self.hass.async_add_job(self._on_script.async_run())
 
@@ -220,10 +229,8 @@ class LightTemplate(Light):
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)
             else:
-                _LOGGER.error(
-                    'Received invalid light is_on state: %s. ' +
-                    'Expected: %s',
-                    state, ', '.join(_VALID_STATES))
+                _LOGGER.error('Received invalid light is_on state: %s. ' +
+                              'Expected: %s', state, ', '.join(_VALID_STATES))
                 self._state = None
 
         if self._level_template is not None:
@@ -237,7 +244,6 @@ class LightTemplate(Light):
                 self._brightness = brightness
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s' +
-                    'Expected: 0-255',
+                    'Received invalid brightness : %s' + 'Expected: 0-255',
                     brightness)
                 self._brightness = None

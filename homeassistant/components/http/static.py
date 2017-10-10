@@ -67,6 +67,7 @@ class CachingFileResponse(FileResponse):
 @asyncio.coroutine
 def staticresource_middleware(app, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
+
     @asyncio.coroutine
     def static_middleware_handler(request):
         """Strip out fingerprints from resource names."""

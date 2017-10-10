@@ -14,8 +14,8 @@ import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
 from homeassistant.util.async import run_coroutine_threadsafe
-from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, PLATFORM_FORMAT, CONSTRAINT_FILE)
+from homeassistant.const import (EVENT_COMPONENT_LOADED, PLATFORM_FORMAT,
+                                 CONSTRAINT_FILE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,16 +27,18 @@ DATA_PIP_LOCK = 'pip_lock'
 SLOW_SETUP_WARNING = 10
 
 
-def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict]=None) -> bool:
+def setup_component(hass: core.HomeAssistant,
+                    domain: str,
+                    config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
 @asyncio.coroutine
-def async_setup_component(hass: core.HomeAssistant, domain: str,
-                          config: Optional[Dict]=None) -> bool:
+def async_setup_component(hass: core.HomeAssistant,
+                          domain: str,
+                          config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -79,10 +81,12 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
         """Install packages."""
         if pkg_util.running_under_virtualenv():
             return pkg_util.install_package(
-                mod, constraints=os.path.join(
+                mod,
+                constraints=os.path.join(
                     os.path.dirname(__file__), CONSTRAINT_FILE))
         return pkg_util.install_package(
-            mod, target=hass.config.path('deps'),
+            mod,
+            target=hass.config.path('deps'),
             constraints=os.path.join(
                 os.path.dirname(__file__), CONSTRAINT_FILE))
 
@@ -101,42 +105,42 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
 @asyncio.coroutine
 def _async_process_dependencies(hass, config, name, dependencies):
     """Ensure all dependencies are set up."""
-    blacklisted = [dep for dep in dependencies
-                   if dep in loader.DEPENDENCY_BLACKLIST]
+    blacklisted = [
+        dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST
+    ]
 
     if blacklisted:
         _LOGGER.error("Unable to setup dependencies of %s: "
-                      "found blacklisted dependencies: %s",
-                      name, ', '.join(blacklisted))
+                      "found blacklisted dependencies: %s", name,
+                      ', '.join(blacklisted))
         return False
 
-    tasks = [async_setup_component(hass, dep, config) for dep
-             in dependencies]
+    tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
 
     if not tasks:
         return True
 
     results = yield from asyncio.gather(*tasks, loop=hass.loop)
 
-    failed = [dependencies[idx] for idx, res
-              in enumerate(results) if not res]
+    failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
 
     if failed:
         _LOGGER.error("Unable to setup dependencies of %s. "
-                      "Setup failed for dependencies: %s",
-                      name, ', '.join(failed))
+                      "Setup failed for dependencies: %s", name,
+                      ', '.join(failed))
 
         return False
     return True
 
 
 @asyncio.coroutine
-def _async_setup_component(hass: core.HomeAssistant,
-                           domain: str, config) -> bool:
+def _async_setup_component(hass: core.HomeAssistant, domain: str,
+                           config) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
     """
+
     def log_error(msg, link=True):
         """Log helper."""
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
@@ -182,16 +186,16 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    warn_task = hass.loop.call_later(
-        SLOW_SETUP_WARNING, _LOGGER.warning,
-        "Setup of %s is taking over %s seconds.", domain, SLOW_SETUP_WARNING)
+    warn_task = hass.loop.call_later(SLOW_SETUP_WARNING, _LOGGER.warning,
+                                     "Setup of %s is taking over %s seconds.",
+                                     domain, SLOW_SETUP_WARNING)
 
     try:
         if async_comp:
             result = yield from component.async_setup(hass, processed_config)
         else:
-            result = yield from hass.async_add_job(
-                component.setup, hass, processed_config)
+            result = yield from hass.async_add_job(component.setup, hass,
+                                                   processed_config)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
@@ -216,9 +220,8 @@ def _async_setup_component(hass: core.HomeAssistant,
     if domain in hass.data[DATA_SETUP]:
         hass.data[DATA_SETUP].pop(domain)
 
-    hass.bus.async_fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
-    )
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED,
+                        {ATTR_COMPONENT: component.DOMAIN})
 
     return True
 

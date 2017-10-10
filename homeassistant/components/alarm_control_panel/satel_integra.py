@@ -8,9 +8,8 @@ import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.satel_integra import (CONF_ARM_HOME_MODE,
-                                                    DATA_SATEL,
-                                                    SIGNAL_PANEL_MESSAGE)
+from homeassistant.components.satel_integra import (
+    CONF_ARM_HOME_MODE, DATA_SATEL, SIGNAL_PANEL_MESSAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -42,8 +41,8 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_PANEL_MESSAGE,
+                                 self._message_callback)
 
     @callback
     def _message_callback(self, message):

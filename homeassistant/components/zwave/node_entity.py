@@ -6,10 +6,9 @@ from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import (
-    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
-    ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN,
-    COMMAND_CLASS_CENTRAL_SCENE)
+from .const import (ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID,
+                    ATTR_SCENE_DATA, ATTR_BASIC_LEVEL, EVENT_NODE_EVENT,
+                    EVENT_SCENE_ACTIVATED, DOMAIN, COMMAND_CLASS_CENTRAL_SCENE)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,13 +24,15 @@ ATTR_NODE_NAME = 'node_name'
 STAGE_COMPLETE = 'Complete'
 
 _REQUIRED_ATTRIBUTES = [
-    ATTR_QUERY_STAGE, ATTR_AWAKE, ATTR_READY, ATTR_FAILED,
-    'is_info_received', 'max_baud_rate', 'is_zwave_plus']
+    ATTR_QUERY_STAGE, ATTR_AWAKE, ATTR_READY, ATTR_FAILED, 'is_info_received',
+    'max_baud_rate', 'is_zwave_plus'
+]
 _OPTIONAL_ATTRIBUTES = ['capabilities', 'neighbors', 'location']
 _COMM_ATTRIBUTES = [
     'sentCnt', 'sentFailed', 'retries', 'receivedCnt', 'receivedDups',
     'receivedUnsolicited', 'sentTS', 'receivedTS', 'lastRequestRTT',
-    'averageRequestRTT', 'lastResponseRTT', 'averageResponseRTT']
+    'averageRequestRTT', 'lastResponseRTT', 'averageResponseRTT'
+]
 ATTRIBUTES = _REQUIRED_ATTRIBUTES + _OPTIONAL_ATTRIBUTES
 
 
@@ -89,8 +90,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
-        self.old_entity_id = "{}.{}_{}".format(
-            DOMAIN, slugify(self._name), self.node_id)
+        self.old_entity_id = "{}.{}_{}".format(DOMAIN,
+                                               slugify(self._name),
+                                               self.node_id)
         self.new_entity_id = "{}.{}".format(DOMAIN, slugify(self._name))
         if not new_entity_ids:
             self.entity_id = self.old_entity_id
@@ -98,15 +100,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
-        dispatcher.connect(
-            self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+        dispatcher.connect(self.network_node_changed,
+                           ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
-        dispatcher.connect(
-            self.network_node_changed, ZWaveNetwork.SIGNAL_NOTIFICATION)
-        dispatcher.connect(
-            self.network_node_event, ZWaveNetwork.SIGNAL_NODE_EVENT)
-        dispatcher.connect(
-            self.network_scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT)
+        dispatcher.connect(self.network_node_changed,
+                           ZWaveNetwork.SIGNAL_NOTIFICATION)
+        dispatcher.connect(self.network_node_event,
+                           ZWaveNetwork.SIGNAL_NODE_EVENT)
+        dispatcher.connect(self.network_scene_activated,
+                           ZWaveNetwork.SIGNAL_SCENE_EVENT)
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
@@ -117,16 +119,16 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             return
 
         # Process central scene activation
-        if (value is not None and
-                value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
+        if (value is not None
+                and value.command_class == COMMAND_CLASS_CENTRAL_SCENE):
             self.central_scene_activated(value.index, value.data)
 
         self.node_changed()
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""
-        return self._network.manager.getNodeStatistics(
-            self._network.home_id, self.node_id)
+        return self._network.manager.getNodeStatistics(self._network.home_id,
+                                                       self.node_id)
 
     def node_changed(self):
         """Update node properties."""
@@ -190,10 +192,10 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             return
 
         self.hass.bus.fire(EVENT_SCENE_ACTIVATED, {
-            ATTR_ENTITY_ID:   self.entity_id,
-            ATTR_NODE_ID:     self.node_id,
-            ATTR_SCENE_ID:    scene_id,
-            ATTR_SCENE_DATA:  scene_data
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_NODE_ID: self.node_id,
+            ATTR_SCENE_ID: scene_id,
+            ATTR_SCENE_DATA: scene_data
         })
 
     @property

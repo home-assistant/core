@@ -27,14 +27,15 @@ CONF_OUTPUT_FORMAT = 'output_format'
 CONF_SAMPLE_RATE = 'sample_rate'
 CONF_TEXT_TYPE = 'text_type'
 
-SUPPORTED_VOICES = ['Geraint', 'Gwyneth', 'Mads', 'Naja', 'Hans', 'Marlene',
-                    'Nicole', 'Russell', 'Amy', 'Brian', 'Emma', 'Raveena',
-                    'Ivy', 'Joanna', 'Joey', 'Justin', 'Kendra', 'Kimberly',
-                    'Salli', 'Conchita', 'Enrique', 'Miguel', 'Penelope',
-                    'Chantal', 'Celine', 'Mathieu', 'Dora', 'Karl', 'Carla',
-                    'Giorgio', 'Mizuki', 'Liv', 'Lotte', 'Ruben', 'Ewa',
-                    'Jacek', 'Jan', 'Maja', 'Ricardo', 'Vitoria', 'Cristiano',
-                    'Ines', 'Carmen', 'Maxim', 'Tatyana', 'Astrid', 'Filiz']
+SUPPORTED_VOICES = [
+    'Geraint', 'Gwyneth', 'Mads', 'Naja', 'Hans', 'Marlene', 'Nicole',
+    'Russell', 'Amy', 'Brian', 'Emma', 'Raveena', 'Ivy', 'Joanna', 'Joey',
+    'Justin', 'Kendra', 'Kimberly', 'Salli', 'Conchita', 'Enrique', 'Miguel',
+    'Penelope', 'Chantal', 'Celine', 'Mathieu', 'Dora', 'Karl', 'Carla',
+    'Giorgio', 'Mizuki', 'Liv', 'Lotte', 'Ruben', 'Ewa', 'Jacek', 'Jan',
+    'Maja', 'Ricardo', 'Vitoria', 'Cristiano', 'Ines', 'Carmen', 'Maxim',
+    'Tatyana', 'Astrid', 'Filiz'
+]
 
 SUPPORTED_OUTPUT_FORMATS = ['mp3', 'ogg_vorbis', 'pcm']
 
@@ -58,25 +59,25 @@ DEFAULT_VOICE = 'Joanna'
 DEFAULT_OUTPUT_FORMAT = 'mp3'
 DEFAULT_TEXT_TYPE = 'text'
 
-DEFAULT_SAMPLE_RATES = {
-    'mp3': '22050',
-    'ogg_vorbis': '22050',
-    'pcm': '16000'
-}
+DEFAULT_SAMPLE_RATES = {'mp3': '22050', 'ogg_vorbis': '22050', 'pcm': '16000'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION, default=DEFAULT_REGION):
-        vol.In(SUPPORTED_REGIONS),
-    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
+    vol.In(SUPPORTED_REGIONS),
+    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS):
+    cv.string,
+    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS):
+    cv.string,
+    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS):
+    cv.string,
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+    vol.In(SUPPORTED_VOICES),
     vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
-        vol.In(SUPPORTED_OUTPUT_FORMATS),
-    vol.Optional(CONF_SAMPLE_RATE): vol.All(cv.string,
-                                            vol.In(SUPPORTED_SAMPLE_RATES)),
+    vol.In(SUPPORTED_OUTPUT_FORMATS),
+    vol.Optional(CONF_SAMPLE_RATE):
+    vol.All(cv.string, vol.In(SUPPORTED_SAMPLE_RATES)),
     vol.Optional(CONF_TEXT_TYPE, default=DEFAULT_TEXT_TYPE):
-        vol.In(SUPPORTED_TEXT_TYPES),
+    vol.In(SUPPORTED_TEXT_TYPES),
 })
 
 
@@ -87,8 +88,8 @@ def get_engine(hass, config):
     sample_rate = config.get(CONF_SAMPLE_RATE,
                              DEFAULT_SAMPLE_RATES[output_format])
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
-        _LOGGER.error("%s is not a valid sample rate for %s",
-                      sample_rate, output_format)
+        _LOGGER.error("%s is not a valid sample rate for %s", sample_rate,
+                      output_format)
         return None
 
     config[CONF_SAMPLE_RATE] = sample_rate
@@ -130,8 +131,7 @@ def get_engine(hass, config):
 class AmazonPollyProvider(Provider):
     """Amazon Polly speech api provider."""
 
-    def __init__(self, polly_client, config, supported_languages,
-                 all_voices):
+    def __init__(self, polly_client, config, supported_languages, all_voices):
         """Initialize Amazon Polly provider for TTS."""
         self.client = polly_client
         self.config = config
@@ -165,8 +165,8 @@ class AmazonPollyProvider(Provider):
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices.get(voice_id)
         if language != voice_in_dict.get('LanguageCode'):
-            _LOGGER.error("%s does not support the %s language",
-                          voice_id, language)
+            _LOGGER.error("%s does not support the %s language", voice_id,
+                          language)
             return (None, None)
 
         resp = self.client.synthesize_speech(
@@ -174,8 +174,7 @@ class AmazonPollyProvider(Provider):
             SampleRate=self.config[CONF_SAMPLE_RATE],
             Text=message,
             TextType=self.config[CONF_TEXT_TYPE],
-            VoiceId=voice_id
-        )
+            VoiceId=voice_id)
 
         return (CONTENT_TYPE_EXTENSIONS[resp.get('ContentType')],
                 resp.get('AudioStream').read())

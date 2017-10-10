@@ -32,8 +32,11 @@ CONF_DEVICE_ID = 'device_id'
 CONF_VALUES = 'values'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Required(CONF_VALUES): {cv.string: cv.string},
+    vol.Required(CONF_DEVICE_ID):
+    cv.string,
+    vol.Required(CONF_VALUES): {
+        cv.string: cv.string
+    },
 })
 
 
@@ -46,8 +49,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     app_id = ttn.get(TTN_APP_ID)
     access_key = ttn.get(TTN_ACCESS_KEY)
 
-    ttn_data_storage = TtnDataStorage(
-        hass, app_id, device_id, access_key, values)
+    ttn_data_storage = TtnDataStorage(hass, app_id, device_id, access_key,
+                                      values)
     success = yield from ttn_data_storage.async_update()
 
     if not success:
@@ -55,8 +58,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices = []
     for value, unit_of_measurement in values.items():
-        devices.append(TtnDataSensor(
-            ttn_data_storage, device_id, value, unit_of_measurement))
+        devices.append(
+            TtnDataSensor(ttn_data_storage, device_id, value,
+                          unit_of_measurement))
     async_add_devices(devices, True)
 
 
@@ -145,8 +149,8 @@ class TtnDataStorage(object):
             return False
 
         if status == 401:
-            _LOGGER.error(
-                "Not authorized for Application ID: %s", self._app_id)
+            _LOGGER.error("Not authorized for Application ID: %s",
+                          self._app_id)
             return False
 
         if status == 404:

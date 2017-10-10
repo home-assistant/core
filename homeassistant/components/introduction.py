@@ -10,9 +10,10 @@ import voluptuous as vol
 
 DOMAIN = 'introduction'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({}),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config=None):

@@ -17,32 +17,29 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.3.zip'
-                '#pybotvac==0.0.3']
+REQUIREMENTS = [
+    'https://github.com/jabesq/pybotvac/archive/v0.0.3.zip'
+    '#pybotvac==0.0.3'
+]
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
 NEATO_LOGIN = 'neato_login'
 NEATO_MAP_DATA = 'neato_map_data'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
-STATES = {
-    1: 'Idle',
-    2: 'Busy',
-    3: 'Pause',
-    4: 'Error'
-}
+STATES = {1: 'Idle', 2: 'Busy', 3: 'Pause', 4: 'Error'}
 
-MODE = {
-    1: 'Eco',
-    2: 'Turbo'
-}
+MODE = {1: 'Eco', 2: 'Turbo'}
 
 ACTION = {
     0: 'No action',
@@ -105,9 +102,8 @@ class NeatoHub(object):
         self._neato = neato
         self._hass = hass
 
-        self.my_neato = neato(
-            domain_config[CONF_USERNAME],
-            domain_config[CONF_PASSWORD])
+        self.my_neato = neato(domain_config[CONF_USERNAME],
+                              domain_config[CONF_PASSWORD])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
@@ -115,8 +111,8 @@ class NeatoHub(object):
         """Login to My Neato."""
         try:
             _LOGGER.debug("Trying to connect to Neato API")
-            self.my_neato = self._neato(
-                self.config[CONF_USERNAME], self.config[CONF_PASSWORD])
+            self.my_neato = self._neato(self.config[CONF_USERNAME],
+                                        self.config[CONF_PASSWORD])
             return True
         except HTTPError:
             _LOGGER.error("Unable to connect to Neato API")

@@ -17,10 +17,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['cover']:
             model = device['model']
             if model == 'curtain':
-                devices.append(XiaomiGenericCover(device, "Curtain",
-                                                  {'status': 'status',
-                                                   'pos': 'curtain_level'},
-                                                  gateway))
+                devices.append(
+                    XiaomiGenericCover(device, "Curtain", {
+                        'status': 'status',
+                        'pos': 'curtain_level'
+                    }, gateway))
     add_devices(devices)
 
 

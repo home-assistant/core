@@ -14,13 +14,11 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_FAN_LIST,
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST)
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS,
+                                 TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['evohomeclient==0.2.5',
-                'somecomfort==0.4.1']
+REQUIREMENTS = ['evohomeclient==0.2.5', 'somecomfort==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +38,20 @@ DEFAULT_REGION = 'eu'
 REGIONS = ['eu', 'us']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_AWAY_TEMPERATURE,
-                 default=DEFAULT_AWAY_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_COOL_AWAY_TEMPERATURE,
-                 default=DEFAULT_COOL_AWAY_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_HEAT_AWAY_TEMPERATURE,
-                 default=DEFAULT_HEAT_AWAY_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE):
+    vol.Coerce(float),
+    vol.Optional(
+        CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE):
+    vol.Coerce(float),
+    vol.Optional(
+        CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE):
+    vol.Coerce(float),
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION):
+    vol.In(REGIONS),
 })
 
 
@@ -75,9 +78,8 @@ def _setup_round(username, password, config, add_devices):
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
             add_devices(
-                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
-                True
-            )
+                [RoundThermostat(evo_api, zone['id'], i == 0,
+                                 away_temp)], True)
     except socket.error:
         _LOGGER.error(
             "Connection error logging into the honeywell evohome web service")
@@ -104,12 +106,14 @@ def _setup_us(username, password, config, add_devices):
     cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    add_devices([HoneywellUSThermostat(client, device, cool_away_temp,
-                                       heat_away_temp, username, password)
-                 for location in client.locations_by_id.values()
-                 for device in location.devices_by_id.values()
-                 if ((not loc_id or location.locationid == loc_id) and
-                     (not dev_id or device.deviceid == dev_id))])
+    add_devices([
+        HoneywellUSThermostat(client, device, cool_away_temp, heat_away_temp,
+                              username, password)
+        for location in client.locations_by_id.values()
+        for device in location.devices_by_id.values()
+        if ((not loc_id or location.locationid == loc_id) and (
+            not dev_id or device.deviceid == dev_id))
+    ])
     return True
 
 
@@ -218,15 +222,15 @@ class RoundThermostat(ClimateDevice):
             # The underlying library doesn't expose the thermostat's mode
             # but we can pull it out of the big dictionary of information.
             device = self.client.devices[self._id]
-            self.client.system_mode = device[
-                'thermostat']['changeableValues']['mode']
+            self.client.system_mode = device['thermostat']['changeableValues'][
+                'mode']
 
 
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(self, client, device, cool_away_temp,
-                 heat_away_temp, username, password):
+    def __init__(self, client, device, cool_away_temp, heat_away_temp,
+                 username, password):
         """Initialize the thermostat."""
         self._client = client
         self._device = device
@@ -249,8 +253,8 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return (TEMP_CELSIUS if self._device.temperature_unit == 'C'
-                else TEMP_FAHRENHEIT)
+        return (TEMP_CELSIUS
+                if self._device.temperature_unit == 'C' else TEMP_FAHRENHEIT)
 
     @property
     def current_temperature(self):
@@ -290,13 +294,10 @@ class HoneywellUSThermostat(ClimateDevice):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                setattr(self._device,
-                        "hold_{}".format(mode),
+                setattr(self._device, "hold_{}".format(mode),
                         datetime.time(hour, minute))
             # Set temperature
-            setattr(self._device,
-                    "setpoint_{}".format(mode),
-                    temperature)
+            setattr(self._device, "setpoint_{}".format(mode), temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
@@ -336,12 +337,9 @@ class HoneywellUSThermostat(ClimateDevice):
         try:
 
             # Set permanent hold
-            setattr(self._device,
-                    "hold_{}".format(mode),
-                    True)
+            setattr(self._device, "hold_{}".format(mode), True)
             # Set temperature
-            setattr(self._device,
-                    "setpoint_{}".format(mode),
+            setattr(self._device, "setpoint_{}".format(mode),
                     getattr(self, "_{}_away_temp".format(mode)))
         except somecomfort.SomeComfortError:
             _LOGGER.error('Temperature %.1f out of range',
@@ -389,21 +387,22 @@ class HoneywellUSThermostat(ClimateDevice):
         """
         import somecomfort
         try:
-            self._client = somecomfort.SomeComfort(
-                self._username, self._password)
+            self._client = somecomfort.SomeComfort(self._username,
+                                                   self._password)
         except somecomfort.AuthError:
             _LOGGER.error("Failed to login to honeywell account %s",
                           self._username)
             return False
         except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s",
-                          str(ex))
+            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
             return False
 
-        devices = [device
-                   for location in self._client.locations_by_id.values()
-                   for device in location.devices_by_id.values()
-                   if device.name == self._device.name]
+        devices = [
+            device
+            for location in self._client.locations_by_id.values()
+            for device in location.devices_by_id.values()
+            if device.name == self._device.name
+        ]
 
         if len(devices) != 1:
             _LOGGER.error("Failed to find device %s", self._device.name)

@@ -6,12 +6,11 @@ https://home-assistant.io/components/light.skybell/
 """
 import logging
 
-
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
-from homeassistant.components.skybell import (
-    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
+from homeassistant.components.skybell import (DOMAIN as SKYBELL_DOMAIN,
+                                              SkybellDevice)
 
 DEPENDENCIES = ['skybell']
 

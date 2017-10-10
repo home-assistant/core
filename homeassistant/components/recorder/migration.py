@@ -76,8 +76,7 @@ def _drop_index(engine, table_name, index_name):
 
     # Engines like DB2/Oracle
     try:
-        engine.execute(text("DROP INDEX {index}".format(
-            index=index_name)))
+        engine.execute(text("DROP INDEX {index}".format(index=index_name)))
     except SQLAlchemyError:
         pass
     else:
@@ -86,9 +85,9 @@ def _drop_index(engine, table_name, index_name):
     # Engines like SQLite, SQL Server
     if not success:
         try:
-            engine.execute(text("DROP INDEX {table}.{index}".format(
-                index=index_name,
-                table=table_name)))
+            engine.execute(
+                text("DROP INDEX {table}.{index}".format(
+                    index=index_name, table=table_name)))
         except SQLAlchemyError:
             pass
         else:
@@ -97,17 +96,17 @@ def _drop_index(engine, table_name, index_name):
     if not success:
         # Engines like MySQL, MS Access
         try:
-            engine.execute(text("DROP INDEX {index} ON {table}".format(
-                index=index_name,
-                table=table_name)))
+            engine.execute(
+                text("DROP INDEX {index} ON {table}".format(
+                    index=index_name, table=table_name)))
         except SQLAlchemyError:
             pass
         else:
             success = True
 
     if success:
-        _LOGGER.debug("Finished dropping index %s from table %s",
-                      index_name, table_name)
+        _LOGGER.debug("Finished dropping index %s from table %s", index_name,
+                      table_name)
     else:
         _LOGGER.warning("Failed to drop index %s from table %s. Schema "
                         "Migration will continue; this is not a "
@@ -166,8 +165,7 @@ def _inspect_schema_version(engine, session):
     for index in indexes:
         if index['column_names'] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
-            session.add(SchemaChanges(
-                schema_version=SCHEMA_VERSION))
+            session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
             return SCHEMA_VERSION
 
     # Version 1 schema changes not found, this db needs to be migrated.

@@ -10,8 +10,8 @@ from urllib.parse import urljoin
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import (CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD,
+                                 CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,17 +27,26 @@ LOGIN_RETRIES = 2
 
 ZM = {}
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        # This should match PATH_ZMS in ZoneMinder settings.
-        vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST):
+            cv.string,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+            cv.boolean,
+            vol.Optional(CONF_PATH, default=DEFAULT_PATH):
+            cv.string,
+            # This should match PATH_ZMS in ZoneMinder settings.
+            vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS):
+            cv.string,
+            vol.Optional(CONF_USERNAME):
+            cv.string,
+            vol.Optional(CONF_PASSWORD):
+            cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -84,7 +93,8 @@ def login():
     # Login calls returns a 200 response on both failure and success.
     # The only way to tell if you logged in correctly is to issue an api call.
     req = requests.get(
-        ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
+        ZM['url'] + 'api/host/getVersion.json',
+        cookies=ZM['cookies'],
         timeout=DEFAULT_TIMEOUT)
 
     if not req.ok:
@@ -100,8 +110,11 @@ def _zm_request(method, api_url, data=None):
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
-            method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT)
+            method,
+            urljoin(ZM['url'], api_url),
+            data=data,
+            cookies=ZM['cookies'],
+            timeout=DEFAULT_TIMEOUT)
 
         if not req.ok:
             login()

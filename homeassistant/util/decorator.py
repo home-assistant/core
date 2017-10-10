@@ -6,6 +6,7 @@ class Registry(dict):
 
     def register(self, name):
         """Return decorator to register item with a specific name."""
+
         def decorator(func):
             """Register decorated function."""
             self[name] = func

@@ -92,13 +92,14 @@ class TradfriDevice(Entity):
         """Start observation of light."""
         from pytradfri.error import PyTradFriError
         if exc:
-            _LOGGER.warning("Observation failed for %s", self._name,
-                            exc_info=exc)
+            _LOGGER.warning(
+                "Observation failed for %s", self._name, exc_info=exc)
 
         try:
-            cmd = self._device.observe(callback=self._observe_update,
-                                       err_callback=self._async_start_observe,
-                                       duration=0)
+            cmd = self._device.observe(
+                callback=self._observe_update,
+                err_callback=self._async_start_observe,
+                duration=0)
             self.hass.async_add_job(self._api(cmd))
         except PyTradFriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)

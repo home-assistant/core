@@ -17,32 +17,26 @@ from homeassistant.const import (CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD,
                                  STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
-
-REQUIREMENTS = [
-    "tank_utility==1.4.0"
-]
+REQUIREMENTS = ["tank_utility==1.4.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(hours=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, vol.Length(min=1))
+    vol.Required(CONF_EMAIL):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_DEVICES):
+    vol.All(cv.ensure_list, vol.Length(min=1))
 })
 
 SENSOR_TYPE = "tank"
 SENSOR_ROUNDING_PRECISION = 1
 SENSOR_UNIT_OF_MEASUREMENT = "%"
 SENSOR_ATTRS = [
-    "name",
-    "address",
-    "capacity",
-    "fuelType",
-    "orientation",
-    "status",
-    "time",
+    "name", "address", "capacity", "fuelType", "orientation", "status", "time",
     "time_iso"
 ]
 
@@ -57,8 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
-        if (http_error.response.status_code ==
-                requests.codes.unauthorized):  # pylint: disable=no-member
+        if (http_error.response.status_code == requests.codes.unauthorized):  # pylint: disable=no-member
             _LOGGER.error("Invalid credentials")
             return
 
@@ -122,8 +115,8 @@ class TankUtilitySensor(Entity):
             if (http_error.response.status_code ==
                     requests.codes.unauthorized):  # pylint: disable=no-member
                 _LOGGER.info("Getting new token")
-                self._token = auth.get_token(self._email, self._password,
-                                             force=True)
+                self._token = auth.get_token(
+                    self._email, self._password, force=True)
                 data = device.get_device_data(self._token, self.device)
             else:
                 raise http_error

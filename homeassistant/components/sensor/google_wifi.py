@@ -13,8 +13,8 @@ import requests
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+from homeassistant.const import (CONF_NAME, CONF_HOST,
+                                 CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -35,43 +35,23 @@ ENDPOINT = '/api/v1/status'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 MONITORED_CONDITIONS = {
-    ATTR_CURRENT_VERSION: [
-        ['software', 'softwareVersion'],
-        None,
-        'mdi:checkbox-marked-circle-outline'
-    ],
-    ATTR_NEW_VERSION: [
-        ['software', 'updateNewVersion'],
-        None,
-        'mdi:update'
-    ],
-    ATTR_UPTIME: [
-        ['system', 'uptime'],
-        'days',
-        'mdi:timelapse'
-    ],
-    ATTR_LAST_RESTART: [
-        ['system', 'uptime'],
-        None,
-        'mdi:restart'
-    ],
-    ATTR_LOCAL_IP: [
-        ['wan', 'localIpAddress'],
-        None,
-        'mdi:access-point-network'
-    ],
-    ATTR_STATUS: [
-        ['wan', 'online'],
-        None,
-        'mdi:google'
-    ]
+    ATTR_CURRENT_VERSION: [['software', 'softwareVersion'], None,
+                           'mdi:checkbox-marked-circle-outline'],
+    ATTR_NEW_VERSION: [['software', 'updateNewVersion'], None, 'mdi:update'],
+    ATTR_UPTIME: [['system', 'uptime'], 'days', 'mdi:timelapse'],
+    ATTR_LAST_RESTART: [['system', 'uptime'], None, 'mdi:restart'],
+    ATTR_LOCAL_IP: [['wan', 'localIpAddress'], None,
+                    'mdi:access-point-network'],
+    ATTR_STATUS: [['wan', 'online'], None, 'mdi:google']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -182,8 +162,8 @@ class GoogleWifiAPI(object):
                 if primary_key in self.raw_data:
                     sensor_value = self.raw_data[primary_key][sensor_key]
                     # Format sensor for better readability
-                    if (attr_key == ATTR_NEW_VERSION and
-                            sensor_value == '0.0.0.0'):
+                    if (attr_key == ATTR_NEW_VERSION
+                            and sensor_value == '0.0.0.0'):
                         sensor_value = 'Latest'
                     elif attr_key == ATTR_UPTIME:
                         sensor_value = round(sensor_value / (3600 * 24), 2)

@@ -14,9 +14,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, STATE_IDLE, STATE_OFF,
+                                 STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -36,7 +35,8 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 KNOWN_HOSTS_KEY = 'cast_known_hosts'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
     vol.Optional(CONF_IGNORE_CEC): [cv.string],
 })
 
@@ -70,8 +70,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts = [host]
 
     else:
-        hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
-                 if tuple(dev[:2]) not in known_hosts]
+        hosts = [
+            tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
+            if tuple(dev[:2]) not in known_hosts
+        ]
 
     casts = []
 
@@ -81,8 +83,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for host in hosts:
         (_, port) = host
-        found = [device for device in all_chromecasts
-                 if (device.host, device.port) == host]
+        found = [
+            device for device in all_chromecasts
+            if (device.host, device.port) == host
+        ]
         if found:
             try:
                 casts.append(CastDevice(found[0]))
@@ -271,8 +275,8 @@ class CastDevice(MediaPlayerDevice):
             if self.cast.app_id:
                 self.cast.quit_app()
 
-            self.cast.play_media(
-                CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+            self.cast.play_media(CAST_SPLASH,
+                                 pychromecast.STREAM_TYPE_BUFFERED)
 
     def turn_off(self):
         """Turn Chromecast off."""

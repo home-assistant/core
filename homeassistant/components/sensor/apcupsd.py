@@ -85,9 +85,7 @@ SENSOR_TYPES = {
     'xonbatt': ['Transfer to Battery', '', 'mdi:transfer'],
 }
 
-SPECIFIC_UNITS = {
-    'ITEMP': TEMP_CELSIUS
-}
+SPECIFIC_UNITS = {'ITEMP': TEMP_CELSIUS}
 INFERRED_UNITS = {
     ' Minutes': 'min',
     ' Seconds': 'sec',
@@ -101,7 +99,7 @@ INFERRED_UNITS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCES, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -114,7 +112,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if sensor_type not in SENSOR_TYPES:
             SENSOR_TYPES[sensor_type] = [
-                sensor_type.title(), '', 'mdi:information-outline']
+                sensor_type.title(), '', 'mdi:information-outline'
+            ]
 
         if sensor_type.upper() not in apcupsd.DATA.status:
             _LOGGER.warning(

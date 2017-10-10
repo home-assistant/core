@@ -32,10 +32,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
     for coil in config.get("coils"):
-        switches.append(ModbusCoilSwitch(
-            coil.get(CONF_NAME),
-            coil.get(CONF_SLAVE),
-            coil.get(CONF_COIL)))
+        switches.append(
+            ModbusCoilSwitch(
+                coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(
+                    CONF_COIL)))
     add_devices(switches)
 
 
@@ -73,7 +73,5 @@ class ModbusCoilSwitch(ToggleEntity):
         try:
             self._is_on = bool(result.bits[0])
         except AttributeError:
-            _LOGGER.error(
-                'No response from modbus slave %s coil %s',
-                self._slave,
-                self._coil)
+            _LOGGER.error('No response from modbus slave %s coil %s',
+                          self._slave, self._coil)

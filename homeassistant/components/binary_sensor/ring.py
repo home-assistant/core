@@ -10,14 +10,14 @@ from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
+from homeassistant.components.ring import (CONF_ATTRIBUTION,
+                                           DEFAULT_ENTITY_NAMESPACE)
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE,
+                                 CONF_MONITORED_CONDITIONS)
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
 
 DEPENDENCIES = ['ring']
 
@@ -33,9 +33,9 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -47,9 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass,
-                                                device,
-                                                sensor_type))
+                sensors.append(RingBinarySensor(hass, device, sensor_type))
     add_devices(sensors, True)
     return True
 

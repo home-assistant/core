@@ -8,8 +8,12 @@ from typing import List
 
 # Based on code at
 # http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
-                   decimals: int=2, bar_length: int=68) -> None:
+def print_progress(iteration: int,
+                   total: int,
+                   prefix: str = '',
+                   suffix: str = '',
+                   decimals: int = 2,
+                   bar_length: int = 68) -> None:
     """Print progress bar.
 
     Call in a loop to create terminal progress bar
@@ -24,8 +28,8 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
     filled_length = int(round(bar_length * iteration / float(total)))
     percents = round(100.00 * (iteration / float(total)), decimals)
     line = '#' * filled_length + '-' * (bar_length - filled_length)
-    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line,
-                                            percents, '%', suffix))
+    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, line, percents, '%',
+                                            suffix))
     sys.stdout.flush()
     if iteration == total:
         print("\n")
@@ -35,57 +39,61 @@ def run(script_args: List) -> int:
     """Run the actual script."""
     from influxdb import InfluxDBClient
 
-    parser = argparse.ArgumentParser(
-        description="Migrate legacy influxDB.")
+    parser = argparse.ArgumentParser(description="Migrate legacy influxDB.")
     parser.add_argument(
-        '-d', '--dbname',
+        '-d',
+        '--dbname',
         metavar='dbname',
         required=True,
         help="InfluxDB database name")
     parser.add_argument(
-        '-H', '--host',
+        '-H',
+        '--host',
         metavar='host',
         default='127.0.0.1',
         help="InfluxDB host address")
     parser.add_argument(
-        '-P', '--port',
+        '-P',
+        '--port',
         metavar='port',
         default=8086,
         help="InfluxDB host port")
     parser.add_argument(
-        '-u', '--username',
+        '-u',
+        '--username',
         metavar='username',
         default='root',
         help="InfluxDB username")
     parser.add_argument(
-        '-p', '--password',
+        '-p',
+        '--password',
         metavar='password',
         default='root',
         help="InfluxDB password")
     parser.add_argument(
-        '-s', '--step',
+        '-s',
+        '--step',
         metavar='step',
         default=1000,
         help="How many points to migrate at the same time")
     parser.add_argument(
-        '-o', '--override-measurement',
+        '-o',
+        '--override-measurement',
         metavar='override_measurement',
         default="",
         help="Store all your points in the same measurement")
     parser.add_argument(
-        '-D', '--delete',
+        '-D',
+        '--delete',
         action='store_true',
         default=False,
         help="Delete old database")
-    parser.add_argument(
-        '--script',
-        choices=['influxdb_migrator'])
+    parser.add_argument('--script', choices=['influxdb_migrator'])
 
     args = parser.parse_args()
 
     # Get client for old DB
-    client = InfluxDBClient(args.host, args.port,
-                            args.username, args.password)
+    client = InfluxDBClient(args.host, args.port, args.username, args.password)
     client.switch_database(args.dbname)
     # Get DB list
     db_list = [db['name'] for db in client.get_list_database()]
@@ -138,9 +146,7 @@ def run(script_args: List) -> int:
             res = client.query('SELECT * FROM "{}" LIMIT {} OFFSET '
                                '{}'.format(measurement, args.step, offset))
             for point in res.get_points():
-                new_point = {"tags": {},
-                             "fields": {},
-                             "time": None}
+                new_point = {"tags": {}, "fields": {}, "time": None}
                 if args.override_measurement:
                     new_point["measurement"] = args.override_measurement
                 else:

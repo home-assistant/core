@@ -13,8 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_HOST, CONF_METHOD, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, ATTR_STATE)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST,
+    CONF_METHOD, CONF_PORT, CONF_TYPE, CONF_TIMEOUT, ATTR_STATE)
 
 DOMAIN = 'modbus'
 
@@ -44,11 +44,10 @@ ETHERNET_SCHEMA = {
     vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
 }
 
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-}, extra=vol.ALLOW_EXTRA)
-
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+    }, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,15 +59,21 @@ ATTR_UNIT = 'unit'
 ATTR_VALUE = 'value'
 
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_UNIT): cv.positive_int,
-    vol.Required(ATTR_ADDRESS): cv.positive_int,
-    vol.Required(ATTR_VALUE): vol.All(cv.ensure_list, [cv.positive_int])
+    vol.Required(ATTR_UNIT):
+    cv.positive_int,
+    vol.Required(ATTR_ADDRESS):
+    cv.positive_int,
+    vol.Required(ATTR_VALUE):
+    vol.All(cv.ensure_list, [cv.positive_int])
 })
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema({
-    vol.Required(ATTR_UNIT): cv.positive_int,
-    vol.Required(ATTR_ADDRESS): cv.positive_int,
-    vol.Required(ATTR_STATE): cv.boolean
+    vol.Required(ATTR_UNIT):
+    cv.positive_int,
+    vol.Required(ATTR_ADDRESS):
+    cv.positive_int,
+    vol.Required(ATTR_STATE):
+    cv.boolean
 })
 
 HUB = None
@@ -85,23 +90,26 @@ def setup(hass, config):
 
     if client_type == 'serial':
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-        client = ModbusClient(method=config[DOMAIN][CONF_METHOD],
-                              port=config[DOMAIN][CONF_PORT],
-                              baudrate=config[DOMAIN][CONF_BAUDRATE],
-                              stopbits=config[DOMAIN][CONF_STOPBITS],
-                              bytesize=config[DOMAIN][CONF_BYTESIZE],
-                              parity=config[DOMAIN][CONF_PARITY],
-                              timeout=config[DOMAIN][CONF_TIMEOUT])
+        client = ModbusClient(
+            method=config[DOMAIN][CONF_METHOD],
+            port=config[DOMAIN][CONF_PORT],
+            baudrate=config[DOMAIN][CONF_BAUDRATE],
+            stopbits=config[DOMAIN][CONF_STOPBITS],
+            bytesize=config[DOMAIN][CONF_BYTESIZE],
+            parity=config[DOMAIN][CONF_PARITY],
+            timeout=config[DOMAIN][CONF_TIMEOUT])
     elif client_type == 'tcp':
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-        client = ModbusClient(host=config[DOMAIN][CONF_HOST],
-                              port=config[DOMAIN][CONF_PORT],
-                              timeout=config[DOMAIN][CONF_TIMEOUT])
+        client = ModbusClient(
+            host=config[DOMAIN][CONF_HOST],
+            port=config[DOMAIN][CONF_PORT],
+            timeout=config[DOMAIN][CONF_TIMEOUT])
     elif client_type == 'udp':
         from pymodbus.client.sync import ModbusUdpClient as ModbusClient
-        client = ModbusClient(host=config[DOMAIN][CONF_HOST],
-                              port=config[DOMAIN][CONF_PORT],
-                              timeout=config[DOMAIN][CONF_TIMEOUT])
+        client = ModbusClient(
+            host=config[DOMAIN][CONF_HOST],
+            port=config[DOMAIN][CONF_PORT],
+            timeout=config[DOMAIN][CONF_TIMEOUT])
     else:
         return False
 
@@ -117,16 +125,21 @@ def setup(hass, config):
         HUB.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
-        descriptions = load_yaml_config_file(os.path.join(
-            os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
+        descriptions = load_yaml_config_file(
+            os.path.join(os.path.dirname(__file__), 'services.yaml')).get(
+                DOMAIN)
 
         # Register services for modbus
         hass.services.register(
-            DOMAIN, SERVICE_WRITE_REGISTER, write_register,
+            DOMAIN,
+            SERVICE_WRITE_REGISTER,
+            write_register,
             descriptions.get(SERVICE_WRITE_REGISTER),
             schema=SERVICE_WRITE_REGISTER_SCHEMA)
         hass.services.register(
-            DOMAIN, SERVICE_WRITE_COIL, write_coil,
+            DOMAIN,
+            SERVICE_WRITE_COIL,
+            write_coil,
             descriptions.get(SERVICE_WRITE_COIL),
             schema=SERVICE_WRITE_COIL_SCHEMA)
 
@@ -136,15 +149,9 @@ def setup(hass, config):
         address = int(float(service.data.get(ATTR_ADDRESS)))
         value = service.data.get(ATTR_VALUE)
         if isinstance(value, list):
-            HUB.write_registers(
-                unit,
-                address,
-                [int(float(i)) for i in value])
+            HUB.write_registers(unit, address, [int(float(i)) for i in value])
         else:
-            HUB.write_register(
-                unit,
-                address,
-                int(float(value)))
+            HUB.write_register(unit, address, int(float(value)))
 
     def write_coil(service):
         """Write modbus coil."""
@@ -180,52 +187,35 @@ class ModbusHub(object):
         """Read coils."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            return self._client.read_coils(
-                address,
-                count,
-                **kwargs)
+            return self._client.read_coils(address, count, **kwargs)
 
     def read_input_registers(self, unit, address, count):
         """Read input registers."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            return self._client.read_input_registers(
-                address,
-                count,
-                **kwargs)
+            return self._client.read_input_registers(address, count, **kwargs)
 
     def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            return self._client.read_holding_registers(
-                address,
-                count,
-                **kwargs)
+            return self._client.read_holding_registers(address, count,
+                                                       **kwargs)
 
     def write_coil(self, unit, address, value):
         """Write coil."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            self._client.write_coil(
-                address,
-                value,
-                **kwargs)
+            self._client.write_coil(address, value, **kwargs)
 
     def write_register(self, unit, address, value):
         """Write register."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            self._client.write_register(
-                address,
-                value,
-                **kwargs)
+            self._client.write_register(address, value, **kwargs)
 
     def write_registers(self, unit, address, values):
         """Write registers."""
         with self._lock:
             kwargs = {'unit': unit} if unit else {}
-            self._client.write_registers(
-                address,
-                values,
-                **kwargs)
+            self._client.write_registers(address, values, **kwargs)

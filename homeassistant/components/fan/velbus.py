@@ -8,9 +8,9 @@ import asyncio
 import logging
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, FanEntity, SUPPORT_SET_SPEED,
-    PLATFORM_SCHEMA)
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+                                          FanEntity, SUPPORT_SET_SPEED,
+                                          PLATFORM_SCHEMA)
 from homeassistant.components.velbus import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_DEVICES, STATE_OFF
 import homeassistant.helpers.config_validation as cv
@@ -20,15 +20,14 @@ DEPENDENCIES = ['velbus']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
-        {
-            vol.Required('module'): cv.positive_int,
-            vol.Required('channel_low'): cv.positive_int,
-            vol.Required('channel_medium'): cv.positive_int,
-            vol.Required('channel_high'): cv.positive_int,
-            vol.Required(CONF_NAME): cv.string,
-        }
-    ])
+    vol.Required(CONF_DEVICES):
+    vol.All(cv.ensure_list, [{
+        vol.Required('module'): cv.positive_int,
+        vol.Required('channel_low'): cv.positive_int,
+        vol.Required('channel_medium'): cv.positive_int,
+        vol.Required('channel_high'): cv.positive_int,
+        vol.Required(CONF_NAME): cv.string,
+    }])
 })
 
 
@@ -49,14 +48,16 @@ class VelbusFan(FanEntity):
         self._channel_low = fan['channel_low']
         self._channel_medium = fan['channel_medium']
         self._channel_high = fan['channel_high']
-        self._channels = [self._channel_low, self._channel_medium,
-                          self._channel_high]
+        self._channels = [
+            self._channel_low, self._channel_medium, self._channel_high
+        ]
         self._channels_state = [False, False, False]
         self._speed = STATE_OFF
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
+
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)

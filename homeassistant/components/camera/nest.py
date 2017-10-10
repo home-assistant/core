@@ -28,8 +28,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     camera_devices = hass.data[nest.DATA_NEST].cameras()
-    cameras = [NestCamera(structure, device)
-               for structure, device in camera_devices]
+    cameras = [
+        NestCamera(structure, device) for structure, device in camera_devices
+    ]
     add_devices(cameras, True)
 
 
@@ -88,8 +89,7 @@ class NestCamera(Camera):
             self._time_between_snapshots = timedelta(seconds=30)
 
     def _ready_for_snapshot(self, now):
-        return (self._next_snapshot_at is None or
-                now > self._next_snapshot_at)
+        return (self._next_snapshot_at is None or now > self._next_snapshot_at)
 
     def camera_image(self):
         """Return a still image response from the camera."""

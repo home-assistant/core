@@ -11,9 +11,7 @@ from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
 from homeassistant.components.zwave import workaround
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
-from homeassistant.components.binary_sensor import (
-    DOMAIN,
-    BinarySensorDevice)
+from homeassistant.components.binary_sensor import (DOMAIN, BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -81,9 +79,8 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
-        track_point_in_time(
-            self.hass, self.async_update_ha_state,
-            self.invalidate_after)
+        track_point_in_time(self.hass, self.async_update_ha_state,
+                            self.invalidate_after)
 
     @property
     def is_on(self):

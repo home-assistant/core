@@ -11,9 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (
-    CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
-    CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
+                                 CONF_BINARY_SENSORS, CONF_SENSORS,
+                                 CONF_MONITORED_CONDITIONS)
 
 REQUIREMENTS = ['python-nest==3.1.0']
 
@@ -32,23 +32,34 @@ ATTR_HOME_MODE = 'home_mode'
 ATTR_STRUCTURE = 'structure'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+    vol.All(cv.ensure_list)
 })
 
 AWAY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HOME_MODE): cv.string,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+    vol.Required(ATTR_HOME_MODE):
+    cv.string,
+    vol.Optional(ATTR_STRUCTURE):
+    vol.All(cv.ensure_list, cv.string)
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
-        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_CLIENT_ID):
+            cv.string,
+            vol.Required(CONF_CLIENT_SECRET):
+            cv.string,
+            vol.Optional(CONF_STRUCTURE):
+            vol.All(cv.ensure_list, cv.string),
+            vol.Optional(CONF_SENSORS):
+            SENSOR_SCHEMA,
+            vol.Optional(CONF_BINARY_SENSORS):
+            SENSOR_SCHEMA
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def request_configuration(nest, hass, config):
@@ -56,8 +67,8 @@ def request_configuration(nest, hass, config):
     configurator = hass.components.configurator
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
-        configurator.notify_errors(
-            _CONFIGURING['nest'], "Failed to configure, please try again.")
+        configurator.notify_errors(_CONFIGURING['nest'],
+                                   "Failed to configure, please try again.")
         return
 
     def nest_configuration_callback(data):
@@ -67,15 +78,19 @@ def request_configuration(nest, hass, config):
         setup_nest(hass, nest, config, pin=pin)
 
     _CONFIGURING['nest'] = configurator.request_config(
-        "Nest", nest_configuration_callback,
+        "Nest",
+        nest_configuration_callback,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
         link_name='Request Authorization',
         link_url=nest.authorize_url,
         submit_caption="Confirm",
-        fields=[{'id': 'pin', 'name': 'Enter the PIN', 'type': ''}]
-    )
+        fields=[{
+            'id': 'pin',
+            'name': 'Enter the PIN',
+            'type': ''
+        }])
 
 
 def setup_nest(hass, nest, config, pin=None):
@@ -130,7 +145,8 @@ def setup(hass, config):
 
     nest = nest.Nest(
         access_token_cache_file=access_token_cache_file,
-        client_id=client_id, client_secret=client_secret)
+        client_id=client_id,
+        client_secret=client_secret)
     setup_nest(hass, nest, config)
 
     def set_mode(service):
@@ -148,8 +164,7 @@ def setup(hass, config):
                 _LOGGER.error("Invalid structure %s",
                               service.data[ATTR_STRUCTURE])
 
-    hass.services.register(
-        DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
+    hass.services.register(DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
     return True
 
@@ -188,7 +203,7 @@ class NestDevice(object):
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:
                     for device in structure.smoke_co_alarms:
-                        yield(structure, device)
+                        yield (structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
                                  structure.name, self.local_structure)
@@ -202,7 +217,7 @@ class NestDevice(object):
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:
                     for device in structure.cameras:
-                        yield(structure, device)
+                        yield (structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
                                  structure.name, self.local_structure)

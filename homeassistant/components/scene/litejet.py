@@ -50,9 +50,7 @@ class LiteJetScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
-        return {
-            ATTR_NUMBER: self._index
-        }
+        return {ATTR_NUMBER: self._index}
 
     def activate(self, **kwargs):
         """Activate the scene."""

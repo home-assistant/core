@@ -19,13 +19,12 @@ DEPENDENCIES = ['velbus']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
-        {
-            vol.Required('module'): cv.positive_int,
-            vol.Required('channel'): cv.positive_int,
-            vol.Required(CONF_NAME): cv.string
-        }
-    ])
+    vol.Required(CONF_DEVICES):
+    vol.All(cv.ensure_list, [{
+        vol.Required('module'): cv.positive_int,
+        vol.Required('channel'): cv.positive_int,
+        vol.Required(CONF_NAME): cv.string
+    }])
 })
 
 
@@ -49,6 +48,7 @@ class VelbusLight(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
+
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)

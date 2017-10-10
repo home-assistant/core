@@ -14,24 +14,28 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string
 })
 
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
-                Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+    for cls in [
+            Tplink5DeviceScanner, Tplink4DeviceScanner, Tplink3DeviceScanner,
+            Tplink2DeviceScanner, TplinkDeviceScanner
+    ]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -77,8 +81,10 @@ class TplinkDeviceScanner(DeviceScanner):
         url = 'http://{}/userRpm/WlanStationRpm.htm'.format(self.host)
         referer = 'http://{}'.format(self.host)
         page = requests.get(
-            url, auth=(self.username, self.password),
-            headers={'referer': referer}, timeout=4)
+            url,
+            auth=(self.username, self.password),
+            headers={'referer': referer},
+            timeout=4)
 
         result = self.parse_macs.findall(page.text)
 
@@ -117,14 +123,13 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         # Let's create the cookie
         username_password = '{}:{}'.format(self.username, self.password)
         b64_encoded_username_password = base64.b64encode(
-            username_password.encode('ascii')
-        ).decode('ascii')
+            username_password.encode('ascii')).decode('ascii')
         cookie = 'Authorization=Basic {}' \
             .format(b64_encoded_username_password)
 
         response = requests.post(
-            url, headers={'referer': referer, 'cookie': cookie},
-            timeout=4)
+            url, headers={'referer': referer,
+                          'cookie': cookie}, timeout=4)
 
         try:
             result = response.json().get('data')
@@ -137,7 +142,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
             self.last_results = {
                 device['mac_addr'].replace('-', ':'): device['name']
                 for device in result
-                }
+            }
             return True
 
         return False
@@ -176,15 +181,20 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
 
         # If possible implement rsa encryption of password here.
         response = requests.post(
-            url, params={'operation': 'login', 'username': self.username,
-                         'password': self.password},
-            headers={'referer': referer}, timeout=4)
+            url,
+            params={
+                'operation': 'login',
+                'username': self.username,
+                'password': self.password
+            },
+            headers={'referer': referer},
+            timeout=4)
 
         try:
             self.stok = response.json().get('data').get('stok')
             _LOGGER.info(self.stok)
-            regex_result = re.search(
-                'sysauth=(.*);', response.headers['set-cookie'])
+            regex_result = re.search('sysauth=(.*);',
+                                     response.headers['set-cookie'])
             self.sysauth = regex_result.group(1)
             _LOGGER.info(self.sysauth)
             return True
@@ -207,11 +217,12 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                'form=statistics').format(self.host, self.stok)
         referer = 'http://{}/webpages/index.html'.format(self.host)
 
-        response = requests.post(url,
-                                 params={'operation': 'load'},
-                                 headers={'referer': referer},
-                                 cookies={'sysauth': self.sysauth},
-                                 timeout=5)
+        response = requests.post(
+            url,
+            params={'operation': 'load'},
+            headers={'referer': referer},
+            cookies={'sysauth': self.sysauth},
+            timeout=5)
 
         try:
             json_response = response.json()
@@ -224,8 +235,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                     self.stok = ''
                     self.sysauth = ''
                     return False
-                _LOGGER.error(
-                    "An unknown error happened while fetching data")
+                _LOGGER.error("An unknown error happened while fetching data")
                 return False
         except ValueError:
             _LOGGER.error("Router didn't respond with JSON. "
@@ -236,7 +246,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
             self.last_results = {
                 device['mac'].replace('-', ':'): device['mac']
                 for device in result
-                }
+            }
             return True
 
         return False
@@ -248,10 +258,11 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                'form=logout').format(self.host, self.stok)
         referer = 'http://{}/webpages/index.html'.format(self.host)
 
-        requests.post(url,
-                      params={'operation': 'write'},
-                      headers={'referer': referer},
-                      cookies={'sysauth': self.sysauth})
+        requests.post(
+            url,
+            params={'operation': 'write'},
+            headers={'referer': referer},
+            cookies={'sysauth': self.sysauth})
         self.stok = ''
         self.sysauth = ''
 
@@ -325,10 +336,9 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
             referer = 'http://{}'.format(self.host)
             cookie = 'Authorization=Basic {}'.format(self.credentials)
 
-            page = requests.get(url, headers={
-                'cookie': cookie,
-                'referer': referer
-            })
+            page = requests.get(
+                url, headers={'cookie': cookie,
+                              'referer': referer})
             mac_results.extend(self.parse_macs.findall(page.text))
 
         if not mac_results:
@@ -361,18 +371,28 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         base_url = 'http://{}'.format(self.host)
 
         header = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
-                          " rv:53.0) Gecko/20100101 Firefox/53.0",
-            "Accept": "application/json, text/javascript, */*; q=0.01",
-            "Accept-Language": "Accept-Language: en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
-            "Content-Type": "application/x-www-form-urlencoded; "
-                            "charset=UTF-8",
-            "X-Requested-With": "XMLHttpRequest",
-            "Referer": "http://" + self.host + "/",
-            "Connection": "keep-alive",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache"
+            "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
+            " rv:53.0) Gecko/20100101 Firefox/53.0",
+            "Accept":
+            "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language":
+            "Accept-Language: en-US,en;q=0.5",
+            "Accept-Encoding":
+            "gzip, deflate",
+            "Content-Type":
+            "application/x-www-form-urlencoded; "
+            "charset=UTF-8",
+            "X-Requested-With":
+            "XMLHttpRequest",
+            "Referer":
+            "http://" + self.host + "/",
+            "Connection":
+            "keep-alive",
+            "Pragma":
+            "no-cache",
+            "Cache-Control":
+            "no-cache"
         }
 
         password_md5 = hashlib.md5(
@@ -388,17 +408,12 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         # a timestamp is required to be sent as get parameter
         timestamp = int(datetime.now().timestamp() * 1e3)
 
-        client_list_url = '{}/data/monitor.client.client.json'.format(
-            base_url)
+        client_list_url = '{}/data/monitor.client.client.json'.format(base_url)
 
-        get_params = {
-            'operation': 'load',
-            '_': timestamp
-        }
+        get_params = {'operation': 'load', '_': timestamp}
 
-        response = session.get(client_list_url,
-                               headers=header,
-                               params=get_params)
+        response = session.get(
+            client_list_url, headers=header, params=get_params)
         session.close()
         try:
             list_of_devices = response.json()
@@ -411,7 +426,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
             self.last_results = {
                 device['MAC'].replace('-', ':'): device['DeviceName']
                 for device in list_of_devices['data']
-                }
+            }
             return True
 
         return False

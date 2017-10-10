@@ -33,25 +33,33 @@ DEFAULT_NAME = 'KNX Cover'
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
-    vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
-    vol.Optional(CONF_POSITION_ADDRESS): cv.string,
-    vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
-    vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_MOVE_LONG_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_MOVE_SHORT_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_POSITION_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_POSITION_STATE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_ANGLE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_ANGLE_STATE_ADDRESS):
+    cv.string,
     vol.Optional(CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME):
-        cv.positive_int,
+    cv.positive_int,
     vol.Optional(CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME):
-        cv.positive_int,
-    vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-    vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+    cv.positive_int,
+    vol.Optional(CONF_INVERT_POSITION, default=False):
+    cv.boolean,
+    vol.Optional(CONF_INVERT_ANGLE, default=False):
+    cv.boolean,
 })
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if DATA_KNX not in hass.data \
             or not hass.data[DATA_KNX].initialized:
@@ -84,8 +92,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         name=config.get(CONF_NAME),
         group_address_long=config.get(CONF_MOVE_LONG_ADDRESS),
         group_address_short=config.get(CONF_MOVE_SHORT_ADDRESS),
-        group_address_position_state=config.get(
-            CONF_POSITION_STATE_ADDRESS),
+        group_address_position_state=config.get(CONF_POSITION_STATE_ADDRESS),
         group_address_angle=config.get(CONF_ANGLE_ADDRESS),
         group_address_angle_state=config.get(CONF_ANGLE_STATE_ADDRESS),
         group_address_position=config.get(CONF_POSITION_ADDRESS),
@@ -112,11 +119,13 @@ class KNXCover(CoverDevice):
     @callback
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+
         @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
+
         self.device.register_device_updated_cb(after_update_callback)
 
     @property

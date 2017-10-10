@@ -16,14 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'velbus'
 
-
 VELBUS_MESSAGE = 'velbus.message'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_PORT): cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

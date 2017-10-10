@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (ENTITY_ID_FORMAT, SwitchDevice,
+                                             PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, STATE_OFF,
     STATE_ON, ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
@@ -38,7 +38,10 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES):
+    vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
 })
 
 
@@ -54,8 +57,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      state_template.extract_entities())
+        entity_ids = (device_config.get(ATTR_ENTITY_ID)
+                      or state_template.extract_entities())
 
         state_template.hass = hass
 
@@ -63,10 +66,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             icon_template.hass = hass
 
         switches.append(
-            SwitchTemplate(
-                hass, device, friendly_name, state_template, icon_template,
-                on_action, off_action, entity_ids)
-            )
+            SwitchTemplate(hass, device, friendly_name, state_template,
+                           icon_template, on_action, off_action, entity_ids))
     if not switches:
         _LOGGER.error("No switches added")
         return False
@@ -108,13 +109,13 @@ class SwitchTemplate(SwitchDevice):
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_switch_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_switch_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_switch_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_switch_startup)
 
     @property
     def name(self):

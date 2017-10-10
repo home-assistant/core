@@ -14,13 +14,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
+    ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 STATE_IDLE, STATE_OFF, STATE_PAUSED,
+                                 STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
@@ -36,10 +36,14 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
 })
 
 
@@ -66,8 +70,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error(
-            "Could not communicate with %s:%d: %s", host, port, error)
+        _LOGGER.error("Could not communicate with %s:%d: %s", host, port,
+                      error)
         return False
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
@@ -98,8 +102,8 @@ class LogitechMediaServer(object):
         if data is False:
             return result
         for players in data.get('players_loop', []):
-            player = SqueezeBoxDevice(
-                self, players['playerid'], players['name'])
+            player = SqueezeBoxDevice(self, players['playerid'],
+                                      players['name'])
             yield from player.async_update()
             result.append(player)
         return result
@@ -109,13 +113,12 @@ class LogitechMediaServer(object):
         """Abstract out the JSON-RPC connection."""
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
-        url = "http://{}:{}/jsonrpc.js".format(
-            self.host, self.port)
+        url = "http://{}:{}/jsonrpc.js".format(self.host, self.port)
         data = json.dumps({
             "id": "1",
             "method": "slim.request",
             "params": [player, command]
-            })
+        })
 
         _LOGGER.debug("URL: %s Data: %s", url, data)
 
@@ -123,9 +126,7 @@ class LogitechMediaServer(object):
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.post(
-                    url,
-                    data=data,
-                    auth=auth)
+                    url, data=data, auth=auth)
 
                 if response.status != 200:
                     _LOGGER.error(
@@ -188,16 +189,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._lms.async_query(
-            *parameters, player=self._id)
+        return self._lms.async_query(*parameters, player=self._id)
 
     @asyncio.coroutine
     def async_update(self):
         """Retrieve the current state of the player."""
         tags = 'adKl'
         response = yield from self.async_query(
-            "status", "-", "1", "tags:{tags}"
-            .format(tags=tags))
+            "status", "-", "1", "tags:{tags}".format(tags=tags))
 
         if response is False:
             return
@@ -277,8 +276,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 port=self._lms.port)
         else:
             base_url = 'http://{server}:{port}/'.format(
-                server=self._lms.host,
-                port=self._lms.port)
+                server=self._lms.host, port=self._lms.port)
 
         url = urllib.parse.urljoin(base_url, media_url)
 
@@ -336,7 +334,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        volume_percent = str(int(volume*100))
+        volume_percent = str(int(volume * 100))
         return self.async_query('mixer', 'volume', volume_percent)
 
     def async_mute_volume(self, mute):

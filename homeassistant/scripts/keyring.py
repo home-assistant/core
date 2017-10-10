@@ -14,10 +14,10 @@ def run(args):
         description=("Modify Home Assistant secrets in the default keyring. "
                      "Use the secrets in configuration files with: "
                      "!secret <name>"))
+    parser.add_argument('--script', choices=['keyring'])
     parser.add_argument(
-        '--script', choices=['keyring'])
-    parser.add_argument(
-        'action', choices=['get', 'set', 'del', 'info'],
+        'action',
+        choices=['get', 'set', 'del', 'info'],
         help="Get, set or delete a secret")
     parser.add_argument(
         'name', help="Name of the secret", nargs='?', default=None)

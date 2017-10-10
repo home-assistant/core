@@ -12,9 +12,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.const import (
-    CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN, CONF_NAME,
-    STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS)
+from homeassistant.const import (CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN,
+                                 STATE_CLOSED, STATE_OPEN, CONF_COVERS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,15 +39,23 @@ STATES_MAP = {
 }
 
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_DEVICE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_ACCESS_TOKEN):
+    cv.string,
+    vol.Optional(CONF_DEVICE):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS):
+    vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 
@@ -108,8 +116,9 @@ class GaradgetCover(CoverDevice):
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError as ex:
-            _LOGGER.warning("Garadget device %(device)s seems to be offline",
-                            dict(device=self.device_id))
+            _LOGGER.warning(
+                "Garadget device %(device)s seems to be offline",
+                dict(device=self.device_id))
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
             self._available = False
@@ -184,8 +193,8 @@ class GaradgetCover(CoverDevice):
 
     def remove_token(self):
         """Remove authorization token from API."""
-        url = '{}/v1/access_tokens/{}'.format(
-            self.particle_url, self.access_token)
+        url = '{}/v1/access_tokens/{}'.format(self.particle_url,
+                                              self.access_token)
         ret = requests.delete(
             url, auth=(self._username, self._password), timeout=10)
         return ret.text
@@ -237,8 +246,9 @@ class GaradgetCover(CoverDevice):
                 "Unable to connect to server: %(reason)s", dict(reason=ex))
             self._state = STATE_OFFLINE
         except KeyError as ex:
-            _LOGGER.warning("Garadget device %(device)s seems to be offline",
-                            dict(device=self.device_id))
+            _LOGGER.warning(
+                "Garadget device %(device)s seems to be offline",
+                dict(device=self.device_id))
             self._state = STATE_OFFLINE
 
         if self._state not in [STATE_CLOSING, STATE_OPENING]:
@@ -262,7 +272,7 @@ class GaradgetCover(CoverDevice):
         params = {'access_token': self.access_token}
         if arg:
             params['command'] = arg
-        url = '{}/v1/devices/{}/{}'.format(
-            self.particle_url, self.device_id, func)
+        url = '{}/v1/devices/{}/{}'.format(self.particle_url, self.device_id,
+                                           func)
         ret = requests.post(url, data=params, timeout=10)
         return ret.json()

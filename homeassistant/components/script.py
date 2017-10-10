@@ -12,9 +12,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS)
+from homeassistant.const import (ATTR_ENTITY_ID, SERVICE_TURN_OFF,
+                                 SERVICE_TURN_ON, SERVICE_TOGGLE,
+                                 SERVICE_RELOAD, STATE_ON, CONF_ALIAS)
 from homeassistant.core import split_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
@@ -44,14 +44,20 @@ SCRIPT_ENTRY_SCHEMA = vol.Schema({
     vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({cv.slug: SCRIPT_ENTRY_SCHEMA})
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: SCRIPT_ENTRY_SCHEMA
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_VARIABLES): dict,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Optional(ATTR_VARIABLES):
+    dict,
 })
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
@@ -128,8 +134,11 @@ def async_setup(hass, config):
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
         yield from asyncio.wait(
-            [script.async_turn_off() for script
-             in component.async_extract_from_service(service)], loop=hass.loop)
+            [
+                script.async_turn_off()
+                for script in component.async_extract_from_service(service)
+            ],
+            loop=hass.loop)
 
     @asyncio.coroutine
     def toggle_service(service):
@@ -137,14 +146,23 @@ def async_setup(hass, config):
         for script in component.async_extract_from_service(service):
             yield from script.async_toggle()
 
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD, reload_service,
-                                 schema=RELOAD_SERVICE_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
-                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_TURN_OFF, turn_off_service,
-                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_TOGGLE, toggle_service,
-                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service, schema=RELOAD_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        turn_on_service,
+        schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        turn_off_service,
+        schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TOGGLE,
+        toggle_service,
+        schema=SCRIPT_TURN_ONOFF_SCHEMA)
 
     return True
 
@@ -152,6 +170,7 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _async_process_config(hass, config, component):
     """Process group configuration."""
+
     @asyncio.coroutine
     def service_handler(service):
         """Execute a service call to script.<script name>."""

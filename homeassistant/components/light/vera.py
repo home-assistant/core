@@ -7,10 +7,10 @@ https://home-assistant.io/components/light.vera/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, Light)
+from homeassistant.components.vera import (VERA_CONTROLLER, VERA_DEVICES,
+                                           VeraDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

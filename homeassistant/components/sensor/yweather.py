@@ -11,9 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN,
-    ATTR_ATTRIBUTION)
+from homeassistant.const import (TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
+                                 CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -42,12 +41,14 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_WOEID, default=None):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_FORECAST, default=0):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        [vol.In(SENSOR_TYPES)],
+    [vol.In(SENSOR_TYPES)],
 })
 
 

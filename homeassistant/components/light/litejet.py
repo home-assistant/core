@@ -7,8 +7,8 @@ https://home-assistant.io/components/light.litejet/
 import logging
 
 import homeassistant.components.litejet as litejet
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,9 +76,7 @@ class LiteJetLight(Light):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {
-            ATTR_NUMBER: self._index
-        }
+        return {ATTR_NUMBER: self._index}
 
     def turn_on(self, **kwargs):
         """Turn on the light."""

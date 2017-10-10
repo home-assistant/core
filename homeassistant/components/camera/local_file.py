@@ -21,8 +21,10 @@ CONF_FILE_PATH = 'file_path'
 DEFAULT_NAME = 'Local File'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_FILE_PATH):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string
 })
 
 

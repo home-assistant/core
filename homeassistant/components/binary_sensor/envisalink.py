@@ -29,13 +29,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for zone_num in configured_zones:
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         device = EnvisalinkBinarySensor(
-            hass,
-            zone_num,
-            device_config_data[CONF_ZONENAME],
+            hass, zone_num, device_config_data[CONF_ZONENAME],
             device_config_data[CONF_ZONETYPE],
             hass.data[DATA_EVL].alarm_state['zone'][zone_num],
-            hass.data[DATA_EVL]
-        )
+            hass.data[DATA_EVL])
         devices.append(device)
 
     async_add_devices(devices)
@@ -56,8 +53,8 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE,
+                                 self._update_callback)
 
     @property
     def device_state_attributes(self):

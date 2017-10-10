@@ -9,10 +9,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
 from homeassistant.components import zone as zone_cmp
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
-    CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
-    WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
-    CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ENTITY_ID,
+    CONF_VALUE_TEMPLATE, CONF_CONDITION, WEEKDAYS, CONF_STATE, CONF_ZONE,
+    CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -31,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _threaded_factory(async_factory):
     """Create threaded versions of async factories."""
+
     @ft.wraps(async_factory)
     def factory(config, config_validation=True):
         """Threaded factory."""
@@ -39,23 +39,24 @@ def _threaded_factory(async_factory):
         def condition_if(hass, variables=None):
             """Validate condition."""
             return run_callback_threadsafe(
-                hass.loop, async_check, hass, variables,
-            ).result()
+                hass.loop,
+                async_check,
+                hass,
+                variables, ).result()
 
         return condition_if
 
     return factory
 
 
-def async_from_config(config: ConfigType, config_validation: bool=True):
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
     """
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-        factory = getattr(
-            sys.modules[__name__],
-            fmt.format(config.get(CONF_CONDITION)), None)
+        factory = getattr(sys.modules[__name__],
+                          fmt.format(config.get(CONF_CONDITION)), None)
 
         if factory:
             break
@@ -70,20 +71,21 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType, config_validation: bool=True):
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
     checks = None
 
-    def if_and_condition(hass: HomeAssistant,
-                         variables=None) -> bool:
+    def if_and_condition(hass: HomeAssistant, variables=None) -> bool:
         """Test and condition."""
         nonlocal checks
 
         if checks is None:
-            checks = [async_from_config(entry, False) for entry
-                      in config['conditions']]
+            checks = [
+                async_from_config(entry, False)
+                for entry in config['conditions']
+            ]
 
         try:
             for check in checks:
@@ -101,20 +103,21 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType, config_validation: bool=True):
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
     checks = None
 
-    def if_or_condition(hass: HomeAssistant,
-                        variables=None) -> bool:
+    def if_or_condition(hass: HomeAssistant, variables=None) -> bool:
         """Test and condition."""
         nonlocal checks
 
         if checks is None:
-            checks = [async_from_config(entry, False) for entry
-                      in config['conditions']]
+            checks = [
+                async_from_config(entry, False)
+                for entry in config['conditions']
+            ]
 
         try:
             for check in checks:
@@ -131,17 +134,30 @@ def async_or_from_config(config: ConfigType, config_validation: bool=True):
 or_from_config = _threaded_factory(async_or_from_config)
 
 
-def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
-                  value_template=None, variables=None):
+def numeric_state(hass: HomeAssistant,
+                  entity,
+                  below=None,
+                  above=None,
+                  value_template=None,
+                  variables=None):
     """Test a numeric state condition."""
     return run_callback_threadsafe(
-        hass.loop, async_numeric_state, hass, entity, below, above,
-        value_template, variables,
-    ).result()
+        hass.loop,
+        async_numeric_state,
+        hass,
+        entity,
+        below,
+        above,
+        value_template,
+        variables, ).result()
 
 
-def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
-                        value_template=None, variables=None):
+def async_numeric_state(hass: HomeAssistant,
+                        entity,
+                        below=None,
+                        above=None,
+                        value_template=None,
+                        variables=None):
     """Test a numeric state condition."""
     if isinstance(entity, str):
         entity = hass.states.get(entity)
@@ -189,8 +205,8 @@ def async_numeric_state_from_config(config, config_validation=True):
         if value_template is not None:
             value_template.hass = hass
 
-        return async_numeric_state(
-            hass, entity_id, below, above, value_template, variables)
+        return async_numeric_state(hass, entity_id, below, above,
+                                   value_template, variables)
 
     return if_numeric_state
 
@@ -242,13 +258,13 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     sunrise = get_astral_event_date(hass, 'sunrise', today)
     sunset = get_astral_event_date(hass, 'sunset', today)
 
-    if sunrise is None and (before == SUN_EVENT_SUNRISE or
-                            after == SUN_EVENT_SUNRISE):
+    if sunrise is None and (before == SUN_EVENT_SUNRISE
+                            or after == SUN_EVENT_SUNRISE):
         # There is no sunrise today
         return False
 
-    if sunset is None and (before == SUN_EVENT_SUNSET or
-                           after == SUN_EVENT_SUNSET):
+    if sunset is None and (before == SUN_EVENT_SUNSET
+                           or after == SUN_EVENT_SUNSET):
         # There is no sunset today
         return False
 
@@ -286,8 +302,11 @@ def sun_from_config(config, config_validation=True):
 def template(hass, value_template, variables=None):
     """Test if template condition matches."""
     return run_callback_threadsafe(
-        hass.loop, async_template, hass, value_template, variables,
-    ).result()
+        hass.loop,
+        async_template,
+        hass,
+        value_template,
+        variables, ).result()
 
 
 def async_template(hass, value_template, variables=None):

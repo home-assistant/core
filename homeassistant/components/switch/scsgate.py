@@ -10,8 +10,8 @@ import voluptuous as vol
 
 import homeassistant.components.scsgate as scsgate
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME,
+                                 CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 
 ATTR_SCENARIO_ID = 'scenario_id'
@@ -26,7 +26,10 @@ CONF_SCS_ID = 'scs_id'
 DOMAIN = 'scsgate'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
+    vol.Required(CONF_DEVICES):
+    vol.Schema({
+        cv.slug: scsgate.SCSGATE_SCHEMA
+    }),
 })
 
 
@@ -147,11 +150,9 @@ class SCSGateSwitch(SwitchDevice):
         if self._toggled:
             command = "on"
 
-        self.hass.bus.fire(
-            'button_pressed', {
-                ATTR_ENTITY_ID: self._scs_id,
-                ATTR_STATE: command}
-        )
+        self.hass.bus.fire('button_pressed',
+                           {ATTR_ENTITY_ID: self._scs_id,
+                            ATTR_STATE: command})
 
 
 class SCSGateScenarioSwitch(object):
@@ -191,9 +192,7 @@ class SCSGateScenarioSwitch(object):
                               message)
             return
 
-        self._hass.bus.fire(
-            'scenario_switch_triggered', {
-                ATTR_ENTITY_ID: int(self._scs_id),
-                ATTR_SCENARIO_ID: int(scenario_id, 16)
-            }
-        )
+        self._hass.bus.fire('scenario_switch_triggered', {
+            ATTR_ENTITY_ID: int(self._scs_id),
+            ATTR_SCENARIO_ID: int(scenario_id, 16)
+        })

@@ -11,8 +11,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_BASE,
+                                 CONF_QUOTE, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -28,10 +28,14 @@ DEFAULT_NAME = 'Exchange Rate Sensor'
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_QUOTE): cv.string,
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_QUOTE):
+    cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

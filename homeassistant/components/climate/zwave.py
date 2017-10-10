@@ -11,8 +11,8 @@ from homeassistant.components.climate import DOMAIN
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                                 ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +27,7 @@ ATTR_FAN_STATE = 'fan_state'
 
 WORKAROUND_ZXT_120 = 'zxt_120'
 
-DEVICE_MAPPINGS = {
-    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
-}
+DEVICE_MAPPINGS = {REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120}
 
 
 def get_device(hass, values, **kwargs):
@@ -58,11 +56,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
         # Make sure that we have values for the key before converting to int
-        if (self.node.manufacturer_id.strip() and
-                self.node.product_id.strip()):
-            specific_sensor_key = (
-                int(self.node.manufacturer_id, 16),
-                int(self.node.product_id, 16))
+        if (self.node.manufacturer_id.strip()
+                and self.node.product_id.strip()):
+            specific_sensor_key = (int(self.node.manufacturer_id, 16), int(
+                self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
                     _LOGGER.debug(
@@ -95,8 +92,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             if fan_list:
                 self._fan_list = list(fan_list)
         _LOGGER.debug("self._fan_list=%s", self._fan_list)
-        _LOGGER.debug("self._current_fan_mode=%s",
-                      self._current_fan_mode)
+        _LOGGER.debug("self._current_fan_mode=%s", self._current_fan_mode)
         # Swing mode
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
@@ -110,14 +106,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Set point
         if self.values.primary.data == 0:
             _LOGGER.debug("Setpoint is 0, setting default to "
-                          "current_temperature=%s",
-                          self._current_temperature)
+                          "current_temperature=%s", self._current_temperature)
             if self._current_temperature is not None:
-                self._target_temperature = (
-                    round((float(self._current_temperature)), 1))
+                self._target_temperature = (round(
+                    (float(self._current_temperature)), 1))
         else:
-            self._target_temperature = round(
-                (float(self.values.primary.data)), 1)
+            self._target_temperature = round((float(self.values.primary.data)),
+                                             1)
 
         # Operating state
         if self.values.operating_state:

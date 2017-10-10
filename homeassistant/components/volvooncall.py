@@ -8,8 +8,8 @@ https://home-assistant.io/components/volvooncall/
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_RESOURCES)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
+                                 CONF_RESOURCES)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,42 +33,51 @@ CONF_SERVICE_URL = 'service_url'
 
 SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
 
-RESOURCES = {'position': ('device_tracker',),
-             'lock': ('lock', 'Lock'),
-             'heater': ('switch', 'Heater', 'mdi:radiator'),
-             'odometer': ('sensor', 'Odometer', 'mdi:speedometer', 'km'),
-             'fuel_amount': ('sensor', 'Fuel amount', 'mdi:gas-station', 'L'),
-             'fuel_amount_level': (
-                 'sensor', 'Fuel level', 'mdi:water-percent', '%'),
-             'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
-             'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
-             'brake_fluid': ('binary_sensor', 'Brake Fluid'),
-             'service_warning_status': ('binary_sensor', 'Service'),
-             'bulb_failures': ('binary_sensor', 'Bulbs'),
-             'doors': ('binary_sensor', 'Doors'),
-             'windows': ('binary_sensor', 'Windows')}
+RESOURCES = {
+    'position': ('device_tracker', ),
+    'lock': ('lock', 'Lock'),
+    'heater': ('switch', 'Heater', 'mdi:radiator'),
+    'odometer': ('sensor', 'Odometer', 'mdi:speedometer', 'km'),
+    'fuel_amount': ('sensor', 'Fuel amount', 'mdi:gas-station', 'L'),
+    'fuel_amount_level': ('sensor', 'Fuel level', 'mdi:water-percent', '%'),
+    'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
+    'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
+    'brake_fluid': ('binary_sensor', 'Brake Fluid'),
+    'service_warning_status': ('binary_sensor', 'Service'),
+    'bulb_failures': ('binary_sensor', 'Bulbs'),
+    'doors': ('binary_sensor', 'Doors'),
+    'windows': ('binary_sensor', 'Windows')
+}
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
-        vol.Optional(CONF_NAME, default={}): vol.Schema(
-            {cv.slug: cv.string}),
-        vol.Optional(CONF_RESOURCES): vol.All(
-            cv.ensure_list, [vol.In(RESOURCES)]),
-        vol.Optional(CONF_SERVICE_URL): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(
+                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+            (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
+            vol.Optional(CONF_NAME, default={}):
+            vol.Schema({
+                cv.slug: cv.string
+            }),
+            vol.Optional(CONF_RESOURCES):
+            vol.All(cv.ensure_list, [vol.In(RESOURCES)]),
+            vol.Optional(CONF_SERVICE_URL):
+            cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the Volvo On Call component."""
     from volvooncall import Connection, DEFAULT_SERVICE_URL
     connection = Connection(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
+        config[DOMAIN].get(CONF_USERNAME), config[DOMAIN].get(CONF_PASSWORD),
         config[DOMAIN].get(CONF_SERVICE_URL, DEFAULT_SERVICE_URL))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
@@ -79,10 +88,10 @@ def setup(hass, config):
         """Load relevant platforms."""
         state.entities[vehicle.vin] = []
         for attr, (component, *_) in RESOURCES.items():
-            if (getattr(vehicle, attr + '_supported', True) and
-                    attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
-                discovery.load_platform(
-                    hass, component, DOMAIN, (vehicle.vin, attr), config)
+            if (getattr(vehicle, attr + '_supported', True)
+                    and attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
+                discovery.load_platform(hass, component, DOMAIN,
+                                        (vehicle.vin, attr), config)
 
     def update_vehicle(vehicle):
         """Revieve updated information on vehicle."""
@@ -124,11 +133,10 @@ class VolvoData:
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
-        if (vehicle.registration_number and
-                vehicle.registration_number.lower()) in self.names:
+        if (vehicle.registration_number
+                and vehicle.registration_number.lower()) in self.names:
             return self.names[vehicle.registration_number.lower()]
-        elif (vehicle.vin and
-              vehicle.vin.lower() in self.names):
+        elif (vehicle.vin and vehicle.vin.lower() in self.names):
             return self.names[vehicle.vin.lower()]
         elif vehicle.registration_number:
             return vehicle.registration_number
@@ -168,9 +176,7 @@ class VolvoEntity(Entity):
     @property
     def name(self):
         """Return full name of the entity."""
-        return '{} {}'.format(
-            self._vehicle_name,
-            self._entity_name)
+        return '{} {}'.format(self._vehicle_name, self._entity_name)
 
     @property
     def should_poll(self):
@@ -185,6 +191,5 @@ class VolvoEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return dict(model='{}/{}'.format(
-            self.vehicle.vehicle_type,
-            self.vehicle.model_year))
+        return dict(model='{}/{}'.format(self.vehicle.vehicle_type,
+                                         self.vehicle.model_year))

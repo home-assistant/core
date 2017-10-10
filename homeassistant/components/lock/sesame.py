@@ -9,9 +9,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
-    STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
+                                 STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.typing import ConfigType
 
 REQUIREMENTS = ['pysesame==0.1.0']
@@ -25,16 +24,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the Sesame platform."""
     import pysesame
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
 
-    add_devices([SesameDevice(sesame) for
-                 sesame in pysesame.get_sesames(email, password)])
+    add_devices([
+        SesameDevice(sesame)
+        for sesame in pysesame.get_sesames(email, password)
+    ])
 
 
 class SesameDevice(LockDevice):

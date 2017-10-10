@@ -2,10 +2,7 @@
 # pylint: disable=import-error
 import logging
 
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_NAME,
-    STATE_UNKNOWN)
+from homeassistant.const import (CONF_DEVICE, CONF_NAME, STATE_UNKNOWN)
 
 from homeassistant.helpers.entity import Entity
 

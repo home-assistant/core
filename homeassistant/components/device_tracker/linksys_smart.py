@@ -5,8 +5,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 DEFAULT_TIMEOUT = 10
@@ -56,9 +56,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         self.last_results = {}
         response = self._make_request()
         if response.status_code != 200:
-            _LOGGER.error(
-                "Got HTTP status code %d when getting device list",
-                response.status_code)
+            _LOGGER.error("Got HTTP status code %d when getting device list",
+                          response.status_code)
             return False
         try:
             data = response.json()
@@ -99,7 +98,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             "action": "http://linksys.com/jnap/devicelist/GetDevices"
         }]
         headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
-        return requests.post('http://{}/JNAP/'.format(self.host),
-                             timeout=DEFAULT_TIMEOUT,
-                             headers=headers,
-                             json=data)
+        return requests.post(
+            'http://{}/JNAP/'.format(self.host),
+            timeout=DEFAULT_TIMEOUT,
+            headers=headers,
+            json=data)

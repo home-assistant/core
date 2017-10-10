@@ -39,9 +39,12 @@ SCAN_INTERVAL = timedelta(minutes=1)
 TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ROUTE, default=""): cv.string,
+    vol.Required(CONF_STOP_ID):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_ROUTE, default=""):
+    cv.string,
 })
 
 
@@ -132,9 +135,11 @@ class PublicTransportData(object):
         """Initialize the data object."""
         self.stop = stop
         self.route = route
-        self.info = [{ATTR_DUE_AT: 'n/a',
-                      ATTR_ROUTE: self.route,
-                      ATTR_DUE_IN: 'n/a'}]
+        self.info = [{
+            ATTR_DUE_AT: 'n/a',
+            ATTR_ROUTE: self.route,
+            ATTR_DUE_IN: 'n/a'
+        }]
 
     def update(self):
         """Get the latest data from opendata.ch."""
@@ -150,17 +155,21 @@ class PublicTransportData(object):
         response = requests.get(_RESOURCE, params, timeout=10)
 
         if response.status_code != 200:
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+            self.info = [{
+                ATTR_DUE_AT: 'n/a',
+                ATTR_ROUTE: self.route,
+                ATTR_DUE_IN: 'n/a'
+            }]
             return
 
         result = response.json()
 
         if str(result['errorcode']) != '0':
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+            self.info = [{
+                ATTR_DUE_AT: 'n/a',
+                ATTR_ROUTE: self.route,
+                ATTR_DUE_IN: 'n/a'
+            }]
             return
 
         self.info = []
@@ -168,12 +177,16 @@ class PublicTransportData(object):
             due_at = item.get('departuredatetime')
             route = item.get('route')
             if due_at is not None and route is not None:
-                bus_data = {ATTR_DUE_AT: due_at,
-                            ATTR_ROUTE: route,
-                            ATTR_DUE_IN: due_in_minutes(due_at)}
+                bus_data = {
+                    ATTR_DUE_AT: due_at,
+                    ATTR_ROUTE: route,
+                    ATTR_DUE_IN: due_in_minutes(due_at)
+                }
                 self.info.append(bus_data)
 
         if not self.info:
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+            self.info = [{
+                ATTR_DUE_AT: 'n/a',
+                ATTR_ROUTE: self.route,
+                ATTR_DUE_IN: 'n/a'
+            }]

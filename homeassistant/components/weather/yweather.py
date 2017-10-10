@@ -11,8 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA,
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN)
 
 REQUIREMENTS = ["yahooweather==0.8"]
@@ -49,10 +48,11 @@ CONDITION_CLASSES = {
     'exceptional': [0, 1, 2],
 }
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_WOEID, default=None):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -107,8 +107,8 @@ class YahooWeatherWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         try:
-            return self.hass.data[DATA_CONDITION][int(
-                self._data.yahoo.Now['code'])]
+            return self.hass.data[DATA_CONDITION][int(self._data.yahoo.Now[
+                'code'])]
         except (ValueError, IndexError):
             return STATE_UNKNOWN
 
@@ -156,14 +156,16 @@ class YahooWeatherWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         try:
-            return [
-                {
-                    ATTR_FORECAST_TIME: v['date'],
-                    ATTR_FORECAST_TEMP:int(v['high']),
-                    ATTR_FORECAST_TEMP_LOW: int(v['low']),
-                    ATTR_FORECAST_CONDITION:
-                        self.hass.data[DATA_CONDITION][int(v['code'])]
-                } for v in self._data.yahoo.Forecast]
+            return [{
+                ATTR_FORECAST_TIME:
+                v['date'],
+                ATTR_FORECAST_TEMP:
+                int(v['high']),
+                ATTR_FORECAST_TEMP_LOW:
+                int(v['low']),
+                ATTR_FORECAST_CONDITION:
+                self.hass.data[DATA_CONDITION][int(v['code'])]
+            } for v in self._data.yahoo.Forecast]
         except (ValueError, IndexError):
             return STATE_UNKNOWN
 

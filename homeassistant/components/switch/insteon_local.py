@@ -28,41 +28,39 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
 
-    conf_switches = config_from_file(hass.config.path(
-        INSTEON_LOCAL_SWITCH_CONF))
+    conf_switches = config_from_file(
+        hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if conf_switches:
         for device_id in conf_switches:
-            setup_switch(
-                device_id, conf_switches[device_id], insteonhub, hass,
-                add_devices)
+            setup_switch(device_id, conf_switches[device_id], insteonhub, hass,
+                         add_devices)
     else:
         linked = insteonhub.get_linked()
 
         for device_id in linked:
             if linked[device_id]['cat_type'] == 'switch'\
                     and device_id not in conf_switches:
-                request_configuration(device_id, insteonhub,
-                                      linked[device_id]['model_name'] + ' ' +
-                                      linked[device_id]['sku'],
-                                      hass, add_devices)
+                request_configuration(
+                    device_id, insteonhub, linked[device_id]['model_name'] +
+                    ' ' + linked[device_id]['sku'], hass, add_devices)
 
 
-def request_configuration(
-        device_id, insteonhub, model, hass, add_devices_callback):
+def request_configuration(device_id, insteonhub, model, hass,
+                          add_devices_callback):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if device_id in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[device_id], 'Failed to register, please try again.')
+        configurator.notify_errors(_CONFIGURING[device_id],
+                                   'Failed to register, please try again.')
 
         return
 
     def insteon_switch_config_callback(data):
         """Handle configuration changes."""
-        setup_switch(device_id, data.get('name'), insteonhub, hass,
-                     add_devices_callback)
+        setup_switch(device_id,
+                     data.get('name'), insteonhub, hass, add_devices_callback)
 
     _CONFIGURING[device_id] = configurator.request_config(
         'Insteon Switch ' + model + ' addr: ' + device_id,
@@ -70,8 +68,11 @@ def request_configuration(
         description=('Enter a name for ' + model + ' addr: ' + device_id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
-        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
-    )
+        fields=[{
+            'id': 'name',
+            'name': 'Name',
+            'type': ''
+        }])
 
 
 def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):

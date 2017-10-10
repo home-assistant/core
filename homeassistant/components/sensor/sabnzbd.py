@@ -12,16 +12,17 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_MONITORED_VARIABLES,
-    CONF_SSL)
+from homeassistant.const import (CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT,
+                                 CONF_MONITORED_VARIABLES, CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
-                'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
-                '#python-sabnzbd==0.1']
+REQUIREMENTS = [
+    'https://github.com/jamespcole/home-assistant-nzb-clients/'
+    'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
+    '#python-sabnzbd==0.1'
+]
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -44,13 +45,18 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
 })
 
 
@@ -75,8 +81,8 @@ def setup_sabnzbd(base_url, apikey, name, hass, config, add_devices, sab_api):
 
     # pylint: disable=global-statement
     global _THROTTLED_REFRESH
-    _THROTTLED_REFRESH = Throttle(
-        MIN_TIME_BETWEEN_UPDATES)(sab_api.refresh_queue)
+    _THROTTLED_REFRESH = Throttle(MIN_TIME_BETWEEN_UPDATES)(
+        sab_api.refresh_queue)
 
     devices = []
     for variable in monitored:
@@ -99,8 +105,8 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
         """Handle configuration changes."""
         api_key = data.get('api_key')
         if _check_sabnzbd(sab_api, host, api_key):
-            setup_sabnzbd(host, api_key, name,
-                          hass, config, add_devices, sab_api)
+            setup_sabnzbd(host, api_key, name, hass, config, add_devices,
+                          sab_api)
 
             def success():
                 """Set up was successful."""
@@ -120,8 +126,8 @@ def request_configuration(host, name, hass, config, add_devices, sab_api):
         fields=[{
             'id': 'api_key',
             'name': 'API Key',
-            'type': ''}]
-    )
+            'type': ''
+        }])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -149,12 +155,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             api_key = conf[base_url]['api_key']
 
     if not _check_sabnzbd(SabnzbdApi, base_url, api_key):
-        request_configuration(base_url, name, hass, config,
-                              add_devices, SabnzbdApi)
+        request_configuration(base_url, name, hass, config, add_devices,
+                              SabnzbdApi)
         return
 
-    setup_sabnzbd(base_url, api_key, name, hass,
-                  config, add_devices, SabnzbdApi)
+    setup_sabnzbd(base_url, api_key, name, hass, config, add_devices,
+                  SabnzbdApi)
 
 
 class SabnzbdSensor(Entity):

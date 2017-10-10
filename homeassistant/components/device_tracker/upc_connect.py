@@ -13,18 +13,18 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = '192.168.0.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_IP):
+    cv.string,
 })
 
 CMD_DEVICES = 123
@@ -51,8 +51,10 @@ class UPCDeviceScanner(DeviceScanner):
         self.token = None
 
         self.headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Referer': "http://{}/index.html".format(self.host),
+            'X-Requested-With':
+            'XMLHttpRequest',
+            'Referer':
+            "http://{}/index.html".format(self.host),
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")
@@ -92,8 +94,7 @@ class UPCDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.get(
                     "http://{}/common_page/login.html".format(self.host),
-                    headers=self.headers
-                )
+                    headers=self.headers)
 
                 yield from response.text()
 
@@ -116,8 +117,7 @@ class UPCDeviceScanner(DeviceScanner):
                     "http://{}/xml/getter.xml".format(self.host),
                     data="token={}&fun={}".format(self.token, function),
                     headers=self.headers,
-                    allow_redirects=False
-                )
+                    allow_redirects=False)
 
                 # error?
                 if response.status != 200:

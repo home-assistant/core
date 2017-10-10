@@ -40,15 +40,23 @@ UNITS = {
     "GBytes": 1024**3,
 }
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
-        vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
-        vol.Optional(CONF_LOCAL_IP): ip_address,
-        vol.Optional(CONF_PORTS):
-            vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True):
+            cv.boolean,
+            vol.Optional(CONF_UNITS, default="MBytes"):
+            vol.In(UNITS),
+            vol.Optional(CONF_LOCAL_IP):
+            ip_address,
+            vol.Optional(CONF_PORTS):
+            vol.Schema({
+                vol.Any(CONF_HASS, cv.positive_int): cv.positive_int
+            })
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=import-error, no-member, broad-except
@@ -98,8 +106,8 @@ def setup(hass, config):
         if internal == CONF_HASS:
             internal = internal_port
         try:
-            upnp.addportmapping(
-                external, 'TCP', host, internal, 'Home Assistant', '')
+            upnp.addportmapping(external, 'TCP', host, internal,
+                                'Home Assistant', '')
             registered.append(external)
         except Exception:
             _LOGGER.exception("UPnP failed to configure port mapping for %s",

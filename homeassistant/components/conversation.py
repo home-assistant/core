@@ -13,11 +13,10 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.loader import bind_hass
-from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, HTTP_BAD_REQUEST)
+from homeassistant.const import (ATTR_ENTITY_ID, SERVICE_TURN_OFF,
+                                 SERVICE_TURN_ON, HTTP_BAD_REQUEST)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import http
-
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.1']
 DEPENDENCIES = ['http']
@@ -33,11 +32,17 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    vol.Optional('intents'): vol.Schema({
-        cv.string: vol.All(cv.ensure_list, [cv.string])
-    })
-})}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional('intents'):
+            vol.Schema({
+                cv.string: vol.All(cv.ensure_list, [cv.string])
+            })
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,9 +134,12 @@ def _process(hass, text):
                 continue
 
             response = yield from intent.async_handle(
-                hass, DOMAIN, intent_type,
-                {key: {'value': value} for key, value
-                 in match.groupdict().items()}, text)
+                hass, DOMAIN, intent_type, {
+                    key: {
+                        'value': value
+                    }
+                    for key, value in match.groupdict().items()
+                }, text)
             return response
 
     from fuzzywuzzy import process as fuzzyExtract
@@ -143,31 +151,34 @@ def _process(hass, text):
         return None
 
     name, command = match.groups()
-    entities = {state.entity_id: state.name for state
-                in hass.states.async_all()}
-    entity_ids = fuzzyExtract.extractOne(
-        name, entities, score_cutoff=65)[2]
+    entities = {
+        state.entity_id: state.name
+        for state in hass.states.async_all()
+    }
+    entity_ids = fuzzyExtract.extractOne(name, entities, score_cutoff=65)[2]
 
     if not entity_ids:
-        _LOGGER.error(
-            "Could not find entity id %s from text %s", name, text)
+        _LOGGER.error("Could not find entity id %s from text %s", name, text)
         return None
 
     if command == 'on':
         yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_ON, {
+            core.DOMAIN,
+            SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            },
+            blocking=True)
 
     elif command == 'off':
         yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_OFF, {
+            core.DOMAIN,
+            SERVICE_TURN_OFF, {
                 ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            },
+            blocking=True)
 
     else:
-        _LOGGER.error('Got unsupported command %s from text %s',
-                      command, text)
+        _LOGGER.error('Got unsupported command %s from text %s', command, text)
 
     return None
 

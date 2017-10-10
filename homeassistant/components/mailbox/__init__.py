@@ -35,8 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
     mailboxes = []
-    hass.components.frontend.register_built_in_panel(
-        'mailbox', 'Mailbox', 'mdi:mailbox')
+    hass.components.frontend.register_built_in_panel('mailbox', 'Mailbox',
+                                                     'mdi:mailbox')
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))
@@ -70,8 +70,8 @@ def async_setup(hass, config):
                 raise HomeAssistantError("Invalid mailbox platform.")
 
             if mailbox is None:
-                _LOGGER.error(
-                    "Failed to initialize mailbox platform %s", p_type)
+                _LOGGER.error("Failed to initialize mailbox platform %s",
+                              p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
@@ -84,8 +84,10 @@ def async_setup(hass, config):
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
         yield from component.async_add_entity(mailbox_entity)
 
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
+    setup_tasks = [
+        async_setup_platform(p_type, p_config)
+        for p_type, p_config in config_per_platform(config, DOMAIN)
+    ]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
@@ -248,7 +250,7 @@ class MailboxMediaView(MailboxView):
                     _LOGGER.error(error_msg)
                     return web.Response(status=500)
             if stream:
-                return web.Response(body=stream,
-                                    content_type=mailbox.media_type)
+                return web.Response(
+                    body=stream, content_type=mailbox.media_type)
 
         return web.Response(status=500)

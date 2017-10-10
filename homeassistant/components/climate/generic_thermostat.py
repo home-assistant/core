@@ -11,15 +11,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components import switch
-from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
-    STATE_AUTO)
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-    CONF_NAME)
+from homeassistant.components.climate import (STATE_HEAT, STATE_COOL,
+                                              STATE_IDLE, ClimateDevice,
+                                              PLATFORM_SCHEMA, STATE_AUTO)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF,
+                                 ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.helpers import condition
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_time_interval)
+from homeassistant.helpers.event import (async_track_state_change,
+                                         async_track_time_interval)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,19 +38,27 @@ CONF_MIN_DUR = 'min_cycle_duration'
 CONF_TOLERANCE = 'tolerance'
 CONF_KEEP_ALIVE = 'keep_alive'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HEATER): cv.entity_id,
-    vol.Required(CONF_SENSOR): cv.entity_id,
-    vol.Optional(CONF_AC_MODE): cv.boolean,
-    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_KEEP_ALIVE): vol.All(
-        cv.time_period, cv.positive_timedelta),
+    vol.Required(CONF_HEATER):
+    cv.entity_id,
+    vol.Required(CONF_SENSOR):
+    cv.entity_id,
+    vol.Optional(CONF_AC_MODE):
+    cv.boolean,
+    vol.Optional(CONF_MAX_TEMP):
+    vol.Coerce(float),
+    vol.Optional(CONF_MIN_DUR):
+    vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MIN_TEMP):
+    vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE):
+    vol.Coerce(float),
+    vol.Optional(CONF_TARGET_TEMP):
+    vol.Coerce(float),
+    vol.Optional(CONF_KEEP_ALIVE):
+    vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -69,9 +76,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tolerance = config.get(CONF_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
-    async_add_devices([GenericThermostat(
-        hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
+    async_add_devices([
+        GenericThermostat(hass, name, heater_entity_id, sensor_entity_id,
+                          min_temp, max_temp, target_temp, ac_mode,
+                          min_cycle_duration, tolerance, keep_alive)
+    ])
 
 
 class GenericThermostat(ClimateDevice):
@@ -97,14 +106,14 @@ class GenericThermostat(ClimateDevice):
         self._target_temp = target_temp
         self._unit = hass.config.units.temperature_unit
 
-        async_track_state_change(
-            hass, sensor_entity_id, self._async_sensor_changed)
-        async_track_state_change(
-            hass, heater_entity_id, self._async_switch_changed)
+        async_track_state_change(hass, sensor_entity_id,
+                                 self._async_sensor_changed)
+        async_track_state_change(hass, heater_entity_id,
+                                 self._async_switch_changed)
 
         if self._keep_alive:
-            async_track_time_interval(
-                hass, self._async_keep_alive, self._keep_alive)
+            async_track_time_interval(hass, self._async_keep_alive,
+                                      self._keep_alive)
 
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
@@ -252,9 +261,9 @@ class GenericThermostat(ClimateDevice):
                 current_state = STATE_ON
             else:
                 current_state = STATE_OFF
-            long_enough = condition.state(
-                self.hass, self.heater_entity_id, current_state,
-                self.min_cycle_duration)
+            long_enough = condition.state(self.hass, self.heater_entity_id,
+                                          current_state,
+                                          self.min_cycle_duration)
             if not long_enough:
                 return
 

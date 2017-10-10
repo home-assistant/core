@@ -15,13 +15,15 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
+                                 STATE_OFF, STATE_PLAYING, STATE_PAUSED,
+                                 STATE_UNKNOWN)
 import homeassistant.util as util
 
-REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
-                'v0.2.0.zip#pylgnetcast==0.2.0']
+REQUIREMENTS = [
+    'https://github.com/wokar/pylgnetcast/archive/'
+    'v0.2.0.zip#pylgnetcast==0.2.0'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +38,12 @@ SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
     vol.Optional(CONF_ACCESS_TOKEN, default=None):
-        vol.All(cv.string, vol.Length(max=6)),
+    vol.All(cv.string, vol.Length(max=6)),
 })
 
 

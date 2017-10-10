@@ -13,8 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_MAC, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_NAME, CONF_MAC, TEMP_CELSIUS,
+                                 STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
 
 # REQUIREMENTS = ['pygatt==3.1.1']
 
@@ -26,8 +26,10 @@ ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=""): cv.string,
+    vol.Required(CONF_MAC):
+    cv.string,
+    vol.Optional(CONF_NAME, default=""):
+    cv.string,
 })
 
 BLE_TEMP_UUID = '0000ff92-0000-1000-8000-00805f9b34fb'
@@ -143,8 +145,8 @@ class Monitor(threading.Thread):
         # pylint: disable=import-error
         import pygatt
         from pygatt.backends import Characteristic
-        from pygatt.exceptions import (
-            BLEError, NotConnectedError, NotificationTimeout)
+        from pygatt.exceptions import (BLEError, NotConnectedError,
+                                       NotificationTimeout)
 
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)
         adapter = pygatt.backends.GATTToolBackend()
@@ -155,8 +157,7 @@ class Monitor(threading.Thread):
                 adapter.start(reset_on_start=False)
                 # Seems only one connection can be initiated at a time
                 with CONNECT_LOCK:
-                    device = adapter.connect(self.mac,
-                                             CONNECT_TIMEOUT,
+                    device = adapter.connect(self.mac, CONNECT_TIMEOUT,
                                              pygatt.BLEAddressType.random)
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline

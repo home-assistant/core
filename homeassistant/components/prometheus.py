@@ -28,9 +28,10 @@ API_ENDPOINT = '/api/prometheus'
 DOMAIN = 'prometheus'
 DEPENDENCIES = ['http']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: recorder.FILTER_SCHEMA,
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: recorder.FILTER_SCHEMA,
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -76,8 +77,8 @@ class Metrics(object):
             return
         if self.include_domains and domain not in self.include_domains:
             return
-        if not self.exclude and (self.include_entities and
-                                 entity_id not in self.include_entities):
+        if not self.exclude and (self.include_entities
+                                 and entity_id not in self.include_entities):
             return
 
         handler = '_handle_{}'.format(domain)
@@ -107,8 +108,7 @@ class Metrics(object):
             metric = self._metric(
                 'battery_level_percent',
                 self.prometheus_client.Gauge,
-                'Battery level as a percentage of its capacity',
-            )
+                'Battery level as a percentage of its capacity', )
             try:
                 value = float(state.attributes['battery_level'])
                 metric.labels(**self._labels(state)).set(value)
@@ -119,8 +119,7 @@ class Metrics(object):
         metric = self._metric(
             'binary_sensor_state',
             self.prometheus_client.Gauge,
-            'State of the binary sensor (0/1)',
-        )
+            'State of the binary sensor (0/1)', )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
@@ -128,8 +127,7 @@ class Metrics(object):
         metric = self._metric(
             'device_tracker_state',
             self.prometheus_client.Gauge,
-            'State of the device tracker (0/1)',
-        )
+            'State of the device tracker (0/1)', )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
@@ -137,8 +135,7 @@ class Metrics(object):
         metric = self._metric(
             'light_state',
             self.prometheus_client.Gauge,
-            'Load level of a light (0..1)',
-        )
+            'Load level of a light (0..1)', )
 
         try:
             if 'brightness' in state.attributes:
@@ -154,41 +151,40 @@ class Metrics(object):
         metric = self._metric(
             'lock_state',
             self.prometheus_client.Gauge,
-            'State of the lock (0/1)',
-        )
+            'State of the lock (0/1)', )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_sensor(self, state):
         _sensor_types = {
             TEMP_CELSIUS: (
-                'temperature_c', self.prometheus_client.Gauge,
-                'Temperature in degrees Celsius',
-            ),
+                'temperature_c',
+                self.prometheus_client.Gauge,
+                'Temperature in degrees Celsius', ),
             TEMP_FAHRENHEIT: (
-                'temperature_c', self.prometheus_client.Gauge,
-                'Temperature in degrees Celsius',
-            ),
+                'temperature_c',
+                self.prometheus_client.Gauge,
+                'Temperature in degrees Celsius', ),
             '%': (
-                'relative_humidity', self.prometheus_client.Gauge,
-                'Relative humidity (0..100)',
-            ),
+                'relative_humidity',
+                self.prometheus_client.Gauge,
+                'Relative humidity (0..100)', ),
             'lux': (
-                'light_lux', self.prometheus_client.Gauge,
-                'Light level in lux',
-            ),
+                'light_lux',
+                self.prometheus_client.Gauge,
+                'Light level in lux', ),
             'kWh': (
-                'electricity_used_kwh', self.prometheus_client.Gauge,
-                'Electricity used by this device in KWh',
-            ),
+                'electricity_used_kwh',
+                self.prometheus_client.Gauge,
+                'Electricity used by this device in KWh', ),
             'V': (
-                'voltage', self.prometheus_client.Gauge,
-                'Currently reported voltage in Volts',
-            ),
+                'voltage',
+                self.prometheus_client.Gauge,
+                'Currently reported voltage in Volts', ),
             'W': (
-                'electricity_usage_w', self.prometheus_client.Gauge,
-                'Currently reported electricity draw in Watts',
-            ),
+                'electricity_usage_w',
+                self.prometheus_client.Gauge,
+                'Currently reported electricity draw in Watts', ),
         }
 
         unit = state.attributes.get('unit_of_measurement')
@@ -210,8 +206,7 @@ class Metrics(object):
         metric = self._metric(
             'switch_state',
             self.prometheus_client.Gauge,
-            'State of the switch (0/1)',
-        )
+            'State of the switch (0/1)', )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 

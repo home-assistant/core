@@ -9,8 +9,8 @@ import logging
 from datetime import timedelta
 import re
 
-from homeassistant.components.google import (
-    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
+from homeassistant.components.google import (CONF_OFFSET, CONF_DEVICE_ID,
+                                             CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import time_period_str
@@ -31,8 +31,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
     yield from component.async_setup(config)
     return True
@@ -147,8 +146,9 @@ class CalendarEventDevice(Entity):
         def _get_date(date):
             """Get the dateTime from date or dateTime as a local."""
             if 'date' in date:
-                return dt.start_of_local_day(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time.min))
+                return dt.start_of_local_day(
+                    dt.dt.datetime.combine(
+                        dt.parse_date(date['date']), dt.dt.time.min))
             return dt.as_local(dt.parse_datetime(date['dateTime']))
 
         start = _get_date(self.data.event['start'])

@@ -66,6 +66,6 @@ class EcobeeBinarySensor(BinarySensorDevice):
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
             for item in sensor['capability']:
-                if (item['type'] == 'occupancy' and
-                        self.sensor_name == sensor['name']):
+                if (item['type'] == 'occupancy'
+                        and self.sensor_name == sensor['name']):
                     self._state = item['value']

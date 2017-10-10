@@ -9,8 +9,8 @@ import logging
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY, CONF_ID, CONF_WHITELIST, STATE_UNAVAILABLE, STATE_UNKNOWN)
+from homeassistant.const import (CONF_API_KEY, CONF_ID, CONF_WHITELIST,
+                                 STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as event
@@ -23,13 +23,16 @@ DOMAIN = 'thingspeak'
 
 TIMEOUT = 5
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ID): int,
-        vol.Required(CONF_WHITELIST): cv.string
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_ID): int,
+            vol.Required(CONF_WHITELIST): cv.string
         }),
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -53,8 +56,8 @@ def setup(hass, config):
 
     def thingspeak_listener(entity_id, old_state, new_state):
         """Listen for new events and send them to Thingspeak."""
-        if new_state is None or new_state.state in (
-                STATE_UNKNOWN, '', STATE_UNAVAILABLE):
+        if new_state is None or new_state.state in (STATE_UNKNOWN, '',
+                                                    STATE_UNAVAILABLE):
             return
         try:
             if new_state.entity_id != entity:
@@ -65,8 +68,8 @@ def setup(hass, config):
         try:
             channel.update({'field1': _state})
         except RequestException:
-            _LOGGER.error(
-                "Error while sending value '%s' to Thingspeak", _state)
+            _LOGGER.error("Error while sending value '%s' to Thingspeak",
+                          _state)
 
     event.track_state_change(hass, entity, thingspeak_listener)
 

@@ -15,8 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['envirophat==0.0.6',
-                'smbus-cffi==0.5.1']
+REQUIREMENTS = ['envirophat==0.0.6', 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +45,11 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
-        [vol.In(SENSOR_TYPES)],
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_USE_LEDS, default=False): cv.boolean
+    [vol.In(SENSOR_TYPES)],
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_USE_LEDS, default=False):
+    cv.boolean
 })
 
 

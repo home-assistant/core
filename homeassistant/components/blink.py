@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, ATTR_FRIENDLY_NAME, ATTR_ARMED)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
+                                 ATTR_FRIENDLY_NAME, ATTR_ARMED)
 from homeassistant.helpers import discovery
 
 REQUIREMENTS = ['blinkpy==0.6.0']
@@ -19,25 +19,24 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
-ARM_SYSTEM_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ARMED): cv.boolean
-})
+ARM_SYSTEM_SCHEMA = vol.Schema({vol.Optional(ATTR_ARMED): cv.boolean})
 
 ARM_CAMERA_SCHEMA = vol.Schema({
     vol.Required(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ARMED): cv.boolean
 })
 
-SNAP_PICTURE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_FRIENDLY_NAME): cv.string
-})
+SNAP_PICTURE_SCHEMA = vol.Schema({vol.Required(ATTR_FRIENDLY_NAME): cv.string})
 
 
 class BlinkSystem(object):
@@ -46,8 +45,9 @@ class BlinkSystem(object):
     def __init__(self, config_info):
         """Initialize the system."""
         import blinkpy
-        self.blink = blinkpy.Blink(username=config_info[DOMAIN][CONF_USERNAME],
-                                   password=config_info[DOMAIN][CONF_PASSWORD])
+        self.blink = blinkpy.Blink(
+            username=config_info[DOMAIN][CONF_USERNAME],
+            password=config_info[DOMAIN][CONF_PASSWORD])
         self.blink.setup_system()
 
 

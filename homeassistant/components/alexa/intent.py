@@ -90,9 +90,12 @@ class AlexaIntentsView(http.HomeAssistantView):
 
         try:
             intent_response = yield from intent.async_handle(
-                hass, DOMAIN, intent_name,
-                {key: {'value': value} for key, value
-                 in alexa_response.variables.items()})
+                hass, DOMAIN, intent_name, {
+                    key: {
+                        'value': value
+                    }
+                    for key, value in alexa_response.variables.items()
+                })
         except intent.UnknownIntent as err:
             _LOGGER.warning('Received unknown intent %s', intent_name)
             alexa_response.add_speech(
@@ -116,9 +119,9 @@ class AlexaIntentsView(http.HomeAssistantView):
                 break
 
         if 'simple' in intent_response.card:
-            alexa_response.add_card(
-                CardType.simple, intent_response.card['simple']['title'],
-                intent_response.card['simple']['content'])
+            alexa_response.add_card(CardType.simple,
+                                    intent_response.card['simple']['title'],
+                                    intent_response.card['simple']['content'])
 
         return self.json(alexa_response)
 
@@ -146,9 +149,7 @@ class AlexaResponse(object):
         """Add a card to the response."""
         assert self.card is None
 
-        card = {
-            "type": card_type.value
-        }
+        card = {"type": card_type.value}
 
         if card_type == CardType.link_account:
             self.card = card
@@ -164,10 +165,7 @@ class AlexaResponse(object):
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
 
-        self.speech = {
-            'type': speech_type.value,
-            key: text
-        }
+        self.speech = {'type': speech_type.value, key: text}
 
     def add_reprompt(self, speech_type, text):
         """Add reprompt if user does not answer."""
@@ -182,9 +180,7 @@ class AlexaResponse(object):
 
     def as_dict(self):
         """Return response in an Alexa valid dict."""
-        response = {
-            'shouldEndSession': self.should_end_session
-        }
+        response = {'shouldEndSession': self.should_end_session}
 
         if self.card is not None:
             response['card'] = self.card
@@ -193,9 +189,7 @@ class AlexaResponse(object):
             response['outputSpeech'] = self.speech
 
         if self.reprompt is not None:
-            response['reprompt'] = {
-                'outputSpeech': self.reprompt
-            }
+            response['reprompt'] = {'outputSpeech': self.reprompt}
 
         return {
             'version': '1.0',

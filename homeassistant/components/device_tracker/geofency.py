@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
@@ -30,8 +30,8 @@ LOCATION_EXIT = '0'
 URL = '/api/geofency'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MOBILE_BEACONS): vol.All(
-        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_MOBILE_BEACONS):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -80,8 +80,9 @@ class GeofencyView(HomeAssistantView):
         """Validate POST payload."""
         data = data.copy()
 
-        required_attributes = ['address', 'device', 'entry',
-                               'latitude', 'longitude', 'name']
+        required_attributes = [
+            'address', 'device', 'entry', 'latitude', 'longitude', 'name'
+        ]
 
         valid = True
         for attribute in required_attributes:
@@ -119,9 +120,11 @@ class GeofencyView(HomeAssistantView):
         device = self._device_name(data)
 
         yield from hass.async_add_job(
-            partial(self.see, dev_id=device,
-                    gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
-                    location_name=location_name,
-                    attributes=data))
+            partial(
+                self.see,
+                dev_id=device,
+                gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
+                location_name=location_name,
+                attributes=data))
 
         return "Setting location for {}".format(device)

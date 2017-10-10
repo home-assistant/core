@@ -21,8 +21,8 @@ import voluptuous as vol
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, __version__ as current_version)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, __version__ as
+                                 current_version)
 from homeassistant.helpers import event
 
 REQUIREMENTS = ['distro==1.0.4']
@@ -41,10 +41,14 @@ ENTITY_ID = 'updater.updater'
 UPDATER_URL = 'https://updater.home-assistant.io/'
 UPDATER_UUID_FILE = '.uuid'
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    vol.Optional(CONF_REPORTING, default=True): cv.boolean,
-    vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
-}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            vol.Optional(CONF_REPORTING, default=True): cv.boolean,
+            vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
+        }
+    },
+    extra=vol.ALLOW_EXTRA)
 
 RESPONSE_SCHEMA = vol.Schema({
     vol.Required('version'): cv.string,
@@ -102,10 +106,10 @@ def async_setup(hass, config):
 
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
-            hass.states.async_set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
-                                    ATTR_RELEASE_NOTES: releasenotes}
-            )
+            hass.states.async_set(ENTITY_ID, newest, {
+                ATTR_FRIENDLY_NAME: 'Update Available',
+                ATTR_RELEASE_NOTES: releasenotes
+            })
         elif StrictVersion(newest) == StrictVersion(current_version):
             _LOGGER.info(
                 "You are on the latest version (%s) of Home Assistant", newest)
@@ -113,8 +117,11 @@ def async_setup(hass, config):
     # Update daily, start 1 hour after startup
     _dt = dt_util.utcnow() + timedelta(hours=1)
     event.async_track_utc_time_change(
-        hass, check_new_version,
-        hour=_dt.hour, minute=_dt.minute, second=_dt.second)
+        hass,
+        check_new_version,
+        hour=_dt.hour,
+        minute=_dt.minute,
+        second=_dt.second)
 
     return True
 
@@ -144,8 +151,8 @@ def get_system_info(hass, include_components):
         info_object['os_version'] = platform.release()
     elif platform.system() == 'Linux':
         import distro
-        linux_dist = yield from hass.async_add_job(
-            distro.linux_distribution, False)
+        linux_dist = yield from hass.async_add_job(distro.linux_distribution,
+                                                   False)
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
         info_object['docker'] = os.path.isfile('/.dockerenv')

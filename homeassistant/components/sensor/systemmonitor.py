@@ -10,8 +10,8 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_RESOURCES, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_TYPE)
+from homeassistant.const import (CONF_RESOURCES, STATE_OFF, STATE_ON,
+                                 STATE_UNKNOWN, CONF_TYPE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -49,10 +49,12 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
-        vol.All(cv.ensure_list, [vol.Schema({
+    vol.All(cv.ensure_list, [
+        vol.Schema({
             vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional(CONF_ARG): cv.string,
-        })])
+        })
+    ])
 })
 
 IO_COUNTER = {
@@ -75,8 +77,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for resource in config[CONF_RESOURCES]:
         if CONF_ARG not in resource:
             resource[CONF_ARG] = ''
-        dev.append(SystemMonitorSensor(
-            resource[CONF_TYPE], resource[CONF_ARG]))
+        dev.append(
+            SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
 
     add_devices(dev, True)
 
@@ -118,17 +120,17 @@ class SystemMonitorSensor(Entity):
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == 'disk_use':
-            self._state = round(psutil.disk_usage(self.argument).used /
-                                1024**3, 1)
+            self._state = round(
+                psutil.disk_usage(self.argument).used / 1024**3, 1)
         elif self.type == 'disk_free':
-            self._state = round(psutil.disk_usage(self.argument).free /
-                                1024**3, 1)
+            self._state = round(
+                psutil.disk_usage(self.argument).free / 1024**3, 1)
         elif self.type == 'memory_use_percent':
             self._state = psutil.virtual_memory().percent
         elif self.type == 'memory_use':
             self._state = round((psutil.virtual_memory().total -
-                                 psutil.virtual_memory().available) /
-                                1024**2, 1)
+                                 psutil.virtual_memory().available) / 1024**2,
+                                1)
         elif self.type == 'memory_free':
             self._state = round(psutil.virtual_memory().available / 1024**2, 1)
         elif self.type == 'swap_use_percent':
@@ -171,8 +173,8 @@ class SystemMonitorSensor(Entity):
                 self._state = STATE_UNKNOWN
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
-                dt_util.utc_from_timestamp(psutil.boot_time())
-            ).date().isoformat()
+                dt_util.utc_from_timestamp(
+                    psutil.boot_time())).date().isoformat()
         elif self.type == 'since_last_boot':
             self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 psutil.boot_time())

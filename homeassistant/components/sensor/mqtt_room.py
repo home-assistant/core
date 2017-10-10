@@ -14,8 +14,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_TIMEOUT)
+from homeassistant.const import (CONF_NAME, CONF_TIMEOUT)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -42,30 +41,38 @@ DEFAULT_TOPIC = 'room_presence'
 STATE_AWAY = 'away'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
-    vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_AWAY_TIMEOUT,
-                 default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_DEVICE_ID):
+    cv.string,
+    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC):
+    cv.string,
+    vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
+    vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT):
+    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string
 })
 
-MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
-    vol.Required(ATTR_ID): cv.string,
-    vol.Required(ATTR_DISTANCE): vol.Coerce(float),
-}, extra=vol.ALLOW_EXTRA)))
+MQTT_PAYLOAD = vol.Schema(
+    vol.All(json.loads,
+            vol.Schema(
+                {
+                    vol.Required(ATTR_ID): cv.string,
+                    vol.Required(ATTR_DISTANCE): vol.Coerce(float),
+                },
+                extra=vol.ALLOW_EXTRA)))
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up MQTT room Sensor."""
-    async_add_devices([MQTTRoomSensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_DEVICE_ID),
-        config.get(CONF_TIMEOUT),
-        config.get(CONF_AWAY_TIMEOUT)
-    )])
+    async_add_devices([
+        MQTTRoomSensor(
+            config.get(CONF_NAME),
+            config.get(CONF_STATE_TOPIC),
+            config.get(CONF_DEVICE_ID),
+            config.get(CONF_TIMEOUT), config.get(CONF_AWAY_TIMEOUT))
+    ])
 
 
 class MQTTRoomSensor(Entity):
@@ -89,6 +96,7 @@ class MQTTRoomSensor(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
+
         @callback
         def update_state(device_id, room, distance):
             """Update the sensor state."""
@@ -123,8 +131,8 @@ class MQTTRoomSensor(Entity):
                             or timediff.seconds >= self._timeout:
                         update_state(**device)
 
-        return mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, 1)
+        return mqtt.async_subscribe(self.hass, self._state_topic,
+                                    message_received, 1)
 
     @property
     def name(self):
@@ -134,9 +142,7 @@ class MQTTRoomSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_DISTANCE: self._distance
-        }
+        return {ATTR_DISTANCE: self._distance}
 
     @property
     def state(self):

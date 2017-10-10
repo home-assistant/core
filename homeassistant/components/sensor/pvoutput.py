@@ -14,9 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
-from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME,
-    ATTR_VOLTAGE)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME,
+                                 ATTR_DATE, ATTR_TIME, ATTR_VOLTAGE)
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = 'http://pvoutput.org/service/r2/getstatus.jsp'
@@ -35,9 +34,12 @@ DEFAULT_VERIFY_SSL = True
 SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_SYSTEM_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_SYSTEM_ID):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -73,11 +75,12 @@ class PvoutputSensor(Entity):
         self.rest = rest
         self._name = name
         self.pvcoutput = None
-        self.status = namedtuple(
-            'status', [ATTR_DATE, ATTR_TIME, ATTR_ENERGY_GENERATION,
-                       ATTR_POWER_GENERATION, ATTR_ENERGY_CONSUMPTION,
-                       ATTR_POWER_CONSUMPTION, ATTR_EFFICIENCY,
-                       ATTR_TEMPERATURE, ATTR_VOLTAGE])
+        self.status = namedtuple('status', [
+            ATTR_DATE, ATTR_TIME, ATTR_ENERGY_GENERATION,
+            ATTR_POWER_GENERATION, ATTR_ENERGY_CONSUMPTION,
+            ATTR_POWER_CONSUMPTION, ATTR_EFFICIENCY, ATTR_TEMPERATURE,
+            ATTR_VOLTAGE
+        ])
 
     @property
     def name(self):
@@ -112,5 +115,5 @@ class PvoutputSensor(Entity):
             self.pvcoutput = self.status._make(self.rest.data.split(','))
         except TypeError:
             self.pvcoutput = None
-            _LOGGER.error(
-                "Unable to fetch data from PVOutput. %s", self.rest.data)
+            _LOGGER.error("Unable to fetch data from PVOutput. %s",
+                          self.rest.data)

@@ -13,16 +13,18 @@ def run(args):
         description=("Modify Home Assistant secrets in credstash."
                      "Use the secrets in configuration files with: "
                      "!secret <name>"))
+    parser.add_argument('--script', choices=['credstash'])
     parser.add_argument(
-        '--script', choices=['credstash'])
-    parser.add_argument(
-        'action', choices=['get', 'put', 'del', 'list'],
+        'action',
+        choices=['get', 'put', 'del', 'list'],
         help="Get, put or delete a secret, or list all available secrets")
     parser.add_argument(
         'name', help="Name of the secret", nargs='?', default=None)
     parser.add_argument(
-        'value', help="The value to save when putting a secret",
-        nargs='?', default=None)
+        'value',
+        help="The value to save when putting a secret",
+        nargs='?',
+        default=None)
 
     import credstash
     import botocore
@@ -55,10 +57,11 @@ def run(args):
             the_secret = getpass.getpass('Please enter the secret for {}: '
                                          .format(args.name))
         current_version = credstash.getHighestVersion(args.name, table=table)
-        credstash.putSecret(args.name,
-                            the_secret,
-                            version=int(current_version) + 1,
-                            table=table)
+        credstash.putSecret(
+            args.name,
+            the_secret,
+            version=int(current_version) + 1,
+            table=table)
         print('Secret {} put successfully'.format(args.name))
     elif args.action == 'get':
         the_secret = credstash.getSecret(args.name, table=table)

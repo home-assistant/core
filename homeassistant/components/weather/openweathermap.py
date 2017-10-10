@@ -40,15 +40,19 @@ CONDITION_CLASSES = {
     'sunny': [800],
     'windy': [905, 951, 952, 953, 954, 955, 956, 957],
     'windy-variant': [958, 959, 960, 961],
-    'exceptional': [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903,
-                    904],
+    'exceptional':
+    [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -68,8 +72,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = WeatherData(owm, latitude, longitude)
 
-    add_devices([OpenWeatherMapWeather(
-        name, data, hass.config.units.temperature_unit)], True)
+    add_devices([
+        OpenWeatherMapWeather(name, data, hass.config.units.temperature_unit)
+    ], True)
 
 
 class OpenWeatherMapWeather(WeatherEntity):
@@ -92,8 +97,10 @@ class OpenWeatherMapWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         try:
-            return [k for k, v in CONDITION_CLASSES.items() if
-                    self.data.get_weather_code() in v][0]
+            return [
+                k for k, v in CONDITION_CLASSES.items()
+                if self.data.get_weather_code() in v
+            ][0]
         except IndexError:
             return STATE_UNKNOWN
 
@@ -136,9 +143,11 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         return [{
-            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
-            ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')}
-                for entry in self.forecast_data.get_weathers()]
+            ATTR_FORECAST_TIME:
+            entry.get_reference_time('iso'),
+            ATTR_FORECAST_TEMP:
+            entry.get_temperature('celsius').get('temp')
+        } for entry in self.forecast_data.get_weathers()]
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
@@ -172,8 +181,8 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
         """Get the lastest forecast from OpenWeatherMap."""
-        fcd = self.owm.three_hours_forecast_at_coords(
-            self.latitude, self.longitude)
+        fcd = self.owm.three_hours_forecast_at_coords(self.latitude,
+                                                      self.longitude)
 
         if fcd is None:
             _LOGGER.warning("Failed to fetch forecast data from OWM")

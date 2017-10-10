@@ -18,9 +18,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
+from homeassistant.const import (ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID,
+                                 STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
+                                 SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import group
 
 ATTR_CHANGED_BY = 'changed_by'
@@ -78,8 +78,8 @@ def unlock(hass, entity_id=None, code=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_LOCKS)
 
     yield from component.async_setup(config)
 
@@ -112,16 +112,23 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
-        descriptions.get(SERVICE_UNLOCK), schema=LOCK_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_UNLOCK,
+        async_handle_lock_service,
+        descriptions.get(SERVICE_UNLOCK),
+        schema=LOCK_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_LOCK, async_handle_lock_service,
-        descriptions.get(SERVICE_LOCK), schema=LOCK_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_LOCK,
+        async_handle_lock_service,
+        descriptions.get(SERVICE_LOCK),
+        schema=LOCK_SERVICE_SCHEMA)
 
     return True
 

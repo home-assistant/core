@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.components import enocean
-from homeassistant.const import (
-    CONF_NAME, CONF_ID, CONF_DEVICE_CLASS)
+from homeassistant.const import (CONF_NAME, CONF_ID, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,9 +20,12 @@ DEPENDENCIES = ['enocean']
 DEFAULT_NAME = 'EnOcean binary sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Required(CONF_ID):
+    vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
 })
 
 
@@ -84,7 +86,9 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         elif value2 == 0x15:
             self.which = 10
             self.onoff = 1
-        self.hass.bus.fire('button_pressed', {'id': self.dev_id,
-                                              'pushed': value,
-                                              'which': self.which,
-                                              'onoff': self.onoff})
+        self.hass.bus.fire('button_pressed', {
+            'id': self.dev_id,
+            'pushed': value,
+            'which': self.which,
+            'onoff': self.onoff
+        })

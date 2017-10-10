@@ -40,13 +40,20 @@ ICON = 'mdi:train'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_KEY): cv.string,
-    vol.Required(CONF_SECRET): cv.string,
+    vol.Required(CONF_KEY):
+    cv.string,
+    vol.Required(CONF_SECRET):
+    cv.string,
     vol.Optional(CONF_DEPARTURES): [{
-        vol.Required(CONF_FROM): cv.string,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
-        vol.Optional(CONF_HEADING): cv.string,
-        vol.Optional(CONF_NAME): cv.string}]
+        vol.Required(CONF_FROM):
+        cv.string,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY):
+        cv.positive_int,
+        vol.Optional(CONF_HEADING):
+        cv.string,
+        vol.Optional(CONF_NAME):
+        cv.string
+    }]
 })
 
 
@@ -58,10 +65,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
-            VasttrafikDepartureSensor(
-                vasttrafik, planner, departure.get(CONF_NAME),
-                departure.get(CONF_FROM), departure.get(CONF_HEADING),
-                departure.get(CONF_DELAY)))
+            VasttrafikDepartureSensor(vasttrafik, planner,
+                                      departure.get(CONF_NAME),
+                                      departure.get(CONF_FROM),
+                                      departure.get(CONF_HEADING),
+                                      departure.get(CONF_DELAY)))
     add_devices(sensors, True)
 
 
@@ -101,17 +109,16 @@ class VasttrafikDepartureSensor(Entity):
             ATTR_DIRECTION: departure.get('direction', None),
             ATTR_LINE: departure.get('sname', None),
             ATTR_TRACK: departure.get('track', None),
-            }
+        }
         return {k: v for k, v in params.items() if v}
 
     @property
     def state(self):
         """Return the next departure time."""
         if not self._departureboard:
-            _LOGGER.warning(
-                "No departures from %s heading %s",
-                self._departure['name'],
-                self._heading['name'] if self._heading else 'ANY')
+            _LOGGER.warning("No departures from %s heading %s",
+                            self._departure['name'], self._heading['name']
+                            if self._heading else 'ANY')
             return
         if 'rtTime' in self._departureboard[0]:
             return self._departureboard[0]['rtTime']
@@ -124,7 +131,7 @@ class VasttrafikDepartureSensor(Entity):
             self._departureboard = self._planner.departureboard(
                 self._departure['id'],
                 direction=self._heading['id'] if self._heading else None,
-                date=datetime.now()+self._delay)
+                date=datetime.now() + self._delay)
         except self._vasttrafik.Error:
             _LOGGER.warning("Unable to read departure board, updating token")
             self._planner.update_token()

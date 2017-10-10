@@ -13,9 +13,9 @@ import time
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_PREFIX,
+                                 EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,13 +25,19 @@ DEFAULT_PORT = 2003
 DEFAULT_PREFIX = 'ha'
 DOMAIN = 'graphite'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+            cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX):
+            cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -69,13 +75,11 @@ class GraphiteFeeder(threading.Thread):
         self._quit_object = object()
         self._we_started = False
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                             self.start_listen)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             self.shutdown)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.start_listen)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         hass.bus.listen(EVENT_STATE_CHANGED, self.event_listener)
-        _LOGGER.debug("Graphite feeding to %s:%i initialized",
-                      self._host, self._port)
+        _LOGGER.debug("Graphite feeding to %s:%i initialized", self._host,
+                      self._port)
 
     def start_listen(self, event):
         """Start event-processing thread."""
@@ -114,11 +118,11 @@ class GraphiteFeeder(threading.Thread):
             things['state'] = state.state_as_number(new_state)
         except ValueError:
             pass
-        lines = ['%s.%s.%s %f %i' % (self._prefix,
-                                     entity_id, key.replace(' ', '_'),
-                                     value, now)
-                 for key, value in things.items()
-                 if isinstance(value, (float, int))]
+        lines = [
+            '%s.%s.%s %f %i' % (self._prefix, entity_id, key.replace(' ', '_'),
+                                value, now) for key, value in things.items()
+            if isinstance(value, (float, int))
+        ]
         if not lines:
             return
         _LOGGER.debug("Sending to graphite: %s", lines)
@@ -137,20 +141,20 @@ class GraphiteFeeder(threading.Thread):
                 _LOGGER.debug("Event processing thread stopped")
                 self._queue.task_done()
                 return
-            elif (event.event_type == EVENT_STATE_CHANGED and
-                  event.data.get('new_state')):
+            elif (event.event_type == EVENT_STATE_CHANGED
+                  and event.data.get('new_state')):
                 _LOGGER.debug("Processing STATE_CHANGED event for %s",
                               event.data['entity_id'])
                 try:
-                    self._report_attributes(
-                        event.data['entity_id'], event.data['new_state'])
+                    self._report_attributes(event.data['entity_id'],
+                                            event.data['new_state'])
                 # pylint: disable=broad-except
                 except Exception:
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")
             else:
-                _LOGGER.warning(
-                    "Processing unexpected event type %s", event.event_type)
+                _LOGGER.warning("Processing unexpected event type %s",
+                                event.event_type)
 
             self._queue.task_done()

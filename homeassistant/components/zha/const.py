@@ -17,7 +17,6 @@ def populate_data():
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'switch',
         zha.DeviceType.SMART_PLUG: 'switch',
-
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
@@ -36,9 +35,12 @@ def populate_data():
     }
 
     SINGLE_CLUSTER_DEVICE_CLASS.update({
-        zcl.clusters.general.OnOff: 'switch',
-        zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
-        zcl.clusters.security.IasZone: 'binary_sensor',
+        zcl.clusters.general.OnOff:
+        'switch',
+        zcl.clusters.measurement.TemperatureMeasurement:
+        'sensor',
+        zcl.clusters.security.IasZone:
+        'binary_sensor',
     })
 
     # A map of hass components to all Zigbee clusters it could use

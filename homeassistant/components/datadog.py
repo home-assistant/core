@@ -24,15 +24,21 @@ DEFAULT_PREFIX = 'hass'
 DEFAULT_RATE = 1
 DOMAIN = 'datadog'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-        vol.Optional(CONF_RATE, default=DEFAULT_RATE):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST, default=DEFAULT_HOST):
+            cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX):
+            cv.string,
+            vol.Optional(CONF_RATE, default=DEFAULT_RATE):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -58,8 +64,7 @@ def setup(hass, config):
             tags=[
                 "entity:{}".format(event.data.get('entity_id')),
                 "domain:{}".format(event.data.get('domain'))
-            ]
-        )
+            ])
 
         _LOGGER.debug('Sent event %s', event.data.get('entity_id'))
 
@@ -81,36 +86,19 @@ def setup(hass, config):
             if isinstance(value, (float, int)):
                 attribute = "{}.{}".format(metric, key.replace(' ', '_'))
                 statsd.gauge(
-                    attribute,
-                    value,
-                    sample_rate=sample_rate,
-                    tags=tags
-                )
+                    attribute, value, sample_rate=sample_rate, tags=tags)
 
-                _LOGGER.debug(
-                    'Sent metric %s: %s (tags: %s)',
-                    attribute,
-                    value,
-                    tags
-                )
+                _LOGGER.debug('Sent metric %s: %s (tags: %s)', attribute,
+                              value, tags)
 
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
-            _LOGGER.debug(
-                'Error sending %s: %s (tags: %s)',
-                metric,
-                state.state,
-                tags
-            )
+            _LOGGER.debug('Error sending %s: %s (tags: %s)', metric,
+                          state.state, tags)
             return
 
-        statsd.gauge(
-            metric,
-            value,
-            sample_rate=sample_rate,
-            tags=tags
-        )
+        statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
 
         _LOGGER.debug('Sent metric %s: %s (tags: %s)', metric, value, tags)
 

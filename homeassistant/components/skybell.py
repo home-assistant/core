@@ -9,8 +9,8 @@ import logging
 from requests.exceptions import HTTPError, ConnectTimeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_USERNAME,
+                                 CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -27,12 +27,15 @@ DOMAIN = 'skybell'
 DEFAULT_CACHEDB = './skybell_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'skybell'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -45,8 +48,11 @@ def setup(hass, config):
         from skybellpy import Skybell
 
         cache = hass.config.path(DEFAULT_CACHEDB)
-        skybell = Skybell(username=username, password=password,
-                          get_devices=True, cache_path=cache)
+        skybell = Skybell(
+            username=username,
+            password=password,
+            get_devices=True,
+            cache_path=cache)
 
         hass.data[DOMAIN] = skybell
     except (ConnectTimeout, HTTPError) as ex:

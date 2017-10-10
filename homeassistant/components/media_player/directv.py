@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_DEVICE, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING, CONF_PORT)
+from homeassistant.const import (CONF_DEVICE, CONF_HOST, CONF_NAME, STATE_OFF,
+                                 STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['directpy==0.1']
@@ -29,10 +29,14 @@ SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
 DATA_DIRECTV = "data_directv"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+    cv.string,
 })
 
 
@@ -45,8 +49,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config:
         hosts.append([
-            config.get(CONF_NAME), config.get(CONF_HOST),
-            config.get(CONF_PORT), config.get(CONF_DEVICE)
+            config.get(CONF_NAME),
+            config.get(CONF_HOST),
+            config.get(CONF_PORT),
+            config.get(CONF_DEVICE)
         ])
 
     elif discovery_info:
@@ -55,14 +61,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         # attempt to discover additional RVU units
         try:
-            resp = requests.get(
-                'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
+            resp = requests.get('http://%s:%d/info/getLocations' %
+                                (host, DEFAULT_PORT)).json()
             if "locations" in resp:
                 for loc in resp["locations"]:
-                    if("locationName" in loc and "clientAddr" in loc
-                       and loc["clientAddr"] not in known_devices):
-                        hosts.append([str.title(loc["locationName"]), host,
-                                      DEFAULT_PORT, loc["clientAddr"]])
+                    if ("locationName" in loc and "clientAddr" in loc
+                            and loc["clientAddr"] not in known_devices):
+                        hosts.append([
+                            str.title(loc["locationName"]), host, DEFAULT_PORT,
+                            loc["clientAddr"]
+                        ])
 
         except requests.exceptions.RequestException:
             # bail out and just go forward with uPnP data
@@ -162,8 +170,8 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return "{} ({})".format(
-            self._current['callsign'], self._current['major'])
+        return "{} ({})".format(self._current['callsign'],
+                                self._current['major'])
 
     def turn_on(self):
         """Turn on the receiver."""

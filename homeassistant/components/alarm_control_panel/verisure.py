@@ -10,9 +10,9 @@ from time import sleep
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import (CONF_ALARM, CONF_CODE_DIGITS)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
+from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+                                 STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def set_arm_state(state, code=None):
     """Send set arm state command."""
-    transaction_id = hub.session.set_arm_state(code, state)[
-        'armStateChangeTransactionId']
+    transaction_id = hub.session.set_arm_state(
+        code, state)['armStateChangeTransactionId']
     _LOGGER.info('verisure set arm state %s', state)
     transaction = {}
     while 'result' not in transaction:

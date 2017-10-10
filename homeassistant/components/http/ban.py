@@ -14,9 +14,8 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
-from .const import (
-    KEY_BANS_ENABLED, KEY_BANNED_IPS, KEY_LOGIN_THRESHOLD,
-    KEY_FAILED_LOGIN_ATTEMPTS)
+from .const import (KEY_BANS_ENABLED, KEY_BANNED_IPS, KEY_LOGIN_THRESHOLD,
+                    KEY_FAILED_LOGIN_ATTEMPTS)
 from .util import get_real_ip
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +27,8 @@ IP_BANS_FILE = 'ip_bans.yaml'
 ATTR_BANNED_AT = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY = vol.Schema({
-    vol.Optional('banned_at'): vol.Any(None, cv.datetime)
+    vol.Optional('banned_at'):
+    vol.Any(None, cv.datetime)
 })
 
 
@@ -71,12 +71,12 @@ def process_wrong_login(request):
     msg = ('Login attempt or request with invalid authentication '
            'from {}'.format(remote_addr))
     _LOGGER.warning(msg)
-    persistent_notification.async_create(
-        request.app['hass'], msg, 'Login attempt failed',
-        NOTIFICATION_ID_LOGIN)
+    persistent_notification.async_create(request.app['hass'], msg,
+                                         'Login attempt failed',
+                                         NOTIFICATION_ID_LOGIN)
 
-    if (not request.app[KEY_BANS_ENABLED] or
-            request.app[KEY_LOGIN_THRESHOLD] < 1):
+    if (not request.app[KEY_BANS_ENABLED]
+            or request.app[KEY_LOGIN_THRESHOLD] < 1):
         return
 
     if KEY_FAILED_LOGIN_ATTEMPTS not in request.app:
@@ -90,22 +90,21 @@ def process_wrong_login(request):
         request.app[KEY_BANNED_IPS].append(new_ban)
 
         hass = request.app['hass']
-        yield from hass.async_add_job(
-            update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
+        yield from hass.async_add_job(update_ip_bans_config,
+                                      hass.config.path(IP_BANS_FILE), new_ban)
 
-        _LOGGER.warning(
-            "Banned IP %s for too many login attempts", remote_addr)
+        _LOGGER.warning("Banned IP %s for too many login attempts",
+                        remote_addr)
 
         persistent_notification.async_create(
-            hass,
-            'Too many login attempts from {}'.format(remote_addr),
+            hass, 'Too many login attempts from {}'.format(remote_addr),
             'Banning IP address', NOTIFICATION_ID_BAN)
 
 
 class IpBan(object):
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
+    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
@@ -138,8 +137,10 @@ def load_ip_bans_config(path: str):
 def update_ip_bans_config(path: str, ip_ban: IpBan):
     """Update config file with new banned IP address."""
     with open(path, 'a') as out:
-        ip_ = {str(ip_ban.ip_address): {
-            ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
-        }}
+        ip_ = {
+            str(ip_ban.ip_address): {
+                ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
+            }
+        }
         out.write('\n')
         out.write(dump(ip_))

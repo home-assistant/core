@@ -24,9 +24,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOSTS,
-    CONF_HOST, CONF_PORT, CONF_NAME)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_PLAYING,
+    STATE_PAUSED, STATE_IDLE, CONF_HOSTS, CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['xmltodict==0.11.0']
@@ -49,10 +48,14 @@ NODE_RETRY_INITIATION = timedelta(minutes=3)
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [{
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOSTS):
+    vol.All(cv.ensure_list, [{
+        vol.Required(CONF_HOST):
+        cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+        cv.port,
+        vol.Optional(CONF_NAME):
+        cv.string,
     }])
 })
 
@@ -85,15 +88,10 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
         if hass.is_running:
             _start_polling()
         else:
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START,
-                _start_polling
-            )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                       _start_polling)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_polling
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
     player = BluesoundPlayer(hass, host, port, name, _add_player_cb)
     hass.data[DATA_BLUESOUND].append(player)
@@ -101,10 +99,7 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     if hass.is_running:
         _init_player()
     else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START,
-            _init_player
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
 
 @asyncio.coroutine
@@ -114,18 +109,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_BLUESOUND] = []
 
     if discovery_info:
-        _add_player(hass, async_add_devices, discovery_info.get('host'),
+        _add_player(hass, async_add_devices,
+                    discovery_info.get('host'),
                     discovery_info.get('port', None))
         return
 
     hosts = config.get(CONF_HOSTS, None)
     if hosts:
         for host in hosts:
-            _add_player(hass,
-                        async_add_devices,
+            _add_player(hass, async_add_devices,
                         host.get(CONF_HOST),
-                        host.get(CONF_PORT, None),
-                        host.get(CONF_NAME, None))
+                        host.get(CONF_PORT, None), host.get(CONF_NAME, None))
 
 
 class BluesoundPlayer(MediaPlayerDevice):
@@ -157,6 +151,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._port = DEFAULT_PORT
 
 # Internal methods
+
     @staticmethod
     def _try_get_index(string, seach_string):
         try:
@@ -165,13 +160,13 @@ class BluesoundPlayer(MediaPlayerDevice):
             return -1
 
     @asyncio.coroutine
-    def _internal_update_sync_status(self, on_updated_cb=None,
+    def _internal_update_sync_status(self,
+                                     on_updated_cb=None,
                                      raise_timeout=False):
         resp = None
         try:
             resp = yield from self.send_bluesound_command(
-                'SyncStatus',
-                raise_timeout, raise_timeout)
+                'SyncStatus', raise_timeout, raise_timeout)
         except:
             raise
 
@@ -196,6 +191,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 # END Internal methods
 
 # Poll functionality
+
     @asyncio.coroutine
     def _start_poll_command(self):
         """"Loop which polls the status of the player."""
@@ -206,8 +202,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.info("Bluesound node %s is offline, retrying later",
                          self._name)
-            yield from asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT,
-                                     loop=self._hass.loop)
+            yield from asyncio.sleep(
+                NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
             self.start_polling()
 
         except CancelledError:
@@ -227,6 +223,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 # END Poll functionality
 
 # Initiator
+
     @asyncio.coroutine
     def async_init(self):
         """Initiate the player async."""
@@ -235,15 +232,13 @@ class BluesoundPlayer(MediaPlayerDevice):
                 self._retry_remove()
                 self._retry_remove = None
 
-            yield from self._internal_update_sync_status(self._init_callback,
-                                                         True)
+            yield from self._internal_update_sync_status(
+                self._init_callback, True)
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.info("Bluesound node %s is offline, retrying later",
                          self.host)
             self._retry_remove = async_track_time_interval(
-                self._hass,
-                self.async_init,
-                NODE_RETRY_INITIATION)
+                self._hass, self.async_init, NODE_RETRY_INITIATION)
         except:
             _LOGGER.exception("Unexpected when initiating error in %s",
                               self.host)
@@ -251,6 +246,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 # END Initiator
 
 # Status updates fetchers
+
     @asyncio.coroutine
     def async_update(self):
         """Update internal status of the entity."""
@@ -263,7 +259,9 @@ class BluesoundPlayer(MediaPlayerDevice):
         yield from self.async_update_services()
 
     @asyncio.coroutine
-    def send_bluesound_command(self, method, raise_timeout=False,
+    def send_bluesound_command(self,
+                               method,
+                               raise_timeout=False,
                                allow_offline=False):
         """Send command to the player."""
         import xmltodict
@@ -315,7 +313,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             etag = self._status.get('@etag', '')
 
         if etag != '':
-            url = 'Status?etag='+etag+'&timeout=60.0'
+            url = 'Status?etag=' + etag + '&timeout=60.0'
         url = "http://{}:{}/{}".format(self.host, self._port, url)
 
         _LOGGER.debug("calling URL: %s", url)
@@ -324,8 +322,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
             with async_timeout.timeout(65, loop=self._hass.loop):
                 response = yield from self._polling_session.get(
-                    url,
-                    headers={'connection': 'keep-alive'})
+                    url, headers={'connection': 'keep-alive'})
 
             if response.status != 200:
                 _LOGGER.error("Error %s on %s", response.status, url)
@@ -350,8 +347,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     def async_update_sync_status(self, on_updated_cb=None,
                                  raise_timeout=False):
         """Update sync status."""
-        yield from self._internal_update_sync_status(on_updated_cb,
-                                                     raise_timeout=False)
+        yield from self._internal_update_sync_status(
+            on_updated_cb, raise_timeout=False)
 
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
@@ -365,11 +362,16 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         def _create_capture_item(item):
             self._capture_items.append({
-                'title': item.get('@text', ''),
-                'name': item.get('@text', ''),
-                'type': item.get('@serviceType', 'Capture'),
-                'image': item.get('@image', ''),
-                'url': item.get('@URL', '')
+                'title':
+                item.get('@text', ''),
+                'name':
+                item.get('@text', ''),
+                'type':
+                item.get('@serviceType', 'Capture'),
+                'image':
+                item.get('@image', ''),
+                'url':
+                item.get('@URL', '')
             })
 
         if 'radiotime' in resp and 'item' in resp['radiotime']:
@@ -439,6 +441,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 # END Status updates fetchers
 
 # Media player (and core) properties
+
     @property
     def should_poll(self):
         """No need to poll information."""
@@ -523,8 +526,8 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         position = float(position)
         if mediastate == STATE_PLAYING:
-            position += (dt_util.utcnow() -
-                         self._last_status_update).total_seconds()
+            position += (
+                dt_util.utcnow() - self._last_status_update).total_seconds()
 
         return position
 
@@ -587,9 +590,10 @@ class BluesoundPlayer(MediaPlayerDevice):
         for source in self._preset_items:
             sources.append(source['title'])
 
-        for source in [x for x in self._services_items
-                       if x['type'] == 'LocalMusic' or
-                       x['type'] == 'RadioService']:
+        for source in [
+                x for x in self._services_items
+                if x['type'] == 'LocalMusic' or x['type'] == 'RadioService'
+        ]:
             sources.append(source['title'])
 
         for source in self._capture_items:
@@ -613,8 +617,10 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status.get('is_preset', '') == '1' and stream_url != '':
             # this check doesn't work with all presets, for example playlists.
             # But it works with radio service_items will catch playlists
-            items = [x for x in self._preset_items if 'url2' in x and
-                     parse.unquote(x['url2']) == stream_url]
+            items = [
+                x for x in self._preset_items
+                if 'url2' in x and parse.unquote(x['url2']) == stream_url
+            ]
             if len(items) > 0:
                 return items[0]['title']
 
@@ -624,8 +630,10 @@ class BluesoundPlayer(MediaPlayerDevice):
         # This method will be needing some tweaking over time
         title = self._status.get('title1', '').lower()
         if title == 'bluetooth' or stream_url == 'Capture:hw:2,0/44100/16/2':
-            items = [x for x in self._capture_items
-                     if x['url'] == "Capture%3Abluez%3Abluetooth"]
+            items = [
+                x for x in self._capture_items
+                if x['url'] == "Capture%3Abluez%3Abluetooth"
+            ]
             if len(items) > 0:
                 return items[0]['title']
 
@@ -649,13 +657,15 @@ class BluesoundPlayer(MediaPlayerDevice):
                 if url.lower() == stream_url.lower():
                     return item['title']
 
-        items = [x for x in self._capture_items
-                 if x['name'] == current_service]
+        items = [
+            x for x in self._capture_items if x['name'] == current_service
+        ]
         if len(items) > 0:
             return items[0]['title']
 
-        items = [x for x in self._services_items
-                 if x['name'] == current_service]
+        items = [
+            x for x in self._services_items if x['name'] == current_service
+        ]
         if len(items) > 0:
             return items[0]['title']
 
@@ -698,6 +708,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 # END Media player (and core) properties
 
 # Media player commands
+
     @asyncio.coroutine
     def async_select_source(self, source):
         """Select input source."""
@@ -731,8 +742,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         cmd = 'Skip'
         if self._status and 'actions' in self._status:
             for action in self._status['actions']['action']:
-                if ('@name' in action and '@url' in action and
-                        action['@name'] == 'skip'):
+                if ('@name' in action and '@url' in action
+                        and action['@name'] == 'skip'):
                     cmd = action['@url']
 
         return self.send_bluesound_command(cmd)
@@ -743,8 +754,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         cmd = 'Back'
         if self._status and 'actions' in self._status:
             for action in self._status['actions']['action']:
-                if ('@name' in action and '@url' in action and
-                        action['@name'] == 'back'):
+                if ('@name' in action and '@url' in action
+                        and action['@name'] == 'back'):
                     cmd = action['@url']
 
         return self.send_bluesound_command(cmd)
@@ -775,7 +786,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         current_vol = self.volume_level
         if not current_vol or current_vol < 0:
             return
-        return self.async_set_volume_level(((current_vol*100)+1)/100)
+        return self.async_set_volume_level(((current_vol * 100) + 1) / 100)
 
     @asyncio.coroutine
     def async_volume_down(self):
@@ -783,7 +794,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         current_vol = self.volume_level
         if not current_vol or current_vol < 0:
             return
-        return self.async_set_volume_level(((current_vol*100)-1)/100)
+        return self.async_set_volume_level(((current_vol * 100) - 1) / 100)
 
     @asyncio.coroutine
     def async_set_volume_level(self, volume):
@@ -792,8 +803,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             volume = 0
         elif volume > 1:
             volume = 1
-        return self.send_bluesound_command(
-            'Volume?level=' + str(float(volume) * 100))
+        return self.send_bluesound_command('Volume?level=' + str(
+            float(volume) * 100))
 
     @asyncio.coroutine
     def async_mute_volume(self, mute):
@@ -804,6 +815,8 @@ class BluesoundPlayer(MediaPlayerDevice):
                 self._lastvol = volume
             return self.send_bluesound_command('Volume?level=0')
         else:
-            return self.send_bluesound_command(
-                'Volume?level=' + str(float(self._lastvol) * 100))
+            return self.send_bluesound_command('Volume?level=' + str(
+                float(self._lastvol) * 100))
+
+
 # END Media player commands

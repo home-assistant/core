@@ -10,8 +10,8 @@ import logging
 from urllib.error import HTTPError
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_USERNAME,
+                                 CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -26,14 +26,19 @@ _LOGGER = logging.getLogger(__name__)
 TESLA_ID_FORMAT = '{}_{}'
 TESLA_ID_LIST_SCHEMA = vol.Schema([int])
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=300):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL, default=300):
             vol.All(cv.positive_int, vol.Clamp(min=300)),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 NOTIFICATION_ID = 'tesla_integration_notification'
 NOTIFICATION_TITLE = 'Tesla integration setup'
@@ -55,8 +60,7 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaApi(
-                    email, password, update_interval),
+                'controller': teslaApi(email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")

@@ -22,8 +22,10 @@ ATTR_LOCATION_ID = 'location_id'
 EVENT_DOOR_BELL = 'nello_bell_ring'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string
 })
 
 

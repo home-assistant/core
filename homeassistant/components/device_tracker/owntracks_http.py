@@ -14,7 +14,6 @@ from homeassistant.components.http import HomeAssistantView
 from .owntracks import (  # NOQA
     REQUIREMENTS, PLATFORM_SCHEMA, context_from_config, async_handle_message)
 
-
 DEPENDENCIES = ['http']
 
 

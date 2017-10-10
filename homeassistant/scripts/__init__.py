@@ -10,8 +10,8 @@ from typing import List
 from homeassistant.bootstrap import mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.const import CONSTRAINT_FILE
-from homeassistant.util.package import (
-    install_package, running_under_virtualenv)
+from homeassistant.util.package import (install_package,
+                                        running_under_virtualenv)
 
 
 def run(args: List) -> int:
@@ -44,11 +44,15 @@ def run(args: List) -> int:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     for req in getattr(script, 'REQUIREMENTS', []):
         if running_under_virtualenv():
-            returncode = install_package(req, constraints=os.path.join(
-                os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
+            returncode = install_package(
+                req,
+                constraints=os.path.join(
+                    os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
         else:
             returncode = install_package(
-                req, target=deps_dir, constraints=os.path.join(
+                req,
+                target=deps_dir,
+                constraints=os.path.join(
                     os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
         if not returncode:
             print('Aborting script, could not install dependency', req)
@@ -62,5 +66,5 @@ def extract_config_dir(args=None) -> str:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-c', '--config', default=None)
     args = parser.parse_known_args(args)[0]
-    return (os.path.join(os.getcwd(), args.config) if args.config
-            else get_default_config_dir())
+    return (os.path.join(os.getcwd(), args.config)
+            if args.config else get_default_config_dir())

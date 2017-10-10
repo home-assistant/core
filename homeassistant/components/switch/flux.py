@@ -17,9 +17,9 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
-from homeassistant.util.color import (
-    color_temperature_to_rgb, color_RGB_to_xy,
-    color_temperature_kelvin_to_mired)
+from homeassistant.util.color import (color_temperature_to_rgb,
+                                      color_RGB_to_xy,
+                                      color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
@@ -43,22 +43,28 @@ MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'flux',
-    vol.Required(CONF_LIGHTS): cv.entity_ids,
-    vol.Optional(CONF_NAME, default="Flux"): cv.string,
-    vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
+    vol.Required(CONF_PLATFORM):
+    'flux',
+    vol.Required(CONF_LIGHTS):
+    cv.entity_ids,
+    vol.Optional(CONF_NAME, default="Flux"):
+    cv.string,
+    vol.Optional(CONF_START_TIME):
+    cv.time,
+    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)):
+    cv.time,
     vol.Optional(CONF_START_CT, default=4000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_SUNSET_CT, default=3000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_STOP_CT, default=1900):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_BRIGHTNESS):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+    vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST):
+    cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-        vol.Any(MODE_XY, MODE_MIRED, MODE_RGB)
+    vol.Any(MODE_XY, MODE_MIRED, MODE_RGB)
 })
 
 
@@ -66,29 +72,31 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    xy_color=[x_val, y_val],
-                    brightness=brightness,
-                    transition=30)
+            turn_on(
+                hass,
+                light,
+                xy_color=[x_val, y_val],
+                brightness=brightness,
+                transition=30)
 
 
 def set_lights_temp(hass, lights, mired, brightness):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    color_temp=int(mired),
-                    brightness=brightness,
-                    transition=30)
+            turn_on(
+                hass,
+                light,
+                color_temp=int(mired),
+                brightness=brightness,
+                transition=30)
 
 
 def set_lights_rgb(hass, lights, rgb):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    rgb_color=rgb,
-                    transition=30)
+            turn_on(hass, light, rgb_color=rgb, transition=30)
 
 
 # pylint: disable=unused-argument
@@ -121,8 +129,8 @@ class FluxSwitch(SwitchDevice):
     """Representation of a Flux switch."""
 
     def __init__(self, name, hass, state, lights, start_time, stop_time,
-                 start_colortemp, sunset_colortemp, stop_colortemp,
-                 brightness, disable_brightness_adjust, mode):
+                 start_colortemp, sunset_colortemp, stop_colortemp, brightness,
+                 disable_brightness_adjust, mode):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
@@ -176,8 +184,7 @@ class FluxSwitch(SwitchDevice):
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
         stop_time = now.replace(
-            hour=self._stop_time.hour, minute=self._stop_time.minute,
-            second=0)
+            hour=self._stop_time.hour, minute=self._stop_time.minute, second=0)
 
         if stop_time <= start_time:
             # stop_time does not happen in the same day as start_time
@@ -232,12 +239,11 @@ class FluxSwitch(SwitchDevice):
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:
-            set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, brightness)
+            set_lights_xy(self.hass, self._lights, x_val, y_val, brightness)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
-                         brightness, round(
-                             percentage_complete * 100), time_state, now)
+                         brightness,
+                         round(percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
             set_lights_rgb(self.hass, self._lights, rgb)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
@@ -255,7 +261,8 @@ class FluxSwitch(SwitchDevice):
         """Return sunrise or start_time if given."""
         if self._start_time:
             sunrise = now.replace(
-                hour=self._start_time.hour, minute=self._start_time.minute,
+                hour=self._start_time.hour,
+                minute=self._start_time.minute,
                 second=0)
         else:
             sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())

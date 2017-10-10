@@ -45,8 +45,7 @@ class AmcrestSensor(Entity):
         self._attrs = {}
         self._camera = camera
         self._sensor_type = sensor_type
-        self._name = '{0}_{1}'.format(name,
-                                      SENSORS.get(self._sensor_type)[0])
+        self._name = '{0}_{1}'.format(name, SENSORS.get(self._sensor_type)[0])
         self._icon = 'mdi:{}'.format(SENSORS.get(self._sensor_type)[2])
         self._state = STATE_UNKNOWN
 

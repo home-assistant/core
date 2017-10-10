@@ -10,9 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PATH, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SWITCHES)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, CONF_PATH,
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_SWITCHES)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,16 +20,25 @@ DEFAULT_PORT = 80
 DEFAULT_PATH = "/cgi-bin/json.cgi"
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_PATH, default=DEFAULT_PATH):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES):
+    vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
 })
 
 
@@ -42,14 +50,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for dev_name, properties in switches.items():
         devices.append(
-            KankunSwitch(
-                hass,
-                properties.get(CONF_NAME, dev_name),
-                properties.get(CONF_HOST, None),
-                properties.get(CONF_PORT, DEFAULT_PORT),
-                properties.get(CONF_PATH, DEFAULT_PATH),
-                properties.get(CONF_USERNAME, None),
-                properties.get(CONF_PASSWORD)))
+            KankunSwitch(hass,
+                         properties.get(CONF_NAME, dev_name),
+                         properties.get(CONF_HOST, None),
+                         properties.get(CONF_PORT, DEFAULT_PORT),
+                         properties.get(CONF_PATH, DEFAULT_PATH),
+                         properties.get(CONF_USERNAME, None),
+                         properties.get(CONF_PASSWORD)))
 
     add_devices_callback(devices)
 
@@ -73,8 +80,10 @@ class KankunSwitch(SwitchDevice):
         _LOGGER.info("Switching to state: %s", newstate)
 
         try:
-            req = requests.get('{}?set={}'.format(self._url, newstate),
-                               auth=self._auth, timeout=5)
+            req = requests.get(
+                '{}?set={}'.format(self._url, newstate),
+                auth=self._auth,
+                timeout=5)
             return req.json()['ok']
         except requests.RequestException:
             _LOGGER.error("Switching failed")
@@ -84,8 +93,8 @@ class KankunSwitch(SwitchDevice):
         _LOGGER.info("Querying state from: %s", self._url)
 
         try:
-            req = requests.get('{}?get=state'.format(self._url),
-                               auth=self._auth, timeout=5)
+            req = requests.get(
+                '{}?get=state'.format(self._url), auth=self._auth, timeout=5)
             return req.json()['state'] == "on"
         except requests.RequestException:
             _LOGGER.error("State query failed")

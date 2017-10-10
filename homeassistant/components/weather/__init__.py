@@ -157,8 +157,7 @@ class WeatherEntity(Entity):
         unit = self.temperature_unit
         hass_unit = self.hass.config.units.temperature_unit
 
-        if (temp is None or not isinstance(temp, Number) or
-                unit == hass_unit):
+        if (temp is None or not isinstance(temp, Number) or unit == hass_unit):
             return temp
 
         value = convert_temperature(temp, unit, hass_unit)

@@ -11,20 +11,20 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SWITCHES, CONF_TIMEOUT, CONF_SCAN_INTERVAL,
-    CONF_PLATFORM)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
+                                 CONF_SWITCHES, CONF_TIMEOUT,
+                                 CONF_SCAN_INTERVAL, CONF_PLATFORM)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+from homeassistant.helpers.dispatcher import (async_dispatcher_send,
+                                              async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.components.camera.mjpeg import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
+from homeassistant.components.camera.mjpeg import (CONF_MJPEG_URL,
+                                                   CONF_STILL_IMAGE_URL)
 
 REQUIREMENTS = ['pydroid-ipcam==0.8']
 
@@ -123,30 +123,45 @@ ICON_MAP = {
     'whitebalance_lock': 'mdi:white-balance-auto'
 }
 
-SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
-            'overlay', 'torch', 'whitebalance_lock', 'video_recording']
+SWITCHES = [
+    'exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision', 'overlay',
+    'torch', 'whitebalance_lock', 'video_recording'
+]
 
-SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
-           'battery_voltage', 'light', 'motion', 'pressure', 'proximity',
-           'sound', 'video_connections']
+SENSORS = [
+    'audio_connections', 'battery_level', 'battery_temp', 'battery_voltage',
+    'light', 'motion', 'pressure', 'proximity', 'sound', 'video_connections'
+]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-        vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-        vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_SWITCHES, default=None):
-            vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-        vol.Optional(CONF_SENSORS, default=None):
-            vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_MOTION_SENSOR, default=None): cv.boolean,
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.All(cv.ensure_list, [
+            vol.Schema({
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+                cv.string,
+                vol.Required(CONF_HOST):
+                cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+                cv.port,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+                cv.positive_int,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+                cv.time_period,
+                vol.Inclusive(CONF_USERNAME, 'authentication'):
+                cv.string,
+                vol.Inclusive(CONF_PASSWORD, 'authentication'):
+                cv.string,
+                vol.Optional(CONF_SWITCHES, default=None):
+                vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+                vol.Optional(CONF_SENSORS, default=None):
+                vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+                vol.Optional(CONF_MOTION_SENSOR, default=None):
+                cv.boolean,
+            })
+        ])
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -171,18 +186,24 @@ def async_setup(hass, config):
 
         # Init ip webcam
         cam = PyDroidIPCam(
-            hass.loop, websession, host, cam_config[CONF_PORT],
-            username=username, password=password,
-            timeout=cam_config[CONF_TIMEOUT]
-        )
+            hass.loop,
+            websession,
+            host,
+            cam_config[CONF_PORT],
+            username=username,
+            password=password,
+            timeout=cam_config[CONF_TIMEOUT])
 
         if switches is None:
-            switches = [setting for setting in cam.enabled_settings
-                        if setting in SWITCHES]
+            switches = [
+                setting for setting in cam.enabled_settings
+                if setting in SWITCHES
+            ]
 
         if sensors is None:
-            sensors = [sensor for sensor in cam.enabled_sensors
-                       if sensor in SENSORS]
+            sensors = [
+                sensor for sensor in cam.enabled_sensors if sensor in SENSORS
+            ]
             sensors.extend(['audio_connections', 'video_connections'])
 
         if motion is None:
@@ -194,8 +215,8 @@ def async_setup(hass, config):
             yield from cam.update()
             async_dispatcher_send(hass, SIGNAL_UPDATE_DATA, host)
 
-            async_track_point_in_utc_time(
-                hass, async_update_data, utcnow() + interval)
+            async_track_point_in_utc_time(hass, async_update_data,
+                                          utcnow() + interval)
 
         yield from async_update_data(None)
 
@@ -214,28 +235,29 @@ def async_setup(hass, config):
                 CONF_PASSWORD: password
             })
 
-        hass.async_add_job(discovery.async_load_platform(
-            hass, 'camera', 'mjpeg', mjpeg_camera, config))
+        hass.async_add_job(
+            discovery.async_load_platform(hass, 'camera', 'mjpeg',
+                                          mjpeg_camera, config))
 
         if sensors:
-            hass.async_add_job(discovery.async_load_platform(
-                hass, 'sensor', DOMAIN, {
+            hass.async_add_job(
+                discovery.async_load_platform(hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
                     CONF_SENSORS: sensors,
                 }, config))
 
         if switches:
-            hass.async_add_job(discovery.async_load_platform(
-                hass, 'switch', DOMAIN, {
+            hass.async_add_job(
+                discovery.async_load_platform(hass, 'switch', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
                     CONF_SWITCHES: switches,
                 }, config))
 
         if motion:
-            hass.async_add_job(discovery.async_load_platform(
-                hass, 'binary_sensor', DOMAIN, {
+            hass.async_add_job(
+                discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, {
                     CONF_HOST: host,
                     CONF_NAME: name,
                 }, config))
@@ -258,6 +280,7 @@ class AndroidIPCamEntity(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update dispatcher."""
+
         @callback
         def async_ipcam_update(host):
             """Update callback."""
@@ -265,8 +288,8 @@ class AndroidIPCamEntity(Entity):
                 return
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_DATA, async_ipcam_update)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_DATA,
+                                 async_ipcam_update)
 
     @property
     def should_poll(self):

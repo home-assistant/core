@@ -10,8 +10,8 @@ from functools import partial
 import logging
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, CONF_PORT,
+                                 EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,11 +37,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-    vol.Optional(CONF_HOST, default=None): cv.string,
-    vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-        cv.string, vol.In(['5', '4', '2.2'])),
-    vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.string,
+    vol.Optional(CONF_HOST, default=None):
+    cv.string,
+    vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION):
+    vol.All(cv.string, vol.In(['5', '4', '2.2'])),
+    vol.Optional(CONF_RECONNECT_INTERVAL, default=30):
+    int,
 })
 
 
@@ -52,8 +55,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.clients.protocol import (
-        create_dsmr_reader, create_tcp_dsmr_reader)
+    from dsmr_parser.clients.protocol import (create_dsmr_reader,
+                                              create_tcp_dsmr_reader)
     import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
@@ -97,13 +100,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # and calls update_entities_telegram to update entities on arrival
     if config[CONF_HOST]:
         reader_factory = partial(
-            create_tcp_dsmr_reader, config[CONF_HOST], config[CONF_PORT],
-            config[CONF_DSMR_VERSION], update_entities_telegram,
+            create_tcp_dsmr_reader,
+            config[CONF_HOST],
+            config[CONF_PORT],
+            config[CONF_DSMR_VERSION],
+            update_entities_telegram,
             loop=hass.loop)
     else:
         reader_factory = partial(
-            create_dsmr_reader, config[CONF_PORT], config[CONF_DSMR_VERSION],
-            update_entities_telegram, loop=hass.loop)
+            create_dsmr_reader,
+            config[CONF_PORT],
+            config[CONF_DSMR_VERSION],
+            update_entities_telegram,
+            loop=hass.loop)
 
     @asyncio.coroutine
     def connect_and_reconnect():
@@ -139,8 +148,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
-                                         loop=hass.loop)
+                yield from asyncio.sleep(
+                    config[CONF_RECONNECT_INTERVAL], loop=hass.loop)
 
     # Can't be hass.async_add_job because job runs forever
     hass.loop.create_task(connect_and_reconnect())

@@ -6,8 +6,8 @@ https://home-assistant.io/components/sitch.lutron_caseta/
 """
 import logging
 
-from homeassistant.components.lutron_caseta import (
-    LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
+from homeassistant.components.lutron_caseta import (LUTRON_CASETA_SMARTBRIDGE,
+                                                    LutronCasetaDevice)
 from homeassistant.components.switch import SwitchDevice, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

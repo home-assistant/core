@@ -16,8 +16,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, SUPPORT_PLAY,
     MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
+from homeassistant.const import (STATE_PLAYING, STATE_PAUSED, STATE_OFF,
+                                 CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['websocket-client==0.37.0']
@@ -34,14 +34,19 @@ GPMDP_CONFIG_FILE = 'gpmpd.conf'
 SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
-PLAYBACK_DICT = {'0': STATE_PAUSED,  # Stopped
-                 '1': STATE_PAUSED,
-                 '2': STATE_PLAYING}
+PLAYBACK_DICT = {
+    '0': STATE_PAUSED,  # Stopped
+    '1': STATE_PAUSED,
+    '2': STATE_PLAYING
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -49,15 +54,18 @@ def request_configuration(hass, config, url, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     if 'gpmdp' in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING['gpmdp'], "Failed to register, please try again.")
+        configurator.notify_errors(_CONFIGURING['gpmdp'],
+                                   "Failed to register, please try again.")
 
         return
     from websocket import create_connection
     websocket = create_connection((url), timeout=1)
-    websocket.send(json.dumps({'namespace': 'connect',
-                               'method': 'connect',
-                               'arguments': ['Home Assistant']}))
+    websocket.send(
+        json.dumps({
+            'namespace': 'connect',
+            'method': 'connect',
+            'arguments': ['Home Assistant']
+        }))
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
@@ -73,9 +81,12 @@ def request_configuration(hass, config, url, add_devices_callback):
             if msg['payload'] != "CODE_REQUIRED":
                 continue
             pin = callback_data.get('pin')
-            websocket.send(json.dumps({'namespace': 'connect',
-                                       'method': 'connect',
-                                       'arguments': ['Home Assistant', pin]}))
+            websocket.send(
+                json.dumps({
+                    'namespace': 'connect',
+                    'method': 'connect',
+                    'arguments': ['Home Assistant', pin]
+                }))
             tmpmsg = json.loads(websocket.recv())
             if tmpmsg['channel'] == 'time':
                 _LOGGER.error("Error setting up GPMDP. Please pause "
@@ -84,24 +95,28 @@ def request_configuration(hass, config, url, add_devices_callback):
             code = tmpmsg['payload']
             if code == 'CODE_REQUIRED':
                 continue
-            setup_gpmdp(hass, config, code,
-                        add_devices_callback)
-            _save_config(hass.config.path(GPMDP_CONFIG_FILE),
-                         {"CODE": code})
-            websocket.send(json.dumps({'namespace': 'connect',
-                                       'method': 'connect',
-                                       'arguments': ['Home Assistant', code]}))
+            setup_gpmdp(hass, config, code, add_devices_callback)
+            _save_config(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
+            websocket.send(
+                json.dumps({
+                    'namespace': 'connect',
+                    'method': 'connect',
+                    'arguments': ['Home Assistant', code]
+                }))
             websocket.close()
             break
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
-        DEFAULT_NAME, gpmdp_configuration_callback,
-        description=(
-            'Enter the pin that is displayed in the '
-            'Google Play Music Desktop Player.'),
+        DEFAULT_NAME,
+        gpmdp_configuration_callback,
+        description=('Enter the pin that is displayed in the '
+                     'Google Play Music Desktop Player.'),
         submit_caption="Submit",
-        fields=[{'id': 'pin', 'name': 'Pin Code', 'type': 'number'}]
-    )
+        fields=[{
+            'id': 'pin',
+            'name': 'Pin Code',
+            'type': 'number'
+        }])
 
 
 def setup_gpmdp(hass, config, code, add_devices):
@@ -191,10 +206,13 @@ class GPMDP(MediaPlayerDevice):
         if self._ws is None:
             try:
                 self._ws = self._connection((self._url), timeout=1)
-                msg = json.dumps({'namespace': 'connect',
-                                  'method': 'connect',
-                                  'arguments': ['Home Assistant',
-                                                self._authorization_code]})
+                msg = json.dumps({
+                    'namespace':
+                    'connect',
+                    'method':
+                    'connect',
+                    'arguments': ['Home Assistant', self._authorization_code]
+                })
                 self._ws.send(msg)
             except (socket.timeout, ConnectionRefusedError,
                     ConnectionResetError):
@@ -210,9 +228,12 @@ class GPMDP(MediaPlayerDevice):
                 self._status = STATE_OFF
                 return
             self._request_id += 1
-            websocket.send(json.dumps({'namespace': namespace,
-                                       'method': method,
-                                       'requestID': self._request_id}))
+            websocket.send(
+                json.dumps({
+                    'namespace': namespace,
+                    'method': method,
+                    'requestID': self._request_id
+                }))
             if not with_id:
                 return
             while True:
@@ -322,9 +343,12 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send(json.dumps({'namespace': 'playback',
-                                   'method': 'setCurrentTime',
-                                   'arguments': [position*1000]}))
+        websocket.send(
+            json.dumps({
+                'namespace': 'playback',
+                'method': 'setCurrentTime',
+                'arguments': [position * 1000]
+            }))
         self.schedule_update_ha_state()
 
     def volume_up(self):
@@ -348,7 +372,10 @@ class GPMDP(MediaPlayerDevice):
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send(json.dumps({'namespace': 'volume',
-                                   'method': 'setVolume',
-                                   'arguments': [volume*100]}))
+        websocket.send(
+            json.dumps({
+                'namespace': 'volume',
+                'method': 'setVolume',
+                'arguments': [volume * 100]
+            }))
         self.schedule_update_ha_state()

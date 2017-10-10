@@ -13,8 +13,8 @@ import voluptuous as vol
 
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN)
+from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE,
+                                 CONF_TOKEN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -53,9 +53,12 @@ SCAN_INTERVAL = timedelta(minutes=5)
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_STATIONS): cv.ensure_list,
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Required(CONF_LOCATIONS): cv.ensure_list,
+    vol.Optional(CONF_STATIONS):
+    cv.ensure_list,
+    vol.Required(CONF_TOKEN):
+    cv.string,
+    vol.Required(CONF_LOCATIONS):
+    cv.ensure_list,
 })
 
 
@@ -143,9 +146,9 @@ class WaqiSensor(Entity):
 
         if self._data is not None:
             try:
-                attrs[ATTR_ATTRIBUTION] = ' and '.join(
-                    [ATTRIBUTION] + [
-                        v['name'] for v in self._data.get('attributions', [])])
+                attrs[ATTR_ATTRIBUTION] = ' and '.join([ATTRIBUTION] + [
+                    v['name'] for v in self._data.get('attributions', [])
+                ])
 
                 attrs[ATTR_TIME] = self._data['time']['s']
                 attrs[ATTR_DOMINENTPOL] = self._data.get('dominentpol')

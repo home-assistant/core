@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET,
-    PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import ATTR_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,8 @@ ATTR_DOCUMENT = 'document'
 CONF_CHAT_ID = 'chat_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CHAT_ID): vol.Coerce(int),
+    vol.Required(CONF_CHAT_ID):
+    vol.Coerce(int),
 })
 
 

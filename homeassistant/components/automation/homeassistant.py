@@ -10,16 +10,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback, CoreState
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_EVENT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_PLATFORM, CONF_EVENT,
+                                 EVENT_HOMEASSISTANT_STOP)
 
 EVENT_START = 'start'
 EVENT_SHUTDOWN = 'shutdown'
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'homeassistant',
-    vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),
+    vol.Required(CONF_PLATFORM):
+    'homeassistant',
+    vol.Required(CONF_EVENT):
+    vol.Any(EVENT_START, EVENT_SHUTDOWN),
 })
 
 
@@ -29,6 +31,7 @@ def async_trigger(hass, config, action):
     event = config.get(CONF_EVENT)
 
     if event == EVENT_SHUTDOWN:
+
         @callback
         def hass_shutdown(event):
             """Execute when Home Assistant is shutting down."""

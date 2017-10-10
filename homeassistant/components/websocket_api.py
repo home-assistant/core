@@ -14,9 +14,8 @@ from aiohttp import web
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import (
-    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    __version__)
+from homeassistant.const import (MATCH_ALL, EVENT_TIME_CHANGED,
+                                 EVENT_HOMEASSISTANT_STOP, __version__)
 from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
@@ -29,7 +28,7 @@ from homeassistant.components.http.ban import process_wrong_login
 DOMAIN = 'websocket_api'
 
 URL = '/api/websocket'
-DEPENDENCIES = ('http',)
+DEPENDENCIES = ('http', )
 
 MAX_PENDING_MSG = 512
 
@@ -63,23 +62,34 @@ AUTH_MESSAGE_SCHEMA = vol.Schema({
 })
 
 SUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
-    vol.Optional('event_type', default=MATCH_ALL): str,
+    vol.Required('id'):
+    cv.positive_int,
+    vol.Required('type'):
+    TYPE_SUBSCRIBE_EVENTS,
+    vol.Optional('event_type', default=MATCH_ALL):
+    str,
 })
 
 UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
-    vol.Required('subscription'): cv.positive_int,
+    vol.Required('id'):
+    cv.positive_int,
+    vol.Required('type'):
+    TYPE_UNSUBSCRIBE_EVENTS,
+    vol.Required('subscription'):
+    cv.positive_int,
 })
 
 CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_CALL_SERVICE,
-    vol.Required('domain'): str,
-    vol.Required('service'): str,
-    vol.Optional('service_data', default=None): dict
+    vol.Required('id'):
+    cv.positive_int,
+    vol.Required('type'):
+    TYPE_CALL_SERVICE,
+    vol.Required('domain'):
+    str,
+    vol.Required('service'):
+    str,
+    vol.Optional('service_data', default=None):
+    dict
 })
 
 GET_STATES_MESSAGE_SCHEMA = vol.Schema({
@@ -88,8 +98,10 @@ GET_STATES_MESSAGE_SCHEMA = vol.Schema({
 })
 
 GET_SERVICES_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_GET_SERVICES,
+    vol.Required('id'):
+    cv.positive_int,
+    vol.Required('type'):
+    TYPE_GET_SERVICES,
 })
 
 GET_CONFIG_MESSAGE_SCHEMA = vol.Schema({
@@ -107,17 +119,16 @@ PING_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_PING,
 })
 
-BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
-                                  TYPE_SUBSCRIBE_EVENTS,
-                                  TYPE_UNSUBSCRIBE_EVENTS,
-                                  TYPE_GET_STATES,
-                                  TYPE_GET_SERVICES,
-                                  TYPE_GET_CONFIG,
-                                  TYPE_GET_PANELS,
-                                  TYPE_PING)
-}, extra=vol.ALLOW_EXTRA)
+BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema(
+    {
+        vol.Required('id'):
+        cv.positive_int,
+        vol.Required('type'):
+        vol.Any(TYPE_CALL_SERVICE, TYPE_SUBSCRIBE_EVENTS,
+                TYPE_UNSUBSCRIBE_EVENTS, TYPE_GET_STATES, TYPE_GET_SERVICES,
+                TYPE_GET_CONFIG, TYPE_GET_PANELS, TYPE_PING)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def auth_ok_message():
@@ -273,8 +284,8 @@ class ActiveConnection:
             """Cancel this connection."""
             self.cancel()
 
-        unsub_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, handle_hass_stop)
+        unsub_stop = self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP,
+                                                handle_hass_stop)
         self._writer_task = self.hass.async_add_job(self._writer())
         final_message = None
         msg = None
@@ -314,9 +325,9 @@ class ActiveConnection:
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
-                    self.to_write.put_nowait(error_message(
-                        cur_id, ERR_ID_REUSE,
-                        'Identifier values have to increase.'))
+                    self.to_write.put_nowait(
+                        error_message(cur_id, ERR_ID_REUSE,
+                                      'Identifier values have to increase.'))
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
@@ -343,8 +354,8 @@ class ActiveConnection:
                 else:
                     iden = None
 
-                final_message = error_message(
-                    iden, ERR_INVALID_FORMAT, error_msg)
+                final_message = error_message(iden, ERR_INVALID_FORMAT,
+                                              error_msg)
 
         except TypeError as err:
             if wsock.closed:
@@ -427,9 +438,9 @@ class ActiveConnection:
             self.event_listeners.pop(subscription)()
             self.to_write.put_nowait(result_message(msg['id']))
         else:
-            self.to_write.put_nowait(error_message(
-                msg['id'], ERR_NOT_FOUND,
-                'Subscription not found.'))
+            self.to_write.put_nowait(
+                error_message(msg['id'], ERR_NOT_FOUND,
+                              'Subscription not found.'))
 
     def handle_call_service(self, msg):
         """Handle call service command.
@@ -454,8 +465,8 @@ class ActiveConnection:
         """
         msg = GET_STATES_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.states.async_all()))
+        self.to_write.put_nowait(
+            result_message(msg['id'], self.hass.states.async_all()))
 
     def handle_get_services(self, msg):
         """Handle get services command.
@@ -464,8 +475,8 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.services.async_services()))
+        self.to_write.put_nowait(
+            result_message(msg['id'], self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
         """Handle get config command.
@@ -474,8 +485,8 @@ class ActiveConnection:
         """
         msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.config.as_dict()))
+        self.to_write.put_nowait(
+            result_message(msg['id'], self.hass.config.as_dict()))
 
     def handle_get_panels(self, msg):
         """Handle get panels command.
@@ -484,8 +495,8 @@ class ActiveConnection:
         """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.data[frontend.DATA_PANELS]))
+        self.to_write.put_nowait(
+            result_message(msg['id'], self.hass.data[frontend.DATA_PANELS]))
 
     def handle_ping(self, msg):
         """Handle ping command.

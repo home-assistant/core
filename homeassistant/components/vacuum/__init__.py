@@ -14,9 +14,9 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, ATTR_COMMAND,
+                                 ATTR_ENTITY_ID, SERVICE_TOGGLE,
+                                 SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -54,27 +54,50 @@ VACUUM_SERVICE_SCHEMA = vol.Schema({
 })
 
 VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_FAN_SPEED): cv.string,
+    vol.Required(ATTR_FAN_SPEED):
+    cv.string,
 })
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMS): cv.Dict,
+    vol.Required(ATTR_COMMAND):
+    cv.string,
+    vol.Optional(ATTR_PARAMS):
+    cv.Dict,
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_START_PAUSE: {'method': 'async_start_pause'},
-    SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
-    SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
-    SERVICE_LOCATE: {'method': 'async_locate'},
-    SERVICE_STOP: {'method': 'async_stop'},
-    SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
-                            'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
-    SERVICE_SEND_COMMAND: {'method': 'async_send_command',
-                           'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
+    SERVICE_TURN_ON: {
+        'method': 'async_turn_on'
+    },
+    SERVICE_TURN_OFF: {
+        'method': 'async_turn_off'
+    },
+    SERVICE_TOGGLE: {
+        'method': 'async_toggle'
+    },
+    SERVICE_START_PAUSE: {
+        'method': 'async_start_pause'
+    },
+    SERVICE_RETURN_TO_BASE: {
+        'method': 'async_return_to_base'
+    },
+    SERVICE_CLEAN_SPOT: {
+        'method': 'async_clean_spot'
+    },
+    SERVICE_LOCATE: {
+        'method': 'async_locate'
+    },
+    SERVICE_STOP: {
+        'method': 'async_stop'
+    },
+    SERVICE_SET_FAN_SPEED: {
+        'method': 'async_set_fan_speed',
+        'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA
+    },
+    SERVICE_SEND_COMMAND: {
+        'method': 'async_send_command',
+        'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA
+    },
 }
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
@@ -178,14 +201,15 @@ def send_command(hass, command, params=None, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the vacuum component."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_VACUUMS)
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_handle_vacuum_service(service):
@@ -212,11 +236,14 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', VACUUM_SERVICE_SCHEMA)
+        schema = SERVICE_TO_METHOD[service].get('schema',
+                                                VACUUM_SERVICE_SCHEMA)
         hass.services.async_register(
-            DOMAIN, service, async_handle_vacuum_service,
-            descriptions.get(service), schema=schema)
+            DOMAIN,
+            service,
+            async_handle_vacuum_service,
+            descriptions.get(service),
+            schema=schema)
 
     return True
 
@@ -363,8 +390,7 @@ class VacuumDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
-            partial(self.start_pause, **kwargs))
+        return self.hass.async_add_job(partial(self.start_pause, **kwargs))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""

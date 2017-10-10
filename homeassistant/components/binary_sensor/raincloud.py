@@ -9,10 +9,10 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import (
-    BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity)
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.raincloud import (BINARY_SENSORS, DATA_RAINCLOUD,
+                                                ICON_MAP, RainCloudEntity)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 DEPENDENCIES = ['raincloud']
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
+    vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
 })
 
 

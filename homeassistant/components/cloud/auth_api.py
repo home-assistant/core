@@ -68,12 +68,12 @@ def load_auth(hass):
     if info is None:
         return Auth(hass)
 
-    auth = Auth(hass, _cognito(
-        hass,
-        id_token=info['id_token'],
-        access_token=info['access_token'],
-        refresh_token=info['refresh_token'],
-    ))
+    auth = Auth(hass,
+                _cognito(
+                    hass,
+                    id_token=info['id_token'],
+                    access_token=info['access_token'],
+                    refresh_token=info['refresh_token'], ))
 
     if auth.validate_auth():
         return auth
@@ -264,7 +264,6 @@ def _cognito(hass, **kwargs):
         user_pool_region=info['region'],
         access_key=info['access_key_id'],
         secret_key=info['secret_access_key'],
-        **kwargs
-    )
+        **kwargs)
 
     return cognito

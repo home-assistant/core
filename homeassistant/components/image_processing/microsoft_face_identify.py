@@ -49,10 +49,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(MicrosoftFaceIdentifyEntity(
-            camera[CONF_ENTITY_ID], api, face_group, confidence,
-            camera.get(CONF_NAME)
-        ))
+        entities.append(
+            MicrosoftFaceIdentifyEntity(camera[CONF_ENTITY_ID], api,
+                                        face_group, confidence,
+                                        camera.get(CONF_NAME)))
 
     async_add_devices(entities)
 
@@ -107,8 +107,8 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total).result()
+        run_callback_threadsafe(self.hass.loop, self.async_process_faces,
+                                faces, total).result()
 
     @callback
     def async_process_faces(self, faces, total):
@@ -135,9 +135,8 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                     continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_DETECT_FACE, face
-            )
+            self.hass.async_add_job(self.hass.bus.async_fire,
+                                    EVENT_DETECT_FACE, face)
 
         # Update entity store
         self.faces = faces
@@ -192,9 +191,12 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
                 return
 
             face_ids = [data['faceId'] for data in face_data]
-            detect = yield from self._api.call_api(
-                'post', 'identify',
-                {'faceIds': face_ids, 'personGroupId': self._face_group})
+            detect = yield from self._api.call_api('post', 'identify', {
+                'faceIds':
+                face_ids,
+                'personGroupId':
+                self._face_group
+            })
 
         except HomeAssistantError as err:
             _LOGGER.error("Can't process image on Microsoft face: %s", err)

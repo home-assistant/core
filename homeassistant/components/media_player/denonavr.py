@@ -13,11 +13,11 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON,
-    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PLAY)
-from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
+    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON, MEDIA_TYPE_MUSIC,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY)
+from homeassistant.const import (CONF_HOST, STATE_OFF, STATE_PLAYING,
+                                 STATE_PAUSED, CONF_NAME, STATE_ON, CONF_ZONE,
+                                 CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['denonavr==0.5.3']
@@ -42,18 +42,23 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
     SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 DENON_ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_ZONE):
+    vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
-        cv.boolean,
+    cv.boolean,
     vol.Optional(CONF_ZONES):
-        vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
 })
 
 NewHost = namedtuple('NewHost', ['host', 'name'])
@@ -106,16 +111,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for d_receiver in d_receivers:
                 host = d_receiver["host"]
                 name = d_receiver["friendlyName"]
-                new_hosts.append(
-                    NewHost(host=host, name=name))
+                new_hosts.append(NewHost(host=host, name=name))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later
         # starting
         if entry.host not in cache:
             new_device = denonavr.DenonAVR(
-                host=entry.host, name=entry.name,
-                show_all_inputs=show_all_sources, timeout=timeout,
+                host=entry.host,
+                name=entry.name,
+                show_all_inputs=show_all_sources,
+                timeout=timeout,
                 add_zones=add_zones)
             for new_zone in new_device.zones.values():
                 receivers.append(DenonDevice(new_zone))

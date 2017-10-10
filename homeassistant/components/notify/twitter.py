@@ -14,8 +14,8 @@ from functools import partial
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.helpers.event import async_track_point_in_time
 
@@ -30,22 +30,25 @@ CONF_ACCESS_TOKEN_SECRET = 'access_token_secret'
 ATTR_MEDIA = 'media'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
-    vol.Required(CONF_CONSUMER_KEY): cv.string,
-    vol.Required(CONF_CONSUMER_SECRET): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN):
+    cv.string,
+    vol.Required(CONF_ACCESS_TOKEN_SECRET):
+    cv.string,
+    vol.Required(CONF_CONSUMER_KEY):
+    cv.string,
+    vol.Required(CONF_CONSUMER_SECRET):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Twitter notification service."""
     return TwitterNotificationService(
-        hass,
-        config[CONF_CONSUMER_KEY], config[CONF_CONSUMER_SECRET],
+        hass, config[CONF_CONSUMER_KEY], config[CONF_CONSUMER_SECRET],
         config[CONF_ACCESS_TOKEN], config[CONF_ACCESS_TOKEN_SECRET],
-        config.get(CONF_USERNAME)
-    )
+        config.get(CONF_USERNAME))
 
 
 class TwitterNotificationService(BaseNotificationService):
@@ -78,10 +81,11 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message_callback(self, message, media_id=None):
         """Tweet a message, optionally with media."""
         if self.user:
-            resp = self.api.request('direct_messages/new',
-                                    {'user': self.user,
-                                     'text': message,
-                                     'media_ids': media_id})
+            resp = self.api.request('direct_messages/new', {
+                'user': self.user,
+                'text': message,
+                'media_ids': media_id
+            })
         else:
             resp = self.api.request('statuses/update',
                                     {'status': message,
@@ -100,9 +104,8 @@ class TwitterNotificationService(BaseNotificationService):
         with open(media_path, 'rb') as file:
             total_bytes = os.path.getsize(media_path)
             (media_category, media_type) = self.media_info(media_path)
-            resp = self.upload_media_init(
-                media_type, media_category, total_bytes
-            )
+            resp = self.upload_media_init(media_type, media_category,
+                                          total_bytes)
 
             if 199 > resp.status_code < 300:
                 self.log_error_resp(resp)
@@ -131,10 +134,12 @@ class TwitterNotificationService(BaseNotificationService):
 
     def upload_media_init(self, media_type, media_category, total_bytes):
         """Upload media, INIT phase."""
-        return self.api.request('media/upload',
-                                {'command': 'INIT', 'media_type': media_type,
-                                 'media_category': media_category,
-                                 'total_bytes': total_bytes})
+        return self.api.request('media/upload', {
+            'command': 'INIT',
+            'media_type': media_type,
+            'media_category': media_category,
+            'total_bytes': total_bytes
+        })
 
     def upload_media_chunked(self, file, total_bytes, media_id):
         """Upload media, chunked append."""
@@ -153,21 +158,24 @@ class TwitterNotificationService(BaseNotificationService):
 
     def upload_media_append(self, chunk, media_id, segment_id):
         """Upload media, APPEND phase."""
-        return self.api.request('media/upload',
-                                {'command': 'APPEND', 'media_id': media_id,
-                                 'segment_index': segment_id},
-                                {'media': chunk})
+        return self.api.request('media/upload', {
+            'command': 'APPEND',
+            'media_id': media_id,
+            'segment_index': segment_id
+        }, {'media': chunk})
 
     def upload_media_finalize(self, media_id):
         """Upload media, FINALIZE phase."""
         return self.api.request('media/upload',
-                                {'command': 'FINALIZE', 'media_id': media_id})
+                                {'command': 'FINALIZE',
+                                 'media_id': media_id})
 
     def check_status_until_done(self, media_id, callback, *args):
         """Upload media, STATUS phase."""
-        resp = self.api.request('media/upload',
-                                {'command': 'STATUS', 'media_id': media_id},
-                                method_override='GET')
+        resp = self.api.request(
+            'media/upload', {'command': 'STATUS',
+                             'media_id': media_id},
+            method_override='GET')
         if resp.status_code != 200:
             _LOGGER.error("media processing error: %s", resp.json())
         processing_info = resp.json()['processing_info']
@@ -204,8 +212,8 @@ class TwitterNotificationService(BaseNotificationService):
     @staticmethod
     def log_bytes_sent(bytes_sent, total_bytes):
         """Log upload progress."""
-        _LOGGER.debug("%s of %s bytes uploaded", str(bytes_sent),
-                      str(total_bytes))
+        _LOGGER.debug("%s of %s bytes uploaded",
+                      str(bytes_sent), str(total_bytes))
 
     @staticmethod
     def log_error_resp(resp):

@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
+                                 CONF_ICON, CONF_NAME)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -34,8 +34,10 @@ ATTR_PATTERN = 'pattern'
 SERVICE_SET_VALUE = 'set_value'
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_VALUE):
+    cv.string,
 })
 
 
@@ -53,19 +55,24 @@ def _cv_input_text(cfg):
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
-            vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
-            vol.Optional(CONF_INITIAL, ''): cv.string,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(ATTR_PATTERN): cv.string,
-        }, _cv_input_text)
-    })
-}, required=True, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            cv.slug:
+            vol.All({
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
+                vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
+                vol.Optional(CONF_INITIAL, ''): cv.string,
+                vol.Optional(CONF_ICON): cv.icon,
+                vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(ATTR_PATTERN): cv.string,
+            }, _cv_input_text)
+        })
+    },
+    required=True,
+    extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -93,9 +100,9 @@ def async_setup(hass, config):
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         pattern = cfg.get(ATTR_PATTERN)
 
-        entities.append(InputText(
-            object_id, name, initial, minimum, maximum, icon, unit,
-            pattern))
+        entities.append(
+            InputText(object_id, name, initial, minimum, maximum, icon, unit,
+                      pattern))
 
     if not entities:
         return False
@@ -105,13 +112,17 @@ def async_setup(hass, config):
         """Handle a calls to the input box services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_text.async_set_value(call.data[ATTR_VALUE])
-                 for input_text in target_inputs]
+        tasks = [
+            input_text.async_set_value(call.data[ATTR_VALUE])
+            for input_text in target_inputs
+        ]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        async_set_value_service,
         schema=SERVICE_SET_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)
@@ -121,8 +132,8 @@ def async_setup(hass, config):
 class InputText(Entity):
     """Represent a text box."""
 
-    def __init__(self, object_id, name, initial, minimum, maximum, icon,
-                 unit, pattern):
+    def __init__(self, object_id, name, initial, minimum, maximum, icon, unit,
+                 pattern):
         """Initialize a text input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -184,8 +195,8 @@ class InputText(Entity):
     def async_set_value(self, value):
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
-            _LOGGER.warning("Invalid value: %s (length range %s - %s)",
-                            value, self._minimum, self._maximum)
+            _LOGGER.warning("Invalid value: %s (length range %s - %s)", value,
+                            self._minimum, self._maximum)
             return
         self._current_value = value
         yield from self.async_update_ha_state()

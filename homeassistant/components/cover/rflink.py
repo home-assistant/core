@@ -10,18 +10,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.rflink import (
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
-    DEVICE_DEFAULTS_SCHEMA, EVENT_KEY_COMMAND, RflinkCommand)
-from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA)
+    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
+    EVENT_KEY_COMMAND, RflinkCommand)
+from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
-
 
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
-
 
 CONF_ALIASES = 'aliases'
 CONF_GROUP_ALIASES = 'group_aliases'
@@ -39,18 +36,23 @@ CONF_WAIT_FOR_ACK = 'wait_for_ack'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
     DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
+    vol.Optional(CONF_DEVICES, default={}):
+    vol.Schema({
         cv.string: {
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_NAME):
+            cv.string,
             vol.Optional(CONF_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
+            vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_GROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
+            vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True): cv.boolean,
+            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FIRE_EVENT, default=False):
+            cv.boolean,
+            vol.Optional(CONF_SIGNAL_REPETITIONS):
+            vol.Coerce(int),
+            vol.Optional(CONF_GROUP, default=True):
+            cv.boolean,
         },
     }),
 })
@@ -66,16 +68,16 @@ def devices_from_config(domain_config, hass=None):
 
         # Register entity (and aliases) to listen to incoming rflink events
         # Device id and normal aliases respond to normal and group command
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_COMMAND][device_id].append(device)
+        hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][device_id].append(
+            device)
         if config[CONF_GROUP]:
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][device_id].append(device)
+            hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND][
+                device_id].append(device)
         for _id in config[CONF_ALIASES]:
-            hass.data[DATA_ENTITY_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
-            hass.data[DATA_ENTITY_GROUP_LOOKUP][
-                EVENT_KEY_COMMAND][_id].append(device)
+            hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][_id].append(
+                device)
+            hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND][_id].append(
+                device)
     return devices
 
 

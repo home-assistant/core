@@ -41,7 +41,8 @@ STATE_OFFLINE = 'offline'
 ICON = 'mdi:web'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP):
+    cv.string,
 })
 
 

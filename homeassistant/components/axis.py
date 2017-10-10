@@ -12,16 +12,15 @@ import os
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
-                                 CONF_HOST, CONF_INCLUDE, CONF_NAME,
-                                 CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME,
-                                 CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED, CONF_HOST,
+                                 CONF_INCLUDE, CONF_NAME, CONF_PASSWORD,
+                                 CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-
 
 REQUIREMENTS = ['axis==12']
 
@@ -32,8 +31,9 @@ CONFIG_FILE = 'axis.conf'
 
 AXIS_DEVICES = {}
 
-EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
-               'daynight', 'tampering', 'input']
+EVENT_TYPES = [
+    'motion', 'vmd3', 'pir', 'sound', 'daynight', 'tampering', 'input'
+]
 
 PLATFORMS = ['camera']
 
@@ -45,21 +45,29 @@ AXIS_DEFAULT_PASSWORD = 'pass'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
-        vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
-    vol.Optional(CONF_PORT, default=80): cv.positive_int,
-    vol.Optional(ATTR_LOCATION, default=''): cv.string,
+    vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_TRIGGER_TIME, default=0):
+    cv.positive_int,
+    vol.Optional(CONF_PORT, default=80):
+    cv.positive_int,
+    vol.Optional(ATTR_LOCATION, default=''):
+    cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: DEVICE_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: DEVICE_SCHEMA,
+        }),
+    }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_VAPIX_CALL = 'vapix_call'
 SERVICE_VAPIX_CALL_RESPONSE = 'vapix_call_response'
@@ -70,10 +78,14 @@ SERVICE_DEFAULT_CGI = 'param.cgi'
 SERVICE_DEFAULT_ACTION = 'update'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(SERVICE_PARAM): cv.string,
-    vol.Optional(SERVICE_CGI, default=SERVICE_DEFAULT_CGI): cv.string,
-    vol.Optional(SERVICE_ACTION, default=SERVICE_DEFAULT_ACTION): cv.string,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(SERVICE_PARAM):
+    cv.string,
+    vol.Optional(SERVICE_CGI, default=SERVICE_DEFAULT_CGI):
+    cv.string,
+    vol.Optional(SERVICE_ACTION, default=SERVICE_DEFAULT_ACTION):
+    cv.string,
 })
 
 
@@ -84,8 +96,7 @@ def request_configuration(hass, config, name, host, serialnumber):
     def configuration_callback(callback_data):
         """Called when config is submitted."""
         if CONF_INCLUDE not in callback_data:
-            configurator.notify_errors(request_id,
-                                       "Functionality mandatory.")
+            configurator.notify_errors(request_id, "Functionality mandatory.")
             return False
         callback_data[CONF_INCLUDE] = callback_data[CONF_INCLUDE].split()
         callback_data[CONF_HOST] = host
@@ -111,40 +122,55 @@ def request_configuration(hass, config, name, host, serialnumber):
 
     title = '{} ({})'.format(name, host)
     request_id = configurator.request_config(
-        title, configuration_callback,
+        title,
+        configuration_callback,
         description='Functionality: ' + str(AXIS_INCLUDE),
         entity_picture="/static/images/logo_axis.png",
         link_name='Axis platform documentation',
         link_url='https://home-assistant.io/components/axis/',
         submit_caption="Confirm",
         fields=[
-            {'id': CONF_NAME,
-             'name': "Device name",
-             'type': 'text'},
-            {'id': CONF_USERNAME,
-             'name': "User name",
-             'type': 'text'},
-            {'id': CONF_PASSWORD,
-             'name': 'Password',
-             'type': 'password'},
-            {'id': CONF_INCLUDE,
-             'name': "Device functionality (space separated list)",
-             'type': 'text'},
-            {'id': ATTR_LOCATION,
-             'name': "Physical location of device (optional)",
-             'type': 'text'},
-            {'id': CONF_PORT,
-             'name': "HTTP port (default=80)",
-             'type': 'number'},
-            {'id': CONF_TRIGGER_TIME,
-             'name': "Sensor update interval (optional)",
-             'type': 'number'},
-        ]
-    )
+            {
+                'id': CONF_NAME,
+                'name': "Device name",
+                'type': 'text'
+            },
+            {
+                'id': CONF_USERNAME,
+                'name': "User name",
+                'type': 'text'
+            },
+            {
+                'id': CONF_PASSWORD,
+                'name': 'Password',
+                'type': 'password'
+            },
+            {
+                'id': CONF_INCLUDE,
+                'name': "Device functionality (space separated list)",
+                'type': 'text'
+            },
+            {
+                'id': ATTR_LOCATION,
+                'name': "Physical location of device (optional)",
+                'type': 'text'
+            },
+            {
+                'id': CONF_PORT,
+                'name': "HTTP port (default=80)",
+                'type': 'number'
+            },
+            {
+                'id': CONF_TRIGGER_TIME,
+                'name': "Sensor update interval (optional)",
+                'type': 'number'
+            },
+        ])
 
 
 def setup(hass, config):
     """Common setup for Axis devices."""
+
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
@@ -179,8 +205,7 @@ def setup(hass, config):
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
             device.url = host
-            async_dispatcher_send(hass,
-                                  DOMAIN + '_' + device.name + '_new_ip',
+            async_dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip',
                                   host)
 
     # Register discovery service
@@ -211,11 +236,12 @@ def setup(hass, config):
         return False
 
     # Register service with Home Assistant.
-    hass.services.register(DOMAIN,
-                           SERVICE_VAPIX_CALL,
-                           vapix_service,
-                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
-                           schema=SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_VAPIX_CALL,
+        vapix_service,
+        descriptions[DOMAIN][SERVICE_VAPIX_CALL],
+        schema=SERVICE_SCHEMA)
 
     return True
 
@@ -248,10 +274,7 @@ def setup_device(hass, config, device_config):
                 CONF_USERNAME: device_config[CONF_USERNAME],
                 CONF_PASSWORD: device_config[CONF_PASSWORD]
             }
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    camera_config,
+            discovery.load_platform(hass, component, DOMAIN, camera_config,
                                     config)
 
     if enable_metadatastream:
@@ -291,8 +314,8 @@ def event_initialized(event):
     """Register event initialized on metadatastream here."""
     hass = event.device_config('hass')
     discovery.load_platform(hass,
-                            convert(event.topic, 'topic', 'platform'),
-                            DOMAIN, {'axis_event': event})
+                            convert(event.topic, 'topic', 'platform'), DOMAIN,
+                            {'axis_event': event})
 
 
 class AxisDeviceEvent(Entity):
@@ -303,9 +326,8 @@ class AxisDeviceEvent(Entity):
         self.axis_event = axis_event
         self._event_class = convert(self.axis_event.topic, 'topic', 'class')
         self._name = '{}_{}_{}'.format(self.axis_event.device_name,
-                                       convert(self.axis_event.topic,
-                                               'topic', 'type'),
-                                       self.axis_event.id)
+                                       convert(self.axis_event.topic, 'topic',
+                                               'type'), self.axis_event.id)
         self.axis_event.callback = self._update_callback
 
     def _update_callback(self):
@@ -350,38 +372,54 @@ def convert(item, from_key, to_key):
             return entry[to_key]
 
 
-REMAP = [{'type': 'motion',
-          'class': 'motion',
-          'topic': 'tns1:VideoAnalytics/tnsaxis:MotionDetection',
-          'subscribe': 'onvif:VideoAnalytics/axis:MotionDetection',
-          'platform': 'binary_sensor'},
-         {'type': 'vmd3',
-          'class': 'motion',
-          'topic': 'tns1:RuleEngine/tnsaxis:VMD3/vmd3_video_1',
-          'subscribe': 'onvif:RuleEngine/axis:VMD3/vmd3_video_1',
-          'platform': 'binary_sensor'},
-         {'type': 'pir',
-          'class': 'motion',
-          'topic': 'tns1:Device/tnsaxis:Sensor/PIR',
-          'subscribe': 'onvif:Device/axis:Sensor/axis:PIR',
-          'platform': 'binary_sensor'},
-         {'type': 'sound',
-          'class': 'sound',
-          'topic': 'tns1:AudioSource/tnsaxis:TriggerLevel',
-          'subscribe': 'onvif:AudioSource/axis:TriggerLevel',
-          'platform': 'binary_sensor'},
-         {'type': 'daynight',
-          'class': 'light',
-          'topic': 'tns1:VideoSource/tnsaxis:DayNightVision',
-          'subscribe': 'onvif:VideoSource/axis:DayNightVision',
-          'platform': 'binary_sensor'},
-         {'type': 'tampering',
-          'class': 'safety',
-          'topic': 'tns1:VideoSource/tnsaxis:Tampering',
-          'subscribe': 'onvif:VideoSource/axis:Tampering',
-          'platform': 'binary_sensor'},
-         {'type': 'input',
-          'class': 'input',
-          'topic': 'tns1:Device/tnsaxis:IO/Port',
-          'subscribe': 'onvif:Device/axis:IO/Port',
-          'platform': 'binary_sensor'}, ]
+REMAP = [
+    {
+        'type': 'motion',
+        'class': 'motion',
+        'topic': 'tns1:VideoAnalytics/tnsaxis:MotionDetection',
+        'subscribe': 'onvif:VideoAnalytics/axis:MotionDetection',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'vmd3',
+        'class': 'motion',
+        'topic': 'tns1:RuleEngine/tnsaxis:VMD3/vmd3_video_1',
+        'subscribe': 'onvif:RuleEngine/axis:VMD3/vmd3_video_1',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'pir',
+        'class': 'motion',
+        'topic': 'tns1:Device/tnsaxis:Sensor/PIR',
+        'subscribe': 'onvif:Device/axis:Sensor/axis:PIR',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'sound',
+        'class': 'sound',
+        'topic': 'tns1:AudioSource/tnsaxis:TriggerLevel',
+        'subscribe': 'onvif:AudioSource/axis:TriggerLevel',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'daynight',
+        'class': 'light',
+        'topic': 'tns1:VideoSource/tnsaxis:DayNightVision',
+        'subscribe': 'onvif:VideoSource/axis:DayNightVision',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'tampering',
+        'class': 'safety',
+        'topic': 'tns1:VideoSource/tnsaxis:Tampering',
+        'subscribe': 'onvif:VideoSource/axis:Tampering',
+        'platform': 'binary_sensor'
+    },
+    {
+        'type': 'input',
+        'class': 'input',
+        'topic': 'tns1:Device/tnsaxis:IO/Port',
+        'subscribe': 'onvif:Device/axis:IO/Port',
+        'platform': 'binary_sensor'
+    },
+]

@@ -26,8 +26,10 @@ ICON = 'mdi:train'
 SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_START): cv.string,
+    vol.Required(CONF_DESTINATION):
+    cv.string,
+    vol.Required(CONF_START):
+    cv.string,
 })
 
 
@@ -101,8 +103,9 @@ class SchieneData(object):
             # simplifies usage of template sensors.
             if 'details' in con:
                 con.pop('details')
-                delay = con.get('delay', {'delay_departure': 0,
-                                          'delay_arrival': 0})
+                delay = con.get('delay',
+                                {'delay_departure': 0,
+                                 'delay_arrival': 0})
                 # IMHO only delay_departure is useful
                 con['delay'] = delay['delay_departure']
                 con['ontime'] = con.get('ontime', False)

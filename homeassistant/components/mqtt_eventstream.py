@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.loader as loader
-from homeassistant.components.mqtt import (
-    valid_publish_topic, valid_subscribe_topic)
-from homeassistant.const import (
-    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
-    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.components.mqtt import (valid_publish_topic,
+                                           valid_subscribe_topic)
+from homeassistant.const import (ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+                                 EVENT_SERVICE_EXECUTED, EVENT_STATE_CHANGED,
+                                 EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
@@ -27,14 +27,19 @@ CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_PUBLISH_TOPIC):
+            valid_publish_topic,
+            vol.Optional(CONF_SUBSCRIBE_TOPIC):
+            valid_subscribe_topic,
+            vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
             cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -56,11 +61,9 @@ def async_setup(hass, config):
         # Filter out the events that were triggered by publishing
         # to the MQTT topic, or you will end up in an infinite loop.
         if event.event_type == EVENT_CALL_SERVICE:
-            if (
-                    event.data.get('domain') == mqtt.DOMAIN and
-                    event.data.get('service') == mqtt.SERVICE_PUBLISH and
-                    event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic
-            ):
+            if (event.data.get('domain') == mqtt.DOMAIN
+                    and event.data.get('service') == mqtt.SERVICE_PUBLISH and
+                    event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic):
                 return
 
         # Filter out all the "event service executed" events because they
@@ -101,10 +104,7 @@ def async_setup(hass, config):
                     event_data[key] = state
 
         hass.bus.async_fire(
-            event_type,
-            event_data=event_data,
-            origin=EventOrigin.remote
-        )
+            event_type, event_data=event_data, origin=EventOrigin.remote)
 
     # Only subscribe if you specified a topic.
     if sub_topic:

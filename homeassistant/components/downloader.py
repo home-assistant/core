@@ -31,11 +31,13 @@ SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SUBDIR): cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DOWNLOAD_DIR): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_DOWNLOAD_DIR): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -55,6 +57,7 @@ def setup(hass, config):
 
     def download_file(service):
         """Start thread to download file specified in the URL."""
+
         def do_download():
             """Download the file."""
             try:
@@ -80,8 +83,7 @@ def setup(hass, config):
                             filename = match[0].strip("'\" ")
 
                     if not filename:
-                        filename = os.path.basename(
-                            url).strip()
+                        filename = os.path.basename(url).strip()
 
                     if not filename:
                         filename = 'ha_download'
@@ -130,7 +132,10 @@ def setup(hass, config):
 
         threading.Thread(target=do_download).start()
 
-    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE, download_file,
-                           schema=SERVICE_DOWNLOAD_FILE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_DOWNLOAD_FILE,
+        download_file,
+        schema=SERVICE_DOWNLOAD_FILE_SCHEMA)
 
     return True

@@ -26,17 +26,28 @@ SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 KNOWN_HOSTS = []  # type: List[str]
-DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
-                   'video1': 'Video 1', 'video2': 'Video 2',
-                   'video3': 'Video 3', 'video4': 'Video 4',
-                   'video5': 'Video 5', 'video6': 'Video 6',
-                   'video7': 'Video 7'}
+DEFAULT_SOURCES = {
+    'tv': 'TV',
+    'bd': 'Bluray',
+    'game': 'Game',
+    'aux1': 'Aux1',
+    'video1': 'Video 1',
+    'video2': 'Video 2',
+    'video3': 'Video 3',
+    'video4': 'Video 4',
+    'video5': 'Video 5',
+    'video6': 'Video 6',
+    'video7': 'Video 7'
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
-        {cv.string: cv.string},
+    vol.Optional(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {
+        cv.string: cv.string
+    },
 })
 
 
@@ -50,9 +61,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
-            hosts.append(OnkyoDevice(
-                eiscp.eISCP(host), config.get(CONF_SOURCES),
-                name=config.get(CONF_NAME)))
+            hosts.append(
+                OnkyoDevice(
+                    eiscp.eISCP(host),
+                    config.get(CONF_SOURCES),
+                    name=config.get(CONF_NAME)))
             KNOWN_HOSTS.append(host)
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
@@ -73,8 +86,8 @@ class OnkyoDevice(MediaPlayerDevice):
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
-        self._name = name or '{}_{}'.format(
-            receiver.info['model_name'], receiver.info['identifier'])
+        self._name = name or '{}_{}'.format(receiver.info['model_name'],
+                                            receiver.info['identifier'])
         self._current_source = None
         self._source_list = list(sources.values())
         self._source_mapping = sources
@@ -168,7 +181,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command('volume {}'.format(int(volume*80)))
+        self.command('volume {}'.format(int(volume * 80)))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""

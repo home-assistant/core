@@ -43,14 +43,19 @@ SENSOR_TYPES = {
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
-    vol.Optional(CONF_CURRENCY, default=''): cv.string,
-    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.string,
+    vol.Required(CONF_SENSOR_TYPE):
+    TYPES_SCHEMA,
+    vol.Optional(CONF_CURRENCY, default=''):
+    cv.string,
+    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD):
+    cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_APPTOKEN): cv.string,
-    vol.Optional(CONF_UTC_OFFSET): cv.string,
+    vol.Required(CONF_APPTOKEN):
+    cv.string,
+    vol.Optional(CONF_UTC_OFFSET):
+    cv.string,
     vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
 })
 
@@ -67,12 +72,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = get(url_string, timeout=10)
             for sensor in response.json():
                 sid = sensor['sid']
-                dev.append(EfergySensor(variable[CONF_SENSOR_TYPE], app_token,
-                                        utc_offset, variable[CONF_PERIOD],
-                                        variable[CONF_CURRENCY], sid))
-        dev.append(EfergySensor(
-            variable[CONF_SENSOR_TYPE], app_token, utc_offset,
-            variable[CONF_PERIOD], variable[CONF_CURRENCY]))
+                dev.append(
+                    EfergySensor(variable[CONF_SENSOR_TYPE], app_token,
+                                 utc_offset, variable[CONF_PERIOD], variable[
+                                     CONF_CURRENCY], sid))
+        dev.append(
+            EfergySensor(variable[CONF_SENSOR_TYPE], app_token, utc_offset,
+                         variable[CONF_PERIOD], variable[CONF_CURRENCY]))
 
     add_devices(dev, True)
 
@@ -80,8 +86,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EfergySensor(Entity):
     """Implementation of an Efergy sensor."""
 
-    def __init__(self, sensor_type, app_token, utc_offset, period,
-                 currency, sid=None):
+    def __init__(self,
+                 sensor_type,
+                 app_token,
+                 utc_offset,
+                 period,
+                 currency,
+                 sid=None):
         """Initialize the sensor."""
         self.sid = sid
         if sid:

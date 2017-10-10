@@ -13,9 +13,9 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_VALUE_TEMPLATE,
-    CONTENT_TYPE_TEXT_PLAIN, ATTR_DATE)
+from homeassistant.const import (CONF_NAME, CONF_PORT, CONF_USERNAME,
+                                 CONF_PASSWORD, CONF_VALUE_TEMPLATE,
+                                 CONTENT_TYPE_TEXT_PLAIN, ATTR_DATE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,27 +30,35 @@ ATTR_SUBJECT = 'subject'
 DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_SERVER): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_SERVER):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Email sensor platform."""
     reader = EmailReader(
-        config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
         config.get(CONF_SERVER), config.get(CONF_PORT))
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    sensor = EmailContentSensor(
-        hass, reader, config.get(CONF_NAME) or config.get(CONF_USERNAME),
-        config.get(CONF_SENDERS), value_template)
+    sensor = EmailContentSensor(hass, reader,
+                                config.get(CONF_NAME)
+                                or config.get(CONF_USERNAME),
+                                config.get(CONF_SENDERS), value_template)
 
     if sensor.connected:
         add_devices([sensor], True)
@@ -84,8 +92,7 @@ class EmailReader(object):
 
     def _fetch_message(self, message_uid):
         """Get an email message from a message id."""
-        _, message_data = self.connection.uid(
-            'fetch', message_uid, '(RFC822)')
+        _, message_data = self.connection.uid('fetch', message_uid, '(RFC822)')
 
         raw_email = message_data[0][1]
         email_message = email.message_from_bytes(raw_email)
@@ -112,8 +119,8 @@ class EmailReader(object):
                     return self._fetch_message(message_uid)
 
         except imaplib.IMAP4.error:
-            _LOGGER.info(
-                "Connection to %s lost, attempting to reconnect", self._server)
+            _LOGGER.info("Connection to %s lost, attempting to reconnect",
+                         self._server)
             try:
                 self.connect()
             except imaplib.IMAP4.error:
@@ -226,10 +233,8 @@ class EmailContentSensor(Entity):
 
             self._message = message_body
             self._state_attributes = {
-                ATTR_FROM:
-                    EmailContentSensor.get_msg_sender(email_message),
+                ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
                 ATTR_SUBJECT:
-                    EmailContentSensor.get_msg_subject(email_message),
-                ATTR_DATE:
-                    email_message['Date']
+                EmailContentSensor.get_msg_subject(email_message),
+                ATTR_DATE: email_message['Date']
             }

@@ -8,8 +8,8 @@ import logging
 import asyncio
 
 from homeassistant.core import callback
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,8 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.info("Registered %s with light platform", name)
 
         device_list.append(
-            InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)
-        )
+            InsteonPLMDimmerDevice(hass, plm, address, name, dimmable))
 
     async_add_devices(device_list)
 
@@ -50,8 +49,8 @@ class InsteonPLMDimmerDevice(Light):
         self._name = name
         self._dimmable = dimmable
 
-        self._plm.add_update_callback(
-            self.async_light_update, {'address': self._address})
+        self._plm.add_update_callback(self.async_light_update,
+                                      {'address': self._address})
 
     @property
     def should_poll(self):

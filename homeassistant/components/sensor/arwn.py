@@ -43,8 +43,8 @@ def discover_sensors(topic, payload):
         return ArwnSensor(name, 'moisture', unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
-            return ArwnSensor("Rain Since Midnight", 'since_midnight',
-                              "in", "mdi:water")
+            return ArwnSensor("Rain Since Midnight", 'since_midnight', "in",
+                              "mdi:water")
     if domain == 'barometer':
         return ArwnSensor('Barometer', 'pressure', unit,
                           "mdi:thermometer-lines")
@@ -61,6 +61,7 @@ def _slug(name):
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ARWN platform."""
+
     @callback
     def async_sensor_event_received(topic, payload, qos):
         """Process events as sensors.
@@ -97,12 +98,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 store[sensor.name] = sensor
                 _LOGGER.debug("Registering new sensor %(name)s => %(event)s",
                               dict(name=sensor.name, event=event))
-                async_add_devices((sensor,), True)
+                async_add_devices((sensor, ), True)
             else:
                 store[sensor.name].set_event(event)
 
-    yield from mqtt.async_subscribe(
-        hass, TOPIC, async_sensor_event_received, 0)
+    yield from mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received,
+                                    0)
     return True
 
 

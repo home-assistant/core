@@ -10,8 +10,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_SSL,
+                                 CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
@@ -25,15 +25,18 @@ DEFAULT_PORT = 8088
 DEFAULT_SSL = False
 DEFAULT_NAME = 'HASS'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_TOKEN): cv.string,
+            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_SSL, default=False): cv.boolean,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -66,25 +69,25 @@ def setup(hass, config):
         except ValueError:
             _state = state.state
 
-        json_body = [
-            {
-                'domain': state.domain,
-                'entity_id': state.object_id,
-                'attributes': dict(state.attributes),
-                'time': str(event.time_fired),
-                'value': _state,
-                'host': name,
-            }
-        ]
+        json_body = [{
+            'domain': state.domain,
+            'entity_id': state.object_id,
+            'attributes': dict(state.attributes),
+            'time': str(event.time_fired),
+            'value': _state,
+            'host': name,
+        }]
 
         try:
             payload = {
                 "host": event_collector,
                 "event": json_body,
             }
-            requests.post(event_collector,
-                          data=json.dumps(payload, cls=JSONEncoder),
-                          headers=headers, timeout=10)
+            requests.post(
+                event_collector,
+                data=json.dumps(payload, cls=JSONEncoder),
+                headers=headers,
+                timeout=10)
         except requests.exceptions.RequestException as error:
             _LOGGER.exception("Error saving event to Splunk: %s", error)
 

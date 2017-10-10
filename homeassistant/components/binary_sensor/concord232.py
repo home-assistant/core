@@ -35,10 +35,13 @@ ZONE_TYPES_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXCLUDE_ZONES, default=[]):
-        vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+    vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_ZONE_TYPES, default={}):
+    ZONE_TYPES_SCHEMA,
 })
 
 
@@ -66,11 +69,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Loading Zone found: %s", zone['name'])
         if zone['number'] not in exclude:
             sensors.append(
-                Concord232ZoneSensor(
-                    hass, client, zone, zone_types.get(
-                        zone['number'], get_opening_type(zone))
-                )
-            )
+                Concord232ZoneSensor(hass, client, zone,
+                                     zone_types.get(zone['number'],
+                                                    get_opening_type(zone))))
 
         add_devices(sensors, True)
 

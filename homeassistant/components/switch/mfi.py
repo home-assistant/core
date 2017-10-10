@@ -10,9 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME, CONF_SSL,
-    CONF_VERIFY_SSL)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_PASSWORD,
+                                 CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['mficlient==0.3.0']
@@ -30,12 +29,18 @@ SWITCH_MODELS = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean,
 })
 
 
@@ -53,16 +58,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from mficlient.client import FailedToLogin, MFiClient
 
     try:
-        client = MFiClient(host, username, password, port=port,
-                           use_tls=use_tls, verify=verify_tls)
+        client = MFiClient(
+            host,
+            username,
+            password,
+            port=port,
+            use_tls=use_tls,
+            verify=verify_tls)
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
         return False
 
-    add_devices(MfiSwitch(port)
-                for device in client.get_devices()
-                for port in device.ports.values()
-                if port.model in SWITCH_MODELS)
+    add_devices(
+        MfiSwitch(port)
+        for device in client.get_devices() for port in device.ports.values()
+        if port.model in SWITCH_MODELS)
 
 
 class MfiSwitch(SwitchDevice):

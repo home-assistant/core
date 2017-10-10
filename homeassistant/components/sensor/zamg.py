@@ -20,9 +20,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_ATTRIBUTION, ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED)
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__,
-    CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS, CONF_NAME,
+                                 __version__, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -61,13 +60,15 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=['temperature']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_STATION_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_STATION_ID):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.longitude,
 })
 
 
@@ -91,8 +92,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from ZAMG: %s", err)
         return False
 
-    add_devices([ZamgSensor(probe, variable, name)
-                 for variable in config[CONF_MONITORED_CONDITIONS]], True)
+    add_devices([
+        ZamgSensor(probe, variable, name)
+        for variable in config[CONF_MONITORED_CONDITIONS]
+    ], True)
 
 
 class ZamgSensor(Entity):
@@ -162,8 +165,8 @@ class ZamgData(object):
                 cls.API_URL, headers=cls.API_HEADERS, timeout=15)
             response.raise_for_status()
             response.encoding = 'UTF8'
-            return csv.DictReader(response.text.splitlines(),
-                                  delimiter=';', quotechar='"')
+            return csv.DictReader(
+                response.text.splitlines(), delimiter=';', quotechar='"')
         except requests.exceptions.HTTPError:
             _LOGGER.error("While fetching data")
 
@@ -176,14 +179,17 @@ class ZamgData(object):
 
         for row in self.current_observations():
             if row.get('Station') == self._station_id:
-                api_fields = {col_heading: (standard_name, dtype)
-                              for standard_name, (_, _, col_heading, dtype)
-                              in SENSOR_TYPES.items()}
+                api_fields = {
+                    col_heading: (standard_name, dtype)
+                    for standard_name, (_, _, col_heading,
+                                        dtype) in SENSOR_TYPES.items()
+                }
                 self.data = {
                     api_fields.get(col_heading)[0]:
-                        api_fields.get(col_heading)[1](v.replace(',', '.'))
+                    api_fields.get(col_heading)[1](v.replace(',', '.'))
                     for col_heading, v in row.items()
-                    if col_heading in api_fields and v}
+                    if col_heading in api_fields and v
+                }
                 break
         else:
             raise ValueError(
@@ -197,11 +203,13 @@ class ZamgData(object):
 def _get_zamg_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
     capital_stations = {r['Station'] for r in ZamgData.current_observations()}
-    req = requests.get('https://www.zamg.ac.at/cms/en/documents/climate/'
-                       'doc_metnetwork/zamg-observation-points', timeout=15)
+    req = requests.get(
+        'https://www.zamg.ac.at/cms/en/documents/climate/'
+        'doc_metnetwork/zamg-observation-points',
+        timeout=15)
     stations = {}
-    for row in csv.DictReader(req.text.splitlines(),
-                              delimiter=';', quotechar='"'):
+    for row in csv.DictReader(
+            req.text.splitlines(), delimiter=';', quotechar='"'):
         if row.get('synnr') in capital_stations:
             try:
                 stations[row['synnr']] = tuple(
@@ -238,6 +246,6 @@ def closest_station(lat, lon, cache_dir):
     def comparable_dist(zamg_id):
         """Calculate the psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[zamg_id]
-        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
+        return (lat - station_lat)**2 + (lon - station_lon)**2
 
     return min(stations, key=comparable_dist)

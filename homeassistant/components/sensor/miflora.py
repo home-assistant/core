@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS, CONF_NAME,
+                                 CONF_MAC)
 
 REQUIREMENTS = ['miflora==0.1.16']
 
@@ -33,7 +33,6 @@ DEFAULT_NAME = 'Mi Flora'
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
-
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
@@ -44,16 +43,24 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC): cv.string,
+    vol.Required(CONF_MAC):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
-    vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN):
+    cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE):
+    cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
+    vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES):
+    cv.positive_int,
+    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL):
+    cv.positive_int,
+    vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER):
+    cv.string,
 })
 
 
@@ -63,7 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
-        config.get(CONF_MAC), cache_timeout=cache,
+        config.get(CONF_MAC),
+        cache_timeout=cache,
         adapter=config.get(CONF_ADAPTER))
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
@@ -80,8 +88,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if prefix:
             name = "{} {}".format(prefix, name)
 
-        devs.append(MiFloraSensor(
-            poller, parameter, name, unit, force_update, median))
+        devs.append(
+            MiFloraSensor(poller, parameter, name, unit, force_update, median))
 
     add_devices(devs)
 

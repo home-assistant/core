@@ -8,8 +8,8 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.vera import (VERA_CONTROLLER, VERA_DEVICES,
+                                           VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera switches."""
     add_devices(
-        VeraSwitch(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['switch'])
+        VeraSwitch(device, VERA_CONTROLLER)
+        for device in VERA_DEVICES['switch'])
 
 
 class VeraSwitch(VeraDevice, SwitchDevice):

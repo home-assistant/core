@@ -12,24 +12,11 @@ import voluptuous as vol
 
 import homeassistant.util as util
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice
-)
-from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_OFF,
-    STATE_ON,
-    CONF_NAME,
-    CONF_HOST,
-    CONF_ACCESS_TOKEN
-)
+    PLATFORM_SCHEMA, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_SELECT_SOURCE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import (STATE_UNKNOWN, STATE_OFF, STATE_ON, CONF_NAME,
+                                 CONF_HOST, CONF_ACCESS_TOKEN)
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['pyvizio==0.0.2']
@@ -52,12 +39,16 @@ SUPPORTED_COMMANDS = SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
                      | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_ACCESS_TOKEN):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_SUPPRESS_WARNING, default=False):
+    cv.boolean,
     vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+    vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
 })
 
 

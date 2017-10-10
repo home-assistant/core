@@ -28,8 +28,7 @@ PROJECT_CLASSIFIERS = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.4',
-    'Topic :: Home Automation'
+    'Programming Language :: Python :: 3.4', 'Topic :: Home Automation'
 ]
 
 PROJECT_GITHUB_USERNAME = 'home-assistant'
@@ -421,9 +420,10 @@ HTTP_HEADER_ACCEPT = 'Accept'
 HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'
 HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS = 'Access-Control-Allow-Headers'
 
-ALLOWED_CORS_HEADERS = [HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                        HTTP_HEADER_X_REQUESTED_WITH, HTTP_HEADER_CONTENT_TYPE,
-                        HTTP_HEADER_HA_AUTH]
+ALLOWED_CORS_HEADERS = [
+    HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT, HTTP_HEADER_X_REQUESTED_WITH,
+    HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_HA_AUTH
+]
 
 CONTENT_TYPE_JSON = 'application/json'
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'

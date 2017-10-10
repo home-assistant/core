@@ -17,9 +17,8 @@ DEPENDENCIES = ['tesla']
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Tesla tracker."""
-    TeslaDeviceTracker(
-        hass, config, see,
-        hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
+    TeslaDeviceTracker(hass, config, see,
+                       hass.data[TESLA_DOMAIN]['devices']['devices_tracker'])
     return True
 
 
@@ -46,12 +45,9 @@ class TeslaDeviceTracker(object):
             location = device.get_location()
             lat = location['latitude']
             lon = location['longitude']
-            attrs = {
-                'trackr_id': dev_id,
-                'id': dev_id,
-                'name': name
-            }
+            attrs = {'trackr_id': dev_id, 'id': dev_id, 'name': name}
             self.see(
-                dev_id=dev_id, host_name=name,
-                gps=(lat, lon), attributes=attrs
-            )
+                dev_id=dev_id,
+                host_name=name,
+                gps=(lat, lon),
+                attributes=attrs)

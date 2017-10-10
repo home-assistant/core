@@ -9,10 +9,9 @@ from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
-                                 CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL,
-                                 CONF_NAME, CONF_UNIT_OF_MEASUREMENT,
-                                 CONF_VALUE_TEMPLATE)
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
+    CONF_VERIFY_SSL, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import Throttle
 
@@ -39,27 +38,39 @@ CONF_FIELD = 'field'
 CONF_MEASUREMENT_NAME = 'measurement'
 CONF_WHERE = 'where'
 
-
 _QUERY_SCHEME = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_MEASUREMENT_NAME): cv.string,
-    vol.Required(CONF_WHERE): cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_MEASUREMENT_NAME):
+    cv.string,
+    vol.Required(CONF_WHERE):
+    cv.template,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE):
+    cv.string,
     vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION):
-        cv.string,
-    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string
+    cv.string,
+    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD):
+    cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Inclusive(CONF_USERNAME, 'authentication'):
+    cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'):
+    cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean
 })
 
 # Return cached results if last scan was less then this time ago
@@ -109,16 +120,21 @@ class InfluxSensor(Entity):
         where_clause.hass = hass
 
         influx = InfluxDBClient(
-            host=influx_conf['host'], port=influx_conf['port'],
-            username=influx_conf['username'], password=influx_conf['password'],
-            database=database, ssl=influx_conf['ssl'],
+            host=influx_conf['host'],
+            port=influx_conf['port'],
+            username=influx_conf['username'],
+            password=influx_conf['password'],
+            database=database,
+            ssl=influx_conf['ssl'],
             verify_ssl=influx_conf['verify_ssl'])
         try:
             influx.query("select * from /.*/ LIMIT 1;")
             self.connected = True
-            self.data = InfluxSensorData(
-                influx, query.get(CONF_GROUP_FUNCTION), query.get(CONF_FIELD),
-                query.get(CONF_MEASUREMENT_NAME), where_clause)
+            self.data = InfluxSensorData(influx,
+                                         query.get(CONF_GROUP_FUNCTION),
+                                         query.get(CONF_FIELD),
+                                         query.get(CONF_MEASUREMENT_NAME),
+                                         where_clause)
         except exceptions.InfluxDBClientError as exc:
             _LOGGER.error("Database host is not accessible due to '%s', please"
                           " check your entries in the configuration file and"

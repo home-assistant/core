@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC,
+                                 CONF_DISCOVERY)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['orvibo==1.1.1']
@@ -22,12 +22,16 @@ DEFAULT_DISCOVERY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES, default=[]):
-        vol.All(cv.ensure_list, [{
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_MAC): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-        }]),
-    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+    vol.All(cv.ensure_list, [{
+        vol.Required(CONF_HOST):
+        cv.string,
+        vol.Optional(CONF_MAC):
+        cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+        cv.string
+    }]),
+    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY):
+    cv.boolean,
 })
 
 
@@ -49,8 +53,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for host, data in switch_data.items():
         try:
-            switches.append(S20Switch(data.get(CONF_NAME),
-                                      S20(host, mac=data.get(CONF_MAC))))
+            switches.append(
+                S20Switch(
+                    data.get(CONF_NAME), S20(host, mac=data.get(CONF_MAC))))
             _LOGGER.info("Initialized S20 at %s", host)
         except S20Exception:
             _LOGGER.error("S20 at %s couldn't be initialized", host)

@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_NAME, TEMP_CELSIUS, CONF_API_KEY,
+                                 CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.metoffice import \
@@ -39,8 +39,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     try:
-        site = datapoint.get_nearest_site(latitude=latitude,
-                                          longitude=longitude)
+        site = datapoint.get_nearest_site(
+            latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return False
@@ -56,8 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except (ValueError, dp.exceptions.APIException) as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return False
-    add_devices([MetOfficeWeather(site, data, config.get(CONF_NAME))],
-                True)
+    add_devices([MetOfficeWeather(site, data, config.get(CONF_NAME))], True)
     return True
 
 
@@ -81,8 +80,10 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return [k for k, v in CONDITION_CLASSES.items() if
-                self.data.data.weather.value in v][0]
+        return [
+            k for k, v in CONDITION_CLASSES.items()
+            if self.data.data.weather.value in v
+        ][0]
 
     # Now implement the WeatherEntity interface
 

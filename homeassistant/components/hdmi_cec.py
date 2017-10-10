@@ -18,10 +18,9 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
-                                 EVENT_HOMEASSISTANT_STOP, STATE_ON,
-                                 STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
-                                 STATE_PLAYING, STATE_IDLE,
-                                 STATE_PAUSED, CONF_HOST)
+                                 EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_OFF,
+                                 CONF_DEVICES, CONF_PLATFORM, STATE_PLAYING,
+                                 STATE_IDLE, STATE_PAUSED, CONF_HOST)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
@@ -84,25 +83,31 @@ ATTR_TOGGLE = 'toggle'
 _VOL_HEX = vol.Any(vol.Coerce(int), lambda x: int(x, 16))
 
 SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_CMD): _VOL_HEX,
-    vol.Optional(ATTR_SRC): _VOL_HEX,
-    vol.Optional(ATTR_DST): _VOL_HEX,
-    vol.Optional(ATTR_ATT): _VOL_HEX,
-    vol.Optional(ATTR_RAW): vol.Coerce(str)
-}, extra=vol.PREVENT_EXTRA)
+SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_CMD): _VOL_HEX,
+        vol.Optional(ATTR_SRC): _VOL_HEX,
+        vol.Optional(ATTR_DST): _VOL_HEX,
+        vol.Optional(ATTR_ATT): _VOL_HEX,
+        vol.Optional(ATTR_RAW): vol.Coerce(str)
+    },
+    extra=vol.PREVENT_EXTRA)
 
 SERVICE_VOLUME = 'volume'
-SERVICE_VOLUME_SCHEMA = vol.Schema({
-    vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-    vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-    vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
-}, extra=vol.PREVENT_EXTRA)
+SERVICE_VOLUME_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
+        vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE,
+                                        vol.Coerce(int)),
+        vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
+    },
+    extra=vol.PREVENT_EXTRA)
 
 SERVICE_UPDATE_DEVICES = 'update'
-SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({})
-}, extra=vol.PREVENT_EXTRA)
+SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({})
+    }, extra=vol.PREVENT_EXTRA)
 
 SERVICE_SELECT_DEVICE = 'select_device'
 
@@ -112,23 +117,33 @@ SERVICE_STANDBY = 'standby'
 # pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA = vol.Schema({
     vol.All(cv.positive_int):
-        vol.Any(lambda devices: DEVICE_SCHEMA(devices), cv.string)
+    vol.Any(lambda devices: DEVICE_SCHEMA(devices), cv.string)
 })
 
 CONF_DISPLAY_NAME = 'osd_name'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES):
-            vol.Any(DEVICE_SCHEMA, vol.Schema({
-                vol.All(cv.string): vol.Any(cv.string)})),
-        vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_DISPLAY_NAME): cv.string,
-        vol.Optional(CONF_TYPES, default={}):
-        vol.Schema({cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)})
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_DEVICES):
+            vol.Any(DEVICE_SCHEMA,
+                    vol.Schema({
+                        vol.All(cv.string): vol.Any(cv.string)
+                    })),
+            vol.Optional(CONF_PLATFORM):
+            vol.Any(SWITCH, MEDIA_PLAYER),
+            vol.Optional(CONF_HOST):
+            cv.string,
+            vol.Optional(CONF_DISPLAY_NAME):
+            cv.string,
+            vol.Optional(CONF_TYPES, default={}):
+            vol.Schema({
+                cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)
+            })
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def pad_physical_address(addr):
@@ -141,7 +156,7 @@ def parse_mapping(mapping, parents=None):
     if parents is None:
         parents = []
     for addr, val in mapping.items():
-        if isinstance(addr, (str,)) and isinstance(val, (str,)):
+        if isinstance(addr, (str, )) and isinstance(val, (str, )):
             from pycec.network import PhysicalAddress
             yield (addr, PhysicalAddress(val))
         else:
@@ -176,8 +191,8 @@ def setup(hass: HomeAssistant, base_config):
         # Create own thread if more than 1 CPU
         hass.loop if multiprocessing.cpu_count() < 2 else None)
     host = base_config[DOMAIN].get(CONF_HOST, None)
-    display_name = base_config[DOMAIN].get(
-        CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
+    display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME,
+                                           DEFAULT_DISPLAY_NAME)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
@@ -186,8 +201,11 @@ def setup(hass: HomeAssistant, base_config):
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
-        mute_key_mapping = {ATTR_TOGGLE: KEY_MUTE_TOGGLE, ATTR_ON: KEY_MUTE_ON,
-                            ATTR_OFF: KEY_MUTE_OFF}
+        mute_key_mapping = {
+            ATTR_TOGGLE: KEY_MUTE_TOGGLE,
+            ATTR_ON: KEY_MUTE_ON,
+            ATTR_OFF: KEY_MUTE_OFF
+        }
         for cmd, att in call.data.items():
             if cmd == CMD_UP:
                 _process_volume(KEY_VOLUME_UP, att)
@@ -195,8 +213,8 @@ def setup(hass: HomeAssistant, base_config):
                 _process_volume(KEY_VOLUME_DOWN, att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
-                    KeyPressCommand(mute_key_mapping[att],
-                                    dst=ADDR_AUDIOSYSTEM))
+                    KeyPressCommand(
+                        mute_key_mapping[att], dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
                     KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Audio muted")
@@ -204,7 +222,7 @@ def setup(hass: HomeAssistant, base_config):
                 _LOGGER.warning("Unknown command %s", cmd)
 
     def _process_volume(cmd, att):
-        if isinstance(att, (str,)):
+        if isinstance(att, (str, )):
             att = att.strip()
         if att == CMD_PRESS:
             hdmi_network.send_command(
@@ -239,7 +257,7 @@ def setup(hass: HomeAssistant, base_config):
                 _LOGGER.error("Attribute 'cmd' is missing")
                 return False
             if ATTR_ATT in data:
-                if isinstance(data[ATTR_ATT], (list,)):
+                if isinstance(data[ATTR_ATT], (list, )):
                     att = data[ATTR_ATT]
                 else:
                     att = reduce(lambda x, y: "%s:%x" % (x, y), data[ATTR_ATT])
@@ -274,7 +292,7 @@ def setup(hass: HomeAssistant, base_config):
                     _LOGGER.error("Device %s has not physical address",
                                   call.data[ATTR_DEVICE])
                     return
-        if not isinstance(addr, (PhysicalAddress,)):
+        if not isinstance(addr, (PhysicalAddress, )):
             addr = PhysicalAddress(addr)
         hdmi_network.active_source(addr)
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
@@ -293,7 +311,10 @@ def setup(hass: HomeAssistant, base_config):
         hass.data[key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
-            hass, ent_platform, DOMAIN, discovered={ATTR_NEW: [key]},
+            hass,
+            ent_platform,
+            DOMAIN,
+            discovered={ATTR_NEW: [key]},
             hass_config=base_config)
 
     def _shutdown(call):
@@ -363,14 +384,14 @@ class CecDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            "%s %s" % (self.vendor_name, self._device.osd_name)
-            if (self._device.osd_name is not None and
-                self.vendor_name is not None and self.vendor_name != 'Unknown')
-            else "%s %d" % (self._device.type_name, self._logical_address)
-            if self._device.osd_name is None
-            else "%s %d (%s)" % (self._device.type_name, self._logical_address,
-                                 self._device.osd_name))
+        return ("%s %s" % (self.vendor_name, self._device.osd_name)
+                if (self._device.osd_name is not None
+                    and self.vendor_name is not None
+                    and self.vendor_name != 'Unknown') else
+                "%s %d" % (self._device.type_name, self._logical_address)
+                if self._device.osd_name is None else
+                "%s %d (%s)" % (self._device.type_name, self._logical_address,
+                                self._device.osd_name))
 
     @property
     def vendor_id(self):

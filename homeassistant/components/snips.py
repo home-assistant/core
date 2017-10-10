@@ -19,28 +19,30 @@ INTENT_TOPIC = 'hermes/nlu/intentParsed'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {}
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
-INTENT_SCHEMA = vol.Schema({
-    vol.Required('input'): str,
-    vol.Required('intent'): {
-        vol.Required('intentName'): str
+INTENT_SCHEMA = vol.Schema(
+    {
+        vol.Required('input'):
+        str,
+        vol.Required('intent'): {
+            vol.Required('intentName'): str
+        },
+        vol.Optional('slots'): [{
+            vol.Required('slotName'): str,
+            vol.Required('value'): {
+                vol.Required('kind'): str,
+                vol.Required('value'): cv.match_all
+            }
+        }]
     },
-    vol.Optional('slots'): [{
-        vol.Required('slotName'): str,
-        vol.Required('value'): {
-            vol.Required('kind'): str,
-            vol.Required('value'): cv.match_all
-        }
-    }]
-}, extra=vol.ALLOW_EXTRA)
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Activate Snips component."""
+
     @asyncio.coroutine
     def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
@@ -59,16 +61,20 @@ def async_setup(hass, config):
             return
 
         intent_type = request['intent']['intentName'].split('__')[-1]
-        slots = {slot['slotName']: {'value': slot['value']['value']}
-                 for slot in request.get('slots', [])}
+        slots = {
+            slot['slotName']: {
+                'value': slot['value']['value']
+            }
+            for slot in request.get('slots', [])
+        }
 
         try:
-            yield from intent.async_handle(
-                hass, DOMAIN, intent_type, slots, request['input'])
+            yield from intent.async_handle(hass, DOMAIN, intent_type, slots,
+                                           request['input'])
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
 
-    yield from hass.components.mqtt.async_subscribe(
-        INTENT_TOPIC, message_received)
+    yield from hass.components.mqtt.async_subscribe(INTENT_TOPIC,
+                                                    message_received)
 
     return True

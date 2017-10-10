@@ -23,13 +23,9 @@ SUPPORT_LANGUAGES = [
     'de', 'en-GB', 'en-US', 'fr', 'it', 'lb', 'ru', 'sv', 'te', 'tr'
 ]
 
-SUPPORT_VOICES = [
-    'cmu-slt-hsmm'
-]
+SUPPORT_VOICES = ['cmu-slt-hsmm']
 
-SUPPORT_CODEC = [
-    'aiff', 'au', 'wav'
-]
+SUPPORT_CODEC = ['aiff', 'au', 'wav']
 
 CONF_VOICE = 'voice'
 CONF_CODEC = 'codec'
@@ -41,11 +37,16 @@ DEFAULT_VOICE = 'cmu-slt-hsmm'
 DEFAULT_CODEC = 'wav'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
+    vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+    vol.In(SUPPORT_VOICES),
+    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC):
+    vol.In(SUPPORT_CODEC)
 })
 
 
@@ -105,8 +106,8 @@ class MaryTTSProvider(Provider):
                 request = yield from websession.get(url, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s",
-                                  request.status, request.url)
+                    _LOGGER.error("Error %d on load url %s", request.status,
+                                  request.url)
                     return (None, None)
                 data = yield from request.read()
 

@@ -69,16 +69,20 @@ COLORS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP): cv.string,
-    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Coerce(int),
+    vol.Required(CONF_IP):
+    cv.string,
+    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION):
+    vol.Coerce(int),
     vol.Optional(CONF_POSITION, default=DEFAULT_POSITION):
-        vol.In(POSITIONS.keys()),
+    vol.In(POSITIONS.keys()),
     vol.Optional(CONF_TRANSPARENCY, default=DEFAULT_TRANSPARENCY):
-        vol.In(TRANSPARENCIES.keys()),
+    vol.In(TRANSPARENCIES.keys()),
     vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
-        vol.In(COLORS.keys()),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-    vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
+    vol.In(COLORS.keys()),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    vol.Coerce(int),
+    vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT):
+    cv.boolean,
 })
 
 
@@ -118,18 +122,22 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(filename=('icon.png',
-                                 open(self._icon_file, 'rb'),
-                                 'application/octet-stream',
-                                 {'Expires': '0'}), type='0',
-                       title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                       msg=message, duration="%i" % self._default_duration,
-                       position='%i' % POSITIONS.get(self._default_position),
-                       bkgcolor='%s' % COLORS.get(self._default_color),
-                       transparency='%i' % TRANSPARENCIES.get(
-                           self._default_transparency),
-                       offset='0', app=ATTR_TITLE_DEFAULT, force='true',
-                       interrupt='%i' % self._default_interrupt)
+        payload = dict(
+            filename=('icon.png', open(self._icon_file, 'rb'),
+                      'application/octet-stream', {
+                          'Expires': '0'
+                      }),
+            type='0',
+            title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            msg=message,
+            duration="%i" % self._default_duration,
+            position='%i' % POSITIONS.get(self._default_position),
+            bkgcolor='%s' % COLORS.get(self._default_color),
+            transparency='%i' % TRANSPARENCIES.get(self._default_transparency),
+            offset='0',
+            app=ATTR_TITLE_DEFAULT,
+            force='true',
+            interrupt='%i' % self._default_interrupt)
 
         data = kwargs.get(ATTR_DATA)
         if data:
@@ -176,5 +184,5 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if response.status_code != 200:
                 _LOGGER.error("Error sending message: %s", str(response))
         except requests.exceptions.ConnectionError as err:
-            _LOGGER.error("Error communicating with %s: %s",
-                          self._target, str(err))
+            _LOGGER.error("Error communicating with %s: %s", self._target,
+                          str(err))

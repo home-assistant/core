@@ -51,10 +51,10 @@ DEFAULT_CORE_CONFIG = (
      ' the sun rises and sets'),
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'
-                              ' (altitude above sea level in meters)'),
-    (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
-     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC,
-                                             CONF_UNIT_SYSTEM_IMPERIAL)),
+     ' (altitude above sea level in meters)'),
+    (CONF_UNIT_SYSTEM,
+     CONF_UNIT_SYSTEM_METRIC, None, '{} for Metric, {} for Imperial'.format(
+         CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
@@ -117,33 +117,47 @@ DEFAULT_SECRETS = """
 http_password: welcome
 """
 
-
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema(  # Package names are slugs
+    cv.slug:
+    vol.Schema(  # Package names are slugs
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
 })
 
 CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE, default={}):
-        vol.Schema({cv.entity_id: dict}),
+    vol.Schema({
+        cv.entity_id: dict
+    }),
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
-        vol.Schema({cv.string: dict}),
+    vol.Schema({
+        cv.string: dict
+    }),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        vol.Schema({cv.string: OrderedDict}),
+    vol.Schema({
+        cv.string: OrderedDict
+    }),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
-    CONF_NAME: vol.Coerce(str),
-    CONF_LATITUDE: cv.latitude,
-    CONF_LONGITUDE: cv.longitude,
-    CONF_ELEVATION: vol.Coerce(int),
-    vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-    CONF_UNIT_SYSTEM: cv.unit_system,
-    CONF_TIME_ZONE: cv.time_zone,
+    CONF_NAME:
+    vol.Coerce(str),
+    CONF_LATITUDE:
+    cv.latitude,
+    CONF_LONGITUDE:
+    cv.longitude,
+    CONF_ELEVATION:
+    vol.Coerce(int),
+    vol.Optional(CONF_TEMPERATURE_UNIT):
+    cv.temperature_unit,
+    CONF_UNIT_SYSTEM:
+    cv.unit_system,
+    CONF_TIME_ZONE:
+    cv.time_zone,
     vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
-        # pylint: disable=no-value-for-parameter
-        vol.All(cv.ensure_list, [vol.IsDir()]),
-    vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
+    # pylint: disable=no-value-for-parameter
+    vol.All(cv.ensure_list, [vol.IsDir()]),
+    vol.Optional(CONF_PACKAGES, default={}):
+    PACKAGES_CONFIG_SCHEMA,
 })
 
 
@@ -154,7 +168,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -176,12 +190,12 @@ def create_default_config(config_dir, detect_location=True):
     Return path to new config file if success, None if failed.
     This method needs to run in an executor.
     """
-    from homeassistant.components.config.group import (
-        CONFIG_PATH as GROUP_CONFIG_PATH)
+    from homeassistant.components.config.group import (CONFIG_PATH as
+                                                       GROUP_CONFIG_PATH)
     from homeassistant.components.config.automation import (
         CONFIG_PATH as AUTOMATION_CONFIG_PATH)
-    from homeassistant.components.config.script import (
-        CONFIG_PATH as SCRIPT_CONFIG_PATH)
+    from homeassistant.components.config.script import (CONFIG_PATH as
+                                                        SCRIPT_CONFIG_PATH)
     from homeassistant.components.config.customize import (
         CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
@@ -209,8 +223,8 @@ def create_default_config(config_dir, detect_location=True):
             info[attr] = getattr(location_info, prop) or default
 
         if location_info.latitude and location_info.longitude:
-            info[CONF_ELEVATION] = loc_util.elevation(
-                location_info.latitude, location_info.longitude)
+            info[CONF_ELEVATION] = loc_util.elevation(location_info.latitude,
+                                                      location_info.longitude)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -261,6 +275,7 @@ def async_hass_config_yaml(hass):
 
     This method is a coroutine.
     """
+
     def _load_hass_yaml_config():
         path = find_config_file(hass.config.config_dir)
         conf = load_yaml_config_file(path)
@@ -288,8 +303,8 @@ def load_yaml_config_file(config_path):
     try:
         conf_dict = load_yaml(config_path)
     except FileNotFoundError as err:
-        raise HomeAssistantError("Config file not found: {}".format(
-            getattr(err, 'filename', err)))
+        raise HomeAssistantError(
+            "Config file not found: {}".format(getattr(err, 'filename', err)))
 
     if not isinstance(conf_dict, dict):
         msg = "The configuration file {} does not contain a dictionary".format(
@@ -387,10 +402,10 @@ def async_process_ha_core_config(hass, config):
         else:
             _LOGGER.error("Received invalid time zone %s", time_zone_str)
 
-    for key, attr in ((CONF_LATITUDE, 'latitude'),
-                      (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name'),
-                      (CONF_ELEVATION, 'elevation')):
+    for key, attr in ((CONF_LATITUDE, 'latitude'), (CONF_LONGITUDE,
+                                                    'longitude'),
+                      (CONF_NAME, 'location_name'), (CONF_ELEVATION,
+                                                     'elevation')):
         if key in config:
             setattr(hac, attr, config[key])
 
@@ -398,7 +413,7 @@ def async_process_ha_core_config(hass, config):
         set_time_zone(config.get(CONF_TIME_ZONE))
 
     # Init whitelist external dir
-    hac.whitelist_external_dirs = set((hass.config.path('www'),))
+    hac.whitelist_external_dirs = set((hass.config.path('www'), ))
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(
             set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
@@ -444,17 +459,15 @@ def async_process_ha_core_config(hass, config):
                         CONF_UNIT_SYSTEM, hac.units.name)
 
     # Shortcut if no auto-detection necessary
-    if None not in (hac.latitude, hac.longitude, hac.units,
-                    hac.time_zone, hac.elevation):
+    if None not in (hac.latitude, hac.longitude, hac.units, hac.time_zone,
+                    hac.elevation):
         return
 
     discovered = []
 
     # If we miss some of the needed values, auto detect them
-    if None in (hac.latitude, hac.longitude, hac.units,
-                hac.time_zone):
-        info = yield from hass.async_add_job(
-            loc_util.detect_location_info)
+    if None in (hac.latitude, hac.longitude, hac.units, hac.time_zone):
+        info = yield from hass.async_add_job(loc_util.detect_location_info)
 
         if info is None:
             _LOGGER.error("Could not detect location information")
@@ -479,15 +492,15 @@ def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = yield from hass.async_add_job(
-            loc_util.elevation, hac.latitude, hac.longitude)
+        elevation = yield from hass.async_add_job(loc_util.elevation,
+                                                  hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 
     if discovered:
-        _LOGGER.warning(
-            "Incomplete core configuration. Auto detected %s",
-            ", ".join('{}: {}'.format(key, val) for key, val in discovered))
+        _LOGGER.warning("Incomplete core configuration. Auto detected %s",
+                        ", ".join('{}: {}'.format(key, val)
+                                  for key, val in discovered))
 
 
 def _log_pkg_error(package, component, config, message):
@@ -546,9 +559,8 @@ def merge_packages_config(config, packages):
 
                 if merge_type == 'dict':
                     if not isinstance(comp_conf, dict):
-                        _log_pkg_error(
-                            pack_name, comp_name, config,
-                            "cannot be merged. Expected a dict.")
+                        _log_pkg_error(pack_name, comp_name, config,
+                                       "cannot be merged. Expected a dict.")
                         continue
 
                     if comp_name not in config:
@@ -633,8 +645,10 @@ def async_process_component_config(hass, config, domain):
         # Create a copy of the configuration with all config for current
         # component removed and add validated config back in.
         filter_keys = extract_domain_configs(config, domain)
-        config = {key: value for key, value in config.items()
-                  if key not in filter_keys}
+        config = {
+            key: value
+            for key, value in config.items() if key not in filter_keys
+        }
         config[domain] = platforms
 
     return config
@@ -647,9 +661,15 @@ def async_check_ha_config_file(hass):
     This method is a coroutine.
     """
     proc = yield from asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'homeassistant', '--script',
-        'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        sys.executable,
+        '-m',
+        'homeassistant',
+        '--script',
+        'check_config',
+        '--config',
+        hass.config.config_dir,
+        stdout=asyncio.subprocess.PIPE,
+        loop=hass.loop)
     # Wait for the subprocess exit
     stdout_data, dummy = yield from proc.communicate()
     result = yield from proc.wait()
@@ -674,9 +694,11 @@ def async_notify_setup_error(hass, component, link=False):
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or link
-    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in errors.items()]
+    _lst = [
+        HA_COMPONENT_URL.format(name.replace('_', '-'), name) if link else name
+        for name, link in errors.items()
+    ]
     message = ('The following components and platforms could not be set up:\n'
                '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
-    persistent_notification.async_create(
-        hass, message, 'Invalid config', 'invalid_config')
+    persistent_notification.async_create(hass, message, 'Invalid config',
+                                         'invalid_config')

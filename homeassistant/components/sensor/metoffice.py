@@ -10,9 +10,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
+                                 STATE_UNKNOWN, CONF_NAME, ATTR_ATTRIBUTION,
+                                 CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -68,10 +68,12 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=None):
+    cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -88,8 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     try:
-        site = datapoint.get_nearest_site(latitude=latitude,
-                                          longitude=longitude)
+        site = datapoint.get_nearest_site(
+            latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return False
@@ -107,8 +109,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     # Add
-    add_devices([MetOfficeCurrentSensor(site, data, variable)
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
+    add_devices([
+        MetOfficeCurrentSensor(site, data, variable)
+        for variable in config[CONF_MONITORED_CONDITIONS]
+    ])
     return True
 
 
@@ -129,14 +133,16 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if (self._condition == 'visibility_distance' and
-                'visibility' in self.data.data.__dict__.keys()):
+        if (self._condition == 'visibility_distance'
+                and 'visibility' in self.data.data.__dict__.keys()):
             return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
         if self._condition in self.data.data.__dict__.keys():
             variable = getattr(self.data.data, self._condition)
             if self._condition == "weather":
-                return [k for k, v in CONDITION_CLASSES.items() if
-                        self.data.data.weather.value in v][0]
+                return [
+                    k for k, v in CONDITION_CLASSES.items()
+                    if self.data.data.weather.value in v
+                ][0]
             return variable.value
         return STATE_UNKNOWN
 

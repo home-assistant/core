@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
 
@@ -24,8 +24,7 @@ PLATFORM_SCHEMA = vol.All(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD, default=''): cv.string,
         vol.Optional(CONF_PORT): cv.port,
-    })
-)
+    }))
 
 
 def get_scanner(hass, config):
@@ -109,8 +108,12 @@ class CiscoDeviceScanner(DeviceScanner):
 
         try:
             cisco_ssh = pxssh.pxssh()
-            cisco_ssh.login(self.host, self.username, self.password,
-                            port=self.port, auto_prompt_reset=False)
+            cisco_ssh.login(
+                self.host,
+                self.username,
+                self.password,
+                port=self.port,
+                auto_prompt_reset=False)
 
             # Find the hostname
             initial_line = cisco_ssh.before.decode('utf-8').splitlines()
@@ -150,7 +153,9 @@ def _parse_cisco_mac_address(cisco_hardware_addr):
     Returns a regular standard MAC address
     """
     cisco_hardware_addr = cisco_hardware_addr.replace('.', '')
-    blocks = [cisco_hardware_addr[x:x + 2]
-              for x in range(0, len(cisco_hardware_addr), 2)]
+    blocks = [
+        cisco_hardware_addr[x:x + 2]
+        for x in range(0, len(cisco_hardware_addr), 2)
+    ]
 
     return ':'.join(blocks).upper()

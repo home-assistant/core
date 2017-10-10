@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import convert
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
+from homeassistant.const import (STATE_OFF, STATE_ON, STATE_STANDBY,
+                                 STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
@@ -132,15 +132,14 @@ class WemoSwitch(SwitchDevice):
         """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
         return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
-            uptime.day-1, uptime.hour, uptime.minute, uptime.second)
+            uptime.day - 1, uptime.hour, uptime.minute, uptime.second)
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
         if self.insight_params:
-            return convert(
-                self.insight_params['currentpower'], float, 0.0
-                ) / 1000.0
+            return convert(self.insight_params['currentpower'], float,
+                           0.0) / 1000.0
 
     @property
     def today_energy_kwh(self):
@@ -216,5 +215,5 @@ class WemoSwitch(SwitchDevice):
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
         except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name,
+                            err)

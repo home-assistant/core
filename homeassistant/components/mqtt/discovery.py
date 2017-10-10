@@ -67,8 +67,8 @@ def async_start(hass, discovery_topic, hass_config):
         payload[CONF_PLATFORM] = platform
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
-                discovery_topic, component, '%s/' % node_id if node_id else '',
-                object_id)
+                discovery_topic, component, '%s/' % node_id
+                if node_id else '', object_id)
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = set()
@@ -86,10 +86,10 @@ def async_start(hass, discovery_topic, hass_config):
 
         _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-        yield from async_load_platform(
-            hass, component, platform, payload, hass_config)
+        yield from async_load_platform(hass, component, platform, payload,
+                                       hass_config)
 
-    yield from mqtt.async_subscribe(
-        hass, discovery_topic + '/#', async_device_message_received, 0)
+    yield from mqtt.async_subscribe(hass, discovery_topic + '/#',
+                                    async_device_message_received, 0)
 
     return True

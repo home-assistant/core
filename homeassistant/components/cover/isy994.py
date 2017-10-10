@@ -24,8 +24,10 @@ STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening', 'stopped']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 cover platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")

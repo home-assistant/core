@@ -9,10 +9,9 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME)
-from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (CONF_PLATFORM, CONF_NAME)
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,10 +24,14 @@ CONF_PROFILE_NAME = 'profile_name'
 ATTR_CREDENTIALS = 'credentials'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION, default='us-east-1'): cv.string,
-    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+    vol.Optional(CONF_REGION, default='us-east-1'):
+    cv.string,
+    vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS):
+    cv.string,
+    vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS):
+    cv.string,
+    vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS):
+    cv.string,
 })
 
 
@@ -74,8 +77,11 @@ class AWSSQS(BaseNotificationService):
             message_body.update(cleaned_kwargs)
             message_attributes = {}
             for key, val in cleaned_kwargs.items():
-                message_attributes[key] = {"StringValue": json.dumps(val),
-                                           "DataType": "String"}
-            self.client.send_message(QueueUrl=target,
-                                     MessageBody=json.dumps(message_body),
-                                     MessageAttributes=message_attributes)
+                message_attributes[key] = {
+                    "StringValue": json.dumps(val),
+                    "DataType": "String"
+                }
+            self.client.send_message(
+                QueueUrl=target,
+                MessageBody=json.dumps(message_body),
+                MessageAttributes=message_attributes)

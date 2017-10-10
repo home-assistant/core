@@ -5,8 +5,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import (
-    intent, template, script, config_validation as cv)
+from homeassistant.helpers import (intent, template, script, config_validation
+                                   as cv)
 
 DOMAIN = 'intent_script'
 
@@ -23,24 +23,28 @@ CONF_ASYNC_ACTION = 'async_action'
 
 DEFAULT_CONF_ASYNC_ACTION = False
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        cv.string: {
-            vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_ASYNC_ACTION,
-                         default=DEFAULT_CONF_ASYNC_ACTION): cv.boolean,
-            vol.Optional(CONF_CARD): {
-                vol.Optional(CONF_TYPE, default='simple'): cv.string,
-                vol.Required(CONF_TITLE): cv.template,
-                vol.Required(CONF_CONTENT): cv.template,
-            },
-            vol.Optional(CONF_SPEECH): {
-                vol.Optional(CONF_TYPE, default='plain'): cv.string,
-                vol.Required(CONF_TEXT): cv.template,
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            cv.string: {
+                vol.Optional(CONF_ACTION):
+                cv.SCRIPT_SCHEMA,
+                vol.Optional(
+                    CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION):
+                cv.boolean,
+                vol.Optional(CONF_CARD): {
+                    vol.Optional(CONF_TYPE, default='simple'): cv.string,
+                    vol.Required(CONF_TITLE): cv.template,
+                    vol.Required(CONF_CONTENT): cv.template,
+                },
+                vol.Optional(CONF_SPEECH): {
+                    vol.Optional(CONF_TYPE, default='plain'): cv.string,
+                    vol.Required(CONF_TEXT): cv.template,
+                }
             }
         }
-    }
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,8 +80,10 @@ class ScriptIntentHandler(intent.IntentHandler):
         card = self.config.get(CONF_CARD)
         action = self.config.get(CONF_ACTION)
         is_async_action = self.config.get(CONF_ASYNC_ACTION)
-        slots = {key: value['value'] for key, value
-                 in intent_obj.slots.items()}
+        slots = {
+            key: value['value']
+            for key, value in intent_obj.slots.items()
+        }
 
         if action is not None:
             if is_async_action:
@@ -92,9 +98,8 @@ class ScriptIntentHandler(intent.IntentHandler):
                                       speech[CONF_TYPE])
 
         if card is not None:
-            response.async_set_card(
-                card[CONF_TITLE].async_render(slots),
-                card[CONF_CONTENT].async_render(slots),
-                card[CONF_TYPE])
+            response.async_set_card(card[CONF_TITLE].async_render(slots),
+                                    card[CONF_CONTENT].async_render(slots),
+                                    card[CONF_TYPE])
 
         return response

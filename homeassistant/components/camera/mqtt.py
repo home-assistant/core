@@ -25,8 +25,10 @@ DEFAULT_NAME = 'MQTT Camera'
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_TOPIC):
+    mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string
 })
 
 
@@ -65,10 +67,11 @@ class MqttCamera(Camera):
 
         This method must be run in the event loop and returns a coroutine.
         """
+
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
             self._last_image = payload
 
-        return mqtt.async_subscribe(
-            self.hass, self._topic, message_received, self._qos, None)
+        return mqtt.async_subscribe(self.hass, self._topic, message_received,
+                                    self._qos, None)

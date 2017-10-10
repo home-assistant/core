@@ -17,9 +17,9 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_MUSIC,
     SUPPORT_VOLUME_SET, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_ACCESS_TOKEN,
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT,
+                                 CONF_ACCESS_TOKEN, STATE_OFF, STATE_PLAYING,
+                                 STATE_PAUSED, STATE_UNKNOWN)
 
 REQUIREMENTS = ['python-clementine-remote==1.0.1']
 
@@ -36,10 +36,14 @@ SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                      SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_ACCESS_TOKEN, default=None):
+    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 

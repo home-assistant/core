@@ -15,9 +15,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
     MEDIA_TYPE_MUSIC)
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON,
-    CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON,
+                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['russound_rio==0.1.4']
@@ -28,10 +27,13 @@ SUPPORT_RUSSOUND = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=9621): cv.port,
-    })
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=9621):
+    cv.port,
+})
 
 
 @asyncio.coroutine
@@ -80,8 +82,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         self._sources = sources
 
     def _zone_var(self, name, default=None):
-        return self._russ.get_cached_zone_variable(self._zone_id,
-                                                   name,
+        return self._russ.get_cached_zone_variable(self._zone_id, name,
                                                    default)
 
     def _source_var(self, name, default=None):
@@ -95,8 +96,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         """Will replace invalid values with None."""
         current = int(self._zone_var('currentsource', 0))
         if current:
-            value = self._russ.get_cached_source_variable(
-                current, name, None)
+            value = self._russ.get_cached_source_variable(current, name, None)
             if value in (None, "", "------"):
                 return None
             return value
@@ -188,20 +188,16 @@ class RussoundZoneDevice(MediaPlayerDevice):
 
     def async_turn_off(self):
         """Turn off the zone."""
-        return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOff")
+        return self._russ.send_zone_event(self._zone_id, "ZoneOff")
 
     def async_turn_on(self):
         """Turn on the zone."""
-        return self._russ.send_zone_event(self._zone_id,
-                                          "ZoneOn")
+        return self._russ.send_zone_event(self._zone_id, "ZoneOn")
 
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        return self._russ.send_zone_event(self._zone_id,
-                                          "KeyPress",
-                                          "Volume",
+        return self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume",
                                           rvol)
 
     def async_select_source(self, source):
@@ -209,5 +205,5 @@ class RussoundZoneDevice(MediaPlayerDevice):
         for source_id, name in self._sources:
             if name.lower() != source.lower():
                 continue
-            return self._russ.send_zone_event(
-                self._zone_id, "SelectSource", source_id)
+            return self._russ.send_zone_event(self._zone_id, "SelectSource",
+                                              source_id)

@@ -12,26 +12,19 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT,
-    STATE_UNKNOWN, STATE_ON
-)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
+                                 STATE_UNKNOWN, STATE_ON)
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
-    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP
-)
+    MediaPlayerDevice, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON,
+    SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_STOP)
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_FEATURES = (
-    SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP |
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF |
-    SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |
-    SUPPORT_SELECT_SOURCE
-)
+SUPPORTED_FEATURES = (SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP
+                      | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                      | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET
+                      | SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE)
 
 KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
 
@@ -41,9 +34,12 @@ DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.positive_int,
 })
 
 
@@ -65,8 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error(
-            "Could not communicate with %s:%d: %s", host, port, error)
+        _LOGGER.error("Could not communicate with %s:%d: %s", host, port,
+                      error)
         return
 
     if [item for item in known_hosts if item[0] == ipaddr]:
@@ -206,9 +202,8 @@ class YamahaDevice(MediaPlayerDevice):
         else:
             # update_status_timer was set before
             if self._receiver.update_status_timer:
-                _LOGGER.debug(
-                    "is_alive: %s",
-                    self._receiver.update_status_timer.is_alive())
+                _LOGGER.debug("is_alive: %s",
+                              self._receiver.update_status_timer.is_alive())
                 # e.g. computer was suspended, while hass was running
                 if not self._receiver.update_status_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
@@ -256,8 +251,8 @@ class YamahaDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        _LOGGER.debug("Volume level: %.2f / %d",
-                      volume, volume * self.volume_max)
+        _LOGGER.debug("Volume level: %.2f / %d", volume,
+                      volume * self.volume_max)
         self._receiver.set_volume(volume * self.volume_max)
 
     def select_source(self, source):

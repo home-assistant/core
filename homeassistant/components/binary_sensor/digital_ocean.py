@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
 from homeassistant.components.digital_ocean import (
     CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
     ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
@@ -23,7 +23,8 @@ DEFAULT_DEVICE_CLASS = 'moving'
 DEPENDENCIES = ['digital_ocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_DROPLETS):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 

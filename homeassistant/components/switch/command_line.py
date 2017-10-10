@@ -11,24 +11,32 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
-    CONF_COMMAND_ON, CONF_COMMAND_STATE)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
+                                             ENTITY_ID_FORMAT)
+from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
+                                 CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
+                                 CONF_COMMAND_ON, CONF_COMMAND_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_ON, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COMMAND_OFF, default='true'):
+    cv.string,
+    vol.Optional(CONF_COMMAND_ON, default='true'):
+    cv.string,
+    vol.Optional(CONF_COMMAND_STATE):
+    cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES):
+    vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
 })
 
 
@@ -45,16 +53,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             value_template.hass = hass
 
         switches.append(
-            CommandSwitch(
-                hass,
-                object_id,
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
-                device_config.get(CONF_COMMAND_STATE),
-                value_template
-            )
-        )
+            CommandSwitch(hass, object_id,
+                          device_config.get(CONF_FRIENDLY_NAME, object_id),
+                          device_config.get(CONF_COMMAND_ON),
+                          device_config.get(CONF_COMMAND_OFF),
+                          device_config.get(CONF_COMMAND_STATE),
+                          value_template))
 
     if not switches:
         _LOGGER.error("No switches added")
@@ -66,8 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    def __init__(self, hass, object_id, friendly_name, command_on,
-                 command_off, command_state, value_template):
+    def __init__(self, hass, object_id, friendly_name, command_on, command_off,
+                 command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -147,14 +151,14 @@ class CommandSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if (CommandSwitch._switch(self._command_on) and
-                not self._command_state):
+        if (CommandSwitch._switch(self._command_on)
+                and not self._command_state):
             self._state = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if (CommandSwitch._switch(self._command_off) and
-                not self._command_state):
+        if (CommandSwitch._switch(self._command_off)
+                and not self._command_state):
             self._state = False
             self.schedule_update_ha_state()

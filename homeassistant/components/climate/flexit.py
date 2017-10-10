@@ -14,9 +14,8 @@ https://home-assistant.io/components/climate.flexit/
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
-    ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
+from homeassistant.const import (CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
+                                 ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
 from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
 import homeassistant.components.modbus as modbus
 import homeassistant.helpers.config_validation as cv
@@ -25,8 +24,10 @@ REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
+    vol.Required(CONF_SLAVE):
+    vol.All(int, vol.Range(min=0, max=32)),
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME):
+    cv.string
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,12 +90,12 @@ class Flexit(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            'filter_hours':     self._filter_hours,
-            'filter_alarm':     self._filter_alarm,
-            'heat_recovery':    self._heat_recovery,
-            'heating':          self._heating,
-            'heater_enabled':   self._heater_enabled,
-            'cooling':          self._cooling
+            'filter_hours': self._filter_hours,
+            'filter_alarm': self._filter_alarm,
+            'heat_recovery': self._heat_recovery,
+            'heating': self._heating,
+            'heater_enabled': self._heater_enabled,
+            'cooling': self._cooling
         }
 
     @property

@@ -6,19 +6,16 @@ https://home-assistant.io/components/notify.mycroft/
 """
 import logging
 
-
 from homeassistant.components.notify import BaseNotificationService
 
 DEPENDENCIES = ['mycroft']
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Mycroft notification service."""
-    return MycroftNotificationService(
-        hass.data['mycroft'])
+    return MycroftNotificationService(hass.data['mycroft'])
 
 
 class MycroftNotificationService(BaseNotificationService):

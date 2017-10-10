@@ -24,7 +24,7 @@ DEFAULT_INCLUDE_ARCHIVED = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED):
-        cv.boolean,
+    cv.boolean,
 })
 
 
@@ -37,12 +37,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     monitors = zoneminder.get_state('api/monitors.json')
     for i in monitors['monitors']:
         sensors.append(
-            ZMSensorMonitors(int(i['Monitor']['Id']), i['Monitor']['Name'])
-        )
+            ZMSensorMonitors(int(i['Monitor']['Id']), i['Monitor']['Name']))
         sensors.append(
-            ZMSensorEvents(int(i['Monitor']['Id']), i['Monitor']['Name'],
-                           include_archived)
-        )
+            ZMSensorEvents(
+                int(i['Monitor']['Id']), i['Monitor']['Name'],
+                include_archived))
 
     add_devices(sensors)
 
@@ -69,8 +68,7 @@ class ZMSensorMonitors(Entity):
     def update(self):
         """Update the sensor."""
         monitor = zoneminder.get_state(
-            'api/monitors/%i.json' % self._monitor_id
-        )
+            'api/monitors/%i.json' % self._monitor_id)
         if monitor['monitor']['Monitor']['Function'] is None:
             self._state = STATE_UNKNOWN
         else:
@@ -108,9 +106,7 @@ class ZMSensorEvents(Entity):
         if self._include_archived:
             archived_filter = ''
 
-        event = zoneminder.get_state(
-            'api/events/index/MonitorId:%i%s.json' % (self._monitor_id,
-                                                      archived_filter)
-        )
+        event = zoneminder.get_state('api/events/index/MonitorId:%i%s.json' %
+                                     (self._monitor_id, archived_filter))
 
         self._state = event['pagination']['count']

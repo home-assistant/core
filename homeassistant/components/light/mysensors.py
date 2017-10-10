@@ -11,8 +11,8 @@ from homeassistant.components.light import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
-SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
-                     SUPPORT_WHITE_VALUE)
+SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+                     | SUPPORT_WHITE_VALUE)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -23,7 +23,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'S_RGBW_LIGHT': MySensorsLightRGBW,
     }
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, device_class_map,
+        hass,
+        DOMAIN,
+        discovery_info,
+        device_class_map,
         add_devices=add_devices)
 
 
@@ -74,8 +77,8 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
         if self._state:
             return
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_LIGHT, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_LIGHT, 1)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -93,8 +96,8 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             return
         brightness = kwargs[ATTR_BRIGHTNESS]
         percent = round(100 * brightness / 255)
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_DIMMER, percent)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_DIMMER, percent)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -121,8 +124,8 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         hex_color = hex_template % tuple(rgb)
         if len(rgb) > 3:
             white = rgb.pop()
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, hex_color)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     self.value_type, hex_color)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -133,8 +136,8 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
     def turn_off(self):
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, value_type, 0)
+        self.gateway.set_child_value(self.node_id, self.child_id, value_type,
+                                     0)
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._state = False

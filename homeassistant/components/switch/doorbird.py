@@ -33,7 +33,7 @@ SWITCHES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES, default=[]):
-        vol.All(cv.ensure_list([vol.In(SWITCHES)]))
+    vol.All(cv.ensure_list([vol.In(SWITCHES)]))
 })
 
 

@@ -23,7 +23,8 @@ SUPPORT_BLINKT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 DEFAULT_NAME = 'blinkt'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -103,10 +104,8 @@ class BlinktLight(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         percent_bright = (self._brightness / 255)
-        self._blinkt.set_all(self._rgb_color[0],
-                             self._rgb_color[1],
-                             self._rgb_color[2],
-                             percent_bright)
+        self._blinkt.set_all(self._rgb_color[0], self._rgb_color[1],
+                             self._rgb_color[2], percent_bright)
 
         self._blinkt.show()
 

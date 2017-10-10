@@ -38,31 +38,35 @@ RGB_BOUNDARY = 40
 
 WHITE = [255, 255, 255]
 
-SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_TRANSITION)
-SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                            SUPPORT_FLASH | SUPPORT_RGB_COLOR |
-                            SUPPORT_TRANSITION)
-SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_EFFECT | SUPPORT_FLASH |
-                              SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+                              | SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH
+                            | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+                              | SUPPORT_EFFECT | SUPPORT_FLASH
+                              | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
+    vol.Required(CONF_BRIDGES):
+    vol.All(cv.ensure_list, [
         {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_VERSION,
-                         default=DEFAULT_VERSION): cv.positive_int,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Required(CONF_GROUPS):  vol.All(cv.ensure_list, [
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
-                        vol.In(LED_TYPE),
-                    vol.Required(CONF_NUMBER): cv.positive_int,
-                    vol.Optional(CONF_FADE, default=DEFAULT_FADE): cv.boolean,
-                }
-            ]),
+            vol.Required(CONF_HOST):
+            cv.string,
+            vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
+            cv.positive_int,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Required(CONF_GROUPS):
+            vol.All(cv.ensure_list, [{
+                vol.Required(CONF_NAME):
+                cv.string,
+                vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
+                vol.In(LED_TYPE),
+                vol.Required(CONF_NUMBER):
+                cv.positive_int,
+                vol.Optional(CONF_FADE, default=DEFAULT_FADE):
+                cv.boolean,
+            }]),
         },
     ]),
 })
@@ -82,10 +86,12 @@ def rewrite_legacy(config):
                 name_key = 'group_%d_name' % i
                 if name_key in bridge_conf:
                     groups.append({
-                        'number': i,
-                        'type':  bridge_conf.get('group_%d_type' % i,
-                                                 DEFAULT_LED_TYPE),
-                        'name': bridge_conf.get(name_key)
+                        'number':
+                        i,
+                        'type':
+                        bridge_conf.get('group_%d_type' % i, DEFAULT_LED_TYPE),
+                        'name':
+                        bridge_conf.get(name_key)
                     })
         new_bridges.append({
             'host': bridge_conf.get(CONF_HOST),
@@ -107,17 +113,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Use the expanded configuration format.
     lights = []
     for bridge_conf in config.get(CONF_BRIDGES):
-        bridge = Bridge(bridge_conf.get(CONF_HOST),
-                        port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),
-                        version=bridge_conf.get(CONF_VERSION, DEFAULT_VERSION))
+        bridge = Bridge(
+            bridge_conf.get(CONF_HOST),
+            port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),
+            version=bridge_conf.get(CONF_VERSION, DEFAULT_VERSION))
         for group_conf in bridge_conf.get(CONF_GROUPS):
             group = bridge.add_group(
                 group_conf.get(CONF_NUMBER),
                 group_conf.get(CONF_NAME),
                 group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
-            lights.append(LimitlessLEDGroup.factory(group, {
-                'fade': group_conf[CONF_FADE]
-            }))
+            lights.append(
+                LimitlessLEDGroup.factory(group,
+                                          {'fade': group_conf[CONF_FADE]}))
     add_devices(lights)
 
 
@@ -126,8 +133,10 @@ def state(new_state):
 
     Specify True (turn on) or False (turn off).
     """
+
     def decorator(function):
         """Set up the decorator function."""
+
         # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
@@ -150,7 +159,9 @@ def state(new_state):
             self._is_on = new_state
             self.group.enqueue(pipeline)
             self.schedule_update_ha_state()
+
         return wrapper
+
     return decorator
 
 
@@ -243,8 +254,7 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
         pipeline.transition(
             transition_time,
             brightness=_from_hass_brightness(self._brightness),
-            temperature=_from_hass_temperature(self._temperature)
-        )
+            temperature=_from_hass_temperature(self._temperature))
 
 
 class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
@@ -288,8 +298,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
         pipeline.transition(
             transition_time,
             brightness=_from_hass_brightness(self._brightness),
-            color=_from_hass_color(self._color)
-        )
+            color=_from_hass_color(self._color))
         # Flash.
         if ATTR_FLASH in kwargs:
             duration = 0
@@ -357,14 +366,12 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
             pipeline.transition(
                 transition_time,
                 brightness=_from_hass_brightness(self._brightness),
-                temperature=_from_hass_temperature(self._temperature)
-            )
+                temperature=_from_hass_temperature(self._temperature))
         else:
             pipeline.transition(
                 transition_time,
                 brightness=_from_hass_brightness(self._brightness),
-                color=_from_hass_color(self._color)
-            )
+                color=_from_hass_color(self._color))
         # Flash.
         if ATTR_FLASH in kwargs:
             duration = 0

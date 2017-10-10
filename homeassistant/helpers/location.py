@@ -12,9 +12,9 @@ def has_location(state: State) -> bool:
 
     Async friendly.
     """
-    return (isinstance(state, State) and
-            isinstance(state.attributes.get(ATTR_LATITUDE), float) and
-            isinstance(state.attributes.get(ATTR_LONGITUDE), float))
+    return (isinstance(state, State)
+            and isinstance(state.attributes.get(ATTR_LATITUDE), float)
+            and isinstance(state.attributes.get(ATTR_LONGITUDE), float))
 
 
 def closest(latitude: float, longitude: float,

@@ -9,8 +9,8 @@ import asyncio
 
 from homeassistant import setup, core
 from homeassistant.loader import bind_hass
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.const import (ATTR_DISCOVERED, ATTR_SERVICE,
+                                 EVENT_PLATFORM_DISCOVERED)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import DEPENDENCY_BLACKLIST
 from homeassistant.util.async import run_callback_threadsafe
@@ -25,8 +25,8 @@ def listen(hass, service, callback):
 
     Service can be a string or a list/tuple.
     """
-    run_callback_threadsafe(
-        hass.loop, async_listen, hass, service, callback).result()
+    run_callback_threadsafe(hass.loop, async_listen, hass, service,
+                            callback).result()
 
 
 @core.callback
@@ -37,7 +37,7 @@ def async_listen(hass, service, callback):
     Service can be a string or a list/tuple.
     """
     if isinstance(service, str):
-        service = (service,)
+        service = (service, )
     else:
         service = tuple(service)
 
@@ -60,7 +60,10 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
 
 @asyncio.coroutine
 @bind_hass
-def async_discover(hass, service, discovered=None, component=None,
+def async_discover(hass,
+                   service,
+                   discovered=None,
+                   component=None,
                    hass_config=None):
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
@@ -68,12 +71,9 @@ def async_discover(hass, service, discovered=None, component=None,
             'Cannot discover the {} component.'.format(component))
 
     if component is not None and component not in hass.config.components:
-        yield from setup.async_setup_component(
-            hass, component, hass_config)
+        yield from setup.async_setup_component(hass, component, hass_config)
 
-    data = {
-        ATTR_SERVICE: service
-    }
+    data = {ATTR_SERVICE: service}
 
     if discovered is not None:
         data[ATTR_DISCOVERED] = discovered
@@ -84,9 +84,8 @@ def async_discover(hass, service, discovered=None, component=None,
 @bind_hass
 def listen_platform(hass, component, callback):
     """Register a platform loader listener."""
-    run_callback_threadsafe(
-        hass.loop, async_listen_platform, hass, component, callback
-    ).result()
+    run_callback_threadsafe(hass.loop, async_listen_platform, hass, component,
+                            callback).result()
 
 
 @bind_hass
@@ -108,12 +107,10 @@ def async_listen_platform(hass, component, callback):
         if not platform:
             return
 
-        hass.async_run_job(
-            callback, platform, event.data.get(ATTR_DISCOVERED)
-        )
+        hass.async_run_job(callback, platform, event.data.get(ATTR_DISCOVERED))
 
-    hass.bus.async_listen(
-        EVENT_PLATFORM_DISCOVERED, discovery_platform_listener)
+    hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED,
+                          discovery_platform_listener)
 
 
 @bind_hass
@@ -136,7 +133,10 @@ def load_platform(hass, component, platform, discovered=None,
 
 @asyncio.coroutine
 @bind_hass
-def async_load_platform(hass, component, platform, discovered=None,
+def async_load_platform(hass,
+                        component,
+                        platform,
+                        discovered=None,
                         hass_config=None):
     """Load a component and platform dynamically.
 

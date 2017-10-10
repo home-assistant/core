@@ -14,9 +14,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
+                                 CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyebox==0.1.0']
@@ -39,11 +38,9 @@ SENSOR_TYPES = {
     'limit': ['Data limit', GIGABITS, 'mdi:download'],
     'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
     'before_offpeak_download':
-        ['Download before offpeak', GIGABITS, 'mdi:download'],
-    'before_offpeak_upload':
-        ['Upload before offpeak', GIGABITS, 'mdi:upload'],
-    'before_offpeak_total':
-        ['Total before offpeak', GIGABITS, 'mdi:download'],
+    ['Download before offpeak', GIGABITS, 'mdi:download'],
+    'before_offpeak_upload': ['Upload before offpeak', GIGABITS, 'mdi:upload'],
+    'before_offpeak_total': ['Total before offpeak', GIGABITS, 'mdi:download'],
     'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
     'offpeak_upload': ['Offpeak Upload', GIGABITS, 'mdi:upload'],
     'offpeak_total': ['Offpeak Total', GIGABITS, 'mdi:download'],
@@ -54,10 +51,13 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

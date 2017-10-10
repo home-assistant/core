@@ -26,16 +26,19 @@ ICON = 'mdi:coin'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_PRODUCT_ID): cv.positive_int,
-    vol.Optional(CONF_DESCRIPTION, default='Price'): cv.string,
-    vol.Optional(CONF_DOMAIN, default='geizhals.de'): vol.In(
-        ['geizhals.at',
-         'geizhals.eu',
-         'geizhals.de',
-         'skinflint.co.uk',
-         'cenowarka.pl']),
-    vol.Optional(CONF_REGEX, default=r'\D\s(\d*)[\,|\.](\d*)'): cv.string,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_PRODUCT_ID):
+    cv.positive_int,
+    vol.Optional(CONF_DESCRIPTION, default='Price'):
+    cv.string,
+    vol.Optional(CONF_DOMAIN, default='geizhals.de'):
+    vol.In([
+        'geizhals.at', 'geizhals.eu', 'geizhals.de', 'skinflint.co.uk',
+        'cenowarka.pl'
+    ]),
+    vol.Optional(CONF_REGEX, default=r'\D\s(\d*)[\,|\.](\d*)'):
+    cv.string,
 })
 
 
@@ -54,8 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Geizwatch(Entity):
     """Implementation of Geizwatch."""
 
-    def __init__(self, name, description, product_id, domain,
-                 regex):
+    def __init__(self, name, description, product_id, domain, regex):
         """Initialize the sensor."""
         self._name = name
         self.description = description
@@ -82,14 +84,16 @@ class Geizwatch(Entity):
         """Return the state attributes."""
         while len(self.data.prices) < 4:
             self.data.prices.append("None")
-        attrs = {'device_name': self.data.device_name,
-                 'description': self.description,
-                 'unit_of_measurement': self.data.unit_of_measurement,
-                 'product_id': self.data.product_id,
-                 'price1': self.data.prices[0],
-                 'price2': self.data.prices[1],
-                 'price3': self.data.prices[2],
-                 'price4': self.data.prices[3]}
+        attrs = {
+            'device_name': self.data.device_name,
+            'description': self.description,
+            'unit_of_measurement': self.data.unit_of_measurement,
+            'product_id': self.data.product_id,
+            'price1': self.data.prices[0],
+            'price2': self.data.prices[1],
+            'price3': self.data.prices[2],
+            'price4': self.data.prices[3]
+        }
         return attrs
 
     def update(self):
@@ -121,10 +125,10 @@ class GeizParser(object):
         import re
 
         sess = requests.session()
-        request = sess.get('https://{}/{}'.format(self.domain,
-                                                  self.product_id),
-                           allow_redirects=True,
-                           timeout=1)
+        request = sess.get(
+            'https://{}/{}'.format(self.domain, self.product_id),
+            allow_redirects=True,
+            timeout=1)
         soup = bs4.BeautifulSoup(request.text, 'html.parser')
 
         # parse name
@@ -135,8 +139,7 @@ class GeizParser(object):
         prices = []
         for tmp in soup.find_all('span', attrs={'class': 'gh_price'}):
             matches = re.search(self.regex, tmp.string)
-            raw = '{}.{}'.format(matches.group(1),
-                                 matches.group(2))
+            raw = '{}.{}'.format(matches.group(1), matches.group(2))
             prices += [float(raw)]
         prices.sort()
         self.prices = prices[1:]

@@ -32,15 +32,24 @@ CONF_Y_POS = 'y_position'
 DEFAULT_BINARY = 'ssocr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
-    vol.Optional(CONF_DIGITS, default=-1): cv.positive_int,
-    vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
-    vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
-    vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
-    vol.Optional(CONF_ROTATE, default=0): cv.positive_int,
-    vol.Optional(CONF_WIDTH, default=0): cv.positive_int,
-    vol.Optional(CONF_X_POS, default=0): cv.string,
-    vol.Optional(CONF_Y_POS, default=0): cv.positive_int,
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=''):
+    cv.string,
+    vol.Optional(CONF_DIGITS, default=-1):
+    cv.positive_int,
+    vol.Optional(CONF_HEIGHT, default=0):
+    cv.positive_int,
+    vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY):
+    cv.string,
+    vol.Optional(CONF_THRESHOLD, default=0):
+    cv.positive_int,
+    vol.Optional(CONF_ROTATE, default=0):
+    cv.positive_int,
+    vol.Optional(CONF_WIDTH, default=0):
+    cv.positive_int,
+    vol.Optional(CONF_X_POS, default=0):
+    cv.string,
+    vol.Optional(CONF_Y_POS, default=0):
+    cv.positive_int,
 })
 
 
@@ -49,9 +58,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Seven segments OCR platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(ImageProcessingSsocr(
-            hass, camera[CONF_ENTITY_ID], config, camera.get(CONF_NAME)
-        ))
+        entities.append(
+            ImageProcessingSsocr(hass, camera[CONF_ENTITY_ID], config,
+                                 camera.get(CONF_NAME)))
 
     async_add_devices(entities)
 
@@ -71,8 +80,13 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         self._state = None
 
         self.filepath = os.path.join(self.hass.config.config_dir, 'ocr.png')
-        crop = ['crop', str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
-                str(config[CONF_WIDTH]), str(config[CONF_HEIGHT])]
+        crop = [
+            'crop',
+            str(config[CONF_X_POS]),
+            str(config[CONF_Y_POS]),
+            str(config[CONF_WIDTH]),
+            str(config[CONF_HEIGHT])
+        ]
         digits = ['-d', str(config[CONF_DIGITS])]
         rotate = ['rotate', str(config[CONF_ROTATE])]
         threshold = ['-t', str(config[CONF_THRESHOLD])]
@@ -118,5 +132,5 @@ class ImageProcessingSsocr(ImageProcessingEntity):
             self._state = out[0].strip().decode('utf-8')
         else:
             self._state = None
-            _LOGGER.warning(
-                "Unable to detect value: %s", out[1].strip().decode('utf-8'))
+            _LOGGER.warning("Unable to detect value: %s",
+                            out[1].strip().decode('utf-8'))

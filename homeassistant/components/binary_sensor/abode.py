@@ -10,7 +10,6 @@ from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
                                             DOMAIN as ABODE_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-
 DEPENDENCIES = ['abode']
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,9 +22,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = hass.data[ABODE_DOMAIN]
 
-    device_types = [CONST.TYPE_CONNECTIVITY, CONST.TYPE_MOISTURE,
-                    CONST.TYPE_MOTION, CONST.TYPE_OCCUPANCY,
-                    CONST.TYPE_OPENING]
+    device_types = [
+        CONST.TYPE_CONNECTIVITY, CONST.TYPE_MOISTURE, CONST.TYPE_MOTION,
+        CONST.TYPE_OCCUPANCY, CONST.TYPE_OPENING
+    ]
 
     devices = []
     for device in data.abode.get_devices(generic_type=device_types):
@@ -39,8 +39,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if data.is_automation_excluded(automation):
             continue
 
-        devices.append(AbodeQuickActionBinarySensor(
-            data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
+        devices.append(
+            AbodeQuickActionBinarySensor(data, automation,
+                                         TIMELINE.AUTOMATION_EDIT_GROUP))
 
     data.devices.extend(devices)
 

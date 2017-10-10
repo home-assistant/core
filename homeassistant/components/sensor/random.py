@@ -11,8 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_MINIMUM, CONF_MAXIMUM, CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (CONF_NAME, CONF_MINIMUM, CONF_MAXIMUM,
+                                 CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,10 +24,14 @@ DEFAULT_MAX = 20
 ICON = 'mdi:hanger'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
-    vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX):
+    cv.positive_int,
+    vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN):
+    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
 })
 
 

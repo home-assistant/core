@@ -31,20 +31,26 @@ VALID_COLORS = {'yellow', 'green', 'red', 'purple', 'gray', 'random'}
 VALID_FORMATS = {'text', 'html'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ROOM): vol.Coerce(int),
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): vol.In(VALID_COLORS),
-    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT): vol.In(VALID_FORMATS),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NOTIFY, default=DEFAULT_NOTIFY): cv.boolean,
+    vol.Required(CONF_ROOM):
+    vol.Coerce(int),
+    vol.Required(CONF_TOKEN):
+    cv.string,
+    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
+    vol.In(VALID_COLORS),
+    vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT):
+    vol.In(VALID_FORMATS),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NOTIFY, default=DEFAULT_NOTIFY):
+    cv.boolean,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the HipChat notification service."""
-    return HipchatNotificationService(
-        config[CONF_TOKEN], config[CONF_ROOM], config[CONF_COLOR],
-        config[CONF_NOTIFY], config[CONF_FORMAT], config[CONF_HOST])
+    return HipchatNotificationService(config[CONF_TOKEN], config[CONF_ROOM],
+                                      config[CONF_COLOR], config[CONF_NOTIFY],
+                                      config[CONF_FORMAT], config[CONF_HOST])
 
 
 class HipchatNotificationService(BaseNotificationService):
@@ -93,5 +99,8 @@ class HipchatNotificationService(BaseNotificationService):
 
         for target in targets:
             room = self._get_room(target)
-            room.notify(msg=message, color=color, notify=notify,
-                        message_format=message_format)
+            room.notify(
+                msg=message,
+                color=color,
+                notify=notify,
+                message_format=message_format)

@@ -10,8 +10,8 @@ import mimetypes
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -64,11 +64,12 @@ class PushBulletNotificationService(BaseNotificationService):
         """
         self.pushbullet.refresh()
         self.pbtargets = {
-            'device': {
-                tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
-            'channel': {
-                tgt.channel_tag.lower(): tgt for
-                tgt in self.pushbullet.channels},
+            'device':
+            {tgt.nickname.lower(): tgt
+             for tgt in self.pushbullet.devices},
+            'channel':
+            {tgt.channel_tag.lower(): tgt
+             for tgt in self.pushbullet.channels},
         }
 
     def send_message(self, message=None, **kwargs):
@@ -154,9 +155,12 @@ class PushBulletNotificationService(BaseNotificationService):
                 if not file_url.startswith('http'):
                     _LOGGER.error("Url should start with http or https.")
                     return
-                pusher.push_file(title=title, body=message, file_name=file_url,
-                                 file_url=file_url,
-                                 file_type=mimetypes.guess_type(file_url)[0])
+                pusher.push_file(
+                    title=title,
+                    body=message,
+                    file_name=file_url,
+                    file_url=file_url,
+                    file_type=mimetypes.guess_type(file_url)[0])
             else:
                 if tname:
                     pusher.push_note(title, message, email=tname)

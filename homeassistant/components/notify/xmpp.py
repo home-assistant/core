@@ -13,10 +13,10 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT
 
-REQUIREMENTS = ['sleekxmpp==1.3.2',
-                'dnspython3==1.15.0',
-                'pyasn1==0.3.6',
-                'pyasn1-modules==0.1.4']
+REQUIREMENTS = [
+    'sleekxmpp==1.3.2', 'dnspython3==1.15.0', 'pyasn1==0.3.6',
+    'pyasn1-modules==0.1.4'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,20 +24,26 @@ CONF_TLS = 'tls'
 CONF_VERIFY = 'verify'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENDER): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_RECIPIENT): cv.string,
-    vol.Optional(CONF_TLS, default=True): cv.boolean,
-    vol.Optional(CONF_VERIFY, default=True): cv.boolean,
+    vol.Required(CONF_SENDER):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_RECIPIENT):
+    cv.string,
+    vol.Optional(CONF_TLS, default=True):
+    cv.boolean,
+    vol.Optional(CONF_VERIFY, default=True):
+    cv.boolean,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
-        config.get(CONF_SENDER), config.get(CONF_PASSWORD),
-        config.get(CONF_RECIPIENT), config.get(CONF_TLS),
-        config.get(CONF_VERIFY))
+        config.get(CONF_SENDER),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_RECIPIENT),
+        config.get(CONF_TLS), config.get(CONF_VERIFY))
 
 
 class XmppNotificationService(BaseNotificationService):
@@ -60,8 +66,8 @@ class XmppNotificationService(BaseNotificationService):
                      self._recipient, self._tls, self._verify, data)
 
 
-def send_message(sender, password, recipient, use_tls,
-                 verify_certificate, message):
+def send_message(sender, password, recipient, use_tls, verify_certificate,
+                 message):
     """Send a message over XMPP."""
     import sleekxmpp
 

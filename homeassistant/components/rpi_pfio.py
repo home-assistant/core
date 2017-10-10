@@ -6,8 +6,8 @@ https://home-assistant.io/components/rpi_pfio/
 """
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['pifacecommon==4.1.2', 'pifacedigitalio==3.0.5']
 

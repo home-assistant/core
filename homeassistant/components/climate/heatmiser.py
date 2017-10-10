@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
+from homeassistant.const import (TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT,
+                                 CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['heatmiserV3==0.9.1']
@@ -26,10 +26,14 @@ TSTATS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IPADDRESS): cv.string,
-    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_IPADDRESS):
+    cv.string,
+    vol.Required(CONF_PORT):
+    cv.port,
     vol.Required(CONF_TSTATS, default={}):
-        vol.Schema({cv.string: TSTATS_SCHEMA}),
+    vol.Schema({
+        cv.string: TSTATS_SCHEMA
+    }),
 })
 
 
@@ -47,9 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for thermostat, tstat in tstats.items():
         add_devices([
-            HeatmiserV3Thermostat(
-                heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
-            ])
+            HeatmiserV3Thermostat(heatmiser,
+                                  tstat.get(CONF_ID),
+                                  tstat.get(CONF_NAME), serport)
+        ])
     return
 
 
@@ -100,12 +105,8 @@ class HeatmiserV3Thermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self.heatmiser.hmSendAddress(
-            self._id,
-            18,
-            temperature,
-            1,
-            self.serport)
+        self.heatmiser.hmSendAddress(self._id, 18, temperature, 1,
+                                     self.serport)
         self._target_temperature = temperature
 
     def update(self):

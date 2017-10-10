@@ -124,9 +124,7 @@ class WinkSmokeDetector(WinkBinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'test_activated': self.wink.test_activated()
-        }
+        return {'test_activated': self.wink.test_activated()}
 
 
 class WinkHub(WinkBinarySensorDevice):

@@ -9,10 +9,10 @@ import asyncio
 import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, CONF_CODE,
-    CONF_NAME)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
+                                 STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+                                 STATE_UNKNOWN, CONF_CODE, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,10 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Alarm.com'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_CODE): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_CODE):
+    cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -57,9 +61,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._password = password
         self._websession = async_get_clientsession(self._hass)
         self._state = STATE_UNKNOWN
-        self._alarm = Alarmdotcom(username,
-                                  password,
-                                  self._websession,
+        self._alarm = Alarmdotcom(username, password, self._websession,
                                   hass.loop)
 
     @asyncio.coroutine

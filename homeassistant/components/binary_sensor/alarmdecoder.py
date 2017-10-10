@@ -11,13 +11,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from homeassistant.components.alarmdecoder import (ZONE_SCHEMA,
-                                                   CONF_ZONES,
-                                                   CONF_ZONE_NAME,
-                                                   CONF_ZONE_TYPE,
-                                                   SIGNAL_ZONE_FAULT,
-                                                   SIGNAL_ZONE_RESTORE)
-
+from homeassistant.components.alarmdecoder import (
+    ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE, SIGNAL_ZONE_FAULT,
+    SIGNAL_ZONE_RESTORE)
 
 DEPENDENCIES = ['alarmdecoder']
 
@@ -35,8 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        device = AlarmDecoderBinarySensor(
-            hass, zone_num, zone_name, zone_type)
+        device = AlarmDecoderBinarySensor(hass, zone_num, zone_name, zone_type)
         devices.append(device)
 
     async_add_devices(devices)
@@ -60,11 +55,11 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_FAULT, self._fault_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_ZONE_FAULT,
+                                 self._fault_callback)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_RESTORE, self._restore_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_ZONE_RESTORE,
+                                 self._restore_callback)
 
     @property
     def name(self):

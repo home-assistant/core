@@ -21,7 +21,9 @@ DEPENDENCIES = ['mqtt']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
-    vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
+    vol.Required(CONF_DEVICES): {
+        cv.string: mqtt.valid_subscribe_topic
+    },
 })
 
 
@@ -41,7 +43,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     for dev_id, topic in devices.items():
         dev_id_lookup[topic] = dev_id
-        yield from mqtt.async_subscribe(
-            hass, topic, async_tracker_message_received, qos)
+        yield from mqtt.async_subscribe(hass, topic,
+                                        async_tracker_message_received, qos)
 
     return True

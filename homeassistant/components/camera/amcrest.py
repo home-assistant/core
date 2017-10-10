@@ -7,13 +7,12 @@ https://home-assistant.io/components/camera.amcrest/
 import asyncio
 import logging
 
-from homeassistant.components.amcrest import (
-    STREAM_SOURCE_LIST, TIMEOUT)
+from homeassistant.components.amcrest import (STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web,
-    async_aiohttp_proxy_stream)
+from homeassistant.helpers.aiohttp_client import (async_get_clientsession,
+                                                  async_aiohttp_proxy_web,
+                                                  async_aiohttp_proxy_stream)
 
 DEPENDENCIES = ['amcrest', 'ffmpeg']
 
@@ -34,13 +33,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     stream_source = discovery_info['stream_source']
 
     async_add_devices([
-        AmcrestCam(hass,
-                   name,
-                   device,
-                   authentication,
-                   ffmpeg_arguments,
-                   stream_source,
-                   resolution)], True)
+        AmcrestCam(hass, name, device, authentication, ffmpeg_arguments,
+                   stream_source, resolution)
+    ], True)
 
     return True
 
@@ -48,8 +43,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, hass, name, camera, authentication,
-                 ffmpeg_arguments, stream_source, resolution):
+    def __init__(self, hass, name, camera, authentication, ffmpeg_arguments,
+                 stream_source, resolution):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
         self._name = name

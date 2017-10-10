@@ -19,8 +19,8 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.const import (DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF,
+                                 STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 
@@ -108,14 +108,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    setup_plexserver(
-        host, token, has_ssl, verify_ssl,
-        hass, config, add_devices_callback
-    )
+    setup_plexserver(host, token, has_ssl, verify_ssl, hass, config,
+                     add_devices_callback)
 
 
-def setup_plexserver(
-        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
+def setup_plexserver(host, token, has_ssl, verify_ssl, hass, config,
+                     add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
@@ -127,10 +125,8 @@ def setup_plexserver(
         cert_session = requests.Session()
         cert_session.verify = False
     try:
-        plexserver = plexapi.server.PlexServer(
-            '%s://%s' % (http_prefix, host),
-            token, cert_session
-        )
+        plexserver = plexapi.server.PlexServer('%s://%s' % (http_prefix, host),
+                                               token, cert_session)
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
@@ -148,11 +144,12 @@ def setup_plexserver(
 
     # Save config
     if not config_from_file(
-            hass.config.path(PLEX_CONFIG_FILE), {host: {
-                'token': token,
-                'ssl': has_ssl,
-                'verify': verify_ssl,
-            }}):
+            hass.config.path(PLEX_CONFIG_FILE),
+        {host: {
+            'token': token,
+            'ssl': has_ssl,
+            'verify': verify_ssl,
+        }}):
         _LOGGER.error("Failed to save configuration file")
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
@@ -181,9 +178,8 @@ def setup_plexserver(
                 continue
 
             if device.machineIdentifier not in plex_clients:
-                new_client = PlexClient(config, device, None,
-                                        plex_sessions, update_devices,
-                                        update_sessions)
+                new_client = PlexClient(config, device, None, plex_sessions,
+                                        update_devices, update_sessions)
                 plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
@@ -225,8 +221,8 @@ def setup_plexserver(
 
         plex_sessions.clear()
         for session in sessions:
-            if (session.player is not None and
-                    session.player.machineIdentifier is not None):
+            if (session.player is not None
+                    and session.player.machineIdentifier is not None):
                 plex_sessions[session.player.machineIdentifier] = session
 
     update_sessions()
@@ -245,12 +241,11 @@ def request_configuration(host, hass, config, add_devices_callback):
 
     def plex_configuration_callback(data):
         """Handle configuration changes."""
-        setup_plexserver(
-            host, data.get('token'),
-            cv.boolean(data.get('has_ssl')),
-            cv.boolean(data.get('do_not_verify')),
-            hass, config, add_devices_callback
-        )
+        setup_plexserver(host,
+                         data.get('token'),
+                         cv.boolean(data.get('has_ssl')),
+                         cv.boolean(data.get('do_not_verify')), hass, config,
+                         add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
         'Plex Media Server',
@@ -276,8 +271,8 @@ def request_configuration(host, hass, config, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    def __init__(self, config, device, session, plex_sessions,
-                 update_devices, update_sessions):
+    def __init__(self, config, device, session, plex_sessions, update_devices,
+                 update_sessions):
         """Initialize the Plex device."""
         from plexapi.utils import NA
         self._app_name = ''
@@ -366,8 +361,8 @@ class PlexClient(MediaPlayerDevice):
         # set valid session, preferring device session
         if self._device and self.plex_sessions.get(
                 self._device.machineIdentifier, None):
-            self._session = self._convert_na_to_none(self.plex_sessions.get(
-                self._device.machineIdentifier, None))
+            self._session = self._convert_na_to_none(
+                self.plex_sessions.get(self._device.machineIdentifier, None))
 
         if self._session:
             self._media_position = self._convert_na_to_none(
@@ -427,8 +422,8 @@ class PlexClient(MediaPlayerDevice):
             self._media_title = self._convert_na_to_none(self._session.title)
 
         # Movies
-        if (self.media_content_type == MEDIA_TYPE_VIDEO and
-                self._convert_na_to_none(self._session.year) is not None):
+        if (self.media_content_type == MEDIA_TYPE_VIDEO
+                and self._convert_na_to_none(self._session.year) is not None):
             self._media_title += ' (' + str(self._session.year) + ')'
 
         # TV Show
@@ -510,8 +505,8 @@ class PlexClient(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
-        return '{}.{}'.format(self.__class__, self.machine_identifier or
-                              self.name)
+        return '{}.{}'.format(self.__class__, self.machine_identifier
+                              or self.name)
 
     @property
     def name(self):
@@ -651,37 +646,32 @@ class PlexClient(MediaPlayerDevice):
 
         # force show all controls
         if self.config.get(CONF_SHOW_ALL_CONTROLS):
-            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                    SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                    | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY
+                    | SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
         # only show controls when we know what device is connecting
         if not self._make:
             return None
         # no mute support
         elif self.make.lower() == "shield android tv":
-            _LOGGER.debug(
-                "Shield Android TV client detected, disabling mute "
-                "controls: %s", self.entity_id)
-            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                    SUPPORT_TURN_OFF)
+            _LOGGER.debug("Shield Android TV client detected, disabling mute "
+                          "controls: %s", self.entity_id)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                    | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY
+                    | SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
         elif self.make.lower().startswith("tivo"):
-            _LOGGER.debug(
-                "Tivo client detected, only enabling pause, play, "
-                "stop, and off controls: %s", self.entity_id)
-            return (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
-                    SUPPORT_TURN_OFF)
+            _LOGGER.debug("Tivo client detected, only enabling pause, play, "
+                          "stop, and off controls: %s", self.entity_id)
+            return (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
+                    | SUPPORT_TURN_OFF)
         # Not all devices support playback functionality
         # Playback includes volume, stop/play/pause, etc.
         elif self.device and 'playback' in self._device_protocol_capabilities:
-            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                    SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                    | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY
+                    | SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
         return None
 
@@ -697,9 +687,8 @@ class PlexClient(MediaPlayerDevice):
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
                 # playback is occurring
-                _LOGGER.debug(
-                    "Local client detected, redirecting controls to "
-                    "Plex server: %s", self.entity_id)
+                _LOGGER.debug("Local client detected, redirecting controls to "
+                              "Plex server: %s", self.entity_id)
                 server_url = self.device.server.baseurl
                 client_url = self.device.baseurl
                 self.device.baseurl = "{}://{}:{}".format(
@@ -718,8 +707,8 @@ class PlexClient(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level of the client (0..1)."""
-        if (self._is_player_active and self.device and
-                'playback' in self._device_protocol_capabilities):
+        if (self._is_player_active and self.device
+                and 'playback' in self._device_protocol_capabilities):
             return self._volume_level
 
     @property
@@ -735,8 +724,8 @@ class PlexClient(MediaPlayerDevice):
         - On mute, store volume and set volume to 0
         - On unmute, set volume to previously stored volume
         """
-        if not (self.device and
-                'playback' in self._device_protocol_capabilities):
+        if not (self.device
+                and 'playback' in self._device_protocol_capabilities):
             return
 
         self._volume_muted = mute
@@ -784,8 +773,8 @@ class PlexClient(MediaPlayerDevice):
     # pylint: disable=W0613
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        if not (self.device and
-                'playback' in self._device_protocol_capabilities):
+        if not (self.device
+                and 'playback' in self._device_protocol_capabilities):
             return
 
         src = json.loads(media_id)
@@ -796,9 +785,9 @@ class PlexClient(MediaPlayerDevice):
                 src['library_name']).get(src['artist_name']).album(
                     src['album_name']).get(src['track_name'])
         elif media_type == 'EPISODE':
-            media = self._get_tv_media(
-                src['library_name'], src['show_name'],
-                src['season_number'], src['episode_number'])
+            media = self._get_tv_media(src['library_name'], src['show_name'],
+                                       src['season_number'],
+                                       src['episode_number'])
         elif media_type == 'PLAYLIST':
             media = self.device.server.playlist(src['playlist_name'])
         elif media_type == 'VIDEO':
@@ -806,11 +795,11 @@ class PlexClient(MediaPlayerDevice):
                 src['library_name']).get(src['video_name'])
 
         import plexapi.playlist
-        if (media and media_type == 'EPISODE' and
-                isinstance(media, plexapi.playlist.Playlist)):
+        if (media and media_type == 'EPISODE'
+                and isinstance(media, plexapi.playlist.Playlist)):
             # delete episode playlist after being loaded into a play queue
-            self._client_play_media(media=media, delete=True,
-                                    shuffle=src['shuffle'])
+            self._client_play_media(
+                media=media, delete=True, shuffle=src['shuffle'])
         elif media:
             self._client_play_media(media=media, shuffle=src['shuffle'])
 
@@ -820,14 +809,13 @@ class PlexClient(MediaPlayerDevice):
         target_season = None
         target_episode = None
 
-        show = self.device.server.library.section(library_name).get(
-            show_name)
+        show = self.device.server.library.section(library_name).get(show_name)
 
         if not season_number:
-            playlist_name = "{} - {} Episodes".format(
-                self.entity_id, show_name)
-            return self.device.server.createPlaylist(
-                playlist_name, show.episodes())
+            playlist_name = "{} - {} Episodes".format(self.entity_id,
+                                                      show_name)
+            return self.device.server.createPlaylist(playlist_name,
+                                                     show.episodes())
 
         for season in show.seasons():
             if int(season.seasonNumber) == int(season_number):
@@ -861,14 +849,14 @@ class PlexClient(MediaPlayerDevice):
 
     def _client_play_media(self, media, delete=False, **params):
         """Instruct Plex client to play a piece of media."""
-        if not (self.device and
-                'playback' in self._device_protocol_capabilities):
+        if not (self.device
+                and 'playback' in self._device_protocol_capabilities):
             _LOGGER.error("Client cannot play media: %s", self.entity_id)
             return
 
         import plexapi.playqueue
-        playqueue = plexapi.playqueue.PlayQueue.create(
-            self.device.server, media, **params)
+        playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
+                                                       media, **params)
 
         # Delete dynamic playlists used to build playqueue (ex. play tv season)
         if delete:
@@ -877,15 +865,20 @@ class PlexClient(MediaPlayerDevice):
         self._local_client_control_fix()
 
         server_url = self.device.server.baseurl.split(':')
-        self.device.sendCommand('playback/playMedia', **dict({
-            'machineIdentifier': self.device.server.machineIdentifier,
-            'address': server_url[1].strip('/'),
-            'port': server_url[-1],
-            'key': media.key,
-            'containerKey':
-                '/playQueues/{}?window=100&own=1'.format(
-                    playqueue.playQueueID),
-        }, **params))
+        self.device.sendCommand('playback/playMedia',
+                                **dict({
+                                    'machineIdentifier':
+                                    self.device.server.machineIdentifier,
+                                    'address':
+                                    server_url[1].strip('/'),
+                                    'port':
+                                    server_url[-1],
+                                    'key':
+                                    media.key,
+                                    'containerKey':
+                                    '/playQueues/{}?window=100&own=1'.format(
+                                        playqueue.playQueueID),
+                                }, **params))
 
     @property
     def device_state_attributes(self):

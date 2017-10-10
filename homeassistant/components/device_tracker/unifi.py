@@ -8,8 +8,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 
@@ -27,12 +27,18 @@ NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_SITE_ID, default='default'): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_SITE_ID, default='default'):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean,
 })
 
 
@@ -48,8 +54,14 @@ def get_scanner(hass, config):
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
 
     try:
-        ctrl = Controller(host, username, password, port, version='v4',
-                          site_id=site_id, ssl_verify=verify_ssl)
+        ctrl = Controller(
+            host,
+            username,
+            password,
+            port,
+            version='v4',
+            site_id=site_id,
+            ssl_verify=verify_ssl)
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         hass.components.persistent_notification.create(

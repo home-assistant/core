@@ -14,9 +14,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
+                                 CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -47,12 +46,12 @@ SENSOR_TYPES = {
     'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
     'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
     'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
-    'text_int_used': ['International text used',
-                      MESSAGES, 'mdi:message-alert'],
-    'text_int_limit': ['International text limit',
-                       MESSAGES, 'mdi:message-alart'],
-    'text_int_remaining': ['Internaltional remaining',
-                           MESSAGES, 'mdi:message-alert'],
+    'text_int_used':
+    ['International text used', MESSAGES, 'mdi:message-alert'],
+    'text_int_limit':
+    ['International text limit', MESSAGES, 'mdi:message-alart'],
+    'text_int_remaining':
+    ['Internaltional remaining', MESSAGES, 'mdi:message-alert'],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
     'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
     'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
@@ -63,10 +62,13 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

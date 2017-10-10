@@ -13,19 +13,17 @@ from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
                                  CONF_MONITORED_CONDITIONS)
 
 DEPENDENCIES = ['nest']
-SENSOR_TYPES = ['humidity',
-                'operation_mode',
-                'hvac_state']
+SENSOR_TYPES = ['humidity', 'operation_mode', 'hvac_state']
 
-SENSOR_TYPES_DEPRECATED = ['last_ip',
-                           'local_ip',
-                           'last_connection']
+SENSOR_TYPES_DEPRECATED = ['last_ip', 'local_ip', 'last_connection']
 
-DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
-                           'weather_temperature': 'temperature',
-                           'weather_condition': 'condition',
-                           'wind_speed': 'kph',
-                           'wind_direction': 'direction'}
+DEPRECATED_WEATHER_VARS = {
+    'weather_humidity': 'humidity',
+    'weather_temperature': 'temperature',
+    'weather_condition': 'condition',
+    'wind_speed': 'kph',
+    'wind_direction': 'direction'
+}
 
 SENSOR_UNITS = {'humidity': '%', 'temperature': '°C'}
 
@@ -73,15 +71,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     all_sensors = []
     for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
-        sensors = [NestBasicSensor(structure, device, variable)
-                   for variable in conditions
-                   if variable in SENSOR_TYPES and device.is_thermostat]
-        sensors += [NestTempSensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in SENSOR_TEMP_TYPES and device.is_thermostat]
-        sensors += [NestProtectSensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in PROTECT_VARS and device.is_smoke_co_alarm]
+        sensors = [
+            NestBasicSensor(structure, device, variable)
+            for variable in conditions
+            if variable in SENSOR_TYPES and device.is_thermostat
+        ]
+        sensors += [
+            NestTempSensor(structure, device, variable)
+            for variable in conditions
+            if variable in SENSOR_TEMP_TYPES and device.is_thermostat
+        ]
+        sensors += [
+            NestProtectSensor(structure, device, variable)
+            for variable in conditions
+            if variable in PROTECT_VARS and device.is_smoke_co_alarm
+        ]
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)

@@ -21,8 +21,8 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
+                | SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -123,8 +123,8 @@ class WemoLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]
-            self.device.set_temperature(mireds=colortemp,
-                                        transition=transitiontime)
+            self.device.set_temperature(
+                mireds=colortemp, transition=transitiontime)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)

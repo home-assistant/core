@@ -11,8 +11,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_HOST,
+                                 CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -29,8 +29,9 @@ CONF_CUSTOM = 'custom'
 GROUP_INSTALLER = 'installer'
 GROUP_USER = 'user'
 GROUPS = [GROUP_USER, GROUP_INSTALLER]
-SENSOR_OPTIONS = ['current_consumption', 'current_power', 'total_consumption',
-                  'total_yield']
+SENSOR_OPTIONS = [
+    'current_consumption', 'current_power', 'total_consumption', 'total_yield'
+]
 
 
 def _check_sensor_schema(conf):
@@ -47,18 +48,30 @@ def _check_sensor_schema(conf):
     return conf
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): str,
-    vol.Required(CONF_PASSWORD): str,
-    vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: cv.ensure_list}),
-    vol.Optional(CONF_CUSTOM, default={}): vol.Schema({
-        cv.slug: {
-            vol.Required('key'): vol.All(str, vol.Length(min=13, max=13)),
-            vol.Required('unit'): str,
-            vol.Optional('factor', default=1): vol.Coerce(float),
-        }})
-}, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST):
+            str,
+            vol.Required(CONF_PASSWORD):
+            str,
+            vol.Optional(CONF_GROUP, default=GROUPS[0]):
+            vol.In(GROUPS),
+            vol.Required(CONF_SENSORS):
+            vol.Schema({
+                cv.slug: cv.ensure_list
+            }),
+            vol.Optional(CONF_CUSTOM, default={}):
+            vol.Schema({
+                cv.slug: {
+                    vol.Required('key'): vol.All(str,
+                                                 vol.Length(min=13, max=13)),
+                    vol.Required('unit'): str,
+                    vol.Optional('factor', default=1): vol.Coerce(float),
+                }
+            })
+        },
+        extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 
 @asyncio.coroutine
@@ -67,11 +80,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     import pysma
 
     # Sensor_defs from the library
-    sensor_defs = dict(zip(SENSOR_OPTIONS, [
-        (pysma.KEY_CURRENT_CONSUMPTION_W, 'W', 1),
-        (pysma.KEY_CURRENT_POWER_W, 'W', 1),
-        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kWh', 1000),
-        (pysma.KEY_TOTAL_YIELD_KWH, 'kWh', 1000)]))
+    sensor_defs = dict(
+        zip(SENSOR_OPTIONS, [(pysma.KEY_CURRENT_CONSUMPTION_W, 'W', 1), (
+            pysma.KEY_CURRENT_POWER_W, 'W', 1), (
+                pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kWh', 1000), (
+                    pysma.KEY_TOTAL_YIELD_KWH, 'kWh', 1000)]))
 
     # Sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
@@ -88,17 +101,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         used_sensors.extend(attr)
 
     # Remove sensor_defs not in use
-    sensor_defs = {name: val for name, val in sensor_defs.items()
-                   if name in used_sensors}
+    sensor_defs = {
+        name: val
+        for name, val in sensor_defs.items() if name in used_sensors
+    }
 
     async_add_devices(hass_sensors)
 
     # Init the SMA interface
     session = async_get_clientsession(hass)
-    grp = {GROUP_INSTALLER: pysma.GROUP_INSTALLER,
-           GROUP_USER: pysma.GROUP_USER}[config[CONF_GROUP]]
-    sma = pysma.SMA(session, config[CONF_HOST], config[CONF_PASSWORD],
-                    group=grp)
+    grp = {
+        GROUP_INSTALLER: pysma.GROUP_INSTALLER,
+        GROUP_USER: pysma.GROUP_USER
+    }[config[CONF_GROUP]]
+    sma = pysma.SMA(
+        session, config[CONF_HOST], config[CONF_PASSWORD], group=grp)
 
     # Ensure we logout on shutdown
     @asyncio.coroutine

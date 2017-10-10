@@ -12,9 +12,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
-    TEMP_CELSIUS)
+from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_UNKNOWN,
+                                 CONF_NAME, CONF_RESOURCES, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -46,11 +45,14 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -120,8 +122,9 @@ class GlancesSensor(Entity):
                 try:
                     self._state = round(value['fs'][0]['free'] / 1024**3, 1)
                 except KeyError:
-                    self._state = round((value['fs'][0]['size'] -
-                                         value['fs'][0]['used']) / 1024**3, 1)
+                    self._state = round(
+                        (value['fs'][0]['size'] - value['fs'][0]['used']) /
+                        1024**3, 1)
             elif self.type == 'memory_use_percent':
                 self._state = value['mem']['percent']
             elif self.type == 'memory_use':

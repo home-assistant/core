@@ -12,9 +12,8 @@ from homeassistant.components.rflink import (
     CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID,
     EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, cv, remove_deprecated, vol)
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, CONF_NAME,
+                                 CONF_PLATFORM, CONF_UNIT_OF_MEASUREMENT)
 
 DEPENDENCIES = ['rflink']
 
@@ -29,18 +28,24 @@ SENSOR_ICONS = {
 CONF_SENSOR_TYPE = 'sensor_type'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
+    vol.Required(CONF_PLATFORM):
+    DOMAIN,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True):
+    cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}):
+    vol.Schema({
         cv.string: {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_SENSOR_TYPE): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_NAME):
+            cv.string,
+            vol.Required(CONF_SENSOR_TYPE):
+            cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None):
+            cv.string,
             vol.Optional(CONF_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
+            vol.All(cv.ensure_list, [cv.string]),
             # deprecated config options
             vol.Optional(CONF_ALIASSES):
-                vol.All(cv.ensure_list, [cv.string]),
+            vol.All(cv.ensure_list, [cv.string]),
         },
     }),
 })
@@ -69,8 +74,8 @@ def devices_from_config(domain_config, hass=None):
         devices.append(device)
 
         # Register entity to listen to incoming rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_SENSOR][device_id].append(device)
+        hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][device_id].append(
+            device)
     return devices
 
 
@@ -90,8 +95,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         async_add_devices([device])
 
         # Register entity to listen to incoming rflink events
-        hass.data[DATA_ENTITY_LOOKUP][
-            EVENT_KEY_SENSOR][device_id].append(device)
+        hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][device_id].append(
+            device)
 
         # Schedule task to process event after entity is created
         hass.async_add_job(device.handle_event, event)

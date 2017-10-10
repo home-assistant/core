@@ -43,8 +43,10 @@ def make_sensor(discovery_info):
         cluster = list(in_clusters.values())[0]
         yield from cluster.bind()
         yield from cluster.configure_reporting(
-            attr, 300, 600, sensor.min_reportable_change,
-        )
+            attr,
+            300,
+            600,
+            sensor.min_reportable_change, )
 
     return sensor
 
@@ -87,5 +89,5 @@ class TemperatureSensor(Sensor):
         if self._state == 'unknown':
             return 'unknown'
         celsius = round(float(self._state) / 100, 1)
-        return convert_temperature(
-            celsius, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert_temperature(celsius, TEMP_CELSIUS,
+                                   self.unit_of_measurement)

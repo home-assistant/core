@@ -15,9 +15,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.util import get_real_ip
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED, CONF_URL)
+from homeassistant.const import (CONF_API_KEY, EVENT_HOMEASSISTANT_STOP,
+                                 HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['http']
@@ -40,9 +39,10 @@ DEFAULT_TRUSTED_NETWORKS = [
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): vol.Url(),
+    vol.Optional(CONF_URL):
+    vol.Url(),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
-        vol.All(cv.ensure_list, [ip_network])
+    vol.All(cv.ensure_list, [ip_network])
 })
 
 
@@ -90,8 +90,9 @@ def async_setup_platform(hass, config):
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         lambda event: bot.setWebhook(REMOVE_HANDLER_URL))
-    hass.http.register_view(BotPushReceiver(
-        hass, config[CONF_ALLOWED_CHAT_IDS], config[CONF_TRUSTED_NETWORKS]))
+    hass.http.register_view(
+        BotPushReceiver(hass, config[CONF_ALLOWED_CHAT_IDS], config[
+            CONF_TRUSTED_NETWORKS]))
     return True
 
 

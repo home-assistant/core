@@ -47,25 +47,29 @@ ROUTING_SCHEMA = vol.Schema({
     vol.Required(CONF_KNX_LOCAL_IP): cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_KNX_CONFIG): cv.string,
-        vol.Exclusive(CONF_KNX_ROUTING, 'connection_type'): ROUTING_SCHEMA,
-        vol.Exclusive(CONF_KNX_TUNNELING, 'connection_type'):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_KNX_CONFIG):
+            cv.string,
+            vol.Exclusive(CONF_KNX_ROUTING, 'connection_type'):
+            ROUTING_SCHEMA,
+            vol.Exclusive(CONF_KNX_TUNNELING, 'connection_type'):
             TUNNELING_SCHEMA,
-        vol.Inclusive(CONF_KNX_FIRE_EVENT, 'fire_ev'):
+            vol.Inclusive(CONF_KNX_FIRE_EVENT, 'fire_ev'):
             cv.boolean,
-        vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'):
-            vol.All(
-                cv.ensure_list,
-                [cv.string])
-    })
-}, extra=vol.ALLOW_EXTRA)
+            vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'):
+            vol.All(cv.ensure_list, [cv.string])
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_KNX_SEND_SCHEMA = vol.Schema({
-    vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
-    vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-        cv.positive_int, [cv.positive_int]),
+    vol.Required(SERVICE_KNX_ATTR_ADDRESS):
+    cv.string,
+    vol.Required(SERVICE_KNX_ATTR_PAYLOAD):
+    vol.Any(cv.positive_int, [cv.positive_int]),
 })
 
 
@@ -81,14 +85,12 @@ def async_setup(hass, config):
         _LOGGER.exception("Can't connect to KNX interface: %s", ex)
         return False
 
-    for component, discovery_type in (
-            ('switch', 'Switch'),
-            ('climate', 'Climate'),
-            ('cover', 'Cover'),
-            ('light', 'Light'),
-            ('sensor', 'Sensor'),
-            ('binary_sensor', 'BinarySensor'),
-            ('notify', 'Notification')):
+    for component, discovery_type in (('switch', 'Switch'), ('climate',
+                                                             'Climate'),
+                                      ('cover', 'Cover'), ('light', 'Light'),
+                                      ('sensor', 'Sensor'), ('binary_sensor',
+                                                             'BinarySensor'),
+                                      ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
         hass.async_add_job(
             discovery.async_load_platform(hass, component, DOMAIN, {
@@ -96,7 +98,8 @@ def async_setup(hass, config):
             }, config))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_KNX_SEND,
+        DOMAIN,
+        SERVICE_KNX_SEND,
         hass.data[DATA_KNX].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA)
 
@@ -106,9 +109,8 @@ def async_setup(hass, config):
 def _get_devices(hass, discovery_type):
     return list(
         map(lambda device: device.name,
-            filter(
-                lambda device: type(device).__name__ == discovery_type,
-                hass.data[DATA_KNX].xknx.devices)))
+            filter(lambda device: type(device).__name__ == discovery_type,
+                   hass.data[DATA_KNX].xknx.devices)))
 
 
 class KNXModule(object):
@@ -125,17 +127,14 @@ class KNXModule(object):
     def init_xknx(self):
         """Initialization of KNX object."""
         from xknx import XKNX
-        self.xknx = XKNX(
-            config=self.config_file(),
-            loop=self.hass.loop)
+        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
 
     @asyncio.coroutine
     def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
         yield from self.xknx.start(
-            state_updater=True,
-            connection_config=connection_config)
+            state_updater=True, connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.initialized = True
 
@@ -167,8 +166,7 @@ class KNXModule(object):
         local_ip = \
             self.config[DOMAIN][CONF_KNX_ROUTING].get(CONF_KNX_LOCAL_IP)
         return ConnectionConfig(
-            connection_type=ConnectionType.ROUTING,
-            local_ip=local_ip)
+            connection_type=ConnectionType.ROUTING, local_ip=local_ip)
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
@@ -199,9 +197,9 @@ class KNXModule(object):
         if CONF_KNX_FIRE_EVENT in self.config[DOMAIN] and \
                 self.config[DOMAIN][CONF_KNX_FIRE_EVENT]:
             from xknx.knx import AddressFilter
-            address_filters = list(map(
-                AddressFilter,
-                self.config[DOMAIN][CONF_KNX_FIRE_EVENT_FILTER]))
+            address_filters = list(
+                map(AddressFilter, self.config[DOMAIN][
+                    CONF_KNX_FIRE_EVENT_FILTER]))
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
@@ -227,6 +225,7 @@ class KNXModule(object):
             if isinstance(attr_payload, int):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
+
         payload = calculate_payload(attr_payload)
         address = Address(attr_address)
 

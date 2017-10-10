@@ -16,8 +16,10 @@ DEPENDENCIES = ['tesla']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla switch platform."""
-    devices = [ChargerSwitch(device, hass.data[TESLA_DOMAIN]['controller'])
-               for device in hass.data[TESLA_DOMAIN]['devices']['switch']]
+    devices = [
+        ChargerSwitch(device, hass.data[TESLA_DOMAIN]['controller'])
+        for device in hass.data[TESLA_DOMAIN]['devices']['switch']
+    ]
     add_devices(devices, True)
 
 

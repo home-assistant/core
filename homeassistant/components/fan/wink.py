@@ -7,10 +7,9 @@ https://home-assistant.io/components/fan.wink/
 import asyncio
 import logging
 
-from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
-                                          SPEED_LOW, SPEED_MEDIUM,
-                                          STATE_UNKNOWN, SUPPORT_SET_SPEED,
-                                          SUPPORT_DIRECTION)
+from homeassistant.components.fan import (FanEntity, SPEED_HIGH, SPEED_LOW,
+                                          SPEED_MEDIUM, STATE_UNKNOWN,
+                                          SUPPORT_SET_SPEED, SUPPORT_DIRECTION)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
@@ -49,7 +48,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Set the speed of the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         self.wink.set_state(True, speed)
 

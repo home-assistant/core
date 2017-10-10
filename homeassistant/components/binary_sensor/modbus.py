@@ -32,10 +32,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
-        sensors.append(ModbusCoilSensor(
-            coil.get(CONF_NAME),
-            coil.get(CONF_SLAVE),
-            coil.get(CONF_COIL)))
+        sensors.append(
+            ModbusCoilSensor(
+                coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(
+                    CONF_COIL)))
     add_devices(sensors)
 
 
@@ -65,7 +65,5 @@ class ModbusCoilSensor(BinarySensorDevice):
         try:
             self._value = result.bits[0]
         except AttributeError:
-            _LOGGER.error(
-                'No response from modbus slave %s coil %s',
-                self._slave,
-                self._coil)
+            _LOGGER.error('No response from modbus slave %s coil %s',
+                          self._slave, self._coil)

@@ -42,15 +42,20 @@ MOD_REGEX = r"index: ([0-9]+)\s+name: <module-loopback>" \
 UNLOAD_CMD = "unload-module {0}"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SINK_NAME): cv.string,
-    vol.Required(CONF_SOURCE_NAME): cv.string,
+    vol.Required(CONF_SINK_NAME):
+    cv.string,
+    vol.Required(CONF_SOURCE_NAME):
+    cv.string,
     vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
-        cv.positive_int,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    cv.positive_int,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
     vol.Optional(CONF_TCP_TIMEOUT, default=DEFAULT_TCP_TIMEOUT):
-        cv.positive_int,
+    cv.positive_int,
 })
 
 
@@ -132,9 +137,9 @@ class PAServer():
 
     def get_module_idx(self, sink_name, source_name):
         """For a sink/source, return it's module id in our cache, if found."""
-        result = re.search(str.format(MOD_REGEX, re.escape(sink_name),
-                                      re.escape(source_name)),
-                           self._current_module_state)
+        result = re.search(
+            str.format(MOD_REGEX, re.escape(sink_name),
+                       re.escape(source_name)), self._current_module_state)
         if result and result.group(1).isdigit():
             return int(result.group(1))
         return -1
@@ -187,5 +192,5 @@ class PALoopbackSwitch(SwitchDevice):
     def update(self):
         """Refresh state in case an alternate process modified this data."""
         self._pa_svr.update_module_state()
-        self._module_idx = self._pa_svr.get_module_idx(
-            self._sink_name, self._source_name)
+        self._module_idx = self._pa_svr.get_module_idx(self._sink_name,
+                                                       self._source_name)

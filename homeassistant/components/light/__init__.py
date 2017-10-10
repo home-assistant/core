@@ -16,9 +16,8 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+from homeassistant.const import (STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                 SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -101,31 +100,43 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
-    ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
-    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    ATTR_ENTITY_ID:
+    cv.entity_ids,
+    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP):
+    cv.string,
+    ATTR_TRANSITION:
+    VALID_TRANSITION,
+    ATTR_BRIGHTNESS:
+    VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT:
+    VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP):
+    cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                vol.Coerce(tuple)),
+    vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)),
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
-        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
-                vol.Coerce(tuple)),
+    vol.All(
+        vol.ExactSequence((cv.small_float, cv.small_float)),
+        vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
-    ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-    ATTR_EFFECT: cv.string,
+    vol.All(vol.Coerce(int), vol.Range(min=0)),
+    ATTR_WHITE_VALUE:
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+    ATTR_FLASH:
+    vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_EFFECT:
+    cv.string,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_ENTITY_ID:
+    cv.entity_ids,
+    ATTR_TRANSITION:
+    VALID_TRANSITION,
+    ATTR_FLASH:
+    vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
@@ -134,16 +145,17 @@ LIGHT_TOGGLE_SCHEMA = vol.Schema({
 })
 
 PROFILE_SCHEMA = vol.Schema(
-    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
-)
+    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte)))
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def extract_info(state):
     """Extract light parameters from a state object."""
-    params = {key: state.attributes[key] for key in PROP_TO_ATTR
-              if key in state.attributes}
+    params = {
+        key: state.attributes[key]
+        for key in PROP_TO_ATTR if key in state.attributes
+    }
     params['is_on'] = state.state == STATE_ON
     return params
 
@@ -156,26 +168,46 @@ def is_on(hass, entity_id=None):
 
 
 @bind_hass
-def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            brightness_pct=None, rgb_color=None, xy_color=None,
-            color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+def turn_on(hass,
+            entity_id=None,
+            transition=None,
+            brightness=None,
+            brightness_pct=None,
+            rgb_color=None,
+            xy_color=None,
+            color_temp=None,
+            kelvin=None,
+            white_value=None,
+            profile=None,
+            flash=None,
+            effect=None,
+            color_name=None):
     """Turn all or specified light on."""
-    hass.add_job(
-        async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
-        rgb_color, xy_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
+    hass.add_job(async_turn_on, hass, entity_id, transition, brightness,
+                 brightness_pct, rgb_color, xy_color, color_temp, kelvin,
+                 white_value, profile, flash, effect, color_name)
 
 
 @callback
 @bind_hass
-def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  brightness_pct=None, rgb_color=None, xy_color=None,
-                  color_temp=None, kelvin=None, white_value=None,
-                  profile=None, flash=None, effect=None, color_name=None):
+def async_turn_on(hass,
+                  entity_id=None,
+                  transition=None,
+                  brightness=None,
+                  brightness_pct=None,
+                  rgb_color=None,
+                  xy_color=None,
+                  color_temp=None,
+                  kelvin=None,
+                  white_value=None,
+                  profile=None,
+                  flash=None,
+                  effect=None,
+                  color_name=None):
     """Turn all or specified light on."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
@@ -206,21 +238,23 @@ def turn_off(hass, entity_id=None, transition=None):
 def async_turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_TRANSITION, transition),
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, data))
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
 @bind_hass
 def toggle(hass, entity_id=None, transition=None):
     """Toggle all or specified light."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_TRANSITION, transition),
         ] if value is not None
@@ -247,14 +281,14 @@ def preprocess_turn_on_alternatives(params):
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
+        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct / 100)
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Expose light control via statemachine and services."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_LIGHTS)
     yield from component.async_setup(config)
 
     # load profiles from files
@@ -288,8 +322,7 @@ def async_setup(hass, config):
             if not light.should_poll:
                 continue
 
-            update_coro = hass.async_add_job(
-                light.async_update_ha_state(True))
+            update_coro = hass.async_add_job(light.async_update_ha_state(True))
             if hasattr(light, 'async_update'):
                 update_tasks.append(update_coro)
             else:
@@ -299,21 +332,31 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_ON), schema=LIGHT_TURN_ON_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_light_service,
+        descriptions.get(SERVICE_TURN_ON),
+        schema=LIGHT_TURN_ON_SCHEMA)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=LIGHT_TURN_OFF_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handle_light_service,
+        descriptions.get(SERVICE_TURN_OFF),
+        schema=LIGHT_TURN_OFF_SCHEMA)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        descriptions.get(SERVICE_TOGGLE), schema=LIGHT_TOGGLE_SCHEMA)
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handle_light_service,
+        descriptions.get(SERVICE_TOGGLE),
+        schema=LIGHT_TOGGLE_SCHEMA)
 
     return True
 
@@ -327,11 +370,13 @@ class Profiles:
     @asyncio.coroutine
     def load_profiles(cls, hass):
         """Load and cache profiles."""
+
         def load_profile_data(hass):
             """Load built-in profiles and custom profiles."""
-            profile_paths = [os.path.join(os.path.dirname(__file__),
-                                          LIGHT_PROFILES_FILE),
-                             hass.config.path(LIGHT_PROFILES_FILE)]
+            profile_paths = [
+                os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
+                hass.config.path(LIGHT_PROFILES_FILE)
+            ]
             profiles = {}
 
             for profile_path in profile_paths:

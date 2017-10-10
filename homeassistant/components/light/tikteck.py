@@ -26,7 +26,9 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
 })
 
 
@@ -60,12 +62,12 @@ class TikteckLight(Light):
         self._rgb = [255, 255, 255]
         self._state = False
         self.is_valid = True
-        self._bulb = tikteck.tikteck(
-            self._address, "Smart Light", self._password)
+        self._bulb = tikteck.tikteck(self._address, "Smart Light",
+                                     self._password)
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error(
-                "Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error("Failed to connect to bulb %s, %s", self._address,
+                          self._name)
 
     @property
     def unique_id(self):

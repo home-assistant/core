@@ -13,16 +13,19 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string
 })
 
 
@@ -68,14 +71,14 @@ class LuciDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             url = 'http://{}/cgi-bin/luci/rpc/uci'.format(self.host)
-            result = _req_json_rpc(url, 'get_all', 'dhcp',
-                                   params={'auth': self.token})
+            result = _req_json_rpc(
+                url, 'get_all', 'dhcp', params={'auth': self.token})
             if result:
-                hosts = [x for x in result.values()
-                         if x['.type'] == 'host' and
-                         'mac' in x and 'name' in x]
-                mac2name_list = [
-                    (x['mac'].upper(), x['name']) for x in hosts]
+                hosts = [
+                    x for x in result.values()
+                    if x['.type'] == 'host' and 'mac' in x and 'name' in x
+                ]
+                mac2name_list = [(x['mac'].upper(), x['name']) for x in hosts]
                 self.mac2name = dict(mac2name_list)
             else:
                 # Error, handled in the _req_json_rpc
@@ -95,8 +98,8 @@ class LuciDeviceScanner(DeviceScanner):
         url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
 
         try:
-            result = _req_json_rpc(url, 'net.arptable',
-                                   params={'auth': self.token})
+            result = _req_json_rpc(
+                url, 'net.arptable', params={'auth': self.token})
         except InvalidLuciTokenError:
             _LOGGER.info("Refreshing token")
             self.refresh_token()

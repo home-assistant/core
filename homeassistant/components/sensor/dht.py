@@ -11,16 +11,18 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (TEMP_FAHRENHEIT, CONF_NAME,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
-REQUIREMENTS = ['https://github.com/adafruit/Adafruit_Python_DHT/archive/'
-                'da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip'
-                '#Adafruit_DHT==1.3.2']
+REQUIREMENTS = [
+    'https://github.com/adafruit/Adafruit_Python_DHT/archive/'
+    'da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip'
+    '#Adafruit_DHT==1.3.2'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +44,18 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSOR): cv.string,
-    vol.Required(CONF_PIN): cv.string,
+    vol.Required(CONF_SENSOR):
+    cv.string,
+    vol.Required(CONF_PIN):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_TEMPERATURE_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
+    vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
     vol.Optional(CONF_HUMIDITY_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100))
+    vol.All(vol.Coerce(float), vol.Range(min=-100, max=100))
 })
 
 
@@ -80,9 +85,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
-            dev.append(DHTSensor(
-                data, variable, SENSOR_TYPES[variable][1], name,
-                temperature_offset, humidity_offset))
+            dev.append(
+                DHTSensor(data, variable, SENSOR_TYPES[variable][1], name,
+                          temperature_offset, humidity_offset))
     except KeyError:
         pass
 
@@ -137,8 +142,8 @@ class DHTSensor(Entity):
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY and SENSOR_HUMIDITY in data:
             humidity = data[SENSOR_HUMIDITY]
-            _LOGGER.debug("Humidity %.1f%% + offset %.1f",
-                          humidity, humidity_offset)
+            _LOGGER.debug("Humidity %.1f%% + offset %.1f", humidity,
+                          humidity_offset)
             if (humidity >= 0) and (humidity <= 100):
                 self._state = round(humidity + humidity_offset, 1)
 

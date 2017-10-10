@@ -13,11 +13,10 @@ from homeassistant.core import callback
 from homeassistant.helpers import template
 from homeassistant.components import http
 
-from .const import (
-    CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT, CONF_DISPLAY_URL, ATTR_UID,
-    ATTR_UPDATE_DATE, ATTR_TITLE_TEXT, ATTR_STREAM_URL, ATTR_MAIN_TEXT,
-    ATTR_REDIRECTION_URL, DATE_FORMAT)
-
+from .const import (CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT,
+                    CONF_DISPLAY_URL, ATTR_UID, ATTR_UPDATE_DATE,
+                    ATTR_TITLE_TEXT, ATTR_STREAM_URL, ATTR_MAIN_TEXT,
+                    ATTR_REDIRECTION_URL, DATE_FORMAT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,8 +81,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
                     output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
 
             if item.get(CONF_DISPLAY_URL) is not None:
-                if isinstance(item.get(CONF_DISPLAY_URL),
-                              template.Template):
+                if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
                     output[ATTR_REDIRECTION_URL] = \
                         item[CONF_DISPLAY_URL].async_render()
                 else:

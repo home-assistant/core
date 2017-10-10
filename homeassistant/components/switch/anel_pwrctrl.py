@@ -15,9 +15,11 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['https://github.com/mweinelt/anel-pwrctrl/archive/'
-                'ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip'
-                '#anel_pwrctrl==0.0.1']
+REQUIREMENTS = [
+    'https://github.com/mweinelt/anel-pwrctrl/archive/'
+    'ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip'
+    '#anel_pwrctrl==0.0.1'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +29,16 @@ CONF_PORT_SEND = 'port_send'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT_RECV): cv.port,
-    vol.Required(CONF_PORT_SEND): cv.port,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT_RECV):
+    cv.port,
+    vol.Required(CONF_PORT_SEND):
+    cv.port,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
 })
 
 
@@ -48,7 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         master = DeviceMaster(
-            username=username, password=password, read_port=port_send,
+            username=username,
+            password=password,
+            read_port=port_send,
             write_port=port_recv)
         master.query(ip_addr=host)
     except socket.error as ex:
@@ -60,8 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         parent_device = PwrCtrlDevice(device)
         devices.extend(
             PwrCtrlSwitch(switch, parent_device)
-            for switch in device.switches.values()
-        )
+            for switch in device.switches.values())
 
     add_devices(devices)
 
@@ -83,9 +91,7 @@ class PwrCtrlSwitch(SwitchDevice):
     def unique_id(self):
         """Return the unique ID of the device."""
         return '{device}-{switch_idx}'.format(
-            device=self._port.device.host,
-            switch_idx=self._port.get_index()
-        )
+            device=self._port.device.host, switch_idx=self._port.get_index())
 
     @property
     def name(self):

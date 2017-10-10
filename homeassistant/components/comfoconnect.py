@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_TOKEN, CONF_PIN, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_TOKEN, CONF_PIN,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import (discovery)
 from homeassistant.helpers.dispatcher import (dispatcher_send)
 
@@ -38,16 +38,23 @@ DEFAULT_USER_AGENT = 'Home Assistant'
 
 DEVICE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST):
+            cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+            cv.string,
+            vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
             vol.Length(min=32, max=32, msg='invalid token'),
-        vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT):
+            cv.string,
+            vol.Optional(CONF_PIN, default=DEFAULT_PIN):
+            cv.positive_int,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -100,8 +107,10 @@ class ComfoConnectBridge(object):
         self.hass = hass
 
         self.comfoconnect = ComfoConnect(
-            bridge=bridge, local_uuid=bytes.fromhex(token),
-            local_devicename=friendly_name, pin=pin)
+            bridge=bridge,
+            local_uuid=bytes.fromhex(token),
+            local_devicename=friendly_name,
+            pin=pin)
         self.comfoconnect.callback_sensor = self.sensor_callback
 
     def connect(self):
@@ -118,8 +127,8 @@ class ComfoConnectBridge(object):
         """Callback function for sensor updates."""
         _LOGGER.debug("Got value from bridge: %d = %d", var, value)
 
-        from pycomfoconnect import (
-            SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR)
+        from pycomfoconnect import (SENSOR_TEMPERATURE_EXTRACT,
+                                    SENSOR_TEMPERATURE_OUTDOOR)
 
         if var in [SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR]:
             self.data[var] = value / 10

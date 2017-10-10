@@ -22,7 +22,8 @@ ATTR_GROUP = 'group'
 DEFAULT_URL = 'http://localhost:9001/RPC2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
+    vol.Optional(CONF_URL, default=DEFAULT_URL):
+    cv.url,
 })
 
 
@@ -37,9 +38,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not connect to Supervisord")
         return False
 
-    add_devices(
-        [SupervisorProcessSensor(info, supervisor_server)
-         for info in processes], True)
+    add_devices([
+        SupervisorProcessSensor(info, supervisor_server) for info in processes
+    ], True)
 
 
 class SupervisorProcessSensor(Entity):

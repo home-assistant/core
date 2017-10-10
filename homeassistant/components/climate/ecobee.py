@@ -13,8 +13,8 @@ from homeassistant.components import ecobee
 from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_ENTITY_ID, STATE_OFF, STATE_ON,
+                                 ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -35,13 +35,17 @@ SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
 SERVICE_RESUME_PROGRAM = 'ecobee_resume_program'
 
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_FAN_MIN_ON_TIME):
+    vol.Coerce(int),
 })
 
 RESUME_PROGRAM_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL):
+    cv.boolean,
 })
 
 
@@ -54,8 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s",
         hold_temp)
-    devices = [Thermostat(data, index, hold_temp)
-               for index in range(len(data.ecobee.thermostats))]
+    devices = [
+        Thermostat(data, index, hold_temp)
+        for index in range(len(data.ecobee.thermostats))
+    ]
     add_devices(devices)
 
     def fan_min_on_time_set_service(service):
@@ -64,8 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
 
         if entity_id:
-            target_thermostats = [device for device in devices
-                                  if device.entity_id in entity_id]
+            target_thermostats = [
+                device for device in devices if device.entity_id in entity_id
+            ]
         else:
             target_thermostats = devices
 
@@ -80,8 +87,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         resume_all = service.data.get(ATTR_RESUME_ALL)
 
         if entity_id:
-            target_thermostats = [device for device in devices
-                                  if device.entity_id in entity_id]
+            target_thermostats = [
+                device for device in devices if device.entity_id in entity_id
+            ]
         else:
             target_thermostats = devices
 
@@ -94,12 +102,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
+        DOMAIN,
+        SERVICE_SET_FAN_MIN_ON_TIME,
+        fan_min_on_time_set_service,
         descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
     hass.services.register(
-        DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
+        DOMAIN,
+        SERVICE_RESUME_PROGRAM,
+        resume_program_set_service,
         descriptions.get(SERVICE_RESUME_PROGRAM),
         schema=RESUME_PROGRAM_SCHEMA)
 
@@ -117,8 +129,7 @@ class Thermostat(ClimateDevice):
         self.hold_temp = hold_temp
         self.vacation = None
         self._climate_list = self.climate_list
-        self._operation_list = ['auto', 'auxHeatOnly', 'cool',
-                                'heat', 'off']
+        self._operation_list = ['auto', 'auxHeatOnly', 'cool', 'heat', 'off']
         self.update_without_throttle = False
 
     def update(self):
@@ -304,16 +315,17 @@ class Thermostat(ClimateDevice):
             return
         elif hold_mode == 'None' or hold_mode is None:
             if hold == VACATION_HOLD:
-                self.data.ecobee.delete_vacation(
-                    self.thermostat_index, self.vacation)
+                self.data.ecobee.delete_vacation(self.thermostat_index,
+                                                 self.vacation)
             else:
                 self.data.ecobee.resume_program(self.thermostat_index)
         else:
             if hold_mode == TEMPERATURE_HOLD:
                 self.set_temp_hold(self.current_temperature)
             else:
-                self.data.ecobee.set_climate_hold(
-                    self.thermostat_index, hold_mode, self.hold_preference())
+                self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                                  hold_mode,
+                                                  self.hold_preference())
         self.update_without_throttle = True
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
@@ -321,8 +333,8 @@ class Thermostat(ClimateDevice):
         self.data.ecobee.set_hold_temp(self.thermostat_index, cool_temp,
                                        heat_temp, self.hold_preference())
         _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
-                      "cool=%s, is=%s", heat_temp, isinstance(
-                          heat_temp, (int, float)), cool_temp,
+                      "cool=%s, is=%s", heat_temp,
+                      isinstance(heat_temp, (int, float)), cool_temp,
                       isinstance(cool_temp, (int, float)))
 
         self.update_without_throttle = True
@@ -354,8 +366,8 @@ class Thermostat(ClimateDevice):
         elif temp is not None:
             self.set_temp_hold(temp)
         else:
-            _LOGGER.error(
-                "Missing valid arguments for set_temperature in %s", kwargs)
+            _LOGGER.error("Missing valid arguments for set_temperature in %s",
+                          kwargs)
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
@@ -364,14 +376,14 @@ class Thermostat(ClimateDevice):
 
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
-        self.data.ecobee.set_fan_min_on_time(
-            self.thermostat_index, fan_min_on_time)
+        self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
+                                             fan_min_on_time)
         self.update_without_throttle = True
 
     def resume_program(self, resume_all):
         """Resume the thermostat schedule program."""
-        self.data.ecobee.resume_program(
-            self.thermostat_index, 'true' if resume_all else 'false')
+        self.data.ecobee.resume_program(self.thermostat_index, 'true'
+                                        if resume_all else 'false')
         self.update_without_throttle = True
 
     def hold_preference(self):

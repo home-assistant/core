@@ -6,17 +6,14 @@ https://home-assistant.io/components/binary_sensor.raspihats/
 """
 import logging
 import voluptuous as vol
-from homeassistant.const import (
-    CONF_NAME, CONF_DEVICE_CLASS, DEVICE_DEFAULT_NAME
-)
+from homeassistant.const import (CONF_NAME, CONF_DEVICE_CLASS,
+                                 DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice
-)
+from homeassistant.components.binary_sensor import (PLATFORM_SCHEMA,
+                                                    BinarySensorDevice)
 from homeassistant.components.raspihats import (
     CONF_I2C_HATS, CONF_BOARD, CONF_ADDRESS, CONF_CHANNELS, CONF_INDEX,
-    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException
-)
+    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,20 +23,28 @@ DEFAULT_INVERT_LOGIC = False
 DEFAULT_DEVICE_CLASS = None
 
 _CHANNELS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_INDEX): cv.positive_int,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): cv.string,
+    vol.Required(CONF_INDEX):
+    cv.positive_int,
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC):
+    cv.boolean,
+    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
+    cv.string,
 }])
 
 _I2C_HATS_SCHEMA = vol.Schema([{
-    vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
-    vol.Required(CONF_ADDRESS): vol.Coerce(int),
-    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
+    vol.Required(CONF_BOARD):
+    vol.In(I2C_HAT_NAMES),
+    vol.Required(CONF_ADDRESS):
+    vol.Coerce(int),
+    vol.Required(CONF_CHANNELS):
+    _CHANNELS_SCHEMA
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_I2C_HATS): _I2C_HATS_SCHEMA,
+    vol.Optional(CONF_I2C_HATS):
+    _I2C_HATS_SCHEMA,
 })
 
 
@@ -56,19 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             I2CHatBinarySensor.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 binary_sensors.append(
-                    I2CHatBinarySensor(
-                        address,
-                        channel_config[CONF_INDEX],
-                        channel_config[CONF_NAME],
-                        channel_config[CONF_INVERT_LOGIC],
-                        channel_config[CONF_DEVICE_CLASS]
-                    )
-                )
+                    I2CHatBinarySensor(address, channel_config[
+                        CONF_INDEX], channel_config[CONF_NAME], channel_config[
+                            CONF_INVERT_LOGIC], channel_config[
+                                CONF_DEVICE_CLASS]))
         except I2CHatsException as ex:
-            _LOGGER.error(
-                "Failed to register " + board + "I2CHat@" + hex(address) + " "
-                + str(ex)
-            )
+            _LOGGER.error("Failed to register " + board + "I2CHat@" +
+                          hex(address) + " " + str(ex))
     add_devices(binary_sensors)
 
 
@@ -84,20 +83,15 @@ class I2CHatBinarySensor(BinarySensorDevice):
         self._name = name or DEVICE_DEFAULT_NAME
         self._invert_logic = invert_logic
         self._device_class = device_class
-        self._state = self.I2C_HATS_MANAGER.read_di(
-            self._address,
-            self._channel
-        )
+        self._state = self.I2C_HATS_MANAGER.read_di(self._address,
+                                                    self._channel)
 
         def online_callback():
             """Callback fired when board is online."""
             self.schedule_update_ha_state()
 
         self.I2C_HATS_MANAGER.register_online_callback(
-            self._address,
-            self._channel,
-            online_callback
-        )
+            self._address, self._channel, online_callback)
 
         def edge_callback(state):
             """Read digital input state."""
@@ -105,10 +99,7 @@ class I2CHatBinarySensor(BinarySensorDevice):
             self.schedule_update_ha_state()
 
         self.I2C_HATS_MANAGER.register_di_callback(
-            self._address,
-            self._channel,
-            edge_callback
-        )
+            self._address, self._channel, edge_callback)
 
     @property
     def device_class(self):

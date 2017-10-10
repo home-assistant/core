@@ -23,7 +23,8 @@ REQUIREMENTS = ['pyTibber==0.1.1']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string
+    vol.Required(CONF_ACCESS_TOKEN):
+    cv.string
 })
 
 ICON = 'mdi:currency-usd'
@@ -34,8 +35,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Tibber sensor."""
     import Tibber
-    tibber = Tibber.Tibber(config[CONF_ACCESS_TOKEN],
-                           websession=async_get_clientsession(hass))
+    tibber = Tibber.Tibber(
+        config[CONF_ACCESS_TOKEN], websession=async_get_clientsession(hass))
     yield from tibber.update_info()
     dev = []
     for home in tibber.get_homes():

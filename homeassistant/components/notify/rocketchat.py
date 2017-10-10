@@ -8,11 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_URL, CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
+from homeassistant.const import (CONF_URL, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rocketchat-API==0.6.1']
@@ -23,10 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): vol.Url(),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_ROOM): cv.string,
+    vol.Required(CONF_URL):
+    vol.Url(),
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_ROOM):
+    cv.string,
 })
 
 
@@ -43,11 +45,10 @@ def get_service(hass, config, discovery_info=None):
     try:
         return RocketChatNotificationService(url, username, password, room)
     except RocketConnectionException:
-        _LOGGER.warning(
-            "Unable to connect to Rocket.Chat server at %s.", url)
+        _LOGGER.warning("Unable to connect to Rocket.Chat server at %s.", url)
     except RocketAuthenticationException:
-        _LOGGER.warning(
-            "Rocket.Chat authentication failed for user %s.", username)
+        _LOGGER.warning("Rocket.Chat authentication failed for user %s.",
+                        username)
         _LOGGER.info("Please check your username/password.")
 
     return None
@@ -65,8 +66,8 @@ class RocketChatNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
-        resp = self._server.chat_post_message(message, channel=self._room,
-                                              **data)
+        resp = self._server.chat_post_message(
+            message, channel=self._room, **data)
         if resp.status_code == 200:
             success = resp.json()["success"]
             if not success:

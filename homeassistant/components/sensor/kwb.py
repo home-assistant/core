@@ -8,9 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
-                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP,
-                                 STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE, CONF_NAME,
+                                 EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -29,23 +28,30 @@ CONF_TYPE = 'type'
 CONF_RAW = 'raw'
 
 SERIAL_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_DEVICE): cv.string,
-    vol.Required(CONF_TYPE): 'serial',
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW):
+    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_DEVICE):
+    cv.string,
+    vol.Required(CONF_TYPE):
+    'serial',
 })
 
 ETHERNET_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_TYPE): 'tcp',
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW):
+    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PORT):
+    cv.port,
+    vol.Required(CONF_TYPE):
+    'tcp',
 })
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-)
+PLATFORM_SCHEMA = vol.Schema(vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA))
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

@@ -11,9 +11,9 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_API_KEY, CONF_WHITELIST, CONF_URL, STATE_UNKNOWN, STATE_UNAVAILABLE,
-    CONF_SCAN_INTERVAL)
+from homeassistant.const import (CONF_API_KEY, CONF_WHITELIST, CONF_URL,
+                                 STATE_UNKNOWN, STATE_UNAVAILABLE,
+                                 CONF_SCAN_INTERVAL)
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import dt as dt_util
@@ -23,15 +23,23 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'emoncms_history'
 CONF_INPUTNODE = 'inputnode'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_INPUTNODE): cv.positive_int,
-        vol.Required(CONF_WHITELIST): cv.entity_ids,
-        vol.Optional(CONF_SCAN_INTERVAL, default=30): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY):
+            cv.string,
+            vol.Required(CONF_URL):
+            cv.string,
+            vol.Required(CONF_INPUTNODE):
+            cv.positive_int,
+            vol.Required(CONF_WHITELIST):
+            cv.entity_ids,
+            vol.Optional(CONF_SCAN_INTERVAL, default=30):
+            cv.positive_int,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -46,7 +54,10 @@ def setup(hass, config):
             data = {"apikey": apikey, "data": payload}
             parameters = {"node": node}
             req = requests.post(
-                fullurl, params=parameters, data=data, allow_redirects=True,
+                fullurl,
+                params=parameters,
+                data=data,
+                allow_redirects=True,
                 timeout=5)
 
         except requests.exceptions.RequestException:
@@ -65,8 +76,8 @@ def setup(hass, config):
         for entity_id in whitelist:
             state = hass.states.get(entity_id)
 
-            if state is None or state.state in (
-                    STATE_UNKNOWN, '', STATE_UNAVAILABLE):
+            if state is None or state.state in (STATE_UNKNOWN, '',
+                                                STATE_UNAVAILABLE):
                 continue
 
             try:
@@ -76,14 +87,16 @@ def setup(hass, config):
 
         if payload_dict:
             payload = "{%s}" % ",".join("{}:{}".format(key, val)
-                                        for key, val in
-                                        payload_dict.items())
+                                        for key, val in payload_dict.items())
 
-            send_data(conf.get(CONF_URL), conf.get(CONF_API_KEY),
-                      str(conf.get(CONF_INPUTNODE)), payload)
+            send_data(
+                conf.get(CONF_URL),
+                conf.get(CONF_API_KEY), str(conf.get(CONF_INPUTNODE)), payload)
 
-        track_point_in_time(hass, update_emoncms, time +
-                            timedelta(seconds=conf.get(CONF_SCAN_INTERVAL)))
+        track_point_in_time(
+            hass,
+            update_emoncms,
+            time + timedelta(seconds=conf.get(CONF_SCAN_INTERVAL)))
 
     update_emoncms(dt_util.utcnow())
     return True

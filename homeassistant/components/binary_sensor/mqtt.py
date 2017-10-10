@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
-    CONF_DEVICE_CLASS)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    DEVICE_CLASSES_SCHEMA)
+from homeassistant.const import (CONF_NAME, CONF_VALUE_TEMPLATE,
+                                 CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
+                                 CONF_DEVICE_CLASS)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_QOS, valid_subscribe_topic)
 import homeassistant.helpers.config_validation as cv
@@ -34,15 +34,21 @@ DEFAULT_PAYLOAD_NOT_AVAILABLE = 'offline'
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_AVAILABILITY_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
-    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_AVAILABILITY_TOPIC):
+    valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE):
+    cv.string,
+    vol.Optional(
+        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE):
+    cv.string,
 })
 
 
@@ -56,18 +62,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttBinarySensor(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_DEVICE_CLASS),
-        config.get(CONF_QOS),
-        config.get(CONF_PAYLOAD_ON),
-        config.get(CONF_PAYLOAD_OFF),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        value_template
-    )])
+    async_add_devices([
+        MqttBinarySensor(
+            config.get(CONF_NAME),
+            config.get(CONF_STATE_TOPIC),
+            config.get(CONF_AVAILABILITY_TOPIC),
+            config.get(CONF_DEVICE_CLASS),
+            config.get(CONF_QOS),
+            config.get(CONF_PAYLOAD_ON),
+            config.get(CONF_PAYLOAD_OFF),
+            config.get(CONF_PAYLOAD_AVAILABLE),
+            config.get(CONF_PAYLOAD_NOT_AVAILABLE), value_template)
+    ])
 
 
 class MqttBinarySensor(BinarySensorDevice):
@@ -95,6 +101,7 @@ class MqttBinarySensor(BinarySensorDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
+
         @callback
         def state_message_received(topic, payload, qos):
             """Handle a new received MQTT state message."""
@@ -108,8 +115,8 @@ class MqttBinarySensor(BinarySensorDevice):
 
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
-            self.hass, self._state_topic, state_message_received, self._qos)
+        yield from mqtt.async_subscribe(self.hass, self._state_topic,
+                                        state_message_received, self._qos)
 
         @callback
         def availability_message_received(topic, payload, qos):

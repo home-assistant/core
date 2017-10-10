@@ -20,11 +20,13 @@ DOMAIN = 'logentries'
 
 DEFAULT_HOST = 'https://webhook.logentries.com/noformat/logs/'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_TOKEN): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_TOKEN): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -42,20 +44,15 @@ def setup(hass, config):
             _state = state_helper.state_as_number(state)
         except ValueError:
             _state = state.state
-        json_body = [
-            {
-                'domain': state.domain,
-                'entity_id': state.object_id,
-                'attributes': dict(state.attributes),
-                'time': str(event.time_fired),
-                'value': _state,
-            }
-        ]
+        json_body = [{
+            'domain': state.domain,
+            'entity_id': state.object_id,
+            'attributes': dict(state.attributes),
+            'time': str(event.time_fired),
+            'value': _state,
+        }]
         try:
-            payload = {
-                "host": le_wh,
-                "event": json_body
-            }
+            payload = {"host": le_wh, "event": json_body}
             requests.post(le_wh, data=json.dumps(payload), timeout=10)
         except requests.exceptions.RequestException as error:
             _LOGGER.exception("Error sending to Logentries: %s", error)

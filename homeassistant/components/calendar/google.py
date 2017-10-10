@@ -10,8 +10,7 @@ from datetime import timedelta
 
 from homeassistant.components.calendar import CalendarEventDevice
 from homeassistant.components.google import (
-    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
-    GoogleCalendarService)
+    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE, GoogleCalendarService)
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,9 +33,11 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    add_devices([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
-                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
+    add_devices([
+        GoogleCalendarEventDevice(hass, calendar_service,
+                                  disc_info[CONF_CAL_ID], data)
+        for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]
+    ])
 
 
 class GoogleCalendarEventDevice(CalendarEventDevice):

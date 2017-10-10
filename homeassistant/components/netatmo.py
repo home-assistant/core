@@ -10,15 +10,16 @@ from urllib.error import HTTPError
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_DISCOVERY)
+from homeassistant.const import (CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_DISCOVERY)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.9.2.zip#lnetatmo==0.9.2']
+    'v0.9.2.zip#lnetatmo==0.9.2'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +33,23 @@ DEFAULT_DISCOVERY = True
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_SECRET_KEY): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Required(CONF_SECRET_KEY):
+            cv.string,
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY):
+            cv.boolean,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -95,8 +104,8 @@ class CameraData(object):
         """Return all module available on the API as a list."""
         self.module_names = []
         self.update()
-        cam_id = self.camera_data.cameraByName(camera=camera_name,
-                                               home=self.home)['id']
+        cam_id = self.camera_data.cameraByName(
+            camera=camera_name, home=self.home)['id']
         for module in self.camera_data.modules.values():
             if cam_id == module['cam_id']:
                 self.module_names.append(module['name'])

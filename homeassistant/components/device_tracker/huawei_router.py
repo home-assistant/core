@@ -13,16 +13,19 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string
 })
 
 
@@ -106,11 +109,12 @@ class HuaweiDeviceScanner(DeviceScanner):
             for device in device_regex_res:
                 device_attrs_regex_res = self.DEVICE_ATTR_REGEX.search(device)
 
-                devices.append(Device(device_attrs_regex_res.group('HostName'),
-                                      device_attrs_regex_res.group('IpAddr'),
-                                      device_attrs_regex_res.group('MacAddr'),
-                                      device_attrs_regex_res.group(
-                                          'DevStatus') == "Online"))
+                devices.append(
+                    Device(
+                        device_attrs_regex_res.group('HostName'),
+                        device_attrs_regex_res.group('IpAddr'),
+                        device_attrs_regex_res.group('MacAddr'),
+                        device_attrs_regex_res.group('DevStatus') == "Online"))
 
         return devices
 
@@ -120,11 +124,11 @@ class HuaweiDeviceScanner(DeviceScanner):
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors='replace')
 
         _LOGGER.debug("Loggin in")
-        cookie = requests.post('http://{}/login.cgi'.format(self.host),
-                               data=[('UserName', self.username),
-                                     ('PassWord', self.password),
-                                     ('x.X_HW_Token', cnt_str)],
-                               cookies=self.LOGIN_COOKIE)
+        cookie = requests.post(
+            'http://{}/login.cgi'.format(self.host),
+            data=[('UserName', self.username), ('PassWord', self.password),
+                  ('x.X_HW_Token', cnt_str)],
+            cookies=self.LOGIN_COOKIE)
 
         _LOGGER.debug("Requesting lan user info update")
         # this request is needed or else some devices' state won't be updated

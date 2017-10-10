@@ -8,8 +8,8 @@ import asyncio
 from functools import partial
 import logging
 
-from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_NOT_HOME, HTTP_UNPROCESSABLE_ENTITY)
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, STATE_NOT_HOME,
+                                 HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA
@@ -60,18 +60,15 @@ class LocativeView(HomeAssistantView):
 
         if 'device' not in data:
             _LOGGER.error('Device id not specified.')
-            return ('Device id not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
+            return ('Device id not specified.', HTTP_UNPROCESSABLE_ENTITY)
 
         if 'trigger' not in data:
             _LOGGER.error('Trigger is not specified.')
-            return ('Trigger is not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
+            return ('Trigger is not specified.', HTTP_UNPROCESSABLE_ENTITY)
 
         if 'id' not in data and data['trigger'] != 'test':
             _LOGGER.error('Location id not specified.')
-            return ('Location id not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
+            return ('Location id not specified.', HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
         location_name = data.get('id', data['trigger']).lower()
@@ -80,19 +77,24 @@ class LocativeView(HomeAssistantView):
 
         if direction == 'enter':
             yield from hass.async_add_job(
-                partial(self.see, dev_id=device, location_name=location_name,
-                        gps=gps_location))
+                partial(
+                    self.see,
+                    dev_id=device,
+                    location_name=location_name,
+                    gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
-            current_state = hass.states.get(
-                '{}.{}'.format(DOMAIN, device))
+            current_state = hass.states.get('{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
                 yield from hass.async_add_job(
-                    partial(self.see, dev_id=device,
-                            location_name=location_name, gps=gps_location))
+                    partial(
+                        self.see,
+                        dev_id=device,
+                        location_name=location_name,
+                        gps=gps_location))
                 return 'Setting location to not home'
 
             # Ignore the message if it is telling us to exit a zone that we

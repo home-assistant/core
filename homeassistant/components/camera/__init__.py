@@ -60,16 +60,16 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_EN_MOTION, data))
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_EN_MOTION, data))
 
 
 @bind_hass
 def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DISEN_MOTION, data))
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_DISEN_MOTION, data))
 
 
 @asyncio.coroutine
@@ -82,18 +82,16 @@ def async_get_image(hass, entity_id, timeout=10):
         raise HomeAssistantError(
             "No entity '{0}' for grab a image".format(entity_id))
 
-    url = "{0}{1}".format(
-        hass.config.api.base_url,
-        state.attributes.get(ATTR_ENTITY_PICTURE)
-    )
+    url = "{0}{1}".format(hass.config.api.base_url,
+                          state.attributes.get(ATTR_ENTITY_PICTURE))
 
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             response = yield from websession.get(url)
 
             if response.status != 200:
-                raise HomeAssistantError("Error {0} on {1}".format(
-                    response.status, url))
+                raise HomeAssistantError(
+                    "Error {0} on {1}".format(response.status, url))
 
             image = yield from response.read()
             return image
@@ -147,16 +145,23 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_EN_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_EN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_EN_MOTION,
+        async_handle_camera_service,
+        descriptions.get(SERVICE_EN_MOTION),
+        schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_DISEN_MOTION, async_handle_camera_service,
-        descriptions.get(SERVICE_DISEN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_DISEN_MOTION,
+        async_handle_camera_service,
+        descriptions.get(SERVICE_DISEN_MOTION),
+        schema=CAMERA_SERVICE_SCHEMA)
 
     return True
 
@@ -226,12 +231,12 @@ class Camera(Entity):
 
         def write(img_bytes):
             """Write image to stream."""
-            response.write(bytes(
-                '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
-                    self.content_type, len(img_bytes)),
-                'utf-8') + img_bytes + b'\r\n')
+            response.write(
+                bytes('--frameboundary\r\n'
+                      'Content-Type: {}\r\n'
+                      'Content-Length: {}\r\n\r\n'.format(
+                          self.content_type, len(img_bytes)), 'utf-8') +
+                img_bytes + b'\r\n')
 
         last_image = None
 
@@ -309,8 +314,8 @@ class Camera(Entity):
     def async_update_token(self):
         """Update the used token."""
         self.access_tokens.append(
-            hashlib.sha256(
-                _RND.getrandbits(256).to_bytes(32, 'little')).hexdigest())
+            hashlib.sha256(_RND.getrandbits(256).to_bytes(32, 'little'))
+            .hexdigest())
 
 
 class CameraView(HomeAssistantView):
@@ -331,8 +336,8 @@ class CameraView(HomeAssistantView):
             status = 404 if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)
 
-        authenticated = (request[KEY_AUTHENTICATED] or
-                         request.query.get('token') in camera.access_tokens)
+        authenticated = (request[KEY_AUTHENTICATED]
+                         or request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
             return web.Response(status=401)
@@ -360,8 +365,8 @@ class CameraImageView(CameraView):
                 image = yield from camera.async_camera_image()
 
             if image:
-                return web.Response(body=image,
-                                    content_type=camera.content_type)
+                return web.Response(
+                    body=image, content_type=camera.content_type)
 
         return web.Response(status=500)
 

@@ -8,11 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP, CONF_URL)
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.switch import SwitchDevice
 
 REQUIREMENTS = ['pyqwikswitch==0.4']
@@ -25,13 +25,19 @@ CONF_DIMMER_ADJUST = 'dimmer_adjust'
 CONF_BUTTON_EVENTS = 'button_events'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
             vol.Coerce(str),
-        vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
-        vol.Optional(CONF_BUTTON_EVENTS): vol.Coerce(str)
-    })}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_DIMMER_ADJUST, default=1):
+            CV_DIM_VALUE,
+            vol.Optional(CONF_BUTTON_EVENTS):
+            vol.Coerce(str)
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 QSUSB = {}
 
@@ -97,7 +103,7 @@ class QSToggleEntity(object):
         newvalue = 255
         if ATTR_BRIGHTNESS in kwargs:
             newvalue = kwargs[ATTR_BRIGHTNESS]
-        if self._qsusb.set(self._id, round(min(newvalue, 255)/2.55)) >= 0:
+        if self._qsusb.set(self._id, round(min(newvalue, 255) / 2.55)) >= 0:
             self.update_value(newvalue)
 
     # pylint: disable=unused-argument
@@ -124,9 +130,8 @@ class QSLight(QSToggleEntity, Light):
 
 def setup(hass, config):
     """Set up the QSUSB component."""
-    from pyqwikswitch import (
-        QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
-        QSType)
+    from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
+                              PQS_VALUE, PQS_TYPE, QSType)
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -191,6 +196,7 @@ def setup(hass, config):
     def _start(event):
         """Start listening."""
         qsusb.listen(callback=qs_callback, timeout=30)
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start)
 
     return True

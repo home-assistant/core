@@ -40,12 +40,15 @@ CHECKIN_SERVICE_SCHEMA = vol.Schema({
     vol.Required('venueId'): cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-        vol.Required(CONF_PUSH_SECRET): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_ACCESS_TOKEN): cv.string,
+            vol.Required(CONF_PUSH_SECRET): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -64,16 +67,18 @@ def setup(hass, config):
         response = requests.post(url, data=call.data, timeout=10)
 
         if response.status_code not in (200, 201):
-            _LOGGER.exception(
-                "Error checking in user. Response %d: %s:",
-                response.status_code, response.reason)
+            _LOGGER.exception("Error checking in user. Response %d: %s:",
+                              response.status_code, response.reason)
 
         hass.bus.fire(EVENT_CHECKIN, response.text)
 
     # Register our service with Home Assistant.
-    hass.services.register(DOMAIN, 'checkin', checkin_user,
-                           descriptions[DOMAIN][SERVICE_CHECKIN],
-                           schema=CHECKIN_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        'checkin',
+        checkin_user,
+        descriptions[DOMAIN][SERVICE_CHECKIN],
+        schema=CHECKIN_SERVICE_SCHEMA)
 
     hass.http.register_view(FoursquarePushReceiver(config[CONF_PUSH_SECRET]))
 

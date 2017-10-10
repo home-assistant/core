@@ -10,12 +10,12 @@ from binascii import hexlify, unhexlify
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_DEVICE,
+                                 CONF_NAME, CONF_PIN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              dispatcher_send)
 
 REQUIREMENTS = ['xbee-helper==0.0.7']
 
@@ -46,18 +46,25 @@ ATTR_FRAME = 'frame'
 
 DEVICE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_BAUD, default=DEFAULT_BAUD):
+            cv.string,
+            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+            cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_PIN): cv.positive_int,
-    vol.Optional(CONF_ADDRESS): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_PIN): cv.positive_int,
+        vol.Optional(CONF_ADDRESS): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -181,15 +188,9 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
         "low" or "high".
         """
         if self._config.get("on_state", "").lower() == "low":
-            bool2state = {
-                True: False,
-                False: True
-            }
+            bool2state = {True: False, False: True}
         else:
-            bool2state = {
-                True: True,
-                False: False
-            }
+            bool2state = {True: True, False: False}
         state2bool = {v: k for k, v in bool2state.items()}
         return bool2state, state2bool
 
@@ -280,6 +281,7 @@ class ZigBeeDigitalIn(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
+
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -296,8 +298,8 @@ class ZigBeeDigitalIn(Entity):
             self._state = self._config.state2bool[sample[pin_name]]
             self.schedule_update_ha_state()
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
+        async_dispatcher_connect(self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED,
+                                 handle_frame)
 
     @property
     def name(self):
@@ -329,15 +331,15 @@ class ZigBeeDigitalIn(Entity):
                 "ZigBee device at address: %s", hexlify(self._config.address))
             return
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from ZigBee device: %s",
+                              exc)
             return
         pin_name = DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
                 "Pin %s (%s) was not in the sample provided by ZigBee device "
-                "%s.",
-                self._config.pin, pin_name, hexlify(self._config.address))
+                "%s.", self._config.pin, pin_name,
+                hexlify(self._config.address))
             return
         self._state = self._config.state2bool[sample[pin_name]]
 
@@ -348,18 +350,17 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     def _set_state(self, state):
         """Initialize the ZigBee digital out device."""
         try:
-            DEVICE.set_gpio_pin(
-                self._config.pin,
-                self._config.bool2state[state],
-                self._config.address)
+            DEVICE.set_gpio_pin(self._config.pin,
+                                self._config.bool2state[state],
+                                self._config.address)
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to set output pin on "
                 "ZigBee device at address: %s", hexlify(self._config.address))
             return
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to set digital pin on ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to set digital pin on ZigBee device: %s",
+                              exc)
             return
         self._state = state
         if not self.should_poll:
@@ -376,9 +377,8 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     def update(self):
         """Ask the ZigBee device what its output is set to."""
         try:
-            pin_state = DEVICE.get_gpio_pin(
-                self._config.pin,
-                self._config.address)
+            pin_state = DEVICE.get_gpio_pin(self._config.pin,
+                                            self._config.address)
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get output pin status"
@@ -403,6 +403,7 @@ class ZigBeeAnalogIn(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
+
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -416,15 +417,12 @@ class ZigBeeAnalogIn(Entity):
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
-            self._value = CONVERT_ADC(
-                sample[pin_name],
-                ADC_PERCENTAGE,
-                self._config.max_voltage
-            )
+            self._value = CONVERT_ADC(sample[pin_name], ADC_PERCENTAGE,
+                                      self._config.max_voltage)
             self.schedule_update_ha_state()
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
+        async_dispatcher_connect(self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED,
+                                 handle_frame)
 
     @property
     def name(self):
@@ -455,14 +453,12 @@ class ZigBeeAnalogIn(Entity):
         """Get the latest reading from the ADC."""
         try:
             self._value = DEVICE.read_analog_pin(
-                self._config.pin,
-                self._config.max_voltage,
-                self._config.address,
-                ADC_PERCENTAGE)
+                self._config.pin, self._config.max_voltage,
+                self._config.address, ADC_PERCENTAGE)
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
                 "ZigBee device at address: %s", hexlify(self._config.address))
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from ZigBee device: %s",
+                              exc)

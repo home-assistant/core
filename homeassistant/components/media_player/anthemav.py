@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF,
+                                 STATE_ON, STATE_UNKNOWN,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['anthemav==1.1.8']
@@ -29,10 +29,13 @@ SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    })
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+})
 
 
 @asyncio.coroutine
@@ -53,7 +56,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.async_add_job(device.async_update_ha_state())
 
     avr = yield from anthemav.Connection.create(
-        host=host, port=port, loop=hass.loop,
+        host=host,
+        port=port,
+        loop=hass.loop,
         update_callback=async_anthemav_update_callback)
 
     device = AnthemAVR(avr, name)
@@ -162,14 +167,13 @@ class AnthemAVR(MediaPlayerDevice):
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
-        _LOGGER.info(
-            "Sending command to AVR: set %s to %s", propname, str(value))
+        _LOGGER.info("Sending command to AVR: set %s to %s", propname,
+                     str(value))
         setattr(self.avr.protocol, propname, value)
 
     @property
     def dump_avrdata(self):
         """Return state of avr object for debugging forensics."""
         attrs = vars(self)
-        return(
-            'dump_avrdata: '
-            + ', '.join('%s: %s' % item for item in attrs.items()))
+        return ('dump_avrdata: ' + ', '.join('%s: %s' % item
+                                             for item in attrs.items()))

@@ -43,8 +43,8 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
     def open_cover(self, **kwargs):
         """Move the cover up."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_UP, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_UP,
+                                     1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
@@ -56,8 +56,8 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
     def close_cover(self, **kwargs):
         """Move the cover down."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_DOWN, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_DOWN, 1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
@@ -70,8 +70,8 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_DIMMER, position)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_DIMMER, position)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
@@ -80,5 +80,5 @@ class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the device."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_STOP, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_STOP, 1)

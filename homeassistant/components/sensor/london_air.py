@@ -21,40 +21,19 @@ _LOGGER = logging.getLogger(__name__)
 CONF_LOCATIONS = 'locations'
 SCAN_INTERVAL = timedelta(minutes=30)
 AUTHORITIES = [
-    'Barking and Dagenham',
-    'Bexley',
-    'Brent',
-    'Camden',
-    'City of London',
-    'Croydon',
-    'Ealing',
-    'Enfield',
-    'Greenwich',
-    'Hackney',
-    'Hammersmith and Fulham',
-    'Haringey',
-    'Harrow',
-    'Havering',
-    'Hillingdon',
-    'Islington',
-    'Kensington and Chelsea',
-    'Kingston',
-    'Lambeth',
-    'Lewisham',
-    'Merton',
-    'Redbridge',
-    'Richmond',
-    'Southwark',
-    'Sutton',
-    'Tower Hamlets',
-    'Wandsworth',
-    'Westminster']
+    'Barking and Dagenham', 'Bexley', 'Brent', 'Camden', 'City of London',
+    'Croydon', 'Ealing', 'Enfield', 'Greenwich', 'Hackney',
+    'Hammersmith and Fulham', 'Haringey', 'Harrow', 'Havering', 'Hillingdon',
+    'Islington', 'Kensington and Chelsea', 'Kingston', 'Lambeth', 'Lewisham',
+    'Merton', 'Redbridge', 'Richmond', 'Southwark', 'Sutton', 'Tower Hamlets',
+    'Wandsworth', 'Westminster'
+]
 URL = ('http://api.erg.kcl.ac.uk/AirQuality/Hourly/'
        'MonitoringIndex/GroupName=London/Json')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LOCATIONS, default=AUTHORITIES):
-        vol.All(cv.ensure_list, [vol.In(AUTHORITIES)]),
+    vol.All(cv.ensure_list, [vol.In(AUTHORITIES)]),
 })
 
 
@@ -155,8 +134,8 @@ def parse_species(species_data):
             species_dict['code'] = species['@SpeciesCode']
             species_dict['quality'] = species['@AirQualityBand']
             species_dict['index'] = species['@AirQualityIndex']
-            species_dict['summary'] = (species_dict['code'] + ' is '
-                                       + species_dict['quality'])
+            species_dict['summary'] = (
+                species_dict['code'] + ' is ' + species_dict['quality'])
             parsed_species_data.append(species_dict)
             quality_list.append(species_dict['quality'])
     return parsed_species_data, quality_list
@@ -188,8 +167,8 @@ def parse_site(entry_sites_data):
         site_data['pollutants'] = parsed_species_data
 
         if quality_list:
-            site_data['pollutants_status'] = max(set(quality_list),
-                                                 key=quality_list.count)
+            site_data['pollutants_status'] = max(
+                set(quality_list), key=quality_list.count)
             site_data['number_of_pollutants'] = len(quality_list)
         else:
             site_data['pollutants_status'] = 'no_species_data'

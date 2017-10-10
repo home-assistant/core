@@ -8,21 +8,22 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
-    BaseNotificationService)
+from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
+                                             ATTR_TARGET, ATTR_DATA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-pushover==0.3']
 _LOGGER = logging.getLogger(__name__)
 
-
 CONF_USER_KEY = 'user_key'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USER_KEY): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_USER_KEY):
+    cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
 })
 
 
@@ -32,8 +33,8 @@ def get_service(hass, config, discovery_info=None):
     from pushover import InitError
 
     try:
-        return PushoverNotificationService(
-            config[CONF_USER_KEY], config[CONF_API_KEY])
+        return PushoverNotificationService(config[CONF_USER_KEY],
+                                           config[CONF_API_KEY])
     except InitError:
         _LOGGER.error("Wrong API key supplied")
         return None
@@ -47,8 +48,7 @@ class PushoverNotificationService(BaseNotificationService):
         from pushover import Client
         self._user_key = user_key
         self._api_token = api_token
-        self.pushover = Client(
-            self._user_key, api_token=self._api_token)
+        self.pushover = Client(self._user_key, api_token=self._api_token)
 
     def send_message(self, message='', **kwargs):
         """Send a message to a user."""

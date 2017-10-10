@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import (
-    DATA_RAINCLOUD, ICON_MAP, RainCloudEntity, SENSORS)
+from homeassistant.components.raincloud import (DATA_RAINCLOUD, ICON_MAP,
+                                                RainCloudEntity, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+    vol.All(cv.ensure_list, [vol.In(SENSORS)]),
 })
 
 
@@ -33,8 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         if sensor_type == 'battery':
             sensors.append(
-                RainCloudSensor(raincloud.controller.faucet,
-                                sensor_type))
+                RainCloudSensor(raincloud.controller.faucet, sensor_type))
         else:
             # create an sensor for each zone managed by a faucet
             for zone in raincloud.controller.faucet.zones:
@@ -64,6 +63,6 @@ class RainCloudSensor(RainCloudEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if self._sensor_type == 'battery' and self._state is not None:
-            return icon_for_battery_level(battery_level=int(self._state),
-                                          charging=False)
+            return icon_for_battery_level(
+                battery_level=int(self._state), charging=False)
         return ICON_MAP.get(self._sensor_type)

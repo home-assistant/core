@@ -41,18 +41,17 @@ ICLOUDTRACKERS = {}
 
 _CONFIGURING = {}
 
-DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
-                   'deviceStatus', 'remoteLock', 'activationLocked',
-                   'deviceClass', 'id', 'deviceModel', 'rawDeviceModel',
-                   'passcodeLength', 'canWipeAfterLock', 'trackingInfo',
-                   'location', 'msg', 'batteryLevel', 'remoteWipe',
-                   'thisDevice', 'snd', 'prsId', 'wipeInProgress',
-                   'lowPowerMode', 'lostModeEnabled', 'isLocating',
-                   'lostModeCapable', 'mesg', 'name', 'batteryStatus',
-                   'lockedTimestamp', 'lostTimestamp', 'locationCapable',
-                   'deviceDisplayName', 'lostDevice', 'deviceColor',
-                   'wipedTimestamp', 'modelDisplayName', 'locationEnabled',
-                   'isMac', 'locFoundEnabled']
+DEVICESTATUSSET = [
+    'features', 'maxMsgChar', 'darkWake', 'fmlyShare', 'deviceStatus',
+    'remoteLock', 'activationLocked', 'deviceClass', 'id', 'deviceModel',
+    'rawDeviceModel', 'passcodeLength', 'canWipeAfterLock', 'trackingInfo',
+    'location', 'msg', 'batteryLevel', 'remoteWipe', 'thisDevice', 'snd',
+    'prsId', 'wipeInProgress', 'lowPowerMode', 'lostModeEnabled', 'isLocating',
+    'lostModeCapable', 'mesg', 'name', 'batteryStatus', 'lockedTimestamp',
+    'lostTimestamp', 'locationCapable', 'deviceDisplayName', 'lostDevice',
+    'deviceColor', 'wipedTimestamp', 'modelDisplayName', 'locationEnabled',
+    'isMac', 'locFoundEnabled'
+]
 
 DEVICESTATUSCODES = {
     '200': 'online',
@@ -62,15 +61,21 @@ DEVICESTATUSCODES = {
 }
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
-    vol.Optional(ATTR_DEVICENAME): cv.slugify,
-    vol.Optional(ATTR_INTERVAL): cv.positive_int,
+    vol.Optional(ATTR_ACCOUNTNAME):
+    vol.All(cv.ensure_list, [cv.slugify]),
+    vol.Optional(ATTR_DEVICENAME):
+    cv.slugify,
+    vol.Optional(ATTR_INTERVAL):
+    cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(ATTR_ACCOUNTNAME):
+    cv.slugify,
 })
 
 
@@ -96,8 +101,9 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].lost_iphone(devicename)
-    hass.services.register(DOMAIN, 'icloud_lost_iphone', lost_iphone,
-                           schema=SERVICE_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, 'icloud_lost_iphone', lost_iphone, schema=SERVICE_SCHEMA)
 
     def update_icloud(call):
         """Call the update function of an iCloud account."""
@@ -106,8 +112,9 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].update_icloud(devicename)
-    hass.services.register(DOMAIN, 'icloud_update', update_icloud,
-                           schema=SERVICE_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, 'icloud_update', update_icloud, schema=SERVICE_SCHEMA)
 
     def reset_account_icloud(call):
         """Reset an iCloud account."""
@@ -115,8 +122,12 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].reset_account_icloud()
-    hass.services.register(DOMAIN, 'icloud_reset_account',
-                           reset_account_icloud, schema=SERVICE_SCHEMA)
+
+    hass.services.register(
+        DOMAIN,
+        'icloud_reset_account',
+        reset_account_icloud,
+        schema=SERVICE_SCHEMA)
 
     def setinterval(call):
         """Call the update function of an iCloud account."""
@@ -127,8 +138,8 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].setinterval(interval, devicename)
 
-    hass.services.register(DOMAIN, 'icloud_set_interval', setinterval,
-                           schema=SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'icloud_set_interval', setinterval, schema=SERVICE_SCHEMA)
 
     # Tells the bootstrapper that the component was successfully initialized
     return True
@@ -159,14 +170,13 @@ class Icloud(DeviceScanner):
         self.reset_account_icloud()
 
         randomseconds = random.randint(10, 59)
-        track_utc_time_change(
-            self.hass, self.keep_alive, second=randomseconds)
+        track_utc_time_change(self.hass, self.keep_alive, second=randomseconds)
 
     def reset_account_icloud(self):
         """Reset an iCloud account."""
         from pyicloud import PyiCloudService
-        from pyicloud.exceptions import (
-            PyiCloudFailedLoginException, PyiCloudNoDevicesException)
+        from pyicloud.exceptions import (PyiCloudFailedLoginException,
+                                         PyiCloudNoDevicesException)
 
         icloud_dir = self.hass.config.path('icloud')
         if not os.path.exists(icloud_dir):
@@ -174,7 +184,8 @@ class Icloud(DeviceScanner):
 
         try:
             self.api = PyiCloudService(
-                self.username, self.password,
+                self.username,
+                self.password,
                 cookie_directory=icloud_dir,
                 verify=True)
         except PyiCloudFailedLoginException as error:
@@ -223,20 +234,21 @@ class Icloud(DeviceScanner):
         devicesstring = ''
         devices = self.api.trusted_devices
         for i, device in enumerate(devices):
-            devicename = device.get(
-                'deviceName', 'SMS to %s' % device.get('phoneNumber'))
+            devicename = device.get('deviceName',
+                                    'SMS to %s' % device.get('phoneNumber'))
             devicesstring += "{}: {};".format(i, devicename)
 
         _CONFIGURING[self.accountname] = configurator.request_config(
             'iCloud {}'.format(self.accountname),
             self.icloud_trusted_device_callback,
-            description=(
-                'Please choose your trusted device by entering'
-                ' the index from this list: ' + devicesstring),
+            description=('Please choose your trusted device by entering'
+                         ' the index from this list: ' + devicesstring),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'id': 'trusted_device', 'name': 'Trusted Device'}]
-        )
+            fields=[{
+                'id': 'trusted_device',
+                'name': 'Trusted Device'
+            }])
 
     def icloud_verification_callback(self, callback_data):
         """Handle the chosen trusted device."""
@@ -273,8 +285,10 @@ class Icloud(DeviceScanner):
             description=('Please enter the validation code:'),
             entity_picture="/static/images/config_icloud.png",
             submit_caption='Confirm',
-            fields=[{'id': 'code', 'name': 'code'}]
-        )
+            fields=[{
+                'id': 'code',
+                'name': 'code'
+            }])
 
     def keep_alive(self, now):
         """Keep the API alive."""
@@ -311,8 +325,7 @@ class Icloud(DeviceScanner):
             for devicename in self.devices:
                 interval = self._intervals.get(devicename, 1)
                 if ((currentminutes % interval == 0) or
-                        (interval > 10 and
-                         currentminutes % interval in [2, 4])):
+                    (interval > 10 and currentminutes % interval in [2, 4])):
                     self.update_device(devicename)
         except ValueError:
             _LOGGER.debug("iCloud API returned an error")
@@ -323,16 +336,16 @@ class Icloud(DeviceScanner):
         zone_state = self.hass.states.get('zone.home')
         zone_state_lat = zone_state.attributes['latitude']
         zone_state_long = zone_state.attributes['longitude']
-        distancefromhome = distance(
-            latitude, longitude, zone_state_lat, zone_state_long)
+        distancefromhome = distance(latitude, longitude, zone_state_lat,
+                                    zone_state_long)
         distancefromhome = round(distancefromhome / 1000, 1)
 
         currentzone = active_zone(self.hass, latitude, longitude)
 
-        if ((currentzone is not None and
-             currentzone == self._overridestates.get(devicename)) or
-                (currentzone is None and
-                 self._overridestates.get(devicename) == 'away')):
+        if ((currentzone is not None
+             and currentzone == self._overridestates.get(devicename))
+                or (currentzone is None
+                    and self._overridestates.get(devicename) == 'away')):
             return
 
         self._overridestates[devicename] = None
@@ -384,9 +397,8 @@ class Icloud(DeviceScanner):
                 battery = status.get('batteryLevel', 0) * 100
                 location = status['location']
                 if location:
-                    self.determine_interval(
-                        devicename, location['latitude'],
-                        location['longitude'], battery)
+                    self.determine_interval(devicename, location['latitude'],
+                                            location['longitude'], battery)
                     interval = self._intervals.get(devicename, 1)
                     attrs[ATTR_INTERVAL] = interval
                     accuracy = location['horizontalAccuracy']

@@ -19,26 +19,25 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['bloomsky']
 
 # These are the available sensors
-SENSOR_TYPES = ['Temperature',
-                'Humidity',
-                'Pressure',
-                'Luminance',
-                'UVIndex',
-                'Voltage']
+SENSOR_TYPES = [
+    'Temperature', 'Humidity', 'Pressure', 'Luminance', 'UVIndex', 'Voltage'
+]
 
 # Sensor units - these do not currently align with the API documentation
-SENSOR_UNITS = {'Temperature': TEMP_FAHRENHEIT,
-                'Humidity': '%',
-                'Pressure': 'inHg',
-                'Luminance': 'cd/m²',
-                'Voltage': 'mV'}
+SENSOR_UNITS = {
+    'Temperature': TEMP_FAHRENHEIT,
+    'Humidity': '%',
+    'Pressure': 'inHg',
+    'Luminance': 'cd/m²',
+    'Voltage': 'mV'
+}
 
 # Which sensors to format numerically
 FORMAT_NUMBERS = ['Temperature', 'Pressure', 'Voltage']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -51,8 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device in bloomsky.BLOOMSKY.devices.values():
         for variable in sensors:
-            add_devices(
-                [BloomSkySensor(bloomsky.BLOOMSKY, device, variable)], True)
+            add_devices([BloomSkySensor(bloomsky.BLOOMSKY, device, variable)],
+                        True)
 
 
 class BloomSkySensor(Entity):

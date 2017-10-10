@@ -18,11 +18,12 @@ DOMAIN = 'shell_command'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: cv.string,
+        }),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -65,9 +66,11 @@ def setup(hass, config):
             shell = False
 
         try:
-            subprocess.call(cmd, shell=shell,
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL)
+            subprocess.call(
+                cmd,
+                shell=shell,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
         except subprocess.SubprocessError:
             _LOGGER.exception("Error running command: %s", cmd)
 

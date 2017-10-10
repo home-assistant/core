@@ -33,9 +33,12 @@ ICON = 'mdi:currency'
 SCAN_INTERVAL = timedelta(days=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TARGET): cv.string,
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_TARGET):
+    cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -115,7 +118,8 @@ class ExchangeData(object):
         self.base_currency = base_currency
         self.target_currency = target_currency
         self.exchange = Fixerio(
-            base=self.base_currency, symbols=[self.target_currency],
+            base=self.base_currency,
+            symbols=[self.target_currency],
             secure=True)
 
     def update(self):

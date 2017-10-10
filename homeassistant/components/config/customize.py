@@ -13,10 +13,14 @@ CONFIG_PATH = 'customize.yaml'
 @asyncio.coroutine
 def async_setup(hass):
     """Set up the Customize config API."""
-    hass.http.register_view(CustomizeConfigView(
-        'customize', 'config', CONFIG_PATH, cv.entity_id, dict,
-        post_write_hook=async_reload_core_config
-    ))
+    hass.http.register_view(
+        CustomizeConfigView(
+            'customize',
+            'config',
+            CONFIG_PATH,
+            cv.entity_id,
+            dict,
+            post_write_hook=async_reload_core_config))
 
     return True
 

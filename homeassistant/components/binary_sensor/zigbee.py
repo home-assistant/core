@@ -18,14 +18,15 @@ DEPENDENCIES = ['zigbee']
 STATES = ['high', 'low']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ON_STATE): vol.In(STATES),
+    vol.Optional(CONF_ON_STATE):
+    vol.In(STATES),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZigBee binary sensor platform."""
-    add_devices(
-        [ZigBeeBinarySensor(hass, ZigBeeDigitalInConfig(config))], True)
+    add_devices([ZigBeeBinarySensor(hass, ZigBeeDigitalInConfig(config))],
+                True)
 
 
 class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorDevice):

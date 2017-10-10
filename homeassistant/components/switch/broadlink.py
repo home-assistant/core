@@ -16,10 +16,9 @@ import voluptuous as vol
 from homeassistant.util.dt import utcnow
 from homeassistant.util import Throttle
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_SWITCHES,
-    CONF_COMMAND_OFF, CONF_COMMAND_ON,
-    CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
+from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
+                                 CONF_COMMAND_OFF, CONF_COMMAND_ON,
+                                 CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['broadlink==0.5']
@@ -36,9 +35,11 @@ SERVICE_LEARN = 'learn_command'
 SERVICE_SEND = 'send_packet'
 CONF_SLOTS = 'slots'
 
-RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
-            'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
-            'rm2_pro_plus_bl', 'rm_mini_shate']
+RM_TYPES = [
+    'rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
+    'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2', 'rm2_pro_plus_bl',
+    'rm_mini_shate'
+]
 SP1_TYPES = ['sp1']
 SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
 MP1_TYPES = ["mp1"]
@@ -46,9 +47,12 @@ MP1_TYPES = ["mp1"]
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
-    vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_COMMAND_OFF, default=None):
+    cv.string,
+    vol.Optional(CONF_COMMAND_ON, default=None):
+    cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME):
+    cv.string,
 })
 
 MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
@@ -60,13 +64,21 @@ MP1_SWITCH_SLOT_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SWITCHES, default={}):
-        vol.Schema({cv.slug: SWITCH_SCHEMA}),
-    vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+    vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
+    vol.Optional(CONF_SLOTS, default={}):
+    MP1_SWITCH_SLOT_SCHEMA,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_MAC):
+    cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]):
+    vol.In(SWITCH_TYPES),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int
 })
 
 
@@ -97,8 +109,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Press the key you want HASS to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = yield from hass.async_add_job(
-                broadlink_device.check_data)
+            packet = yield from hass.async_add_job(broadlink_device.check_data)
             if packet:
                 log_msg = "Recieved packet is: {}".\
                           format(b64encode(packet).decode('utf8'))
@@ -118,15 +129,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for retry in range(DEFAULT_RETRY):
                 try:
                     payload = b64decode(packet)
-                    yield from hass.async_add_job(
-                        broadlink_device.send_data, payload)
+                    yield from hass.async_add_job(broadlink_device.send_data,
+                                                  payload)
                     break
                 except (socket.timeout, ValueError):
                     try:
-                        yield from hass.async_add_job(
-                            broadlink_device.auth)
+                        yield from hass.async_add_job(broadlink_device.auth)
                     except socket.timeout:
-                        if retry == DEFAULT_RETRY-1:
+                        if retry == DEFAULT_RETRY - 1:
                             _LOGGER.error("Failed to send packet to device")
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
@@ -136,10 +146,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
-        hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                               ip_addr.replace('.', '_'), _learn_command)
-        hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet)
+        hass.services.register(DOMAIN,
+                               SERVICE_LEARN + '_' + ip_addr.replace('.', '_'),
+                               _learn_command)
+        hass.services.register(DOMAIN,
+                               SERVICE_SEND + '_' + ip_addr.replace('.', '_'),
+                               _send_packet)
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
@@ -147,9 +159,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     device_config.get(CONF_FRIENDLY_NAME, object_id),
                     broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
-                    device_config.get(CONF_COMMAND_OFF)
-                )
-            )
+                    device_config.get(CONF_COMMAND_OFF)))
     elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device)]
@@ -162,8 +172,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         parent_device = BroadlinkMP1Switch(broadlink_device)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, i),
-                broadlink_device, i, parent_device)
+                _get_mp1_slot_name(friendly_name, i), broadlink_device, i,
+                parent_device)
             switches.append(slot)
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
@@ -231,7 +241,7 @@ class BroadlinkRMSwitch(SwitchDevice):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, retry-1)
+            return self._sendpacket(packet, retry - 1)
         return True
 
     def _auth(self, retry=2):
@@ -240,7 +250,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(retry-1)
+            return self._auth(retry - 1)
         return auth
 
 
@@ -263,7 +273,7 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, retry-1)
+            return self._sendpacket(packet, retry - 1)
         return True
 
 
@@ -293,9 +303,9 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
                 return
             if not self._auth():
                 return
-            return self._update(retry-1)
+            return self._update(retry - 1)
         if state is None and retry > 0:
-            return self._update(retry-1)
+            return self._update(retry - 1)
         self._state = state
 
 
@@ -325,7 +335,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, max(0, retry-1))
+            return self._sendpacket(packet, max(0, retry - 1))
         return True
 
     @property
@@ -365,9 +375,9 @@ class BroadlinkMP1Switch(object):
                 return
             if not self._auth():
                 return
-            return self._update(max(0, retry-1))
+            return self._update(max(0, retry - 1))
         if states is None and retry > 0:
-            return self._update(max(0, retry-1))
+            return self._update(max(0, retry - 1))
         self._states = states
 
     def _auth(self, retry=2):
@@ -376,5 +386,5 @@ class BroadlinkMP1Switch(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(retry-1)
+            return self._auth(retry - 1)
         return auth

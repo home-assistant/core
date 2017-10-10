@@ -8,18 +8,19 @@ import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.spc import (
-    SpcWebGateway, ATTR_DISCOVER_AREAS, DATA_API, DATA_REGISTRY)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
-
+from homeassistant.components.spc import (SpcWebGateway, ATTR_DISCOVER_AREAS,
+                                          DATA_API, DATA_REGISTRY)
+from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+                                 STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
-SPC_AREA_MODE_TO_STATE = {'0': STATE_ALARM_DISARMED,
-                          '1': STATE_ALARM_ARMED_HOME,
-                          '3': STATE_ALARM_ARMED_AWAY}
+SPC_AREA_MODE_TO_STATE = {
+    '0': STATE_ALARM_DISARMED,
+    '1': STATE_ALARM_ARMED_HOME,
+    '3': STATE_ALARM_ARMED_AWAY
+}
 
 
 def _get_alarm_state(spc_mode):
@@ -27,18 +28,19 @@ def _get_alarm_state(spc_mode):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the SPC alarm control panel platform."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_AREAS] is None):
+    if (discovery_info is None or discovery_info[ATTR_DISCOVER_AREAS] is None):
         return
 
-    devices = [SpcAlarm(hass=hass,
-                        area_id=area['id'],
-                        name=area['name'],
-                        state=_get_alarm_state(area['mode']))
-               for area in discovery_info[ATTR_DISCOVER_AREAS]]
+    devices = [
+        SpcAlarm(
+            hass=hass,
+            area_id=area['id'],
+            name=area['name'],
+            state=_get_alarm_state(area['mode']))
+        for area in discovery_info[ATTR_DISCOVER_AREAS]
+    ]
 
     async_add_devices(devices)
 
@@ -92,5 +94,5 @@ class SpcAlarm(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        yield from self._api.send_area_command(
-            self._area_id, SpcWebGateway.AREA_COMMAND_SET)
+        yield from self._api.send_area_command(self._area_id,
+                                               SpcWebGateway.AREA_COMMAND_SET)

@@ -7,12 +7,10 @@ https://home-assistant.io/components/media_player.nadtcp/
 import logging
 import voluptuous as vol
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, MediaPlayerDevice,
     PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, STATE_OFF, STATE_ON)
+from homeassistant.const import (CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['nad_receiver==0.0.6']
@@ -33,24 +31,30 @@ CONF_VOLUME_STEP = 'volume_step'
 CONF_HOST = 'host'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
-    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): int,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME):
+    int,
+    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME):
+    int,
+    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
+    int,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the NAD platform."""
     from nad_receiver import NADReceiverTCP
-    add_devices([NADtcp(
-        NADReceiverTCP(config.get(CONF_HOST)),
-        config.get(CONF_NAME),
-        config.get(CONF_MIN_VOLUME),
-        config.get(CONF_MAX_VOLUME),
-        config.get(CONF_VOLUME_STEP),
-    )], True)
+    add_devices([
+        NADtcp(
+            NADReceiverTCP(config.get(CONF_HOST)),
+            config.get(CONF_NAME),
+            config.get(CONF_MIN_VOLUME),
+            config.get(CONF_MAX_VOLUME),
+            config.get(CONF_VOLUME_STEP), )
+    ], True)
 
 
 class NADtcp(MediaPlayerDevice):

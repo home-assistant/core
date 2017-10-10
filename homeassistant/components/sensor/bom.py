@@ -18,9 +18,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
+                                 STATE_UNKNOWN, CONF_NAME, ATTR_ATTRIBUTION,
+                                 CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -86,12 +86,16 @@ def validate_station(station):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
-    vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Optional(CONF_STATION): validate_station,
+    vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'):
+    cv.string,
+    vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'):
+    cv.string,
+    vol.Optional(CONF_NAME, default=None):
+    cv.string,
+    vol.Optional(CONF_STATION):
+    validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -101,15 +105,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     zone_id, wmo_id = config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID)
     if station is not None:
         if zone_id and wmo_id:
-            _LOGGER.warning(
-                "Using config %s, not %s and %s for BOM sensor",
-                CONF_STATION, CONF_ZONE_ID, CONF_WMO_ID)
+            _LOGGER.warning("Using config %s, not %s and %s for BOM sensor",
+                            CONF_STATION, CONF_ZONE_ID, CONF_WMO_ID)
     elif zone_id and wmo_id:
         station = '{}.{}'.format(zone_id, wmo_id)
     else:
         station = closest_station(
-            config.get(CONF_LATITUDE), config.get(CONF_LONGITUDE),
-            hass.config.config_dir)
+            config.get(CONF_LATITUDE),
+            config.get(CONF_LONGITUDE), hass.config.config_dir)
         if station is None:
             _LOGGER.error("Could not get BOM weather station from lat/lon")
             return False
@@ -120,8 +123,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except ValueError as err:
         _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
-    add_devices([BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
+    add_devices([
+        BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
+        for variable in config[CONF_MONITORED_CONDITIONS]
+    ])
     return True
 
 
@@ -140,8 +145,8 @@ class BOMCurrentSensor(Entity):
         if self.stationname is None:
             return 'BOM {}'.format(SENSOR_TYPES[self._condition][0])
 
-        return 'BOM {} {}'.format(
-            self.stationname, SENSOR_TYPES[self._condition][0])
+        return 'BOM {} {}'.format(self.stationname,
+                                  SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
@@ -159,8 +164,8 @@ class BOMCurrentSensor(Entity):
         attr['Zone Id'] = self.rest.data['history_product']
         attr['Station Id'] = self.rest.data['wmo']
         attr['Station Name'] = self.rest.data['name']
-        attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
+        attr['Last Update'] = datetime.datetime.strptime(
+            str(self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -195,9 +200,9 @@ class BOMCurrentData(object):
         if self._lastupdate != 0 and \
             ((datetime.datetime.now() - self._lastupdate) <
              datetime.timedelta(minutes=35)):
-            _LOGGER.info(
-                "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
+            _LOGGER.info("BOM was updated %s minutes ago, skipping update as"
+                         " < 35 minutes",
+                         (datetime.datetime.now() - self._lastupdate))
             return self._lastupdate
 
         try:
@@ -233,8 +238,9 @@ def _get_bom_stations():
                     line = station_txt.readline().decode().strip()
                     if len(line) < 120:
                         break  # end while loop, ignoring any footer text
-                    wmo, lat, lon = (line[a:b].strip() for a, b in
-                                     [(128, 134), (70, 78), (79, 88)])
+                    wmo, lat, lon = (line[a:b].strip()
+                                     for a, b in [(128, 134), (70, 78), (79,
+                                                                         88)])
                     if wmo != '..':
                         latlon[wmo] = (float(lat), float(lon))
     zones = {}
@@ -245,8 +251,10 @@ def _get_bom_stations():
             state)
         for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
             zones[wmo_id] = zone_id
-    return {'{}.{}'.format(zones[k], k): latlon[k]
-            for k in set(latlon) & set(zones)}
+    return {
+        '{}.{}'.format(zones[k], k): latlon[k]
+        for k in set(latlon) & set(zones)
+    }
 
 
 def bom_stations(cache_dir):
@@ -274,6 +282,6 @@ def closest_station(lat, lon, cache_dir):
     def comparable_dist(wmo_id):
         """Create a psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[wmo_id]
-        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
+        return (lat - station_lat)**2 + (lon - station_lon)**2
 
     return min(stations, key=comparable_dist)

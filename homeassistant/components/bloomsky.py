@@ -26,11 +26,13 @@ DOMAIN = 'bloomsky'
 # no point in polling the API more frequently
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=unused-argument
@@ -75,6 +77,6 @@ class BloomSky(object):
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id
-        self.devices.update({
-            device['DeviceID']: device for device in response.json()
-        })
+        self.devices.update(
+            {device['DeviceID']: device
+             for device in response.json()})

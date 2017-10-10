@@ -30,8 +30,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    for device in [d for d in hass.data[DYSON_DEVICES] if
-                   isinstance(d, DysonPureCoolLink)]:
+    for device in [
+            d for d in hass.data[DYSON_DEVICES]
+            if isinstance(d, DysonPureCoolLink)
+    ]:
         devices.append(DysonFilterLifeSensor(hass, device))
         devices.append(DysonDustSensor(hass, device))
         devices.append(DysonHumiditySensor(hass, device))
@@ -53,8 +55,8 @@ class DysonSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
-        self.hass.async_add_job(
-            self._device.add_message_listener, self.on_message)
+        self.hass.async_add_job(self._device.add_message_listener,
+                                self.on_message)
 
     def on_message(self, message):
         """Called when new messages received from the fan."""

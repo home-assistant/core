@@ -45,9 +45,12 @@ MANIFEST_JSON = {
 
 for size in (192, 384, 512, 1024):
     MANIFEST_JSON['icons'].append({
-        'src': '/static/icons/favicon-{}x{}.png'.format(size, size),
-        'sizes': '{}x{}'.format(size, size),
-        'type': 'image/png'
+        'src':
+        '/static/icons/favicon-{}x{}.png'.format(size, size),
+        'sizes':
+        '{}x{}'.format(size, size),
+        'type':
+        'image/png'
     })
 
 DATA_PANELS = 'frontend_panels'
@@ -63,15 +66,21 @@ PRIMARY_COLOR = 'primary-color'
 _REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(ATTR_THEMES): vol.Schema({
-            cv.string: {cv.string: cv.string}
-        }),
-        vol.Optional(ATTR_EXTRA_HTML_URL):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(ATTR_THEMES):
+            vol.Schema({
+                cv.string: {
+                    cv.string: cv.string
+                }
+            }),
+            vol.Optional(ATTR_EXTRA_HTML_URL):
             vol.All(cv.ensure_list, [cv.string]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_SET_THEME = 'set_theme'
 SERVICE_RELOAD_THEMES = 'reload_themes'
@@ -81,17 +90,20 @@ SERVICE_SET_THEME_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def register_built_in_panel(hass, component_name, sidebar_title=None,
-                            sidebar_icon=None, url_path=None, config=None):
+def register_built_in_panel(hass,
+                            component_name,
+                            sidebar_title=None,
+                            sidebar_icon=None,
+                            url_path=None,
+                            config=None):
     """Register a built-in panel."""
     nondev_path = 'panels/ha-panel-{}.html'.format(component_name)
 
     if hass.http.development:
         url = ('/static/home-assistant-polymer/panels/'
                '{0}/ha-panel-{0}.html'.format(component_name))
-        path = os.path.join(
-            STATIC_PATH, 'home-assistant-polymer/panels/',
-            '{0}/ha-panel-{0}.html'.format(component_name))
+        path = os.path.join(STATIC_PATH, 'home-assistant-polymer/panels/',
+                            '{0}/ha-panel-{0}.html'.format(component_name))
     else:
         url = None  # use default url generate mechanism
         path = os.path.join(STATIC_PATH, nondev_path)
@@ -103,8 +115,15 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
 
 
 @bind_hass
-def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
-                   sidebar_icon=None, url_path=None, url=None, config=None):
+def register_panel(hass,
+                   component_name,
+                   path,
+                   md5=None,
+                   sidebar_title=None,
+                   sidebar_icon=None,
+                   url_path=None,
+                   url=None,
+                   config=None):
     """Register a panel for the frontend.
 
     component_name: name of the web component
@@ -129,8 +148,8 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     if url is None:
         if not os.path.isfile(path):
-            _LOGGER.error(
-                "Panel %s component does not exist: %s", component_name, path)
+            _LOGGER.error("Panel %s component does not exist: %s",
+                          component_name, path)
             return
 
         if md5 is None:
@@ -168,8 +187,8 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
     index_view = hass.data.get(DATA_INDEX_VIEW)
 
     if index_view:
-        hass.http.app.router.add_route(
-            'get', '/{}'.format(url_path), index_view.get)
+        hass.http.app.router.add_route('get', '/{}'.format(url_path),
+                                       index_view.get)
         hass.http.app.router.add_route(
             'get', '/{}/{{extra:.+}}'.format(url_path), index_view.get)
 
@@ -215,8 +234,8 @@ def setup(hass, config):
     # Now register their urls.
     if DATA_PANELS in hass.data:
         for url_path in hass.data[DATA_PANELS]:
-            hass.http.app.router.add_route(
-                'get', '/{}'.format(url_path), index_view.get)
+            hass.http.app.router.add_route('get', '/{}'.format(url_path),
+                                           index_view.get)
             hass.http.app.router.add_route(
                 'get', '/{}/{{extra:.+}}'.format(url_path), index_view.get)
     else:
@@ -288,8 +307,7 @@ def setup_themes(hass, themes):
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_SET_THEME,
-                           set_theme,
+    hass.services.register(DOMAIN, SERVICE_SET_THEME, set_theme,
                            descriptions[SERVICE_SET_THEME],
                            SERVICE_SET_THEME_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
@@ -328,11 +346,8 @@ class IndexView(HomeAssistantView):
         """Initialize the frontend view."""
         from jinja2 import FileSystemLoader, Environment
 
-        self.templates = Environment(
-            loader=FileSystemLoader(
-                os.path.join(os.path.dirname(__file__), 'templates/')
-            )
-        )
+        self.templates = Environment(loader=FileSystemLoader(
+            os.path.join(os.path.dirname(__file__), 'templates/')))
 
     @asyncio.coroutine
     def get(self, request, extra=None):
@@ -345,8 +360,7 @@ class IndexView(HomeAssistantView):
                 '/static/home-assistant-polymer/build/compatibility.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
         else:
-            core_url = '/static/core-{}.js'.format(
-                FINGERPRINTS['core.js'])
+            core_url = '/static/core-{}.js'.format(FINGERPRINTS['core.js'])
             compatibility_url = '/static/compatibility-{}.js'.format(
                 FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
@@ -371,17 +385,21 @@ class IndexView(HomeAssistantView):
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = yield from hass.async_add_job(
-            self.templates.get_template, 'index.html')
+        template = yield from hass.async_add_job(self.templates.get_template,
+                                                 'index.html')
 
         # pylint is wrong
         # pylint: disable=no-member
         # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
-            core_url=core_url, ui_url=ui_url,
-            compatibility_url=compatibility_url, no_auth=no_auth,
-            icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=hass.data[DATA_PANELS],
+            core_url=core_url,
+            ui_url=ui_url,
+            compatibility_url=compatibility_url,
+            no_auth=no_auth,
+            icons_url=icons_url,
+            icons=FINGERPRINTS['mdi.html'],
+            panel_url=panel_url,
+            panels=hass.data[DATA_PANELS],
             dev_mode=request.app[KEY_DEVELOPMENT],
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[DATA_EXTRA_HTML_URL])
@@ -397,7 +415,7 @@ class ManifestJSONView(HomeAssistantView):
     name = 'manifestjson'
 
     @asyncio.coroutine
-    def get(self, request):    # pylint: disable=no-self-use
+    def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
         msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
         return web.Response(body=msg, content_type="application/manifest+json")

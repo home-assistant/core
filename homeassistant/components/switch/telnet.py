@@ -22,17 +22,27 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 23
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_COMMAND_ON): cv.string,
-    vol.Required(CONF_COMMAND_OFF): cv.string,
-    vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_RESOURCE): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_ON):
+    cv.string,
+    vol.Required(CONF_COMMAND_OFF):
+    cv.string,
+    vol.Optional(CONF_COMMAND_STATE):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Required(CONF_RESOURCE):
+    cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES):
+    vol.Schema({
+        cv.slug: SWITCH_SCHEMA
+    }),
 })
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -51,18 +61,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             value_template.hass = hass
 
         switches.append(
-            TelnetSwitch(
-                hass,
-                object_id,
-                device_config.get(CONF_RESOURCE),
-                device_config.get(CONF_PORT),
-                device_config.get(CONF_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
-                device_config.get(CONF_COMMAND_STATE),
-                value_template
-            )
-        )
+            TelnetSwitch(hass, object_id,
+                         device_config.get(CONF_RESOURCE),
+                         device_config.get(CONF_PORT),
+                         device_config.get(CONF_NAME, object_id),
+                         device_config.get(CONF_COMMAND_ON),
+                         device_config.get(CONF_COMMAND_OFF),
+                         device_config.get(CONF_COMMAND_STATE),
+                         value_template))
 
     if not switches:
         _LOGGER.error("No switches added")
@@ -95,9 +101,8 @@ class TelnetSwitch(SwitchDevice):
             response = telnet.read_until(b'\r', timeout=0.2)
             return response.decode('ASCII').strip()
         except IOError as error:
-            _LOGGER.error(
-                'Command "%s" failed with exception: %s',
-                command, repr(error))
+            _LOGGER.error('Command "%s" failed with exception: %s', command,
+                          repr(error))
             return None
 
     @property
@@ -128,8 +133,8 @@ class TelnetSwitch(SwitchDevice):
                 .render_with_possible_json_value(response)
             self._state = rendered == "True"
         else:
-            _LOGGER.warning(
-                "Empty response for command: %s", self._command_state)
+            _LOGGER.warning("Empty response for command: %s",
+                            self._command_state)
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

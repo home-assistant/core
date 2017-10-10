@@ -14,12 +14,13 @@ from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
 from homeassistant.helpers.event import async_track_template
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'template',
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(CONF_PLATFORM):
+    'template',
+    vol.Required(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 

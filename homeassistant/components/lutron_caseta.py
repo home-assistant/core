@@ -22,15 +22,15 @@ LUTRON_CASETA_SMARTBRIDGE = 'lutron_smartbridge'
 
 DOMAIN = 'lutron_caseta'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_HOST): cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
-LUTRON_CASETA_COMPONENTS = [
-    'light', 'switch', 'cover', 'scene'
-]
+LUTRON_CASETA_COMPONENTS = ['light', 'switch', 'cover', 'scene']
 
 
 def setup(hass, base_config):
@@ -39,8 +39,7 @@ def setup(hass, base_config):
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = Smartbridge(
-        hostname=config[CONF_HOST]
-    )
+        hostname=config[CONF_HOST])
     if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
         _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
@@ -73,10 +72,8 @@ class LutronCasetaDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
-            self._smartbridge.add_subscriber, self._device_id,
-            self._update_callback
-        )
+        self.hass.async_add_job(self._smartbridge.add_subscriber,
+                                self._device_id, self._update_callback)
 
     def _update_callback(self):
         self.schedule_update_ha_state()

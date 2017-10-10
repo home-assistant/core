@@ -10,12 +10,12 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP, SUPPORT_PLAY,
+    MediaPlayerDevice)
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
+                                 STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,20 +29,38 @@ SUPPORT_MEDIA_MODES = SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
-NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', 'Blue ray': 'BD', 'TV': 'TV',
-                 'Satelite / Cable': 'SAT/CBL', 'Game': 'GAME',
-                 'Game2': 'GAME2', 'Video Aux': 'V.AUX', 'Dock': 'DOCK'}
+NORMAL_INPUTS = {
+    'Cd': 'CD',
+    'Dvd': 'DVD',
+    'Blue ray': 'BD',
+    'TV': 'TV',
+    'Satelite / Cable': 'SAT/CBL',
+    'Game': 'GAME',
+    'Game2': 'GAME2',
+    'Video Aux': 'V.AUX',
+    'Dock': 'DOCK'
+}
 
-MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
-               'Ipod dock': 'IPOD', 'Net/USB': 'NET/USB',
-               'Rapsody': 'RHAPSODY', 'Napster': 'NAPSTER',
-               'Pandora': 'PANDORA', 'LastFM': 'LASTFM',
-               'Flickr': 'FLICKR', 'Favorites': 'FAVORITES',
-               'Internet Radio': 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
+MEDIA_MODES = {
+    'Tuner': 'TUNER',
+    'Media server': 'SERVER',
+    'Ipod dock': 'IPOD',
+    'Net/USB': 'NET/USB',
+    'Rapsody': 'RHAPSODY',
+    'Napster': 'NAPSTER',
+    'Pandora': 'PANDORA',
+    'LastFM': 'LASTFM',
+    'Flickr': 'FLICKR',
+    'Favorites': 'FAVORITES',
+    'Internet Radio': 'IRADIO',
+    'USB/IPOD': 'USB/IPOD'
+}
 
 # Sub-modes of 'NET/USB'
 # {'USB': 'USB', 'iPod Direct': 'IPD', 'Internet Radio': 'IRP',
@@ -144,8 +162,10 @@ class DenonDevice(MediaPlayerDevice):
 
         if self._mediasource in MEDIA_MODES.values():
             self._mediainfo = ""
-            answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
-                            "NSE6", "NSE7", "NSE8"]
+            answer_codes = [
+                "NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5", "NSE6",
+                "NSE7", "NSE8"
+            ]
             for line in self.telnet_request(telnet, 'NSE', all_lines=True):
                 self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:

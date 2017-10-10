@@ -27,8 +27,10 @@ DEFAULT_THRESHOLD = 75
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD):
+    cv.positive_int,
 })
 
 
@@ -42,15 +44,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     threshold = config.get(CONF_THRESHOLD)
 
     try:
-        aurora_data = AuroraData(
-            hass.config.latitude,
-            hass.config.longitude,
-            threshold
-        )
+        aurora_data = AuroraData(hass.config.latitude, hass.config.longitude,
+                                 threshold)
         aurora_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(
-            "Connection to aurora forecast service failed: %s", error)
+        _LOGGER.error("Connection to aurora forecast service failed: %s",
+                      error)
         return False
 
     add_devices([AuroraSensor(aurora_data, name)], True)
@@ -126,23 +125,22 @@ class AuroraData(object):
                 self.is_visible_text = "nothing's out"
 
         except requests.exceptions.HTTPError as error:
-            _LOGGER.error(
-                "Connection to aurora forecast service failed: %s", error)
+            _LOGGER.error("Connection to aurora forecast service failed: %s",
+                          error)
             return False
 
     def get_aurora_forecast(self):
         """Get forecast data and parse for given long/lat."""
         raw_data = requests.get(self.api_url, headers=self.headers).text
         forecast_table = [
-            row.strip(" ").split("   ")
-            for row in raw_data.split("\n")
+            row.strip(" ").split("   ") for row in raw_data.split("\n")
             if not row.startswith("#")
         ]
 
         # convert lat and long for data points in table
-        converted_latitude = round((self.latitude / 180)
-                                   * self.number_of_latitude_intervals)
-        converted_longitude = round((self.longitude / 360)
-                                    * self.number_of_longitude_intervals)
+        converted_latitude = round(
+            (self.latitude / 180) * self.number_of_latitude_intervals)
+        converted_longitude = round(
+            (self.longitude / 360) * self.number_of_longitude_intervals)
 
         return forecast_table[converted_latitude][converted_longitude]

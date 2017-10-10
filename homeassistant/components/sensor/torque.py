@@ -36,8 +36,10 @@ UNIT_KEY = re.compile(SENSOR_UNIT_KEY)
 VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_EMAIL):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -53,8 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     email = config.get(CONF_EMAIL)
     sensors = {}
 
-    hass.http.register_view(TorqueReceiveDataView(
-        email, vehicle, sensors, add_devices))
+    hass.http.register_view(
+        TorqueReceiveDataView(email, vehicle, sensors, add_devices))
     return True
 
 

@@ -32,12 +32,16 @@ TELLSTICK_LOCK = threading.RLock()
 # tellcore_device and HA device (entity).
 TELLCORE_REGISTRY = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(ATTR_SIGNAL_REPETITIONS,
-                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(
+                ATTR_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+            vol.Coerce(int),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def _discover(hass, config, component_name, found_tellcore_devices):
@@ -45,14 +49,15 @@ def _discover(hass, config, component_name, found_tellcore_devices):
     if not found_tellcore_devices:
         return
 
-    _LOGGER.info("Discovered %d new %s devices", len(found_tellcore_devices),
-                 component_name)
+    _LOGGER.info("Discovered %d new %s devices",
+                 len(found_tellcore_devices), component_name)
 
     signal_repetitions = config[DOMAIN].get(ATTR_SIGNAL_REPETITIONS)
 
     discovery.load_platform(hass, component_name, DOMAIN, {
         ATTR_DISCOVER_DEVICES: found_tellcore_devices,
-        ATTR_DISCOVER_CONFIG: signal_repetitions}, config)
+        ATTR_DISCOVER_CONFIG: signal_repetitions
+    }, config)
 
 
 def setup(hass, config):
@@ -77,14 +82,16 @@ def setup(hass, config):
     hass.data['tellcore_registry'] = tellcore_registry
 
     # Discover the switches
-    _discover(hass, config, 'switch',
-              [tellcore_device.id for tellcore_device in all_tellcore_devices
-               if not tellcore_device.methods(TELLSTICK_DIM)])
+    _discover(hass, config, 'switch', [
+        tellcore_device.id for tellcore_device in all_tellcore_devices
+        if not tellcore_device.methods(TELLSTICK_DIM)
+    ])
 
     # Discover the lights
-    _discover(hass, config, 'light',
-              [tellcore_device.id for tellcore_device in all_tellcore_devices
-               if tellcore_device.methods(TELLSTICK_DIM)])
+    _discover(hass, config, 'light', [
+        tellcore_device.id for tellcore_device in all_tellcore_devices
+        if tellcore_device.methods(TELLSTICK_DIM)
+    ])
 
     return True
 
@@ -135,9 +142,10 @@ class TellstickRegistry(object):
 
     def register_tellcore_devices(self, tellcore_devices):
         """Register a list of devices."""
-        self._id_to_tellcore_device_map.update(
-            {tellcore_device.id: tellcore_device for tellcore_device
-             in tellcore_devices})
+        self._id_to_tellcore_device_map.update({
+            tellcore_device.id: tellcore_device
+            for tellcore_device in tellcore_devices
+        })
 
     def get_tellcore_device(self, tellcore_id):
         """Return a device by tellcore_id."""
@@ -244,11 +252,12 @@ class TellstickDevice(Entity):
 
     def _update_model_from_command(self, tellcore_command, tellcore_data):
         """Update the model, from a sent tellcore command and data."""
-        from tellcore.constants import (
-            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM)
+        from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
+                                        TELLSTICK_DIM)
 
-        if tellcore_command not in [TELLSTICK_TURNON, TELLSTICK_TURNOFF,
-                                    TELLSTICK_DIM]:
+        if tellcore_command not in [
+                TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM
+        ]:
             _LOGGER.debug("Unhandled tellstick command: %d", tellcore_command)
             return
 
@@ -268,8 +277,8 @@ class TellstickDevice(Entity):
     def _update_from_tellcore(self):
         """Read the current state of the device from the tellcore library."""
         from tellcore.library import TelldusError
-        from tellcore.constants import (
-            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM)
+        from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
+                                        TELLSTICK_DIM)
 
         with TELLSTICK_LOCK:
             try:

@@ -87,16 +87,16 @@ class NeatoConnectedSensor(Entity):
             if self._state['state'] == 1:
                 if self._state['details']['isCharging']:
                     self._status_state = 'Charging'
-                elif (self._state['details']['isDocked'] and
-                      not self._state['details']['isCharging']):
+                elif (self._state['details']['isDocked']
+                      and not self._state['details']['isCharging']):
                     self._status_state = 'Docked'
                 else:
                     self._status_state = 'Stopped'
             elif self._state['state'] == 2:
                 if ALERTS.get(self._state['error']) is None:
                     self._status_state = (
-                        MODE.get(self._state['cleaning']['mode'])
-                        + ' ' + ACTION.get(self._state['action']))
+                        MODE.get(self._state['cleaning']['mode']) + ' ' +
+                        ACTION.get(self._state['action']))
                 else:
                     self._status_state = ALERTS.get(self._state['error'])
             elif self._state['state'] == 3:
@@ -107,21 +107,18 @@ class NeatoConnectedSensor(Entity):
             self._battery_state = self._state['details']['charge']
         if not self._mapdata.get(self.robot.serial, {}).get('maps', []):
             return
-        self.clean_time_start = (
-            (self._mapdata[self.robot.serial]['maps'][0]['start_at']
-             .strip('Z'))
-            .replace('T', ' '))
-        self.clean_time_stop = (
-            (self._mapdata[self.robot.serial]['maps'][0]['end_at'].strip('Z'))
-            .replace('T', ' '))
+        self.clean_time_start = ((
+            self._mapdata[self.robot.serial]['maps'][0]['start_at'].strip('Z'))
+                                 .replace('T', ' '))
+        self.clean_time_stop = ((
+            self._mapdata[self.robot.serial]['maps'][0]['end_at'].strip('Z'))
+                                .replace('T', ' '))
         self.clean_area = (
             self._mapdata[self.robot.serial]['maps'][0]['cleaned_area'])
-        self.clean_suspension_charge_count = (
-            self._mapdata[self.robot.serial]['maps'][0]
-            ['suspended_cleaning_charging_count'])
-        self.clean_suspension_time = (
-            self._mapdata[self.robot.serial]['maps'][0]
-            ['time_in_suspended_cleaning'])
+        self.clean_suspension_charge_count = (self._mapdata[self.robot.serial][
+            'maps'][0]['suspended_cleaning_charging_count'])
+        self.clean_suspension_time = (self._mapdata[self.robot.serial]['maps'][
+            0]['time_in_suspended_cleaning'])
         self.clean_battery_start = (
             self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_start'])
         self.clean_battery_end = (

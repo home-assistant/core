@@ -11,17 +11,20 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_EVENT, CONF_OFFSET, CONF_PLATFORM, SUN_EVENT_SUNRISE)
+from homeassistant.const import (CONF_EVENT, CONF_OFFSET, CONF_PLATFORM,
+                                 SUN_EVENT_SUNRISE)
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'sun',
-    vol.Required(CONF_EVENT): cv.sun_event,
-    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
+    vol.Required(CONF_PLATFORM):
+    'sun',
+    vol.Required(CONF_EVENT):
+    cv.sun_event,
+    vol.Required(CONF_OFFSET, default=timedelta(0)):
+    cv.time_period,
 })
 
 

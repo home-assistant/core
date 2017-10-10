@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN)
+from homeassistant.components.notify import (ATTR_TARGET, ATTR_DATA,
+                                             BaseNotificationService, DOMAIN)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
@@ -30,16 +30,23 @@ ATTR_PUSH_ID = 'push_id'
 ATTR_NAME = 'name'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'apns',
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_CERTFILE): cv.isfile,
-    vol.Required(CONF_TOPIC): cv.string,
-    vol.Optional(CONF_SANDBOX, default=False): cv.boolean,
+    vol.Required(CONF_PLATFORM):
+    'apns',
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_CERTFILE):
+    cv.isfile,
+    vol.Required(CONF_TOPIC):
+    cv.string,
+    vol.Optional(CONF_SANDBOX, default=False):
+    cv.boolean,
 })
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_PUSH_ID): cv.string,
-    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Required(ATTR_PUSH_ID):
+    cv.string,
+    vol.Optional(ATTR_NAME, default=None):
+    cv.string,
 })
 
 
@@ -55,8 +62,11 @@ def get_service(hass, config, discovery_info=None):
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(
-        DOMAIN, 'apns_{}'.format(name), service.register,
-        descriptions.get(SERVICE_REGISTER), schema=REGISTER_SERVICE_SCHEMA)
+        DOMAIN,
+        'apns_{}'.format(name),
+        service.register,
+        descriptions.get(SERVICE_REGISTER),
+        schema=REGISTER_SERVICE_SCHEMA)
     return service
 
 
@@ -129,8 +139,7 @@ def _write_device(out, device):
     """Write a single device to file."""
     attributes = []
     if device.name is not None:
-        attributes.append(
-            'name: {}'.format(device.name))
+        attributes.append('name: {}'.format(device.name))
     if device.tracking_device_id is not None:
         attributes.append(
             'tracking_device_id: {}'.format(device.tracking_device_id))
@@ -165,10 +174,9 @@ class ApnsNotificationService(BaseNotificationService):
                     str(key),
                     value.get('name'),
                     value.get('tracking_device_id'),
-                    value.get('disabled', False)
-                )
-                for (key, value) in
-                load_yaml_config_file(self.yaml_path).items()
+                    value.get('disabled', False))
+                for (key,
+                     value) in load_yaml_config_file(self.yaml_path).items()
             }
 
         tracking_ids = [
@@ -176,8 +184,8 @@ class ApnsNotificationService(BaseNotificationService):
             for (key, device) in self.devices.items()
             if device.tracking_device_id is not None
         ]
-        track_state_change(
-            hass, tracking_ids, self.device_state_changed_listener)
+        track_state_change(hass, tracking_ids,
+                           self.device_state_changed_listener)
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """

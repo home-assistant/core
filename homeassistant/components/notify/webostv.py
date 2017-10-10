@@ -19,14 +19,17 @@ REQUIREMENTS = ['pylgtv==0.1.7']
 _LOGGER = logging.getLogger(__name__)
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
-HOME_ASSISTANT_ICON_PATH = os.path.join(os.path.dirname(__file__), '..',
-                                        'frontend', 'www_static', 'icons',
-                                        'favicon-1024x1024.png')
+HOME_ASSISTANT_ICON_PATH = os.path.join(
+    os.path.dirname(__file__), '..', 'frontend', 'www_static', 'icons',
+    'favicon-1024x1024.png')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE):
+    cv.string,
+    vol.Optional(CONF_ICON, default=HOME_ASSISTANT_ICON_PATH):
+    cv.string
 })
 
 

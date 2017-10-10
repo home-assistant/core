@@ -43,8 +43,8 @@ class AlarmDecoderSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_PANEL_MESSAGE,
+                                 self._message_callback)
 
     @callback
     def _message_callback(self, message):

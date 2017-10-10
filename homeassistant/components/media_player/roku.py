@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
+from homeassistant.const import (CONF_HOST, STATE_IDLE, STATE_PLAYING,
+                                 STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-roku==3.1.3']
@@ -131,8 +131,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        if (self.current_app.name == "Power Saver" or
-                self.current_app.is_screensaver):
+        if (self.current_app.name == "Power Saver"
+                or self.current_app.is_screensaver):
             return STATE_IDLE
         elif self.current_app.name == "Roku":
             return STATE_HOME

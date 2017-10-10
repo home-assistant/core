@@ -19,8 +19,8 @@ import requests
 
 from homeassistant import core as ha
 from homeassistant.const import (
-    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API,
-    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
+    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENTS,
+    URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
     URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
@@ -49,8 +49,11 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    def __init__(self, host: str, api_password: Optional[str]=None,
-                 port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
+    def __init__(self,
+                 host: str,
+                 api_password: Optional[str] = None,
+                 port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False) -> None:
         """Init the API."""
         self.host = host
         self.port = port
@@ -74,7 +77,7 @@ class API(object):
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate: bool=False) -> bool:
+    def validate_api(self, force_validate: bool = False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)
@@ -94,8 +97,7 @@ class API(object):
                     url, params=data, timeout=timeout, headers=self._headers)
 
             return requests.request(
-                method, url, data=data, timeout=timeout,
-                headers=self._headers)
+                method, url, data=data, timeout=timeout, headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -134,8 +136,7 @@ class JSONEncoder(json.JSONEncoder):
             # If the JSON serializer couldn't serialize it
             # it might be a generator, convert it to a list
             try:
-                return [self.default(child_obj)
-                        for child_obj in o]
+                return [self.default(child_obj) for child_obj in o]
             except TypeError:
                 # Ok, we're lost, cause the original error
                 return json.JSONEncoder.default(self, o)
@@ -178,8 +179,8 @@ def fire_event(api, event_type, data=None):
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
         if req.status_code != 200:
-            _LOGGER.error("Error firing event: %d - %s",
-                          req.status_code, req.text)
+            _LOGGER.error("Error firing event: %d - %s", req.status_code,
+                          req.text)
 
     except HomeAssistantError:
         _LOGGER.exception("Error firing event")
@@ -205,11 +206,9 @@ def get_state(api, entity_id):
 def get_states(api):
     """Query given API for all states."""
     try:
-        req = api(METHOD_GET,
-                  URL_API_STATES)
+        req = api(METHOD_GET, URL_API_STATES)
 
-        return [ha.State.from_dict(item) for
-                item in req.json()]
+        return [ha.State.from_dict(item) for item in req.json()]
 
     except (HomeAssistantError, ValueError, AttributeError):
         # ValueError if req.json() can't parse the json
@@ -229,8 +228,8 @@ def remove_state(api, entity_id):
         if req.status_code in (200, 404):
             return True
 
-        _LOGGER.error("Error removing state: %d - %s",
-                      req.status_code, req.text)
+        _LOGGER.error("Error removing state: %d - %s", req.status_code,
+                      req.text)
         return False
     except HomeAssistantError:
         _LOGGER.exception("Error removing state")
@@ -245,18 +244,18 @@ def set_state(api, entity_id, new_state, attributes=None, force_update=False):
     """
     attributes = attributes or {}
 
-    data = {'state': new_state,
-            'attributes': attributes,
-            'force_update': force_update}
+    data = {
+        'state': new_state,
+        'attributes': attributes,
+        'force_update': force_update
+    }
 
     try:
-        req = api(METHOD_POST,
-                  URL_API_STATES_ENTITY.format(entity_id),
-                  data)
+        req = api(METHOD_POST, URL_API_STATES_ENTITY.format(entity_id), data)
 
         if req.status_code not in (200, 201):
-            _LOGGER.error("Error changing state: %d - %s",
-                          req.status_code, req.text)
+            _LOGGER.error("Error changing state: %d - %s", req.status_code,
+                          req.text)
             return False
 
         return True
@@ -294,13 +293,15 @@ def get_services(api):
 def call_service(api, domain, service, service_data=None, timeout=5):
     """Call a service at the remote API."""
     try:
-        req = api(METHOD_POST,
-                  URL_API_SERVICES_SERVICE.format(domain, service),
-                  service_data, timeout=timeout)
+        req = api(
+            METHOD_POST,
+            URL_API_SERVICES_SERVICE.format(domain, service),
+            service_data,
+            timeout=timeout)
 
         if req.status_code != 200:
-            _LOGGER.error("Error calling service: %d - %s",
-                          req.status_code, req.text)
+            _LOGGER.error("Error calling service: %d - %s", req.status_code,
+                          req.text)
 
     except HomeAssistantError:
         _LOGGER.exception("Error calling service")

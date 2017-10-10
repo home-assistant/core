@@ -44,12 +44,12 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
-        self.wink.set_state(float(position)/100)
+        self.wink.set_state(float(position) / 100)
 
     @property
     def current_cover_position(self):
         """Return the current position of roller shutter."""
-        return int(self.wink.state()*100)
+        return int(self.wink.state() * 100)
 
     @property
     def is_closed(self):

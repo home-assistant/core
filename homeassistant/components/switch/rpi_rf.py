@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_NAME, CONF_SWITCHES,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rpi-rf==0.9.6']
@@ -29,18 +29,24 @@ DEFAULT_SIGNAL_REPETITIONS = 10
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_CODE_OFF):
-        vol.All(cv.ensure_list_csv, [cv.positive_int]),
+    vol.All(cv.ensure_list_csv, [cv.positive_int]),
     vol.Required(CONF_CODE_ON):
-        vol.All(cv.ensure_list_csv, [cv.positive_int]),
-    vol.Optional(CONF_PULSELENGTH): cv.positive_int,
-    vol.Optional(CONF_SIGNAL_REPETITIONS,
-                 default=DEFAULT_SIGNAL_REPETITIONS): cv.positive_int,
-    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.positive_int,
+    vol.All(cv.ensure_list_csv, [cv.positive_int]),
+    vol.Optional(CONF_PULSELENGTH):
+    cv.positive_int,
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+    cv.positive_int,
+    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
+    cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_GPIO): cv.positive_int,
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCH_SCHEMA}),
+    vol.Required(CONF_GPIO):
+    cv.positive_int,
+    vol.Required(CONF_SWITCHES):
+    vol.Schema({
+        cv.string: SWITCH_SCHEMA
+    }),
 })
 
 
@@ -56,24 +62,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for dev_name, properties in switches.items():
         devices.append(
-            RPiRFSwitch(
-                hass,
-                properties.get(CONF_NAME, dev_name),
-                rfdevice,
-                properties.get(CONF_PROTOCOL),
-                properties.get(CONF_PULSELENGTH),
-                properties.get(CONF_SIGNAL_REPETITIONS),
-                properties.get(CONF_CODE_ON),
-                properties.get(CONF_CODE_OFF)
-            )
-        )
+            RPiRFSwitch(hass,
+                        properties.get(CONF_NAME, dev_name), rfdevice,
+                        properties.get(CONF_PROTOCOL),
+                        properties.get(CONF_PULSELENGTH),
+                        properties.get(CONF_SIGNAL_REPETITIONS),
+                        properties.get(CONF_CODE_ON),
+                        properties.get(CONF_CODE_OFF)))
     if devices:
         rfdevice.enable_tx()
 
     add_devices(devices)
 
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: rfdevice.cleanup())
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         lambda event: rfdevice.cleanup())
 
 
 class RPiRFSwitch(SwitchDevice):

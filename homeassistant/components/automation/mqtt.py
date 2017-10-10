@@ -19,9 +19,12 @@ DEPENDENCIES = ['mqtt']
 CONF_TOPIC = 'topic'
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
-    vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Required(CONF_PLATFORM):
+    mqtt.DOMAIN,
+    vol.Required(CONF_TOPIC):
+    mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PAYLOAD):
+    cv.string,
 })
 
 
@@ -47,10 +50,8 @@ def async_trigger(hass, config, action):
             except ValueError:
                 pass
 
-            hass.async_run_job(action, {
-                'trigger': data
-            })
+            hass.async_run_job(action, {'trigger': data})
 
-    remove = yield from mqtt.async_subscribe(
-        hass, topic, mqtt_automation_listener)
+    remove = yield from mqtt.async_subscribe(hass, topic,
+                                             mqtt_automation_listener)
     return remove

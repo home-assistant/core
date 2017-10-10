@@ -97,8 +97,7 @@ class WinkLight(WinkDevice, Light):
         rgb_color = kwargs.get(ATTR_RGB_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
 
-        state_kwargs = {
-        }
+        state_kwargs = {}
 
         if rgb_color:
             if self.wink.supports_xy_color():
@@ -106,8 +105,8 @@ class WinkLight(WinkDevice, Light):
                 state_kwargs['color_xy'] = xyb[0], xyb[1]
                 state_kwargs['brightness'] = xyb[2]
             if self.wink.supports_hue_saturation():
-                hsv = colorsys.rgb_to_hsv(
-                    rgb_color[0], rgb_color[1], rgb_color[2])
+                hsv = colorsys.rgb_to_hsv(rgb_color[0], rgb_color[1],
+                                          rgb_color[2])
                 state_kwargs['color_hue_saturation'] = hsv[0], hsv[1]
 
         if color_temp_mired:

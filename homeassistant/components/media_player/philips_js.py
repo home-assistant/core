@@ -14,8 +14,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
+                                 STATE_UNKNOWN)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['ha-philipsjs==0.0.1']
@@ -36,8 +36,10 @@ DEFAULT_NAME = 'Philips TV'
 BASE_URL = 'http://{0}:1925/1/{1}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

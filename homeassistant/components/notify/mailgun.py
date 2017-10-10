@@ -12,8 +12,8 @@ from homeassistant.components.mailgun import CONF_SANDBOX, DATA_MAILGUN
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE, ATTR_TITLE_DEFAULT,
     ATTR_DATA)
-from homeassistant.const import (
-    CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER)
+from homeassistant.const import (CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT,
+                                 CONF_SENDER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,10 @@ DEFAULT_SANDBOX = False
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): vol.Email(),
-    vol.Optional(CONF_SENDER): vol.Email()
+    vol.Required(CONF_RECIPIENT):
+    vol.Email(),
+    vol.Optional(CONF_SENDER):
+    vol.Email()
 })
 
 
@@ -37,9 +39,10 @@ def get_service(hass, config, discovery_info=None):
     """Get the Mailgun notification service."""
     data = hass.data[DATA_MAILGUN]
     mailgun_service = MailgunNotificationService(
-        data.get(CONF_DOMAIN), data.get(CONF_SANDBOX),
-        data.get(CONF_API_KEY), config.get(CONF_SENDER),
-        config.get(CONF_RECIPIENT))
+        data.get(CONF_DOMAIN),
+        data.get(CONF_SANDBOX),
+        data.get(CONF_API_KEY),
+        config.get(CONF_SENDER), config.get(CONF_RECIPIENT))
     if mailgun_service.connection_is_valid():
         return mailgun_service
 
@@ -92,8 +95,11 @@ class MailgunNotificationService(BaseNotificationService):
             if self._client is None:
                 self.initialize_client()
             resp = self._client.send_mail(
-                sender=self._sender, to=self._recipient, subject=subject,
-                text=message, files=files)
+                sender=self._sender,
+                to=self._recipient,
+                subject=subject,
+                text=message,
+                files=files)
             _LOGGER.debug("Message sent: %s", resp)
         except MailgunError as mailgun_error:
             _LOGGER.exception("Failed to send message: %s", mailgun_error)

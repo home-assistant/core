@@ -11,8 +11,10 @@ def deprecated_substitute(substitute_name):
     If the old property is defined, it's value will be used instead, and a log
     warning will be issued alerting the user of the impending change.
     """
+
     def decorator(func):
         """Decorate function as deprecated."""
+
         def func_wrapper(self):
             """Wrap for the original function."""
             if hasattr(self, substitute_name):
@@ -22,11 +24,11 @@ def deprecated_substitute(substitute_name):
                 module_name = self.__module__
                 if not warnings.get(module_name):
                     logger = logging.getLogger(module_name)
-                    logger.warning(
-                        "'%s' is deprecated. Please rename '%s' to "
-                        "'%s' in '%s' to ensure future support.",
-                        substitute_name, substitute_name, func.__name__,
-                        inspect.getfile(self.__class__))
+                    logger.warning("'%s' is deprecated. Please rename '%s' to "
+                                   "'%s' in '%s' to ensure future support.",
+                                   substitute_name, substitute_name,
+                                   func.__name__,
+                                   inspect.getfile(self.__class__))
                     warnings[module_name] = True
                     # pylint: disable=protected-access
                     func._deprecated_substitute_warnings = warnings
@@ -35,7 +37,9 @@ def deprecated_substitute(substitute_name):
                 return getattr(self, substitute_name)
             else:
                 return func(self)
+
         return func_wrapper
+
     return decorator
 
 

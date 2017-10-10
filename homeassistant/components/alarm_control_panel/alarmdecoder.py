@@ -14,9 +14,9 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarmdecoder import (DATA_AD,
                                                    SIGNAL_PANEL_MESSAGE)
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+                                 STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_PANEL_MESSAGE,
+                                 self._message_callback)
 
     @callback
     def _message_callback(self, message):

@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT)
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -28,12 +28,18 @@ DEFAULT_PORT = 32400
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SERVER): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SERVER):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
 })
 
 
@@ -48,8 +54,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_port = config.get(CONF_PORT)
     plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
-    add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server)], True)
+    add_devices(
+        [PlexSensor(name, plex_url, plex_user, plex_password,
+                    plex_server)], True)
 
 
 class PlexSensor(Entity):

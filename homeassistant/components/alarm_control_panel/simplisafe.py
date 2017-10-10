@@ -26,10 +26,14 @@ NOTIFICATION_ID = 'simplisafe_notification'
 NOTIFICATION_TITLE = 'SimpliSafe Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_CODE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_CODE):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -52,9 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         message = 'Failed to log into SimpliSafe. Check credentials.'
         _LOGGER.error(message)
         hass.components.persistent_notification.create(
-            message,
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            message, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID)
         return False
 
     def logout(event):

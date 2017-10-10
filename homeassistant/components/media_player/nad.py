@@ -9,12 +9,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, MediaPlayerDevice,
     PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, STATE_OFF, STATE_ON)
+from homeassistant.const import (CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['nad_receiver==0.0.6']
@@ -34,29 +32,32 @@ CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_SOURCE_DICT = 'sources'
 
-SOURCE_DICT_SCHEMA = vol.Schema({
-    vol.Range(min=1, max=10): cv.string
-})
+SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=10): cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL_PORT): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
-    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
-    vol.Optional(CONF_SOURCE_DICT, default={}): SOURCE_DICT_SCHEMA,
+    vol.Required(CONF_SERIAL_PORT):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME):
+    int,
+    vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME):
+    int,
+    vol.Optional(CONF_SOURCE_DICT, default={}):
+    SOURCE_DICT_SCHEMA,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NAD platform."""
     from nad_receiver import NADReceiver
-    add_devices([NAD(
-        config.get(CONF_NAME),
-        NADReceiver(config.get(CONF_SERIAL_PORT)),
-        config.get(CONF_MIN_VOLUME),
-        config.get(CONF_MAX_VOLUME),
-        config.get(CONF_SOURCE_DICT)
-    )], True)
+    add_devices([
+        NAD(
+            config.get(CONF_NAME),
+            NADReceiver(config.get(CONF_SERIAL_PORT)),
+            config.get(CONF_MIN_VOLUME),
+            config.get(CONF_MAX_VOLUME), config.get(CONF_SOURCE_DICT))
+    ], True)
 
 
 class NAD(MediaPlayerDevice):
@@ -70,8 +71,10 @@ class NAD(MediaPlayerDevice):
         self._min_volume = min_volume
         self._max_volume = max_volume
         self._source_dict = source_dict
-        self._reverse_mapping = {value: key for key, value in
-                                 self._source_dict.items()}
+        self._reverse_mapping = {
+            value: key
+            for key, value in self._source_dict.items()
+        }
 
         self._volume = self._state = self._mute = self._source = None
 

@@ -13,7 +13,6 @@ from homeassistant.components import http
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 
-
 DOMAIN = 'shopping_list'
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
@@ -44,9 +43,8 @@ def async_setup(hass, config):
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
         'Add {item} to my shopping list',
     ])
-    hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
-        'What is on my shopping list'
-    ])
+    hass.components.conversation.async_register(
+        INTENT_LAST_ITEMS, ['What is on my shopping list'])
 
     hass.components.frontend.register_built_in_panel(
         'shopping-list', 'Shopping List', 'mdi:cart')
@@ -94,6 +92,7 @@ class ShoppingData:
     @asyncio.coroutine
     def async_load(self):
         """Load items."""
+
         def load():
             """Load the items synchronously."""
             path = self.hass.config.path(PERSISTENCE)
@@ -115,9 +114,7 @@ class AddItemIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_ADD_ITEM
-    slot_schema = {
-        'item': cv.string
-    }
+    slot_schema = {'item': cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -137,9 +134,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_LAST_ITEMS
-    slot_schema = {
-        'item': cv.string
-    }
+    slot_schema = {'item': cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -153,8 +148,8 @@ class ListTopItemsIntent(intent.IntentHandler):
         else:
             response.async_set_speech(
                 "These are the top {} items on your shopping list: {}".format(
-                    min(len(items), 5),
-                    ', '.join(itm['name'] for itm in reversed(items))))
+                    min(len(items), 5), ', '.join(itm['name']
+                                                  for itm in reversed(items))))
         return response
 
 

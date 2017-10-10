@@ -37,42 +37,67 @@ DOMAIN = 'influxdb'
 TIMEOUT = 5
 
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+    vol.Optional(CONF_OVERRIDE_MEASUREMENT):
+    cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-        vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_HOST):
+            cv.string,
+            vol.Inclusive(CONF_USERNAME, 'authentication'):
+            cv.string,
+            vol.Inclusive(CONF_PASSWORD, 'authentication'):
+            cv.string,
+            vol.Optional(CONF_EXCLUDE, default={}):
+            vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]):
+                cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]):
                 vol.All(cv.ensure_list, [cv.string])
-        }),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
+            }),
+            vol.Optional(CONF_INCLUDE, default={}):
+            vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]):
+                cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]):
                 vol.All(cv.ensure_list, [cv.string])
-        }),
-        vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
-        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_TAGS, default={}):
-            vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
+            }),
+            vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE):
+            cv.string,
+            vol.Optional(CONF_PORT):
+            cv.port,
+            vol.Optional(CONF_SSL):
+            cv.boolean,
+            vol.Optional(CONF_DEFAULT_MEASUREMENT):
+            cv.string,
+            vol.Optional(CONF_OVERRIDE_MEASUREMENT):
+            cv.string,
+            vol.Optional(CONF_TAGS, default={}):
+            vol.Schema({
+                cv.string: cv.string
+            }),
+            vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_COMPONENT_CONFIG, default={}):
-            vol.Schema({cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
-            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
-            vol.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+            cv.boolean,
+            vol.Optional(CONF_COMPONENT_CONFIG, default={}):
+            vol.Schema({
+                cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY
+            }),
+            vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}):
+            vol.Schema({
+                cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY
+            }),
+            vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}):
+            vol.Schema({
+                cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY
+            }),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
 RE_DECIMAL = re.compile(r'[^\d.]+')
@@ -115,10 +140,9 @@ def setup(hass, config):
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
-    component_config = EntityValues(
-        conf[CONF_COMPONENT_CONFIG],
-        conf[CONF_COMPONENT_CONFIG_DOMAIN],
-        conf[CONF_COMPONENT_CONFIG_GLOB])
+    component_config = EntityValues(conf[CONF_COMPONENT_CONFIG],
+                                    conf[CONF_COMPONENT_CONFIG_DOMAIN],
+                                    conf[CONF_COMPONENT_CONFIG_GLOB])
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -149,8 +173,8 @@ def setup(hass, config):
             _state = state.state
             _state_key = "state"
 
-        measurement = component_config.get(state.entity_id).get(
-            CONF_OVERRIDE_MEASUREMENT)
+        measurement = component_config.get(
+            state.entity_id).get(CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ''):
             if override_measurement:
                 measurement = override_measurement
@@ -162,19 +186,17 @@ def setup(hass, config):
                     else:
                         measurement = state.entity_id
 
-        json_body = [
-            {
-                'measurement': measurement,
-                'tags': {
-                    'domain': state.domain,
-                    'entity_id': state.object_id,
-                },
-                'time': event.time_fired,
-                'fields': {
-                    _state_key: _state,
-                }
+        json_body = [{
+            'measurement': measurement,
+            'tags': {
+                'domain': state.domain,
+                'entity_id': state.object_id,
+            },
+            'time': event.time_fired,
+            'fields': {
+                _state_key: _state,
             }
-        ]
+        }]
 
         for key, value in state.attributes.items():
             if key in tags_attributes:

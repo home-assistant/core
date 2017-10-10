@@ -10,9 +10,9 @@ import asyncio
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
+from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
+                                             ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -64,7 +64,7 @@ class ProwlNotificationService(BaseNotificationService):
 
             if response.status != 200 or 'error' in result:
                 _LOGGER.error("Prowl service returned http "
-                              "status %d, response %s",
-                              response.status, result)
+                              "status %d, response %s", response.status,
+                              result)
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s", url)

@@ -9,15 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
+    SUPPORT_TURN_OFF, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, SUPPORT_PLAY, SUPPORT_VOLUME_SET, MediaPlayerDevice,
+    PLATFORM_SCHEMA)
 
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT)
-
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
+                                 STATE_UNKNOWN, CONF_PORT, CONF_USERNAME,
+                                 CONF_PASSWORD, CONF_TIMEOUT)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -38,25 +37,35 @@ SUPPORT_SHARPTV = SUPPORT_TURN_OFF | \
     SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
-    vol.Optional('retries', default=DEFAULT_RETRIES): cv.string,
-    vol.Optional('power_on_enabled', default=False): cv.boolean,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.string,
+    vol.Optional('retries', default=DEFAULT_RETRIES):
+    cv.string,
+    vol.Optional('power_on_enabled', default=False):
+    cv.boolean,
 })
 
-SOURCES = {0: 'TV / Antenna',
-           1: 'HDMI_IN_1',
-           2: 'HDMI_IN_2',
-           3: 'HDMI_IN_3',
-           4: 'HDMI_IN_4',
-           5: 'COMPONENT IN',
-           6: 'VIDEO_IN_1',
-           7: 'VIDEO_IN_2',
-           8: 'PC_IN'}
+SOURCES = {
+    0: 'TV / Antenna',
+    1: 'HDMI_IN_1',
+    2: 'HDMI_IN_2',
+    3: 'HDMI_IN_3',
+    4: 'HDMI_IN_4',
+    5: 'COMPONENT IN',
+    6: 'VIDEO_IN_1',
+    7: 'VIDEO_IN_2',
+    8: 'PC_IN'
+}
 
 
 # pylint: disable=unused-argument
@@ -90,6 +99,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def _retry(func):
     """Handle query retries."""
+
     def wrapper(obj, *args, **kwargs):
         """Wrap all query functions."""
         update_retries = 5
@@ -101,6 +111,7 @@ def _retry(func):
                 update_retries -= 1
                 if update_retries == 0:
                     obj.set_state(STATE_OFF)
+
     return wrapper
 
 

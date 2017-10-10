@@ -13,9 +13,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.command_line import CommandSensorData
-from homeassistant.const import (
-    CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
-    CONF_COMMAND, CONF_DEVICE_CLASS)
+from homeassistant.const import (CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME,
+                                 CONF_VALUE_TEMPLATE, CONF_COMMAND,
+                                 CONF_DEVICE_CLASS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,12 +26,18 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 
@@ -48,16 +54,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         value_template.hass = hass
     data = CommandSensorData(hass, command)
 
-    add_devices([CommandBinarySensor(
-        hass, data, name, device_class, payload_on, payload_off,
-        value_template)], True)
+    add_devices([
+        CommandBinarySensor(hass, data, name, device_class, payload_on,
+                            payload_off, value_template)
+    ], True)
 
 
 class CommandBinarySensor(BinarySensorDevice):
     """Representation of a command line binary sensor."""
 
-    def __init__(self, hass, data, name, device_class, payload_on,
-                 payload_off, value_template):
+    def __init__(self, hass, data, name, device_class, payload_on, payload_off,
+                 value_template):
         """Initialize the Command line binary sensor."""
         self._hass = hass
         self.data = data
@@ -78,7 +85,7 @@ class CommandBinarySensor(BinarySensorDevice):
         """Return true if the binary sensor is on."""
         return self._state
 
-    @ property
+    @property
     def device_class(self):
         """Return the class of the binary sensor."""
         return self._device_class

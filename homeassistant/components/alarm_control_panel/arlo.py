@@ -10,12 +10,11 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel, PLATFORM_SCHEMA)
+from homeassistant.components.alarm_control_panel import (AlarmControlPanel,
+                                                          PLATFORM_SCHEMA)
 from homeassistant.components.arlo import (DATA_ARLO, CONF_ATTRIBUTION)
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED)
+from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +29,8 @@ DISARMED = 'disarmed'
 ICON = 'mdi:security'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
+    vol.Optional(CONF_HOME_MODE_NAME, default=ARMED):
+    cv.string,
 })
 
 

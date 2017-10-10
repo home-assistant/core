@@ -11,8 +11,8 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant  # noqa
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict  # noqa
@@ -37,18 +37,25 @@ KEY_FOLDER = 'folder'
 KEY_MY_PROGRAMS = 'My Programs'
 KEY_STATUS = 'status'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-        vol.Optional(CONF_HIDDEN_STRING,
-                     default=DEFAULT_HIDDEN_STRING): cv.string,
-        vol.Optional(CONF_SENSOR_STRING,
-                     default=DEFAULT_SENSOR_STRING): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST):
+            cv.url,
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_TLS_VER):
+            vol.Coerce(float),
+            vol.Optional(CONF_HIDDEN_STRING, default=DEFAULT_HIDDEN_STRING):
+            cv.string,
+            vol.Optional(CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING):
+            cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SENSOR_NODES = []
 WEATHER_NODES = []
@@ -60,14 +67,14 @@ PYISY = None
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
-                     'sensor', 'switch']
-
+SUPPORTED_DOMAINS = [
+    'binary_sensor', 'cover', 'fan', 'light', 'lock', 'sensor', 'switch'
+]
 
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
-def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
+def filter_nodes(nodes: list, units: list = None, states: list = None) -> list:
     """Filter a list of ISY nodes based on the units and states provided."""
     filtered_nodes = []
     units = units if units else []
@@ -145,10 +152,12 @@ def _categorize_weather() -> None:
     global WEATHER_NODES
 
     climate_attrs = dir(ISY.climate)
-    WEATHER_NODES = [WeatherNode(getattr(ISY.climate, attr), attr,
-                                 getattr(ISY.climate, attr + '_units'))
-                     for attr in climate_attrs
-                     if attr + '_units' in climate_attrs]
+    WEATHER_NODES = [
+        WeatherNode(
+            getattr(ISY.climate, attr), attr,
+            getattr(ISY.climate, attr + '_units')) for attr in climate_attrs
+        if attr + '_units' in climate_attrs
+    ]
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -161,10 +170,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = urlparse(isy_config.get(CONF_HOST))
     port = host.port
     addr = host.geturl()
-    hidden_identifier = isy_config.get(
-        CONF_HIDDEN_STRING, DEFAULT_HIDDEN_STRING)
-    sensor_identifier = isy_config.get(
-        CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
+    hidden_identifier = isy_config.get(CONF_HIDDEN_STRING,
+                                       DEFAULT_HIDDEN_STRING)
+    sensor_identifier = isy_config.get(CONF_SENSOR_STRING,
+                                       DEFAULT_SENSOR_STRING)
 
     global HIDDEN_STRING
     HIDDEN_STRING = hidden_identifier
@@ -188,8 +197,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Connect to ISY controller.
     global ISY
-    ISY = PyISY.ISY(addr, port, username=user, password=password,
-                    use_https=https, tls_ver=tls_version, log=_LOGGER)
+    ISY = PyISY.ISY(
+        addr,
+        port,
+        username=user,
+        password=password,
+        use_https=https,
+        tls_ver=tls_version,
+        log=_LOGGER)
     if not ISY.connected:
         return False
 

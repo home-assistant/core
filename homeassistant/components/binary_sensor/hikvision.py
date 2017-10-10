@@ -10,13 +10,13 @@ import voluptuous as vol
 
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START, ATTR_LAST_TRIP_TIME,
+    CONF_CUSTOMIZE)
 
 REQUIREMENTS = ['pyhik==0.1.4']
 _LOGGER = logging.getLogger(__name__)
@@ -51,19 +51,29 @@ DEVICE_CLASS_MAP = {
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
-    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int
-    })
+    vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED):
+    cv.boolean,
+    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY):
+    cv.positive_int
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=None):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=False):
+    cv.boolean,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}):
-        vol.Schema({cv.string: CUSTOMIZE_SCHEMA}),
+    vol.Schema({
+        cv.string: CUSTOMIZE_SCHEMA
+    }),
 })
 
 
@@ -108,8 +118,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.debug("Entity: %s - %s, Options - Ignore: %s, Delay: %s",
                           data.name, sensor_name, ignore, delay)
             if not ignore:
-                entities.append(HikvisionBinarySensor(
-                    hass, sensor, channel[1], data, delay))
+                entities.append(
+                    HikvisionBinarySensor(hass, sensor, channel[1], data,
+                                          delay))
 
     add_entities(entities)
 
@@ -127,8 +138,8 @@ class HikvisionData(object):
         self._password = password
 
         # Establish camera
-        self.camdata = HikCamera(
-            self._url, self._port, self._username, self._password)
+        self.camdata = HikCamera(self._url, self._port, self._username,
+                                 self._password)
 
         if self._name is None:
             self._name = self.camdata.get_name
@@ -252,8 +263,8 @@ class HikvisionBinarySensor(BinarySensorDevice):
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug("%s Called delayed (%ssec) update",
-                              self._name, self._delay)
+                _LOGGER.debug("%s Called delayed (%ssec) update", self._name,
+                              self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None
 
@@ -262,7 +273,8 @@ class HikvisionBinarySensor(BinarySensorDevice):
                 self._timer = None
 
             self._timer = track_point_in_utc_time(
-                self._hass, _delay_update,
+                self._hass,
+                _delay_update,
                 utcnow() + timedelta(seconds=self._delay))
 
         elif self._delay > 0 and self.is_on:

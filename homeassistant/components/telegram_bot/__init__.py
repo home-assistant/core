@@ -14,12 +14,12 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
+from homeassistant.components.notify import (ATTR_DATA, ATTR_MESSAGE,
+                                             ATTR_TITLE)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.const import (ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 CONF_API_KEY, CONF_PLATFORM, CONF_TIMEOUT,
+                                 HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
@@ -81,75 +81,107 @@ PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_PLATFORM):
+    cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Required(CONF_ALLOWED_CHAT_IDS):
-        vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-    vol.Optional(CONF_PROXY_URL): cv.string,
-    vol.Optional(CONF_PROXY_PARAMS): dict,
+    vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(ATTR_PARSER, default=PARSER_MD):
+    cv.string,
+    vol.Optional(CONF_PROXY_URL):
+    cv.string,
+    vol.Optional(CONF_PROXY_PARAMS):
+    dict,
 })
 
-BASE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(ATTR_PARSER): cv.string,
-    vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-    vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
-    vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-}, extra=vol.ALLOW_EXTRA)
+BASE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_PARSER): cv.string,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+        vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.template,
+    vol.Required(ATTR_MESSAGE):
+    cv.template,
+    vol.Optional(ATTR_TITLE):
+    cv.template,
 })
 
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_URL): cv.template,
-    vol.Optional(ATTR_FILE): cv.template,
-    vol.Optional(ATTR_CAPTION): cv.template,
-    vol.Optional(ATTR_USERNAME): cv.string,
-    vol.Optional(ATTR_PASSWORD): cv.string,
-    vol.Optional(ATTR_AUTHENTICATION): cv.string,
+    vol.Optional(ATTR_URL):
+    cv.template,
+    vol.Optional(ATTR_FILE):
+    cv.template,
+    vol.Optional(ATTR_CAPTION):
+    cv.template,
+    vol.Optional(ATTR_USERNAME):
+    cv.string,
+    vol.Optional(ATTR_PASSWORD):
+    cv.string,
+    vol.Optional(ATTR_AUTHENTICATION):
+    cv.string,
 })
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_LONGITUDE): cv.template,
-    vol.Required(ATTR_LATITUDE): cv.template,
+    vol.Required(ATTR_LONGITUDE):
+    cv.template,
+    vol.Required(ATTR_LATITUDE):
+    cv.template,
 })
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
     vol.Required(ATTR_MESSAGEID):
-        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+    vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
+    vol.Required(ATTR_CHAT_ID):
+    vol.Coerce(int),
 })
 
-SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema({
-    vol.Required(ATTR_MESSAGEID):
+SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGEID):
         vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    vol.Required(ATTR_CAPTION): cv.template,
-    vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-}, extra=vol.ALLOW_EXTRA)
+        vol.Required(ATTR_CHAT_ID):
+        vol.Coerce(int),
+        vol.Required(ATTR_CAPTION):
+        cv.template,
+        vol.Optional(ATTR_KEYBOARD_INLINE):
+        cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema({
-    vol.Required(ATTR_MESSAGEID):
+SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGEID):
         vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-}, extra=vol.ALLOW_EXTRA)
+        vol.Required(ATTR_CHAT_ID):
+        vol.Coerce(int),
+        vol.Required(ATTR_KEYBOARD_INLINE):
+        cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
-    vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
-}, extra=vol.ALLOW_EXTRA)
+SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGE): cv.template,
+        vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
+        vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
-    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    vol.Required(ATTR_MESSAGEID):
+SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
+    {
+        vol.Required(ATTR_CHAT_ID):
+        vol.Coerce(int),
+        vol.Required(ATTR_MESSAGEID):
         vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
@@ -164,8 +196,13 @@ SERVICE_MAP = {
 }
 
 
-def load_data(hass, url=None, filepath=None, username=None, password=None,
-              authentication=None, num_retries=5):
+def load_data(hass,
+              url=None,
+              filepath=None,
+              username=None,
+              password=None,
+              authentication=None,
+              num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
@@ -191,8 +228,8 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     _LOGGER.warning("Empty data (retry #%s) in %s).",
                                     retry_num + 1, url)
                 retry_num += 1
-            _LOGGER.warning("Can't load photo in %s after %s retries.",
-                            url, retry_num)
+            _LOGGER.warning("Can't load photo in %s after %s retries.", url,
+                            retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
                 return open(filepath, "rb")
@@ -214,14 +251,15 @@ def async_setup(hass, config):
         return False
 
     p_config = config[DOMAIN][0]
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     p_type = p_config.get(CONF_PLATFORM)
 
-    platform = yield from async_prepare_setup_platform(
-        hass, config, DOMAIN, p_type)
+    platform = yield from async_prepare_setup_platform(hass, config, DOMAIN,
+                                                       p_type)
 
     if platform is None:
         return
@@ -231,8 +269,7 @@ def async_setup(hass, config):
         receiver_service = yield from \
             platform.async_setup_platform(hass, p_config)
         if receiver_service is False:
-            _LOGGER.error(
-                "Failed to initialize Telegram bot %s", p_type)
+            _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
             return False
 
     except Exception:  # pylint: disable=broad-except
@@ -244,33 +281,35 @@ def async_setup(hass, config):
         p_config.get(CONF_API_KEY),
         p_config.get(CONF_ALLOWED_CHAT_IDS),
         p_config.get(ATTR_PARSER),
-        p_config.get(CONF_PROXY_URL),
-        p_config.get(CONF_PROXY_PARAMS)
-    )
+        p_config.get(CONF_PROXY_URL), p_config.get(CONF_PROXY_PARAMS))
 
     @asyncio.coroutine
     def async_send_telegram_message(service):
         """Handle sending Telegram Bot message service calls."""
+
         def _render_template_attr(data, attribute):
             attribute_templ = data.get(attribute)
             if attribute_templ:
-                if any([isinstance(attribute_templ, vtype)
-                        for vtype in [float, int, str]]):
+                if any([
+                        isinstance(attribute_templ, vtype)
+                        for vtype in [float, int, str]
+                ]):
                     data[attribute] = attribute_templ
                 else:
                     attribute_templ.hass = hass
                     try:
                         data[attribute] = attribute_templ.async_render()
                     except TemplateError as exc:
-                        _LOGGER.error(
-                            "TemplateError in %s: %s -> %s",
-                            attribute, attribute_templ.template, exc)
+                        _LOGGER.error("TemplateError in %s: %s -> %s",
+                                      attribute, attribute_templ.template, exc)
                         data[attribute] = attribute_templ.template
 
         msgtype = service.service
         kwargs = dict(service.data)
-        for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
-                          ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
+        for attribute in [
+                ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE, ATTR_CAPTION,
+                ATTR_LONGITUDE, ATTR_LATITUDE
+        ]:
             _render_template_attr(kwargs, attribute)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
@@ -299,8 +338,11 @@ def async_setup(hass, config):
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
         hass.services.async_register(
-            DOMAIN, service_notif, async_send_telegram_message,
-            descriptions.get(service_notif), schema=schema)
+            DOMAIN,
+            service_notif,
+            async_send_telegram_message,
+            descriptions.get(service_notif),
+            schema=schema)
 
     return True
 
@@ -308,8 +350,13 @@ def async_setup(hass, config):
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser,
-                 proxy_url=None, proxy_params=None):
+    def __init__(self,
+                 hass,
+                 api_key,
+                 allowed_chat_ids,
+                 parser,
+                 proxy_url=None,
+                 proxy_params=None):
         """Initialize the service."""
         from telegram import Bot
         from telegram.parsemode import ParseMode
@@ -318,13 +365,15 @@ class TelegramNotificationService:
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
-        self._parsers = {PARSER_HTML: ParseMode.HTML,
-                         PARSER_MD: ParseMode.MARKDOWN}
+        self._parsers = {
+            PARSER_HTML: ParseMode.HTML,
+            PARSER_MD: ParseMode.MARKDOWN
+        }
         self._parse_mode = self._parsers.get(parser)
         request = None
         if proxy_url is not None:
-            request = Request(proxy_url=proxy_url,
-                              urllib3_proxy_kwargs=proxy_params)
+            request = Request(
+                proxy_url=proxy_url, urllib3_proxy_kwargs=proxy_params)
         self.bot = Bot(token=api_key, request=request)
         self.hass = hass
 
@@ -339,8 +388,8 @@ class TelegramNotificationService:
         message_id = inline_message_id = None
         if ATTR_MESSAGEID in msg_data:
             message_id = msg_data[ATTR_MESSAGEID]
-            if (isinstance(message_id, str) and (message_id == 'last') and
-                    (self._last_message_id[chat_id] is not None)):
+            if (isinstance(message_id, str) and (message_id == 'last')
+                    and (self._last_message_id[chat_id] is not None)):
                 message_id = self._last_message_id[chat_id]
         else:
             inline_message_id = msg_data['inline_message_id']
@@ -358,12 +407,13 @@ class TelegramNotificationService:
             chat_ids = [t for t in target if t in self.allowed_chat_ids]
             if chat_ids:
                 return chat_ids
-            _LOGGER.warning("Unallowed targets: %s, using default: %s",
-                            target, self._default_user)
+            _LOGGER.warning("Unallowed targets: %s, using default: %s", target,
+                            self._default_user)
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
         """Get parameters in message data kwargs."""
+
         def _make_row_inline_keyboard(row_keyboard):
             """Make a list of InlineKeyboardButtons.
 
@@ -449,8 +499,8 @@ class TelegramNotificationService:
                                 type(out), out)
             return out
         except TelegramError as exc:
-            _LOGGER.error("%s: %s. Args: %s, kwargs: %s",
-                          msg_error, exc, args_msg, kwargs_msg)
+            _LOGGER.error("%s: %s. Args: %s, kwargs: %s", msg_error, exc,
+                          args_msg, kwargs_msg)
 
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
@@ -460,8 +510,7 @@ class TelegramNotificationService:
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s",
                           chat_id, params)
-            self._send_msg(self.bot.sendMessage,
-                           "Error sending message",
+            self._send_msg(self.bot.sendMessage, "Error sending message",
                            chat_id, text, **params)
 
     def delete_message(self, chat_id=None, **kwargs):
@@ -470,8 +519,7 @@ class TelegramNotificationService:
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
         deleted = self._send_msg(self.bot.deleteMessage,
-                                 "Error deleting message",
-                                 chat_id, message_id)
+                                 "Error deleting message", chat_id, message_id)
         # reduce message_id anyway:
         if self._last_message_id[chat_id] is not None:
             # change last msg_id for deque(n_msgs)?
@@ -489,34 +537,45 @@ class TelegramNotificationService:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
             text = '{}\n{}'.format(title, message) if title else message
-            _LOGGER.debug("Editing message with ID %s.",
-                          message_id or inline_message_id)
-            return self._send_msg(self.bot.editMessageText,
-                                  "Error editing text message",
-                                  text, chat_id=chat_id, message_id=message_id,
-                                  inline_message_id=inline_message_id,
-                                  **params)
+            _LOGGER.debug("Editing message with ID %s.", message_id
+                          or inline_message_id)
+            return self._send_msg(
+                self.bot.editMessageText,
+                "Error editing text message",
+                text,
+                chat_id=chat_id,
+                message_id=message_id,
+                inline_message_id=inline_message_id,
+                **params)
         elif type_edit == SERVICE_EDIT_CAPTION:
             func_send = self.bot.editMessageCaption
             params[ATTR_CAPTION] = kwargs.get(ATTR_CAPTION)
         else:
             func_send = self.bot.editMessageReplyMarkup
-        return self._send_msg(func_send,
-                              "Error editing message attributes",
-                              chat_id=chat_id, message_id=message_id,
-                              inline_message_id=inline_message_id,
-                              **params)
+        return self._send_msg(
+            func_send,
+            "Error editing message attributes",
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            **params)
 
-    def answer_callback_query(self, message, callback_query_id,
-                              show_alert=False, **kwargs):
+    def answer_callback_query(self,
+                              message,
+                              callback_query_id,
+                              show_alert=False,
+                              **kwargs):
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug("Answer callback query with callback ID %s: %s, "
                       "alert: %s.", callback_query_id, message, show_alert)
-        self._send_msg(self.bot.answerCallbackQuery,
-                       "Error sending answer callback query",
-                       callback_query_id,
-                       text=message, show_alert=show_alert, **params)
+        self._send_msg(
+            self.bot.answerCallbackQuery,
+            "Error sending answer callback query",
+            callback_query_id,
+            text=message,
+            show_alert=show_alert,
+            **params)
 
     def send_file(self, is_photo=True, target=None, **kwargs):
         """Send a photo or a document."""
@@ -529,15 +588,18 @@ class TelegramNotificationService:
             filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
-            authentication=kwargs.get(ATTR_AUTHENTICATION),
-        )
+            authentication=kwargs.get(ATTR_AUTHENTICATION), )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
-                _LOGGER.debug("Send file to chat ID %s. Caption: %s.",
-                              chat_id, caption)
-                self._send_msg(func_send, "Error sending file",
-                               chat_id, file_content,
-                               caption=caption, **params)
+                _LOGGER.debug("Send file to chat ID %s. Caption: %s.", chat_id,
+                              caption)
+                self._send_msg(
+                    func_send,
+                    "Error sending file",
+                    chat_id,
+                    file_content,
+                    caption=caption,
+                    **params)
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
@@ -548,12 +610,15 @@ class TelegramNotificationService:
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
-            _LOGGER.debug("Send location %s/%s to chat ID %s.",
-                          latitude, longitude, chat_id)
-            self._send_msg(self.bot.sendLocation,
-                           "Error sending location",
-                           chat_id=chat_id,
-                           latitude=latitude, longitude=longitude, **params)
+            _LOGGER.debug("Send location %s/%s to chat ID %s.", latitude,
+                          longitude, chat_id)
+            self._send_msg(
+                self.bot.sendLocation,
+                "Error sending location",
+                chat_id=chat_id,
+                latitude=latitude,
+                longitude=longitude,
+                **params)
 
 
 class BaseTelegramBotEntity:
@@ -568,9 +633,8 @@ class BaseTelegramBotEntity:
         """Return boolean msg_data_is_ok and dict msg_data."""
         if not msg_data:
             return False, None
-        bad_fields = ('text' not in msg_data and
-                      'data' not in msg_data and
-                      'chat' not in msg_data)
+        bad_fields = ('text' not in msg_data and 'data' not in msg_data
+                      and 'chat' not in msg_data)
         if bad_fields or 'from' not in msg_data:
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
@@ -578,8 +642,8 @@ class BaseTelegramBotEntity:
             return False, None
 
         if (msg_data['from'].get('id') not in self.allowed_chat_ids or
-                ('chat' in msg_data and
-                 msg_data['chat'].get('id') not in self.allowed_chat_ids)):
+            ('chat' in msg_data
+             and msg_data['chat'].get('id') not in self.allowed_chat_ids)):
             # Origin is not allowed.
             _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
             return True, None

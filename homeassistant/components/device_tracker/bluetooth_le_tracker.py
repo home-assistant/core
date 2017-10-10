@@ -10,8 +10,7 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA, load_config
-)
+    PLATFORM_SCHEMA, load_config)
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
@@ -25,8 +24,10 @@ CONF_SCAN_DURATION = 'scan_duration'
 CONF_BLUETOOTH_DEVICE = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
-    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
+    vol.Optional(CONF_SCAN_DURATION, default=10):
+    cv.positive_int,
+    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'):
+    cv.string
 })
 
 
@@ -41,8 +42,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Mark a device as seen."""
         if new_device:
             if address in new_devices:
-                _LOGGER.debug(
-                    "Seen %s %s times", address, new_devices[address])
+                _LOGGER.debug("Seen %s %s times", address,
+                              new_devices[address])
                 new_devices[address] += 1
                 if new_devices[address] >= MIN_SEEN_NEW:
                     _LOGGER.debug("Adding %s to tracked devices", address)

@@ -25,8 +25,10 @@ DEPENDENCIES = ['zigbee']
 TYPES = ['analog', 'temperature']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE): vol.In(TYPES),
-    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS): vol.Coerce(float),
+    vol.Required(CONF_TYPE):
+    vol.In(TYPES),
+    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS):
+    vol.Coerce(float),
 })
 
 
@@ -79,8 +81,8 @@ class ZigBeeTemperatureSensor(Entity):
                 "Transmission failure when attempting to get sample from "
                 "ZigBee device at address: %s", hexlify(self._config.address))
         except zigbee.ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from ZigBee device: %s",
+                              exc)
 
 
 # This must be below the classes to which it refers.

@@ -9,11 +9,11 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
-from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME, STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN,
-    CONF_COVERS, CONF_HOST, CONF_PORT)
+from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
+                                            SUPPORT_OPEN, SUPPORT_CLOSE)
+from homeassistant.const import (CONF_DEVICE, CONF_NAME, STATE_UNKNOWN,
+                                 STATE_CLOSED, STATE_OPEN, CONF_COVERS,
+                                 CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,20 +32,24 @@ STATE_OFFLINE = "offline"
 STATE_OPENING = "opening"
 STATE_STOPPED = "stopped"
 
-STATES_MAP = {
-    0: STATE_CLOSED,
-    1: STATE_OPEN
-}
+STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
 COVER_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICEKEY): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME): cv.string
+    vol.Required(CONF_DEVICEKEY):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_NAME):
+    cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS):
+    vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 
@@ -74,8 +78,8 @@ class OpenGarageCover(CoverDevice):
     # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
-        self.opengarage_url = 'http://{}:{}'.format(
-            args[CONF_HOST], args[CONF_PORT])
+        self.opengarage_url = 'http://{}:{}'.format(args[CONF_HOST],
+                                                    args[CONF_PORT])
         self.hass = hass
         self._name = args[CONF_NAME]
         self.device_id = args['device_id']
@@ -153,8 +157,9 @@ class OpenGarageCover(CoverDevice):
             self.dist = status.get('dist')
             self._available = True
         except (requests.exceptions.RequestException) as ex:
-            _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
-                          dict(reason=ex))
+            _LOGGER.error(
+                "Unable to connect to OpenGarage device: %(reason)s",
+                dict(reason=ex))
             self._state = STATE_OFFLINE
 
     def _get_status(self):
@@ -165,8 +170,8 @@ class OpenGarageCover(CoverDevice):
 
     def _push_button(self):
         """Send commands to API."""
-        url = '{}/cc?dkey={}&click=1'.format(
-            self.opengarage_url, self._devicekey)
+        url = '{}/cc?dkey={}&click=1'.format(self.opengarage_url,
+                                             self._devicekey)
         try:
             response = requests.get(url, timeout=10).json()
             if response["result"] == 2:
@@ -175,8 +180,9 @@ class OpenGarageCover(CoverDevice):
                 self._state = self._state_before_move
                 self._state_before_move = None
         except (requests.exceptions.RequestException) as ex:
-            _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
-                          dict(reason=ex))
+            _LOGGER.error(
+                "Unable to connect to OpenGarage device: %(reason)s",
+                dict(reason=ex))
             self._state = self._state_before_move
             self._state_before_move = None
 

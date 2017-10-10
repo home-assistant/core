@@ -12,13 +12,13 @@ import voluptuous as vol
 
 import homeassistant.util as util
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE, SUPPORT_SELECT_SOURCE,
-    MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
-    STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_SELECT_SOURCE, MEDIA_TYPE_CHANNEL,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF,
+                                 STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['liveboxplaytv==1.4.9']
@@ -37,9 +37,12 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string
 })
 
 
@@ -118,8 +121,9 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         # Sort channels by tvIndex
-        return [self._channel_list[c] for c in
-                sorted(self._channel_list.keys())]
+        return [
+            self._channel_list[c] for c in sorted(self._channel_list.keys())
+        ]
 
     @property
     def media_content_type(self):

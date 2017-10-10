@@ -12,17 +12,20 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string
 })
 
 
@@ -35,6 +38,7 @@ def get_scanner(hass, config):
 
 def _refresh_on_acccess_denied(func):
     """If remove rebooted, it lost our session so rebuld one and try again."""
+
     def decorator(self, *args, **kwargs):
         """Wrapper function to refresh session_id on PermissionError."""
         try:
@@ -84,8 +88,13 @@ class UbusDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if self.leasefile is None:
             result = _req_json_rpc(
-                self.url, self.session_id, 'call', 'uci', 'get',
-                config="dhcp", type="dnsmasq")
+                self.url,
+                self.session_id,
+                'call',
+                'uci',
+                'get',
+                config="dhcp",
+                type="dnsmasq")
             if result:
                 values = result["values"].values()
                 self.leasefile = next(iter(values))["leasefile"]
@@ -94,7 +103,11 @@ class UbusDeviceScanner(DeviceScanner):
 
         if self.mac2name is None:
             result = _req_json_rpc(
-                self.url, self.session_id, 'call', 'file', 'read',
+                self.url,
+                self.session_id,
+                'call',
+                'file',
+                'read',
                 path=self.leasefile)
             if result:
                 self.mac2name = dict()
@@ -119,15 +132,15 @@ class UbusDeviceScanner(DeviceScanner):
         _LOGGER.info("Checking ARP")
 
         if not self.hostapd:
-            hostapd = _req_json_rpc(
-                self.url, self.session_id, 'list', 'hostapd.*', '')
+            hostapd = _req_json_rpc(self.url, self.session_id, 'list',
+                                    'hostapd.*', '')
             self.hostapd.extend(hostapd.keys())
 
         self.last_results = []
         results = 0
         for hostapd in self.hostapd:
-            result = _req_json_rpc(
-                self.url, self.session_id, 'call', hostapd, 'get_clients')
+            result = _req_json_rpc(self.url, self.session_id, 'call', hostapd,
+                                   'get_clients')
 
             if result:
                 results = results + 1
@@ -138,13 +151,12 @@ class UbusDeviceScanner(DeviceScanner):
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """Perform one JSON RPC operation."""
-    data = json.dumps({"jsonrpc": "2.0",
-                       "id": 1,
-                       "method": rpcmethod,
-                       "params": [session_id,
-                                  subsystem,
-                                  method,
-                                  params]})
+    data = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": rpcmethod,
+        "params": [session_id, subsystem, method, params]
+    })
 
     try:
         res = requests.post(url, data=data, timeout=5)
@@ -172,7 +184,12 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
 
 def _get_session_id(url, username, password):
     """Get the authentication token for the given host+username+password."""
-    res = _req_json_rpc(url, "00000000000000000000000000000000", 'call',
-                        'session', 'login', username=username,
-                        password=password)
+    res = _req_json_rpc(
+        url,
+        "00000000000000000000000000000000",
+        'call',
+        'session',
+        'login',
+        username=username,
+        password=password)
     return res["ubus_rpc_session"]

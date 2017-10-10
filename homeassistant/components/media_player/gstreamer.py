@@ -9,16 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, SUPPORT_NEXT_TRACK,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_IDLE, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PLAY, SUPPORT_NEXT_TRACK, PLATFORM_SCHEMA, MediaPlayerDevice)
+from homeassistant.const import (STATE_IDLE, CONF_NAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
-
 
 REQUIREMENTS = ['gstreamer-player==1.1.0']
 DOMAIN = 'gstreamer'
@@ -29,8 +26,10 @@ SUPPORT_GSTREAMER = SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_PAUSE |\
      SUPPORT_PLAY_MEDIA | SUPPORT_NEXT_TRACK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PIPELINE): cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_PIPELINE):
+    cv.string,
 })
 
 

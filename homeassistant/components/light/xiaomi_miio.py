@@ -12,10 +12,17 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP, Light, )
+    PLATFORM_SCHEMA,
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    SUPPORT_COLOR_TEMP,
+    Light, )
 
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,9 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Xiaomi Philips Light'
 PLATFORM = 'xiaomi_miio'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_TOKEN):
+    vol.All(cv.string, vol.Length(min=32, max=32)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 REQUIREMENTS = ['python-mirobo==0.2.0']
@@ -55,10 +65,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         light = Ceil(host, token)
         device_info = light.info()
-        _LOGGER.info("%s %s %s initialized",
-                     device_info.raw['model'],
-                     device_info.raw['fw_ver'],
-                     device_info.raw['hw_ver'])
+        _LOGGER.info("%s %s %s initialized", device_info.raw['model'],
+                     device_info.raw['fw_ver'], device_info.raw['hw_ver'])
 
         philips_light = XiaomiPhilipsLight(name, light, device_info)
         hass.data[PLATFORM][host] = philips_light
@@ -157,13 +165,12 @@ class XiaomiPhilipsLight(Light):
             brightness = kwargs[ATTR_BRIGHTNESS]
             percent_brightness = int(100 * brightness / 255)
 
-            _LOGGER.debug(
-                "Setting brightness: %s %s%%",
-                self.brightness, percent_brightness)
+            _LOGGER.debug("Setting brightness: %s %s%%", self.brightness,
+                          percent_brightness)
 
             result = yield from self._try_command(
-                "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)
+                "Setting brightness failed: %s", self._light.set_brightness,
+                percent_brightness)
 
             if result:
                 self._brightness = brightness
@@ -171,13 +178,11 @@ class XiaomiPhilipsLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             percent_color_temp = self.translate(
-                color_temp, self.max_mireds,
-                self.min_mireds, CCT_MIN, CCT_MAX)
+                color_temp, self.max_mireds, self.min_mireds, CCT_MIN, CCT_MAX)
 
-            _LOGGER.debug(
-                "Setting color temperature: "
-                "%s mireds, %s%% cct",
-                color_temp, percent_color_temp)
+            _LOGGER.debug("Setting color temperature: "
+                          "%s mireds, %s%% cct", color_temp,
+                          percent_color_temp)
 
             result = yield from self._try_command(
                 "Setting color temperature failed: %s cct",
@@ -186,8 +191,8 @@ class XiaomiPhilipsLight(Light):
             if result:
                 self._color_temp = color_temp
 
-        result = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
+        result = yield from self._try_command("Turning the light on failed.",
+                                              self._light.on)
 
         if result:
             self._state = True
@@ -195,8 +200,8 @@ class XiaomiPhilipsLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        result = yield from self._try_command(
-            "Turning the light off failed.", self._light.off)
+        result = yield from self._try_command("Turning the light off failed.",
+                                              self._light.off)
 
         if result:
             self._state = True
@@ -211,9 +216,9 @@ class XiaomiPhilipsLight(Light):
 
             self._state = state.is_on
             self._brightness = int(255 * 0.01 * state.brightness)
-            self._color_temp = self.translate(state.color_temperature,
-                                              CCT_MIN, CCT_MAX,
-                                              self.max_mireds, self.min_mireds)
+            self._color_temp = self.translate(state.color_temperature, CCT_MIN,
+                                              CCT_MAX, self.max_mireds,
+                                              self.min_mireds)
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)

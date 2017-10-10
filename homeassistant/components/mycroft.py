@@ -17,15 +17,15 @@ REQUIREMENTS = ['mycroftapi==2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DOMAIN = 'mycroft'
 
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_HOST): cv.string
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

@@ -34,7 +34,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 

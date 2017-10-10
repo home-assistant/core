@@ -3,8 +3,8 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+from homeassistant.const import (ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+                                 SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.components import switch, light
 from homeassistant.util.decorator import Registry
 
@@ -17,11 +17,10 @@ API_HEADER = 'header'
 API_PAYLOAD = 'payload'
 API_ENDPOINT = 'endpoint'
 
-
 MAPPING_COMPONENT = {
-    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController',), None],
+    switch.DOMAIN: ['SWITCH', ('Alexa.PowerController', ), None],
     light.DOMAIN: [
-        'LIGHT', ('Alexa.PowerController',), {
+        'LIGHT', ('Alexa.PowerController', ), {
             light.SUPPORT_BRIGHTNESS: 'Alexa.BrightnessController'
         }
     ],
@@ -41,8 +40,7 @@ def async_handle_message(hass, message):
     # Do we support this API request?
     funct_ref = HANDLERS.get((namespace, name))
     if not funct_ref:
-        _LOGGER.warning(
-            "Unsupported API request %s/%s", namespace, name)
+        _LOGGER.warning("Unsupported API request %s/%s", namespace, name)
         return api_error(message)
 
     return (yield from funct_ref(hass, message))
@@ -141,12 +139,15 @@ def async_api_discovery(hass, request):
         discovery_endpoints.append(endpoint)
 
     return api_message(
-        request, name='Discover.Response', namespace='Alexa.Discovery',
+        request,
+        name='Discover.Response',
+        namespace='Alexa.Discovery',
         payload={'endpoints': discovery_endpoints})
 
 
 def extract_entity(funct):
     """Decorator for extract entity object from request."""
+
     @asyncio.coroutine
     def async_api_entity_wrapper(hass, request):
         """Process a turn on request."""
@@ -169,9 +170,10 @@ def extract_entity(funct):
 @asyncio.coroutine
 def async_api_turn_on(hass, request, entity):
     """Process a turn on request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-        ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain,
+        SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True)
 
     return api_message(request)
 
@@ -181,9 +183,10 @@ def async_api_turn_on(hass, request, entity):
 @asyncio.coroutine
 def async_api_turn_off(hass, request, entity):
     """Process a turn off request."""
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_OFF, {
-        ATTR_ENTITY_ID: entity.entity_id
-    }, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain,
+        SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True)
 
     return api_message(request)
 
@@ -195,9 +198,12 @@ def async_api_set_brightness(hass, request, entity):
     """Process a set brightness request."""
     brightness = request[API_PAYLOAD]['brightness']
 
-    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-        ATTR_ENTITY_ID: entity.entity_id,
-        light.ATTR_BRIGHTNESS: brightness,
-    }, blocking=True)
+    yield from hass.services.async_call(
+        entity.domain,
+        SERVICE_TURN_ON, {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_BRIGHTNESS: brightness,
+        },
+        blocking=True)
 
     return api_message(request)

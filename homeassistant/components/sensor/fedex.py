@@ -33,11 +33,14 @@ ICON = 'mdi:package-variant-closed'
 STATUS_DELIVERED = 'delivered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -52,7 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         cookie = hass.config.path(COOKIE)
         session = fedexdeliverymanager.get_session(
-            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
             cookie_path=cookie)
     except fedexdeliverymanager.FedexError:
         _LOGGER.exception("Could not connect to Fedex Delivery Manager")
@@ -98,9 +102,7 @@ class FedexSensor(Entity):
             if skip:
                 continue
             status_counts[status] += 1
-        self._attributes = {
-            ATTR_ATTRIBUTION: fedexdeliverymanager.ATTRIBUTION
-        }
+        self._attributes = {ATTR_ATTRIBUTION: fedexdeliverymanager.ATTRIBUTION}
         self._attributes.update(status_counts)
         self._state = sum(status_counts.values())
 

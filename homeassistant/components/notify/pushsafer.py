@@ -21,7 +21,8 @@ CONF_DEVICE_KEY = 'private_key'
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_KEY): cv.string,
+    vol.Required(CONF_DEVICE_KEY):
+    cv.string,
 })
 
 
@@ -41,7 +42,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         payload = {'k': self._private_key, 't': title, 'm': message}
-        response = requests.get(_RESOURCE, params=payload,
-                                timeout=DEFAULT_TIMEOUT)
+        response = requests.get(
+            _RESOURCE, params=payload, timeout=DEFAULT_TIMEOUT)
         if response.status_code != 200:
             _LOGGER.error("Not possible to send notification")

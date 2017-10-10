@@ -10,14 +10,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
-from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA)
-from homeassistant.helpers.aiohttp_client import (
-    async_create_clientsession,
-    async_aiohttp_proxy_web)
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL,
+                                 CONF_TIMEOUT)
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.helpers.aiohttp_client import (async_create_clientsession,
+                                                  async_aiohttp_proxy_web)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['py-synology==0.1.3']
@@ -28,13 +26,20 @@ DEFAULT_NAME = 'Synology Camera'
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_URL):
+    cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
+    vol.Optional(CONF_WHITELIST, default=[]):
+    cv.ensure_list,
+    vol.Optional(CONF_VERIFY_SSL, default=True):
+    cv.boolean,
 })
 
 
@@ -51,8 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
             verify_ssl=verify_ssl,
-            timeout=timeout
-        )
+            timeout=timeout)
     except (requests.exceptions.RequestException, ValueError):
         _LOGGER.exception("Error when initializing SurveillanceStation")
         return False

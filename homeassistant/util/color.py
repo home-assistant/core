@@ -191,12 +191,9 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     G = iG / 255
 
     # Gamma correction
-    R = pow((R + 0.055) / (1.0 + 0.055),
-            2.4) if (R > 0.04045) else (R / 12.92)
-    G = pow((G + 0.055) / (1.0 + 0.055),
-            2.4) if (G > 0.04045) else (G / 12.92)
-    B = pow((B + 0.055) / (1.0 + 0.055),
-            2.4) if (B > 0.04045) else (B / 12.92)
+    R = pow((R + 0.055) / (1.0 + 0.055), 2.4) if (R > 0.04045) else (R / 12.92)
+    G = pow((G + 0.055) / (1.0 + 0.055), 2.4) if (G > 0.04045) else (G / 12.92)
+    B = pow((B + 0.055) / (1.0 + 0.055), 2.4) if (B > 0.04045) else (B / 12.92)
 
     # Wide RGB D65 conversion formula
     X = R * 0.664511 + G * 0.154324 + B * 0.162028
@@ -260,15 +257,15 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
 # pylint: disable=invalid-sequence-index
 def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
     """Convert an rgb color to its hsv representation."""
-    fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
-    return (int(fHSV[0]*65536), int(fHSV[1]*255), int(fHSV[2]*255))
+    fHSV = colorsys.rgb_to_hsv(iR / 255.0, iG / 255.0, iB / 255.0)
+    return (int(fHSV[0] * 65536), int(fHSV[1] * 255), int(fHSV[2] * 255))
 
 
 # pylint: disable=invalid-sequence-index
 def color_hsv_to_RGB(iH: int, iS: int, iV: int) -> Tuple[int, int, int]:
     """Convert an hsv color into its rgb representation."""
-    fRGB = colorsys.hsv_to_rgb(iH/65536, iS/255, iV/255)
-    return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
+    fRGB = colorsys.hsv_to_rgb(iH / 65536, iS / 255, iV / 255)
+    return (int(fRGB[0] * 255), int(fRGB[1] * 255), int(fRGB[2] * 255))
 
 
 # pylint: disable=invalid-sequence-index
@@ -320,10 +317,10 @@ def color_rgb_to_hex(r, g, b):
 
 def rgb_hex_to_rgb_list(hex_string):
     """Return an RGB color value list from a hex color string."""
-    return [int(hex_string[i:i + len(hex_string) // 3], 16)
-            for i in range(0,
-                           len(hex_string),
-                           len(hex_string) // 3)]
+    return [
+        int(hex_string[i:i + len(hex_string) // 3], 16)
+        for i in range(0, len(hex_string), len(hex_string) // 3)
+    ]
 
 
 def color_temperature_to_rgb(color_temperature_kelvin):
@@ -350,8 +347,8 @@ def color_temperature_to_rgb(color_temperature_kelvin):
     return (red, green, blue)
 
 
-def _bound(color_component: float, minimum: float=0,
-           maximum: float=255) -> float:
+def _bound(color_component: float, minimum: float = 0,
+           maximum: float = 255) -> float:
     """
     Bound the given color component value between the given min and max values.
 

@@ -9,8 +9,8 @@ import logging
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
-from homeassistant.const import (
-    TEMP_FAHRENHEIT, TEMP_CELSIUS, ATTR_TEMPERATURE)
+from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS,
+                                 ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,8 +21,10 @@ OPERATION_LIST = [STATE_ON, STATE_OFF]
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla climate platform."""
-    devices = [TeslaThermostat(device, hass.data[TESLA_DOMAIN]['controller'])
-               for device in hass.data[TESLA_DOMAIN]['devices']['climate']]
+    devices = [
+        TeslaThermostat(device, hass.data[TESLA_DOMAIN]['controller'])
+        for device in hass.data[TESLA_DOMAIN]['devices']['climate']
+    ]
     add_devices(devices, True)
 
 

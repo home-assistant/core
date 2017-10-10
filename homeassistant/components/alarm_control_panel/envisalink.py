@@ -29,8 +29,10 @@ DEPENDENCIES = ['envisalink']
 SERVICE_ALARM_KEYPRESS = 'envisalink_alarm_keypress'
 ATTR_KEYPRESS = 'keypress'
 ALARM_KEYPRESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_KEYPRESS): cv.string
+    vol.Required(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_KEYPRESS):
+    cv.string
 })
 
 
@@ -45,14 +47,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         device = EnvisalinkAlarm(
-            hass,
-            part_num,
-            device_config_data[CONF_PARTITIONNAME],
-            code,
-            panic_type,
-            hass.data[DATA_EVL].alarm_state['partition'][part_num],
-            hass.data[DATA_EVL]
-        )
+            hass, part_num, device_config_data[CONF_PARTITIONNAME], code,
+            panic_type, hass.data[DATA_EVL].alarm_state['partition'][part_num],
+            hass.data[DATA_EVL])
         devices.append(device)
 
     async_add_devices(devices)
@@ -63,20 +60,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         keypress = service.data.get(ATTR_KEYPRESS)
 
-        target_devices = [device for device in devices
-                          if device.entity_id in entity_ids]
+        target_devices = [
+            device for device in devices if device.entity_id in entity_ids
+        ]
 
         for device in target_devices:
             device.async_alarm_keypress(keypress)
 
     # Register Envisalink specific services
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        alarm.DOMAIN, SERVICE_ALARM_KEYPRESS, alarm_keypress_handler,
-        descriptions.get(SERVICE_ALARM_KEYPRESS), schema=ALARM_KEYPRESS_SCHEMA)
+        alarm.DOMAIN,
+        SERVICE_ALARM_KEYPRESS,
+        alarm_keypress_handler,
+        descriptions.get(SERVICE_ALARM_KEYPRESS),
+        schema=ALARM_KEYPRESS_SCHEMA)
 
     return True
 
@@ -97,10 +99,10 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_KEYPAD_UPDATE,
+                                 self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_PARTITION_UPDATE,
+                                 self._update_callback)
 
     @callback
     def _update_callback(self, partition):

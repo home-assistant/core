@@ -24,10 +24,14 @@ CONF_EVENT = 'event'
 CONF_SALT = 'salt'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_KEY): cv.string,
-    vol.Optional(CONF_EVENT): cv.string,
-    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
-    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
+    vol.Required(CONF_DEVICE_KEY):
+    cv.string,
+    vol.Optional(CONF_EVENT):
+    cv.string,
+    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED):
+    cv.string,
+    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED):
+    cv.string,
 })
 
 
@@ -53,7 +57,12 @@ class SimplePushNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if self._password:
-            send_encrypted(self._device_key, self._password, self._salt, title,
-                           message, event=self._event)
+            send_encrypted(
+                self._device_key,
+                self._password,
+                self._salt,
+                title,
+                message,
+                event=self._event)
         else:
             send(self._device_key, title, message, event=self._event)

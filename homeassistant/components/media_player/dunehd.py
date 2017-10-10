@@ -11,8 +11,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
     SUPPORT_PLAY, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_ON, STATE_PLAYING)
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED,
+                                 STATE_ON, STATE_PLAYING)
 
 REQUIREMENTS = ['pdunehd==1.3']
 
@@ -21,9 +21,14 @@ DEFAULT_NAME = 'DuneHD'
 CONF_SOURCES = 'sources'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_SOURCES):
+    vol.Schema({
+        cv.string: cv.string
+    }),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 DUNEHD_PLAYER_SUPPORT = \

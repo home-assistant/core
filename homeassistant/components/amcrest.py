@@ -11,9 +11,9 @@ import aiohttp
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
 
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
+                                 CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -46,9 +46,7 @@ RESOLUTION_LIST = {
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-AUTHENTICATION_LIST = {
-    'basic': 'basic'
-}
+AUTHENTICATION_LIST = {'basic': 'basic'}
 
 STREAM_SOURCE_LIST = {
     'mjpeg': 0,
@@ -63,26 +61,39 @@ SENSORS = {
     'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
 }
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-            vol.All(vol.In(AUTHENTICATION_LIST)),
-        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-            vol.All(vol.In(RESOLUTION_LIST)),
-        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
-            vol.All(vol.In(STREAM_SOURCE_LIST)),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-        vol.Optional(CONF_SENSORS, default=None):
-            vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.All(cv.ensure_list, [
+            vol.Schema({
+                vol.Required(CONF_HOST):
+                cv.string,
+                vol.Required(CONF_USERNAME):
+                cv.string,
+                vol.Required(CONF_PASSWORD):
+                cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+                cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+                cv.port,
+                vol.Optional(
+                    CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+                vol.All(vol.In(AUTHENTICATION_LIST)),
+                vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
+                vol.All(vol.In(RESOLUTION_LIST)),
+                vol.Optional(
+                    CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
+                vol.All(vol.In(STREAM_SOURCE_LIST)),
+                vol.Optional(CONF_FFMPEG_ARGUMENTS):
+                cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+                cv.time_period,
+                vol.Optional(CONF_SENSORS, default=None):
+                vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+            })
+        ])
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -92,10 +103,10 @@ def setup(hass, config):
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
-        camera = AmcrestCamera(device.get(CONF_HOST),
-                               device.get(CONF_PORT),
-                               device.get(CONF_USERNAME),
-                               device.get(CONF_PASSWORD)).camera
+        camera = AmcrestCamera(
+            device.get(CONF_HOST),
+            device.get(CONF_PORT),
+            device.get(CONF_USERNAME), device.get(CONF_PASSWORD)).camera
         try:
             camera.current_time
 
@@ -126,22 +137,20 @@ def setup(hass, config):
             else:
                 authentication = None
 
-        discovery.load_platform(
-            hass, 'camera', DOMAIN, {
-                'device': camera,
-                CONF_AUTHENTICATION: authentication,
-                CONF_FFMPEG_ARGUMENTS: ffmpeg_arguments,
-                CONF_NAME: name,
-                CONF_RESOLUTION: resolution,
-                CONF_STREAM_SOURCE: stream_source,
-            }, config)
+        discovery.load_platform(hass, 'camera', DOMAIN, {
+            'device': camera,
+            CONF_AUTHENTICATION: authentication,
+            CONF_FFMPEG_ARGUMENTS: ffmpeg_arguments,
+            CONF_NAME: name,
+            CONF_RESOLUTION: resolution,
+            CONF_STREAM_SOURCE: stream_source,
+        }, config)
 
         if sensors:
-            discovery.load_platform(
-                hass, 'sensor', DOMAIN, {
-                    'device': camera,
-                    CONF_NAME: name,
-                    CONF_SENSORS: sensors,
-                }, config)
+            discovery.load_platform(hass, 'sensor', DOMAIN, {
+                'device': camera,
+                CONF_NAME: name,
+                CONF_SENSORS: sensors,
+            }, config)
 
     return True

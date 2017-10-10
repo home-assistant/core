@@ -22,8 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DISPLAY_TIME = "display_time"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default="i555"): cv.string,
-    vol.Optional(CONF_DISPLAY_TIME, default=10): cv.positive_int,
+    vol.Optional(CONF_ICON, default="i555"):
+    cv.string,
+    vol.Optional(CONF_DISPLAY_TIME, default=10):
+    cv.positive_int,
 })
 
 
@@ -31,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
     hlmn = hass.data.get(DOMAIN)
-    return LaMetricNotificationService(hlmn,
-                                       config[CONF_ICON],
+    return LaMetricNotificationService(hlmn, config[CONF_ICON],
                                        config[CONF_DISPLAY_TIME] * 1000)
 
 
@@ -62,8 +63,8 @@ class LaMetricNotificationService(BaseNotificationService):
                 icon = data["icon"]
             if "sound" in data:
                 try:
-                    sound = Sound(category="notifications",
-                                  sound_id=data["sound"])
+                    sound = Sound(
+                        category="notifications", sound_id=data["sound"])
                     _LOGGER.debug("Adding notification sound %s",
                                   data["sound"])
                 except AssertionError:
@@ -71,8 +72,8 @@ class LaMetricNotificationService(BaseNotificationService):
                                   data["sound"])
 
         text_frame = SimpleFrame(icon, message)
-        _LOGGER.debug("Icon/Message/Duration: %s, %s, %d",
-                      icon, message, self._display_time)
+        _LOGGER.debug("Icon/Message/Duration: %s, %s, %d", icon, message,
+                      self._display_time)
 
         frames = [text_frame]
 

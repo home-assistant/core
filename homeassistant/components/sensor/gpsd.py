@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN, CONF_HOST, CONF_PORT,
-    CONF_NAME)
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
+                                 CONF_HOST, CONF_PORT, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,9 +29,12 @@ DEFAULT_NAME = 'GPS'
 DEFAULT_PORT = 2947
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 

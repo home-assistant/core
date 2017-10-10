@@ -22,8 +22,10 @@ CONF_XUID = 'xuid'
 ICON = 'mdi:xbox'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_XUID): vol.All(cv.ensure_list, [cv.string])
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_XUID):
+    vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -82,9 +84,9 @@ class XboxSensor(Entity):
         attributes = {}
         for device in self._presence:
             for title in device.get('titles'):
-                attributes[
-                    '{} {}'.format(device.get('type'), title.get('placement'))
-                ] = title.get('name')
+                attributes['{} {}'.format(
+                    device.get('type'), title.get('placement'))] = title.get(
+                        'name')
 
         return attributes
 

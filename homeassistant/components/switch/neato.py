@@ -41,8 +41,8 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.type = switch_type
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
-        self._robot_name = '{} {}'.format(
-            self.robot.name, SWITCH_TYPES[self.type][0])
+        self._robot_name = '{} {}'.format(self.robot.name,
+                                          SWITCH_TYPES[self.type][0])
         try:
             self._state = self.robot.state
         except (requests.exceptions.ConnectionError,
@@ -65,10 +65,10 @@ class NeatoConnectedSwitch(ToggleEntity):
             return
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_CLEAN:
-            if (self.robot.state['action'] == 1 or
-                    self.robot.state['action'] == 2 or
-                    self.robot.state['action'] == 3 and
-                    self.robot.state['state'] == 2):
+            if (self.robot.state['action'] == 1
+                    or self.robot.state['action'] == 2
+                    or self.robot.state['action'] == 3
+                    and self.robot.state['state'] == 2):
                 self._clean_state = STATE_ON
             else:
                 self._clean_state = STATE_OFF

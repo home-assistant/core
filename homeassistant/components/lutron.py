@@ -23,13 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, base_config):
@@ -52,7 +55,7 @@ def setup(hass, base_config):
         for output in area.outputs:
             hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
 
-    for component in ('light',):
+    for component in ('light', ):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
 
@@ -69,10 +72,8 @@ class LutronDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
-            self._controller.subscribe, self._lutron_device,
-            self._update_callback
-        )
+        self.hass.async_add_job(self._controller.subscribe,
+                                self._lutron_device, self._update_callback)
 
     def _update_callback(self, _device):
         """Run when invoked by pylutron when the device state changes."""

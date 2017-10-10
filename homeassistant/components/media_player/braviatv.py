@@ -21,7 +21,8 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
-    '#braviarc==0.3.7']
+    '#braviarc==0.3.7'
+]
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -43,8 +44,10 @@ SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                  SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -138,7 +141,11 @@ def setup_bravia(config, pin, hass, add_devices):
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'host': host, 'mac': mac}}):
+            {host: {
+                'pin': pin,
+                'host': host,
+                'mac': mac
+            }}):
             _LOGGER.error("Failed to save configuration file")
 
         add_devices([BraviaTVDevice(host, mac, name, pin)])
@@ -153,8 +160,8 @@ def request_configuration(config, hass, add_devices):
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again.")
+        configurator.notify_errors(_CONFIGURING[host],
+                                   "Failed to register, please try again.")
         return
 
     def bravia_configuration_callback(data):
@@ -170,13 +177,17 @@ def request_configuration(config, hass, add_devices):
             request_configuration(config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
-        name, bravia_configuration_callback,
+        name,
+        bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
         'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
-        fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
-    )
+        fields=[{
+            'id': 'pin',
+            'name': 'Enter the pin',
+            'type': ''
+        }])
 
 
 class BraviaTVDevice(MediaPlayerDevice):

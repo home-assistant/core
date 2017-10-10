@@ -26,25 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 OPENALPR_API_URL = "https://api.openalpr.com/v1/recognize"
 
 OPENALPR_REGIONS = [
-    'au',
-    'auwide',
-    'br',
-    'eu',
-    'fr',
-    'gb',
-    'kr',
-    'kr2',
-    'mx',
-    'sg',
-    'us',
+    'au', 'auwide', 'br', 'eu', 'fr', 'gb', 'kr', 'kr2', 'mx', 'sg', 'us',
     'vn2'
 ]
 
 CONF_REGION = 'region'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_REGION):
+    vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
 })
 
 
@@ -61,9 +53,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(OpenAlprCloudEntity(
-            camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
-        ))
+        entities.append(
+            OpenAlprCloudEntity(camera[CONF_ENTITY_ID], params, confidence,
+                                camera.get(CONF_NAME)))
 
     async_add_devices(entities)
 
@@ -114,14 +106,13 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 request = yield from websession.post(
-                    OPENALPR_API_URL, params=params
-                )
+                    OPENALPR_API_URL, params=params)
 
                 data = yield from request.json()
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d -> %s.",
-                                  request.status, data.get('error'))
+                    _LOGGER.error("Error %d -> %s.", request.status,
+                                  data.get('error'))
                     return
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -137,8 +128,9 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
             for p_data in row['candidates']:
                 try:
-                    result.update(
-                        {p_data['plate']: float(p_data['confidence'])})
+                    result.update({
+                        p_data['plate']: float(p_data['confidence'])
+                    })
                 except ValueError:
                     continue
 

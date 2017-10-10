@@ -13,14 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (TEMP_FAHRENHEIT, CONF_NAME,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
+REQUIREMENTS = ['i2csense==0.0.4', 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,25 +57,28 @@ SENSOR_TYPES = {
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_TEMP,
-                 default=DEFAULT_OVERSAMPLING_TEMP): vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_PRES,
-                 default=DEFAULT_OVERSAMPLING_PRES): vol.Coerce(int),
-    vol.Optional(CONF_OVERSAMPLING_HUM,
-                 default=DEFAULT_OVERSAMPLING_HUM): vol.Coerce(int),
-    vol.Optional(CONF_OPERATION_MODE,
-                 default=DEFAULT_OPERATION_MODE): vol.Coerce(int),
-    vol.Optional(CONF_T_STANDBY,
-                 default=DEFAULT_T_STANDBY): vol.Coerce(int),
-    vol.Optional(CONF_FILTER_MODE,
-                 default=DEFAULT_FILTER_MODE): vol.Coerce(int),
-    vol.Optional(CONF_DELTA_TEMP,
-                 default=DEFAULT_DELTA_TEMP): vol.Coerce(float),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS):
+    vol.Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_TEMP, default=DEFAULT_OVERSAMPLING_TEMP):
+    vol.Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_PRES, default=DEFAULT_OVERSAMPLING_PRES):
+    vol.Coerce(int),
+    vol.Optional(CONF_OVERSAMPLING_HUM, default=DEFAULT_OVERSAMPLING_HUM):
+    vol.Coerce(int),
+    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_OPERATION_MODE):
+    vol.Coerce(int),
+    vol.Optional(CONF_T_STANDBY, default=DEFAULT_T_STANDBY):
+    vol.Coerce(int),
+    vol.Optional(CONF_FILTER_MODE, default=DEFAULT_FILTER_MODE):
+    vol.Coerce(int),
+    vol.Optional(CONF_DELTA_TEMP, default=DEFAULT_DELTA_TEMP):
+    vol.Coerce(float),
 })
 
 
@@ -93,16 +95,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
     sensor = yield from hass.async_add_job(
-        partial(BME280, bus, i2c_address,
-                osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
-                osrs_p=config.get(CONF_OVERSAMPLING_PRES),
-                osrs_h=config.get(CONF_OVERSAMPLING_HUM),
-                mode=config.get(CONF_OPERATION_MODE),
-                t_sb=config.get(CONF_T_STANDBY),
-                filter_mode=config.get(CONF_FILTER_MODE),
-                delta_temp=config.get(CONF_DELTA_TEMP),
-                logger=_LOGGER)
-    )
+        partial(
+            BME280,
+            bus,
+            i2c_address,
+            osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
+            osrs_p=config.get(CONF_OVERSAMPLING_PRES),
+            osrs_h=config.get(CONF_OVERSAMPLING_HUM),
+            mode=config.get(CONF_OPERATION_MODE),
+            t_sb=config.get(CONF_T_STANDBY),
+            filter_mode=config.get(CONF_FILTER_MODE),
+            delta_temp=config.get(CONF_DELTA_TEMP),
+            logger=_LOGGER))
     if not sensor.sample_ok:
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
@@ -112,8 +116,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     dev = []
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
-            dev.append(BME280Sensor(
-                sensor_handler, variable, SENSOR_TYPES[variable][1], name))
+            dev.append(
+                BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][
+                    1], name))
     except KeyError:
         pass
 

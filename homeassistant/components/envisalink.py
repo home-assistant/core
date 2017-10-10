@@ -52,33 +52,48 @@ SIGNAL_PARTITION_UPDATE = 'envisalink.partition_updated'
 SIGNAL_KEYPAD_UPDATE = 'envisalink.keypad_updated'
 
 ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONENAME): cv.string,
-    vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string})
+    vol.Required(CONF_ZONENAME):
+    cv.string,
+    vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE):
+    cv.string
+})
 
-PARTITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_PARTITIONNAME): cv.string})
+PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_EVL_HOST): cv.string,
-        vol.Required(CONF_PANEL_TYPE):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_EVL_HOST):
+            cv.string,
+            vol.Required(CONF_PANEL_TYPE):
             vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASS): cv.string,
-        vol.Required(CONF_CODE): cv.string,
-        vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
-        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-        vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-        vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASS):
+            cv.string,
+            vol.Required(CONF_CODE):
+            cv.string,
+            vol.Optional(CONF_PANIC, default=DEFAULT_PANIC):
+            cv.string,
+            vol.Optional(CONF_ZONES): {
+                vol.Coerce(int): ZONE_SCHEMA
+            },
+            vol.Optional(CONF_PARTITIONS): {
+                vol.Coerce(int): PARTITION_SCHEMA
+            },
+            vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
             vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
-        vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+            vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(
-            CONF_ZONEDUMP_INTERVAL,
-            default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(
+                CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL):
+            vol.Coerce(int),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -102,9 +117,9 @@ def async_setup(hass, config):
     partitions = conf.get(CONF_PARTITIONS)
     sync_connect = asyncio.Future(loop=hass.loop)
 
-    controller = EnvisalinkAlarmPanel(
-        host, port, panel_type, version, user, password, zone_dump,
-        keep_alive, hass.loop)
+    controller = EnvisalinkAlarmPanel(host, port, panel_type, version, user,
+                                      password, zone_dump, keep_alive,
+                                      hass.loop)
     hass.data[DATA_EVL] = controller
 
     @callback
@@ -167,25 +182,20 @@ def async_setup(hass, config):
 
     # Load sub-components for Envisalink
     if partitions:
-        hass.async_add_job(async_load_platform(
-            hass, 'alarm_control_panel', 'envisalink', {
+        hass.async_add_job(
+            async_load_platform(hass, 'alarm_control_panel', 'envisalink', {
                 CONF_PARTITIONS: partitions,
                 CONF_CODE: code,
                 CONF_PANIC: panic_type
-            }, config
-        ))
-        hass.async_add_job(async_load_platform(
-            hass, 'sensor', 'envisalink', {
-                CONF_PARTITIONS: partitions,
-                CONF_CODE: code
-            }, config
-        ))
+            }, config))
+        hass.async_add_job(
+            async_load_platform(hass, 'sensor', 'envisalink',
+                                {CONF_PARTITIONS: partitions,
+                                 CONF_CODE: code}, config))
     if zones:
-        hass.async_add_job(async_load_platform(
-            hass, 'binary_sensor', 'envisalink', {
-                CONF_ZONES: zones
-            }, config
-        ))
+        hass.async_add_job(
+            async_load_platform(hass, 'binary_sensor', 'envisalink',
+                                {CONF_ZONES: zones}, config))
 
     return True
 

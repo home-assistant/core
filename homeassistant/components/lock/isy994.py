@@ -14,18 +14,17 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-VALUE_TO_STATE = {
-    0: STATE_UNLOCKED,
-    100: STATE_LOCKED
-}
+VALUE_TO_STATE = {0: STATE_UNLOCKED, 100: STATE_LOCKED}
 
 UOM = ['11']
 STATES = [STATE_LOCKED, STATE_UNLOCKED]
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 lock platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")
@@ -33,8 +32,7 @@ def setup_platform(hass, config: ConfigType,
 
     devices = []
 
-    for node in isy.filter_nodes(isy.NODES, units=UOM,
-                                 states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM, states=STATES):
         devices.append(ISYLockDevice(node))
 
     for program in isy.PROGRAMS.get(DOMAIN, []):
@@ -71,8 +69,8 @@ class ISYLockDevice(isy.ISYDevice, LockDevice):
     def lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""
         # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '1'])
+        req_url = self._conn.compileURL(
+            ['nodes', self.unique_id, 'cmd', 'SECMD', '1'])
         response = self._conn.request(req_url)
 
         if response is None:
@@ -83,8 +81,8 @@ class ISYLockDevice(isy.ISYDevice, LockDevice):
     def unlock(self, **kwargs) -> None:
         """Send the unlock command to the ISY994 device."""
         # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '0'])
+        req_url = self._conn.compileURL(
+            ['nodes', self.unique_id, 'cmd', 'SECMD', '0'])
         response = self._conn.request(req_url)
 
         if response is None:

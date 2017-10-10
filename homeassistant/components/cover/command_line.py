@@ -18,16 +18,25 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COMMAND_CLOSE, default='true'):
+    cv.string,
+    vol.Optional(CONF_COMMAND_OPEN, default='true'):
+    cv.string,
+    vol.Optional(CONF_COMMAND_STATE):
+    cv.string,
+    vol.Optional(CONF_COMMAND_STOP, default='true'):
+    cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Required(CONF_COVERS):
+    vol.Schema({
+        cv.slug: COVER_SCHEMA
+    }),
 })
 
 
@@ -49,9 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_CLOSE),
                 device_config.get(CONF_COMMAND_STOP),
                 device_config.get(CONF_COMMAND_STATE),
-                value_template,
-            )
-        )
+                value_template, ))
 
     if not covers:
         _LOGGER.error("No covers added")

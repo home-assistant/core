@@ -11,11 +11,9 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,12 +24,15 @@ CONF_INTERFACE = 'interface'
 
 DEFAULT_INTERFACE = 'Home'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE):
+    cv.string,
 })
 
 
@@ -69,8 +70,9 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
     def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        filter_named = [
+            device.name for device in self.last_results if device.mac == mac
+        ]
 
         if filter_named:
             return filter_named[0]
@@ -85,16 +87,17 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
         # doing a request
         try:
             from requests.auth import HTTPDigestAuth
-            res = requests.get(self._url, timeout=10, auth=HTTPDigestAuth(
-                self._username, self._password
-            ))
+            res = requests.get(
+                self._url,
+                timeout=10,
+                auth=HTTPDigestAuth(self._username, self._password))
         except requests.exceptions.Timeout:
-            _LOGGER.error(
-                "Connection to the router timed out at URL %s", self._url)
+            _LOGGER.error("Connection to the router timed out at URL %s",
+                          self._url)
             return False
         if res.status_code != 200:
-            _LOGGER.error(
-                "Connection failed with http code %s", res.status_code)
+            _LOGGER.error("Connection failed with http code %s",
+                          res.status_code)
             return False
         try:
             result = res.json()

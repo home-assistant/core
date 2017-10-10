@@ -14,13 +14,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, STATE_ON)
+    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_SENSORS,
+    CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, STATE_ON)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_same_state)
+from homeassistant.helpers.event import (async_track_state_change,
+                                         async_track_same_state)
 from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,18 +29,25 @@ CONF_DELAY_ON = 'delay_on'
 CONF_DELAY_OFF = 'delay_off'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Required(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(ATTR_FRIENDLY_NAME):
+    cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DELAY_ON):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DELAY_OFF):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+    vol.Required(CONF_SENSORS):
+    vol.Schema({
+        cv.slug: SENSOR_SCHEMA
+    }),
 })
 
 
@@ -51,8 +58,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SENSORS].items():
         value_template = device_config[CONF_VALUE_TEMPLATE]
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      value_template.extract_entities())
+        entity_ids = (device_config.get(ATTR_ENTITY_ID)
+                      or value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         delay_on = device_config.get(CONF_DELAY_ON)
@@ -62,10 +69,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             value_template.hass = hass
 
         sensors.append(
-            BinarySensorTemplate(
-                hass, device, friendly_name, device_class, value_template,
-                entity_ids, delay_on, delay_off)
-            )
+            BinarySensorTemplate(hass, device, friendly_name, device_class,
+                                 value_template, entity_ids, delay_on,
+                                 delay_off))
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
@@ -106,13 +112,13 @@ class BinarySensorTemplate(BinarySensorDevice):
         @callback
         def template_bsensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_bsensor_state_listener)
+            async_track_state_change(self.hass, self._entities,
+                                     template_bsensor_state_listener)
 
             self.hass.async_add_job(self.async_check_state)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_bsensor_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        template_bsensor_startup)
 
     @property
     def name(self):
@@ -171,5 +177,9 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         period = self._delay_on if state else self._delay_off
         async_track_same_state(
-            self.hass, state, period, set_state, entity_ids=self._entities,
+            self.hass,
+            state,
+            period,
+            set_state,
+            entity_ids=self._entities,
             async_check_func=self._async_render)

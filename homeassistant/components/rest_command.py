@@ -12,9 +12,8 @@ from aiohttp import hdrs
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD)
+from homeassistant.const import (CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_URL, CONF_PAYLOAD, CONF_METHOD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -35,21 +34,28 @@ SUPPORT_REST_METHODS = [
 CONF_CONTENT_TYPE = 'content_type'
 
 COMMAND_SCHEMA = vol.Schema({
-    vol.Required(CONF_URL): cv.template,
+    vol.Required(CONF_URL):
+    cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
-        vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
-    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_PAYLOAD): cv.template,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-    vol.Optional(CONF_CONTENT_TYPE): cv.string
+    vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Inclusive(CONF_USERNAME, 'authentication'):
+    cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD):
+    cv.template,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    vol.Coerce(int),
+    vol.Optional(CONF_CONTENT_TYPE):
+    cv.string
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: COMMAND_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: COMMAND_SCHEMA,
+        }),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -96,14 +102,13 @@ def async_setup(hass, config):
                         template_url.async_render(variables=service.data),
                         data=payload,
                         auth=auth,
-                        headers=headers
-                    )
+                        headers=headers)
 
                 if request.status < 400:
                     _LOGGER.info("Success call %s.", request.url)
                 else:
-                    _LOGGER.warning(
-                        "Error %d on call %s.", request.status, request.url)
+                    _LOGGER.warning("Error %d on call %s.", request.status,
+                                    request.url)
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s.", request.url)

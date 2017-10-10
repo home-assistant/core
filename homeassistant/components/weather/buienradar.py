@@ -12,8 +12,7 @@ from homeassistant.const import \
     CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.buienradar import (
-    BrData)
+from homeassistant.components.sensor.buienradar import (BrData)
 import voluptuous as vol
 
 REQUIREMENTS = ['buienradar==0.9']
@@ -28,7 +27,6 @@ CONF_FORECAST = 'forecast'
 
 ATTR_FORECAST_CONDITION = 'condition'
 ATTR_FORECAST_TEMP_LOW = 'templow'
-
 
 CONDITION_CLASSES = {
     'cloudy': ['c', 'p'],
@@ -48,10 +46,14 @@ CONDITION_CLASSES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_FORECAST, default=True): cv.boolean,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_FORECAST, default=True):
+    cv.boolean,
 })
 
 
@@ -65,8 +67,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = {CONF_LATITUDE:  float(latitude),
-                   CONF_LONGITUDE: float(longitude)}
+    coordinates = {
+        CONF_LATITUDE: float(latitude),
+        CONF_LONGITUDE: float(longitude)
+    }
 
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)

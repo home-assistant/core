@@ -15,10 +15,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (
-    STATE_UNKNOWN, STATE_ON, STATE_OFF, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE)
+from homeassistant.const import (STATE_UNKNOWN, STATE_ON, STATE_OFF,
+                                 STATE_ALARM_ARMED_AWAY,
+                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+                                 STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE)
 
 DOMAIN = 'spc'
 REQUIREMENTS = ['websockets==3.2']
@@ -34,12 +34,15 @@ CONF_API_URL = 'api_url'
 DATA_REGISTRY = 'spc_registry'
 DATA_API = 'spc_api'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_WS_URL): cv.string,
-        vol.Required(CONF_API_URL): cv.string
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_WS_URL): cv.string,
+            vol.Required(CONF_API_URL): cv.string
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -47,8 +50,7 @@ def async_setup(hass, config):
     """Setup the SPC platform."""
     hass.data[DATA_REGISTRY] = SpcRegistry()
 
-    api = SpcWebGateway(hass,
-                        config[DOMAIN].get(CONF_API_URL),
+    api = SpcWebGateway(hass, config[DOMAIN].get(CONF_API_URL),
                         config[DOMAIN].get(CONF_WS_URL))
 
     hass.data[DATA_API] = api
@@ -56,16 +58,18 @@ def async_setup(hass, config):
     # add sensor devices for each zone (typically motion/fire/door sensors)
     zones = yield from api.get_zones()
     if zones:
-        hass.async_add_job(discovery.async_load_platform(
-            hass, 'binary_sensor', DOMAIN,
-            {ATTR_DISCOVER_DEVICES: zones}, config))
+        hass.async_add_job(
+            discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, {
+                ATTR_DISCOVER_DEVICES: zones
+            }, config))
 
     # create a separate alarm panel for each area
     areas = yield from api.get_areas()
     if areas:
-        hass.async_add_job(discovery.async_load_platform(
-            hass, 'alarm_control_panel', DOMAIN,
-            {ATTR_DISCOVER_AREAS: areas}, config))
+        hass.async_add_job(
+            discovery.async_load_platform(hass, 'alarm_control_panel', DOMAIN,
+                                          {ATTR_DISCOVER_AREAS: areas
+                                           }, config))
 
     # start listening for incoming events over websocket
     api.start_listener(_async_process_message, hass.data[DATA_REGISTRY])
@@ -94,15 +98,17 @@ def _async_process_message(sia_message, spc_registry):
         # change in zone status, notify sensor device
         device = spc_registry.get_sensor_device(spc_id)
 
-    sia_code_to_state_map = {'BA': STATE_ALARM_TRIGGERED,
-                             'CG': STATE_ALARM_ARMED_AWAY,
-                             'NL': STATE_ALARM_ARMED_HOME,
-                             'OG': STATE_ALARM_DISARMED,
-                             'OQ': STATE_ALARM_DISARMED,
-                             'ZO': STATE_ON,
-                             'ZC': STATE_OFF,
-                             'ZX': STATE_UNKNOWN,
-                             'ZD': STATE_UNAVAILABLE}
+    sia_code_to_state_map = {
+        'BA': STATE_ALARM_TRIGGERED,
+        'CG': STATE_ALARM_ARMED_AWAY,
+        'NL': STATE_ALARM_ARMED_HOME,
+        'OG': STATE_ALARM_DISARMED,
+        'OQ': STATE_ALARM_DISARMED,
+        'ZO': STATE_ON,
+        'ZC': STATE_OFF,
+        'ZX': STATE_UNKNOWN,
+        'ZD': STATE_UNAVAILABLE
+    }
 
     new_state = sia_code_to_state_map.get(sia_code, None)
 
@@ -145,7 +151,7 @@ def _ws_process_message(message, async_callback, *args):
                         "delivered, ignoring: %s", message)
     try:
         yield from async_callback(message['data']['sia'], *args)
-    except:    # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
         _LOGGER.exception("Exception in callback, ignoring.")
 
 
@@ -176,8 +182,8 @@ class SpcWebGateway:
     @asyncio.coroutine
     def send_area_command(self, area_id, command):
         """Send an area command."""
-        _LOGGER.debug("Sending SPC area command '%s' to area %s.",
-                      command, area_id)
+        _LOGGER.debug("Sending SPC area command '%s' to area %s.", command,
+                      area_id)
         resource = "area/{}/{}".format(area_id, command)
         return (yield from self._call_web_gateway(resource, use_get=False))
 
@@ -217,8 +223,8 @@ class SpcWebGateway:
                 response = yield from action(url)
             if response.status != 200:
                 _LOGGER.error("SPC Web Gateway returned http "
-                              "status %d, response %s.",
-                              response.status, (yield from response.text()))
+                              "status %d, response %s.", response.status,
+                              (yield from response.text()))
                 return False
             result = yield from response.json()
         except asyncio.TimeoutError:
@@ -243,7 +249,7 @@ class SpcWebGateway:
             if not self._ws:
                 self._ws = yield from wslib.connect(self._ws_url)
                 _LOGGER.info("Connected to websocket at %s.", self._ws_url)
-        except Exception as ws_exc:    # pylint: disable=broad-except
+        except Exception as ws_exc:  # pylint: disable=broad-except
             _LOGGER.error("Failed to connect to websocket: %s", ws_exc)
             return
 
@@ -252,7 +258,7 @@ class SpcWebGateway:
         try:
             result = yield from self._ws.recv()
             _LOGGER.debug("Data from websocket: %s", result)
-        except Exception as ws_exc:    # pylint: disable=broad-except
+        except Exception as ws_exc:  # pylint: disable=broad-except
             _LOGGER.error("Failed to read from websocket: %s", ws_exc)
             try:
                 yield from self._ws.close()
@@ -268,8 +274,8 @@ class SpcWebGateway:
                 result = yield from self._ws_read()
 
                 if result:
-                    yield from _ws_process_message(json.loads(result),
-                                                   async_callback, *args)
+                    yield from _ws_process_message(
+                        json.loads(result), async_callback, *args)
                 else:
                     _LOGGER.info("Trying again in 30 seconds.")
                     yield from asyncio.sleep(30)

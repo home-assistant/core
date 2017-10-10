@@ -8,7 +8,6 @@ from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components.zwave import const, DEVICE_CONFIG_SCHEMA_ENTRY
 import homeassistant.helpers.config_validation as cv
 
-
 CONFIG_PATH = 'zwave_device_config.yaml'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 URL_API_OZW_LOG = '/api/zwave/ozwlog'
@@ -17,16 +16,15 @@ URL_API_OZW_LOG = '/api/zwave/ozwlog'
 @asyncio.coroutine
 def async_setup(hass):
     """Set up the Z-Wave config API."""
-    hass.http.register_view(EditKeyBasedConfigView(
-        'zwave', 'device_config', CONFIG_PATH, cv.entity_id,
-        DEVICE_CONFIG_SCHEMA_ENTRY
-    ))
+    hass.http.register_view(
+        EditKeyBasedConfigView('zwave', 'device_config', CONFIG_PATH,
+                               cv.entity_id, DEVICE_CONFIG_SCHEMA_ENTRY))
     hass.http.register_view(ZWaveNodeValueView)
     hass.http.register_view(ZWaveNodeGroupView)
     hass.http.register_view(ZWaveNodeConfigView)
     hass.http.register_view(ZWaveUserCodeView)
-    hass.http.register_static_path(
-        URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
+    hass.http.register_static_path(URL_API_OZW_LOG,
+                                   hass.config.path(OZW_LOG_FILENAME), False)
 
     return True
 
@@ -78,11 +76,12 @@ class ZWaveNodeGroupView(HomeAssistantView):
         groupdata = node.groups
         groups = {}
         for key, value in groupdata.items():
-            groups[key] = {'associations': value.associations,
-                           'association_instances':
-                           value.associations_instances,
-                           'label': value.label,
-                           'max_associations': value.max_associations}
+            groups[key] = {
+                'associations': value.associations,
+                'association_instances': value.associations_instances,
+                'label': value.label,
+                'max_associations': value.max_associations
+            }
         return self.json(groups)
 
 
@@ -102,16 +101,17 @@ class ZWaveNodeConfigView(HomeAssistantView):
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         config = {}
-        for value in (
-                node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
-                .values()):
-            config[value.index] = {'label': value.label,
-                                   'type': value.type,
-                                   'help': value.help,
-                                   'data_items': value.data_items,
-                                   'data': value.data,
-                                   'max': value.max,
-                                   'min': value.min}
+        for value in (node.get_values(
+                class_id=const.COMMAND_CLASS_CONFIGURATION).values()):
+            config[value.index] = {
+                'label': value.label,
+                'type': value.type,
+                'help': value.help,
+                'data_items': value.data_items,
+                'data': value.data,
+                'max': value.max,
+                'min': value.min
+            }
         return self.json(config)
 
 
@@ -133,12 +133,13 @@ class ZWaveUserCodeView(HomeAssistantView):
         usercodes = {}
         if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
             return self.json(usercodes)
-        for value in (
-                node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
-                .values()):
+        for value in (node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
+                      .values()):
             if value.genre != const.GENRE_USER:
                 continue
-            usercodes[value.index] = {'code': value.data,
-                                      'label': value.label,
-                                      'length': len(value.data)}
+            usercodes[value.index] = {
+                'code': value.data,
+                'label': value.label,
+                'length': len(value.data)
+            }
         return self.json(usercodes)

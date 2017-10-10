@@ -20,13 +20,19 @@ CONF_PUBLISH_TIMESTAMPS = 'publish_timestamps'
 DEPENDENCIES = ['mqtt']
 DOMAIN = 'mqtt_statestream'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
-        vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_BASE_TOPIC):
+            valid_publish_topic,
+            vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False):
+            cv.boolean,
+            vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False):
+            cv.boolean
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -52,21 +58,17 @@ def async_setup(hass, config):
             if new_state.last_updated:
                 hass.components.mqtt.async_publish(
                     mybase + 'last_updated',
-                    new_state.last_updated.isoformat(),
-                    1,
-                    True)
+                    new_state.last_updated.isoformat(), 1, True)
             if new_state.last_changed:
                 hass.components.mqtt.async_publish(
                     mybase + 'last_changed',
-                    new_state.last_changed.isoformat(),
-                    1,
-                    True)
+                    new_state.last_changed.isoformat(), 1, True)
 
         if publish_attributes:
             for key, val in new_state.attributes.items():
                 if val:
-                    hass.components.mqtt.async_publish(mybase + key,
-                                                       val, 1, True)
+                    hass.components.mqtt.async_publish(mybase + key, val, 1,
+                                                       True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True

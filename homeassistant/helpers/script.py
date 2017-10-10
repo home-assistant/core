@@ -8,14 +8,14 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
-from homeassistant.helpers import (
-    service, condition, template, config_validation as cv)
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_template)
+from homeassistant.helpers import (service, condition, template,
+                                   config_validation as cv)
+from homeassistant.helpers.event import (async_track_point_in_utc_time,
+                                         async_track_template)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import (run_coroutine_threadsafe,
+                                      run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +29,9 @@ CONF_DELAY = 'delay'
 CONF_WAIT_TEMPLATE = 'wait_template'
 
 
-def call_from_config(hass: HomeAssistant, config: ConfigType,
-                     variables: Optional[Sequence]=None) -> None:
+def call_from_config(hass: HomeAssistant,
+                     config: ConfigType,
+                     variables: Optional[Sequence] = None) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables)
 
@@ -38,7 +39,10 @@ def call_from_config(hass: HomeAssistant, config: ConfigType,
 class Script():
     """Representation of a script."""
 
-    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
+    def __init__(self,
+                 hass: HomeAssistant,
+                 sequence,
+                 name: str = None,
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -49,8 +53,9 @@ class Script():
         self._cur = -1
         self.last_action = None
         self.last_triggered = None
-        self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
-                              in action for action in self.sequence)
+        self.can_cancel = any(CONF_DELAY in action
+                              or CONF_WAIT_TEMPLATE in action
+                              for action in self.sequence)
         self._async_listener = []
         self._template_cache = {}
         self._config_cache = {}
@@ -62,11 +67,11 @@ class Script():
 
     def run(self, variables=None):
         """Run script."""
-        run_coroutine_threadsafe(
-            self.async_run(variables), self.hass.loop).result()
+        run_coroutine_threadsafe(self.async_run(variables),
+                                 self.hass.loop).result()
 
     @asyncio.coroutine
-    def async_run(self, variables: Optional[Sequence]=None) -> None:
+    def async_run(self, variables: Optional[Sequence] = None) -> None:
         """Run script.
 
         This method is a coroutine.
@@ -98,13 +103,10 @@ class Script():
                 if isinstance(delay, template.Template):
                     delay = vol.All(
                         cv.time_period,
-                        cv.positive_timedelta)(
-                            delay.async_render(variables))
+                        cv.positive_timedelta)(delay.async_render(variables))
 
                 unsub = async_track_point_in_utc_time(
-                    self.hass, async_script_delay,
-                    date_util.utcnow() + delay
-                )
+                    self.hass, async_script_delay, date_util.utcnow() + delay)
                 self._async_listener.append(unsub)
 
                 self._cur = cur + 1
@@ -118,8 +120,8 @@ class Script():
                 wait_template.hass = self.hass
 
                 # check if condition already okay
-                if condition.async_template(
-                        self.hass, wait_template, variables):
+                if condition.async_template(self.hass, wait_template,
+                                            variables):
                     continue
 
                 @callback
@@ -128,8 +130,9 @@ class Script():
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
 
-                self._async_listener.append(async_track_template(
-                    self.hass, wait_template, async_script_wait))
+                self._async_listener.append(
+                    async_track_template(self.hass, wait_template,
+                                         async_script_wait))
 
                 self._cur = cur + 1
                 if self._change_listener:
@@ -212,10 +215,8 @@ class Script():
             self._log("Timout reach, abort script.")
             self.async_stop()
 
-        unsub = async_track_point_in_utc_time(
-            self.hass, async_script_timeout,
-            date_util.utcnow() + timeout
-        )
+        unsub = async_track_point_in_utc_time(self.hass, async_script_timeout,
+                                              date_util.utcnow() + timeout)
         self._async_listener.append(unsub)
 
     def _async_remove_listener(self):

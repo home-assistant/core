@@ -27,12 +27,11 @@ from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import auth_middleware
 from .ban import ban_middleware
-from .const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
-    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
-    KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import (
-    staticresource_middleware, CachingFileResponse, CachingStaticResource)
+from .const import (KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
+                    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD, KEY_DEVELOPMENT,
+                    KEY_AUTHENTICATED)
+from .static import (staticresource_middleware, CachingFileResponse,
+                     CachingStaticResource)
 from .util import get_real_ip
 
 REQUIREMENTS = ['aiohttp_cors==0.5.3']
@@ -79,27 +78,40 @@ DEFAULT_SERVER_HOST = '0.0.0.0'
 DEFAULT_DEVELOPMENT = '0'
 DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 
-HTTP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
-    vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
-    vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
-    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
-    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
-    vol.Optional(CONF_CORS_ORIGINS, default=[]):
+HTTP_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_PASSWORD, default=None):
+        cv.string,
+        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST):
+        cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+        cv.port,
+        vol.Optional(CONF_BASE_URL):
+        cv.string,
+        vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT):
+        cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE, default=None):
+        cv.isfile,
+        vol.Optional(CONF_SSL_KEY, default=None):
+        cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
-    vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
+        vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False):
+        cv.boolean,
+        vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
-    vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
-                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
-    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
-})
+        vol.Optional(
+            CONF_LOGIN_ATTEMPTS_THRESHOLD,
+            default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD):
+        cv.positive_int,
+        vol.Optional(CONF_IP_BAN_ENABLED, default=True):
+        cv.boolean
+    })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: HTTP_SCHEMA,
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: HTTP_SCHEMA,
+    }, extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -138,8 +150,7 @@ def async_setup(hass, config):
         use_x_forwarded_for=use_x_forwarded_for,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled
-    )
+        is_ban_enabled=is_ban_enabled)
 
     @asyncio.coroutine
     def stop_server(event):
@@ -178,8 +189,8 @@ class HomeAssistantWSGI(object):
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_networks,
-                 login_threshold, is_ban_enabled):
+                 use_x_forwarded_for, trusted_networks, login_threshold,
+                 is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
@@ -207,12 +218,14 @@ class HomeAssistantWSGI(object):
         self.server = None
 
         if cors_origins:
-            self.cors = aiohttp_cors.setup(self.app, defaults={
-                host: aiohttp_cors.ResourceOptions(
-                    allow_headers=ALLOWED_CORS_HEADERS,
-                    allow_methods='*',
-                ) for host in cors_origins
-            })
+            self.cors = aiohttp_cors.setup(
+                self.app,
+                defaults={
+                    host: aiohttp_cors.ResourceOptions(
+                        allow_headers=ALLOWED_CORS_HEADERS,
+                        allow_methods='*', )
+                    for host in cors_origins
+                })
         else:
             self.cors = None
 
@@ -230,14 +243,12 @@ class HomeAssistantWSGI(object):
         if not hasattr(view, 'url'):
             class_name = view.__class__.__name__
             raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
-            )
+                '{0} missing required attribute "url"'.format(class_name))
 
         if not hasattr(view, 'name'):
             class_name = view.__class__.__name__
             raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
-            )
+                '{0} missing required attribute "name"'.format(class_name))
 
         view.register(self.app.router)
 
@@ -250,6 +261,7 @@ class HomeAssistantWSGI(object):
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
         """
+
         def redirect(request):
             """Redirect to location."""
             raise HTTPMovedPermanently(redirect_to)
@@ -268,11 +280,13 @@ class HomeAssistantWSGI(object):
             return
 
         if cache_headers:
+
             @asyncio.coroutine
             def serve_file(request):
                 """Serve file from disk."""
                 return CachingFileResponse(path)
         else:
+
             @asyncio.coroutine
             def serve_file(request):
                 """Serve file from disk."""
@@ -419,8 +433,8 @@ def request_handler_factory(view, handler):
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, remote_addr, authenticated)
+        _LOGGER.info('Serving %s to %s (auth: %s)', request.path, remote_addr,
+                     authenticated)
 
         result = handler(request, **request.match_info)
 
@@ -464,6 +478,7 @@ class RequestDataValidator:
 
     def __call__(self, method):
         """Decorate a function."""
+
         @asyncio.coroutine
         @wraps(method)
         def wrapper(view, request, *args, **kwargs):

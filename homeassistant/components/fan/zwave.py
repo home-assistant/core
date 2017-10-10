@@ -7,9 +7,9 @@ https://home-assistant.io/components/fan.zwave/
 import logging
 import math
 
-from homeassistant.components.fan import (
-    DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
+from homeassistant.components.fan import (DOMAIN, FanEntity, SPEED_OFF,
+                                          SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+                                          SUPPORT_SET_SPEED)
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
@@ -55,8 +55,8 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
 
     def set_speed(self, speed):
         """Set the speed of the fan."""
-        self.node.set_dimmer(
-            self.values.primary.value_id, SPEED_TO_VALUE[speed])
+        self.node.set_dimmer(self.values.primary.value_id,
+                             SPEED_TO_VALUE[speed])
 
     def turn_on(self, speed=None, **kwargs):
         """Turn the device on."""

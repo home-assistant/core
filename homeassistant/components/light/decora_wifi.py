@@ -13,11 +13,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_TRANSITION, Light,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION)
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_BRIGHTNESS, ATTR_TRANSITION, Light, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
+                                 EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['decora_wifi==1.3']
@@ -26,8 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
 })
 
 NOTIFICATION_ID = 'leviton_notification'

@@ -10,14 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 
-SUPPORT_LANGUAGES = [
-    'en', 'de'
-]
+SUPPORT_LANGUAGES = ['en', 'de']
 
 DEFAULT_LANG = 'en'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
+    vol.In(SUPPORT_LANGUAGES),
 })
 
 

@@ -15,9 +15,9 @@ from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.util import (convert, slugify)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (ATTR_ARMED, ATTR_BATTERY_LEVEL,
+                                 ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyvera==0.2.37']
@@ -41,13 +41,19 @@ VERA_DEVICES = defaultdict(list)
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CONTROLLER): cv.url,
-        vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_CONTROLLER):
+            cv.url,
+            vol.Optional(CONF_EXCLUDE, default=[]):
+            VERA_ID_LIST_SCHEMA,
+            vol.Optional(CONF_LIGHTS, default=[]):
+            VERA_ID_LIST_SCHEMA
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover'
@@ -84,8 +90,9 @@ def setup(hass, base_config):
         return False
 
     # Exclude devices unwanted by user.
-    devices = [device for device in all_devices
-               if device.device_id not in exclude_ids]
+    devices = [
+        device for device in all_devices if device.device_id not in exclude_ids
+    ]
 
     for device in devices:
         device_type = map_vera_device(device, light_ids)

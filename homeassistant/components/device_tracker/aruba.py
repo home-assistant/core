@@ -10,23 +10,25 @@ import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pexpect==4.0.1']
 
-_DEVICES_REGEX = re.compile(
-    r'(?P<name>([^\s]+)?)\s+' +
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
-    r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+')
+_DEVICES_REGEX = re.compile(r'(?P<name>([^\s]+)?)\s+' +
+                            r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
+                            r'(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string
 })
 
 
@@ -87,11 +89,14 @@ class ArubaDeviceScanner(DeviceScanner):
         import pexpect
         connect = 'ssh {}@{}'
         ssh = pexpect.spawn(connect.format(self.username, self.host))
-        query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
-                            'continue connecting (yes/no)?',
-                            'Host key verification failed.',
-                            'Connection refused',
-                            'Connection timed out'], timeout=120)
+        query = ssh.expect(
+            [
+                'password:', pexpect.TIMEOUT, pexpect.EOF,
+                'continue connecting (yes/no)?',
+                'Host key verification failed.', 'Connection refused',
+                'Connection timed out'
+            ],
+            timeout=120)
         if query == 1:
             _LOGGER.error("Timeout")
             return

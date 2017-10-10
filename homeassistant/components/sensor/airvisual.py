@@ -12,10 +12,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE,
-    CONF_SHOW_ON_MAP)
+from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE, CONF_API_KEY, CONF_LATITUDE,
+                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+                                 CONF_STATE, CONF_SHOW_ON_MAP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -41,22 +41,57 @@ VOLUME_MICROGRAMS_PER_CUBIC_METER = 'µg/m3'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
-POLLUTANT_LEVEL_MAPPING = [
-    {'label': 'Good', 'minimum': 0, 'maximum': 50},
-    {'label': 'Moderate', 'minimum': 51, 'maximum': 100},
-    {'label': 'Unhealthy for sensitive group', 'minimum': 101, 'maximum': 150},
-    {'label': 'Unhealthy', 'minimum': 151, 'maximum': 200},
-    {'label': 'Very Unhealthy', 'minimum': 201, 'maximum': 300},
-    {'label': 'Hazardous', 'minimum': 301, 'maximum': 10000}
-]
+POLLUTANT_LEVEL_MAPPING = [{
+    'label': 'Good',
+    'minimum': 0,
+    'maximum': 50
+}, {
+    'label': 'Moderate',
+    'minimum': 51,
+    'maximum': 100
+}, {
+    'label': 'Unhealthy for sensitive group',
+    'minimum': 101,
+    'maximum': 150
+}, {
+    'label': 'Unhealthy',
+    'minimum': 151,
+    'maximum': 200
+}, {
+    'label': 'Very Unhealthy',
+    'minimum': 201,
+    'maximum': 300
+}, {
+    'label': 'Hazardous',
+    'minimum': 301,
+    'maximum': 10000
+}]
 
 POLLUTANT_MAPPING = {
-    'co': {'label': 'Carbon Monoxide', 'unit': MASS_PARTS_PER_MILLION},
-    'n2': {'label': 'Nitrogen Dioxide', 'unit': MASS_PARTS_PER_BILLION},
-    'o3': {'label': 'Ozone', 'unit': MASS_PARTS_PER_BILLION},
-    'p1': {'label': 'PM10', 'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER},
-    'p2': {'label': 'PM2.5', 'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER},
-    's2': {'label': 'Sulfur Dioxide', 'unit': MASS_PARTS_PER_BILLION},
+    'co': {
+        'label': 'Carbon Monoxide',
+        'unit': MASS_PARTS_PER_MILLION
+    },
+    'n2': {
+        'label': 'Nitrogen Dioxide',
+        'unit': MASS_PARTS_PER_BILLION
+    },
+    'o3': {
+        'label': 'Ozone',
+        'unit': MASS_PARTS_PER_BILLION
+    },
+    'p1': {
+        'label': 'PM10',
+        'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER
+    },
+    'p2': {
+        'label': 'PM2.5',
+        'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER
+    },
+    's2': {
+        'label': 'Sulfur Dioxide',
+        'unit': MASS_PARTS_PER_BILLION
+    },
 }
 
 SENSOR_LOCALES = {'cn': 'Chinese', 'us': 'U.S.'}
@@ -67,16 +102,24 @@ SENSOR_TYPES = [
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
-    vol.Optional(CONF_CITY): cv.string,
-    vol.Optional(CONF_COUNTRY): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=1000): cv.positive_int,
-    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
-    vol.Optional(CONF_STATE): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
+    vol.Optional(CONF_CITY):
+    cv.string,
+    vol.Optional(CONF_COUNTRY):
+    cv.string,
+    vol.Optional(CONF_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_LONGITUDE):
+    cv.longitude,
+    vol.Optional(CONF_RADIUS, default=1000):
+    cv.positive_int,
+    vol.Optional(CONF_SHOW_ON_MAP, default=True):
+    cv.boolean,
+    vol.Optional(CONF_STATE):
+    cv.string,
 })
 
 
@@ -96,17 +139,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     show_on_map = config.get(CONF_SHOW_ON_MAP)
 
     if city and state and country:
-        _LOGGER.debug(
-            "Using city, state, and country: %s, %s, %s", city, state, country)
+        _LOGGER.debug("Using city, state, and country: %s, %s, %s", city,
+                      state, country)
         data = AirVisualData(
-            pav.Client(api_key), city=city, state=state, country=country,
+            pav.Client(api_key),
+            city=city,
+            state=state,
+            country=country,
             show_on_map=show_on_map)
     else:
-        _LOGGER.debug(
-            "Using latitude and longitude: %s, %s", latitude, longitude)
+        _LOGGER.debug("Using latitude and longitude: %s, %s", latitude,
+                      longitude)
         data = AirVisualData(
-            pav.Client(api_key), latitude=latitude, longitude=longitude,
-            radius=radius, show_on_map=show_on_map)
+            pav.Client(api_key),
+            latitude=latitude,
+            longitude=longitude,
+            radius=radius,
+            show_on_map=show_on_map)
 
     sensors = []
     for locale in monitored_locales:
@@ -267,11 +316,11 @@ class AirVisualData(object):
 
         try:
             if self.city and self.state and self.country:
-                resp = self._client.city(
-                    self.city, self.state, self.country).get('data')
+                resp = self._client.city(self.city, self.state,
+                                         self.country).get('data')
             else:
-                resp = self._client.nearest_city(
-                    self.latitude, self.longitude, self._radius).get('data')
+                resp = self._client.nearest_city(self.latitude, self.longitude,
+                                                 self._radius).get('data')
             _LOGGER.debug("New data retrieved: %s", resp)
 
             self.city = resp.get('city')

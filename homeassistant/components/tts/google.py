@@ -24,17 +24,65 @@ GOOGLE_SPEECH_URL = "http://translate.google.com/translate_tts"
 MESSAGE_SIZE = 148
 
 SUPPORT_LANGUAGES = [
-    'af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue',
-    'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
-    'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
-    'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
-    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk',
+    'af',
+    'sq',
+    'ar',
+    'hy',
+    'bn',
+    'ca',
+    'zh',
+    'zh-cn',
+    'zh-tw',
+    'zh-yue',
+    'hr',
+    'cs',
+    'da',
+    'nl',
+    'en',
+    'en-au',
+    'en-uk',
+    'en-us',
+    'eo',
+    'fi',
+    'fr',
+    'de',
+    'el',
+    'hi',
+    'hu',
+    'is',
+    'id',
+    'it',
+    'ja',
+    'ko',
+    'la',
+    'lv',
+    'mk',
+    'no',
+    'pl',
+    'pt',
+    'pt-br',
+    'ro',
+    'ru',
+    'sr',
+    'sk',
+    'es',
+    'es-es',
+    'es-us',
+    'sw',
+    'sv',
+    'ta',
+    'th',
+    'tr',
+    'vi',
+    'cy',
+    'uk',
 ]
 
 DEFAULT_LANG = 'en'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
+    vol.In(SUPPORT_LANGUAGES),
 })
 
 
@@ -52,7 +100,8 @@ class GoogleProvider(Provider):
         self.hass = hass
         self._lang = lang
         self.headers = {
-            'Referer': "http://translate.google.com/",
+            'Referer':
+            "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")
@@ -97,9 +146,9 @@ class GoogleProvider(Provider):
             try:
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     request = yield from websession.get(
-                        GOOGLE_SPEECH_URL, params=url_param,
-                        headers=self.headers
-                    )
+                        GOOGLE_SPEECH_URL,
+                        params=url_param,
+                        headers=self.headers)
 
                     if request.status != 200:
                         _LOGGER.error("Error %d on load url %s",

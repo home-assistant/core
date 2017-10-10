@@ -8,18 +8,17 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
-from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
+from homeassistant.components.apple_tv import (ATTR_ATV, ATTR_POWER,
+                                               DATA_APPLE_TV, DATA_ENTITIES)
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
-from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC, MEDIA_TYPE_VIDEO,
+    MEDIA_TYPE_TVSHOW)
+from homeassistant.const import (STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
+                                 STATE_STANDBY, CONF_HOST, STATE_OFF,
+                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
-
 
 DEPENDENCIES = ['apple_tv']
 
@@ -118,8 +117,8 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_error(self, updater, exception):
         """Inform about an error and restart push updates."""
-        _LOGGER.warning('A %s error occurred: %s',
-                        exception.__class__, exception)
+        _LOGGER.warning('A %s error occurred: %s', exception.__class__,
+                        exception)
 
         # This will wait 10 seconds before restarting push updates. If the
         # connection continues to fail, it will flood the log (every 10

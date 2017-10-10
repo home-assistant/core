@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, CoreState, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.loader import bind_hass
 from homeassistant.components.history import get_states, last_recorder_run
-from homeassistant.components.recorder import (
-    wait_connection_ready, DOMAIN as _RECORDER)
+from homeassistant.components.recorder import (wait_connection_ready, DOMAIN as
+                                               _RECORDER)
 import homeassistant.util.dt as dt_util
 
 RECORDER_TIMEOUT = 10
@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _load_restore_cache(hass: HomeAssistant):
     """Load the restore cache to be used by other components."""
+
     @callback
     def remove_cache(event):
         """Remove the states cache."""
@@ -45,7 +46,9 @@ def _load_restore_cache(hass: HomeAssistant):
 
     # Cache the states
     hass.data[DATA_RESTORE_CACHE] = {
-        state.entity_id: state for state in states}
+        state.entity_id: state
+        for state in states
+    }
     _LOGGER.debug('Created cache with %s', list(hass.data[DATA_RESTORE_CACHE]))
 
 
@@ -78,8 +81,7 @@ def async_get_last_state(hass, entity_id: str):
 
     with (yield from hass.data[_LOCK]):
         if DATA_RESTORE_CACHE not in hass.data:
-            yield from hass.async_add_job(
-                _load_restore_cache, hass)
+            yield from hass.async_add_job(_load_restore_cache, hass)
 
     return hass.data.get(DATA_RESTORE_CACHE, {}).get(entity_id)
 

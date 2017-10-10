@@ -61,5 +61,5 @@ class NmaNotificationService(BaseNotificationService):
         tree = ET.fromstring(response.content)
 
         if tree[0].tag == 'error':
-            _LOGGER.exception(
-                "Unable to perform request. Error: %s", tree[0].text)
+            _LOGGER.exception("Unable to perform request. Error: %s",
+                              tree[0].text)

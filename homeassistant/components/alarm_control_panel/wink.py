@@ -8,8 +8,7 @@ import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.const import (STATE_UNKNOWN,
-                                 STATE_ALARM_DISARMED,
+from homeassistant.const import (STATE_UNKNOWN, STATE_ALARM_DISARMED,
                                  STATE_ALARM_ARMED_HOME,
                                  STATE_ALARM_ARMED_AWAY)
 from homeassistant.components.wink import WinkDevice, DOMAIN
@@ -73,6 +72,4 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'private': self.wink.private()
-        }
+        return {'private': self.wink.private()}

@@ -26,33 +26,25 @@ CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
     vol.Required(CONF_PIN):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
-    vol.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.All(vol.Coerce(int), vol.Range(min=1000, max=9999)),
+    vol.Optional(CONF_ALLOW_UNREACHABLE, default=True):
+    cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
 })
 
 ERROR_STATE = [
-    'blade-blocked',
-    'repositioning-error',
-    'wire-bounced',
-    'blade-blocked',
-    'outside-wire',
-    'mower-lifted',
-    'alarm-6',
-    'upside-down',
-    'alarm-8',
-    'collision-sensor-blocked',
-    'mower-tilted',
-    'charge-error',
-    'battery-error'
+    'blade-blocked', 'repositioning-error', 'wire-bounced', 'blade-blocked',
+    'outside-wire', 'mower-lifted', 'alarm-6', 'upside-down', 'alarm-8',
+    'collision-sensor-blocked', 'mower-tilted', 'charge-error', 'battery-error'
 ]
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Worx Landroid sensors."""
     for typ in ('battery', 'state'):
         async_add_devices([WorxLandroidSensor(typ, config)])

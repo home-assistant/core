@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,11 +26,16 @@ CONF_BASEOID = 'baseoid'
 DEFAULT_COMMUNITY = 'public'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-    vol.Inclusive(CONF_AUTHKEY, 'keys'): cv.string,
-    vol.Inclusive(CONF_PRIVKEY, 'keys'): cv.string,
-    vol.Required(CONF_BASEOID): cv.string
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY):
+    cv.string,
+    vol.Inclusive(CONF_AUTHKEY, 'keys'):
+    cv.string,
+    vol.Inclusive(CONF_PRIVKEY, 'keys'):
+    cv.string,
+    vol.Required(CONF_BASEOID):
+    cv.string
 })
 
 
@@ -60,8 +65,7 @@ class SnmpScanner(DeviceScanner):
                 config[CONF_AUTHKEY],
                 config[CONF_PRIVKEY],
                 authProtocol=cfg.usmHMACSHAAuthProtocol,
-                privProtocol=cfg.usmAesCfb128Protocol
-            )
+                privProtocol=cfg.usmAesCfb128Protocol)
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
         self.last_results = []
 
@@ -72,8 +76,9 @@ class SnmpScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results
-                if client.get('mac')]
+        return [
+            client['mac'] for client in self.last_results if client.get('mac')
+        ]
 
     # Suppressing no-self-use warning
     # pylint: disable=R0201
@@ -109,7 +114,8 @@ class SnmpScanner(DeviceScanner):
             return
         # pylint: disable=no-member
         if errstatus:
-            _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
+            _LOGGER.error("SNMP error: %s at %s",
+                          errstatus.prettyPrint(),
                           errindex and restable[int(errindex) - 1][0] or '?')
             return
 
@@ -120,6 +126,6 @@ class SnmpScanner(DeviceScanner):
                 except AttributeError:
                     continue
                 _LOGGER.debug("Found MAC %s", mac)
-                mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
+                mac = ':'.join([mac[i:i + 2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices

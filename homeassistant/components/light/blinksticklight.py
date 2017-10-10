@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.components.light import (ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+                                            Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -24,8 +24,10 @@ DEFAULT_NAME = 'Blinkstick'
 SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_SERIAL):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -88,9 +90,10 @@ class BlinkStickLight(Light):
         else:
             self._rgb_color = [255, 255, 255]
 
-        self._stick.set_color(red=self._rgb_color[0],
-                              green=self._rgb_color[1],
-                              blue=self._rgb_color[2])
+        self._stick.set_color(
+            red=self._rgb_color[0],
+            green=self._rgb_color[1],
+            blue=self._rgb_color[2])
 
     def turn_off(self, **kwargs):
         """Turn the device off."""

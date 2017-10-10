@@ -6,11 +6,10 @@ https://home-assistant.io/components/remote.apple_tv/
 """
 import asyncio
 
-from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
+from homeassistant.components.apple_tv import (ATTR_ATV, ATTR_POWER,
+                                               DATA_APPLE_TV)
 from homeassistant.components import remote
 from homeassistant.const import (CONF_NAME, CONF_HOST)
-
 
 DEPENDENCIES = ['apple_tv']
 

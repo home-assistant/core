@@ -14,9 +14,9 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_PLAY, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
     MEDIA_TYPE_MUSIC)
-from homeassistant.const import (
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN,
-    CONF_HOST, CONF_PORT, CONF_PASSWORD)
+from homeassistant.const import (STATE_OFF, STATE_PLAYING, STATE_PAUSED,
+                                 STATE_UNKNOWN, CONF_HOST, CONF_PORT,
+                                 CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fsapi==0.0.7']
@@ -34,9 +34,12 @@ DEFAULT_PASSWORD = '1234'
 DEVICE_URL = 'http://{0}:{1}/device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
+    cv.string,
 })
 
 
@@ -47,8 +50,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         add_devices(
-            [FSAPIDevice(discovery_info['ssdp_description'],
-                         DEFAULT_PASSWORD)],
+            [
+                FSAPIDevice(discovery_info['ssdp_description'],
+                            DEFAULT_PASSWORD)
+            ],
             update_before_add=True)
         return True
 
@@ -63,8 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
         return True
     except requests.exceptions.RequestException:
-        _LOGGER.error("Could not add the FSAPI device at %s:%s -> %s",
-                      host, port, password)
+        _LOGGER.error("Could not add the FSAPI device at %s:%s -> %s", host,
+                      port, password)
 
     return False
 

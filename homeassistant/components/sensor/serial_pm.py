@@ -21,9 +21,12 @@ CONF_SERIAL_DEVICE = 'serial_device'
 CONF_BRAND = 'brand'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BRAND): cv.string,
-    vol.Required(CONF_SERIAL_DEVICE): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_BRAND):
+    cv.string,
+    vol.Required(CONF_SERIAL_DEVICE):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
 })
 
 
@@ -34,8 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         coll = pm.PMDataCollector(
             config.get(CONF_SERIAL_DEVICE),
-            pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)]
-        )
+            pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)])
     except KeyError:
         _LOGGER.error("Brand %s not supported\n supported brands: %s",
                       config.get(CONF_BRAND), pm.SUPPORTED_SENSORS.keys())

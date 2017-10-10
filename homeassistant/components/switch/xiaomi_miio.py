@@ -11,8 +11,13 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA, )
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
+from homeassistant.components.switch import (
+    SwitchDevice,
+    PLATFORM_SCHEMA, )
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,9 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Xiaomi Miio Switch'
 PLATFORM = 'xiaomi_miio'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_TOKEN):
+    vol.All(cv.string, vol.Length(min=32, max=32)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 REQUIREMENTS = ['python-mirobo==0.2.0']
@@ -49,10 +57,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         plug = Plug(host, token)
         device_info = plug.info()
-        _LOGGER.info("%s %s %s initialized",
-                     device_info.raw['model'],
-                     device_info.raw['fw_ver'],
-                     device_info.raw['hw_ver'])
+        _LOGGER.info("%s %s %s initialized", device_info.raw['model'],
+                     device_info.raw['fw_ver'], device_info.raw['hw_ver'])
 
         xiaomi_plug_switch = XiaomiPlugSwitch(name, plug, device_info)
     except DeviceException:
@@ -127,8 +133,8 @@ class XiaomiPlugSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-        result = yield from self._try_command(
-            "Turning the plug on failed.", self._plug.on)
+        result = yield from self._try_command("Turning the plug on failed.",
+                                              self._plug.on)
 
         if result:
             self._state = True
@@ -137,8 +143,8 @@ class XiaomiPlugSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the plug off."""
-        result = yield from self._try_command(
-            "Turning the plug off failed.", self._plug.off)
+        result = yield from self._try_command("Turning the plug off failed.",
+                                              self._plug.off)
 
         if result:
             self._state = False

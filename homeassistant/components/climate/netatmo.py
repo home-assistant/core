@@ -9,8 +9,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.components.climate import (
-    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import (STATE_HEAT, STATE_IDLE,
+                                              ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -30,9 +30,10 @@ DEFAULT_TIME_OFFSET = 7200
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RELAY): cv.string,
+    vol.Optional(CONF_RELAY):
+    cv.string,
     vol.Optional(CONF_THERMOSTAT, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -124,8 +125,8 @@ class NetatmoThermostat(ClimateDevice):
         if temperature is None:
             return
         mode = "manual"
-        self._data.thermostatdata.setthermpoint(
-            mode, temperature, DEFAULT_TIME_OFFSET)
+        self._data.thermostatdata.setthermpoint(mode, temperature,
+                                                DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature
         self._away = False
 

@@ -14,8 +14,8 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
-from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOST, CONF_PORT, CONF_NAME)
+from homeassistant.const import (STATE_PLAYING, STATE_PAUSED, STATE_IDLE,
+                                 CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -32,11 +32,13 @@ SUPPORT_VOLUMIO = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -197,7 +199,8 @@ class Volumio(MediaPlayerDevice):
     def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
         return self.send_volumio_msg(
-            'commands', params={'cmd': 'volume', 'volume': int(volume * 100)})
+            'commands', params={'cmd': 'volume',
+                                'volume': int(volume * 100)})
 
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
@@ -206,7 +209,9 @@ class Volumio(MediaPlayerDevice):
             # mute is implemenhted as 0 volume, do save last volume level
             self._lastvol = self._state['volume']
             return self.send_volumio_msg(
-                'commands', params={'cmd': 'volume', 'volume': mutecmd})
+                'commands', params={'cmd': 'volume',
+                                    'volume': mutecmd})
 
         return self.send_volumio_msg(
-            'commands', params={'cmd': 'volume', 'volume': self._lastvol})
+            'commands', params={'cmd': 'volume',
+                                'volume': self._lastvol})

@@ -22,9 +22,7 @@ U = TypeVar('U')
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
-TBL_SLUGIFY = {
-    ord('ß'): 'ss'
-}
+TBL_SLUGIFY = {ord('ß'): 'ss'}
 
 
 def sanitize_filename(filename: str) -> str:
@@ -52,8 +50,8 @@ def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
-            repr_helper(key)+"="+repr_helper(item) for key, item
-            in inp.items())
+            repr_helper(key) + "=" + repr_helper(item)
+            for key, item in inp.items())
     elif isinstance(inp, datetime):
         return as_local(inp).isoformat()
 
@@ -61,7 +59,7 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(value: T, to_type: Callable[[T], U],
-            default: Optional[U]=None) -> Optional[U]:
+            default: Optional[U] = None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -70,8 +68,9 @@ def convert(value: T, to_type: Callable[[T], U],
         return default
 
 
-def ensure_unique_string(preferred_string: str, current_strings:
-                         Union[Sequence[str], KeysView[str]]) -> str:
+def ensure_unique_string(
+        preferred_string: str,
+        current_strings: Union[Sequence[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
@@ -151,8 +150,8 @@ class OrderedSet(MutableSet):
     def __init__(self, iterable=None):
         """Initialize the set."""
         self.end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.map = {}  # key --> [key, prev, next]
         if iterable is not None:
             self |= iterable
 
@@ -223,7 +222,7 @@ class OrderedSet(MutableSet):
     def __repr__(self):
         """Return the representation."""
         if not self:
-            return '%s()' % (self.__class__.__name__,)
+            return '%s()' % (self.__class__.__name__, )
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
@@ -271,8 +270,8 @@ class Throttle(object):
         # All methods have the classname in their qualname separated by a '.'
         # Functions have a '.' in their qualname if defined inline, but will
         # be prefixed by '.<locals>.' so we strip that out.
-        is_func = (not hasattr(method, '__self__') and
-                   '.' not in method.__qualname__.split('.<locals>.')[-1])
+        is_func = (not hasattr(method, '__self__')
+                   and '.' not in method.__qualname__.split('.<locals>.')[-1])
 
         @wraps(method)
         def wrapper(*args, **kwargs):

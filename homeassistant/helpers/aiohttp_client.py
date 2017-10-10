@@ -37,8 +37,7 @@ def async_get_clientsession(hass, verify_ssl=True):
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
             connector=connector,
-            headers={USER_AGENT: SERVER_SOFTWARE}
-        )
+            headers={USER_AGENT: SERVER_SOFTWARE})
         _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
 
@@ -47,7 +46,9 @@ def async_get_clientsession(hass, verify_ssl=True):
 
 @callback
 @bind_hass
-def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
+def async_create_clientsession(hass,
+                               verify_ssl=True,
+                               auto_cleanup=True,
                                **kwargs):
     """Create a new ClientSession with kwargs, i.e. for cookies.
 
@@ -63,8 +64,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
         loop=hass.loop,
         connector=connector,
         headers={USER_AGENT: SERVER_SOFTWARE},
-        **kwargs
-    )
+        **kwargs)
 
     if auto_cleanup:
         _async_register_clientsession_shutdown(hass, clientsession)
@@ -74,7 +74,10 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
 
 @asyncio.coroutine
 @bind_hass
-def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
+def async_aiohttp_proxy_web(hass,
+                            request,
+                            web_coro,
+                            buffer_size=102400,
                             timeout=10):
     """Stream websession request to aiohttp web response."""
     try:
@@ -94,20 +97,20 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         raise HTTPBadGateway() from err
 
     try:
-        yield from async_aiohttp_proxy_stream(
-            hass,
-            request,
-            req.content,
-            req.headers.get(CONTENT_TYPE)
-        )
+        yield from async_aiohttp_proxy_stream(hass, request, req.content,
+                                              req.headers.get(CONTENT_TYPE))
     finally:
         req.close()
 
 
 @asyncio.coroutine
 @bind_hass
-def async_aiohttp_proxy_stream(hass, request, stream, content_type,
-                               buffer_size=102400, timeout=10):
+def async_aiohttp_proxy_stream(hass,
+                               request,
+                               stream,
+                               content_type,
+                               buffer_size=102400,
+                               timeout=10):
     """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
     response.content_type = content_type
@@ -140,13 +143,14 @@ def _async_register_clientsession_shutdown(hass, clientsession):
 
     This method must be run in the event loop.
     """
+
     @callback
     def _async_close_websession(event):
         """Close websession."""
         clientsession.detach()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE,
+                               _async_close_websession)
 
 
 @callback
@@ -173,12 +177,13 @@ def _async_get_connector(hass, verify_ssl=True):
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     if is_new:
+
         @callback
         def _async_close_connector(event):
             """Close connector pool."""
             connector.close()
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE,
+                                   _async_close_connector)
 
     return connector

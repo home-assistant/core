@@ -33,9 +33,11 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
-        [vol.In(SENSOR_TYPES)],
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_IS_HAT_ATTACHED, default=True): cv.boolean
+    [vol.In(SENSOR_TYPES)],
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_IS_HAT_ATTACHED, default=True):
+    cv.boolean
 })
 
 
@@ -53,8 +55,8 @@ def get_average(temp_base):
     get_average.temp[2] = get_average.temp[1]
     get_average.temp[1] = get_average.temp[0]
     get_average.temp[0] = temp_base
-    temp_avg = (get_average.temp[0] + get_average.temp[1]
-                + get_average.temp[2]) / 3
+    temp_avg = (
+        get_average.temp[0] + get_average.temp[1] + get_average.temp[2]) / 3
     return temp_avg
 
 

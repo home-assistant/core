@@ -18,8 +18,10 @@ ATTR_IR_CODE = 'V_IR_SEND'
 SERVICE_SEND_IR_CODE = 'mysensors_send_ir_code'
 
 SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_IR_CODE): cv.string,
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_IR_CODE):
+    cv.string,
 })
 
 
@@ -41,7 +43,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'S_WATER_QUALITY': MySensorsSwitch,
     }
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, device_class_map,
+        hass,
+        DOMAIN,
+        discovery_info,
+        device_class_map,
         add_devices=add_devices)
 
     def send_ir_code_service(service):
@@ -51,12 +56,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices = mysensors.get_mysensors_devices(hass, DOMAIN)
 
         if entity_ids:
-            _devices = [device for device in devices.values()
-                        if isinstance(device, MySensorsIRSwitch) and
-                        device.entity_id in entity_ids]
+            _devices = [
+                device for device in devices.values()
+                if isinstance(device, MySensorsIRSwitch)
+                and device.entity_id in entity_ids
+            ]
         else:
-            _devices = [device for device in devices.values()
-                        if isinstance(device, MySensorsIRSwitch)]
+            _devices = [
+                device for device in devices.values()
+                if isinstance(device, MySensorsIRSwitch)
+            ]
 
         kwargs = {ATTR_IR_CODE: ir_code}
         for device in _devices:
@@ -65,10 +74,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_SEND_IR_CODE,
-                           send_ir_code_service,
-                           descriptions.get(SERVICE_SEND_IR_CODE),
-                           schema=SEND_IR_CODE_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SEND_IR_CODE,
+        send_ir_code_service,
+        descriptions.get(SERVICE_SEND_IR_CODE),
+        schema=SEND_IR_CODE_SERVICE_SCHEMA)
 
 
 class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
@@ -86,8 +97,8 @@ class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     self.value_type, 1)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
@@ -95,8 +106,8 @@ class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, 0)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     self.value_type, 0)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
@@ -122,10 +133,10 @@ class MySensorsIRSwitch(MySensorsSwitch):
         set_req = self.gateway.const.SetReq
         if ATTR_IR_CODE in kwargs:
             self._ir_code = kwargs[ATTR_IR_CODE]
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, self._ir_code)
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_LIGHT, 1)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     self.value_type, self._ir_code)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_LIGHT, 1)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
@@ -137,8 +148,8 @@ class MySensorsIRSwitch(MySensorsSwitch):
     def turn_off(self, **kwargs):
         """Turn the IR switch off."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_LIGHT, 0)
+        self.gateway.set_child_value(self.node_id, self.child_id,
+                                     set_req.V_LIGHT, 0)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF

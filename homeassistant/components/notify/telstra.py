@@ -9,8 +9,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    BaseNotificationService, ATTR_TITLE, PLATFORM_SCHEMA)
+from homeassistant.components.notify import (BaseNotificationService,
+                                             ATTR_TITLE, PLATFORM_SCHEMA)
 from homeassistant.const import CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE
 import homeassistant.helpers.config_validation as cv
 
@@ -21,9 +21,12 @@ CONF_CONSUMER_SECRET = 'consumer_secret'
 CONF_PHONE_NUMBER = 'phone_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CONSUMER_KEY): cv.string,
-    vol.Required(CONF_CONSUMER_SECRET): cv.string,
-    vol.Required(CONF_PHONE_NUMBER): cv.string,
+    vol.Required(CONF_CONSUMER_KEY):
+    cv.string,
+    vol.Required(CONF_CONSUMER_SECRET):
+    cv.string,
+    vol.Required(CONF_PHONE_NUMBER):
+    cv.string,
 })
 
 
@@ -37,8 +40,8 @@ def get_service(hass, config, discovery_info=None):
         _LOGGER.exception("Error obtaining authorization from Telstra API")
         return None
 
-    return TelstraNotificationService(
-        consumer_key, consumer_secret, phone_number)
+    return TelstraNotificationService(consumer_key, consumer_secret,
+                                      phone_number)
 
 
 class TelstraNotificationService(BaseNotificationService):
@@ -55,8 +58,8 @@ class TelstraNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE)
 
         # Retrieve authorization first
-        token_response = _authenticate(
-            self._consumer_key, self._consumer_secret)
+        token_response = _authenticate(self._consumer_key,
+                                       self._consumer_secret)
         if token_response is False:
             _LOGGER.exception("Error obtaining authorization from Telstra API")
             return
@@ -77,7 +80,9 @@ class TelstraNotificationService(BaseNotificationService):
             'Authorization': 'Bearer ' + token_response['access_token'],
         }
         message_response = requests.post(
-            message_resource, headers=message_headers, json=message_data,
+            message_resource,
+            headers=message_headers,
+            json=message_data,
             timeout=10)
 
         if message_response.status_code != 202:

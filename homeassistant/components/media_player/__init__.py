@@ -26,13 +26,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
-    SERVICE_SHUFFLE_SET)
+    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE, ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
+    SERVICE_MEDIA_STOP, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_SHUFFLE_SET)
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -114,63 +113,100 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 })
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
+    vol.Required(ATTR_MEDIA_VOLUME_LEVEL):
+    cv.small_float,
 })
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED):
+    cv.boolean,
 })
 
 MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SEEK_POSITION):
-        vol.All(vol.Coerce(float), vol.Range(min=0)),
+    vol.All(vol.Coerce(float), vol.Range(min=0)),
 })
 
 MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_INPUT_SOURCE): cv.string,
+    vol.Required(ATTR_INPUT_SOURCE):
+    cv.string,
 })
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE):
+    cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID):
+    cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE):
+    cv.boolean,
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
+    vol.Required(ATTR_MEDIA_SHUFFLE):
+    cv.boolean,
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_VOLUME_UP: {'method': 'async_volume_up'},
-    SERVICE_VOLUME_DOWN: {'method': 'async_volume_down'},
-    SERVICE_MEDIA_PLAY_PAUSE: {'method': 'async_media_play_pause'},
-    SERVICE_MEDIA_PLAY: {'method': 'async_media_play'},
-    SERVICE_MEDIA_PAUSE: {'method': 'async_media_pause'},
-    SERVICE_MEDIA_STOP: {'method': 'async_media_stop'},
-    SERVICE_MEDIA_NEXT_TRACK: {'method': 'async_media_next_track'},
-    SERVICE_MEDIA_PREVIOUS_TRACK: {'method': 'async_media_previous_track'},
-    SERVICE_CLEAR_PLAYLIST: {'method': 'async_clear_playlist'},
+    SERVICE_TURN_ON: {
+        'method': 'async_turn_on'
+    },
+    SERVICE_TURN_OFF: {
+        'method': 'async_turn_off'
+    },
+    SERVICE_TOGGLE: {
+        'method': 'async_toggle'
+    },
+    SERVICE_VOLUME_UP: {
+        'method': 'async_volume_up'
+    },
+    SERVICE_VOLUME_DOWN: {
+        'method': 'async_volume_down'
+    },
+    SERVICE_MEDIA_PLAY_PAUSE: {
+        'method': 'async_media_play_pause'
+    },
+    SERVICE_MEDIA_PLAY: {
+        'method': 'async_media_play'
+    },
+    SERVICE_MEDIA_PAUSE: {
+        'method': 'async_media_pause'
+    },
+    SERVICE_MEDIA_STOP: {
+        'method': 'async_media_stop'
+    },
+    SERVICE_MEDIA_NEXT_TRACK: {
+        'method': 'async_media_next_track'
+    },
+    SERVICE_MEDIA_PREVIOUS_TRACK: {
+        'method': 'async_media_previous_track'
+    },
+    SERVICE_CLEAR_PLAYLIST: {
+        'method': 'async_clear_playlist'
+    },
     SERVICE_VOLUME_SET: {
         'method': 'async_set_volume_level',
-        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA},
+        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA
+    },
     SERVICE_VOLUME_MUTE: {
         'method': 'async_mute_volume',
-        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA},
+        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA
+    },
     SERVICE_MEDIA_SEEK: {
         'method': 'async_media_seek',
-        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA},
+        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA
+    },
     SERVICE_SELECT_SOURCE: {
         'method': 'async_select_source',
-        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
+        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA
+    },
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
-        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
+    },
     SERVICE_SHUFFLE_SET: {
         'method': 'async_set_shuffle',
-        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
+        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA
+    },
 }
 
 ATTR_TO_PROPERTY = [
@@ -321,8 +357,10 @@ def media_seek(hass, position, entity_id=None):
 @bind_hass
 def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id}
+    data = {
+        ATTR_MEDIA_CONTENT_TYPE: media_type,
+        ATTR_MEDIA_CONTENT_ID: media_id
+    }
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -372,9 +410,10 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -421,11 +460,13 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', MEDIA_PLAYER_SCHEMA)
+        schema = SERVICE_TO_METHOD[service].get('schema', MEDIA_PLAYER_SCHEMA)
         hass.services.async_register(
-            DOMAIN, service, async_service_handler,
-            descriptions.get(service), schema=schema)
+            DOMAIN,
+            service,
+            async_service_handler,
+            descriptions.get(service),
+            schema=schema)
 
     return True
 
@@ -875,8 +916,8 @@ class MediaPlayerDevice(Entity):
         if image_hash is None:
             return None
 
-        return ENTITY_IMAGE_URL.format(
-            self.entity_id, self.access_token, image_hash)
+        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token,
+                                       image_hash)
 
     @property
     def state_attributes(self):
@@ -885,8 +926,8 @@ class MediaPlayerDevice(Entity):
             return None
 
         state_attr = {
-            attr: getattr(self, attr) for attr
-            in ATTR_TO_PROPERTY if getattr(self, attr) is not None
+            attr: getattr(self, attr)
+            for attr in ATTR_TO_PROPERTY if getattr(self, attr) is not None
         }
 
         return state_attr
@@ -894,8 +935,7 @@ class MediaPlayerDevice(Entity):
     def preload_media_image_url(self, url):
         """Preload and cache a media image for future use."""
         run_coroutine_threadsafe(
-            _async_fetch_image(self.hass, url), self.hass.loop
-        ).result()
+            _async_fetch_image(self.hass, url), self.hass.loop).result()
 
 
 @asyncio.coroutine
@@ -962,8 +1002,8 @@ class MediaPlayerImageView(HomeAssistantView):
             status = 404 if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)
 
-        authenticated = (request[KEY_AUTHENTICATED] or
-                         request.query.get('token') == player.access_token)
+        authenticated = (request[KEY_AUTHENTICATED]
+                         or request.query.get('token') == player.access_token)
 
         if not authenticated:
             return web.Response(status=401)

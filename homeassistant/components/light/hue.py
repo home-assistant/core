@@ -48,8 +48,8 @@ PHUE_CONFIG_FILE = 'phue.conf'
 SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
 SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
-SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
-                     SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT | SUPPORT_RGB_COLOR
+                     | SUPPORT_XY_COLOR)
 SUPPORT_HUE_EXTENDED = (SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR)
 
 SUPPORT_HUE = {
@@ -58,7 +58,7 @@ SUPPORT_HUE = {
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
     'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
-    }
+}
 
 CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
 DEFAULT_ALLOW_IN_EMULATED_HUE = True
@@ -67,12 +67,16 @@ CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_FILENAME): cv.string,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
-    vol.Optional(CONF_ALLOW_HUE_GROUPS,
-                 default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+    vol.Optional(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_ALLOW_UNREACHABLE):
+    cv.boolean,
+    vol.Optional(CONF_FILENAME):
+    cv.string,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE):
+    cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS):
+    cv.boolean,
 })
 
 ATTR_GROUP_NAME = "group_name"
@@ -144,9 +148,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     import phue
 
     try:
-        bridge = phue.Bridge(
-            host,
-            config_file_path=hass.config.path(filename))
+        bridge = phue.Bridge(host, config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.error("Error connecting to the Hue bridge at %s", host)
 
@@ -229,10 +231,9 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         for light_id, info in api_lights.items():
             if light_id not in lights:
-                lights[light_id] = HueLight(int(light_id), info,
-                                            bridge, update_lights,
-                                            bridge_type, allow_unreachable,
-                                            allow_in_emulated_hue)
+                lights[light_id] = HueLight(
+                    int(light_id), info, bridge, update_lights, bridge_type,
+                    allow_unreachable, allow_in_emulated_hue)
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
@@ -270,23 +271,25 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
-                           descriptions.get(SERVICE_HUE_SCENE),
-                           schema=SCENE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_HUE_SCENE,
+        hue_activate_scene,
+        descriptions.get(SERVICE_HUE_SCENE),
+        schema=SCENE_SCHEMA)
 
     update_lights()
 
 
-def request_configuration(host, hass, add_devices, filename,
-                          allow_unreachable, allow_in_emulated_hue,
-                          allow_hue_groups):
+def request_configuration(host, hass, add_devices, filename, allow_unreachable,
+                          allow_in_emulated_hue, allow_hue_groups):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again.")
+        configurator.notify_errors(_CONFIGURING[host],
+                                   "Failed to register, please try again.")
 
         return
 
@@ -297,20 +300,26 @@ def request_configuration(host, hass, add_devices, filename,
                      allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
-        "Philips Hue", hue_configuration_callback,
+        "Philips Hue",
+        hue_configuration_callback,
         description=("Press the button on the bridge to register Philips Hue "
                      "with Home Assistant."),
         entity_picture="/static/images/logo_philips_hue.png",
         description_image="/static/images/config_philips_hue.jpg",
-        submit_caption="I have pressed the button"
-    )
+        submit_caption="I have pressed the button")
 
 
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type, allow_unreachable, allow_in_emulated_hue,
+    def __init__(self,
+                 light_id,
+                 info,
+                 bridge,
+                 update_lights,
+                 bridge_type,
+                 allow_unreachable,
+                 allow_in_emulated_hue,
                  is_group=False):
         """Initialize the light."""
         self.light_id = light_id
@@ -436,8 +445,8 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif (self.bridge_type == 'hue' and
-              self.info.get('manufacturername') == 'Philips'):
+        elif (self.bridge_type == 'hue'
+              and self.info.get('manufacturername') == 'Philips'):
             command['effect'] = 'none'
 
         self._command_func(self.light_id, command)

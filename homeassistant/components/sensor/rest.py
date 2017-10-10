@@ -28,18 +28,29 @@ DEFAULT_VERIFY_SSL = True
 METHODS = ['POST', 'GET']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
     vol.Optional(CONF_AUTHENTICATION):
-        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PAYLOAD): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_HEADERS): {
+        cv.string: cv.string
+    },
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
+    vol.In(METHODS),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD):
+    cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean,
 })
 
 

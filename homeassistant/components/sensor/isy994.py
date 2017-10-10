@@ -8,8 +8,8 @@ import logging
 from typing import Callable  # noqa
 
 import homeassistant.components.isy994 as isy
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF, STATE_ON)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
+                                 STATE_ON)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -236,8 +236,10 @@ BINARY_UOM = ['2', '78']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 sensor platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")
@@ -294,8 +296,7 @@ class ISYSensorDevice(isy.ISYDevice):
                 whole_part = str_val[:len(str_val) - int_prec]
                 val = float('{}.{}'.format(whole_part, decimal_part))
                 raw_units = self.raw_unit_of_measurement
-                if raw_units in (
-                        TEMP_CELSIUS, TEMP_FAHRENHEIT):
+                if raw_units in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
                     val = self.hass.config.units.temperature(val, raw_units)
 
                 return str(val)

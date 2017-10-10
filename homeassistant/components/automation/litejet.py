@@ -24,12 +24,14 @@ CONF_HELD_MORE_THAN = 'held_more_than'
 CONF_HELD_LESS_THAN = 'held_less_than'
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'litejet',
-    vol.Required(CONF_NUMBER): cv.positive_int,
+    vol.Required(CONF_PLATFORM):
+    'litejet',
+    vol.Required(CONF_NUMBER):
+    cv.positive_int,
     vol.Optional(CONF_HELD_MORE_THAN):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_HELD_LESS_THAN):
-        vol.All(cv.time_period, cv.positive_timedelta)
+    vol.All(cv.time_period, cv.positive_timedelta)
 })
 
 
@@ -73,8 +75,7 @@ def async_trigger(hass, config, action):
             hass.add_job(call_action)
         if held_more_than is not None and held_less_than is None:
             cancel_pressed_more_than = track_point_in_utc_time(
-                hass,
-                pressed_more_than_satisfied,
+                hass, pressed_more_than_satisfied,
                 dt_util.utcnow() + held_more_than)
 
     def released():

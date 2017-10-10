@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, ATTR_WHITE_VALUE,
-    SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
+    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE,
+    Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['zengge==0.2']
@@ -25,7 +25,9 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
 })
 
 
@@ -60,8 +62,8 @@ class ZenggeLight(Light):
         self._state = False
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error(
-                "Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error("Failed to connect to bulb %s, %s", self._address,
+                          self._name)
             return
 
     @property

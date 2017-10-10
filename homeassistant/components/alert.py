@@ -35,21 +35,30 @@ DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_DONE_MESSAGE, default=None): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_STATE, default=STATE_ON): cv.string,
-    vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
-    vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
-    vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
-    vol.Required(CONF_NOTIFIERS): cv.ensure_list})
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_DONE_MESSAGE, default=None):
+    cv.string,
+    vol.Required(CONF_ENTITY_ID):
+    cv.entity_id,
+    vol.Required(CONF_STATE, default=STATE_ON):
+    cv.string,
+    vol.Required(CONF_REPEAT):
+    vol.All(cv.ensure_list, [vol.Coerce(float)]),
+    vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK):
+    cv.boolean,
+    vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST):
+    cv.boolean,
+    vol.Required(CONF_NOTIFIERS):
+    cv.ensure_list
+})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: ALERT_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
-
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            cv.slug: ALERT_SCHEMA,
+        }),
+    }, extra=vol.ALLOW_EXTRA)
 
 ALERT_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -70,8 +79,7 @@ def turn_on(hass, entity_id):
 def async_turn_on(hass, entity_id):
     """Async reset the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 def turn_off(hass, entity_id):
@@ -96,8 +104,7 @@ def toggle(hass, entity_id):
 def async_toggle(hass, entity_id):
     """Async toggle acknowledgement of alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
 @asyncio.coroutine
@@ -122,29 +129,38 @@ def async_setup(hass, config):
 
     # Setup alerts
     for entity_id, alert in alerts.items():
-        entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert[CONF_DONE_MESSAGE],
-                       alert[CONF_ENTITY_ID], alert[CONF_STATE],
-                       alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
-                       alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
+        entity = Alert(
+            hass, entity_id, alert[CONF_NAME], alert[CONF_DONE_MESSAGE],
+            alert[CONF_ENTITY_ID], alert[CONF_STATE], alert[CONF_REPEAT],
+            alert[CONF_SKIP_FIRST], alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
     # Read descriptions
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
     descriptions = descriptions.get(DOMAIN, {})
 
     # Setup service calls
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handle_alert_service,
+        descriptions.get(SERVICE_TURN_OFF),
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_ON), schema=ALERT_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_alert_service,
+        descriptions.get(SERVICE_TURN_ON),
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
-        descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handle_alert_service,
+        descriptions.get(SERVICE_TOGGLE),
+        schema=ALERT_SERVICE_SCHEMA)
 
     tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
     if tasks:
@@ -176,8 +192,8 @@ class Alert(ToggleEntity):
         self._send_done_message = False
         self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
 
-        event.async_track_state_change(
-            hass, watched_entity_id, self.watched_entity_change)
+        event.async_track_state_change(hass, watched_entity_id,
+                                       self.watched_entity_change)
 
     @property
     def name(self):

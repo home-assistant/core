@@ -37,8 +37,10 @@ ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_GCM_SENDER_ID): cv.string,
-    vol.Optional(ATTR_GCM_API_KEY): cv.string,
+    vol.Optional(ATTR_GCM_SENDER_ID):
+    cv.string,
+    vol.Optional(ATTR_GCM_API_KEY):
+    cv.string,
 })
 
 ATTR_SUBSCRIPTION = 'subscription'
@@ -66,36 +68,46 @@ KEYS_SCHEMA = vol.All(dict,
                       vol.Schema({
                           vol.Required(ATTR_AUTH): cv.string,
                           vol.Required(ATTR_P256DH): cv.string
-                          }))
+                      }))
 
-SUBSCRIPTION_SCHEMA = vol.All(dict,
-                              vol.Schema({
-                                  # pylint: disable=no-value-for-parameter
-                                  vol.Required(ATTR_ENDPOINT): vol.Url(),
-                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA,
-                                  vol.Optional(ATTR_EXPIRATIONTIME):
-                                      vol.Any(None, cv.positive_int)
-                                  }))
+SUBSCRIPTION_SCHEMA = vol.All(
+    dict,
+    vol.Schema({
+        # pylint: disable=no-value-for-parameter
+        vol.Required(ATTR_ENDPOINT):
+        vol.Url(),
+        vol.Required(ATTR_KEYS):
+        KEYS_SCHEMA,
+        vol.Optional(ATTR_EXPIRATIONTIME):
+        vol.Any(None, cv.positive_int)
+    }))
 
 REGISTER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
-    vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
+    vol.Required(ATTR_SUBSCRIPTION):
+    SUBSCRIPTION_SCHEMA,
+    vol.Required(ATTR_BROWSER):
+    vol.In(['chrome', 'firefox'])
 })
 
 CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TAG): cv.string,
-    vol.Required(ATTR_TYPE): vol.In(['received', 'clicked', 'closed']),
-    vol.Required(ATTR_TARGET): cv.string,
-    vol.Optional(ATTR_ACTION): cv.string,
-    vol.Optional(ATTR_DATA): dict,
+    vol.Required(ATTR_TAG):
+    cv.string,
+    vol.Required(ATTR_TYPE):
+    vol.In(['received', 'clicked', 'closed']),
+    vol.Required(ATTR_TARGET):
+    cv.string,
+    vol.Optional(ATTR_ACTION):
+    cv.string,
+    vol.Optional(ATTR_DATA):
+    dict,
 })
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
 # Badge and timestamp are Chrome specific (not in official spec)
-HTML5_SHOWNOTIFICATION_PARAMETERS = (
-    'actions', 'badge', 'body', 'dir', 'icon', 'lang', 'renotify',
-    'requireInteraction', 'tag', 'timestamp', 'vibrate')
+HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir', 'icon',
+                                     'lang', 'renotify', 'requireInteraction',
+                                     'tag', 'timestamp', 'vibrate')
 
 
 def get_service(hass, config, discovery_info=None):
@@ -115,8 +127,8 @@ def get_service(hass, config, discovery_info=None):
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
     if gcm_sender_id is not None:
-        add_manifest_json_key(
-            ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
+        add_manifest_json_key(ATTR_GCM_SENDER_ID,
+                              config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(gcm_api_key, registrations, json_path)
 
@@ -155,8 +167,9 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(
-                config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
+            fdesc.write(
+                json.dumps(
+                    config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
     except (IOError, TypeError) as error:
         _LOGGER.error("Saving config file failed: %s", error)
         return False
@@ -193,8 +206,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations[name] = data
 
         if not _save_config(self.json_path, self.registrations):
-            return self.json_message(
-                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message('Error saving registration.',
+                                     HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber registered.')
 
@@ -223,8 +236,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         if not _save_config(self.json_path, self.registrations):
             self.registrations[found] = reg
-            return self.json_message(
-                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message('Error saving registration.',
+                                     HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber unregistered.')
 
@@ -258,8 +271,8 @@ class HTML5PushCallbackView(HomeAssistantView):
             except jwt.exceptions.DecodeError:
                 pass
 
-        return self.json_message('No target found in JWT',
-                                 status_code=HTTP_UNAUTHORIZED)
+        return self.json_message(
+            'No target found in JWT', status_code=HTTP_UNAUTHORIZED)
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
@@ -268,26 +281,29 @@ class HTML5PushCallbackView(HomeAssistantView):
         import jwt
         auth = request.headers.get('Authorization', None)
         if not auth:
-            return self.json_message('Authorization header is expected',
-                                     status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                'Authorization header is expected',
+                status_code=HTTP_UNAUTHORIZED)
 
         parts = auth.split()
 
         if parts[0].lower() != 'bearer':
-            return self.json_message('Authorization header must '
-                                     'start with Bearer',
-                                     status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                'Authorization header must '
+                'start with Bearer',
+                status_code=HTTP_UNAUTHORIZED)
         elif len(parts) != 2:
-            return self.json_message('Authorization header must '
-                                     'be Bearer token',
-                                     status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                'Authorization header must '
+                'be Bearer token',
+                status_code=HTTP_UNAUTHORIZED)
 
         token = parts[1]
         try:
             payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message('token is invalid',
-                                     status_code=HTTP_UNAUTHORIZED)
+            return self.json_message(
+                'token is invalid', status_code=HTTP_UNAUTHORIZED)
         return payload
 
     @asyncio.coroutine
@@ -323,8 +339,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     event_payload[ATTR_TYPE])
         request.app['hass'].bus.fire(event_name, event_payload)
-        return self.json({'status': 'ok',
-                          'event': event_payload[ATTR_TYPE]})
+        return self.json({'status': 'ok', 'event': event_payload[ATTR_TYPE]})
 
 
 class HTML5NotificationService(BaseNotificationService):
@@ -358,7 +373,7 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_DATA: {},
             'icon': '/static/icons/favicon-192x192.png',
             ATTR_TAG: tag,
-            'timestamp': (timestamp*1000),  # Javascript ms since epoch
+            'timestamp': (timestamp * 1000),  # Javascript ms since epoch
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         }
 
@@ -378,8 +393,8 @@ class HTML5NotificationService(BaseNotificationService):
 
             payload[ATTR_DATA] = data_tmp
 
-        if (payload[ATTR_DATA].get(ATTR_URL) is None and
-                payload.get(ATTR_ACTIONS) is None):
+        if (payload[ATTR_DATA].get(ATTR_URL) is None
+                and payload.get(ATTR_ACTIONS) is None):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
 
         targets = kwargs.get(ATTR_TARGET)
@@ -397,9 +412,13 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
                        datetime.timedelta(days=JWT_VALID_DAYS))
             jwt_secret = info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
-            jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
-                          'iat': timestamp, ATTR_TARGET: target,
-                          ATTR_TAG: payload[ATTR_TAG]}
+            jwt_claims = {
+                'exp': jwt_exp,
+                'nbf': timestamp,
+                'iat': timestamp,
+                ATTR_TARGET: target,
+                ATTR_TAG: payload[ATTR_TAG]
+            }
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 

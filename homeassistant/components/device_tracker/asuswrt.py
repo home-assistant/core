@@ -12,10 +12,10 @@ from collections import namedtuple
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pexpect==4.0.1']
@@ -34,31 +34,33 @@ SECRET_GROUP = 'Password or SSH Key'
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
     PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_HOST):
+        cv.string,
+        vol.Required(CONF_USERNAME):
+        cv.string,
         vol.Optional(CONF_PROTOCOL, default='ssh'):
-            vol.In(['ssh', 'telnet']),
+        vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'):
-            vol.In(['router', 'ap']),
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
-        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
+        vol.In(['router', 'ap']),
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT):
+        cv.port,
+        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP):
+        cv.string,
+        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP):
+        cv.isfile,
+        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP):
+        cv.isfile
     }))
-
 
 _LEASES_CMD = 'cat /var/lib/misc/dnsmasq.leases'
 _LEASES_REGEX = re.compile(
-    r'\w+\s' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s' +
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
-    r'(?P<host>([^\s]+))')
+    r'\w+\s' + r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s' +
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' + r'(?P<host>([^\s]+))')
 
 # Command to get both 5GHz and 2.4GHz clients
 _WL_CMD = 'for dev in `nvram get wl_ifnames`; do wl -i $dev assoclist; done'
-_WL_REGEX = re.compile(
-    r'\w+\s' +
-    r'(?P<mac>(([0-9A-F]{2}[:-]){5}([0-9A-F]{2})))')
+_WL_REGEX = re.compile(r'\w+\s' +
+                       r'(?P<mac>(([0-9A-F]{2}[:-]){5}([0-9A-F]{2})))')
 
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
@@ -103,10 +105,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 return
 
             self.connection = SshConnection(self.host, self.port,
-                                            self.username,
-                                            self.password,
-                                            self.ssh_key,
-                                            self.mode == "ap")
+                                            self.username, self.password,
+                                            self.ssh_key, self.mode == "ap")
         else:
             if not self.password:
                 _LOGGER.error("No password specified")
@@ -114,8 +114,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 return
 
             self.connection = TelnetConnection(self.host, self.port,
-                                               self.username,
-                                               self.password,
+                                               self.username, self.password,
                                                self.mode == "ap")
 
         self.last_results = {}
@@ -151,11 +150,12 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if not data:
             return False
 
-        active_clients = [client for client in data.values() if
-                          client['status'] == 'REACHABLE' or
-                          client['status'] == 'DELAY' or
-                          client['status'] == 'STALE' or
-                          client['status'] == 'IN_ASSOCLIST']
+        active_clients = [
+            client for client in data.values()
+            if client['status'] == 'REACHABLE' or client['status'] == 'DELAY'
+            or client['status'] == 'STALE'
+            or client['status'] == 'IN_ASSOCLIST'
+        ]
         self.last_results = active_clients
         return True
 
@@ -182,7 +182,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                     'status': 'IN_ASSOCLIST',
                     'ip': '',
                     'mac': match.group('mac').upper(),
-                    }
+                }
 
         else:
             for lease in result.leases:
@@ -205,7 +205,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                     'status': '',
                     'ip': match.group('ip'),
                     'mac': match.group('mac').upper(),
-                    }
+                }
 
             for neighbor in result.neighbors:
                 match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
@@ -296,15 +296,21 @@ class SshConnection(_Connection):
 
         self._ssh = pxssh.pxssh()
         if self._ssh_key:
-            self._ssh.login(self._host, self._username,
-                            ssh_key=self._ssh_key, port=self._port)
+            self._ssh.login(
+                self._host,
+                self._username,
+                ssh_key=self._ssh_key,
+                port=self._port)
         else:
-            self._ssh.login(self._host, self._username,
-                            password=self._password, port=self._port)
+            self._ssh.login(
+                self._host,
+                self._username,
+                password=self._password,
+                port=self._port)
 
         super(SshConnection, self).connect()
 
-    def disconnect(self):   \
+    def disconnect(self):           \
             # pylint: disable=broad-except
         """Disconnect the current SSH connection."""
         try:
@@ -343,16 +349,16 @@ class TelnetConnection(_Connection):
                 self.connect()
 
             self._telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
-            neighbors = (self._telnet.read_until(self._prompt_string).
-                         split(b'\n')[1:-1])
+            neighbors = (self._telnet.read_until(
+                self._prompt_string).split(b'\n')[1:-1])
             if self._ap:
                 self._telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
-                leases_result = (self._telnet.read_until(self._prompt_string).
-                                 split(b'\n')[1:-1])
+                leases_result = (self._telnet.read_until(
+                    self._prompt_string).split(b'\n')[1:-1])
             else:
                 self._telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
-                leases_result = (self._telnet.read_until(self._prompt_string).
-                                 split(b'\n')[1:-1])
+                leases_result = (self._telnet.read_until(
+                    self._prompt_string).split(b'\n')[1:-1])
             return AsusWrtResult(neighbors, leases_result)
         except EOFError:
             _LOGGER.error("Unexpected response from router")
@@ -382,7 +388,7 @@ class TelnetConnection(_Connection):
 
         super(TelnetConnection, self).connect()
 
-    def disconnect(self):   \
+    def disconnect(self):           \
             # pylint: disable=broad-except
         """Disconnect the current Telnet connection."""
         try:

@@ -12,8 +12,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired)
+from homeassistant.util.color import (color_temperature_kelvin_to_mired as
+                                      kelvin_to_mired)
 
 from typing import Tuple
 
@@ -34,19 +34,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt*100.0)/255.0)
+    return int((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent*255.0)/100.0
+    return (percent * 255.0) / 100.0
 
 
 # Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
 def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
-    hue, sat, value = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
+    hue, sat, value = colorsys.rgb_to_hsv(rgb[0] / 255, rgb[1] / 255,
+                                          rgb[2] / 255)
     return int(hue * 360), int(sat * 100), int(value * 100)
 
 
@@ -54,7 +55,8 @@ def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
 # pylint: disable=invalid-sequence-index
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
-    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    red, green, blue = colorsys.hsv_to_rgb(hsv[0] / 360, hsv[1] / 100,
+                                           hsv[2] / 100)
     return int(red * 255), int(green * 255), int(blue * 255)
 
 
@@ -131,8 +133,8 @@ class TPLinkSmartBulb(Light):
             self._brightness = brightness_from_percentage(
                 self.smartbulb.brightness)
             if self.smartbulb.is_color:
-                if (self.smartbulb.color_temp is not None and
-                        self.smartbulb.color_temp != 0):
+                if (self.smartbulb.color_temp is not None
+                        and self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)

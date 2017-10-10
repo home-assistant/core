@@ -9,10 +9,10 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_PORT)
 
 REQUIREMENTS = ['librouteros==1.0.2']
 
@@ -21,10 +21,14 @@ MTK_DEFAULT_API_PORT = '8728'
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT): cv.port
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=MTK_DEFAULT_API_PORT):
+    cv.port
 })
 
 
@@ -53,16 +57,10 @@ class MikrotikScanner(DeviceScanner):
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info(
-                "Start polling Mikrotik (%s) router...",
-                self.host
-            )
+            _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)
             self._update_info()
         else:
-            _LOGGER.error(
-                "Connection to Mikrotik (%s) failed",
-                self.host
-            )
+            _LOGGER.error("Connection to Mikrotik (%s) failed", self.host)
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
@@ -70,29 +68,23 @@ class MikrotikScanner(DeviceScanner):
         import librouteros
         try:
             self.client = librouteros.connect(
-                self.host,
-                self.username,
-                self.password,
-                port=int(self.port)
-            )
+                self.host, self.username, self.password, port=int(self.port))
 
             routerboard_info = self.client(cmd='/system/routerboard/getall')
 
             if routerboard_info:
                 _LOGGER.info("Connected to Mikrotik %s with IP %s",
-                             routerboard_info[0].get('model', 'Router'),
-                             self.host)
+                             routerboard_info[0].get('model',
+                                                     'Router'), self.host)
                 self.connected = True
                 self.wireless_exist = self.client(
-                    cmd='/interface/wireless/getall'
-                )
+                    cmd='/interface/wireless/getall')
                 if not self.wireless_exist:
                     _LOGGER.info(
                         'Mikrotik %s: Wireless adapters not found. Try to '
                         'use DHCP lease table as presence tracker source. '
                         'Please decrease lease time as much as possible.',
-                        self.host
-                    )
+                        self.host)
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
@@ -116,39 +108,35 @@ class MikrotikScanner(DeviceScanner):
         else:
             devices_tracker = 'ip'
 
-        _LOGGER.info(
-            "Loading %s devices from Mikrotik (%s) ...",
-            devices_tracker,
-            self.host
-        )
+        _LOGGER.info("Loading %s devices from Mikrotik (%s) ...",
+                     devices_tracker, self.host)
 
         device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
         if self.wireless_exist:
             devices = self.client(
-                cmd='/interface/wireless/registration-table/getall'
-            )
+                cmd='/interface/wireless/registration-table/getall')
         else:
             devices = device_names
 
         if device_names is None and devices is None:
             return False
 
-        mac_names = {device.get('mac-address'): device.get('host-name')
-                     for device in device_names
-                     if device.get('mac-address')}
+        mac_names = {
+            device.get('mac-address'): device.get('host-name')
+            for device in device_names if device.get('mac-address')
+        }
 
         if self.wireless_exist:
             self.last_results = {
                 device.get('mac-address'):
-                    mac_names.get(device.get('mac-address'))
+                mac_names.get(device.get('mac-address'))
                 for device in devices
             }
         else:
             self.last_results = {
                 device.get('mac-address'):
-                    mac_names.get(device.get('mac-address'))
-                for device in device_names
-                if device.get('active-address')
+                mac_names.get(device.get('mac-address'))
+                for device in device_names if device.get('active-address')
             }
 
         return True

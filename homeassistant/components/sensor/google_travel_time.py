@@ -12,9 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
-    ATTR_LONGITUDE)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME,
+                                 EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
@@ -34,12 +34,13 @@ DEFAULT_NAME = 'Google Travel Time'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-                 'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
-                 'it', 'iw', 'ja', 'kn', 'ko', 'lt', 'lv', 'ml', 'mr', 'nl',
-                 'no', 'pl', 'pt', 'pt-BR', 'pt-PT', 'ro', 'ru', 'sk', 'sl',
-                 'sr', 'sv', 'ta', 'te', 'th', 'tl', 'tr', 'uk', 'vi',
-                 'zh-CN', 'zh-TW']
+ALL_LANGUAGES = [
+    'ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es', 'eu', 'fa',
+    'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id', 'it', 'iw', 'ja', 'kn',
+    'ko', 'lt', 'lv', 'ml', 'mr', 'nl', 'no', 'pl', 'pt', 'pt-BR', 'pt-PT',
+    'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'ta', 'te', 'th', 'tl', 'tr', 'uk',
+    'vi', 'zh-CN', 'zh-TW'
+]
 
 AVOID = ['tolls', 'highways', 'ferries', 'indoor']
 TRANSIT_PREFS = ['less_walking', 'fewer_transfers']
@@ -49,23 +50,38 @@ TRAVEL_MODEL = ['best_guess', 'pessimistic', 'optimistic']
 UNITS = ['metric', 'imperial']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_ORIGIN): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
-    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
-        dict, vol.Schema({
-            vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
-            vol.Optional('language'): vol.In(ALL_LANGUAGES),
-            vol.Optional('avoid'): vol.In(AVOID),
-            vol.Optional('units'): vol.In(UNITS),
-            vol.Exclusive('arrival_time', 'time'): cv.string,
-            vol.Exclusive('departure_time', 'time'): cv.string,
-            vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
-            vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
-            vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
-        }))
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_DESTINATION):
+    cv.string,
+    vol.Required(CONF_ORIGIN):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_TRAVEL_MODE):
+    vol.In(TRAVEL_MODE),
+    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}):
+    vol.All(dict,
+            vol.Schema({
+                vol.Optional(CONF_MODE, default='driving'):
+                vol.In(TRAVEL_MODE),
+                vol.Optional('language'):
+                vol.In(ALL_LANGUAGES),
+                vol.Optional('avoid'):
+                vol.In(AVOID),
+                vol.Optional('units'):
+                vol.In(UNITS),
+                vol.Exclusive('arrival_time', 'time'):
+                cv.string,
+                vol.Exclusive('departure_time', 'time'):
+                cv.string,
+                vol.Optional('traffic_model'):
+                vol.In(TRAVEL_MODEL),
+                vol.Optional('transit_mode'):
+                vol.In(TRANSPORT_TYPE),
+                vol.Optional('transit_routing_preference'):
+                vol.In(TRANSIT_PREFS)
+            }))
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
@@ -73,8 +89,8 @@ TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
-    combined = datetime.combine(
-        dt_util.start_of_local_day(), dt_util.parse_time(timestr))
+    combined = datetime.combine(dt_util.start_of_local_day(),
+                                dt_util.parse_time(timestr))
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return dt_util.as_timestamp(combined)
@@ -82,6 +98,7 @@ def convert_time_to_utc(timestr):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Google travel time platform."""
+
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized.
 
@@ -109,8 +126,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         origin = config.get(CONF_ORIGIN)
         destination = config.get(CONF_DESTINATION)
 
-        sensor = GoogleTravelTimeSensor(
-            hass, name, api_key, origin, destination, options)
+        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
+                                        destination, options)
 
         if sensor.valid_api_connection:
             add_devices_callback([sensor])
@@ -147,7 +164,7 @@ class GoogleTravelTimeSensor(Entity):
         try:
             self.update()
         except googlemaps.exceptions.ApiError as exp:
-            _LOGGER .error(exp)
+            _LOGGER.error(exp)
             self.valid_api_connection = False
             return
 
@@ -159,9 +176,9 @@ class GoogleTravelTimeSensor(Entity):
 
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
-            return round(_data['duration_in_traffic']['value']/60)
+            return round(_data['duration_in_traffic']['value'] / 60)
         if 'duration' in _data:
-            return round(_data['duration']['value']/60)
+            return round(_data['duration']['value'] / 60)
         return None
 
     @property
@@ -213,13 +230,11 @@ class GoogleTravelTimeSensor(Entity):
         # Convert device_trackers to google friendly location
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._get_location_from_entity(
-                self._origin_entity_id
-            )
+                self._origin_entity_id)
 
         if hasattr(self, '_destination_entity_id'):
             self._destination = self._get_location_from_entity(
-                self._destination_entity_id
-            )
+                self._destination_entity_id)
 
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
@@ -244,10 +259,8 @@ class GoogleTravelTimeSensor(Entity):
         # Check if device is in a zone
         zone_entity = self._hass.states.get("zone.%s" % entity.state)
         if location.has_location(zone_entity):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location",
-                entity_id, zone_entity.entity_id
-            )
+            _LOGGER.debug("%s is in %s, getting zone location", entity_id,
+                          zone_entity.entity_id)
             return self._get_location_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location

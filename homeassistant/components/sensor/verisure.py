@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.verisure/
 import logging
 
 from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (
-    CONF_THERMOMETERS, CONF_HYDROMETERS, CONF_MOUSE)
+from homeassistant.components.verisure import (CONF_THERMOMETERS,
+                                               CONF_HYDROMETERS, CONF_MOUSE)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -24,19 +24,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.extend([
             VerisureThermometer(device_label)
             for device_label in hub.get(
-                '$.climateValues[?(@.temperature)].deviceLabel')])
+                '$.climateValues[?(@.temperature)].deviceLabel')
+        ])
 
     if int(hub.config.get(CONF_HYDROMETERS, 1)):
         sensors.extend([
             VerisureHygrometer(device_label)
             for device_label in hub.get(
-                '$.climateValues[?(@.humidity)].deviceLabel')])
+                '$.climateValues[?(@.humidity)].deviceLabel')
+        ])
 
     if int(hub.config.get(CONF_MOUSE, 1)):
         sensors.extend([
             VerisureMouseDetection(device_label)
             for device_label in hub.get(
-                "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel")])
+                "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel")
+        ])
 
     add_devices(sensors)
 
@@ -127,9 +130,8 @@ class VerisureMouseDetection(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')].area",
-            self._device_label) + " mouse"
+        return hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')].area",
+                             self._device_label) + " mouse"
 
     @property
     def state(self):
@@ -141,9 +143,8 @@ class VerisureMouseDetection(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')]",
-            self._device_label) is not None
+        return hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')]",
+                             self._device_label) is not None
 
     @property
     def unit_of_measurement(self):

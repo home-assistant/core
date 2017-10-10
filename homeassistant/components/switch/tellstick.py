@@ -6,10 +6,9 @@ https://home-assistant.io/components/switch.tellstick/
 """
 import voluptuous as vol
 
-from homeassistant.components.tellstick import (DEFAULT_SIGNAL_REPETITIONS,
-                                                ATTR_DISCOVER_DEVICES,
-                                                ATTR_DISCOVER_CONFIG,
-                                                DOMAIN, TellstickDevice)
+from homeassistant.components.tellstick import (
+    DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG,
+    DOMAIN, TellstickDevice)
 from homeassistant.helpers.entity import ToggleEntity
 
 PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
@@ -18,17 +17,18 @@ PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Tellstick switches."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_DEVICES] is None):
+    if (discovery_info is None
+            or discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
     # Allow platform level override, fallback to module config
     signal_repetitions = discovery_info.get(ATTR_DISCOVER_CONFIG,
                                             DEFAULT_SIGNAL_REPETITIONS)
 
-    add_devices(TellstickSwitch(tellcore_id, hass.data['tellcore_registry'],
-                                signal_repetitions)
-                for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES])
+    add_devices(
+        TellstickSwitch(tellcore_id, hass.data['tellcore_registry'],
+                        signal_repetitions)
+        for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES])
 
 
 class TellstickSwitch(TellstickDevice, ToggleEntity):

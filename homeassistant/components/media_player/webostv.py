@@ -13,21 +13,17 @@ import voluptuous as vol
 
 import homeassistant.util as util
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
-    STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_CUSTOMIZE, CONF_TIMEOUT,
+                                 STATE_OFF, STATE_PLAYING, STATE_PAUSED,
+                                 STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['pylgtv==0.1.7',
-                'websockets==3.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'wakeonlan==0.2.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -49,16 +45,22 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SOURCES):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
-    vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_CUSTOMIZE, default={}):
+    CUSTOMIZE_SCHEMA,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE):
+    cv.string,
+    vol.Optional(CONF_TIMEOUT, default=10):
+    cv.positive_int,
+    vol.Optional(CONF_ON_ACTION):
+    cv.SCRIPT_SCHEMA,
 })
 
 
@@ -85,12 +87,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     config = hass.config.path(config.get(CONF_FILENAME))
 
-    setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action)
+    setup_tv(host, name, customize, config, timeout, hass, add_devices,
+             turn_on_action)
 
 
-def setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action):
+def setup_tv(host, name, customize, config, timeout, hass, add_devices,
+             turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -104,8 +106,8 @@ def setup_tv(host, name, customize, config, timeout, hass,
             try:
                 client.register()
             except PyLGTVPairException:
-                _LOGGER.warning(
-                    "Connected to LG webOS TV %s but not paired", host)
+                _LOGGER.warning("Connected to LG webOS TV %s but not paired",
+                                host)
                 return
             except (OSError, ConnectionClosed, asyncio.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
@@ -113,9 +115,8 @@ def setup_tv(host, name, customize, config, timeout, hass,
         else:
             # Not registered, request configuration.
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
-            request_configuration(
-                host, name, customize, config, timeout, hass,
-                add_devices, turn_on_action)
+            request_configuration(host, name, customize, config, timeout, hass,
+                                  add_devices, turn_on_action)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -124,41 +125,42 @@ def setup_tv(host, name, customize, config, timeout, hass,
         configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, name, customize, config, timeout,
-                               hass, turn_on_action)], True)
+    add_devices([
+        LgWebOSDevice(host, name, customize, config, timeout, hass,
+                      turn_on_action)
+    ], True)
 
 
-def request_configuration(
-        host, name, customize, config, timeout, hass,
-        add_devices, turn_on_action):
+def request_configuration(host, name, customize, config, timeout, hass,
+                          add_devices, turn_on_action):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], 'Failed to pair, please try again.')
+        configurator.notify_errors(_CONFIGURING[host],
+                                   'Failed to pair, please try again.')
         return
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, name, customize, config, timeout, hass,
-                 add_devices, turn_on_action)
+        setup_tv(host, name, customize, config, timeout, hass, add_devices,
+                 turn_on_action)
 
     _CONFIGURING[host] = configurator.request_config(
-        name, lgtv_configuration_callback,
+        name,
+        lgtv_configuration_callback,
         description='Click start and accept the pairing request on your TV.',
         description_image='/static/images/config_webos.png',
-        submit_caption='Start pairing request'
-    )
+        submit_caption='Start pairing request')
 
 
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, host, name, customize, config, timeout,
-                 hass, on_action):
+    def __init__(self, host, name, customize, config, timeout, hass,
+                 on_action):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         self._client = WebOsClient(host, config, timeout)
@@ -206,11 +208,11 @@ class LgWebOSDevice(MediaPlayerDevice):
                         if app['id'] == self._current_source_id:
                             self._current_source = app['title']
                             self._source_list[app['title']] = app
-                        elif (app['id'] in conf_sources or
-                              any(word in app['title']
-                                  for word in conf_sources) or
-                              any(word in app['id']
-                                  for word in conf_sources)):
+                        elif (app['id'] in conf_sources
+                              or any(word in app['title']
+                                     for word in conf_sources)
+                              or any(word in app['id']
+                                     for word in conf_sources)):
                             self._source_list[app['title']] = app
                     else:
                         self._current_source = app['title']
@@ -220,14 +222,13 @@ class LgWebOSDevice(MediaPlayerDevice):
                     if conf_sources:
                         if source['id'] == self._current_source_id:
                             self._source_list[source['label']] = source
-                        elif (source['label'] in conf_sources or
-                              any(source['label'].find(word) != -1
-                                  for word in conf_sources)):
+                        elif (source['label'] in conf_sources
+                              or any(source['label'].find(word) != -1
+                                     for word in conf_sources)):
                             self._source_list[source['label']] = source
                     else:
                         self._source_list[source['label']] = source
-        except (OSError, ConnectionClosed, TypeError,
-                asyncio.TimeoutError):
+        except (OSError, ConnectionClosed, TypeError, asyncio.TimeoutError):
             self._state = STATE_OFF
             self._current_source = None
             self._current_source_id = None
@@ -290,8 +291,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_OFF
         try:
             self._client.power_off()
-        except (OSError, ConnectionClosed, TypeError,
-                asyncio.TimeoutError):
+        except (OSError, ConnectionClosed, TypeError, asyncio.TimeoutError):
             pass
 
     def turn_on(self):

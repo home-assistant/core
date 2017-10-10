@@ -10,8 +10,8 @@ from time import time
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import (CONF_LOCKS, CONF_CODE_DIGITS)
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (
-    ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
+from homeassistant.const import (ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN,
+                                 STATE_UNLOCKED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +23,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hub.update_overview()
         locks.extend([
             VerisureDoorlock(device_label)
-            for device_label in hub.get(
-                "$.doorLockStatusList[*].deviceLabel")])
+            for device_label in hub.get("$.doorLockStatusList[*].deviceLabel")
+        ])
 
     add_devices(locks)
 
@@ -55,9 +55,8 @@ class VerisureDoorlock(LockDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')]",
-            self._device_label) is not None
+        return hub.get_first("$.doorLockStatusList[?(@.deviceLabel=='%s')]",
+                             self._device_label) is not None
 
     @property
     def changed_by(self):
@@ -108,8 +107,7 @@ class VerisureDoorlock(LockDevice):
         """Send set lock state command."""
         lock_state = 'lock' if state == STATE_LOCKED else 'unlock'
         transaction_id = hub.session.set_lock_state(
-            code,
-            self._device_label,
+            code, self._device_label,
             lock_state)['doorLockStateChangeTransactionId']
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = {}

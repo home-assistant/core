@@ -18,12 +18,12 @@ import homeassistant.util.dt as dt_util
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the media player demo platform."""
     add_devices([
-        DemoYoutubePlayer(
-            'Living Room', 'eyU3bRy2x44',
-            '♥♥ The Best Fireplace Video (3 hours)', 300),
+        DemoYoutubePlayer('Living Room', 'eyU3bRy2x44',
+                          '♥♥ The Best Fireplace Video (3 hours)', 300),
         DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours',
                           360000),
-        DemoMusicPlayer(), DemoTVShowPlayer(),
+        DemoMusicPlayer(),
+        DemoTVShowPlayer(),
     ])
 
 
@@ -181,8 +181,8 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         position = self._progress
 
         if self._player_state == STATE_PLAYING:
-            position += (dt_util.utcnow() -
-                         self._progress_updated_at).total_seconds()
+            position += (
+                dt_util.utcnow() - self._progress_updated_at).total_seconds()
 
         return position
 

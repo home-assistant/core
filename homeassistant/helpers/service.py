@@ -23,7 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def call_from_config(hass, config, blocking=False, variables=None,
+def call_from_config(hass,
+                     config,
+                     blocking=False,
+                     variables=None,
                      validate_config=True):
     """Call a service based on a config hash."""
     run_coroutine_threadsafe(
@@ -33,7 +36,10 @@ def call_from_config(hass, config, blocking=False, variables=None,
 
 @asyncio.coroutine
 @bind_hass
-def async_call_from_config(hass, config, blocking=False, variables=None,
+def async_call_from_config(hass,
+                           config,
+                           blocking=False,
+                           variables=None,
                            validate_config=True):
     """Call a service based on a config hash."""
     if validate_config:
@@ -63,23 +69,27 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
     service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
+
         def _data_template_creator(value):
             """Recursive template creator helper function."""
             if isinstance(value, list):
                 return [_data_template_creator(item) for item in value]
             elif isinstance(value, dict):
-                return {key: _data_template_creator(item)
-                        for key, item in value.items()}
+                return {
+                    key: _data_template_creator(item)
+                    for key, item in value.items()
+                }
             value.hass = hass
             return value.async_render(variables)
-        service_data.update(_data_template_creator(
-            config[CONF_SERVICE_DATA_TEMPLATE]))
+
+        service_data.update(
+            _data_template_creator(config[CONF_SERVICE_DATA_TEMPLATE]))
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
-    yield from hass.services.async_call(
-        domain, service_name, service_data, blocking)
+    yield from hass.services.async_call(domain, service_name, service_data,
+                                        blocking)
 
 
 @bind_hass
@@ -103,8 +113,9 @@ def extract_entity_ids(hass, service_call, expand_group=True):
         if isinstance(service_ent_id, str):
             return group.expand_entity_ids(hass, [service_ent_id])
 
-        return [ent_id for ent_id in
-                group.expand_entity_ids(hass, service_ent_id)]
+        return [
+            ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)
+        ]
 
     else:
 

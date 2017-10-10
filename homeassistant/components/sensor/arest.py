@@ -11,9 +11,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, CONF_RESOURCE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, STATE_UNKNOWN)
+from homeassistant.const import (CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
+                                 CONF_RESOURCE, CONF_MONITORED_VARIABLES,
+                                 CONF_NAME, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -29,18 +29,27 @@ CONF_PINS = 'pins'
 DEFAULT_NAME = 'aREST sensor'
 
 PIN_VARIABLE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_VARIABLE_SCHEMA}),
+    vol.Schema({
+        cv.string: PIN_VARIABLE_SCHEMA
+    }),
     vol.Optional(CONF_MONITORED_VARIABLES, default={}):
-        vol.Schema({cv.string: PIN_VARIABLE_SCHEMA}),
+    vol.Schema({
+        cv.string: PIN_VARIABLE_SCHEMA
+    }),
 })
 
 
@@ -87,20 +96,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 continue
 
             renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))
-            dev.append(ArestSensor(
-                arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-                var_data.get(CONF_NAME, variable), variable=variable,
-                unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
-                renderer=renderer))
+            dev.append(
+                ArestSensor(
+                    arest,
+                    resource,
+                    config.get(CONF_NAME, response[CONF_NAME]),
+                    var_data.get(CONF_NAME, variable),
+                    variable=variable,
+                    unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
+                    renderer=renderer))
 
     if pins is not None:
         for pinnum, pin in pins.items():
             renderer = make_renderer(pin.get(CONF_VALUE_TEMPLATE))
-            dev.append(ArestSensor(
-                ArestData(resource, pinnum), resource,
-                config.get(CONF_NAME, response[CONF_NAME]), pin.get(CONF_NAME),
-                pin=pinnum, unit_of_measurement=pin.get(
-                    CONF_UNIT_OF_MEASUREMENT), renderer=renderer))
+            dev.append(
+                ArestSensor(
+                    ArestData(resource, pinnum),
+                    resource,
+                    config.get(CONF_NAME, response[CONF_NAME]),
+                    pin.get(CONF_NAME),
+                    pin=pinnum,
+                    unit_of_measurement=pin.get(CONF_UNIT_OF_MEASUREMENT),
+                    renderer=renderer))
 
     add_devices(dev, True)
 
@@ -108,8 +125,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ArestSensor(Entity):
     """Implementation of an aREST sensor for exposed variables."""
 
-    def __init__(self, arest, resource, location, name, variable=None,
-                 pin=None, unit_of_measurement=None, renderer=None):
+    def __init__(self,
+                 arest,
+                 resource,
+                 location,
+                 name,
+                 variable=None,
+                 pin=None,
+                 unit_of_measurement=None,
+                 renderer=None):
         """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
@@ -178,12 +202,15 @@ class ArestData(object):
             else:
                 try:
                     if str(self._pin[0]) == 'A':
-                        response = requests.get('{}/analog/{}'.format(
-                            self._resource, self._pin[1:]), timeout=10)
+                        response = requests.get(
+                            '{}/analog/{}'.format(self._resource,
+                                                  self._pin[1:]),
+                            timeout=10)
                         self.data = {'value': response.json()['return_value']}
                 except TypeError:
-                    response = requests.get('{}/digital/{}'.format(
-                        self._resource, self._pin), timeout=10)
+                    response = requests.get(
+                        '{}/digital/{}'.format(self._resource, self._pin),
+                        timeout=10)
                     self.data = {'value': response.json()['return_value']}
             self.available = True
         except requests.exceptions.ConnectionError:

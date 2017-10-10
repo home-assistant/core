@@ -7,8 +7,8 @@ https://home-assistant.io/components/tellduslive/
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME,
+                                 EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -31,17 +31,24 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(seconds=5)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PUBLIC_KEY): cv.string,
-        vol.Required(CONF_PRIVATE_KEY): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_TOKEN_SECRET): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
-    }),
-}, extra=vol.ALLOW_EXTRA)
-
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_PUBLIC_KEY):
+            cv.string,
+            vol.Required(CONF_PRIVATE_KEY):
+            cv.string,
+            vol.Required(CONF_TOKEN):
+            cv.string,
+            vol.Required(CONF_TOKEN_SECRET):
+            cv.string,
+            vol.Optional(
+                CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+            (vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 ATTR_LAST_UPDATED = 'time_last_updated'
 
@@ -84,10 +91,7 @@ class TelldusLiveClient(object):
         self._interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
         _LOGGER.debug('Update interval %s', self._interval)
 
-        self._client = Client(public_key,
-                              private_key,
-                              token,
-                              token_secret)
+        self._client = Client(public_key, private_key, token, token_secret)
 
     def validate_session(self):
         """Make a request to see if the session is valid."""
@@ -100,8 +104,8 @@ class TelldusLiveClient(object):
         try:
             self._sync()
         finally:
-            track_point_in_utc_time(
-                self._hass, self.update, utcnow() + self._interval)
+            track_point_in_utc_time(self._hass, self.update,
+                                    utcnow() + self._interval)
 
     def _sync(self):
         """Update local list of devices."""
@@ -117,14 +121,14 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
-            _LOGGER.warning(
-                "Unidentified device type (methods: %d)", device.methods)
+            _LOGGER.warning("Unidentified device type (methods: %d)",
+                            device.methods)
             return 'switch'
 
         def discover(device_id, component):
             """Discover the component."""
-            discovery.load_platform(
-                self._hass, component, DOMAIN, [device_id], self._config)
+            discovery.load_platform(self._hass, component, DOMAIN, [device_id],
+                                    self._config)
 
         known_ids = {entity.device_id for entity in self.entities}
         for device in self._client.devices:
@@ -135,8 +139,7 @@ class TelldusLiveClient(object):
                     discover((device.device_id, item.name, item.scale),
                              'sensor')
             else:
-                discover(device.device_id,
-                         identify_device(device))
+                discover(device.device_id, identify_device(device))
 
         for entity in self.entities:
             entity.changed()

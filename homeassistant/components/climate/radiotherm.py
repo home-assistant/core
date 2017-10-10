@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
-    ClimateDevice, PLATFORM_SCHEMA)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF, ClimateDevice,
+    PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 
@@ -30,12 +30,16 @@ DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
-    vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
-                 default=DEFAULT_AWAY_TEMPERATURE_HEAT): vol.Coerce(float),
-    vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
-                 default=DEFAULT_AWAY_TEMPERATURE_COOL): vol.Coerce(float),
+    vol.Optional(CONF_HOST):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_HOLD_TEMP, default=False):
+    cv.boolean,
+    vol.Optional(
+        CONF_AWAY_TEMPERATURE_HEAT, default=DEFAULT_AWAY_TEMPERATURE_HEAT):
+    vol.Coerce(float),
+    vol.Optional(
+        CONF_AWAY_TEMPERATURE_COOL, default=DEFAULT_AWAY_TEMPERATURE_COOL):
+    vol.Coerce(float),
 })
 
 

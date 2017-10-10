@@ -22,7 +22,8 @@ DEFAULT_NAME = 'Moon'
 ICON = 'mdi:brightness-3'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 

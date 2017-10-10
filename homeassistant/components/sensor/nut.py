@@ -74,7 +74,7 @@ SENSOR_TYPES = {
     'battery.charge.restart': ['Minimum Battery to Start', '%', 'mdi:gauge'],
     'battery.charge.warning': ['Warning Battery Setpoint', '%', 'mdi:gauge'],
     'battery.charger.status':
-        ['Charging Status', '', 'mdi:information-outline'],
+    ['Charging Status', '', 'mdi:information-outline'],
     'battery.voltage': ['Battery Voltage', 'V', 'mdi:flash'],
     'battery.voltage.nominal': ['Nominal Battery Voltage', 'V', 'mdi:flash'],
     'battery.voltage.low': ['Low Battery Voltage', 'V', 'mdi:flash'],
@@ -83,25 +83,29 @@ SENSOR_TYPES = {
     'battery.current': ['Battery Current', 'A', 'mdi:flash'],
     'battery.current.total': ['Total Battery Current', 'A', 'mdi:flash'],
     'battery.temperature':
-        ['Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    ['Battery Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'battery.runtime': ['Battery Runtime', 's', 'mdi:timer'],
     'battery.runtime.low': ['Low Battery Runtime', 's', 'mdi:timer'],
     'battery.runtime.restart':
-        ['Minimum Battery Runtime to Start', 's', 'mdi:timer'],
-    'battery.alarm.threshold':
-        ['Battery Alarm Threshold', '', 'mdi:information-outline'],
+    ['Minimum Battery Runtime to Start', 's', 'mdi:timer'],
+    'battery.alarm.threshold': [
+        'Battery Alarm Threshold', '', 'mdi:information-outline'
+    ],
     'battery.date': ['Battery Date', '', 'mdi:calendar'],
     'battery.mfr.date': ['Battery Manuf. Date', '', 'mdi:calendar'],
     'battery.packs': ['Number of Batteries', '', 'mdi:information-outline'],
-    'battery.packs.bad':
-        ['Number of Bad Batteries', '', 'mdi:information-outline'],
+    'battery.packs.bad': [
+        'Number of Bad Batteries', '', 'mdi:information-outline'
+    ],
     'battery.type': ['Battery Chemistry', '', 'mdi:information-outline'],
-    'input.sensitivity':
-        ['Input Power Sensitivity', '', 'mdi:information-outline'],
+    'input.sensitivity': [
+        'Input Power Sensitivity', '', 'mdi:information-outline'
+    ],
     'input.transfer.low': ['Low Voltage Transfer', 'V', 'mdi:flash'],
     'input.transfer.high': ['High Voltage Transfer', 'V', 'mdi:flash'],
-    'input.transfer.reason':
-        ['Voltage Transfer Reason', '', 'mdi:information-outline'],
+    'input.transfer.reason': [
+        'Voltage Transfer Reason', '', 'mdi:information-outline'
+    ],
     'input.voltage': ['Input Voltage', 'V', 'mdi:flash'],
     'input.voltage.nominal': ['Nominal Input Voltage', 'V', 'mdi:flash'],
 }
@@ -123,14 +127,20 @@ STATE_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ALIAS, default=None): cv.string,
-    vol.Optional(CONF_USERNAME, default=None): cv.string,
-    vol.Optional(CONF_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_ALIAS, default=None):
+    cv.string,
+    vol.Optional(CONF_USERNAME, default=None):
+    cv.string,
+    vol.Optional(CONF_PASSWORD, default=None):
+    cv.string,
     vol.Required(CONF_RESOURCES, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
@@ -254,8 +264,8 @@ class PyNUTData(object):
         self.pynuterror = PyNUTError
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
-        self._client = PyNUTClient(self._host, self._port,
-                                   self._username, self._password, 5, False)
+        self._client = PyNUTClient(self._host, self._port, self._username,
+                                   self._password, 5, False)
 
         self._status = None
 
@@ -281,8 +291,8 @@ class PyNUTData(object):
         try:
             return self._client.list_vars(self._alias)
         except (self.pynuterror, ConnectionResetError) as err:
-            _LOGGER.debug(
-                "Error getting NUT vars for host %s: %s", self._host, err)
+            _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host,
+                          err)
             return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

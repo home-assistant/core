@@ -14,9 +14,9 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
     MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
-    CONF_PORT)
+from homeassistant.const import (STATE_OFF, STATE_IDLE, STATE_PAUSED,
+                                 STATE_PLAYING, CONF_NAME, CONF_HOST,
+                                 CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +29,12 @@ SUPPORT_MPCHC = SUPPORT_VOLUME_MUTE | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -62,8 +65,8 @@ class MpcHcDevice(MediaPlayerDevice):
             response = requests.get(
                 '{}/variables.html'.format(self._url), data=None, timeout=3)
 
-            mpchc_variables = re.findall(
-                r'<p id="(.+?)">(.+?)</p>', response.text)
+            mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>',
+                                         response.text)
 
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()
@@ -74,8 +77,8 @@ class MpcHcDevice(MediaPlayerDevice):
         """Send a command to MPC-HC via its window message ID."""
         try:
             params = {"wm_command": command_id}
-            requests.get("{}/command.html".format(self._url),
-                         params=params, timeout=3)
+            requests.get(
+                "{}/command.html".format(self._url), params=params, timeout=3)
         except requests.exceptions.RequestException:
             _LOGGER.error("Could not send command %d to MPC-HC at: %s",
                           command_id, self._url)
@@ -117,8 +120,8 @@ class MpcHcDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Return the duration of the current playing media in seconds."""
-        duration = self._player_variables.get(
-            'durationstring', "00:00:00").split(':')
+        duration = self._player_variables.get('durationstring',
+                                              "00:00:00").split(':')
         return \
             int(duration[0]) * 3600 + \
             int(duration[1]) * 60 + \

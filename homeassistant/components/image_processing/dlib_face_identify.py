@@ -24,7 +24,9 @@ ATTR_NAME = 'name'
 CONF_FACES = 'faces'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FACES): {cv.string: cv.isfile},
+    vol.Required(CONF_FACES): {
+        cv.string: cv.isfile
+    },
 })
 
 
@@ -32,9 +34,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dlib Face detection platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(DlibFaceIdentifyEntity(
-            camera[CONF_ENTITY_ID], config[CONF_FACES], camera.get(CONF_NAME)
-        ))
+        entities.append(
+            DlibFaceIdentifyEntity(camera[CONF_ENTITY_ID], config[CONF_FACES],
+                                   camera.get(CONF_NAME)))
 
     add_devices(entities)
 
@@ -92,8 +94,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
             for name, face in self._faces.items():
                 result = face_recognition.compare_faces([face], unknown_face)
                 if result[0]:
-                    found.append({
-                        ATTR_NAME: name
-                    })
+                    found.append({ATTR_NAME: name})
 
         self.process_faces(found, len(unknowns))

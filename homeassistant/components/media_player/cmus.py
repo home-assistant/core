@@ -8,15 +8,14 @@ import logging
 
 import voluptuous as vol
 
-
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_SEEK, PLATFORM_SCHEMA,
     MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME, CONF_PORT,
-    CONF_PASSWORD)
+from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+                                 CONF_HOST, CONF_NAME, CONF_PORT,
+                                 CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pycmus==0.1.0']
@@ -31,10 +30,14 @@ SUPPORT_CMUS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF |  \
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Inclusive(CONF_HOST, 'remote'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'remote'): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Inclusive(CONF_HOST, 'remote'):
+    cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'remote'):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -144,7 +147,7 @@ class CmusDevice(MediaPlayerDevice):
             volume = float(left + right) / 2
         else:
             volume = left
-        return int(volume)/100
+        return int(volume) / 100
 
     @property
     def supported_features(self):

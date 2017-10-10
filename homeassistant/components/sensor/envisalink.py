@@ -28,9 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         device = EnvisalinkSensor(
-            hass,
-            device_config_data[CONF_PARTITIONNAME],
-            part_num,
+            hass, device_config_data[CONF_PARTITIONNAME], part_num,
             hass.data[DATA_EVL].alarm_state['partition'][part_num],
             hass.data[DATA_EVL])
         devices.append(device)
@@ -53,10 +51,10 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_KEYPAD_UPDATE,
+                                 self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_PARTITION_UPDATE,
+                                 self._update_callback)
 
     @property
     def icon(self):

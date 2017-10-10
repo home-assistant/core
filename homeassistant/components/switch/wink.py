@@ -34,12 +34,12 @@ ATTR_ENABLED = "enabled"
 ATTR_AUTO_SHUTOFF = "auto_shutoff"
 
 VOLUMES = ["low", "medium", "high"]
-TONES = ["doorbell", "fur_elise", "doorbell_extended", "alert",
-         "william_tell", "rondo_alla_turca", "police_siren",
-         "evacuation", "beep_beep", "beep"]
+TONES = [
+    "doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell",
+    "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep"
+]
 CHIME_TONES = TONES + ["inactive"]
 AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
-
 
 SET_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -47,23 +47,31 @@ SET_VOLUME_SCHEMA = vol.Schema({
 })
 
 SET_SIREN_TONE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(TONES)
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_TONE):
+    vol.In(TONES)
 })
 
 SET_CHIME_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(CHIME_TONES)
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_TONE):
+    vol.In(CHIME_TONES)
 })
 
 SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_AUTO_SHUTOFF):
+    vol.In(AUTO_SHUTOFF_TIMES)
 })
 
 SET_STROBE_ENABLED_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_ENABLED): cv.boolean
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_ENABLED):
+    cv.boolean
 })
 
 
@@ -133,40 +141,54 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_SIREN_TONE),
-                           schema=SET_SIREN_TONE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_SIREN_TONE,
+        service_handle,
+        descriptions.get(SERVICE_SET_SIREN_TONE),
+        schema=SET_SIREN_TONE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_ENABLE_CHIME,
-                           service_handle,
-                           descriptions.get(SERVICE_ENABLE_CHIME),
-                           schema=SET_CHIME_MODE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_ENABLE_CHIME,
+        service_handle,
+        descriptions.get(SERVICE_ENABLE_CHIME),
+        schema=SET_CHIME_MODE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_SIREN_VOLUME,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_SIREN_VOLUME),
-                           schema=SET_VOLUME_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_SIREN_VOLUME,
+        service_handle,
+        descriptions.get(SERVICE_SET_SIREN_VOLUME),
+        schema=SET_VOLUME_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_CHIME_VOLUME,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_CHIME_VOLUME),
-                           schema=SET_VOLUME_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_CHIME_VOLUME,
+        service_handle,
+        descriptions.get(SERVICE_SET_CHIME_VOLUME),
+        schema=SET_VOLUME_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_SIREN_STROBE_ENABLED,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_SIREN_STROBE_ENABLED),
-                           schema=SET_STROBE_ENABLED_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_SIREN_STROBE_ENABLED,
+        service_handle,
+        descriptions.get(SERVICE_SET_SIREN_STROBE_ENABLED),
+        schema=SET_STROBE_ENABLED_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_CHIME_STROBE_ENABLED,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_CHIME_STROBE_ENABLED),
-                           schema=SET_STROBE_ENABLED_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_CHIME_STROBE_ENABLED,
+        service_handle,
+        descriptions.get(SERVICE_SET_CHIME_STROBE_ENABLED),
+        schema=SET_STROBE_ENABLED_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_SIREN_AUTO_SHUTOFF,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_SIREN_AUTO_SHUTOFF),
-                           schema=SET_AUTO_SHUTOFF_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_SIREN_AUTO_SHUTOFF,
+        service_handle,
+        descriptions.get(SERVICE_SET_SIREN_AUTO_SHUTOFF),
+        schema=SET_AUTO_SHUTOFF_SCHEMA)
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):

@@ -32,10 +32,14 @@ DEFAULT_IPV6 = False
 SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-    vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
-    vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
+    vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME):
+    cv.string,
+    vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER):
+    cv.string,
+    vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6):
+    cv.string,
+    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6):
+    cv.boolean,
 })
 
 
@@ -49,8 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         resolver = config.get(CONF_RESOLVER)
 
-    async_add_devices([WanIpSensor(
-        hass, hostname, resolver, ipv6)], True)
+    async_add_devices([WanIpSensor(hass, hostname, resolver, ipv6)], True)
 
 
 class WanIpSensor(Entity):

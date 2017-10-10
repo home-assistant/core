@@ -26,12 +26,18 @@ PIN_FUNCTION_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_FUNCTION_SCHEMA}),
+    vol.Schema({
+        cv.string: PIN_FUNCTION_SCHEMA
+    }),
     vol.Optional(CONF_FUNCTIONS, default={}):
-        vol.Schema({cv.string: PIN_FUNCTION_SCHEMA}),
+    vol.Schema({
+        cv.string: PIN_FUNCTION_SCHEMA
+    }),
 })
 
 
@@ -52,15 +58,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     pins = config.get(CONF_PINS)
     for pinnum, pin in pins.items():
-        dev.append(ArestSwitchPin(
-            resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
-            pin.get(CONF_NAME), pinnum))
+        dev.append(
+            ArestSwitchPin(resource,
+                           config.get(CONF_NAME, response.json()[CONF_NAME]),
+                           pin.get(CONF_NAME), pinnum))
 
     functions = config.get(CONF_FUNCTIONS)
     for funcname, func in functions.items():
-        dev.append(ArestSwitchFunction(
-            resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
-            func.get(CONF_NAME), funcname))
+        dev.append(
+            ArestSwitchFunction(resource,
+                                config.get(CONF_NAME,
+                                           response.json()[CONF_NAME]),
+                                func.get(CONF_NAME), funcname))
 
     add_devices(dev)
 
@@ -116,26 +125,28 @@ class ArestSwitchFunction(ArestSwitchBase):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10,
+            '{}/{}'.format(self._resource, self._func),
+            timeout=10,
             params={'params': '1'})
 
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error(
-                "Can't turn on function %s at %s", self._func, self._resource)
+            _LOGGER.error("Can't turn on function %s at %s", self._func,
+                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10,
+            '{}/{}'.format(self._resource, self._func),
+            timeout=10,
             params={'params': '0'})
 
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error(
-                "Can't turn off function %s at %s", self._func, self._resource)
+            _LOGGER.error("Can't turn off function %s at %s", self._func,
+                          self._resource)
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
@@ -170,8 +181,8 @@ class ArestSwitchPin(ArestSwitchBase):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error(
-                "Can't turn on pin %s at %s", self._pin, self._resource)
+            _LOGGER.error("Can't turn on pin %s at %s", self._pin,
+                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -180,8 +191,8 @@ class ArestSwitchPin(ArestSwitchBase):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error(
-                "Can't turn off pin %s at %s", self._pin, self._resource)
+            _LOGGER.error("Can't turn off pin %s at %s", self._pin,
+                          self._resource)
 
     def update(self):
         """Get the latest data from aREST API and update the state."""

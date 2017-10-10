@@ -14,9 +14,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN,
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 EVENT_HOMEASSISTANT_START)
 
 REQUIREMENTS = ['beacontools[scan]==1.0.1']
 
@@ -34,8 +34,12 @@ BEACON_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
-    vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
+    vol.Optional(CONF_BT_DEVICE_ID, default=0):
+    cv.positive_int,
+    vol.Required(CONF_BEACONS):
+    vol.Schema({
+        cv.string: BEACON_SCHEMA
+    }),
 })
 
 
@@ -84,7 +88,8 @@ def get_from_conf(config, config_key, length):
     string = config.get(config_key)
     if len(string) != length:
         _LOGGER.error("Error in config parameter %s: Must be exactly %d "
-                      "bytes. Device will not be added", config_key, length/2)
+                      "bytes. Device will not be added", config_key,
+                      length / 2)
         return None
     return string
 
@@ -135,18 +140,19 @@ class Monitor(object):
 
         def callback(bt_addr, _, packet, additional_info):
             """Handle new packets."""
-            self.process_packet(
-                additional_info['namespace'], additional_info['instance'],
-                packet.temperature)
+            self.process_packet(additional_info['namespace'],
+                                additional_info['instance'],
+                                packet.temperature)
 
         # pylint: disable=import-error
-        from beacontools import (
-            BeaconScanner, EddystoneFilter, EddystoneTLMFrame)
-        device_filters = [EddystoneFilter(d.namespace, d.instance)
-                          for d in devices]
+        from beacontools import (BeaconScanner, EddystoneFilter,
+                                 EddystoneTLMFrame)
+        device_filters = [
+            EddystoneFilter(d.namespace, d.instance) for d in devices
+        ]
 
-        self.scanner = BeaconScanner(
-            callback, bt_device_id, device_filters, EddystoneTLMFrame)
+        self.scanner = BeaconScanner(callback, bt_device_id, device_filters,
+                                     EddystoneTLMFrame)
         self.scanning = False
 
     def start(self):
@@ -155,13 +161,12 @@ class Monitor(object):
             self.scanner.start()
             self.scanning = True
         else:
-            _LOGGER.debug(
-                "start() called, but scanner is already running")
+            _LOGGER.debug("start() called, but scanner is already running")
 
     def process_packet(self, namespace, instance, temperature):
         """Assign temperature to device."""
-        _LOGGER.debug("Received temperature for <%s,%s>: %d",
-                      namespace, instance, temperature)
+        _LOGGER.debug("Received temperature for <%s,%s>: %d", namespace,
+                      instance, temperature)
 
         for dev in self.devices:
             if dev.namespace == namespace and dev.instance == instance:
@@ -177,5 +182,4 @@ class Monitor(object):
             _LOGGER.debug("Stopped")
             self.scanning = False
         else:
-            _LOGGER.debug(
-                "stop() called but scanner was not running")
+            _LOGGER.debug("stop() called but scanner was not running")

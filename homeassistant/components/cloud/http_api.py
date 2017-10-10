@@ -6,8 +6,8 @@ import logging
 import voluptuous as vol
 import async_timeout
 
-from homeassistant.components.http import (
-    HomeAssistantView, RequestDataValidator)
+from homeassistant.components.http import (HomeAssistantView,
+                                           RequestDataValidator)
 
 from . import auth_api
 from .const import REQUEST_TIMEOUT
@@ -40,6 +40,7 @@ _CLOUD_ERRORS = {
 
 def _handle_cloud_errors(handler):
     """Helper method to handle auth errors."""
+
     @asyncio.coroutine
     @wraps(handler)
     def error_handler(view, request, *args, **kwargs):
@@ -53,8 +54,8 @@ def _handle_cloud_errors(handler):
             if err_info is None:
                 err_info = (502, 'Unexpected error: {}'.format(err))
             status, msg = err_info
-            return view.json_message(msg, status_code=status,
-                                     message_code=err.__class__.__name__)
+            return view.json_message(
+                msg, status_code=status, message_code=err.__class__.__name__)
 
     return error_handler
 
@@ -67,10 +68,11 @@ class CloudLoginView(HomeAssistantView):
 
     @asyncio.coroutine
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('email'): str,
-        vol.Required('password'): str,
-    }))
+    @RequestDataValidator(
+        vol.Schema({
+            vol.Required('email'): str,
+            vol.Required('password'): str,
+        }))
     def post(self, request, data):
         """Handle login request."""
         hass = request.app['hass']
@@ -128,17 +130,18 @@ class CloudRegisterView(HomeAssistantView):
 
     @asyncio.coroutine
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('email'): str,
-        vol.Required('password'): vol.All(str, vol.Length(min=6)),
-    }))
+    @RequestDataValidator(
+        vol.Schema({
+            vol.Required('email'): str,
+            vol.Required('password'): vol.All(str, vol.Length(min=6)),
+        }))
     def post(self, request, data):
         """Handle registration request."""
         hass = request.app['hass']
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.register, hass, data['email'], data['password'])
+            yield from hass.async_add_job(auth_api.register, hass,
+                                          data['email'], data['password'])
 
         return self.json_message('ok')
 
@@ -151,18 +154,19 @@ class CloudConfirmRegisterView(HomeAssistantView):
 
     @asyncio.coroutine
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-    }))
+    @RequestDataValidator(
+        vol.Schema({
+            vol.Required('confirmation_code'): str,
+            vol.Required('email'): str,
+        }))
     def post(self, request, data):
         """Handle registration confirmation request."""
         hass = request.app['hass']
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_register, hass, data['confirmation_code'],
-                data['email'])
+            yield from hass.async_add_job(auth_api.confirm_register, hass,
+                                          data['confirmation_code'],
+                                          data['email'])
 
         return self.json_message('ok')
 
@@ -183,8 +187,8 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app['hass']
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.forgot_password, hass, data['email'])
+            yield from hass.async_add_job(auth_api.forgot_password, hass,
+                                          data['email'])
 
         return self.json_message('ok')
 
@@ -197,26 +201,27 @@ class CloudConfirmForgotPasswordView(HomeAssistantView):
 
     @asyncio.coroutine
     @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-        vol.Required('new_password'): vol.All(str, vol.Length(min=6))
-    }))
+    @RequestDataValidator(
+        vol.Schema({
+            vol.Required('confirmation_code'):
+            str,
+            vol.Required('email'):
+            str,
+            vol.Required('new_password'):
+            vol.All(str, vol.Length(min=6))
+        }))
     def post(self, request, data):
         """Handle forgot password confirm request."""
         hass = request.app['hass']
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_forgot_password, hass,
-                data['confirmation_code'], data['email'],
-                data['new_password'])
+            yield from hass.async_add_job(auth_api.confirm_forgot_password,
+                                          hass, data['confirmation_code'],
+                                          data['email'], data['new_password'])
 
         return self.json_message('ok')
 
 
 def _auth_data(auth):
     """Generate the auth data JSON response."""
-    return {
-        'email': auth.account.email
-    }
+    return {'email': auth.account.email}

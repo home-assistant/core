@@ -16,8 +16,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,9 +27,12 @@ CONF_HOME_ID = 'home_id'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HOME_ID): cv.string
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_HOME_ID):
+    cv.string
 })
 
 
@@ -85,8 +88,9 @@ class TadoDeviceScanner(DeviceScanner):
     @asyncio.coroutine
     def async_get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        filter_named = [
+            device.name for device in self.last_results if device.mac == mac
+        ]
 
         if filter_named:
             return filter_named[0]
@@ -108,14 +112,15 @@ class TadoDeviceScanner(DeviceScanner):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
                 url = self.tadoapiurl.format(
-                    home_id=self.home_id, username=self.username,
+                    home_id=self.home_id,
+                    username=self.username,
                     password=self.password)
 
                 response = yield from self.websession.get(url)
 
                 if response.status != 200:
-                    _LOGGER.warning(
-                        "Error %d on %s.", response.status, self.tadoapiurl)
+                    _LOGGER.warning("Error %d on %s.", response.status,
+                                    self.tadoapiurl)
                     return
 
                 tado_json = yield from response.json()
@@ -139,9 +144,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info(
-            "Tado presence query successful, %d device(s) at home",
-            len(self.last_results)
-        )
+        _LOGGER.info("Tado presence query successful, %d device(s) at home",
+                     len(self.last_results))
 
         return True

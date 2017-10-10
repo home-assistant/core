@@ -17,8 +17,10 @@ DEPENDENCIES = ['tesla']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [TeslaLock(device, hass.data[TESLA_DOMAIN]['controller'])
-               for device in hass.data[TESLA_DOMAIN]['devices']['lock']]
+    devices = [
+        TeslaLock(device, hass.data[TESLA_DOMAIN]['controller'])
+        for device in hass.data[TESLA_DOMAIN]['devices']['lock']
+    ]
     add_devices(devices, True)
 
 

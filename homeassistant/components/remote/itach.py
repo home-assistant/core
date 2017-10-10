@@ -11,9 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.remote as remote
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
-    CONF_DEVICES)
+from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC,
+                                 CONF_HOST, CONF_PORT, CONF_DEVICES)
 from homeassistant.components.remote import PLATFORM_SCHEMA
 
 REQUIREMENTS = ['pyitachip2ir==0.0.7']
@@ -29,14 +28,22 @@ CONF_COMMANDS = 'commands'
 CONF_DATA = 'data'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAC): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MODADDR): vol.Coerce(int),
-        vol.Required(CONF_CONNADDR): vol.Coerce(int),
-        vol.Required(CONF_COMMANDS): vol.All(cv.ensure_list, [{
+    vol.Optional(CONF_MAC):
+    cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Required(CONF_DEVICES):
+    vol.All(cv.ensure_list, [{
+        vol.Optional(CONF_NAME):
+        cv.string,
+        vol.Optional(CONF_MODADDR):
+        vol.Coerce(int),
+        vol.Required(CONF_CONNADDR):
+        vol.Coerce(int),
+        vol.Required(CONF_COMMANDS):
+        vol.All(cv.ensure_list, [{
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_DATA): cv.string
         }])

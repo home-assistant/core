@@ -33,7 +33,7 @@ OPTION_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
-        vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
+    vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
 })
 
 
@@ -47,8 +47,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
         device = TimeDateSensor(hass, variable)
-        async_track_point_in_utc_time(
-            hass, device.point_in_time_listener, device.get_next_interval())
+        async_track_point_in_utc_time(hass, device.point_in_time_listener,
+                                      device.get_next_interval())
         devices.append(device)
 
     async_add_devices(devices, True)
@@ -108,8 +108,10 @@ class TimeDateSensor(Entity):
         # Calculate Swatch Internet Time.
         time_bmt = time_date + timedelta(hours=1)
         delta = timedelta(
-            hours=time_bmt.hour, minutes=time_bmt.minute,
-            seconds=time_bmt.second, microseconds=time_bmt.microsecond)
+            hours=time_bmt.hour,
+            minutes=time_bmt.minute,
+            seconds=time_bmt.second,
+            microseconds=time_bmt.microsecond)
         beat = int((delta.seconds + delta.microseconds / 1000000.0) / 86.4)
 
         if self.type == 'time':
@@ -130,5 +132,5 @@ class TimeDateSensor(Entity):
         """Get the latest data and update state."""
         self._update_internal_state(time_date)
         self.async_schedule_update_ha_state()
-        async_track_point_in_utc_time(
-            self.hass, self.point_in_time_listener, self.get_next_interval())
+        async_track_point_in_utc_time(self.hass, self.point_in_time_listener,
+                                      self.get_next_interval())

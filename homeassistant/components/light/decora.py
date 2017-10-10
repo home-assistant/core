@@ -12,8 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.1']
@@ -28,12 +27,15 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
 })
 
 
 def retry(method):
     """Retry bluetooth commands."""
+
     @wraps(method)
     def wrapper_retry(device, *args, **kwds):
         """Try send command and retry on error."""
@@ -53,6 +55,7 @@ def retry(method):
                                 "Reconnecting...", device.name)
                 # pylint: disable=protected-access
                 device._switch.connect()
+
     return wrapper_retry
 
 

@@ -11,9 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_API_KEY,
+                                 CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['TravisPy==0.3.5']
@@ -36,21 +36,22 @@ SENSOR_TYPES = {
     'last_build_started_at': ['Last Build Started At', '', 'mdi:timetable'],
     'last_build_state': ['Last Build State', '', 'mdi:github-circle'],
     'state': ['State', '', 'mdi:github-circle'],
-
 }
 
 NOTIFICATION_ID = 'travisci'
 NOTIFICATION_TITLE = 'Travis CI Sensor Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
+    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME):
+    cv.string,
     vol.Optional(CONF_REPOSITORY, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-        cv.time_period,
+    cv.time_period,
 })
 
 

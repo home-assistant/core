@@ -13,12 +13,14 @@ from homeassistant.const import STATE_ON
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for binary sensors."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsBinarySensor,
+        hass,
+        DOMAIN,
+        discovery_info,
+        MySensorsBinarySensor,
         add_devices=add_devices)
 
 
-class MySensorsBinarySensor(
-        mysensors.MySensorsEntity, BinarySensorDevice):
+class MySensorsBinarySensor(mysensors.MySensorsEntity, BinarySensorDevice):
     """Represent the value of a MySensors Binary Sensor child node."""
 
     @property

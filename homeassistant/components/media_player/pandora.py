@@ -13,11 +13,10 @@ import shutil
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
-    MediaPlayerDevice)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, MediaPlayerDevice)
 from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  STATE_IDLE)
 from homeassistant import util
@@ -32,11 +31,13 @@ PANDORA_SUPPORT = \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-CMD_MAP = {SERVICE_MEDIA_NEXT_TRACK: 'n',
-           SERVICE_MEDIA_PLAY_PAUSE: 'p',
-           SERVICE_MEDIA_PLAY: 'p',
-           SERVICE_VOLUME_UP: ')',
-           SERVICE_VOLUME_DOWN: '('}
+CMD_MAP = {
+    SERVICE_MEDIA_NEXT_TRACK: 'n',
+    SERVICE_MEDIA_PLAY_PAUSE: 'p',
+    SERVICE_MEDIA_PLAY: 'p',
+    SERVICE_VOLUME_UP: ')',
+    SERVICE_VOLUME_DOWN: '('
+}
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2)
 CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
                                   re.MULTILINE)
@@ -98,9 +99,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             return
         self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info("Started pianobar subprocess")
-        mode = self._pianobar.expect(['Receiving new playlist',
-                                      'Select station:',
-                                      'Email:'])
+        mode = self._pianobar.expect(
+            ['Receiving new playlist', 'Select station:', 'Email:'])
         if mode == 1:
             # station list was presented. dismiss it.
             self._pianobar.sendcontrol('m')
@@ -237,10 +237,10 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._clear_buffer()
         self._pianobar.send('i')
         try:
-            match_idx = self._pianobar.expect([br'(\d\d):(\d\d)/(\d\d):(\d\d)',
-                                               'No song playing',
-                                               'Select station',
-                                               'Receiving new playlist'])
+            match_idx = self._pianobar.expect([
+                br'(\d\d):(\d\d)/(\d\d):(\d\d)', 'No song playing',
+                'Select station', 'Receiving new playlist'
+            ])
         except pexpect.exceptions.EOF:
             _LOGGER.info("Pianobar process already exited")
             return None
@@ -290,13 +290,13 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         so we have to detect state by checking the ticker.
 
         """
-        (cur_minutes, cur_seconds,
-         total_minutes, total_seconds) = self._pianobar.match.groups()
+        (cur_minutes, cur_seconds, total_minutes,
+         total_seconds) = self._pianobar.match.groups()
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if (time_remaining != self._time_remaining and
-                time_remaining != self._media_duration):
+        if (time_remaining != self._time_remaining
+                and time_remaining != self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
             self._player_state = STATE_PAUSED
@@ -306,14 +306,13 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         """Log grabbed values from console."""
         _LOGGER.debug("Before: %s\nMatch: %s\nAfter: %s",
                       repr(self._pianobar.before),
-                      repr(self._pianobar.match),
-                      repr(self._pianobar.after))
+                      repr(self._pianobar.match), repr(self._pianobar.after))
 
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
-        _LOGGER.debug(
-            "Sending pinaobar command %s for %s", command, service_cmd)
+        _LOGGER.debug("Sending pinaobar command %s for %s", command,
+                      service_cmd)
         if command is None:
             _LOGGER.info("Command %s not supported yet", service_cmd)
         self._clear_buffer()

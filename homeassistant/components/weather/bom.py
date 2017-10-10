@@ -19,8 +19,10 @@ from homeassistant.components.sensor.bom import \
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_STATION): validate_station,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_STATION):
+    validate_station,
 })
 
 
@@ -28,8 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BOM weather platform."""
     station = config.get(CONF_STATION) or closest_station(
         config.get(CONF_LATITUDE),
-        config.get(CONF_LONGITUDE),
-        hass.config.config_dir)
+        config.get(CONF_LONGITUDE), hass.config.config_dir)
     if station is None:
         _LOGGER.error("Could not get BOM weather station from lat/lon")
         return False
@@ -94,10 +95,10 @@ class BOMWeather(WeatherEntity):
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        directions = ['N', 'NNE', 'NE', 'ENE',
-                      'E', 'ESE', 'SE', 'SSE',
-                      'S', 'SSW', 'SW', 'WSW',
-                      'W', 'WNW', 'NW', 'NNW']
+        directions = [
+            'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
+            'WSW', 'W', 'WNW', 'NW', 'NNW'
+        ]
         wind = {name: idx * 360 / 16 for idx, name in enumerate(directions)}
         return wind.get(self.bom_data.data.get('wind_dir'))
 

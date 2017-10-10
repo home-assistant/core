@@ -8,12 +8,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
-
 DATA_KEY = 'intent'
 _LOGGER = logging.getLogger(__name__)
 
-SLOT_SCHEMA = vol.Schema({
-}, extra=vol.ALLOW_EXTRA)
+SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 SPEECH_TYPE_PLAIN = 'plain'
 SPEECH_TYPE_SSML = 'ssml'
@@ -100,8 +98,11 @@ class IntentHandler:
 
         if self._slot_schema is None:
             self._slot_schema = vol.Schema({
-                key: SLOT_SCHEMA.extend({'value': validator})
-                for key, validator in self.slot_schema.items()})
+                key: SLOT_SCHEMA.extend({
+                    'value': validator
+                })
+                for key, validator in self.slot_schema.items()
+            })
 
         return self._slot_schema(slots)
 

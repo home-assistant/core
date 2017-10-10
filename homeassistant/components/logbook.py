@@ -33,20 +33,27 @@ CONF_INCLUDE = 'include'
 CONF_ENTITIES = 'entities'
 CONF_DOMAINS = 'domains'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        CONF_EXCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            CONF_EXCLUDE:
+            vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]):
+                cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+            }),
+            CONF_INCLUDE:
+            vol.Schema({
+                vol.Optional(CONF_ENTITIES, default=[]):
+                cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
+            })
         }),
-        CONF_INCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
-        })
-    }),
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA)
 
 GROUP_BY_MINUTES = 15
 
@@ -72,10 +79,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 def async_log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
-    data = {
-        ATTR_NAME: name,
-        ATTR_MESSAGE: message
-    }
+    data = {ATTR_NAME: name, ATTR_MESSAGE: message}
 
     if domain is not None:
         data[ATTR_DOMAIN] = domain
@@ -86,6 +90,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """Listen for download events to download files."""
+
     @callback
     def log_message(service):
         """Handle sending notification message service calls."""
@@ -100,8 +105,8 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    register_built_in_panel(
-        hass, 'logbook', 'Logbook', 'mdi:format-list-bulleted-type')
+    register_built_in_panel(hass, 'logbook', 'Logbook',
+                            'mdi:format-list-bulleted-type')
 
     hass.services.register(
         DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
@@ -134,8 +139,8 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.async_add_job(
-            _get_events, hass, start_day, end_day)
+        events = yield from hass.async_add_job(_get_events, hass, start_day,
+                                               end_day)
         events = _exclude_events(events, self.config)
         return self.json(humanify(events))
 
@@ -143,7 +148,11 @@ class LogbookView(HomeAssistantView):
 class Entry(object):
     """A human readable version of the log."""
 
-    def __init__(self, when=None, name=None, message=None, domain=None,
+    def __init__(self,
+                 when=None,
+                 name=None,
+                 message=None,
+                 domain=None,
                  entity_id=None):
         """Initialize the entry."""
         self.when = when
@@ -172,8 +181,7 @@ def humanify(events):
     """
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
-            events,
-            lambda event: event.time_fired.minute // GROUP_BY_MINUTES):
+            events, lambda event: event.time_fired.minute // GROUP_BY_MINUTES):
 
         events_batch = list(g_events)
 
@@ -192,8 +200,9 @@ def humanify(events):
                 if entity_id is None:
                     continue
 
-                if entity_id.startswith(tuple('{}.'.format(
-                        domain) for domain in CONTINUOUS_DOMAINS)):
+                if entity_id.startswith(
+                        tuple('{}.'.format(domain)
+                              for domain in CONTINUOUS_DOMAINS)):
                     last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -246,7 +255,9 @@ def humanify(events):
                     continue
 
                 yield Entry(
-                    event.time_fired, "Home Assistant", "started",
+                    event.time_fired,
+                    "Home Assistant",
+                    "started",
                     domain=HA_DOMAIN)
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -256,7 +267,9 @@ def humanify(events):
                     action = "stopped"
 
                 yield Entry(
-                    event.time_fired, "Home Assistant", action,
+                    event.time_fired,
+                    "Home Assistant",
+                    action,
                     domain=HA_DOMAIN)
 
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
@@ -268,23 +281,19 @@ def humanify(events):
                     except IndexError:
                         pass
 
-                yield Entry(
-                    event.time_fired, event.data.get(ATTR_NAME),
-                    event.data.get(ATTR_MESSAGE), domain,
-                    entity_id)
+                yield Entry(event.time_fired,
+                            event.data.get(ATTR_NAME),
+                            event.data.get(ATTR_MESSAGE), domain, entity_id)
 
 
 def _get_events(hass, start_day, end_day):
     """Get events for a period of time."""
     from homeassistant.components.recorder.models import Events
-    from homeassistant.components.recorder.util import (
-        execute, session_scope)
+    from homeassistant.components.recorder.util import (execute, session_scope)
 
     with session_scope(hass=hass) as session:
-        query = session.query(Events).order_by(
-            Events.time_fired).filter(
-                (Events.time_fired > start_day) &
-                (Events.time_fired < end_day))
+        query = session.query(Events).order_by(Events.time_fired).filter(
+            (Events.time_fired > start_day) & (Events.time_fired < end_day))
         return execute(query)
 
 

@@ -28,11 +28,13 @@ EVENT_FEEDREADER = 'feedreader'
 
 MAX_ENTRIES = 20
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
-    }
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
+        }
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -56,8 +58,8 @@ class FeedManager(object):
         self._storage = storage
         self._last_entry_timestamp = None
         self._has_published_parsed = False
-        hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_START, lambda _: self._update())
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                             lambda _: self._update())
         track_utc_time_change(
             hass, lambda now: self._update(), minute=0, second=0)
 
@@ -69,11 +71,10 @@ class FeedManager(object):
         """Update the feed and publish new entries to the event bus."""
         import feedparser
         _LOGGER.info("Fetching new data from feed %s", self._url)
-        self._feed = feedparser.parse(self._url,
-                                      etag=None if not self._feed
-                                      else self._feed.get('etag'),
-                                      modified=None if not self._feed
-                                      else self._feed.get('modified'))
+        self._feed = feedparser.parse(
+            self._url,
+            etag=None if not self._feed else self._feed.get('etag'),
+            modified=None if not self._feed else self._feed.get('modified'))
         if not self._feed:
             _LOGGER.error("Error fetching feed data from %s", self._url)
         else:
@@ -90,8 +91,8 @@ class FeedManager(object):
                     self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
                 self._publish_new_entries()
                 if self._has_published_parsed:
-                    self._storage.put_timestamp(
-                        self._url, self._last_entry_timestamp)
+                    self._storage.put_timestamp(self._url,
+                                                self._last_entry_timestamp)
             else:
                 self._log_no_entries()
         _LOGGER.info("Fetch from feed %s completed", self._url)
@@ -102,8 +103,8 @@ class FeedManager(object):
         # it to publish only new available entries since the last run
         if 'published_parsed' in entry.keys():
             self._has_published_parsed = True
-            self._last_entry_timestamp = max(
-                entry.published_parsed, self._last_entry_timestamp)
+            self._last_entry_timestamp = max(entry.published_parsed,
+                                             self._last_entry_timestamp)
         else:
             self._has_published_parsed = False
             _LOGGER.debug("No published_parsed info available for entry %s",
@@ -123,8 +124,8 @@ class FeedManager(object):
                 datetime.utcfromtimestamp(0).timetuple()
         for entry in self._feed.entries:
             if self._firstrun or (
-                    'published_parsed' in entry.keys() and
-                    entry.published_parsed > self._last_entry_timestamp):
+                    'published_parsed' in entry.keys()
+                    and entry.published_parsed > self._last_entry_timestamp):
                 self._update_and_fire_entry(entry)
                 new_entries = True
             else:
@@ -174,6 +175,6 @@ class StoredData(object):
                 pickle.dump(self._data, myfile)
             # pylint: disable=bare-except
             except:
-                _LOGGER.error(
-                    "Error saving pickled data to %s", self._data_file)
+                _LOGGER.error("Error saving pickled data to %s",
+                              self._data_file)
         self._cache_outdated = True

@@ -26,10 +26,14 @@ DEFAULT_PASSWORD = 'ubnt'
 DEFAULT_PORT = 7080
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NVR): cv.string,
-    vol.Required(CONF_KEY): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_NVR):
+    cv.string,
+    vol.Required(CONF_KEY):
+    cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -59,13 +63,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # version of UnifiVideo and which are EOL by Ubiquiti
     cameras = [
         camera for camera in cameras
-        if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']]
+        if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']
+    ]
 
-    add_devices([UnifiVideoCamera(nvrconn,
-                                  camera[identifier],
-                                  camera['name'],
-                                  password)
-                 for camera in cameras])
+    add_devices([
+        UnifiVideoCamera(nvrconn, camera[identifier], camera['name'], password)
+        for camera in cameras
+    ])
     return True
 
 
@@ -123,8 +127,7 @@ class UnifiVideoCamera(Camera):
         camera = None
         for addr in addrs:
             try:
-                camera = client_cls(
-                    addr, caminfo['username'], self._password)
+                camera = client_cls(addr, caminfo['username'], self._password)
                 camera.login()
                 _LOGGER.debug("Logged into UVC camera %(name)s via %(addr)s",
                               dict(name=self._name, addr=addr))

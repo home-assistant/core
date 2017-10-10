@@ -11,8 +11,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
+                                 EVENT_HOMEASSISTANT_START)
 
 REQUIREMENTS = ['python-lirc==1.2.3']
 
@@ -26,9 +26,10 @@ EVENT_IR_COMMAND_RECEIVED = 'ir_command_received'
 
 ICON = 'mdi:remote'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({}),
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -83,8 +84,8 @@ class LircInterface(threading.Thread):
             if code:
                 code = code[0]
                 _LOGGER.info("Got new LIRC code %s", code)
-                self.hass.bus.fire(
-                    EVENT_IR_COMMAND_RECEIVED, {BUTTON_NAME: code})
+                self.hass.bus.fire(EVENT_IR_COMMAND_RECEIVED,
+                                   {BUTTON_NAME: code})
             else:
                 time.sleep(0.2)
         lirc.deinit()

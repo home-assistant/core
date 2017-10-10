@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
-    MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY, MEDIA_TYPE_MUSIC,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
@@ -33,13 +32,17 @@ DEFAULT_NAME = 'Yamaha Receiver'
 KNOWN = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST):
+    cv.string,
     vol.Optional(CONF_SOURCE_IGNORE, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_ZONE_IGNORE, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCE_NAMES, default={}): {
+        cv.string: cv.string
+    },
 })
 
 
@@ -67,7 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("%s already manually configured", ctrl_url)
             return
         receivers = rxv.RXV(
-            ctrl_url, model_name=model, friendly_name=name,
+            ctrl_url,
+            model_name=model,
+            friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
         # when we are dynamically discovered config is empty
@@ -83,9 +88,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for receiver in receivers:
         if receiver.zone not in zone_ignore:
             hass.data[KNOWN].add(receiver.ctrl_url)
-            add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)
-            ], True)
+            add_devices(
+                [YamahaDevice(name, receiver, source_ignore,
+                              source_names)], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
@@ -128,20 +133,22 @@ class YamahaDevice(MediaPlayerDevice):
             self.build_source_list()
 
         current_source = self._receiver.input
-        self._current_source = self._source_names.get(
-            current_source, current_source)
+        self._current_source = self._source_names.get(current_source,
+                                                      current_source)
         self._playback_support = self._receiver.get_playback_support()
         self._is_playback_supported = self._receiver.is_playback_supported(
             self._current_source)
 
     def build_source_list(self):
         """Build the source list."""
-        self._reverse_mapping = {alias: source for source, alias in
-                                 self._source_names.items()}
+        self._reverse_mapping = {
+            alias: source
+            for source, alias in self._source_names.items()
+        }
 
         self._source_list = sorted(
-            self._source_names.get(source, source) for source in
-            self._receiver.inputs()
+            self._source_names.get(source, source)
+            for source in self._receiver.inputs()
             if source not in self._source_ignore)
 
     @property
@@ -184,11 +191,13 @@ class YamahaDevice(MediaPlayerDevice):
         supported_features = SUPPORT_YAMAHA
 
         supports = self._playback_support
-        mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
-                   'pause': SUPPORT_PAUSE,
-                   'stop': SUPPORT_STOP,
-                   'skip_f': SUPPORT_NEXT_TRACK,
-                   'skip_r': SUPPORT_PREVIOUS_TRACK}
+        mapping = {
+            'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
+            'pause': SUPPORT_PAUSE,
+            'stop': SUPPORT_STOP,
+            'skip_f': SUPPORT_NEXT_TRACK,
+            'skip_r': SUPPORT_PREVIOUS_TRACK
+        }
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):
                 supported_features |= feature
@@ -238,8 +247,8 @@ class YamahaDevice(MediaPlayerDevice):
         try:
             function()
         except rxv.exceptions.ResponseException:
-            _LOGGER.warning(
-                "Failed to execute %s on %s", function_text, self._name)
+            _LOGGER.warning("Failed to execute %s on %s", function_text,
+                            self._name)
 
     def select_source(self, source):
         """Select input source."""

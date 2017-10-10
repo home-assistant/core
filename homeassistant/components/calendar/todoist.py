@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar.todoist/
 """
 
-
 from datetime import datetime
 from datetime import timedelta
 import logging
@@ -13,13 +12,11 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.calendar import (
-    CalendarEventDevice, PLATFORM_SCHEMA)
-from homeassistant.components.google import (
-    CONF_DEVICE_ID)
+from homeassistant.components.calendar import (CalendarEventDevice,
+                                               PLATFORM_SCHEMA)
+from homeassistant.components.google import (CONF_DEVICE_ID)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    CONF_ID, CONF_NAME, CONF_TOKEN)
+from homeassistant.const import (CONF_ID, CONF_NAME, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
@@ -82,12 +79,16 @@ TASKS = 'items'
 
 SERVICE_NEW_TASK = 'new_task'
 NEW_TASK_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CONTENT): cv.string,
-    vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
-    vol.Optional(LABELS): cv.ensure_list_csv,
-    vol.Optional(PRIORITY): vol.All(vol.Coerce(int),
-                                    vol.Range(min=1, max=4)),
-    vol.Optional(DUE_DATE): cv.string
+    vol.Required(CONTENT):
+    cv.string,
+    vol.Optional(PROJECT_NAME, default='inbox'):
+    vol.All(cv.string, vol.Lower),
+    vol.Optional(LABELS):
+    cv.ensure_list_csv,
+    vol.Optional(PRIORITY):
+    vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Optional(DUE_DATE):
+    cv.string
 })
 
 CONF_EXTRA_PROJECTS = 'custom_projects'
@@ -96,18 +97,22 @@ CONF_PROJECT_WHITELIST = 'include_projects'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN): cv.string,
+    vol.Required(CONF_TOKEN):
+    cv.string,
     vol.Optional(CONF_EXTRA_PROJECTS, default=[]):
-        vol.All(cv.ensure_list, vol.Schema([
-            vol.Schema({
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_PROJECT_DUE_DATE): vol.Coerce(int),
-                vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
+    vol.All(cv.ensure_list,
+            vol.Schema([
+                vol.Schema({
+                    vol.Required(CONF_NAME):
+                    cv.string,
+                    vol.Optional(CONF_PROJECT_DUE_DATE):
+                    vol.Coerce(int),
+                    vol.Optional(CONF_PROJECT_WHITELIST, default=[]):
                     vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
-                vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
+                    vol.Optional(CONF_PROJECT_LABEL_WHITELIST, default=[]):
                     vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)])
-            })
-        ]))
+                })
+            ]))
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
@@ -138,13 +143,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for project in projects:
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
-        project_data = {
-            CONF_NAME: project[NAME],
-            CONF_ID: project[ID]
-        }
+        project_data = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
         project_devices.append(
-            TodoistProjectDevice(hass, project_data, labels, api)
-        )
+            TodoistProjectDevice(hass, project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project[NAME].lower()] = project[ID]
 
@@ -166,15 +167,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         project_name_filter = project.get(CONF_PROJECT_WHITELIST)
         project_id_filter = [
             project_id_lookup[project_name.lower()]
-            for project_name in project_name_filter]
+            for project_name in project_name_filter
+        ]
 
         # Create the custom project and add it to the devices array.
         project_devices.append(
-            TodoistProjectDevice(
-                hass, project, labels, api, project_due_date,
-                project_label_filter, project_id_filter
-            )
-        )
+            TodoistProjectDevice(hass, project, labels, api, project_due_date,
+                                 project_label_filter, project_id_filter))
 
     add_devices(project_devices)
 
@@ -193,8 +192,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if LABELS in call.data:
             task_labels = call.data[LABELS]
             label_ids = [
-                label_id_lookup[label.lower()]
-                for label in task_labels]
+                label_id_lookup[label.lower()] for label in task_labels
+            ]
             item.update(labels=label_ids)
 
         if PRIORITY in call.data:
@@ -214,22 +213,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         api.commit()
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
-    hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
-                           descriptions[DOMAIN][SERVICE_NEW_TASK],
-                           schema=NEW_TASK_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        handle_new_task,
+        descriptions[DOMAIN][SERVICE_NEW_TASK],
+        schema=NEW_TASK_SERVICE_SCHEMA)
 
 
 class TodoistProjectDevice(CalendarEventDevice):
     """A device for getting the next Task from a Todoist Project."""
 
-    def __init__(self, hass, data, labels, token,
-                 latest_task_due_date=None, whitelisted_labels=None,
+    def __init__(self,
+                 hass,
+                 data,
+                 labels,
+                 token,
+                 latest_task_due_date=None,
+                 whitelisted_labels=None,
                  whitelisted_projects=None):
         """Create the Todoist Calendar Event Device."""
         self.data = TodoistProjectData(
-            data, labels, token, latest_task_due_date,
-            whitelisted_labels, whitelisted_projects
-        )
+            data, labels, token, latest_task_due_date, whitelisted_labels,
+            whitelisted_projects)
 
         # Set up the calendar side of things
         calendar_format = {
@@ -247,7 +253,8 @@ class TodoistProjectDevice(CalendarEventDevice):
 
         # Set Todoist-specific data that can't easily be grabbed
         self._cal_data[ALL_TASKS] = [
-            task[SUMMARY] for task in self.data.all_project_tasks]
+            task[SUMMARY] for task in self.data.all_project_tasks
+        ]
 
     def cleanup(self):
         """Clean up all calendar data."""
@@ -307,8 +314,12 @@ class TodoistProjectData(object):
     MIN_TIME_BETWEEN_UPDATES minutes.
     """
 
-    def __init__(self, project_data, labels, api,
-                 latest_task_due_date=None, whitelisted_labels=None,
+    def __init__(self,
+                 project_data,
+                 labels,
+                 api,
+                 latest_task_due_date=None,
+                 whitelisted_labels=None,
                  whitelisted_projects=None):
         """Initialize a Todoist Project."""
         self.event = None
@@ -361,11 +372,11 @@ class TodoistProjectData(object):
         # All task Labels (optional parameter).
         task[LABELS] = [
             label[NAME].lower() for label in self._labels
-            if label[ID] in data[LABELS]]
+            if label[ID] in data[LABELS]
+        ]
 
-        if self._label_whitelist and (
-                not any(label in task[LABELS]
-                        for label in self._label_whitelist)):
+        if self._label_whitelist and (not any(
+                label in task[LABELS] for label in self._label_whitelist)):
             # We're not on the whitelist, return invalid task.
             return None
 
@@ -387,8 +398,8 @@ class TodoistProjectData(object):
             # Todoist's time format; strptime has to be used.
             task[END] = datetime.strptime(due_date, time_format)
 
-            if self._latest_due_date is not None and (
-                    task[END] > self._latest_due_date):
+            if self._latest_due_date is not None and (task[END] >
+                                                      self._latest_due_date):
                 # This task is out of range of our due date;
                 # it shouldn't be counted.
                 return None
@@ -452,8 +463,8 @@ class TodoistProjectData(object):
                 continue
             if proposed_event[END] is None:
                 # No end time:
-                if event[END] is None and (
-                        proposed_event[PRIORITY] < event[PRIORITY]):
+                if event[END] is None and (proposed_event[PRIORITY] <
+                                           event[PRIORITY]):
                     # They also have no end time,
                     # but we have a higher priority.
                     event = proposed_event
@@ -488,8 +499,9 @@ class TodoistProjectData(object):
         if self._id is None:
             project_task_data = [
                 task for task in self._api.state[TASKS]
-                if not self._project_id_whitelist or
-                task[PROJECT_ID] in self._project_id_whitelist]
+                if not self._project_id_whitelist
+                or task[PROJECT_ID] in self._project_id_whitelist
+            ]
         else:
             project_task_data = self._api.projects.get_data(self._id)[TASKS]
 
@@ -535,10 +547,8 @@ class TodoistProjectData(object):
                 # HASS gets cranky if a calendar event never ends
                 # Let's set our "due date" to tomorrow
                 self.event[END] = {
-                    DATETIME: (
-                        datetime.utcnow() +
-                        timedelta(days=1)
-                    ).strftime(DATE_STR_FORMAT)
+                    DATETIME: (datetime.utcnow() + timedelta(
+                        days=1)).strftime(DATE_STR_FORMAT)
                 }
         _LOGGER.debug("Updated %s", self._name)
         return True

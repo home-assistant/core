@@ -7,8 +7,8 @@ https://home-assistant.io/components/cover.vera/
 import logging
 
 from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.vera import (VERA_CONTROLLER, VERA_DEVICES,
+                                           VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -18,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera covers."""
     add_devices(
-        VeraCover(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['cover'])
+        VeraCover(device, VERA_CONTROLLER) for device in VERA_DEVICES['cover'])
 
 
 class VeraCover(VeraDevice, CoverDevice):

@@ -84,26 +84,23 @@ class Light(zha.Entity, light.Light):
         if light.ATTR_XY_COLOR in kwargs:
             self._xy_color = kwargs[light.ATTR_XY_COLOR]
         elif light.ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy(
-                *(int(val) for val in kwargs[light.ATTR_RGB_COLOR]))
+            xyb = color_RGB_to_xy(*(int(val)
+                                    for val in kwargs[light.ATTR_RGB_COLOR]))
             self._xy_color = (xyb[0], xyb[1])
             self._brightness = xyb[2]
         if light.ATTR_XY_COLOR in kwargs or light.ATTR_RGB_COLOR in kwargs:
             yield from self._endpoint.light_color.move_to_color(
                 int(self._xy_color[0] * 65535),
                 int(self._xy_color[1] * 65535),
-                duration,
-            )
+                duration, )
 
         if self._brightness is not None:
-            brightness = kwargs.get(
-                light.ATTR_BRIGHTNESS, self._brightness or 255)
+            brightness = kwargs.get(light.ATTR_BRIGHTNESS, self._brightness
+                                    or 255)
             self._brightness = brightness
             # Move to level with on/off:
             yield from self._endpoint.level.move_to_level_with_on_off(
-                brightness,
-                duration
-            )
+                brightness, duration)
             self._state = 1
             self.async_schedule_update_ha_state()
             return
@@ -154,8 +151,7 @@ class Light(zha.Entity, light.Light):
             try:
                 result, _ = yield from cluster.read_attributes(
                     attributes,
-                    allow_cache=False,
-                )
+                    allow_cache=False, )
                 return result
             except Exception:  # pylint: disable=broad-except
                 return {}

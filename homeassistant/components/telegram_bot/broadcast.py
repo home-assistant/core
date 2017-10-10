@@ -7,8 +7,8 @@ https://home-assistant.io/components/telegram_bot.broadcast/
 import asyncio
 import logging
 
-from homeassistant.components.telegram_bot import (
-    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
+from homeassistant.components.telegram_bot import (PLATFORM_SCHEMA as
+                                                   TELEGRAM_PLATFORM_SCHEMA)
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)

@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TYPE,
+                                 STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pymyq==0.0.8']

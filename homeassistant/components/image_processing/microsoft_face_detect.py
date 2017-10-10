@@ -22,11 +22,7 @@ DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_ATTRIBUTES = [
-    ATTR_AGE,
-    ATTR_GENDER,
-    ATTR_GLASSES
-]
+SUPPORTED_ATTRIBUTES = [ATTR_AGE, ATTR_GENDER, ATTR_GLASSES]
 
 CONF_ATTRIBUTES = 'attributes'
 DEFAULT_ATTRIBUTES = [ATTR_AGE, ATTR_GENDER]
@@ -42,7 +38,7 @@ def validate_attributes(list_attributes):
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ATTRIBUTES, default=DEFAULT_ATTRIBUTES):
-        vol.All(cv.ensure_list, validate_attributes),
+    vol.All(cv.ensure_list, validate_attributes),
 })
 
 
@@ -54,9 +50,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(MicrosoftFaceDetectEntity(
-            camera[CONF_ENTITY_ID], api, attributes, camera.get(CONF_NAME)
-        ))
+        entities.append(
+            MicrosoftFaceDetectEntity(camera[CONF_ENTITY_ID], api, attributes,
+                                      camera.get(CONF_NAME)))
 
     async_add_devices(entities)
 
@@ -97,7 +93,10 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         face_data = None
         try:
             face_data = yield from self._api.call_api(
-                'post', 'detect', image, binary=True,
+                'post',
+                'detect',
+                image,
+                binary=True,
                 params={'returnFaceAttributes': ",".join(self._attributes)})
 
         except HomeAssistantError as err:

@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
-from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL)
+from homeassistant.const import (CONF_NAME, CONF_RESOURCE,
+                                 CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
+                                 CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -26,12 +26,18 @@ DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.string,
-    vol.Required(CONF_SELECT): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Required(CONF_RESOURCE):
+    cv.string,
+    vol.Required(CONF_SELECT):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT):
+    cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL):
+    cv.boolean,
 })
 
 
@@ -55,9 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch data from %s", resource)
         return False
 
-    add_devices([
-        ScrapeSensor(hass, rest, name, select, value_template, unit)
-    ], True)
+    add_devices([ScrapeSensor(hass, rest, name, select, value_template, unit)],
+                True)
 
 
 class ScrapeSensor(Entity):

@@ -26,11 +26,16 @@ CONF_HOMESERVER = 'homeserver'
 CONF_DEFAULT_ROOM = 'default_room'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOMESERVER): cv.url,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_DEFAULT_ROOM): cv.string,
+    vol.Required(CONF_HOMESERVER):
+    cv.url,
+    vol.Optional(CONF_VERIFY_SSL, default=True):
+    cv.boolean,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_DEFAULT_ROOM):
+    cv.string,
 })
 
 
@@ -44,8 +49,7 @@ def get_service(hass, config, discovery_info=None):
             config.get(CONF_HOMESERVER),
             config.get(CONF_DEFAULT_ROOM),
             config.get(CONF_VERIFY_SSL),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD))
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
 
     except MatrixRequestError:
         return None
@@ -129,8 +133,7 @@ class MatrixNotificationService(BaseNotificationService):
             except MatrixRequestError as ex:
                 _LOGGER.warning(
                     "Login by token failed, falling back to password. "
-                    "login_by_token raised: (%d) %s",
-                    ex.code, ex.content)
+                    "login_by_token raised: (%d) %s", ex.code, ex.content)
 
         # If we still don't have a client try password.
         if not client:
@@ -141,8 +144,7 @@ class MatrixNotificationService(BaseNotificationService):
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Login failed, both token and username/password invalid "
-                    "login_by_password raised: (%d) %s",
-                    ex.code, ex.content)
+                    "login_by_password raised: (%d) %s", ex.code, ex.content)
 
                 # re-raise the error so the constructor can catch it.
                 raise
@@ -164,8 +166,7 @@ class MatrixNotificationService(BaseNotificationService):
         from matrix_client.client import MatrixClient
 
         _client = MatrixClient(
-            base_url=self.homeserver,
-            valid_cert_check=self.verify_tls)
+            base_url=self.homeserver, valid_cert_check=self.verify_tls)
 
         _client.login_with_password(self.username, self.password)
 

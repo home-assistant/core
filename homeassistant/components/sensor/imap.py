@@ -12,9 +12,8 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_NAME, CONF_PORT, CONF_USERNAME,
+                                 CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -29,22 +28,27 @@ DEFAULT_PORT = 993
 ICON = 'mdi:email-outline'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_SERVER): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_SERVER):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the IMAP platform."""
-    sensor = ImapSensor(config.get(CONF_NAME),
-                        config.get(CONF_USERNAME),
-                        config.get(CONF_PASSWORD),
-                        config.get(CONF_SERVER),
-                        config.get(CONF_PORT))
+    sensor = ImapSensor(
+        config.get(CONF_NAME),
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_SERVER), config.get(CONF_PORT))
 
     if not (yield from sensor.connection()):
         raise PlatformNotReady

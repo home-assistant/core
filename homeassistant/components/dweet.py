@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_WHITELIST, EVENT_STATE_CHANGED, STATE_UNKNOWN)
+from homeassistant.const import (CONF_NAME, CONF_WHITELIST,
+                                 EVENT_STATE_CHANGED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 from homeassistant.util import Throttle
@@ -23,13 +23,17 @@ DOMAIN = 'dweet'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_WHITELIST, default=[]):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_NAME):
+            cv.string,
+            vol.Required(CONF_WHITELIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

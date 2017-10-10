@@ -48,6 +48,7 @@ def disable_c_asyncio():
 
     Requires Python 3.6+.
     """
+
     class AsyncioImportFinder:
         """Finder that blocks C version of asyncio being loaded."""
 

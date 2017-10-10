@@ -13,8 +13,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
-    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR,
+    Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['flux_led==0.20']
@@ -26,8 +26,7 @@ ATTR_MODE = 'mode'
 
 DOMAIN = 'flux_led'
 
-SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_RGB_COLOR)
+SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_RGB_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -54,43 +53,47 @@ EFFECT_WHITE_STROBE = 'white_strobe'
 EFFECT_COLORJUMP = 'colorjump'
 
 EFFECT_MAP = {
-    EFFECT_COLORLOOP:             0x25,
-    EFFECT_RED_FADE:              0x26,
-    EFFECT_GREEN_FADE:            0x27,
-    EFFECT_BLUE_FADE:             0x28,
-    EFFECT_YELLOW_FADE:           0x29,
-    EFFECT_CYAN_FADE:             0x2a,
-    EFFECT_PURPLE_FADE:           0x2b,
-    EFFECT_WHITE_FADE:            0x2c,
-    EFFECT_RED_GREEN_CROSS_FADE:  0x2d,
-    EFFECT_RED_BLUE_CROSS_FADE:   0x2e,
+    EFFECT_COLORLOOP: 0x25,
+    EFFECT_RED_FADE: 0x26,
+    EFFECT_GREEN_FADE: 0x27,
+    EFFECT_BLUE_FADE: 0x28,
+    EFFECT_YELLOW_FADE: 0x29,
+    EFFECT_CYAN_FADE: 0x2a,
+    EFFECT_PURPLE_FADE: 0x2b,
+    EFFECT_WHITE_FADE: 0x2c,
+    EFFECT_RED_GREEN_CROSS_FADE: 0x2d,
+    EFFECT_RED_BLUE_CROSS_FADE: 0x2e,
     EFFECT_GREEN_BLUE_CROSS_FADE: 0x2f,
-    EFFECT_COLORSTROBE:           0x30,
-    EFFECT_RED_STROBE:            0x31,
-    EFFECT_GREEN_STROBE:          0x32,
-    EFFECT_BLUE_STOBE:            0x33,
-    EFFECT_YELLOW_STROBE:         0x34,
-    EFFECT_CYAN_STROBE:           0x35,
-    EFFECT_PURPLE_STROBE:         0x36,
-    EFFECT_WHITE_STROBE:          0x37,
-    EFFECT_COLORJUMP:             0x38
+    EFFECT_COLORSTROBE: 0x30,
+    EFFECT_RED_STROBE: 0x31,
+    EFFECT_GREEN_STROBE: 0x32,
+    EFFECT_BLUE_STOBE: 0x33,
+    EFFECT_YELLOW_STROBE: 0x34,
+    EFFECT_CYAN_STROBE: 0x35,
+    EFFECT_PURPLE_STROBE: 0x36,
+    EFFECT_WHITE_STROBE: 0x37,
+    EFFECT_COLORJUMP: 0x38
 }
 
 FLUX_EFFECT_LIST = [
     EFFECT_RANDOM,
-    ].extend(EFFECT_MAP.keys())
+].extend(EFFECT_MAP.keys())
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
-        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
+    vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
     vol.Optional(CONF_PROTOCOL, default=None):
-        vol.All(cv.string, vol.In(['ledenet'])),
+    vol.All(cv.string, vol.In(['ledenet'])),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False):
+    cv.boolean,
 })
 
 
@@ -222,9 +225,9 @@ class FluxLight(Light):
                 (red, green, blue) = self._bulb.getRgb()
                 self._bulb.setRgb(red, green, blue, brightness=brightness)
         elif effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randint(0, 255),
-                              random.randint(0, 255),
-                              random.randint(0, 255))
+            self._bulb.setRgb(
+                random.randint(0, 255),
+                random.randint(0, 255), random.randint(0, 255))
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 

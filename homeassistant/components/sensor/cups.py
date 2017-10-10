@@ -44,9 +44,12 @@ PRINTER_STATES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PRINTERS): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_PRINTERS):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -108,18 +111,24 @@ class CupsSensor(Entity):
         """Return the state attributes of the sensor."""
         if self._printer is not None:
             return {
-                ATTR_DEVICE_URI: self._printer['device-uri'],
-                ATTR_PRINTER_INFO: self._printer['printer-info'],
-                ATTR_PRINTER_IS_SHARED: self._printer['printer-is-shared'],
-                ATTR_PRINTER_LOCATION: self._printer['printer-location'],
-                ATTR_PRINTER_MODEL: self._printer['printer-make-and-model'],
+                ATTR_DEVICE_URI:
+                self._printer['device-uri'],
+                ATTR_PRINTER_INFO:
+                self._printer['printer-info'],
+                ATTR_PRINTER_IS_SHARED:
+                self._printer['printer-is-shared'],
+                ATTR_PRINTER_LOCATION:
+                self._printer['printer-location'],
+                ATTR_PRINTER_MODEL:
+                self._printer['printer-make-and-model'],
                 ATTR_PRINTER_STATE_MESSAGE:
-                    self._printer['printer-state-message'],
+                self._printer['printer-state-message'],
                 ATTR_PRINTER_STATE_REASON:
-                    self._printer['printer-state-reasons'],
-                ATTR_PRINTER_TYPE: self._printer['printer-type'],
+                self._printer['printer-state-reasons'],
+                ATTR_PRINTER_TYPE:
+                self._printer['printer-type'],
                 ATTR_PRINTER_URI_SUPPORTED:
-                    self._printer['printer-uri-supported'],
+                self._printer['printer-uri-supported'],
             }
 
     def update(self):

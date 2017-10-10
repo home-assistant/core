@@ -10,7 +10,6 @@ import pytz
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
-
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
@@ -18,8 +17,7 @@ DATETIME_RE = re.compile(
     r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
     r'[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})'
     r'(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?'
-    r'(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$'
-)
+    r'(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$')
 
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
@@ -51,7 +49,7 @@ def utcnow() -> dt.datetime:
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo=None) -> dt.datetime:
+def now(time_zone: dt.tzinfo = None) -> dt.datetime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
@@ -95,8 +93,8 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
     return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
-def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+def start_of_local_day(
+        dt_or_d: Union[dt.date, dt.datetime] = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date
@@ -177,6 +175,7 @@ def get_age(date: dt.datetime) -> str:
     be returned.
     Make sure date is not in the future, or else it won't work.
     """
+
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:

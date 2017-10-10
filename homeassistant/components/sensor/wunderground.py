@@ -32,8 +32,8 @@ DEFAULT_LANG = 'EN'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-
 # Helper classes for declaring sensor configurations
+
 
 class WUSensorConfig(object):
     """WU Sensor Configuration.
@@ -43,9 +43,14 @@ class WUSensorConfig(object):
     the json data received by WU API.
     """
 
-    def __init__(self, friendly_name, feature, value,
-                 unit_of_measurement=None, entity_picture=None,
-                 icon="mdi:gauge", device_state_attributes=None):
+    def __init__(self,
+                 friendly_name,
+                 feature,
+                 value,
+                 unit_of_measurement=None,
+                 entity_picture=None,
+                 icon="mdi:gauge",
+                 device_state_attributes=None):
         """Constructor.
 
         Args:
@@ -73,7 +78,10 @@ class WUSensorConfig(object):
 class WUCurrentConditionsSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for current conditions."""
 
-    def __init__(self, friendly_name, field, icon="mdi:gauge",
+    def __init__(self,
+                 friendly_name,
+                 field,
+                 icon="mdi:gauge",
                  unit_of_measurement=None):
         """Constructor.
 
@@ -91,13 +99,12 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
             value=lambda wu: wu.data['current_observation'][field],
             icon=icon,
             unit_of_measurement=unit_of_measurement,
-            entity_picture=lambda wu: wu.data['current_observation'][
-                'icon_url'] if icon is None else None,
+            entity_picture=
+            lambda wu: wu.data['current_observation']['icon_url'] if icon is None else None,
             device_state_attributes={
-                'date': lambda wu: wu.data['current_observation'][
-                    'observation_time']
-            }
-        )
+                'date':
+                lambda wu: wu.data['current_observation']['observation_time']
+            })
 
 
 class WUDailyTextForecastSensorConfig(WUSensorConfig):
@@ -112,25 +119,29 @@ class WUDailyTextForecastSensorConfig(WUSensorConfig):
             unit_of_measurement(string): unit of measurement
         """
         super().__init__(
-            friendly_name=lambda wu: wu.data['forecast']['txt_forecast'][
-                'forecastday'][period]['title'],
+            friendly_name=
+            lambda wu: wu.data['forecast']['txt_forecast']['forecastday'][period]['title'],
             feature='forecast',
-            value=lambda wu: wu.data['forecast']['txt_forecast'][
-                'forecastday'][period][field],
-            entity_picture=lambda wu: wu.data['forecast']['txt_forecast'][
-                'forecastday'][period]['icon_url'],
+            value=
+            lambda wu: wu.data['forecast']['txt_forecast']['forecastday'][period][field],
+            entity_picture=
+            lambda wu: wu.data['forecast']['txt_forecast']['forecastday'][period]['icon_url'],
             unit_of_measurement=unit_of_measurement,
             device_state_attributes={
                 'date': lambda wu: wu.data['forecast']['txt_forecast']['date']
-            }
-        )
+            })
 
 
 class WUDailySimpleForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for daily simpleforecasts."""
 
-    def __init__(self, friendly_name, period, field, wu_unit=None,
-                 ha_unit=None, icon=None):
+    def __init__(self,
+                 friendly_name,
+                 period,
+                 field,
+                 wu_unit=None,
+                 ha_unit=None,
+                 icon=None):
         """Constructor.
 
         Args:
@@ -145,20 +156,19 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
         super().__init__(
             friendly_name=friendly_name,
             feature='forecast',
-            value=(lambda wu: wu.data['forecast']['simpleforecast'][
-                'forecastday'][period][field][wu_unit])
-            if wu_unit else
-            (lambda wu: wu.data['forecast']['simpleforecast'][
-                'forecastday'][period][field]),
+            value=
+            (lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period][field][wu_unit]
+             ) if wu_unit else
+            (lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period][field]
+             ),
             unit_of_measurement=ha_unit,
-            entity_picture=lambda wu: wu.data['forecast']['simpleforecast'][
-                'forecastday'][period]['icon_url'] if not icon else None,
+            entity_picture=
+            lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period]['icon_url'] if not icon else None,
             icon=icon,
             device_state_attributes={
-                'date': lambda wu: wu.data['forecast']['simpleforecast'][
-                    'forecastday'][period]['date']['pretty']
-            }
-        )
+                'date':
+                lambda wu: wu.data['forecast']['simpleforecast']['forecastday'][period]['date']['pretty']
+            })
 
 
 class WUHourlyForecastSensorConfig(WUSensorConfig):
@@ -172,47 +182,42 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
             field (int): field name to use as value
         """
         super().__init__(
-            friendly_name=lambda wu: "{} {}".format(
-                wu.data['hourly_forecast'][period]['FCTTIME'][
-                    'weekday_name_abbrev'],
-                wu.data['hourly_forecast'][period]['FCTTIME'][
-                    'civil']),
+            friendly_name=
+            lambda wu: "{} {}".format(wu.data['hourly_forecast'][period]['FCTTIME']['weekday_name_abbrev'], wu.data['hourly_forecast'][period]['FCTTIME']['civil']),
             feature='hourly',
-            value=lambda wu: wu.data['hourly_forecast'][period][
-                field],
-            entity_picture=lambda wu: wu.data['hourly_forecast'][
-                period]["icon_url"],
+            value=lambda wu: wu.data['hourly_forecast'][period][field],
+            entity_picture=
+            lambda wu: wu.data['hourly_forecast'][period]["icon_url"],
             device_state_attributes={
-                'temp_c': lambda wu: wu.data['hourly_forecast'][
-                    period]['temp']['metric'],
-                'temp_f': lambda wu: wu.data['hourly_forecast'][
-                    period]['temp']['english'],
-                'dewpoint_c': lambda wu: wu.data['hourly_forecast'][
-                    period]['dewpoint']['metric'],
-                'dewpoint_f': lambda wu: wu.data['hourly_forecast'][
-                    period]['dewpoint']['english'],
-                'precip_prop': lambda wu: wu.data['hourly_forecast'][
-                    period]['pop'],
-                'sky': lambda wu: wu.data['hourly_forecast'][
-                    period]['sky'],
-                'precip_mm': lambda wu: wu.data['hourly_forecast'][
-                    period]['qpf']['metric'],
-                'precip_in': lambda wu: wu.data['hourly_forecast'][
-                    period]['qpf']['english'],
-                'humidity': lambda wu: wu.data['hourly_forecast'][
-                    period]['humidity'],
-                'wind_kph': lambda wu: wu.data['hourly_forecast'][
-                    period]['wspd']['metric'],
-                'wind_mph': lambda wu: wu.data['hourly_forecast'][
-                    period]['wspd']['english'],
-                'pressure_mb': lambda wu: wu.data['hourly_forecast'][
-                    period]['mslp']['metric'],
-                'pressure_inHg': lambda wu: wu.data['hourly_forecast'][
-                    period]['mslp']['english'],
-                'date': lambda wu: wu.data['hourly_forecast'][
-                    period]['FCTTIME']['pretty'],
-            },
-        )
+                'temp_c':
+                lambda wu: wu.data['hourly_forecast'][period]['temp']['metric'],
+                'temp_f':
+                lambda wu: wu.data['hourly_forecast'][period]['temp']['english'],
+                'dewpoint_c':
+                lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['metric'],
+                'dewpoint_f':
+                lambda wu: wu.data['hourly_forecast'][period]['dewpoint']['english'],
+                'precip_prop':
+                lambda wu: wu.data['hourly_forecast'][period]['pop'],
+                'sky':
+                lambda wu: wu.data['hourly_forecast'][period]['sky'],
+                'precip_mm':
+                lambda wu: wu.data['hourly_forecast'][period]['qpf']['metric'],
+                'precip_in':
+                lambda wu: wu.data['hourly_forecast'][period]['qpf']['english'],
+                'humidity':
+                lambda wu: wu.data['hourly_forecast'][period]['humidity'],
+                'wind_kph':
+                lambda wu: wu.data['hourly_forecast'][period]['wspd']['metric'],
+                'wind_mph':
+                lambda wu: wu.data['hourly_forecast'][period]['wspd']['english'],
+                'pressure_mb':
+                lambda wu: wu.data['hourly_forecast'][period]['mslp']['metric'],
+                'pressure_inHg':
+                lambda wu: wu.data['hourly_forecast'][period]['mslp']['english'],
+                'date':
+                lambda wu: wu.data['hourly_forecast'][period]['FCTTIME']['pretty'],
+            }, )
 
 
 class WUAlmanacSensorConfig(WUSensorConfig):
@@ -236,8 +241,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
             feature="almanac",
             value=lambda wu: wu.data['almanac'][field][value_type][wu_unit],
             unit_of_measurement=unit_of_measurement,
-            icon=icon
-        )
+            icon=icon)
 
 
 class WUAlertsSensorConfig(WUSensorConfig):
@@ -253,10 +257,9 @@ class WUAlertsSensorConfig(WUSensorConfig):
             friendly_name=friendly_name,
             feature="alerts",
             value=lambda wu: len(wu.data['alerts']),
-            icon=lambda wu: "mdi:alert-circle-outline"
-            if wu.data['alerts'] else "mdi:check-circle-outline",
-            device_state_attributes=self._get_attributes
-        )
+            icon=
+            lambda wu: "mdi:alert-circle-outline" if wu.data['alerts'] else "mdi:check-circle-outline",
+            device_state_attributes=self._get_attributes)
 
     @staticmethod
     def _get_attributes(rest):
@@ -597,31 +600,101 @@ ALERTS_ATTRS = [
 
 # Language Supported Codes
 LANG_CODES = [
-    'AF', 'AL', 'AR', 'HY', 'AZ', 'EU',
-    'BY', 'BU', 'LI', 'MY', 'CA', 'CN',
-    'TW', 'CR', 'CZ', 'DK', 'DV', 'NL',
-    'EN', 'EO', 'ET', 'FA', 'FI', 'FR',
-    'FC', 'GZ', 'DL', 'KA', 'GR', 'GU',
-    'HT', 'IL', 'HI', 'HU', 'IS', 'IO',
-    'ID', 'IR', 'IT', 'JP', 'JW', 'KM',
-    'KR', 'KU', 'LA', 'LV', 'LT', 'ND',
-    'MK', 'MT', 'GM', 'MI', 'MR', 'MN',
-    'NO', 'OC', 'PS', 'GN', 'PL', 'BR',
-    'PA', 'RO', 'RU', 'SR', 'SK', 'SL',
-    'SP', 'SI', 'SW', 'CH', 'TL', 'TT',
-    'TH', 'TR', 'TK', 'UA', 'UZ', 'VU',
-    'CY', 'SN', 'JI', 'YI',
+    'AF',
+    'AL',
+    'AR',
+    'HY',
+    'AZ',
+    'EU',
+    'BY',
+    'BU',
+    'LI',
+    'MY',
+    'CA',
+    'CN',
+    'TW',
+    'CR',
+    'CZ',
+    'DK',
+    'DV',
+    'NL',
+    'EN',
+    'EO',
+    'ET',
+    'FA',
+    'FI',
+    'FR',
+    'FC',
+    'GZ',
+    'DL',
+    'KA',
+    'GR',
+    'GU',
+    'HT',
+    'IL',
+    'HI',
+    'HU',
+    'IS',
+    'IO',
+    'ID',
+    'IR',
+    'IT',
+    'JP',
+    'JW',
+    'KM',
+    'KR',
+    'KU',
+    'LA',
+    'LV',
+    'LT',
+    'ND',
+    'MK',
+    'MT',
+    'GM',
+    'MI',
+    'MR',
+    'MN',
+    'NO',
+    'OC',
+    'PS',
+    'GN',
+    'PL',
+    'BR',
+    'PA',
+    'RO',
+    'RU',
+    'SR',
+    'SK',
+    'SL',
+    'SP',
+    'SI',
+    'SW',
+    'CH',
+    'TL',
+    'TT',
+    'TH',
+    'TR',
+    'TK',
+    'UA',
+    'UZ',
+    'VU',
+    'CY',
+    'SN',
+    'JI',
+    'YI',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PWS_ID): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_PWS_ID):
+    cv.string,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG):
     vol.All(vol.In(LANG_CODES)),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -632,9 +705,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
-    rest = WUndergroundData(
-        hass, config.get(CONF_API_KEY), config.get(CONF_PWS_ID),
-        config.get(CONF_LANG), latitude, longitude)
+    rest = WUndergroundData(hass,
+                            config.get(CONF_API_KEY),
+                            config.get(CONF_PWS_ID),
+                            config.get(CONF_LANG), latitude, longitude)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
@@ -740,8 +814,8 @@ class WUndergroundData(object):
         self._features.add(feature)
 
     def _build_url(self, baseurl=_RESOURCE):
-        url = baseurl.format(
-            self._api_key, "/".join(self._features), self._lang)
+        url = baseurl.format(self._api_key, "/".join(self._features),
+                             self._lang)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:
@@ -755,8 +829,7 @@ class WUndergroundData(object):
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             if "error" in result['response']:
-                raise ValueError(result['response']["error"]
-                                 ["description"])
+                raise ValueError(result['response']["error"]["description"])
             else:
                 self.data = result
         except ValueError as err:

@@ -32,10 +32,9 @@ def _get_image_url(hass, monitor, mode):
     })
     url = '{zms_url}?{query}'.format(
         zms_url=urljoin(zm_data['server_origin'], zm_data['path_zms']),
-        query=query,
-    )
-    _LOGGER.debug('Monitor %s %s URL (without auth): %s',
-                  monitor['Id'], mode, url)
+        query=query, )
+    _LOGGER.debug('Monitor %s %s URL (without auth): %s', monitor['Id'], mode,
+                  url)
 
     if not zm_data['username']:
         return url
@@ -99,8 +98,7 @@ class ZoneMinderCamera(MjpegCamera):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
         status_response = zoneminder.get_state(
-            'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
-        )
+            'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id)
 
         if not status_response:
             _LOGGER.warning("Could not get status for monitor %i",

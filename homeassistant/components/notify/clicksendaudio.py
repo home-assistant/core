@@ -13,11 +13,10 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_USERNAME, CONF_API_KEY, CONF_RECIPIENT, HTTP_HEADER_CONTENT_TYPE,
-    CONTENT_TYPE_JSON)
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (CONF_USERNAME, CONF_API_KEY, CONF_RECIPIENT,
+                                 HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+from homeassistant.components.notify import (PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +31,16 @@ DEFAULT_LANGUAGE = 'en-us'
 DEFAULT_VOICE = 'female'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_RECIPIENT): cv.string,
-    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_RECIPIENT):
+    cv.string,
+    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE):
+    cv.string,
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+    cv.string,
 })
 
 
@@ -62,12 +66,23 @@ class ClicksendNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
-        data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
-                               'to': self.recipient, 'body': message,
-                               'lang': self.language, 'voice': self.voice}]})
+        data = ({
+            'messages': [{
+                'source': 'hass.notify',
+                'from': self.recipient,
+                'to': self.recipient,
+                'body': message,
+                'lang': self.language,
+                'voice': self.voice
+            }]
+        })
         api_url = "{}/voice/send".format(BASE_API_URL)
-        resp = requests.post(api_url, data=json.dumps(data), headers=HEADERS,
-                             auth=(self.username, self.api_key), timeout=5)
+        resp = requests.post(
+            api_url,
+            data=json.dumps(data),
+            headers=HEADERS,
+            auth=(self.username, self.api_key),
+            timeout=5)
 
         obj = json.loads(resp.text)
         response_msg = obj['response_msg']
@@ -80,9 +95,11 @@ class ClicksendNotificationService(BaseNotificationService):
 def _authenticate(config):
     """Authenticate with ClickSend."""
     api_url = '{}/account'.format(BASE_API_URL)
-    resp = requests.get(api_url, headers=HEADERS,
-                        auth=(config.get(CONF_USERNAME),
-                              config.get(CONF_API_KEY)), timeout=5)
+    resp = requests.get(
+        api_url,
+        headers=HEADERS,
+        auth=(config.get(CONF_USERNAME), config.get(CONF_API_KEY)),
+        timeout=5)
 
     if resp.status_code != 200:
         return False

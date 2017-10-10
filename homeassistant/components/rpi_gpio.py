@@ -7,8 +7,8 @@ https://home-assistant.io/components/rpi_gpio/
 # pylint: disable=import-error
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['RPi.GPIO==0.6.1']
 
@@ -44,8 +44,8 @@ def setup_output(port):
 def setup_input(port, pull_mode):
     """Set up a GPIO as input."""
     import RPi.GPIO as GPIO
-    GPIO.setup(port, GPIO.IN,
-               GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
+    GPIO.setup(port, GPIO.IN, GPIO.PUD_DOWN
+               if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
 def write_output(port, value):
@@ -64,7 +64,4 @@ def edge_detect(port, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
     import RPi.GPIO as GPIO
     GPIO.add_event_detect(
-        port,
-        GPIO.BOTH,
-        callback=event_callback,
-        bouncetime=bounce)
+        port, GPIO.BOTH, callback=event_callback, bouncetime=bounce)

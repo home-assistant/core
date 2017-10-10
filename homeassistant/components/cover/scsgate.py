@@ -18,7 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['scsgate']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
+    vol.Required(CONF_DEVICES):
+    vol.Schema({
+        cv.slug: scsgate.SCSGATE_SCHEMA
+    }),
 })
 
 
@@ -96,5 +99,5 @@ class SCSGateCover(CoverDevice):
 
     def process_event(self, message):
         """Handle a SCSGate message related with this cover."""
-        self._logger.debug("Cover %s, got message %s",
-                           self._scs_id, message.toggled)
+        self._logger.debug("Cover %s, got message %s", self._scs_id,
+                           message.toggled)

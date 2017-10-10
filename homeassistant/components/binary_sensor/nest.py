@@ -69,25 +69,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     device_chain = chain(nest.thermostats(),
-                         nest.smoke_co_alarms(),
-                         nest.cameras())
+                         nest.smoke_co_alarms(), nest.cameras())
     for structure, device in device_chain:
-        sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in BINARY_TYPES]
-        sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in CLIMATE_BINARY_TYPES
-                    and device.is_thermostat]
+        sensors += [
+            NestBinarySensor(structure, device, variable)
+            for variable in conditions if variable in BINARY_TYPES
+        ]
+        sensors += [
+            NestBinarySensor(structure, device, variable)
+            for variable in conditions
+            if variable in CLIMATE_BINARY_TYPES and device.is_thermostat
+        ]
 
         if device.is_camera:
-            sensors += [NestBinarySensor(structure, device, variable)
-                        for variable in conditions
-                        if variable in CAMERA_BINARY_TYPES]
+            sensors += [
+                NestBinarySensor(structure, device, variable)
+                for variable in conditions if variable in CAMERA_BINARY_TYPES
+            ]
             for activity_zone in device.activity_zones:
-                sensors += [NestActivityZoneSensor(structure,
-                                                   device,
-                                                   activity_zone)]
+                sensors += [
+                    NestActivityZoneSensor(structure, device, activity_zone)
+                ]
 
     add_devices(sensors, True)
 

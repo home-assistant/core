@@ -4,11 +4,9 @@ import logging
 
 import voluptuous as vol
 
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_HOST,
-                                 CONF_PORT, CONF_PASSWORD)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_PASSWORD)
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
@@ -23,14 +21,16 @@ DOMAIN = 'asterisk_mbox'
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): int,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PORT): int,
+            vol.Required(CONF_PASSWORD): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -59,8 +59,8 @@ class AsteriskData(object):
         self.client = asteriskClient(host, port, password, self.handle_data)
         self.messages = []
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
+        async_dispatcher_connect(self.hass, SIGNAL_MESSAGE_REQUEST,
+                                 self._request_messages)
 
     @callback
     def handle_data(self, command, msg):
@@ -69,9 +69,8 @@ class AsteriskData(object):
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.info("AsteriskVM sent updated message list")
-            self.messages = sorted(msg,
-                                   key=lambda item: item['info']['origtime'],
-                                   reverse=True)
+            self.messages = sorted(
+                msg, key=lambda item: item['info']['origtime'], reverse=True)
             async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
                                   self.messages)
 

@@ -33,10 +33,13 @@ ZONE_TYPES_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXCLUDE_ZONES, default=[]):
-        vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+    vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_ZONE_TYPES, default={}):
+    ZONE_TYPES_SCHEMA,
 })
 
 
@@ -62,11 +65,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     zone_sensors = {
-        zone['number']: NX584ZoneSensor(
-            zone,
-            zone_types.get(zone['number'], 'opening'))
-        for zone in zones
-        if zone['number'] not in exclude}
+        zone['number']: NX584ZoneSensor(zone,
+                                        zone_types.get(zone['number'],
+                                                       'opening'))
+        for zone in zones if zone['number'] not in exclude
+    }
     if zone_sensors:
         add_devices(zone_sensors.values())
         watcher = NX584Watcher(client, zone_sensors)

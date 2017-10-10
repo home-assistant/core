@@ -46,16 +46,15 @@ NO_TIMEOUT = {
     re.compile(r'^addons/[^/]*/rebuild$')
 }
 
-NO_AUTH = {
-    re.compile(r'^panel$'), re.compile(r'^addons/[^/]*/logo$')
-}
+NO_AUTH = {re.compile(r'^panel$'), re.compile(r'^addons/[^/]*/logo$')}
 
 SCHEMA_ADDON = vol.Schema({
     vol.Required(ATTR_ADDON): cv.slug,
 })
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
-    vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)
+    vol.Required(ATTR_INPUT):
+    vol.Any(dict, cv.string)
 })
 
 MAP_SERVICE_API = {
@@ -147,12 +146,13 @@ class HassIO(object):
         try:
             with async_timeout.timeout(timeout, loop=self.loop):
                 request = yield from self.websession.request(
-                    method, "http://{}{}".format(self._ip, command),
+                    method,
+                    "http://{}{}".format(self._ip, command),
                     json=payload)
 
                 if request.status != 200:
-                    _LOGGER.error(
-                        "%s return code %d.", command, request.status)
+                    _LOGGER.error("%s return code %d.", command,
+                                  request.status)
                     return False
 
                 answer = yield from request.json()
@@ -186,9 +186,10 @@ class HassIO(object):
 
             method = getattr(self.websession, request.method.lower())
             client = yield from method(
-                "http://{}/{}".format(self._ip, path), data=data,
-                headers=headers, timeout=read_timeout
-            )
+                "http://{}/{}".format(self._ip, path),
+                data=data,
+                headers=headers,
+                timeout=read_timeout)
 
             return client
 
@@ -234,8 +235,7 @@ def _create_response(client, data):
     return web.Response(
         body=data,
         status=client.status,
-        content_type=client.content_type,
-    )
+        content_type=client.content_type, )
 
 
 def _create_response_log(client, data):
@@ -246,8 +246,7 @@ def _create_response_log(client, data):
     return web.Response(
         text=log,
         status=client.status,
-        content_type=CONTENT_TYPE_TEXT_PLAIN,
-    )
+        content_type=CONTENT_TYPE_TEXT_PLAIN, )
 
 
 def _get_timeout(path):

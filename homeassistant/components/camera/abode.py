@@ -14,7 +14,6 @@ from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
-
 DEPENDENCIES = ['abode']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
@@ -56,10 +55,8 @@ class AbodeCamera(AbodeDevice, Camera):
         """Subscribe Abode events."""
         yield from super().async_added_to_hass()
 
-        self.hass.async_add_job(
-            self._data.abode.events.add_timeline_callback,
-            self._event, self._capture_callback
-        )
+        self.hass.async_add_job(self._data.abode.events.add_timeline_callback,
+                                self._event, self._capture_callback)
 
     def capture(self):
         """Request a new image capture."""

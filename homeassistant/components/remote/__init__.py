@@ -17,9 +17,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+from homeassistant.const import (STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                 SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
@@ -53,16 +52,19 @@ REMOTE_SERVICE_SCHEMA = vol.Schema({
 })
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_ACTIVITY): cv.string
+    vol.Optional(ATTR_ACTIVITY):
+    cv.string
 })
 
 REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_DEVICE): cv.string,
-    vol.Optional(
-        ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
-    vol.Optional(
-        ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float)
+    vol.Required(ATTR_COMMAND):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DEVICE):
+    cv.string,
+    vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS):
+    cv.positive_int,
+    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
+    vol.Coerce(float)
 })
 
 
@@ -77,10 +79,12 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, activity=None, entity_id=None):
     """Turn all or specified remote on."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_ACTIVITY, activity),
             (ATTR_ENTITY_ID, entity_id),
-        ] if value is not None}
+        ] if value is not None
+    }
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
@@ -111,8 +115,12 @@ def toggle(hass, activity=None, entity_id=None):
 
 
 @bind_hass
-def send_command(hass, command, entity_id=None, device=None,
-                 num_repeats=None, delay_secs=None):
+def send_command(hass,
+                 command,
+                 entity_id=None,
+                 device=None,
+                 num_repeats=None,
+                 delay_secs=None):
     """Send a command to a device."""
     data = {ATTR_COMMAND: command}
     if entity_id:
@@ -133,8 +141,8 @@ def send_command(hass, command, entity_id=None, device=None,
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for remotes."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_REMOTES)
     yield from component.async_setup(config)
 
     @asyncio.coroutine
@@ -155,8 +163,10 @@ def async_setup(hass, config):
                 yield from remote.async_toggle(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
                 yield from remote.async_send_command(
-                    device=device, command=command,
-                    num_repeats=num_repeats, delay_secs=delay_secs)
+                    device=device,
+                    command=command,
+                    num_repeats=num_repeats,
+                    delay_secs=delay_secs)
             else:
                 yield from remote.async_turn_off(activity=activity_id)
 
@@ -175,23 +185,32 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handle_remote_service,
         descriptions.get(SERVICE_TURN_OFF),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_remote_service,
         descriptions.get(SERVICE_TURN_ON),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_remote_service,
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handle_remote_service,
         descriptions.get(SERVICE_TOGGLE),
         schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        async_handle_remote_service,
         descriptions.get(SERVICE_SEND_COMMAND),
         schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
 
@@ -210,5 +229,5 @@ class RemoteDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(
-            self.send_command, command, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.send_command, command, **kwargs))

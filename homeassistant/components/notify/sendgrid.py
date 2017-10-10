@@ -19,9 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_SENDER): vol.Email(),
-    vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_SENDER):
+    vol.Email(),
+    vol.Required(CONF_RECIPIENT):
+    vol.Email(),
 })
 
 
@@ -52,25 +55,19 @@ class SendgridNotificationService(BaseNotificationService):
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         data = {
-            "personalizations": [
-                {
-                    "to": [
-                        {
-                            "email": self.recipient
-                        }
-                    ],
-                    "subject": subject
-                }
-            ],
+            "personalizations": [{
+                "to": [{
+                    "email": self.recipient
+                }],
+                "subject": subject
+            }],
             "from": {
                 "email": self.sender
             },
-            "content": [
-                {
-                    "type": "text/plain",
-                    "value": message
-                }
-            ]
+            "content": [{
+                "type": "text/plain",
+                "value": message
+            }]
         }
 
         response = self._sg.client.mail.send.post(request_body=data)

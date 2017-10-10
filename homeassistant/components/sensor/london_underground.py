@@ -21,25 +21,15 @@ ATTRIBUTION = "Powered by TfL Open Data"
 CONF_LINE = 'line'
 SCAN_INTERVAL = timedelta(seconds=30)
 TUBE_LINES = [
-    'Bakerloo',
-    'Central',
-    'Circle',
-    'District',
-    'DLR',
-    'Hammersmith & City',
-    'Jubilee',
-    'London Overground',
-    'Metropolitan',
-    'Northern',
-    'Piccadilly',
-    'TfL Rail',
-    'Victoria',
-    'Waterloo & City']
+    'Bakerloo', 'Central', 'Circle', 'District', 'DLR', 'Hammersmith & City',
+    'Jubilee', 'London Overground', 'Metropolitan', 'Northern', 'Piccadilly',
+    'TfL Rail', 'Victoria', 'Waterloo & City'
+]
 URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LINE):
-        vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))]),
+    vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))]),
 })
 
 
@@ -119,8 +109,10 @@ def parse_api_response(response):
     data_dict = dict.fromkeys(lines)
 
     for line in response:
-        statuses = [status['statusSeverityDescription']
-                    for status in line['lineStatuses']]
+        statuses = [
+            status['statusSeverityDescription']
+            for status in line['lineStatuses']
+        ]
         state = ' + '.join(sorted(set(statuses)))
 
         if state == 'Good Service':

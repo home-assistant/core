@@ -17,10 +17,10 @@ def run(script_args: List) -> int:
     from homeassistant.helpers import state as state_helper
     from homeassistant.core import State
 
-    parser = argparse.ArgumentParser(
-        description="import data to influxDB.")
+    parser = argparse.ArgumentParser(description="import data to influxDB.")
     parser.add_argument(
-        '-c', '--config',
+        '-c',
+        '--config',
         metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
@@ -28,79 +28,89 @@ def run(script_args: List) -> int:
         '--uri',
         type=str,
         help="Connect to URI and import (if other than default sqlite) "
-             "eg: mysql://localhost/homeassistant")
+        "eg: mysql://localhost/homeassistant")
     parser.add_argument(
-        '-d', '--dbname',
+        '-d',
+        '--dbname',
         metavar='dbname',
         required=True,
         help="InfluxDB database name")
     parser.add_argument(
-        '-H', '--host',
+        '-H',
+        '--host',
         metavar='host',
         default='127.0.0.1',
         help="InfluxDB host address")
     parser.add_argument(
-        '-P', '--port',
+        '-P',
+        '--port',
         metavar='port',
         default=8086,
         help="InfluxDB host port")
     parser.add_argument(
-        '-u', '--username',
+        '-u',
+        '--username',
         metavar='username',
         default='root',
         help="InfluxDB username")
     parser.add_argument(
-        '-p', '--password',
+        '-p',
+        '--password',
         metavar='password',
         default='root',
         help="InfluxDB password")
     parser.add_argument(
-        '-s', '--step',
+        '-s',
+        '--step',
         metavar='step',
         default=1000,
         help="How many points to import at the same time")
     parser.add_argument(
-        '-t', '--tags',
+        '-t',
+        '--tags',
         metavar='tags',
         default="",
         help="Comma separated list of tags (key:value) for all points")
     parser.add_argument(
-        '-D', '--default-measurement',
+        '-D',
+        '--default-measurement',
         metavar='default_measurement',
         default="",
         help="Store all your points in the same measurement")
     parser.add_argument(
-        '-o', '--override-measurement',
+        '-o',
+        '--override-measurement',
         metavar='override_measurement',
         default="",
         help="Store all your points in the same measurement")
     parser.add_argument(
-        '-e', '--exclude_entities',
+        '-e',
+        '--exclude_entities',
         metavar='exclude_entities',
         default="",
         help="Comma separated list of excluded entities")
     parser.add_argument(
-        '-E', '--exclude_domains',
+        '-E',
+        '--exclude_domains',
         metavar='exclude_domains',
         default="",
         help="Comma separated list of excluded domains")
     parser.add_argument(
-        "-S", "--simulate",
+        "-S",
+        "--simulate",
         default=False,
         action="store_true",
         help=("Do not write points but simulate preprocessing and print "
               "statistics"))
-    parser.add_argument(
-        '--script',
-        choices=['influxdb_import'])
+    parser.add_argument('--script', choices=['influxdb_import'])
 
     args = parser.parse_args()
     simulate = args.simulate
 
     client = None
     if not simulate:
-        client = InfluxDBClient(args.host, args.port,
-                                args.username, args.password)
+        client = InfluxDBClient(args.host, args.port, args.username,
+                                args.password)
         client.switch_database(args.dbname)
 
     config_dir = os.path.join(os.getcwd(), args.config)  # type: str
@@ -146,9 +156,8 @@ def run(script_args: List) -> int:
         event_data = json.loads(event.event_data)
         state = State.from_dict(event_data.get("new_state"))
 
-        if not state or (
-                excl_entities and state.entity_id in excl_entities) or (
-                    excl_domains and state.domain in excl_domains):
+        if not state or (excl_entities and state.entity_id in excl_entities
+                         ) or (excl_domains and state.domain in excl_domains):
             session.expunge(event)
             continue
 
@@ -214,7 +223,9 @@ def run(script_args: List) -> int:
         count += len(points)
 
     print("\nStatistics:")
-    print("\n".join(["{:6}: {}".format(v, k) for k, v
-                     in sorted(entities.items(), key=lambda x: x[1])]))
+    print("\n".join([
+        "{:6}: {}".format(v, k)
+        for k, v in sorted(entities.items(), key=lambda x: x[1])
+    ]))
     print("\nImport finished {} points written".format(count))
     return 0

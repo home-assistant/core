@@ -44,23 +44,31 @@ def _validate_conf(config):
             res_gw_conf['host'] = host
             res_gw_conf['port'] = gw_conf.get('port', 9898)
 
-            _LOGGER.warning(
-                'Static address (%s:%s) of the gateway provided. '
-                'Discovery of this host will be skipped.',
-                res_gw_conf['host'], res_gw_conf['port'])
+            _LOGGER.warning('Static address (%s:%s) of the gateway provided. '
+                            'Discovery of this host will be skipped.',
+                            res_gw_conf['host'], res_gw_conf['port'])
 
         res_config.append(res_gw_conf)
     return res_config
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=[{CONF_MAC: None, "key": None}]):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(
+                CONF_GATEWAYS, default=[{
+                    CONF_MAC: None,
+                    "key": None
+                }]):
             vol.All(cv.ensure_list, _validate_conf),
-        vol.Optional(CONF_INTERFACE, default='any'): cv.string,
-        vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
-    })
-}, extra=vol.ALLOW_EXTRA)
+            vol.Optional(CONF_INTERFACE, default='any'):
+            cv.string,
+            vol.Optional(CONF_DISCOVERY_RETRY, default=3):
+            cv.positive_int
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +116,7 @@ def setup(hass, config):
         """Stop Xiaomi Socket."""
         _LOGGER.info("Shutting down Xiaomi Hub.")
         hass.data[PY_XIAOMI_GATEWAY].stop_listen()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
     def play_ringtone_service(call):
@@ -119,7 +128,7 @@ def setup(hass, config):
             return
 
         ring_id = int(ring_id)
-        if ring_id in [9, 14-19]:
+        if ring_id in [9, 14 - 19]:
             _LOGGER.error('Specified mid: %s is not defined in gateway.',
                           ring_id)
             return
@@ -156,12 +165,18 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
-    hass.services.async_register(DOMAIN, 'play_ringtone',
-                                 play_ringtone_service,
-                                 description=None, schema=None)
-    hass.services.async_register(DOMAIN, 'stop_ringtone',
-                                 stop_ringtone_service,
-                                 description=None, schema=None)
+    hass.services.async_register(
+        DOMAIN,
+        'play_ringtone',
+        play_ringtone_service,
+        description=None,
+        schema=None)
+    hass.services.async_register(
+        DOMAIN,
+        'stop_ringtone',
+        stop_ringtone_service,
+        description=None,
+        schema=None)
     return True
 
 

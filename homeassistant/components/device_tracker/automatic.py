@@ -48,11 +48,14 @@ DATA_CONFIGURING = 'automatic_configurator_clients'
 DATA_REFRESH_TOKEN = 'refresh_token'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_SECRET): cv.string,
-    vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
-    vol.Optional(CONF_DEVICES, default=None): vol.All(
-        cv.ensure_list, [cv.string])
+    vol.Required(CONF_CLIENT_ID):
+    cv.string,
+    vol.Required(CONF_SECRET):
+    cv.string,
+    vol.Optional(CONF_CURRENT_LOCATION, default=False):
+    cv.boolean,
+    vol.Optional(CONF_DEVICES, default=None):
+    vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -80,9 +83,7 @@ def _write_refresh_token_to_file(hass, filename, refresh_token):
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w+') as data_file:
-        json.dump({
-            DATA_REFRESH_TOKEN: refresh_token
-        }, data_file)
+        json.dump({DATA_REFRESH_TOKEN: refresh_token}, data_file)
 
 
 @asyncio.coroutine
@@ -101,17 +102,16 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         request_kwargs={'timeout': DEFAULT_TIMEOUT})
 
     filename = AUTOMATIC_CONFIG_FILE.format(config[CONF_CLIENT_ID])
-    refresh_token = yield from hass.async_add_job(
-        _get_refresh_token_from_file, hass, filename)
+    refresh_token = yield from hass.async_add_job(_get_refresh_token_from_file,
+                                                  hass, filename)
 
     @asyncio.coroutine
     def initialize_data(session):
         """Initialize the AutomaticData object from the created session."""
-        hass.async_add_job(
-            _write_refresh_token_to_file, hass, filename,
-            session.refresh_token)
-        data = AutomaticData(
-            hass, client, session, config[CONF_DEVICES], async_see)
+        hass.async_add_job(_write_refresh_token_to_file, hass, filename,
+                           session.refresh_token)
+        data = AutomaticData(hass, client, session, config[CONF_DEVICES],
+                             async_see)
 
         # Load the initial vehicle data
         vehicles = yield from session.get_vehicles()
@@ -133,12 +133,11 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     configurator = hass.components.configurator
     request_id = configurator.async_request_config(
-        "Automatic", description=(
-            "Authorization required for Automatic device tracker."),
+        "Automatic",
+        description=("Authorization required for Automatic device tracker."),
         link_name="Click here to authorize Home Assistant.",
         link_url=client.generate_oauth_url(scope),
-        entity_picture="/static/images/logo_automatic.png",
-    )
+        entity_picture="/static/images/logo_automatic.png", )
 
     @asyncio.coroutine
     def initialize_callback(code, state):
@@ -176,8 +175,8 @@ class AutomaticAuthCallbackView(HomeAssistantView):
 
         if 'state' not in params or 'code' not in params:
             if 'error' in params:
-                _LOGGER.error(
-                    "Error authorizing Automatic: %s", params['error'])
+                _LOGGER.error("Error authorizing Automatic: %s",
+                              params['error'])
                 return response
             else:
                 _LOGGER.error(
@@ -326,8 +325,8 @@ class AutomaticData(object):
 
         name = vehicle.display_name
         if name is None:
-            name = ' '.join(filter(None, (
-                str(vehicle.year), vehicle.make, vehicle.model)))
+            name = ' '.join(
+                filter(None, (str(vehicle.year), vehicle.make, vehicle.model)))
 
         if self.devices is not None and name not in self.devices:
             self.vehicle_info[vehicle.id] = None

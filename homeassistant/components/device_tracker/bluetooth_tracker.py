@@ -22,7 +22,8 @@ REQUIREMENTS = ['pybluez==0.22']
 BT_PREFIX = 'BT_'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TRACK_NEW): cv.boolean
+    vol.Optional(CONF_TRACK_NEW):
+    cv.boolean
 })
 
 
@@ -38,7 +39,9 @@ def setup_scanner(hass, config, see, discovery_info=None):
     def discover_devices():
         """Discover Bluetooth devices."""
         result = bluetooth.discover_devices(
-            duration=8, lookup_names=True, flush_cache=True,
+            duration=8,
+            lookup_names=True,
+            flush_cache=True,
             lookup_class=False)
         _LOGGER.debug("Bluetooth devices discovered = " + str(len(result)))
         return result
@@ -86,8 +89,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 see_device((mac, result))
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
-        track_point_in_utc_time(
-            hass, update_bluetooth, dt_util.utcnow() + interval)
+        track_point_in_utc_time(hass, update_bluetooth,
+                                dt_util.utcnow() + interval)
 
     update_bluetooth(dt_util.utcnow())
 

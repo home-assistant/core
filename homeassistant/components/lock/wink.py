@@ -32,13 +32,19 @@ ATTR_SENSITIVITY = 'sensitivity'
 ATTR_MODE = 'mode'
 ATTR_NAME = 'name'
 
-ALARM_SENSITIVITY_MAP = {"low": 0.2, "medium_low": 0.4,
-                         "medium": 0.6, "medium_high": 0.8,
-                         "high": 1.0}
+ALARM_SENSITIVITY_MAP = {
+    "low": 0.2,
+    "medium_low": 0.4,
+    "medium": 0.6,
+    "medium_high": 0.8,
+    "high": 1.0
+}
 
-ALARM_MODES_MAP = {"tamper": "tamper",
-                   "activity": "alert",
-                   "forced_entry": "forced_entry"}
+ALARM_MODES_MAP = {
+    "tamper": "tamper",
+    "activity": "alert",
+    "forced_entry": "forced_entry"
+}
 
 SET_ENABLED_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -46,13 +52,17 @@ SET_ENABLED_SCHEMA = vol.Schema({
 })
 
 SET_SENSITIVITY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_SENSITIVITY): vol.In(ALARM_SENSITIVITY_MAP)
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_SENSITIVITY):
+    vol.In(ALARM_SENSITIVITY_MAP)
 })
 
 SET_ALARM_MODES_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_MODE): vol.In(ALARM_MODES_MAP)
+    vol.Optional(ATTR_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(ATTR_MODE):
+    vol.In(ALARM_MODES_MAP)
 })
 
 ADD_KEY_SCHEMA = vol.Schema({
@@ -102,35 +112,47 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_SET_VACATION_MODE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_VACATION_MODE),
-                           schema=SET_ENABLED_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_VACATION_MODE,
+        service_handle,
+        descriptions.get(SERVICE_SET_VACATION_MODE),
+        schema=SET_ENABLED_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_ALARM_STATE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_STATE),
-                           schema=SET_ENABLED_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_ALARM_STATE,
+        service_handle,
+        descriptions.get(SERVICE_SET_ALARM_STATE),
+        schema=SET_ENABLED_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_BEEPER_STATE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_BEEPER_STATE),
-                           schema=SET_ENABLED_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_BEEPER_STATE,
+        service_handle,
+        descriptions.get(SERVICE_SET_BEEPER_STATE),
+        schema=SET_ENABLED_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_ALARM_MODE,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_MODE),
-                           schema=SET_ALARM_MODES_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_ALARM_MODE,
+        service_handle,
+        descriptions.get(SERVICE_SET_ALARM_MODE),
+        schema=SET_ALARM_MODES_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_ALARM_SENSITIVITY,
-                           service_handle,
-                           descriptions.get(SERVICE_SET_ALARM_SENSITIVITY),
-                           schema=SET_SENSITIVITY_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_ALARM_SENSITIVITY,
+        service_handle,
+        descriptions.get(SERVICE_SET_ALARM_SENSITIVITY),
+        schema=SET_SENSITIVITY_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_KEY,
-                           service_handle,
-                           descriptions.get(SERVICE_ADD_KEY),
-                           schema=ADD_KEY_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_ADD_KEY,
+        service_handle,
+        descriptions.get(SERVICE_ADD_KEY),
+        schema=ADD_KEY_SCHEMA)
 
 
 class WinkLockDevice(WinkDevice, LockDevice):
@@ -201,8 +223,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
         super_attrs['vacation_mode'] = self.wink.vacation_mode_enabled()
         super_attrs['beeper_mode'] = self.wink.beeper_enabled()
         super_attrs['auto_lock'] = self.wink.auto_lock_enabled()
-        alarm_mode = dict_value_to_key(ALARM_MODES_MAP,
-                                       self.wink.alarm_mode())
+        alarm_mode = dict_value_to_key(ALARM_MODES_MAP, self.wink.alarm_mode())
         super_attrs['alarm_mode'] = alarm_mode
         super_attrs['alarm_enabled'] = self.wink.alarm_enabled()
         return super_attrs

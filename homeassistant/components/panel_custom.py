@@ -26,16 +26,25 @@ DEFAULT_ICON = 'mdi:bookmark'
 
 PANEL_DIR = 'panels'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [{
-        vol.Required(CONF_COMPONENT_NAME): cv.slug,
-        vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
-        vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
-        vol.Optional(CONF_URL_PATH): cv.string,
-        vol.Optional(CONF_CONFIG): cv.match_all,
-        vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
-    }])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.All(cv.ensure_list, [{
+            vol.Required(CONF_COMPONENT_NAME):
+            cv.slug,
+            vol.Optional(CONF_SIDEBAR_TITLE):
+            cv.string,
+            vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON):
+            cv.icon,
+            vol.Optional(CONF_URL_PATH):
+            cv.string,
+            vol.Optional(CONF_CONFIG):
+            cv.match_all,
+            vol.Optional(CONF_WEBCOMPONENT_PATH):
+            cv.isfile,
+        }])
+    },
+    extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,17 +61,18 @@ def setup(hass, config):
             panel_path = hass.config.path(PANEL_DIR, '{}.html'.format(name))
 
         if not os.path.isfile(panel_path):
-            _LOGGER.error('Unable to find webcomponent for %s: %s',
-                          name, panel_path)
+            _LOGGER.error('Unable to find webcomponent for %s: %s', name,
+                          panel_path)
             continue
 
         register_panel(
-            hass, name, panel_path,
+            hass,
+            name,
+            panel_path,
             sidebar_title=panel.get(CONF_SIDEBAR_TITLE),
             sidebar_icon=panel.get(CONF_SIDEBAR_ICON),
             url_path=panel.get(CONF_URL_PATH),
-            config=panel.get(CONF_CONFIG),
-        )
+            config=panel.get(CONF_CONFIG), )
 
         success = True
 

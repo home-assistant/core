@@ -21,10 +21,14 @@ CONF_DEVICE_IDS = 'device_ids'
 CONF_DEVICE_NAMES = 'device_names'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_DEVICE_ID): cv.string,
-    vol.Optional(CONF_DEVICE_IDS): cv.string,
-    vol.Optional(CONF_DEVICE_NAMES): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Optional(CONF_DEVICE_ID):
+    cv.string,
+    vol.Optional(CONF_DEVICE_IDS):
+    cv.string,
+    vol.Optional(CONF_DEVICE_NAMES):
+    cv.string,
 })
 
 
@@ -44,8 +48,8 @@ def get_service(hass, config, discovery_info=None):
         _LOGGER.error("No device was provided. Please specify device_id"
                       ", device_ids, or device_names")
         return False
-    return JoinNotificationService(api_key, device_id,
-                                   device_ids, device_names)
+    return JoinNotificationService(api_key, device_id, device_ids,
+                                   device_names)
 
 
 class JoinNotificationService(BaseNotificationService):
@@ -64,7 +68,12 @@ class JoinNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}
         send_notification(
-            device_id=self._device_id, device_ids=self._device_ids,
-            device_names=self._device_names, text=message, title=title,
-            icon=data.get('icon'), smallicon=data.get('smallicon'),
-            vibration=data.get('vibration'), api_key=self._api_key)
+            device_id=self._device_id,
+            device_ids=self._device_ids,
+            device_names=self._device_names,
+            text=message,
+            title=title,
+            icon=data.get('icon'),
+            smallicon=data.get('smallicon'),
+            vibration=data.get('vibration'),
+            api_key=self._api_key)

@@ -11,10 +11,10 @@ from datetime import timedelta
 from homeassistant.const import CONF_ELEVATION
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_utc_time_change)
-from homeassistant.helpers.sun import (
-    get_astral_location, get_astral_event_next)
+from homeassistant.helpers.event import (async_track_point_in_utc_time,
+                                         async_track_utc_time_change)
+from homeassistant.helpers.sun import (get_astral_location,
+                                       get_astral_event_next)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,18 +102,18 @@ class Sun(Entity):
     @callback
     def update_as_of(self, utc_point_in_time):
         """Update the attributes containing solar events."""
-        self.next_dawn = get_astral_event_next(
-            self.hass, 'dawn', utc_point_in_time)
-        self.next_dusk = get_astral_event_next(
-            self.hass, 'dusk', utc_point_in_time)
-        self.next_midnight = get_astral_event_next(
-            self.hass, 'solar_midnight', utc_point_in_time)
-        self.next_noon = get_astral_event_next(
-            self.hass, 'solar_noon', utc_point_in_time)
-        self.next_rising = get_astral_event_next(
-            self.hass, 'sunrise', utc_point_in_time)
-        self.next_setting = get_astral_event_next(
-            self.hass, 'sunset', utc_point_in_time)
+        self.next_dawn = get_astral_event_next(self.hass, 'dawn',
+                                               utc_point_in_time)
+        self.next_dusk = get_astral_event_next(self.hass, 'dusk',
+                                               utc_point_in_time)
+        self.next_midnight = get_astral_event_next(self.hass, 'solar_midnight',
+                                                   utc_point_in_time)
+        self.next_noon = get_astral_event_next(self.hass, 'solar_noon',
+                                               utc_point_in_time)
+        self.next_rising = get_astral_event_next(self.hass, 'sunrise',
+                                                 utc_point_in_time)
+        self.next_setting = get_astral_event_next(self.hass, 'sunset',
+                                                  utc_point_in_time)
 
     @callback
     def update_sun_position(self, utc_point_in_time):
@@ -130,7 +130,8 @@ class Sun(Entity):
 
         # Schedule next update at next_change+1 second so sun state has changed
         async_track_point_in_utc_time(
-            self.hass, self.point_in_time_listener,
+            self.hass,
+            self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
 
     @callback

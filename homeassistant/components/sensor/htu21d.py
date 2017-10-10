@@ -18,8 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
+REQUIREMENTS = ['i2csense==0.0.4', 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +33,10 @@ SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS):
+    vol.Coerce(int),
 })
 
 
@@ -52,16 +53,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
     sensor = yield from hass.async_add_job(
-        partial(HTU21D, bus, logger=_LOGGER)
-    )
+        partial(HTU21D, bus, logger=_LOGGER))
     if not sensor.sample_ok:
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
 
     sensor_handler = yield from hass.async_add_job(HTU21DHandler, sensor)
 
-    dev = [HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
-           HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')]
+    dev = [
+        HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
+        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')
+    ]
 
     async_add_devices(dev)
 

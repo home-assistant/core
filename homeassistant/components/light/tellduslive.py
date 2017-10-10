@@ -8,8 +8,8 @@ https://home-assistant.io/components/light.tellduslive/
 """
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.tellduslive import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)

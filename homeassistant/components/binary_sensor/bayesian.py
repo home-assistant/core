@@ -11,11 +11,11 @@ from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_ABOVE, CONF_BELOW, CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_NAME,
-    CONF_PLATFORM, CONF_STATE, STATE_UNKNOWN)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_ABOVE, CONF_BELOW, CONF_DEVICE_CLASS,
+                                 CONF_ENTITY_ID, CONF_NAME, CONF_PLATFORM,
+                                 CONF_STATE, STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import async_track_state_change
@@ -31,34 +31,40 @@ CONF_TO_STATE = 'to_state'
 
 DEFAULT_NAME = 'BayesianBinary'
 
-NUMERIC_STATE_SCHEMA = vol.Schema({
-    CONF_PLATFORM: 'numeric_state',
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_ABOVE): vol.Coerce(float),
-    vol.Optional(CONF_BELOW): vol.Coerce(float),
-    vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-    vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
-}, required=True)
+NUMERIC_STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: 'numeric_state',
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_ABOVE): vol.Coerce(float),
+        vol.Optional(CONF_BELOW): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+    },
+    required=True)
 
-STATE_SCHEMA = vol.Schema({
-    CONF_PLATFORM: CONF_STATE,
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_TO_STATE): cv.string,
-    vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-    vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
-}, required=True)
+STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: CONF_STATE,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TO_STATE): cv.string,
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float)
+    },
+    required=True)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-        cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): cv.string,
-    vol.Required(CONF_OBSERVATIONS): vol.Schema(
-        vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
-                                         STATE_SCHEMA)])
-    ),
-    vol.Required(CONF_PRIOR): vol.Coerce(float),
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    cv.string,
+    vol.Required(CONF_OBSERVATIONS):
+    vol.Schema(
+        vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA)
+                                 ])),
+    vol.Required(CONF_PRIOR):
+    vol.Coerce(float),
     vol.Optional(CONF_PROBABILITY_THRESHOLD):
-        vol.Coerce(float),
+    vol.Coerce(float),
 })
 
 
@@ -118,6 +124,7 @@ class BayesianBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
+
         @callback
         # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(entity, old_state,
@@ -142,8 +149,8 @@ class BayesianBinarySensor(BinarySensorDevice):
             self.hass.async_add_job(self.async_update_ha_state, True)
 
         entities = [obs['entity_id'] for obs in self._observations]
-        async_track_state_change(
-            self.hass, entities, async_threshold_sensor_state_listener)
+        async_track_state_change(self.hass, entities,
+                                 async_threshold_sensor_state_listener)
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
@@ -151,8 +158,8 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         if should_trigger:
             prob_true = entity_observation['prob_given_true']
-            prob_false = entity_observation.get(
-                'prob_given_false', 1 - prob_true)
+            prob_false = entity_observation.get('prob_given_false',
+                                                1 - prob_true)
 
             self.current_obs[obs_id] = {
                 'prob_true': prob_true,
@@ -177,8 +184,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Add entity to current observations if state conditions are met."""
         entity = entity_observation['entity_id']
 
-        should_trigger = condition.state(
-            self.hass, entity, entity_observation.get('to_state'))
+        should_trigger = condition.state(self.hass, entity,
+                                         entity_observation.get('to_state'))
 
         self._update_current_obs(entity_observation, should_trigger)
 

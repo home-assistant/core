@@ -10,8 +10,8 @@ import os
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST,
+                                 CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['insteonlocal==0.52']
@@ -22,15 +22,23 @@ DEFAULT_PORT = 25105
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'insteon_local'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            cv.port,
+            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+            cv.positive_int
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -57,12 +65,16 @@ def setup(hass, config):
         # Check for successful connection
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
-        _LOGGER.error("Error on insteon_local."
-                      "Could not connect. Check config", exc_info=True)
+        _LOGGER.error(
+            "Error on insteon_local."
+            "Could not connect. Check config",
+            exc_info=True)
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("Error on insteon_local. Could not connect."
-                      "Check config", exc_info=True)
+        _LOGGER.error(
+            "Error on insteon_local. Could not connect."
+            "Check config",
+            exc_info=True)
         return False
     except requests.exceptions.RequestException:
         if insteonhub.http_code == 401:

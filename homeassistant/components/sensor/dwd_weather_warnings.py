@@ -21,8 +21,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor.rest import RestData
@@ -38,17 +38,19 @@ CONF_REGION_NAME = 'region_name'
 SCAN_INTERVAL = timedelta(minutes=15)
 
 MONITORED_CONDITIONS = {
-    'current_warning_level': ['Current Warning Level',
-                              None, 'mdi:close-octagon-outline'],
-    'advance_warning_level': ['Advance Warning Level',
-                              None, 'mdi:close-octagon-outline'],
+    'current_warning_level':
+    ['Current Warning Level', None, 'mdi:close-octagon-outline'],
+    'advance_warning_level':
+    ['Advance Warning Level', None, 'mdi:close-octagon-outline'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION_NAME): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_REGION_NAME):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
@@ -59,8 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     api = DwdWeatherWarningsAPI(region_name)
 
-    sensors = [DwdWeatherWarningsSensor(api, name, condition)
-               for condition in config[CONF_MONITORED_CONDITIONS]]
+    sensors = [
+        DwdWeatherWarningsSensor(api, name, condition)
+        for condition in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     add_devices(sensors, True)
 
@@ -170,11 +174,9 @@ class DwdWeatherWarningsAPI(object):
     def __init__(self, region_name):
         """Initialize the data object."""
         resource = "{}{}{}?{}".format(
-            'https://',
-            'www.dwd.de',
+            'https://', 'www.dwd.de',
             '/DWD/warnungen/warnapp_landkreise/json/warnings.json',
-            'jsonp=loadWarnings'
-        )
+            'jsonp=loadWarnings')
 
         self._rest = RestData('GET', resource, None, None, None, True)
         self.region_name = region_name

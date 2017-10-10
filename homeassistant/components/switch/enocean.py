@@ -20,8 +20,10 @@ DEFAULT_NAME = 'EnOcean Switch'
 DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_ID):
+    vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -58,22 +60,28 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""
-        optional = [0x03, ]
+        optional = [
+            0x03,
+        ]
         optional.extend(self.dev_id)
         optional.extend([0xff, 0x00])
-        self.send_command(data=[0xD2, 0x01, 0x00, 0x64, 0x00,
-                                0x00, 0x00, 0x00, 0x00], optional=optional,
-                          packet_type=0x01)
+        self.send_command(
+            data=[0xD2, 0x01, 0x00, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
+            optional=optional,
+            packet_type=0x01)
         self._on_state = True
 
     def turn_off(self, **kwargs):
         """Turn off the switch."""
-        optional = [0x03, ]
+        optional = [
+            0x03,
+        ]
         optional.extend(self.dev_id)
         optional.extend([0xff, 0x00])
-        self.send_command(data=[0xD2, 0x01, 0x00, 0x00, 0x00,
-                                0x00, 0x00, 0x00, 0x00], optional=optional,
-                          packet_type=0x01)
+        self.send_command(
+            data=[0xD2, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+            optional=optional,
+            packet_type=0x01)
         self._on_state = False
 
     def value_changed(self, val):

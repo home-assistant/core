@@ -18,15 +18,19 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SET_TXT = 'set_txt'
 ATTR_TXT = 'txt'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_DOMAIN): cv.string,
+            vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_TXT_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TXT): vol.Any(None, cv.string)
+    vol.Required(ATTR_TXT):
+    vol.Any(None, cv.string)
 })
 
 
@@ -34,9 +38,8 @@ SERVICE_TXT_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_set_txt(hass, txt):
     """Set the txt record. Pass in None to remove it."""
-    yield from hass.services.async_call(DOMAIN, SERVICE_SET_TXT, {
-        ATTR_TXT: txt
-    }, blocking=True)
+    yield from hass.services.async_call(
+        DOMAIN, SERVICE_SET_TXT, {ATTR_TXT: txt}, blocking=True)
 
 
 @asyncio.coroutine
@@ -59,12 +62,14 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def update_domain_service(call):
         """Update the DuckDNS entry."""
-        yield from _update_duckdns(session, domain, token,
-                                   txt=call.data[ATTR_TXT])
+        yield from _update_duckdns(
+            session, domain, token, txt=call.data[ATTR_TXT])
 
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_TXT, update_domain_service,
+        DOMAIN,
+        SERVICE_SET_TXT,
+        update_domain_service,
         schema=SERVICE_TXT_SCHEMA)
 
     return result

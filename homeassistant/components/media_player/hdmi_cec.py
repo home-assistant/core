@@ -26,9 +26,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as +switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecPlayerDevice(hass, hass.data.get(device),
-                                    hass.data.get(device).logical_address) for
-                    device in discovery_info[ATTR_NEW])
+        add_devices(
+            CecPlayerDevice(hass,
+                            hass.data.get(device),
+                            hass.data.get(device).logical_address)
+            for device in discovery_info[ATTR_NEW])
 
 
 class CecPlayerDevice(CecDevice, MediaPlayerDevice):
@@ -37,19 +39,18 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
-        self.entity_id = "%s.%s_%s" % (
-            DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+        self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi',
+                                       hex(self._logical_address)[2:])
         self.update()
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
         from pycec.commands import KeyPressCommand, KeyReleaseCommand
-        _LOGGER.debug("Sending keypress %s to device %s", hex(key),
-                      hex(self._logical_address))
+        _LOGGER.debug("Sending keypress %s to device %s",
+                      hex(key), hex(self._logical_address))
         self._device.send_command(
             KeyPressCommand(key, dst=self._logical_address))
-        self._device.send_command(
-            KeyReleaseCommand(dst=self._logical_address))
+        self._device.send_command(KeyReleaseCommand(dst=self._logical_address))
 
     def send_playback(self, key):
         """Send playback status to CEC adapter."""
@@ -163,13 +164,13 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
         from pycec.const import TYPE_RECORDER, TYPE_PLAYBACK, TYPE_TUNER, \
             TYPE_AUDIO
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
-            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA |
-                    SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_PREVIOUS_TRACK |
-                    SUPPORT_NEXT_TRACK)
+            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+                    | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_PREVIOUS_TRACK
+                    | SUPPORT_NEXT_TRACK)
         if self.type == TYPE_TUNER:
-            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA |
-                    SUPPORT_PAUSE | SUPPORT_STOP)
+            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+                    | SUPPORT_PAUSE | SUPPORT_STOP)
         if self.type_id == TYPE_AUDIO:
-            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP |
-                    SUPPORT_VOLUME_MUTE)
+            return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP
+                    | SUPPORT_VOLUME_MUTE)
         return SUPPORT_TURN_ON | SUPPORT_TURN_OFF

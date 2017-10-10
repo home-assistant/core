@@ -10,8 +10,8 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.components.light import (ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+                                            Light, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -26,12 +26,16 @@ DEFAULT_PORT = 19444
 SUPPORT_HYPERION = SUPPORT_RGB_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
     vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
-    vol.All(list, vol.Length(min=3, max=3),
+    vol.All(list,
+            vol.Length(min=3, max=3),
             [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -87,8 +91,11 @@ class Hyperion(Light):
         else:
             self._rgb_color = self._default_color
 
-        self.json_request(
-            {'command': 'color', 'priority': 128, 'color': self._rgb_color})
+        self.json_request({
+            'command': 'color',
+            'priority': 128,
+            'color': self._rgb_color
+        })
 
     def turn_off(self, **kwargs):
         """Disconnect all remotes."""

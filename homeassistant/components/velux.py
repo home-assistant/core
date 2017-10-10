@@ -20,12 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyvlx==0.1.3']
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -55,9 +58,7 @@ class VeluxModule:
         self.initialized = False
         host = config[DOMAIN].get(CONF_HOST)
         password = config[DOMAIN].get(CONF_PASSWORD)
-        self.pyvlx = PyVLX(
-            host=host,
-            password=password)
+        self.pyvlx = PyVLX(host=host, password=password)
         self.hass = hass
 
     @asyncio.coroutine

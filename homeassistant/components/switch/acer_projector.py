@@ -10,8 +10,8 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
+from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_NAME,
+                                 CONF_FILENAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyserial==3.1.1']
@@ -47,13 +47,15 @@ CMD_DICT = {
     STATE_OFF: '* 0 IR 002\r',
 }
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.isdevice,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Required(CONF_FILENAME):
+    cv.isdevice,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
     vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT):
-        cv.positive_int,
+    cv.positive_int,
 })
 
 
@@ -74,7 +76,9 @@ class AcerSwitch(SwitchDevice):
         """Init of the Acer projector."""
         import serial
         self.ser = serial.Serial(
-            port=serial_port, timeout=timeout, write_timeout=write_timeout,
+            port=serial_port,
+            timeout=timeout,
+            write_timeout=write_timeout,
             **kwargs)
         self._serial_port = serial_port
         self._name = name

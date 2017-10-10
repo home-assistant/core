@@ -56,13 +56,14 @@ class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug("%s Called delayed (%s sec) update.",
-                              self._name, self._delay)
+                _LOGGER.debug("%s Called delayed (%s sec) update.", self._name,
+                              self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None
 
             self._timer = track_point_in_utc_time(
-                self.hass, _delay_update,
+                self.hass,
+                _delay_update,
                 utcnow() + timedelta(seconds=self._delay))
         else:
             self.schedule_update_ha_state()

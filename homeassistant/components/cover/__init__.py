@@ -37,8 +37,8 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEVICE_CLASSES = [
-    'window',        # Window control
-    'garage',        # Garage door control
+    'window',  # Window control
+    'garage',  # Garage door control
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
@@ -63,27 +63,41 @@ COVER_SERVICE_SCHEMA = vol.Schema({
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_POSITION):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_TILT_POSITION):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+    vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_OPEN_COVER: {'method': 'async_open_cover'},
-    SERVICE_CLOSE_COVER: {'method': 'async_close_cover'},
+    SERVICE_OPEN_COVER: {
+        'method': 'async_open_cover'
+    },
+    SERVICE_CLOSE_COVER: {
+        'method': 'async_close_cover'
+    },
     SERVICE_SET_COVER_POSITION: {
         'method': 'async_set_cover_position',
-        'schema': COVER_SET_COVER_POSITION_SCHEMA},
-    SERVICE_STOP_COVER: {'method': 'async_stop_cover'},
-    SERVICE_OPEN_COVER_TILT: {'method': 'async_open_cover_tilt'},
-    SERVICE_CLOSE_COVER_TILT: {'method': 'async_close_cover_tilt'},
-    SERVICE_STOP_COVER_TILT: {'method': 'async_stop_cover_tilt'},
+        'schema': COVER_SET_COVER_POSITION_SCHEMA
+    },
+    SERVICE_STOP_COVER: {
+        'method': 'async_stop_cover'
+    },
+    SERVICE_OPEN_COVER_TILT: {
+        'method': 'async_open_cover_tilt'
+    },
+    SERVICE_CLOSE_COVER_TILT: {
+        'method': 'async_close_cover_tilt'
+    },
+    SERVICE_STOP_COVER_TILT: {
+        'method': 'async_stop_cover_tilt'
+    },
     SERVICE_SET_COVER_TILT_POSITION: {
         'method': 'async_set_cover_tilt_position',
-        'schema': COVER_SET_COVER_TILT_POSITION_SCHEMA},
+        'schema': COVER_SET_COVER_TILT_POSITION_SCHEMA
+    },
 }
 
 
@@ -155,8 +169,8 @@ def stop_cover_tilt(hass, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for covers."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_COVERS)
 
     yield from component.async_setup(config)
 
@@ -178,8 +192,7 @@ def async_setup(hass, config):
             if not cover.should_poll:
                 continue
 
-            update_coro = hass.async_add_job(
-                cover.async_update_ha_state(True))
+            update_coro = hass.async_add_job(cover.async_update_ha_state(True))
             if hasattr(cover, 'async_update'):
                 update_tasks.append(update_coro)
             else:
@@ -188,16 +201,20 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get(
-            'schema', COVER_SERVICE_SCHEMA)
+        schema = SERVICE_TO_METHOD[service_name].get('schema',
+                                                     COVER_SERVICE_SCHEMA)
         hass.services.async_register(
-            DOMAIN, service_name, async_handle_cover_service,
-            descriptions.get(service_name), schema=schema)
+            DOMAIN,
+            service_name,
+            async_handle_cover_service,
+            descriptions.get(service_name),
+            schema=schema)
 
     return True
 
@@ -261,9 +278,9 @@ class CoverDevice(Entity):
             supported_features |= SUPPORT_SET_POSITION
 
         if self.current_cover_tilt_position is not None:
-            supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
-                SUPPORT_SET_TILT_POSITION)
+            supported_features |= (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT
+                                   | SUPPORT_STOP_TILT
+                                   | SUPPORT_SET_TILT_POSITION)
 
         return supported_features
 

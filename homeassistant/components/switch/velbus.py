@@ -25,7 +25,7 @@ SWITCH_SCHEMA = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):
-        vol.All(cv.ensure_list, [SWITCH_SCHEMA])
+    vol.All(cv.ensure_list, [SWITCH_SCHEMA])
 })
 
 DEPENDENCIES = ['velbus']
@@ -56,6 +56,7 @@ class VelbusSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
+
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)

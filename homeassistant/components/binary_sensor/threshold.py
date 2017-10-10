@@ -12,9 +12,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN,
-    ATTR_ENTITY_ID, CONF_DEVICE_CLASS)
+from homeassistant.const import (CONF_NAME, CONF_ENTITY_ID, CONF_TYPE,
+                                 STATE_UNKNOWN, ATTR_ENTITY_ID,
+                                 CONF_DEVICE_CLASS)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 
@@ -36,13 +36,18 @@ DEFAULT_HYSTERESIS = 0.0
 SENSOR_TYPES = [CONF_LOWER, CONF_UPPER]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_THRESHOLD): vol.Coerce(float),
-    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-    vol.Optional(
-        CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Required(CONF_ENTITY_ID):
+    cv.entity_id,
+    vol.Required(CONF_THRESHOLD):
+    vol.Coerce(float),
+    vol.Required(CONF_TYPE):
+    vol.In(SENSOR_TYPES),
+    vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS):
+    vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_DEVICE_CLASS):
+    DEVICE_CLASSES_SCHEMA,
 })
 
 
@@ -56,10 +61,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     limit_type = config.get(CONF_TYPE)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices([ThresholdSensor(
-        hass, entity_id, name, threshold,
-        hysteresis, limit_type, device_class)
-                      ], True)
+    async_add_devices([
+        ThresholdSensor(hass, entity_id, name, threshold, hysteresis,
+                        limit_type, device_class)
+    ], True)
 
     return True
 
@@ -67,8 +72,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class ThresholdSensor(BinarySensorDevice):
     """Representation of a Threshold sensor."""
 
-    def __init__(self, hass, entity_id, name, threshold,
-                 hysteresis, limit_type, device_class):
+    def __init__(self, hass, entity_id, name, threshold, hysteresis,
+                 limit_type, device_class):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -82,8 +87,8 @@ class ThresholdSensor(BinarySensorDevice):
 
         @callback
         # pylint: disable=invalid-name
-        def async_threshold_sensor_state_listener(
-                entity, old_state, new_state):
+        def async_threshold_sensor_state_listener(entity, old_state,
+                                                  new_state):
             """Handle sensor state changes."""
             if new_state.state == STATE_UNKNOWN:
                 return
@@ -95,8 +100,8 @@ class ThresholdSensor(BinarySensorDevice):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(
-            hass, entity_id, async_threshold_sensor_state_listener)
+        async_track_state_change(hass, entity_id,
+                                 async_threshold_sensor_state_listener)
 
     @property
     def name(self):

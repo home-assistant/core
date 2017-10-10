@@ -18,8 +18,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START,
+    ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, __version__, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -67,36 +66,47 @@ SERVICE_RENAME_DEVICE = 'rename_wink_device'
 SERVICE_DELETE_DEVICE = 'delete_wink_device'
 SERVICE_SET_PAIRING_MODE = 'pair_new_device'
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Inclusive(
+                CONF_EMAIL, CONF_APPSPOT, msg=CONF_MISSING_OAUTH_MSG):
+            cv.string,
+            vol.Inclusive(
+                CONF_PASSWORD, CONF_APPSPOT, msg=CONF_MISSING_OAUTH_MSG):
+            cv.string,
+            vol.Inclusive(
+                CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG):
+            cv.string,
+            vol.Inclusive(
+                CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG):
+            cv.string,
+            vol.Optional(CONF_LOCAL_CONTROL, default=False):
+            cv.boolean
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_EMAIL, CONF_APPSPOT,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_PASSWORD, CONF_APPSPOT,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_ID, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean
-    })
-}, extra=vol.ALLOW_EXTRA)
+RENAME_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_NAME): cv.string
+    },
+    extra=vol.ALLOW_EXTRA)
 
+DELETE_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    }, extra=vol.ALLOW_EXTRA)
 
-RENAME_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_NAME): cv.string
-}, extra=vol.ALLOW_EXTRA)
-
-DELETE_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
-}, extra=vol.ALLOW_EXTRA)
-
-SET_PAIRING_MODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HUB_NAME): cv.string,
-    vol.Required(ATTR_PAIRING_MODE): cv.string,
-    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
-}, extra=vol.ALLOW_EXTRA)
+SET_PAIRING_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_HUB_NAME): cv.string,
+        vol.Required(ATTR_PAIRING_MODE): cv.string,
+        vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
+    },
+    extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
@@ -141,9 +151,10 @@ def _request_app_setup(hass, config):
         client_id = callback_data.get('client_id')
         client_secret = callback_data.get('client_secret')
         if None not in (client_id, client_secret):
-            _write_config_file(_config_path,
-                               {ATTR_CLIENT_ID: client_id,
-                                ATTR_CLIENT_SECRET: client_secret})
+            _write_config_file(_config_path, {
+                ATTR_CLIENT_ID: client_id,
+                ATTR_CLIENT_SECRET: client_secret
+            })
             setup(hass, config)
             return
         else:
@@ -163,14 +174,20 @@ def _request_app_setup(hass, config):
                      """.format(start_url)
 
     hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        DOMAIN, wink_configuration_callback,
-        description=description, submit_caption="submit",
+        DOMAIN,
+        wink_configuration_callback,
+        description=description,
+        submit_caption="submit",
         description_image="/static/images/config_wink.png",
-        fields=[{'id': 'client_id', 'name': 'Client ID', 'type': 'string'},
-                {'id': 'client_secret',
-                 'name': 'Client secret',
-                 'type': 'string'}]
-    )
+        fields=[{
+            'id': 'client_id',
+            'name': 'Client ID',
+            'type': 'string'
+        }, {
+            'id': 'client_secret',
+            'name': 'Client secret',
+            'type': 'string'
+        }])
 
 
 def _request_oauth_completion(hass, config):
@@ -178,9 +195,8 @@ def _request_oauth_completion(hass, config):
     hass.data[DOMAIN]['configurator'] = True
     configurator = hass.components.configurator
     if DOMAIN in hass.data[DOMAIN]['configuring']:
-        configurator.notify_errors(
-            hass.data[DOMAIN]['configuring'][DOMAIN],
-            "Failed to register, please try again.")
+        configurator.notify_errors(hass.data[DOMAIN]['configuring'][DOMAIN],
+                                   "Failed to register, please try again.")
         return
 
     # pylint: disable=unused-argument
@@ -193,9 +209,7 @@ def _request_oauth_completion(hass, config):
     description = "Please authorize Wink by visiting {}".format(start_url)
 
     hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        DOMAIN, wink_configuration_callback,
-        description=description
-    )
+        DOMAIN, wink_configuration_callback, description=description)
 
 
 def setup(hass, config):
@@ -250,8 +264,8 @@ def setup(hass, config):
         hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
-        pywink.legacy_set_wink_credentials(email, password,
-                                           client_id, client_secret)
+        pywink.legacy_set_wink_credentials(email, password, client_id,
+                                           client_secret)
     elif None not in [email, password]:
         _LOGGER.info("Using web form authentication")
         pywink.disable_local_control()
@@ -276,8 +290,8 @@ def setup(hass, config):
 
         if DOMAIN in hass.data[DOMAIN]['configuring']:
             _configurator = hass.data[DOMAIN]['configuring']
-            hass.components.configurator.request_done(_configurator.pop(
-                DOMAIN))
+            hass.components.configurator.request_done(
+                _configurator.pop(DOMAIN))
 
         # Using oauth
         access_token = config_file.get(ATTR_ACCESS_TOKEN)
@@ -285,10 +299,11 @@ def setup(hass, config):
 
         # This will be called after authorizing Home-Assistant
         if None not in (access_token, refresh_token):
-            pywink.set_wink_credentials(config_file.get(ATTR_CLIENT_ID),
-                                        config_file.get(ATTR_CLIENT_SECRET),
-                                        access_token=access_token,
-                                        refresh_token=refresh_token)
+            pywink.set_wink_credentials(
+                config_file.get(ATTR_CLIENT_ID),
+                config_file.get(ATTR_CLIENT_SECRET),
+                access_token=access_token,
+                refresh_token=refresh_token)
         # This is called to create the redirect so the user can Authorize
         # Home-Assistant
         else:
@@ -299,9 +314,9 @@ def setup(hass, config):
             wink_auth_start_url = pywink.get_authorization_url(
                 config_file.get(ATTR_CLIENT_ID), redirect_uri)
             hass.http.register_redirect(WINK_AUTH_START, wink_auth_start_url)
-            hass.http.register_view(WinkAuthCallbackView(config,
-                                                         config_file,
-                                                         pywink.request_token))
+            hass.http.register_view(
+                WinkAuthCallbackView(config, config_file,
+                                     pywink.request_token))
             _request_oauth_completion(hass, config)
             return True
 
@@ -383,8 +398,7 @@ def setup(hass, config):
         kidde_code = call.data.get('kidde_radio_code')
         for hub in WINK_HUBS:
             if hub.name() == hub_name:
-                hub.pair_new_device(pairing_mode,
-                                    kidde_radio_code=kidde_code)
+                hub.pair_new_device(pairing_mode, kidde_radio_code=kidde_code)
 
     def rename_device(call):
         """Set specified device's name."""
@@ -401,9 +415,12 @@ def setup(hass, config):
             name = call.data.get('name')
             found_device.wink.set_name(name)
 
-    hass.services.register(DOMAIN, SERVICE_RENAME_DEVICE, rename_device,
-                           descriptions.get(SERVICE_RENAME_DEVICE),
-                           schema=RENAME_DEVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_RENAME_DEVICE,
+        rename_device,
+        descriptions.get(SERVICE_RENAME_DEVICE),
+        schema=RENAME_DEVICE_SCHEMA)
 
     def delete_device(call):
         """Delete specified device."""
@@ -419,9 +436,12 @@ def setup(hass, config):
         if found_device is not None:
             found_device.wink.remove_device()
 
-    hass.services.register(DOMAIN, SERVICE_DELETE_DEVICE, delete_device,
-                           descriptions.get(SERVICE_DELETE_DEVICE),
-                           schema=DELETE_DEVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_DELETE_DEVICE,
+        delete_device,
+        descriptions.get(SERVICE_DELETE_DEVICE),
+        schema=DELETE_DEVICE_SCHEMA)
 
     hubs = pywink.get_hubs()
     for hub in hubs:
@@ -430,7 +450,9 @@ def setup(hass, config):
 
     if WINK_HUBS:
         hass.services.register(
-            DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
+            DOMAIN,
+            SERVICE_SET_PAIRING_MODE,
+            set_pairing_mode,
             descriptions.get(SERVICE_SET_PAIRING_MODE),
             schema=SET_PAIRING_MODE_SCHEMA)
 
@@ -470,8 +492,8 @@ class WinkAuthCallbackView(HomeAssistantView):
                 <body><h1>{}</h1></body></html>"""
 
         if data.get('code') is not None:
-            response = self.request_token(data.get('code'),
-                                          self.config_file["client_secret"])
+            response = self.request_token(
+                data.get('code'), self.config_file["client_secret"])
 
             config_contents = {
                 ATTR_ACCESS_TOKEN: response['access_token'],
@@ -479,18 +501,19 @@ class WinkAuthCallbackView(HomeAssistantView):
                 ATTR_CLIENT_ID: self.config_file["client_id"],
                 ATTR_CLIENT_SECRET: self.config_file["client_secret"]
             }
-            _write_config_file(hass.config.path(WINK_CONFIG_FILE),
-                               config_contents)
+            _write_config_file(
+                hass.config.path(WINK_CONFIG_FILE), config_contents)
 
             hass.async_add_job(setup, hass, self.config)
 
-            return web.Response(text=html_response.format(response_message),
-                                content_type='text/html')
+            return web.Response(
+                text=html_response.format(response_message),
+                content_type='text/html')
 
         error_msg = "No code returned from Wink API"
         _LOGGER.error(error_msg)
-        return web.Response(text=html_response.format(error_msg),
-                            content_type='text/html')
+        return web.Response(
+            text=html_response.format(error_msg), content_type='text/html')
 
 
 class WinkDevice(Entity):
@@ -500,8 +523,8 @@ class WinkDevice(Entity):
         """Initialize the Wink device."""
         self.hass = hass
         self.wink = wink
-        hass.data[DOMAIN]['pubnub'].add_subscription(
-            self.wink.pubnub_channel, self._pubnub_update)
+        hass.data[DOMAIN]['pubnub'].add_subscription(self.wink.pubnub_channel,
+                                                     self._pubnub_update)
         hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
                                                self.wink.name())
 

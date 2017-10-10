@@ -18,8 +18,10 @@ import homeassistant.helpers.config_validation as cv
 CONF_TIMESTAMP = 'timestamp'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.string,
-    vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
+    vol.Required(CONF_FILENAME):
+    cv.string,
+    vol.Optional(CONF_TIMESTAMP, default=False):
+    cv.boolean,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,8 +49,7 @@ class FileNotificationService(BaseNotificationService):
             if os.stat(self.filepath).st_size == 0:
                 title = '{} notifications (Log started: {})\n{}\n'.format(
                     kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-                    dt_util.utcnow().isoformat(),
-                    '-' * 80)
+                    dt_util.utcnow().isoformat(), '-' * 80)
                 file.write(title)
 
             if self.add_timestamp:

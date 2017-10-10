@@ -17,7 +17,8 @@ REQUIREMENTS = [
     '--only-binary=all '  # avoid compilation of gattlib
     'https://github.com/getSenic/nuimo-linux-python'
     '/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip'
-    '#nuimo==1.0.0']
+    '#nuimo==1.0.0'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,20 +27,26 @@ EVENT_NUIMO = 'nuimo_input'
 
 DEFAULT_NAME = 'None'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_MAC): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SERVICE_NUIMO = 'led_matrix'
 DEFAULT_INTERVAL = 2.0
 
 SERVICE_NUIMO_SCHEMA = vol.Schema({
-    vol.Required('matrix'): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional('interval', default=DEFAULT_INTERVAL): float
+    vol.Required('matrix'):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional('interval', default=DEFAULT_INTERVAL):
+    float
 })
 
 DEFAULT_ADAPTER = 'hci0'
@@ -66,9 +73,11 @@ class NuimoLogger(object):
         """Input Event received."""
         _LOGGER.debug("Received event: name=%s, gesture_id=%s,value=%s",
                       event.name, event.gesture, event.value)
-        self._hass.bus.fire(EVENT_NUIMO,
-                            {'type': event.name, 'value': event.value,
-                             'name': self._name})
+        self._hass.bus.fire(EVENT_NUIMO, {
+            'type': event.name,
+            'value': event.value,
+            'name': self._name
+        })
 
 
 class NuimoThread(threading.Thread):
@@ -151,7 +160,9 @@ class NuimoThread(threading.Thread):
                 self._nuimo.write_matrix(matrix, interval)
 
         self._hass.services.register(
-            DOMAIN, SERVICE_NUIMO, handle_write_matrix,
+            DOMAIN,
+            SERVICE_NUIMO,
+            handle_write_matrix,
             schema=SERVICE_NUIMO_SCHEMA)
 
         self._nuimo.write_matrix(HOMEASSIST_LOGO, 2.0)
@@ -159,15 +170,8 @@ class NuimoThread(threading.Thread):
 
 # must be 9x9 matrix
 HOMEASSIST_LOGO = (
-    "    .    " +
-    "   ...   " +
-    "  .....  " +
-    " ....... " +
-    "..... ..." +
-    " ....... " +
-    " .. .... " +
-    " .. .... " +
-    ".........")
+    "    .    " + "   ...   " + "  .....  " + " ....... " + "..... ..." +
+    " ....... " + " .. .... " + " .. .... " + ".........")
 
 
 class DiscoveryLogger(object):

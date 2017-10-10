@@ -17,9 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def install_package(package: str, upgrade: bool=True,
-                    target: Optional[str]=None,
-                    constraints: Optional[str]=None) -> bool:
+def install_package(package: str,
+                    upgrade: bool = True,
+                    target: Optional[str] = None,
+                    constraints: Optional[str] = None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -48,8 +49,8 @@ def install_package(package: str, upgrade: bool=True,
         process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         _, stderr = process.communicate()
         if process.returncode != 0:
-            _LOGGER.error("Unable to install package %s: %s",
-                          package, stderr.decode('utf-8').lstrip().strip())
+            _LOGGER.error("Unable to install package %s: %s", package,
+                          stderr.decode('utf-8').lstrip().strip())
             return False
 
         return True
@@ -96,8 +97,11 @@ def async_get_user_site(deps_dir: str, loop: asyncio.AbstractEventLoop) -> str:
     """
     args, env = _get_user_site(deps_dir)
     process = yield from asyncio.create_subprocess_exec(
-        *args, loop=loop, stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
+        *args,
+        loop=loop,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
         env=env)
     stdout, _ = yield from process.communicate()
     lib_dir = stdout.decode().strip()

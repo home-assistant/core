@@ -10,8 +10,8 @@ import voluptuous as vol
 
 import homeassistant.components.scsgate as scsgate
 from homeassistant.components.light import (Light, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME)
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['scsgate']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
+    vol.Required(CONF_DEVICES):
+    vol.Schema({
+        cv.slug: scsgate.SCSGATE_SCHEMA
+    }),
 })
 
 
@@ -112,9 +115,7 @@ class SCSGateLight(Light):
         if self._toggled:
             command = "on"
 
-        self.hass.bus.fire(
-            'button_pressed', {
-                ATTR_ENTITY_ID: self._scs_id,
-                ATTR_STATE: command,
-            }
-        )
+        self.hass.bus.fire('button_pressed', {
+            ATTR_ENTITY_ID: self._scs_id,
+            ATTR_STATE: command,
+        })

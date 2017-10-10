@@ -38,12 +38,19 @@ _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
-        vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(LOGGER_DEFAULT):
+            _VALID_LOG_LEVEL,
+            vol.Optional(LOGGER_LOGS):
+            vol.Schema({
+                cv.string: _VALID_LOG_LEVEL
+            }),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def set_level(hass, logs):
@@ -83,9 +90,8 @@ def async_setup(hass, config):
     # Set default log severity
     logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
     if LOGGER_DEFAULT in config.get(DOMAIN):
-        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            config.get(DOMAIN)[LOGGER_DEFAULT]
-        ]
+        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[config.get(DOMAIN)[
+            LOGGER_DEFAULT]]
 
     def set_log_levels(logpoints):
         """Set the specified log levels."""
@@ -100,12 +106,7 @@ def async_setup(hass, config):
             logs[key] = LOGSEVERITY[value]
 
         logfilter[LOGGER_LOGS] = OrderedDict(
-            sorted(
-                logs.items(),
-                key=lambda t: len(t[0]),
-                reverse=True
-            )
-        )
+            sorted(logs.items(), key=lambda t: len(t[0]), reverse=True))
 
     logger = logging.getLogger('')
     logger.setLevel(logging.NOTSET)
@@ -123,12 +124,15 @@ def async_setup(hass, config):
         """Handle logger services."""
         set_log_levels(service.data)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
+        DOMAIN,
+        SERVICE_SET_LEVEL,
+        async_service_handler,
         descriptions[DOMAIN].get(SERVICE_SET_LEVEL),
         schema=SERVICE_SET_LEVEL_SCHEMA)
 

@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.ffmpeg import (
-    FFmpegBase, DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS,
-    CONF_INITIAL_STATE)
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    PLATFORM_SCHEMA)
+from homeassistant.components.ffmpeg import (FFmpegBase, DATA_FFMPEG,
+                                             CONF_INPUT, CONF_EXTRA_ARGUMENTS,
+                                             CONF_INITIAL_STATE)
 from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['ffmpeg']
@@ -31,18 +31,22 @@ DEFAULT_NAME = 'FFmpeg Motion'
 DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INPUT): cv.string,
-    vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
+    vol.Required(CONF_INPUT):
+    cv.string,
+    vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE):
+    cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_EXTRA_ARGUMENTS):
+    cv.string,
     vol.Optional(CONF_RESET, default=10):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_CHANGES, default=10):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=99)),
+    vol.All(vol.Coerce(float), vol.Range(min=0, max=99)),
     vol.Inclusive(CONF_REPEAT, 'repeat'):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Inclusive(CONF_REPEAT_TIME, 'repeat'):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
 
@@ -94,8 +98,8 @@ class FFmpegMotion(FFmpegBinarySensor):
         from haffmpeg import SensorMotion
 
         super().__init__(config)
-        self.ffmpeg = SensorMotion(
-            manager.binary, hass.loop, self._async_callback)
+        self.ffmpeg = SensorMotion(manager.binary, hass.loop,
+                                   self._async_callback)
 
     @asyncio.coroutine
     def _async_start_ffmpeg(self, entity_ids):
@@ -111,14 +115,12 @@ class FFmpegMotion(FFmpegBinarySensor):
             time_reset=self._config.get(CONF_RESET),
             time_repeat=self._config.get(CONF_REPEAT_TIME, 0),
             repeat=self._config.get(CONF_REPEAT, 0),
-            changes=self._config.get(CONF_CHANGES),
-        )
+            changes=self._config.get(CONF_CHANGES), )
 
         # run
         yield from self.ffmpeg.open_sensor(
             input_source=self._config.get(CONF_INPUT),
-            extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
-        )
+            extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS), )
 
     @property
     def device_class(self):

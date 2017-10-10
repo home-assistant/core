@@ -16,9 +16,11 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
-                "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
-                "pygtfs==0.1.3"]
+REQUIREMENTS = [
+    "https://github.com/robbiet480/pygtfs/archive/"
+    "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
+    "pygtfs==0.1.3"
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +37,16 @@ ICON = 'mdi:train'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ORIGIN): cv.string,
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_DATA): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_ORIGIN):
+    cv.string,
+    vol.Required(CONF_DESTINATION):
+    cv.string,
+    vol.Required(CONF_DATA):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
     vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)):
-        cv.time_period_dict,
+    cv.time_period_dict,
 })
 
 
@@ -94,10 +100,12 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     AND calendar.end_date >= :today
     ORDER BY origin_stop_time.departure_time LIMIT 1;
     """.format(day_name=day_name))
-    result = sched.engine.execute(sql_query, now_str=now_str,
-                                  origin_station_id=origin_station.id,
-                                  end_station_id=destination_station.id,
-                                  today=today)
+    result = sched.engine.execute(
+        sql_query,
+        now_str=now_str,
+        origin_station_id=origin_station.id,
+        end_station_id=destination_station.id,
+        today=today)
     item = {}
     for row in result:
         item = row
@@ -109,10 +117,9 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     arrival_time_string = '{} {}'.format(today, item[3])
     departure_time = datetime.datetime.strptime(departure_time_string,
                                                 TIME_FORMAT)
-    arrival_time = datetime.datetime.strptime(arrival_time_string,
-                                              TIME_FORMAT)
+    arrival_time = datetime.datetime.strptime(arrival_time_string, TIME_FORMAT)
 
-    seconds_until = (departure_time-datetime.datetime.now()).total_seconds()
+    seconds_until = (departure_time - datetime.datetime.now()).total_seconds()
     minutes_until = int(seconds_until / 60)
 
     route = sched.routes_by_id(item[1])[0]
@@ -125,16 +132,20 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     origin_stop_time_dict = {
         'Arrival Time': origin_stoptime_arrival_time,
         'Departure Time': origin_stoptime_departure_time,
-        'Drop Off Type': item[6], 'Pickup Type': item[7],
-        'Shape Dist Traveled': item[8], 'Headsign': item[9],
+        'Drop Off Type': item[6],
+        'Pickup Type': item[7],
+        'Shape Dist Traveled': item[8],
+        'Headsign': item[9],
         'Sequence': item[10]
     }
 
     destination_stop_time_dict = {
         'Arrival Time': dest_stoptime_arrival_time,
         'Departure Time': dest_stoptime_depart_time,
-        'Drop Off Type': item[13], 'Pickup Type': item[14],
-        'Shape Dist Traveled': item[15], 'Headsign': item[16],
+        'Drop Off Type': item[13],
+        'Pickup Type': item[14],
+        'Shape Dist Traveled': item[15],
+        'Headsign': item[16],
         'Sequence': item[17]
     }
 
@@ -250,10 +261,9 @@ class GTFSDepartureSensor(Entity):
             trip = self._departure['trip']
 
             name = '{} {} to {} next departure'
-            self._name = (self._custom_name or
-                          name.format(agency.agency_name,
-                                      origin_station.stop_id,
-                                      destination_station.stop_id))
+            self._name = (self._custom_name or name.format(
+                agency.agency_name, origin_station.stop_id,
+                destination_station.stop_id))
 
             # Build attributes
             self._attributes = {}
@@ -282,7 +292,7 @@ class GTFSDepartureSensor(Entity):
             append_keys(dict_for_table(route), 'Route')
             append_keys(dict_for_table(trip), 'Trip')
             append_keys(dict_for_table(origin_station), 'Origin Station')
-            append_keys(dict_for_table(destination_station),
-                        'Destination Station')
+            append_keys(
+                dict_for_table(destination_station), 'Destination Station')
             append_keys(origin_stop_time, 'Origin Stop')
             append_keys(destination_stop_time, 'Destination Stop')

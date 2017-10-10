@@ -29,23 +29,33 @@ DEFAULT_NAME = 'KNX Climate'
 DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_SETPOINT_ADDRESS): cv.string,
-    vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
-    vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): cv.string,
-    vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Required(CONF_SETPOINT_ADDRESS):
+    cv.string,
+    vol.Required(CONF_TEMPERATURE_ADDRESS):
+    cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_OPERATION_MODE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS):
+    cv.string,
+    vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS):
+    cv.string,
 })
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up climate(s) for KNX platform."""
     if DATA_KNX not in hass.data \
             or not hass.data[DATA_KNX].initialized:
@@ -76,14 +86,11 @@ def async_add_devices_config(hass, config, async_add_devices):
     climate = xknx.devices.Climate(
         hass.data[DATA_KNX].xknx,
         name=config.get(CONF_NAME),
-        group_address_temperature=config.get(
-            CONF_TEMPERATURE_ADDRESS),
+        group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
-        group_address_setpoint=config.get(
-            CONF_SETPOINT_ADDRESS),
-        group_address_operation_mode=config.get(
-            CONF_OPERATION_MODE_ADDRESS),
+        group_address_setpoint=config.get(CONF_SETPOINT_ADDRESS),
+        group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),
         group_address_controller_status=config.get(
@@ -115,11 +122,13 @@ class KNXClimate(ClimateDevice):
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+
         @asyncio.coroutine
         def after_update_callback(device):
             """Callback after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
+
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -168,9 +177,10 @@ class KNXClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [operation_mode.value for
-                operation_mode in
-                self.device.get_supported_operation_modes()]
+        return [
+            operation_mode.value
+            for operation_mode in self.device.get_supported_operation_modes()
+        ]
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):

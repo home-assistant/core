@@ -10,19 +10,18 @@ import voluptuous as vol
 
 from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
-    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE)
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice, PLATFORM_SCHEMA,
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, ATTR_TEMPERATURE)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                                 CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF,
+                                 STATE_UNKNOWN)
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
 STATE_ECO = 'eco'
@@ -36,11 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     temp_unit = hass.config.units.temperature_unit
 
-    add_devices(
-        [NestThermostat(structure, device, temp_unit)
-         for structure, device in hass.data[DATA_NEST].thermostats()],
-        True
-    )
+    add_devices([
+        NestThermostat(structure, device, temp_unit)
+        for structure, device in hass.data[DATA_NEST].thermostats()
+    ], True)
 
 
 class NestThermostat(ClimateDevice):

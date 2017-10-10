@@ -13,16 +13,15 @@ import os
 import async_timeout
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST,
+                                 CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+                                 STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
-
 
 REQUIREMENTS = ['rflink==0.0.34']
 
@@ -68,22 +67,30 @@ DOMAIN = 'rflink'
 SERVICE_SEND_COMMAND = 'send_command'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS,
-                 default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+    vol.Optional(CONF_FIRE_EVENT, default=False):
+    cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+    vol.Coerce(int),
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-        vol.Optional(CONF_HOST, default=None): cv.string,
-        vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
-        vol.Optional(CONF_RECONNECT_INTERVAL,
-                     default=DEFAULT_RECONNECT_INTERVAL): int,
-        vol.Optional(CONF_IGNORE_DEVICES, default=[]):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_PORT):
+            vol.Any(cv.port, cv.string),
+            vol.Optional(CONF_HOST, default=None):
+            cv.string,
+            vol.Optional(CONF_WAIT_FOR_ACK, default=True):
+            cv.boolean,
+            vol.Optional(
+                CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL):
+            int,
+            vol.Optional(CONF_IGNORE_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 SEND_COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_ID): cv.string,
@@ -128,14 +135,13 @@ def async_setup(hass, config):
         """Send Rflink command."""
         _LOGGER.debug('Rflink command for %s', str(call.data))
         if not (yield from RflinkCommand.send_command(
-                call.data.get(CONF_DEVICE_ID),
-                call.data.get(CONF_COMMAND))):
+                call.data.get(CONF_DEVICE_ID), call.data.get(CONF_COMMAND))):
             _LOGGER.error('Failed Rflink command for %s', str(call.data))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
@@ -178,8 +184,8 @@ def async_setup(hass, config):
 
             # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
-                hass.async_run_job(
-                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
+                hass.async_run_job(hass.data[DATA_DEVICE_REGISTER][event_type],
+                                   event)
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN][CONF_HOST]
@@ -212,26 +218,23 @@ def async_setup(hass, config):
             event_callback=event_callback,
             disconnect_callback=reconnect,
             loop=hass.loop,
-            ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
-        )
+            ignore=config[DOMAIN][CONF_IGNORE_DEVICES])
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT,
-                                       loop=hass.loop):
+            with async_timeout.timeout(CONNECTION_TIMEOUT, loop=hass.loop):
                 transport, protocol = yield from connection
 
         except (serial.serialutil.SerialException, ConnectionRefusedError,
                 TimeoutError, OSError, asyncio.TimeoutError) as exc:
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
-            _LOGGER.exception(
-                "Error connecting to Rflink, reconnecting in %s",
-                reconnect_interval)
+            _LOGGER.exception("Error connecting to Rflink, reconnecting in %s",
+                              reconnect_interval)
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
         # Bind protocol to command class to allow entities to send commands
-        RflinkCommand.set_rflink_protocol(
-            protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
+        RflinkCommand.set_rflink_protocol(protocol,
+                                          config[DOMAIN][CONF_WAIT_FOR_ACK])
 
         # handle shutdown of Rflink asyncio transport
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -252,8 +255,15 @@ class RflinkDevice(Entity):
     platform = None
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliases=None, group=True,
-                 group_aliases=None, nogroup_aliases=None, fire_event=False,
+    def __init__(self,
+                 device_id,
+                 hass,
+                 name=None,
+                 aliases=None,
+                 group=True,
+                 group_aliases=None,
+                 nogroup_aliases=None,
+                 fire_event=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         self.hass = hass
@@ -283,8 +293,8 @@ class RflinkDevice(Entity):
                 ATTR_ENTITY_ID: self.entity_id,
                 ATTR_STATE: event[EVENT_KEY_COMMAND],
             })
-            _LOGGER.debug("Fired bus event for %s: %s",
-                          self.entity_id, event[EVENT_KEY_COMMAND])
+            _LOGGER.debug("Fired bus event for %s: %s", self.entity_id,
+                          event[EVENT_KEY_COMMAND])
 
     def _handle_event(self, event):
         """Platform specific event handler."""
@@ -407,8 +417,8 @@ class RflinkCommand(RflinkDevice):
     @asyncio.coroutine
     def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
-        _LOGGER.debug(
-            "Sending command: %s to Rflink device: %s", cmd, self._device_id)
+        _LOGGER.debug("Sending command: %s to Rflink device: %s", cmd,
+                      self._device_id)
 
         if not self.is_connected():
             raise HomeAssistantError('Cannot send command, not connected!')
@@ -422,8 +432,8 @@ class RflinkCommand(RflinkDevice):
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            self.hass.async_add_job(ft.partial(
-                self._protocol.send_command, self._device_id, cmd))
+            self.hass.async_add_job(
+                ft.partial(self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
             self._repetition_task = self.hass.async_add_job(
@@ -453,13 +463,11 @@ class SwitchableRflinkDevice(RflinkCommand):
 
 
 DEPRECATED_CONFIG_OPTIONS = [
-    CONF_ALIASSES,
-    CONF_GROUP_ALIASSES,
-    CONF_NOGROUP_ALIASSES]
+    CONF_ALIASSES, CONF_GROUP_ALIASSES, CONF_NOGROUP_ALIASSES
+]
 REPLACEMENT_CONFIG_OPTIONS = [
-    CONF_ALIASES,
-    CONF_GROUP_ALIASES,
-    CONF_NOGROUP_ALIASES]
+    CONF_ALIASES, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES
+]
 
 
 def remove_deprecated(config):

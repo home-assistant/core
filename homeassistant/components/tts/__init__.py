@@ -61,10 +61,12 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
-    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
+    vol.Optional(CONF_CACHE, default=DEFAULT_CACHE):
+    cv.boolean,
+    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR):
+    cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
-        vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
 })
 
 SCHEMA_SERVICE_SAY = vol.Schema({
@@ -96,9 +98,10 @@ def async_setup(hass, config):
 
     hass.http.register_view(TextToSpeechView(tts))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
@@ -110,8 +113,7 @@ def async_setup(hass, config):
 
         try:
             if hasattr(platform, 'async_get_engine'):
-                provider = yield from platform.async_get_engine(
-                    hass, p_config)
+                provider = yield from platform.async_get_engine(hass, p_config)
             else:
                 provider = yield from hass.async_add_job(
                     platform.get_engine, hass, p_config)
@@ -136,9 +138,11 @@ def async_setup(hass, config):
 
             try:
                 url = yield from tts.async_get_url(
-                    p_type, message, cache=cache, language=language,
-                    options=options
-                )
+                    p_type,
+                    message,
+                    cache=cache,
+                    language=language,
+                    options=options)
             except HomeAssistantError as err:
                 _LOGGER.error("Error on init tts: %s", err)
                 return
@@ -155,11 +159,16 @@ def async_setup(hass, config):
                 DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
 
         hass.services.async_register(
-            DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
-            descriptions.get(SERVICE_SAY), schema=SCHEMA_SERVICE_SAY)
+            DOMAIN,
+            "{}_{}".format(p_type, SERVICE_SAY),
+            async_say_handle,
+            descriptions.get(SERVICE_SAY),
+            schema=SCHEMA_SERVICE_SAY)
 
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
+    setup_tasks = [
+        async_setup_platform(p_type, p_config)
+        for p_type, p_config in config_per_platform(config, DOMAIN)
+    ]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
@@ -170,7 +179,9 @@ def async_setup(hass, config):
         yield from tts.async_clear_cache()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR_CACHE, async_clear_cache_handle,
+        DOMAIN,
+        SERVICE_CLEAR_CACHE,
+        async_clear_cache_handle,
         descriptions.get(SERVICE_CLEAR_CACHE),
         schema=SCHEMA_SERVICE_CLEAR_CACHE)
 
@@ -221,9 +232,8 @@ class SpeechManager(object):
                 record = _RE_VOICE_FILE.match(file_data)
                 if record:
                     key = KEY_PATTERN.format(
-                        record.group(1), record.group(2), record.group(3),
-                        record.group(4)
-                    )
+                        record.group(1),
+                        record.group(2), record.group(3), record.group(4))
                     cache[key.lower()] = file_data.lower()
             return cache
 
@@ -246,8 +256,8 @@ class SpeechManager(object):
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
                 except OSError as err:
-                    _LOGGER.warning(
-                        "Can't remove cache file '%s': %s", filename, err)
+                    _LOGGER.warning("Can't remove cache file '%s': %s",
+                                    filename, err)
 
         yield from self.hass.async_add_job(remove_files)
         self.file_cache = {}
@@ -261,7 +271,11 @@ class SpeechManager(object):
         self.providers[engine] = provider
 
     @asyncio.coroutine
-    def async_get_url(self, engine, message, cache=None, language=None,
+    def async_get_url(self,
+                      engine,
+                      message,
+                      cache=None,
+                      language=None,
                       options=None):
         """Get URL for play message.
 
@@ -275,8 +289,8 @@ class SpeechManager(object):
         language = language or provider.default_language
         if language is None or \
            language not in provider.supported_languages:
-            raise HomeAssistantError("Not supported language {0}".format(
-                language))
+            raise HomeAssistantError(
+                "Not supported language {0}".format(language))
 
         # Options
         if provider.default_options and options:
@@ -285,17 +299,19 @@ class SpeechManager(object):
             options = merged_options
         options = options or provider.default_options
         if options is not None:
-            invalid_opts = [opt_name for opt_name in options.keys()
-                            if opt_name not in provider.supported_options]
+            invalid_opts = [
+                opt_name for opt_name in options.keys()
+                if opt_name not in provider.supported_options
+            ]
             if invalid_opts:
-                raise HomeAssistantError(
-                    "Invalid options found: %s", invalid_opts)
+                raise HomeAssistantError("Invalid options found: %s",
+                                         invalid_opts)
             options_key = ctypes.c_size_t(hash(frozenset(options))).value
         else:
             options_key = '-'
 
-        key = KEY_PATTERN.format(
-            msg_hash, language, options_key, engine).lower()
+        key = KEY_PATTERN.format(msg_hash, language, options_key,
+                                 engine).lower()
 
         # Is speech already in memory
         if key in self.mem_cache:
@@ -309,8 +325,8 @@ class SpeechManager(object):
             filename = yield from self.async_get_tts_audio(
                 engine, key, message, use_cache, language, options)
 
-        return "{}/api/tts_proxy/{}".format(
-            self.hass.config.api.base_url, filename)
+        return "{}/api/tts_proxy/{}".format(self.hass.config.api.base_url,
+                                            filename)
 
     @asyncio.coroutine
     def async_get_tts_audio(self, engine, key, message, cache, language,
@@ -330,8 +346,8 @@ class SpeechManager(object):
         # Create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = self.write_tags(
-            filename, data, provider, message, language, options)
+        data = self.write_tags(filename, data, provider, message, language,
+                               options)
 
         # Save to memory
         self._async_store_to_memcache(key, filename, data)

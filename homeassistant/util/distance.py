@@ -9,8 +9,7 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    LENGTH,
-)
+    LENGTH, )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +24,9 @@ VALID_UNITS = [
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
-        raise ValueError(
-            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
     if unit_2 not in VALID_UNITS:
-        raise ValueError(
-            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, LENGTH))
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, LENGTH))
 
     if not isinstance(value, Number):
         raise TypeError('{} is not of numeric type'.format(value))

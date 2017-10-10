@@ -33,11 +33,13 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
     vol.Optional(ATTR_VALUE3): cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_KEY): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_KEY): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
@@ -68,7 +70,10 @@ def setup(hass, config):
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
-    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service,
-                           schema=SERVICE_TRIGGER_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_TRIGGER,
+        trigger_service,
+        schema=SERVICE_TRIGGER_SCHEMA)
 
     return True

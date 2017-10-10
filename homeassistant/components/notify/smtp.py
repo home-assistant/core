@@ -17,12 +17,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_SENDER, CONF_RECIPIENT)
+from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
+                                             ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
+                                 CONF_TIMEOUT, CONF_SENDER, CONF_RECIPIENT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,17 +43,26 @@ ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
-    vol.Required(CONF_SENDER): vol.Email(),
-    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Required(CONF_RECIPIENT):
+    vol.All(cv.ensure_list, [vol.Email()]),
+    vol.Required(CONF_SENDER):
+    vol.Email(),
+    vol.Optional(CONF_SERVER, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
+    cv.positive_int,
     vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION):
-        vol.In(ENCRYPTION_OPTIONS),
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SENDER_NAME): cv.string,
-    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+    vol.In(ENCRYPTION_OPTIONS),
+    vol.Optional(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_SENDER_NAME):
+    cv.string,
+    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG):
+    cv.boolean,
 })
 
 
@@ -69,8 +77,7 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT),
-        config.get(CONF_SENDER_NAME),
-        config.get(CONF_DEBUG))
+        config.get(CONF_SENDER_NAME), config.get(CONF_DEBUG))
 
     if mail_service.connection_is_valid():
         return mail_service
@@ -220,9 +227,9 @@ def _build_multipart_msg(message, images):
                     _LOGGER.warning("Attachment %s has an unknown MIME type. "
                                     "Falling back to file", atch_name)
                     attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment['Content-Disposition'] = ('attachment; '
-                                                         'filename="%s"' %
-                                                         atch_name)
+                    attachment['Content-Disposition'] = (
+                        'attachment; '
+                        'filename="%s"' % atch_name)
                     msg.attach(attachment)
         except FileNotFoundError:
             _LOGGER.warning("Attachment %s not found. Skipping", atch_name)

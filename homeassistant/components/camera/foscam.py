@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_PORT)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +25,16 @@ DEFAULT_PORT = 88
 FOSCAM_COMM_ERROR = -8
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_IP):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
 })
 
 
@@ -55,8 +60,8 @@ class FoscamCam(Camera):
 
         from libpyfoscam import FoscamCamera
 
-        self._foscam_session = FoscamCamera(ip_address, port, self._username,
-                                            self._password, verbose=False)
+        self._foscam_session = FoscamCamera(
+            ip_address, port, self._username, self._password, verbose=False)
 
     def camera_image(self):
         """Return a still image response from the camera."""

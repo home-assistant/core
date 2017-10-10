@@ -23,7 +23,8 @@ SUPPORT_SENSEHAT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 DEFAULT_NAME = 'sensehat'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -98,9 +99,10 @@ class SenseHatLight(Light):
         if ATTR_RGB_COLOR in kwargs:
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
 
-        self._sensehat.clear(int(self._rgb_color[0] * percent_bright),
-                             int(self._rgb_color[1] * percent_bright),
-                             int(self._rgb_color[2] * percent_bright))
+        self._sensehat.clear(
+            int(self._rgb_color[0] * percent_bright),
+            int(self._rgb_color[1] * percent_bright),
+            int(self._rgb_color[2] * percent_bright))
 
         self._is_on = True
         self.schedule_update_ha_state()

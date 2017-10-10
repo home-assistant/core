@@ -24,8 +24,10 @@ STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass,
+                   config: ConfigType,
+                   add_devices: Callable[[list], None],
+                   discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")
@@ -33,8 +35,7 @@ def setup_platform(hass, config: ConfigType,
 
     devices = []
 
-    for node in isy.filter_nodes(isy.SENSOR_NODES, units=UOM,
-                                 states=STATES):
+    for node in isy.filter_nodes(isy.SENSOR_NODES, units=UOM, states=STATES):
         devices.append(ISYBinarySensorDevice(node))
 
     for program in isy.PROGRAMS.get(DOMAIN, []):

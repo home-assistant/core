@@ -8,22 +8,25 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
+from homeassistant.const import (CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE,
+                                 MATCH_ALL, CONF_PLATFORM)
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers import (
-    condition, config_validation as cv, location)
+from homeassistant.helpers import (condition, config_validation as cv,
+                                   location)
 
 EVENT_ENTER = 'enter'
 EVENT_LEAVE = 'leave'
 DEFAULT_EVENT = EVENT_ENTER
 
 TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'zone',
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required(CONF_ZONE): cv.entity_id,
+    vol.Required(CONF_PLATFORM):
+    'zone',
+    vol.Required(CONF_ENTITY_ID):
+    cv.entity_ids,
+    vol.Required(CONF_ZONE):
+    cv.entity_id,
     vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
-        vol.Any(EVENT_ENTER, EVENT_LEAVE),
+    vol.Any(EVENT_ENTER, EVENT_LEAVE),
 })
 
 

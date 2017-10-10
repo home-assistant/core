@@ -6,11 +6,11 @@ https://home-assistant.io/components/climate.proliphix/
 """
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PRECISION_TENTHS, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    ClimateDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+from homeassistant.components.climate import (PRECISION_TENTHS, STATE_COOL,
+                                              STATE_HEAT, STATE_IDLE,
+                                              ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+                                 TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['proliphix==0.4.1']
@@ -18,9 +18,12 @@ REQUIREMENTS = ['proliphix==0.4.1']
 ATTR_FAN = 'fan'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
 })
 
 
@@ -72,9 +75,7 @@ class ProliphixThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        return {
-            ATTR_FAN: self._pdp.fan_state
-        }
+        return {ATTR_FAN: self._pdp.fan_state}
 
     @property
     def temperature_unit(self):

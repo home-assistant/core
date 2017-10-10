@@ -8,10 +8,9 @@ import asyncio
 import random
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT,
-    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
+    ATTR_WHITE_VALUE, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light)
 
 LIGHT_COLORS = [
     [237, 224, 33],
@@ -22,28 +21,40 @@ LIGHT_EFFECT_LIST = ['rainbow', 'none']
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
+SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
+                | SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the demo light platform."""
     add_devices_callback([
-        DemoLight("Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
-                  effect=LIGHT_EFFECT_LIST[0]),
-        DemoLight("Ceiling Lights", True, True,
-                  LIGHT_COLORS[0], LIGHT_TEMPS[1]),
-        DemoLight("Kitchen Lights", True, True,
-                  LIGHT_COLORS[1], LIGHT_TEMPS[0])
+        DemoLight(
+            "Bed Light",
+            False,
+            True,
+            effect_list=LIGHT_EFFECT_LIST,
+            effect=LIGHT_EFFECT_LIST[0]),
+        DemoLight("Ceiling Lights", True, True, LIGHT_COLORS[0],
+                  LIGHT_TEMPS[1]),
+        DemoLight("Kitchen Lights", True, True, LIGHT_COLORS[1],
+                  LIGHT_TEMPS[0])
     ])
 
 
 class DemoLight(Light):
     """Representation of a demo light."""
 
-    def __init__(self, name, state, available=False, rgb=None, ct=None,
-                 brightness=180, xy_color=(.5, .5), white=200,
-                 effect_list=None, effect=None):
+    def __init__(self,
+                 name,
+                 state,
+                 available=False,
+                 rgb=None,
+                 ct=None,
+                 brightness=180,
+                 xy_color=(.5, .5),
+                 white=200,
+                 effect_list=None,
+                 effect=None):
         """Initialize the light."""
         self._name = name
         self._state = state

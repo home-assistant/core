@@ -10,8 +10,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_IP = '192.168.1.1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string
+    vol.Optional(CONF_HOST, default=DEFAULT_IP):
+    cv.string
 })
 
 
@@ -69,8 +70,9 @@ class SwisscomDeviceScanner(DeviceScanner):
         if not data:
             return False
 
-        active_clients = [client for client in data.values() if
-                          client['status']]
+        active_clients = [
+            client for client in data.values() if client['status']
+        ]
         self.last_results = active_clients
         return True
 
@@ -92,7 +94,7 @@ class SwisscomDeviceScanner(DeviceScanner):
                     'mac': device['PhysAddress'],
                     'host': device['Name'],
                     'status': device['Active']
-                    }
+                }
             except (KeyError, requests.exceptions.RequestException):
                 pass
         return devices

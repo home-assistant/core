@@ -39,21 +39,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model == 'natgas':
                 devices.append(XiaomiNatgasSensor(device, gateway))
             elif model == 'switch':
-                devices.append(XiaomiButton(device, 'Switch', 'status',
-                                            hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Switch', 'status', hass, gateway))
             elif model == 'sensor_switch.aq2':
-                devices.append(XiaomiButton(device, 'Switch', 'status',
-                                            hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Switch', 'status', hass, gateway))
             elif model == '86sw1':
-                devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
-                                            hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Wall Switch', 'channel_0', hass,
+                                 gateway))
             elif model == '86sw2':
-                devices.append(XiaomiButton(device, 'Wall Switch (Left)',
-                                            'channel_0', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Right)',
-                                            'channel_1', hass, gateway))
-                devices.append(XiaomiButton(device, 'Wall Switch (Both)',
-                                            'dual_channel', hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Wall Switch (Left)', 'channel_0',
+                                 hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Wall Switch (Right)', 'channel_1',
+                                 hass, gateway))
+                devices.append(
+                    XiaomiButton(device, 'Wall Switch (Both)', 'dual_channel',
+                                 hass, gateway))
             elif model == 'cube':
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
@@ -160,9 +164,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         if value == MOTION:
             self._should_poll = True
             if self.entity_id is not None:
-                self._hass.bus.fire('motion', {
-                    'entity_id': self.entity_id
-                })
+                self._hass.bus.fire('motion', {'entity_id': self.entity_id})
 
             self._no_motion_since = 0
             if self._state:
@@ -288,8 +290,8 @@ class XiaomiButton(XiaomiBinarySensor):
     def __init__(self, device, name, data_key, hass, xiaomi_hub):
         """Initialize the XiaomiButton."""
         self._hass = hass
-        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub,
-                                    data_key, None)
+        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub, data_key,
+                                    None)
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -312,10 +314,9 @@ class XiaomiButton(XiaomiBinarySensor):
         else:
             return False
 
-        self._hass.bus.fire('click', {
-            'entity_id': self.entity_id,
-            'click_type': click_type
-        })
+        self._hass.bus.fire(
+            'click', {'entity_id': self.entity_id,
+                      'click_type': click_type})
         if value in ['long_click_press', 'long_click_release']:
             return True
         return False
@@ -328,8 +329,8 @@ class XiaomiCube(XiaomiBinarySensor):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._state = False
-        XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
-                                    None, None)
+        XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub, None,
+                                    None)
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -341,8 +342,11 @@ class XiaomiCube(XiaomiBinarySensor):
 
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
-                'entity_id': self.entity_id,
-                'action_type': 'rotate',
-                'action_value': float(data['rotate'].replace(",", "."))
+                'entity_id':
+                self.entity_id,
+                'action_type':
+                'rotate',
+                'action_value':
+                float(data['rotate'].replace(",", "."))
             })
         return False

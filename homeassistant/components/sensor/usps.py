@@ -26,8 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     usps = hass.data[DATA_USPS]
-    add_devices([USPSPackageSensor(usps),
-                 USPSMailSensor(usps)], True)
+    add_devices([USPSPackageSensor(usps), USPSMailSensor(usps)], True)
 
 
 class USPSPackageSensor(Entity):
@@ -60,9 +59,7 @@ class USPSPackageSensor(Entity):
                     package['delivery_date'] < now().date():
                 continue
             status_counts[status] += 1
-        self._attributes = {
-            ATTR_ATTRIBUTION: self._usps.attribution
-        }
+        self._attributes = {ATTR_ATTRIBUTION: self._usps.attribution}
         self._attributes.update(status_counts)
         self._state = sum(status_counts.values())
 

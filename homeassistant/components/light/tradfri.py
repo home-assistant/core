@@ -108,8 +108,9 @@ class TradfriGroup(Light):
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
-            self.hass.async_add_job(self._api(
-                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
+            self.hass.async_add_job(
+                self._api(
+                    self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
         else:
             self.hass.async_add_job(self._api(self._group.set_state(1)))
 
@@ -118,13 +119,14 @@ class TradfriGroup(Light):
         """Start observation of light."""
         from pytradfri.error import PyTradFriError
         if exc:
-            _LOGGER.warning("Observation failed for %s", self._name,
-                            exc_info=exc)
+            _LOGGER.warning(
+                "Observation failed for %s", self._name, exc_info=exc)
 
         try:
-            cmd = self._group.observe(callback=self._observe_update,
-                                      err_callback=self._async_start_observe,
-                                      duration=0)
+            cmd = self._group.observe(
+                callback=self._observe_update,
+                err_callback=self._async_start_observe,
+                duration=0)
             self.hass.async_add_job(self._api(cmd))
         except PyTradFriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
@@ -217,13 +219,12 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if (self._light_data.kelvin_color is None or
-                self.supported_features & SUPPORT_COLOR_TEMP == 0 or
-                not self._temp_supported):
+        if (self._light_data.kelvin_color is None
+                or self.supported_features & SUPPORT_COLOR_TEMP == 0
+                or not self._temp_supported):
             return None
         return color_util.color_temperature_kelvin_to_mired(
-            self._light_data.kelvin_color
-        )
+            self._light_data.kelvin_color)
 
     @property
     def rgb_color(self):
@@ -233,8 +234,8 @@ class TradfriLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self.hass.async_add_job(self._api(
-            self._light_control.set_state(False)))
+        self.hass.async_add_job(
+            self._api(self._light_control.set_state(False)))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -245,42 +246,45 @@ class TradfriLight(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            self.hass.async_add_job(self._api(
-                self._light.light_control.set_rgb_color(
-                    *kwargs[ATTR_RGB_COLOR])))
+            self.hass.async_add_job(
+                self._api(
+                    self._light.light_control.set_rgb_color(
+                        *kwargs[ATTR_RGB_COLOR])))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and \
                 self._temp_supported:
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
-            self.hass.async_add_job(self._api(
-                self._light_control.set_kelvin_color(kelvin)))
+            self.hass.async_add_job(
+                self._api(self._light_control.set_kelvin_color(kelvin)))
 
         keys = {}
         if ATTR_TRANSITION in kwargs:
             keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
-            self.hass.async_add_job(self._api(
-                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                               **keys)))
+            self.hass.async_add_job(
+                self._api(
+                    self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS], **
+                                                   keys)))
         else:
-            self.hass.async_add_job(self._api(
-                self._light_control.set_state(True)))
+            self.hass.async_add_job(
+                self._api(self._light_control.set_state(True)))
 
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         from pytradfri.error import PyTradFriError
         if exc:
-            _LOGGER.warning("Observation failed for %s", self._name,
-                            exc_info=exc)
+            _LOGGER.warning(
+                "Observation failed for %s", self._name, exc_info=exc)
 
         try:
-            cmd = self._light.observe(callback=self._observe_update,
-                                      err_callback=self._async_start_observe,
-                                      duration=0)
+            cmd = self._light.observe(
+                callback=self._observe_update,
+                err_callback=self._async_start_observe,
+                duration=0)
             self.hass.async_add_job(self._api(cmd))
         except PyTradFriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)

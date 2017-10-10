@@ -21,7 +21,8 @@ CONF_PAGE_ACCESS_TOKEN = 'page_access_token'
 BASE_URL = 'https://graph.facebook.com/v2.6/me/messages'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_PAGE_ACCESS_TOKEN):
+    cv.string,
 })
 
 
@@ -63,19 +64,17 @@ class FacebookNotificationService(BaseNotificationService):
             else:
                 recipient = {"id": target}
 
-            body = {
-                "recipient": recipient,
-                "message": body_message
-            }
+            body = {"recipient": recipient, "message": body_message}
             import json
-            resp = requests.post(BASE_URL, data=json.dumps(body),
-                                 params=payload,
-                                 headers={'Content-Type': CONTENT_TYPE_JSON},
-                                 timeout=10)
+            resp = requests.post(
+                BASE_URL,
+                data=json.dumps(body),
+                params=payload,
+                headers={'Content-Type': CONTENT_TYPE_JSON},
+                timeout=10)
             if resp.status_code != 200:
                 obj = resp.json()
                 error_message = obj['error']['message']
                 error_code = obj['error']['code']
-                _LOGGER.error(
-                    "Error %s : %s (Code %s)", resp.status_code, error_message,
-                    error_code)
+                _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
+                              error_message, error_code)

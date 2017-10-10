@@ -13,8 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN,
+                                 ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -43,11 +43,14 @@ DEFAULT_SIZE = 20
 ICON = 'mdi:calculator'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_ENTITY_ID):
+    cv.entity_id,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MAX_AGE): cv.time_period
+    vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_MAX_AGE):
+    cv.time_period
 })
 
 
@@ -60,8 +63,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     max_age = config.get(CONF_MAX_AGE, None)
 
     async_add_devices(
-        [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
-        True)
+        [StatisticsSensor(hass, entity_id, name, sampling_size,
+                          max_age)], True)
     return True
 
 
@@ -104,8 +107,8 @@ class StatisticsSensor(Entity):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(
-            hass, entity_id, async_stats_sensor_state_listener)
+        async_track_state_change(hass, entity_id,
+                                 async_stats_sensor_state_listener)
 
     def _add_state_to_queue(self, new_state):
         try:

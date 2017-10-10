@@ -31,11 +31,11 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
 from homeassistant import loader
-from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe,
-    fire_coroutine_threadsafe)
+from homeassistant.exceptions import (HomeAssistantError,
+                                      InvalidEntityFormatError)
+from homeassistant.util.async import (run_coroutine_threadsafe,
+                                      run_callback_threadsafe,
+                                      fire_coroutine_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
@@ -153,8 +153,8 @@ class HomeAssistant(object):
             self.loop.run_forever()
             return self.exit_code
         except KeyboardInterrupt:
-            self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.async_stop())
+            self.loop.call_soon_threadsafe(self.loop.create_task,
+                                           self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -261,8 +261,7 @@ class HomeAssistant(object):
         yield from asyncio.sleep(0, loop=self.loop)
 
         while self._pending_tasks:
-            pending = [task for task in self._pending_tasks
-                       if not task.done()]
+            pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
             if pending:
                 yield from asyncio.wait(pending, loop=self.loop)
@@ -311,7 +310,10 @@ class Event(object):
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
-    def __init__(self, event_type, data=None, origin=EventOrigin.local,
+    def __init__(self,
+                 event_type,
+                 data=None,
+                 origin=EventOrigin.local,
                  time_fired=None):
         """Initialize a new event."""
         self.event_type = event_type
@@ -335,20 +337,18 @@ class Event(object):
         """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
-            return "<Event {}[{}]: {}>".format(
-                self.event_type, str(self.origin)[0],
-                util.repr_helper(self.data))
+            return "<Event {}[{}]: {}>".format(self.event_type,
+                                               str(self.origin)[0],
+                                               util.repr_helper(self.data))
 
-        return "<Event {}[{}]>".format(self.event_type,
-                                       str(self.origin)[0])
+        return "<Event {}[{}]>".format(self.event_type, str(self.origin)[0])
 
     def __eq__(self, other):
         """Return the comparison."""
-        return (self.__class__ == other.__class__ and
-                self.event_type == other.event_type and
-                self.data == other.data and
-                self.origin == other.origin and
-                self.time_fired == other.time_fired)
+        return (self.__class__ == other.__class__
+                and self.event_type == other.event_type
+                and self.data == other.data and self.origin == other.origin
+                and self.time_fired == other.time_fired)
 
 
 class EventBus(object):
@@ -365,24 +365,25 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
-        return {key: len(self._listeners[key])
-                for key in self._listeners}
+        return {key: len(self._listeners[key]) for key in self._listeners}
 
     @property
     def listeners(self):
         """Return dictionary with events and the number of listeners."""
-        return run_callback_threadsafe(
-            self._hass.loop, self.async_listeners
-        ).result()
+        return run_callback_threadsafe(self._hass.loop,
+                                       self.async_listeners).result()
 
     def fire(self, event_type: str, event_data=None, origin=EventOrigin.local):
         """Fire an event."""
-        self._hass.loop.call_soon_threadsafe(
-            self.async_fire, event_type, event_data, origin)
+        self._hass.loop.call_soon_threadsafe(self.async_fire, event_type,
+                                             event_data, origin)
 
     @callback
-    def async_fire(self, event_type: str, event_data=None,
-                   origin=EventOrigin.local, wait=False):
+    def async_fire(self,
+                   event_type: str,
+                   event_data=None,
+                   origin=EventOrigin.local,
+                   wait=False):
         """Fire an event.
 
         This method must be run in the event loop.
@@ -415,8 +416,8 @@ class EventBus(object):
 
         def remove_listener():
             """Remove the listener."""
-            run_callback_threadsafe(
-                self._hass.loop, async_remove_listener).result()
+            run_callback_threadsafe(self._hass.loop,
+                                    async_remove_listener).result()
 
         return remove_listener
 
@@ -449,13 +450,15 @@ class EventBus(object):
         Returns function to unsubscribe the listener.
         """
         async_remove_listener = run_callback_threadsafe(
-            self._hass.loop, self.async_listen_once, event_type, listener,
-        ).result()
+            self._hass.loop,
+            self.async_listen_once,
+            event_type,
+            listener, ).result()
 
         def remove_listener():
             """Remove the listener."""
-            run_callback_threadsafe(
-                self._hass.loop, async_remove_listener).result()
+            run_callback_threadsafe(self._hass.loop,
+                                    async_remove_listener).result()
 
         return remove_listener
 
@@ -470,6 +473,7 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
+
         @callback
         def onetime_listener(event):
             """Remove listener from eventbus and then fire listener."""
@@ -514,16 +518,21 @@ class State(object):
     last_updated: last time this object was updated.
     """
 
-    __slots__ = ['entity_id', 'state', 'attributes',
-                 'last_changed', 'last_updated']
+    __slots__ = [
+        'entity_id', 'state', 'attributes', 'last_changed', 'last_updated'
+    ]
 
-    def __init__(self, entity_id, state, attributes=None, last_changed=None,
+    def __init__(self,
+                 entity_id,
+                 state,
+                 attributes=None,
+                 last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
         if not valid_entity_id(entity_id):
-            raise InvalidEntityFormatError((
-                "Invalid entity id encountered: {}. "
-                "Format should be <domain>.<object_id>").format(entity_id))
+            raise InvalidEntityFormatError(
+                ("Invalid entity id encountered: {}. "
+                 "Format should be <domain>.<object_id>").format(entity_id))
 
         self.entity_id = entity_id.lower()
         self.state = str(state)
@@ -544,9 +553,8 @@ class State(object):
     @property
     def name(self):
         """Name of this state."""
-        return (
-            self.attributes.get(ATTR_FRIENDLY_NAME) or
-            self.object_id.replace('_', ' '))
+        return (self.attributes.get(ATTR_FRIENDLY_NAME)
+                or self.object_id.replace('_', ' '))
 
     def as_dict(self):
         """Return a dict representation of the State.
@@ -556,11 +564,13 @@ class State(object):
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        return {'entity_id': self.entity_id,
-                'state': self.state,
-                'attributes': dict(self.attributes),
-                'last_changed': self.last_changed,
-                'last_updated': self.last_updated}
+        return {
+            'entity_id': self.entity_id,
+            'state': self.state,
+            'attributes': dict(self.attributes),
+            'last_changed': self.last_changed,
+            'last_updated': self.last_updated
+        }
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -570,8 +580,8 @@ class State(object):
 
         Ensures: state == State.from_json_dict(state.to_json_dict())
         """
-        if not (json_dict and 'entity_id' in json_dict and
-                'state' in json_dict):
+        if not (json_dict and 'entity_id' in json_dict
+                and 'state' in json_dict):
             return None
 
         last_changed = json_dict.get('last_changed')
@@ -589,10 +599,10 @@ class State(object):
 
     def __eq__(self, other):
         """Return the comparison of the state."""
-        return (self.__class__ == other.__class__ and
-                self.entity_id == other.entity_id and
-                self.state == other.state and
-                self.attributes == other.attributes)
+        return (self.__class__ == other.__class__
+                and self.entity_id == other.entity_id
+                and self.state == other.state
+                and self.attributes == other.attributes)
 
     def __repr__(self):
         """Return the representation of the states."""
@@ -615,9 +625,8 @@ class StateMachine(object):
 
     def entity_ids(self, domain_filter=None):
         """List of entity ids that are being tracked."""
-        future = run_callback_threadsafe(
-            self._loop, self.async_entity_ids, domain_filter
-        )
+        future = run_callback_threadsafe(self._loop, self.async_entity_ids,
+                                         domain_filter)
         return future.result()
 
     @callback
@@ -631,8 +640,10 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for state in self._states.values()
-                if state.domain == domain_filter]
+        return [
+            state.entity_id for state in self._states.values()
+            if state.domain == domain_filter
+        ]
 
     def all(self):
         """Create a list of all states."""
@@ -675,8 +686,8 @@ class StateMachine(object):
 
         Returns boolean to indicate if an entity was removed.
         """
-        return run_callback_threadsafe(
-            self._loop, self.async_remove, entity_id).result()
+        return run_callback_threadsafe(self._loop, self.async_remove,
+                                       entity_id).result()
 
     @callback
     def async_remove(self, entity_id):
@@ -709,11 +720,17 @@ class StateMachine(object):
         """
         run_callback_threadsafe(
             self._loop,
-            self.async_set, entity_id, new_state, attributes, force_update,
-        ).result()
+            self.async_set,
+            entity_id,
+            new_state,
+            attributes,
+            force_update, ).result()
 
     @callback
-    def async_set(self, entity_id, new_state, attributes=None,
+    def async_set(self,
+                  entity_id,
+                  new_state,
+                  attributes=None,
                   force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
@@ -729,8 +746,8 @@ class StateMachine(object):
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
         is_existing = old_state is not None
-        same_state = (is_existing and old_state.state == new_state and
-                      not force_update)
+        same_state = (is_existing and old_state.state == new_state
+                      and not force_update)
         same_attr = is_existing and old_state.attributes == attributes
 
         if same_state and same_attr:
@@ -749,8 +766,10 @@ class StateMachine(object):
 class Service(object):
     """Representation of a callable service."""
 
-    __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_callback', 'is_coroutinefunction']
+    __slots__ = [
+        'func', 'description', 'fields', 'schema', 'is_callback',
+        'is_coroutinefunction'
+    ]
 
     def __init__(self, func, description, fields, schema):
         """Initialize a service."""
@@ -812,8 +831,8 @@ class ServiceRegistry(object):
     def services(self):
         """Return dictionary with per domain a list of available services."""
         return run_callback_threadsafe(
-            self._hass.loop, self.async_services,
-        ).result()
+            self._hass.loop,
+            self.async_services, ).result()
 
     @callback
     def async_services(self):
@@ -821,9 +840,13 @@ class ServiceRegistry(object):
 
         This method must be run in the event loop.
         """
-        return {domain: {key: value.as_dict() for key, value
-                         in self._services[domain].items()}
-                for domain in self._services}
+        return {
+            domain: {
+                key: value.as_dict()
+                for key, value in self._services[domain].items()
+            }
+            for domain in self._services
+        }
 
     def has_service(self, domain, service):
         """Test if specified service exists.
@@ -832,7 +855,11 @@ class ServiceRegistry(object):
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    def register(self, domain, service, service_func, description=None,
+    def register(self,
+                 domain,
+                 service,
+                 service_func,
+                 description=None,
                  schema=None):
         """
         Register a service.
@@ -842,14 +869,16 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
         """
-        run_callback_threadsafe(
-            self._hass.loop,
-            self.async_register, domain, service, service_func, description,
-            schema
-        ).result()
+        run_callback_threadsafe(self._hass.loop, self.async_register, domain,
+                                service, service_func, description,
+                                schema).result()
 
     @callback
-    def async_register(self, domain, service, service_func, description=None,
+    def async_register(self,
+                       domain,
+                       service,
+                       service_func,
+                       description=None,
                        schema=None):
         """
         Register a service.
@@ -864,7 +893,8 @@ class ServiceRegistry(object):
         domain = domain.lower()
         service = service.lower()
         description = description or {}
-        service_obj = Service(service_func, description.get('description'),
+        service_obj = Service(service_func,
+                              description.get('description'),
                               description.get('fields', {}), schema)
 
         if domain in self._services:
@@ -876,15 +906,14 @@ class ServiceRegistry(object):
             self._async_unsub_call_event = self._hass.bus.async_listen(
                 EVENT_CALL_SERVICE, self._event_to_service_call)
 
-        self._hass.bus.async_fire(
-            EVENT_SERVICE_REGISTERED,
-            {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
-        )
+        self._hass.bus.async_fire(EVENT_SERVICE_REGISTERED,
+                                  {ATTR_DOMAIN: domain,
+                                   ATTR_SERVICE: service})
 
     def remove(self, domain, service):
         """Remove a registered service from service handler."""
-        run_callback_threadsafe(
-            self._hass.loop, self.async_remove, domain, service).result()
+        run_callback_threadsafe(self._hass.loop, self.async_remove, domain,
+                                service).result()
 
     @callback
     def async_remove(self, domain, service):
@@ -896,16 +925,15 @@ class ServiceRegistry(object):
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.warning(
-                "Unable to remove unknown service %s/%s.", domain, service)
+            _LOGGER.warning("Unable to remove unknown service %s/%s.", domain,
+                            service)
             return
 
         self._services[domain].pop(service)
 
-        self._hass.bus.async_fire(
-            EVENT_SERVICE_REMOVED,
-            {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
-        )
+        self._hass.bus.async_fire(EVENT_SERVICE_REMOVED,
+                                  {ATTR_DOMAIN: domain,
+                                   ATTR_SERVICE: service})
 
     def call(self, domain, service, service_data=None, blocking=False):
         """
@@ -926,8 +954,7 @@ class ServiceRegistry(object):
         """
         return run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking),
-            self._hass.loop
-        ).result()
+            self._hass.loop).result()
 
     @asyncio.coroutine
     def async_call(self, domain, service, service_data=None, blocking=False):
@@ -967,8 +994,8 @@ class ServiceRegistry(object):
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
-            unsub = self._hass.bus.async_listen(
-                EVENT_SERVICE_EXECUTED, service_executed)
+            unsub = self._hass.bus.async_listen(EVENT_SERVICE_EXECUTED,
+                                                service_executed)
 
         self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
@@ -989,8 +1016,8 @@ class ServiceRegistry(object):
 
         if not self.has_service(domain, service):
             if event.origin == EventOrigin.local:
-                _LOGGER.warning("Unable to find service %s/%s",
-                                domain, service)
+                _LOGGER.warning("Unable to find service %s/%s", domain,
+                                service)
             return
 
         service_handler = self._services[domain][service]
@@ -1002,8 +1029,8 @@ class ServiceRegistry(object):
 
             data = {ATTR_SERVICE_CALL_ID: call_id}
 
-            if (service_handler.is_coroutinefunction or
-                    service_handler.is_callback):
+            if (service_handler.is_coroutinefunction
+                    or service_handler.is_callback):
                 self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data)
             else:
                 self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data)
@@ -1012,8 +1039,8 @@ class ServiceRegistry(object):
             if service_handler.schema:
                 service_data = service_handler.schema(service_data)
         except vol.Invalid as ex:
-            _LOGGER.error("Invalid service data for %s.%s: %s",
-                          domain, service, humanize_error(service_data, ex))
+            _LOGGER.error("Invalid service data for %s.%s: %s", domain,
+                          service, humanize_error(service_data, ex))
             fire_service_executed()
             return
 
@@ -1026,6 +1053,7 @@ class ServiceRegistry(object):
             yield from service_handler.func(service_call)
             fire_service_executed()
         else:
+
             def execute_service():
                 """Execute a service and fires a SERVICE_EXECUTED event."""
                 service_handler.func(service_call)
@@ -1127,8 +1155,7 @@ def _async_create_timer(hass):
         """Fire next time event."""
         nonlocal handle
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED,
-                            {ATTR_NOW: dt_util.utcnow()})
+        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: dt_util.utcnow()})
         nxt += 1
         slp_seconds = nxt - monotonic()
 

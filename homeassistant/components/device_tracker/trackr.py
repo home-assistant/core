@@ -19,8 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pytrackr==0.0.5']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string
 })
 
 
@@ -75,6 +77,4 @@ class TrackRDeviceScanner(object):
                 'battery_level': trackr.battery_level()
             }
 
-            self.see(
-                dev_id=dev_id, gps=(lat, lon), attributes=attrs
-            )
+            self.see(dev_id=dev_id, gps=(lat, lon), attributes=attrs)

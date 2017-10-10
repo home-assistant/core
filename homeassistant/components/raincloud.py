@@ -11,12 +11,12 @@ from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_USERNAME,
+                                 CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              dispatcher_send)
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
@@ -79,14 +79,19 @@ SCAN_INTERVAL = timedelta(seconds=20)
 
 SIGNAL_UPDATE_RAINCLOUD = "raincloud_update"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME):
+            cv.string,
+            vol.Required(CONF_PASSWORD):
+            cv.string,
+            vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -140,8 +145,8 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
-            self.data.name, KEY_MAP.get(self._sensor_type))
+        self._name = "{0} {1}".format(self.data.name,
+                                      KEY_MAP.get(self._sensor_type))
         self._state = None
 
     @property
@@ -152,8 +157,8 @@ class RainCloudEntity(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RAINCLOUD,
+                                 self._update_callback)
 
     def _update_callback(self):
         """Callback update method."""

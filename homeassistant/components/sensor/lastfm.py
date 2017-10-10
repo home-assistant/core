@@ -24,8 +24,10 @@ CONF_USERS = 'users'
 ICON = 'mdi:lastfm'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_USERS, default=[]):
+    vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -35,9 +37,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pylast as lastfm
     network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
 
-    add_devices(
-        [LastfmSensor(
-            username, network) for username in config.get(CONF_USERS)], True)
+    add_devices([
+        LastfmSensor(username, network) for username in config.get(CONF_USERS)
+    ], True)
 
 
 class LastfmSensor(Entity):
@@ -75,8 +77,8 @@ class LastfmSensor(Entity):
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = "{} - {}".format(
-            last.track.artist, last.track.title)
+        self._lastplayed = "{} - {}".format(last.track.artist,
+                                            last.track.title)
         top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))

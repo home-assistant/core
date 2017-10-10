@@ -7,13 +7,12 @@ https://home-assistant.io/components/sensor.vera/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.util import convert
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.vera import (VERA_CONTROLLER, VERA_DEVICES,
+                                           VeraDevice)
 
 DEPENDENCIES = ['vera']
 

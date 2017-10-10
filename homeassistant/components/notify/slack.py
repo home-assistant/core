@@ -12,9 +12,9 @@ from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
+from homeassistant.components.notify import (ATTR_TARGET, ATTR_TITLE,
+                                             ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 
 REQUIREMENTS = ['slacker==0.9.60']
@@ -37,10 +37,14 @@ ATTR_FILE_AUTH = 'auth'
 ATTR_FILE_AUTH_DIGEST = 'digest'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_CHANNEL): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_ICON): cv.string,
+    vol.Required(CONF_API_KEY):
+    cv.string,
+    vol.Required(CONF_CHANNEL):
+    cv.string,
+    vol.Optional(CONF_USERNAME):
+    cv.string,
+    vol.Optional(CONF_ICON):
+    cv.string,
 })
 
 
@@ -54,8 +58,8 @@ def get_service(hass, config, discovery_info=None):
     icon = config.get(CONF_ICON)
 
     try:
-        return SlackNotificationService(
-            channel, api_key, username, icon, hass.config.is_allowed_path)
+        return SlackNotificationService(channel, api_key, username, icon,
+                                        hass.config.is_allowed_path)
 
     except slacker.Error:
         _LOGGER.exception("Authentication failed")
@@ -65,8 +69,8 @@ def get_service(hass, config, discovery_info=None):
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 
-    def __init__(
-            self, default_channel, api_token, username, icon, is_allowed_path):
+    def __init__(self, default_channel, api_token, username, icon,
+                 is_allowed_path):
         """Initialize the service."""
         from slacker import Slacker
         self._default_channel = default_channel
@@ -122,19 +126,28 @@ class SlackNotificationService(BaseNotificationService):
                         'channels': target
                     }
                     # Post to slack
-                    self.slack.files.post('files.upload',
-                                          data=data,
-                                          files={'file': file_as_bytes})
+                    self.slack.files.post(
+                        'files.upload',
+                        data=data,
+                        files={'file': file_as_bytes})
                 else:
                     self.slack.chat.post_message(
-                        target, message, as_user=self._as_user,
-                        username=self._username, icon_emoji=self._icon,
-                        attachments=attachments, link_names=True)
+                        target,
+                        message,
+                        as_user=self._as_user,
+                        username=self._username,
+                        icon_emoji=self._icon,
+                        attachments=attachments,
+                        link_names=True)
             except slacker.Error as err:
                 _LOGGER.error("Could not send notification. Error: %s", err)
 
-    def load_file(self, url=None, local_path=None, username=None,
-                  password=None, auth=None):
+    def load_file(self,
+                  url=None,
+                  local_path=None,
+                  username=None,
+                  password=None,
+                  auth=None):
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:

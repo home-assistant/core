@@ -9,9 +9,8 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_ENTITY_ID, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-    SERVICE_PLAY_MEDIA)
+    ATTR_ENTITY_ID, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, DOMAIN as
+    MEDIA_PLAYER_DOMAIN, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA, SERVICE_PLAY_MEDIA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_validation as cv
 
@@ -26,30 +25,39 @@ CONF_CUSTOMIZE_ENTITIES = 'customize'
 CONF_DEFAULT_STREAM_QUERY = 'default_query'
 DEFAULT_STREAM_QUERY = 'best'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEFAULT_STREAM_QUERY): cv.string,
-        vol.Optional(CONF_CUSTOMIZE_ENTITIES):
-            vol.Schema({cv.entity_id: vol.Schema({cv.string: cv.string})}),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Optional(CONF_DEFAULT_STREAM_QUERY):
+            cv.string,
+            vol.Optional(CONF_CUSTOMIZE_ENTITIES):
+            vol.Schema({
+                cv.entity_id: vol.Schema({
+                    cv.string: cv.string
+                })
+            }),
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the media extractor service."""
     descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__),
-                     'media_player', 'services.yaml'))
+        os.path.join(
+            os.path.dirname(__file__), 'media_player', 'services.yaml'))
 
     def play_media(call):
         """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
-    hass.services.register(DOMAIN,
-                           SERVICE_PLAY_MEDIA,
-                           play_media,
-                           description=descriptions[SERVICE_PLAY_MEDIA],
-                           schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        play_media,
+        description=descriptions[SERVICE_PLAY_MEDIA],
+        schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA)
 
     return True
 
@@ -131,8 +139,8 @@ class MediaExtractor(object):
                 requested_stream = ydl.process_ie_result(
                     selected_media, download=False)
             except (ExtractorError, DownloadError):
-                _LOGGER.error(
-                    "Could not extract stream for the query: %s", query)
+                _LOGGER.error("Could not extract stream for the query: %s",
+                              query)
                 raise MEQueryException()
 
             return requested_stream['url']
@@ -149,22 +157,23 @@ class MediaExtractor(object):
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
         else:
-            data = {k: v for k, v in self.call_data.items()
-                    if k != ATTR_ENTITY_ID}
+            data = {
+                k: v
+                for k, v in self.call_data.items() if k != ATTR_ENTITY_ID
+            }
             data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
             if entity_id:
                 data[ATTR_ENTITY_ID] = entity_id
 
             self.hass.async_add_job(
-                self.hass.services.async_call(
-                    MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
-            )
+                self.hass.services.async_call(MEDIA_PLAYER_DOMAIN,
+                                              SERVICE_PLAY_MEDIA, data))
 
     def get_stream_query_for_entity(self, entity_id):
         """Get stream format query for entity."""
-        default_stream_query = self.config.get(
-            CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY)
+        default_stream_query = self.config.get(CONF_DEFAULT_STREAM_QUERY,
+                                               DEFAULT_STREAM_QUERY)
 
         if entity_id:
             media_content_type = self.call_data.get(ATTR_MEDIA_CONTENT_TYPE)

@@ -13,8 +13,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_INCLUDE, CONF_EXCLUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    LENGTH_KILOMETERS, LENGTH_METERS)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, LENGTH_KILOMETERS,
+    LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.distance import convert
@@ -34,12 +34,18 @@ EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
 SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_RADIUS): vol.Coerce(float),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-    vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string])
+    vol.Required(CONF_NAME):
+    cv.string,
+    vol.Required(CONF_RADIUS):
+    vol.Coerce(float),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates'):
+    cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'):
+    cv.longitude,
+    vol.Optional(CONF_INCLUDE):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EXCLUDE):
+    vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -53,15 +59,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 
-    add_devices([CrimeReportsSensor(
-        hass, name, latitude, longitude, radius, include, exclude)], True)
+    add_devices([
+        CrimeReportsSensor(hass, name, latitude, longitude, radius, include,
+                           exclude)
+    ], True)
 
 
 class CrimeReportsSensor(Entity):
     """Crime Reports Sensor."""
 
-    def __init__(self, hass, name, latitude, longitude, radius,
-                 include, exclude):
+    def __init__(self, hass, name, latitude, longitude, radius, include,
+                 exclude):
         """Initialize the sensor."""
         import crimereports
         self._hass = hass
@@ -69,8 +77,8 @@ class CrimeReportsSensor(Entity):
         self._include = include
         self._exclude = exclude
         radius_kilometers = convert(radius, LENGTH_METERS, LENGTH_KILOMETERS)
-        self._crimereports = crimereports.CrimeReports(
-            (latitude, longitude), radius_kilometers)
+        self._crimereports = crimereports.CrimeReports((latitude, longitude),
+                                                       radius_kilometers)
         self._attributes = None
         self._state = None
         self._previous_incidents = set()
@@ -116,12 +124,10 @@ class CrimeReportsSensor(Entity):
         for incident in incidents:
             incident_type = slugify(incident.get('type'))
             incident_counts[incident_type] += 1
-            if (fire_events and incident.get('id')
-                    not in self._previous_incidents):
+            if (fire_events
+                    and incident.get('id') not in self._previous_incidents):
                 self._incident_event(incident)
             self._previous_incidents.add(incident.get('id'))
-        self._attributes = {
-            ATTR_ATTRIBUTION: crimereports.ATTRIBUTION
-        }
+        self._attributes = {ATTR_ATTRIBUTION: crimereports.ATTRIBUTION}
         self._attributes.update(incident_counts)
         self._state = len(incidents)

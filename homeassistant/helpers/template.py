@@ -9,9 +9,8 @@ import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
-    ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 MATCH_ALL, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
@@ -26,8 +25,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
-    re.I | re.M
-)
+    re.I | re.M)
 
 
 @bind_hass
@@ -86,8 +84,8 @@ class Template(object):
         if variables is not None:
             kwargs.update(variables)
 
-        return run_callback_threadsafe(
-            self.hass.loop, self.async_render, kwargs).result()
+        return run_callback_threadsafe(self.hass.loop, self.async_render,
+                                       kwargs).result()
 
     def async_render(self, variables=None, **kwargs):
         """Render given template.
@@ -114,7 +112,8 @@ class Template(object):
             error_value).result()
 
     # pylint: disable=invalid-name
-    def async_render_with_possible_json_value(self, value,
+    def async_render_with_possible_json_value(self,
+                                              value,
                                               error_value=_SENTINEL):
         """Render template with value exposed.
 
@@ -124,9 +123,7 @@ class Template(object):
         """
         self._ensure_compiled()
 
-        variables = {
-            'value': value
-        }
+        variables = {'value': value}
         try:
             variables['value_json'] = json.loads(value)
         except ValueError:
@@ -151,23 +148,28 @@ class Template(object):
         location_methods = LocationMethods(self.hass)
 
         global_vars = ENV.make_globals({
-            'closest': location_methods.closest,
-            'distance': location_methods.distance,
-            'is_state': self.hass.states.is_state,
-            'is_state_attr': self.hass.states.is_state_attr,
-            'states': AllStates(self.hass),
+            'closest':
+            location_methods.closest,
+            'distance':
+            location_methods.distance,
+            'is_state':
+            self.hass.states.is_state,
+            'is_state_attr':
+            self.hass.states.is_state_attr,
+            'states':
+            AllStates(self.hass),
         })
 
-        self._compiled = jinja2.Template.from_code(
-            ENV, self._compiled_code, global_vars, None)
+        self._compiled = jinja2.Template.from_code(ENV, self._compiled_code,
+                                                   global_vars, None)
 
         return self._compiled
 
     def __eq__(self, other):
         """Compare template with another."""
-        return (self.__class__ == other.__class__ and
-                self.template == other.template and
-                self.hass == other.hass)
+        return (self.__class__ == other.__class__
+                and self.template == other.template
+                and self.hass == other.hass)
 
 
 class AllStates(object):
@@ -184,9 +186,10 @@ class AllStates(object):
     def __iter__(self):
         """Return all states."""
         return iter(
-            _wrap_state(state) for state in
-            sorted(self._hass.states.async_all(),
-                   key=lambda state: state.entity_id))
+            _wrap_state(state)
+            for state in sorted(
+                self._hass.states.async_all(),
+                key=lambda state: state.entity_id))
 
     def __len__(self):
         """Return number of states."""
@@ -213,10 +216,11 @@ class DomainStates(object):
 
     def __iter__(self):
         """Return the iteration over all the states."""
-        return iter(sorted(
-            (_wrap_state(state) for state in self._hass.states.async_all()
-             if state.domain == self._domain),
-            key=lambda state: state.entity_id))
+        return iter(
+            sorted(
+                (_wrap_state(state) for state in self._hass.states.async_all()
+                 if state.domain == self._domain),
+                key=lambda state: state.entity_id))
 
     def __len__(self):
         """Return number of states."""
@@ -307,9 +311,8 @@ class LocationMethods(object):
             longitude = convert(args[1], float)
 
             if latitude is None or longitude is None:
-                _LOGGER.warning(
-                    "Closest:Received invalid coordinates: %s, %s",
-                    args[0], args[1])
+                _LOGGER.warning("Closest:Received invalid coordinates: %s, %s",
+                                args[0], args[1])
                 return None
 
             entities = args[2]
@@ -324,8 +327,11 @@ class LocationMethods(object):
 
             group = get_component('group')
 
-            states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
+            states = [
+                self._hass.states.get(entity_id)
+                for entity_id in group.expand_entity_ids(
+                    self._hass, [gr_entity_id])
+            ]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
 

@@ -34,14 +34,18 @@ CONF_DESTINATION = 'destination'
 
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_MODE):
-        vol.All(cv.ensure_list, [vol.In(list(['bus', 'train']))]),
-    vol.Required(CONF_ORIGIN): cv.string,
-    vol.Required(CONF_DESTINATION): cv.string,
+    vol.All(cv.ensure_list, [vol.In(list(['bus', 'train']))]),
+    vol.Required(CONF_ORIGIN):
+    cv.string,
+    vol.Required(CONF_DESTINATION):
+    cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_APP_ID): cv.string,
-    vol.Required(CONF_API_APP_KEY): cv.string,
+    vol.Required(CONF_API_APP_ID):
+    cv.string,
+    vol.Required(CONF_API_APP_KEY):
+    cv.string,
     vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
 })
 
@@ -50,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the uk_transport sensor."""
     sensors = []
     number_sensors = len(config.get(CONF_QUERIES))
-    interval = timedelta(seconds=87*number_sensors)
+    interval = timedelta(seconds=87 * number_sensors)
 
     for query in config.get(CONF_QUERIES):
         if 'bus' in query.get(CONF_MODE):
@@ -59,9 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(
                 UkTransportLiveBusTimeSensor(
                     config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
-                    stop_atcocode,
-                    bus_direction,
+                    config.get(CONF_API_APP_KEY), stop_atcocode, bus_direction,
                     interval))
 
         elif 'train' in query.get(CONF_MODE):
@@ -70,9 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(
                 UkTransportLiveTrainTimeSensor(
                     config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
-                    station_code,
-                    calling_at,
+                    config.get(CONF_API_APP_KEY), station_code, calling_at,
                     interval))
 
     add_devices(sensors, True)
@@ -143,22 +143,20 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
 
     ICON = 'mdi:bus'
 
-    def __init__(self, api_app_id, api_app_key,
-                 stop_atcocode, bus_direction, interval):
+    def __init__(self, api_app_id, api_app_key, stop_atcocode, bus_direction,
+                 interval):
         """Construct a live bus time sensor."""
         self._stop_atcocode = stop_atcocode
         self._bus_direction = bus_direction
         self._next_buses = []
-        self._destination_re = re.compile(
-            '{}'.format(bus_direction), re.IGNORECASE
-        )
+        self._destination_re = re.compile('{}'.format(bus_direction),
+                                          re.IGNORECASE)
 
         sensor_name = 'Next bus to {}'.format(bus_direction)
         stop_url = 'bus/stop/{}/live.json'.format(stop_atcocode)
 
-        UkTransportSensor.__init__(
-            self, sensor_name, api_app_id, api_app_key, stop_url
-        )
+        UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key,
+                                   stop_url)
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
@@ -174,16 +172,19 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 for departure in departures:
                     if self._destination_re.search(departure['direction']):
                         self._next_buses.append({
-                            'route': route,
-                            'direction': departure['direction'],
-                            'scheduled': departure['aimed_departure_time'],
-                            'estimated': departure['best_departure_estimate']
+                            'route':
+                            route,
+                            'direction':
+                            departure['direction'],
+                            'scheduled':
+                            departure['aimed_departure_time'],
+                            'estimated':
+                            departure['best_departure_estimate']
                         })
 
             if self._next_buses:
                 self._state = min(
-                    _delta_mins(bus['scheduled'])
-                    for bus in self._next_buses)
+                    _delta_mins(bus['scheduled']) for bus in self._next_buses)
             else:
                 self._state = None
 
@@ -206,8 +207,8 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
 
     ICON = 'mdi:train'
 
-    def __init__(self, api_app_id, api_app_key,
-                 station_code, calling_at, interval):
+    def __init__(self, api_app_id, api_app_key, station_code, calling_at,
+                 interval):
         """Construct a live bus time sensor."""
         self._station_code = station_code
         self._calling_at = calling_at
@@ -216,16 +217,17 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         sensor_name = 'Next train to {}'.format(calling_at)
         query_url = 'train/station/{}/live.json'.format(station_code)
 
-        UkTransportSensor.__init__(
-            self, sensor_name, api_app_id, api_app_key, query_url
-        )
+        UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key,
+                                   query_url)
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
         """Get the latest live departure data for the specified stop."""
-        params = {'darwin': 'false',
-                  'calling_at': self._calling_at,
-                  'train_status': 'passenger'}
+        params = {
+            'darwin': 'false',
+            'calling_at': self._calling_at,
+            'train_status': 'passenger'
+        }
 
         self._do_api_request(params)
         self._next_trains = []
@@ -236,14 +238,21 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
             else:
                 for departure in self._data['departures']['all']:
                     self._next_trains.append({
-                        'origin_name': departure['origin_name'],
-                        'destination_name': departure['destination_name'],
-                        'status': departure['status'],
-                        'scheduled': departure['aimed_departure_time'],
-                        'estimated': departure['expected_departure_time'],
-                        'platform': departure['platform'],
-                        'operator_name': departure['operator_name']
-                        })
+                        'origin_name':
+                        departure['origin_name'],
+                        'destination_name':
+                        departure['destination_name'],
+                        'status':
+                        departure['status'],
+                        'scheduled':
+                        departure['aimed_departure_time'],
+                        'estimated':
+                        departure['expected_departure_time'],
+                        'platform':
+                        departure['platform'],
+                        'operator_name':
+                        departure['operator_name']
+                    })
 
                 if self._next_trains:
                     self._state = min(
@@ -270,9 +279,11 @@ def _delta_mins(hhmm_time_str):
     hhmm_time = datetime.strptime(hhmm_time_str, '%H:%M')
 
     hhmm_datetime = datetime(
-        now.year, now.month, now.day,
-        hour=hhmm_time.hour, minute=hhmm_time.minute
-    )
+        now.year,
+        now.month,
+        now.day,
+        hour=hhmm_time.hour,
+        minute=hhmm_time.minute)
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 

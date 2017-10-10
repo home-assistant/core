@@ -12,17 +12,19 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET, SUPPORT_PLAY,
+    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
     PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
+from homeassistant.const import (CONF_NAME, STATE_PLAYING, STATE_PAUSED,
+                                 STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 COMMIT = '544614f4b1d508201d363e84e871f86c90aa26b2'
-REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
-                'archive/%s.zip#spotipy==2.4.4' % COMMIT]
+REQUIREMENTS = [
+    'https://github.com/happyleavesaoc/spotipy/'
+    'archive/%s.zip#spotipy==2.4.4' % COMMIT
+]
 
 DEPENDENCIES = ['http']
 
@@ -49,11 +51,17 @@ CONFIGURATOR_DESCRIPTION = 'To link your Spotify account, ' \
                            'click the link, login, and authorize:'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_CACHE_PATH): cv.string,
-    vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string}
+    vol.Required(CONF_CLIENT_ID):
+    cv.string,
+    vol.Required(CONF_CLIENT_SECRET):
+    cv.string,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_CACHE_PATH):
+    cv.string,
+    vol.Optional(CONF_ALIASES, default={}): {
+        cv.string: cv.string
+    }
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -63,7 +71,8 @@ def request_configuration(hass, config, add_devices, oauth):
     """Request Spotify authorization."""
     configurator = hass.components.configurator
     hass.data[DOMAIN] = configurator.request_config(
-        DEFAULT_NAME, lambda _: None,
+        DEFAULT_NAME,
+        lambda _: None,
         link_name=CONFIGURATOR_LINK_NAME,
         link_url=oauth.get_authorize_url(),
         description=CONFIGURATOR_DESCRIPTION,
@@ -76,21 +85,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     oauth = spotipy.oauth2.SpotifyOAuth(
-        config.get(CONF_CLIENT_ID), config.get(CONF_CLIENT_SECRET),
-        callback_url, scope=SCOPE,
+        config.get(CONF_CLIENT_ID),
+        config.get(CONF_CLIENT_SECRET),
+        callback_url,
+        scope=SCOPE,
         cache_path=cache)
     token_info = oauth.get_cached_token()
     if not token_info:
         _LOGGER.info("no token; requesting authorization")
-        hass.http.register_view(SpotifyAuthCallbackView(
-            config, add_devices, oauth))
+        hass.http.register_view(
+            SpotifyAuthCallbackView(config, add_devices, oauth))
         request_configuration(hass, config, add_devices, oauth)
         return
     if hass.data.get(DOMAIN):
         configurator = hass.components.configurator
         configurator.request_done(hass.data.get(DOMAIN))
         del hass.data[DOMAIN]
-    player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
+    player = SpotifyMediaPlayer(oauth,
+                                config.get(CONF_NAME, DEFAULT_NAME),
                                 config[CONF_ALIASES])
     add_devices([player], True)
 
@@ -142,8 +154,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Fetch a new spotify instance."""
         import spotipy
         token_refreshed = False
-        need_token = (self._token_info is None or
-                      self._oauth.is_token_expired(self._token_info))
+        need_token = (self._token_info is None
+                      or self._oauth.is_token_expired(self._token_info))
         if need_token:
             new_token = \
                 self._oauth.refresh_access_token(
@@ -174,12 +186,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             devices = player_devices.get('devices')
             if devices is not None:
                 old_devices = self._devices
-                self._devices = {self._aliases.get(device.get('id'),
-                                                   device.get('name')):
-                                 device.get('id')
-                                 for device in devices}
-                device_diff = {name: id for name, id in self._devices.items()
-                               if old_devices.get(name, None) is None}
+                self._devices = {
+                    self._aliases.get(device.get('id'), device.get('name')):
+                    device.get('id')
+                    for device in devices
+                }
+                device_diff = {
+                    name: id
+                    for name, id in self._devices.items()
+                    if old_devices.get(name, None) is None
+                }
                 if device_diff:
                     _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
@@ -192,8 +208,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if item:
             self._album = item.get('album').get('name')
             self._title = item.get('name')
-            self._artist = ', '.join([artist.get('name')
-                                      for artist in item.get('artists')])
+            self._artist = ', '.join(
+                [artist.get('name') for artist in item.get('artists')])
             self._uri = current.get('uri')
             images = item.get('album').get('images')
             self._image_url = images[0].get('url') if images else None

@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
-from homeassistant.setup import (
-    async_prepare_setup_platform, ATTR_COMPONENT)
+from homeassistant.setup import (async_prepare_setup_platform, ATTR_COMPONENT)
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.yaml import load_yaml, dump
@@ -63,8 +62,14 @@ def async_setup(hass, config):
 class BaseEditConfigView(HomeAssistantView):
     """Configure a Group endpoint."""
 
-    def __init__(self, component, config_type, path, key_schema, data_schema,
-                 *, post_write_hook=None):
+    def __init__(self,
+                 component,
+                 config_type,
+                 path,
+                 key_schema,
+                 data_schema,
+                 *,
+                 post_write_hook=None):
         """Initialize a config view."""
         self.url = '/api/config/%s/%s/{config_key}' % (component, config_type)
         self.name = 'api:config:%s:%s' % (component, config_type)
@@ -135,8 +140,8 @@ class BaseEditConfigView(HomeAssistantView):
     @asyncio.coroutine
     def read_config(self, hass):
         """Read the config."""
-        current = yield from hass.async_add_job(
-            _read, hass.config.path(self.path))
+        current = yield from hass.async_add_job(_read,
+                                                hass.config.path(self.path))
         if not current:
             current = self._empty_config()
         return current
@@ -167,8 +172,8 @@ class EditIdBasedConfigView(BaseEditConfigView):
 
     def _get_value(self, hass, data, config_key):
         """Get value."""
-        return next(
-            (val for val in data if val.get(CONF_ID) == config_key), None)
+        return next((val for val in data
+                     if val.get(CONF_ID) == config_key), None)
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""

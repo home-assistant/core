@@ -17,13 +17,13 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION, CONF_NAME)
+from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION,
+                                 CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
+                                 CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_utc_time_change)
+from homeassistant.helpers.event import (async_track_point_in_utc_time,
+                                         async_track_utc_time_change)
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.11.0']
@@ -56,13 +56,18 @@ DEFAULT_FORECAST = 0
 DEFAULT_NAME = 'yr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ELEVATION): vol.Coerce(int),
-    vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_ELEVATION):
+    vol.Coerce(int),
+    vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST):
+    vol.Coerce(int),
+    vol.Optional(CONF_LATITUDE):
+    cv.latitude,
+    vol.Optional(CONF_LONGITUDE):
+    cv.longitude,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol']):
-        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -93,7 +98,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     weather = YrData(hass, coordinates, forecast, dev)
     # Update weather on the hour, spread seconds
     async_track_utc_time_change(
-        hass, weather.async_update, minute=randrange(1, 10),
+        hass,
+        weather.async_update,
+        minute=randrange(1, 10),
         second=randrange(0, 59))
     yield from weather.async_update()
 
@@ -217,8 +224,9 @@ class YrData(object):
                 # Has already passed. Never select this.
                 continue
 
-            average_dist = (abs((valid_to - forecast_time).total_seconds()) +
-                            abs((valid_from - forecast_time).total_seconds()))
+            average_dist = (abs(
+                (valid_to - forecast_time).total_seconds()) + abs(
+                    (valid_from - forecast_time).total_seconds()))
 
             ordered_entries.append((average_dist, time_entry))
 

@@ -18,9 +18,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+from homeassistant.const import (STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                 SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.components import group
 
 DOMAIN = 'switch'
@@ -98,8 +97,8 @@ def toggle(hass, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_SWITCHES)
     yield from component.async_setup(config)
 
     @asyncio.coroutine
@@ -130,19 +129,29 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_switch_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=SWITCH_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handle_switch_service,
+        descriptions.get(SERVICE_TURN_OFF),
+        schema=SWITCH_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_switch_service,
-        descriptions.get(SERVICE_TURN_ON), schema=SWITCH_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_switch_service,
+        descriptions.get(SERVICE_TURN_ON),
+        schema=SWITCH_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_switch_service,
-        descriptions.get(SERVICE_TOGGLE), schema=SWITCH_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handle_switch_service,
+        descriptions.get(SERVICE_TOGGLE),
+        schema=SWITCH_SERVICE_SCHEMA)
 
     return True
 

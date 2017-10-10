@@ -20,13 +20,19 @@ CONF_INCLUDE_SWITCHES = 'include_switches'
 
 DOMAIN = 'litejet'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_EXCLUDE_NAMES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_PORT):
+            cv.string,
+            vol.Optional(CONF_EXCLUDE_NAMES):
+            vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_INCLUDE_SWITCHES, default=False):
+            cv.boolean
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

@@ -13,9 +13,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP, STATE_ON)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
+                                 CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP,
+                                 STATE_ON)
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
@@ -41,11 +41,17 @@ REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 URL_API_NETIO_EP = '/api/netio/{host}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_OUTLETS): {cv.string: cv.string},
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME):
+    cv.string,
+    vol.Required(CONF_PASSWORD):
+    cv.string,
+    vol.Optional(CONF_OUTLETS): {
+        cv.string: cv.string
+    },
 })
 
 
@@ -69,8 +75,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(dev.update)
 
     for key in config[CONF_OUTLETS]:
-        switch = NetioSwitch(
-            DEVICES[host].netio, key, config[CONF_OUTLETS][key])
+        switch = NetioSwitch(DEVICES[host].netio, key,
+                             config[CONF_OUTLETS][key])
         DEVICES[host].entities.append(switch)
 
     add_devices(DEVICES[host].entities)
@@ -107,8 +113,8 @@ class NetioApiView(HomeAssistantView):
                 float(data.get('%s_cumulatedConsumption' % out, 0)) / 1000)
             start_dates.append(data.get('%s_consumptionStart' % out, ""))
 
-        _LOGGER.debug('%s: %s, %s, %s since %s', host, states,
-                      consumptions, cumulated_consumptions, start_dates)
+        _LOGGER.debug('%s: %s, %s, %s since %s', host, states, consumptions,
+                      cumulated_consumptions, start_dates)
 
         ndev = DEVICES[host].netio
         ndev.consumptions = consumptions

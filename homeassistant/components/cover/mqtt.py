@@ -12,17 +12,16 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.cover import (
-    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
+    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
+    SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE,
+    SUPPORT_STOP, SUPPORT_SET_POSITION, ATTR_POSITION)
 from homeassistant.exceptions import TemplateError
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN)
+from homeassistant.const import (CONF_NAME, CONF_VALUE_TEMPLATE,
+                                 CONF_OPTIMISTIC, STATE_OPEN, STATE_CLOSED,
+                                 STATE_UNKNOWN)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC,
-    CONF_QOS, CONF_RETAIN, valid_publish_topic, valid_subscribe_topic)
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_QOS,
+    CONF_RETAIN, valid_publish_topic, valid_subscribe_topic)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,40 +63,60 @@ DEFAULT_TILT_OPTIMISTIC = False
 DEFAULT_TILT_INVERT_STATE = False
 
 OPEN_CLOSE_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP)
-TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
-                 SUPPORT_SET_TILT_POSITION)
+TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+                 | SUPPORT_SET_TILT_POSITION)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_POSITION_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None): valid_subscribe_topic,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
-    vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
-    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
-    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
-    vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
-    vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None): valid_subscribe_topic,
-    vol.Optional(CONF_TILT_CLOSED_POSITION,
-                 default=DEFAULT_TILT_CLOSED_POSITION): int,
-    vol.Optional(CONF_TILT_OPEN_POSITION,
-                 default=DEFAULT_TILT_OPEN_POSITION): int,
-    vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
-    vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
-    vol.Optional(CONF_TILT_STATE_OPTIMISTIC,
-                 default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_INVERT_STATE,
-                 default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
+    vol.Optional(CONF_COMMAND_TOPIC, default=None):
+    valid_publish_topic,
+    vol.Optional(CONF_POSITION_TOPIC, default=None):
+    valid_publish_topic,
+    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None):
+    cv.template,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN):
+    cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC):
+    valid_subscribe_topic,
+    vol.Optional(CONF_AVAILABILITY_TOPIC, default=None):
+    valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE):
+    cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP):
+    cv.string,
+    vol.Optional(CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE):
+    cv.string,
+    vol.Optional(
+        CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE):
+    cv.string,
+    vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN):
+    cv.string,
+    vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED):
+    cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC):
+    cv.boolean,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None):
+    valid_publish_topic,
+    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None):
+    valid_subscribe_topic,
+    vol.Optional(
+        CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION):
+    int,
+    vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION):
+    int,
+    vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN):
+    int,
+    vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX):
+    int,
+    vol.Optional(CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC):
+    cv.boolean,
+    vol.Optional(CONF_TILT_INVERT_STATE, default=DEFAULT_TILT_INVERT_STATE):
+    cv.boolean,
 })
 
 
@@ -111,33 +130,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if set_position_template is not None:
         set_position_template.hass = hass
 
-    async_add_devices([MqttCover(
-        config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC),
-        config.get(CONF_COMMAND_TOPIC),
-        config.get(CONF_AVAILABILITY_TOPIC),
-        config.get(CONF_TILT_COMMAND_TOPIC),
-        config.get(CONF_TILT_STATUS_TOPIC),
-        config.get(CONF_QOS),
-        config.get(CONF_RETAIN),
-        config.get(CONF_STATE_OPEN),
-        config.get(CONF_STATE_CLOSED),
-        config.get(CONF_PAYLOAD_OPEN),
-        config.get(CONF_PAYLOAD_CLOSE),
-        config.get(CONF_PAYLOAD_STOP),
-        config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        config.get(CONF_OPTIMISTIC),
-        value_template,
-        config.get(CONF_TILT_OPEN_POSITION),
-        config.get(CONF_TILT_CLOSED_POSITION),
-        config.get(CONF_TILT_MIN),
-        config.get(CONF_TILT_MAX),
-        config.get(CONF_TILT_STATE_OPTIMISTIC),
-        config.get(CONF_TILT_INVERT_STATE),
-        config.get(CONF_POSITION_TOPIC),
-        set_position_template,
-    )])
+    async_add_devices([
+        MqttCover(
+            config.get(CONF_NAME),
+            config.get(CONF_STATE_TOPIC),
+            config.get(CONF_COMMAND_TOPIC),
+            config.get(CONF_AVAILABILITY_TOPIC),
+            config.get(CONF_TILT_COMMAND_TOPIC),
+            config.get(CONF_TILT_STATUS_TOPIC),
+            config.get(CONF_QOS),
+            config.get(CONF_RETAIN),
+            config.get(CONF_STATE_OPEN),
+            config.get(CONF_STATE_CLOSED),
+            config.get(CONF_PAYLOAD_OPEN),
+            config.get(CONF_PAYLOAD_CLOSE),
+            config.get(CONF_PAYLOAD_STOP),
+            config.get(CONF_PAYLOAD_AVAILABLE),
+            config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+            config.get(CONF_OPTIMISTIC),
+            value_template,
+            config.get(CONF_TILT_OPEN_POSITION),
+            config.get(CONF_TILT_CLOSED_POSITION),
+            config.get(CONF_TILT_MIN),
+            config.get(CONF_TILT_MAX),
+            config.get(CONF_TILT_STATE_OPTIMISTIC),
+            config.get(CONF_TILT_INVERT_STATE),
+            config.get(CONF_POSITION_TOPIC),
+            set_position_template, )
+    ])
 
 
 class MqttCover(CoverDevice):
@@ -187,11 +207,12 @@ class MqttCover(CoverDevice):
 
         This method is a coroutine.
         """
+
         @callback
         def tilt_updated(topic, payload, qos):
             """Handle tilt updates."""
-            if (payload.isnumeric() and
-                    self._tilt_min <= int(payload) <= self._tilt_max):
+            if (payload.isnumeric()
+                    and self._tilt_min <= int(payload) <= self._tilt_max):
 
                 level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
@@ -236,9 +257,8 @@ class MqttCover(CoverDevice):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            yield from mqtt.async_subscribe(
-                self.hass, self._state_topic,
-                state_message_received, self._qos)
+            yield from mqtt.async_subscribe(self.hass, self._state_topic,
+                                            state_message_received, self._qos)
 
         if self._availability_topic is not None:
             yield from mqtt.async_subscribe(
@@ -250,8 +270,8 @@ class MqttCover(CoverDevice):
         else:
             self._tilt_optimistic = False
             self._tilt_value = STATE_UNKNOWN
-            yield from mqtt.async_subscribe(
-                self.hass, self._tilt_status_topic, tilt_updated, self._qos)
+            yield from mqtt.async_subscribe(self.hass, self._tilt_status_topic,
+                                            tilt_updated, self._qos)
 
     @property
     def should_poll(self):
@@ -307,9 +327,8 @@ class MqttCover(CoverDevice):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_open, self._qos,
-            self._retain)
+        mqtt.async_publish(self.hass, self._command_topic, self._payload_open,
+                           self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = False
@@ -321,9 +340,8 @@ class MqttCover(CoverDevice):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_close, self._qos,
-            self._retain)
+        mqtt.async_publish(self.hass, self._command_topic, self._payload_close,
+                           self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = True
@@ -335,16 +353,14 @@ class MqttCover(CoverDevice):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
-            self.hass, self._command_topic, self._payload_stop, self._qos,
-            self._retain)
+        mqtt.async_publish(self.hass, self._command_topic, self._payload_stop,
+                           self._qos, self._retain)
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         mqtt.async_publish(self.hass, self._tilt_command_topic,
-                           self._tilt_open_position, self._qos,
-                           self._retain)
+                           self._tilt_open_position, self._qos, self._retain)
         if self._tilt_optimistic:
             self._tilt_value = self._tilt_open_position
             self.async_schedule_update_ha_state()
@@ -353,8 +369,7 @@ class MqttCover(CoverDevice):
     def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         mqtt.async_publish(self.hass, self._tilt_command_topic,
-                           self._tilt_closed_position, self._qos,
-                           self._retain)
+                           self._tilt_closed_position, self._qos, self._retain)
         if self._tilt_optimistic:
             self._tilt_value = self._tilt_closed_position
             self.async_schedule_update_ha_state()
@@ -370,8 +385,8 @@ class MqttCover(CoverDevice):
         # The position needs to be between min and max
         level = self.find_in_range_from_percent(position)
 
-        mqtt.async_publish(self.hass, self._tilt_command_topic,
-                           level, self._qos, self._retain)
+        mqtt.async_publish(self.hass, self._tilt_command_topic, level,
+                           self._qos, self._retain)
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
@@ -386,8 +401,8 @@ class MqttCover(CoverDevice):
                     _LOGGER.error(ex)
                     self._state = None
 
-            mqtt.async_publish(self.hass, self._position_topic,
-                               position, self._qos, self._retain)
+            mqtt.async_publish(self.hass, self._position_topic, position,
+                               self._qos, self._retain)
 
     def find_percentage_in_range(self, position):
         """Find the 0-100% value within the specified range."""

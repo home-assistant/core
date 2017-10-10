@@ -18,8 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zoneminder']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_ON): cv.string,
-    vol.Required(CONF_COMMAND_OFF): cv.string,
+    vol.Required(CONF_COMMAND_ON):
+    cv.string,
+    vol.Required(CONF_COMMAND_OFF):
+    cv.string,
 })
 
 
@@ -34,12 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for i in monitors['monitors']:
         switches.append(
             ZMSwitchMonitors(
-                int(i['Monitor']['Id']),
-                i['Monitor']['Name'],
-                on_state,
-                off_state
-            )
-        )
+                int(i['Monitor']['Id']), i['Monitor']['Name'], on_state,
+                off_state))
 
     add_devices(switches)
 
@@ -65,8 +63,7 @@ class ZMSwitchMonitors(SwitchDevice):
     def update(self):
         """Update the switch value."""
         monitor = zoneminder.get_state(
-            'api/monitors/%i.json' % self._monitor_id
-        )
+            'api/monitors/%i.json' % self._monitor_id)
         current_state = monitor['monitor']['Monitor']['Function']
         self._state = True if current_state == self._on_state else False
 
@@ -77,14 +74,10 @@ class ZMSwitchMonitors(SwitchDevice):
 
     def turn_on(self):
         """Turn the entity on."""
-        zoneminder.change_state(
-            'api/monitors/%i.json' % self._monitor_id,
-            {'Monitor[Function]': self._on_state}
-        )
+        zoneminder.change_state('api/monitors/%i.json' % self._monitor_id,
+                                {'Monitor[Function]': self._on_state})
 
     def turn_off(self):
         """Turn the entity off."""
-        zoneminder.change_state(
-            'api/monitors/%i.json' % self._monitor_id,
-            {'Monitor[Function]': self._off_state}
-        )
+        zoneminder.change_state('api/monitors/%i.json' % self._monitor_id,
+                                {'Monitor[Function]': self._off_state})

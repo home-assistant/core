@@ -45,14 +45,20 @@ MIN_TIME_PHONEBOOK_UPDATE = datetime.timedelta(hours=6)
 SCAN_INTERVAL = datetime.timedelta(hours=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
-    vol.Optional(CONF_USERNAME, default=''): cv.string,
-    vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_PASSWORD, default='admin'):
+    cv.string,
+    vol.Optional(CONF_USERNAME, default=''):
+    cv.string,
+    vol.Optional(CONF_PHONEBOOK, default=0):
+    cv.positive_int,
     vol.Optional(CONF_PREFIXES, default=[]):
-        vol.All(cv.ensure_list, [cv.string])
+    vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -68,8 +74,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         phonebook = FritzBoxPhonebook(
-            host=host, port=port, username=username, password=password,
-            phonebook_id=phonebook_id, prefixes=prefixes)
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            phonebook_id=phonebook_id,
+            prefixes=prefixes)
     # pylint: disable=bare-except
     except:
         phonebook = None
@@ -86,10 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def _stop_listener(_event):
         monitor.stopped.set()
 
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_listener
-    )
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_listener)
 
     return monitor.sock is not None
 
@@ -164,8 +171,8 @@ class FritzBoxCallMonitor(object):
             threading.Thread(target=self._listen).start()
         except socket.error as err:
             self.sock = None
-            _LOGGER.error("Cannot connect to %s on port %s: %s",
-                          self.host, self.port, err)
+            _LOGGER.error("Cannot connect to %s on port %s: %s", self.host,
+                          self.port, err)
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
@@ -198,20 +205,24 @@ class FritzBoxCallMonitor(object):
         isotime = datetime.datetime.strptime(line[0], df_in).strftime(df_out)
         if line[1] == "RING":
             self._sensor.set_state(VALUE_RING)
-            att = {"type": "incoming",
-                   "from": line[3],
-                   "to": line[4],
-                   "device": line[5],
-                   "initiated": isotime}
+            att = {
+                "type": "incoming",
+                "from": line[3],
+                "to": line[4],
+                "device": line[5],
+                "initiated": isotime
+            }
             att["from_name"] = self._sensor.number_to_name(att["from"])
             self._sensor.set_attributes(att)
         elif line[1] == "CALL":
             self._sensor.set_state(VALUE_CALL)
-            att = {"type": "outgoing",
-                   "from": line[4],
-                   "to": line[5],
-                   "device": line[6],
-                   "initiated": isotime}
+            att = {
+                "type": "outgoing",
+                "from": line[4],
+                "to": line[5],
+                "device": line[6],
+                "initiated": isotime
+            }
             att["to_name"] = self._sensor.number_to_name(att["to"])
             self._sensor.set_attributes(att)
         elif line[1] == "CONNECT":
@@ -229,8 +240,13 @@ class FritzBoxCallMonitor(object):
 class FritzBoxPhonebook(object):
     """This connects to a FritzBox router and downloads its phone book."""
 
-    def __init__(self, host, port, username, password,
-                 phonebook_id=0, prefixes=None):
+    def __init__(self,
+                 host,
+                 port,
+                 username,
+                 password,
+                 phonebook_id=0,
+                 prefixes=None):
         """Initialize the class."""
         self.host = host
         self.username = username
@@ -256,9 +272,10 @@ class FritzBoxPhonebook(object):
     def update_phonebook(self):
         """Update the phone book dictionary."""
         self.phonebook_dict = self.fph.get_all_names(self.phonebook_id)
-        self.number_dict = {re.sub(r'[^\d\+]', '', nr): name
-                            for name, nrs in self.phonebook_dict.items()
-                            for nr in nrs}
+        self.number_dict = {
+            re.sub(r'[^\d\+]', '', nr): name
+            for name, nrs in self.phonebook_dict.items() for nr in nrs
+        }
         _LOGGER.info("Fritz!Box phone book successfully updated")
 
     def get_name(self, number):

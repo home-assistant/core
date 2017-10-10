@@ -14,8 +14,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
+                                                     DeviceScanner)
 from homeassistant.const import CONF_HOSTS
 
 REQUIREMENTS = ['python-nmap==0.6.1']
@@ -28,14 +28,15 @@ CONF_HOME_INTERVAL = 'home_interval'
 CONF_OPTIONS = 'scan_options'
 DEFAULT_OPTIONS = '-F --host-timeout 5s'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): cv.ensure_list,
-    vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
+    vol.Required(CONF_HOSTS):
+    cv.ensure_list,
+    vol.Required(CONF_HOME_INTERVAL, default=0):
+    cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1)),
+    vol.All(cv.ensure_list, vol.Length(min=1)),
     vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
-        cv.string
+    cv.string
 })
 
 
@@ -87,8 +88,9 @@ class NmapDeviceScanner(DeviceScanner):
 
     def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        filter_named = [
+            device.name for device in self.last_results if device.mac == mac
+        ]
 
         if filter_named:
             return filter_named[0]
@@ -108,11 +110,14 @@ class NmapDeviceScanner(DeviceScanner):
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
-            last_results = [device for device in self.last_results
-                            if device.last_update > boundary]
+            last_results = [
+                device for device in self.last_results
+                if device.last_update > boundary
+            ]
             if last_results:
-                exclude_hosts = self.exclude + [device.ip for device
-                                                in last_results]
+                exclude_hosts = self.exclude + [
+                    device.ip for device in last_results
+                ]
             else:
                 exclude_hosts = self.exclude
         else:
@@ -122,8 +127,8 @@ class NmapDeviceScanner(DeviceScanner):
             options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=' '.join(self.hosts),
-                                  arguments=options)
+            result = scanner.scan(
+                hosts=' '.join(self.hosts), arguments=options)
         except PortScannerError:
             return False
 

@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
+                                 EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import state as state_helper
 
 REQUIREMENTS = ['paho-mqtt==1.3.0']
@@ -22,12 +21,15 @@ DOMAIN = 'shiftr'
 
 SHIFTR_BROKER = 'broker.shiftr.io'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -67,7 +69,9 @@ def setup(hass, config):
             if state.attributes:
                 for attribute, data in state.attributes.items():
                     mqttc.publish(
-                        '/{}/{}'.format(topic, attribute), str(data), qos=0,
+                        '/{}/{}'.format(topic, attribute),
+                        str(data),
+                        qos=0,
                         retain=False)
         except RuntimeError:
             pass

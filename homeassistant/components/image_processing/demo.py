@@ -15,8 +15,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the demo image processing platform."""
     add_devices([
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
-        DemoImageProcessingFace(
-            'camera.demo_camera', "Demo Face")
+        DemoImageProcessingFace('camera.demo_camera', "Demo Face")
     ])
 
 

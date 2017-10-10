@@ -14,13 +14,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_LATITUDE,
+                                 CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+                                 CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time)
+from homeassistant.helpers.event import (async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['buienradar==0.9']
@@ -47,8 +46,8 @@ SENSOR_TYPES = {
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'groundtemperature': ['Ground temperature', TEMP_CELSIUS,
-                          'mdi:thermometer'],
+    'groundtemperature':
+    ['Ground temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
     'winddirection': ['Wind direction', None, 'mdi:compass-outline'],
@@ -58,10 +57,10 @@ SENSOR_TYPES = {
     'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
-    'precipitation_forecast_average': ['Precipitation forecast average',
-                                       'mm/h', 'mdi:weather-pouring'],
-    'precipitation_forecast_total': ['Precipitation forecast total',
-                                     'mm', 'mdi:weather-pouring'],
+    'precipitation_forecast_average':
+    ['Precipitation forecast average', 'mm/h', 'mdi:weather-pouring'],
+    'precipitation_forecast_total':
+    ['Precipitation forecast total', 'mm', 'mdi:weather-pouring'],
     'temperature_1d': ['Temperature 1d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_2d': ['Temperature 2d', TEMP_CELSIUS, 'mdi:thermometer'],
     'temperature_3d': ['Temperature 3d', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -127,16 +126,14 @@ SENSOR_TYPES = {
 CONF_TIMEFRAME = 'timeframe'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=['symbol', 'temperature']): vol.All(
-                     cv.ensure_list, vol.Length(min=1),
-                     [vol.In(SENSOR_TYPES.keys())]),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=['symbol', 'temperature']):
+    vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'):
+    cv.longitude,
     vol.Optional(CONF_TIMEFRAME, default=60):
-        vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+    vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
 })
 
 
@@ -153,8 +150,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in HomeAssistant config")
         return False
 
-    coordinates = {CONF_LATITUDE: float(latitude),
-                   CONF_LONGITUDE: float(longitude)}
+    coordinates = {
+        CONF_LATITUDE: float(latitude),
+        CONF_LONGITUDE: float(longitude)
+    }
 
     _LOGGER.debug("Initializing buienradar sensor coordinate %s, timeframe %s",
                   coordinates, timeframe)
@@ -192,11 +191,10 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, CONDITION, CONDCODE,
-                                           DETAILED, EXACT, EXACTNL, FORECAST,
-                                           IMAGE, MEASURED,
-                                           PRECIPITATION_FORECAST, STATIONNAME,
-                                           TIMEFRAME)
+        from buienradar.buienradar import (
+            ATTRIBUTION, CONDITION, CONDCODE, DETAILED, EXACT, EXACTNL,
+            FORECAST, IMAGE, MEASURED, PRECIPITATION_FORECAST, STATIONNAME,
+            TIMEFRAME)
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
@@ -286,7 +284,7 @@ class BrSensor(Entity):
         if self.type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
-            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1:])
             self._timeframe = nested.get(TIMEFRAME)
             # pylint: disable=protected-access
             if new_state != self._state:
@@ -390,14 +388,13 @@ class BrData(object):
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes.", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
-        async_track_point_in_utc_time(self.hass, self.async_update,
-                                      nxt)
+        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
 
     @asyncio.coroutine
     def get_data(self, url):
         """Load data from specified url."""
-        from buienradar.buienradar import (CONTENT,
-                                           MESSAGE, STATUS_CODE, SUCCESS)
+        from buienradar.buienradar import (CONTENT, MESSAGE, STATUS_CODE,
+                                           SUCCESS)
 
         _LOGGER.debug("Calling url: %s...", url)
         result = {SUCCESS: False, MESSAGE: None}
@@ -425,8 +422,8 @@ class BrData(object):
     @asyncio.coroutine
     def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.buienradar import (parse_data, CONTENT,
-                                           DATA, MESSAGE, STATUS_CODE, SUCCESS)
+        from buienradar.buienradar import (parse_data, CONTENT, DATA, MESSAGE,
+                                           STATUS_CODE, SUCCESS)
 
         content = yield from self.get_data('http://xml.buienradar.nl')
         if not content.get(SUCCESS, False):
@@ -434,10 +431,11 @@ class BrData(object):
 
         if content.get(SUCCESS) is not True:
             # unable to get the data
-            _LOGGER.warning("Unable to retrieve xml data from Buienradar."
-                            "(Msg: %s, status: %s,)",
-                            content.get(MESSAGE),
-                            content.get(STATUS_CODE),)
+            _LOGGER.warning(
+                "Unable to retrieve xml data from Buienradar."
+                "(Msg: %s, status: %s,)",
+                content.get(MESSAGE),
+                content.get(STATUS_CODE), )
             # schedule new call
             yield from self.schedule_update(SCHEDULE_NOK)
             return
@@ -446,31 +444,31 @@ class BrData(object):
         rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
         rainurl = rainurl.format(
             round(self.coordinates[CONF_LATITUDE], 2),
-            round(self.coordinates[CONF_LONGITUDE], 2)
-            )
+            round(self.coordinates[CONF_LONGITUDE], 2))
         raincontent = yield from self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
             # unable to get the data
-            _LOGGER.warning("Unable to retrieve raindata from Buienradar."
-                            "(Msg: %s, status: %s,)",
-                            raincontent.get(MESSAGE),
-                            raincontent.get(STATUS_CODE),)
+            _LOGGER.warning(
+                "Unable to retrieve raindata from Buienradar."
+                "(Msg: %s, status: %s,)",
+                raincontent.get(MESSAGE),
+                raincontent.get(STATUS_CODE), )
             # schedule new call
             yield from self.schedule_update(SCHEDULE_NOK)
             return
 
-        result = parse_data(content.get(CONTENT),
-                            raincontent.get(CONTENT),
-                            self.coordinates[CONF_LATITUDE],
-                            self.coordinates[CONF_LONGITUDE],
-                            self.timeframe)
+        result = parse_data(
+            content.get(CONTENT),
+            raincontent.get(CONTENT), self.coordinates[CONF_LATITUDE],
+            self.coordinates[CONF_LONGITUDE], self.timeframe)
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            _LOGGER.warning("Unable to parse data from Buienradar."
-                            "(Msg: %s)",
-                            result.get(MESSAGE),)
+            _LOGGER.warning(
+                "Unable to parse data from Buienradar."
+                "(Msg: %s)",
+                result.get(MESSAGE), )
             yield from self.schedule_update(SCHEDULE_NOK)
             return
 

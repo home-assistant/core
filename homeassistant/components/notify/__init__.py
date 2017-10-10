@@ -39,25 +39,29 @@ DOMAIN = 'notify'
 
 SERVICE_NOTIFY = 'notify'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA)
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.template,
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_DATA): dict,
+    vol.Required(ATTR_MESSAGE):
+    cv.template,
+    vol.Optional(ATTR_TITLE):
+    cv.template,
+    vol.Optional(ATTR_TARGET):
+    vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DATA):
+    dict,
 })
 
 
 @bind_hass
 def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
-    info = {
-        ATTR_MESSAGE: message
-    }
+    info = {ATTR_MESSAGE: message}
 
     if title is not None:
         info[ATTR_TITLE] = title
@@ -71,9 +75,10 @@ def send_message(hass, message, title=None, data=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the notify services."""
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.async_add_job(load_yaml_config_file,
+                                                 os.path.join(
+                                                     os.path.dirname(__file__),
+                                                     'services.yaml'))
 
     targets = {}
 
@@ -107,8 +112,7 @@ def async_setup(hass, config):
                 # on discovery data.
                 if discovery_info is None:
                     _LOGGER.error(
-                        "Failed to initialize notification service %s",
-                        p_type)
+                        "Failed to initialize notification service %s", p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
@@ -143,30 +147,35 @@ def async_setup(hass, config):
             yield from notify_service.async_send_message(**kwargs)
 
         if hasattr(notify_service, 'targets'):
-            platform_name = (
-                p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
-                p_type)
+            platform_name = (p_config.get(CONF_NAME)
+                             or discovery_info.get(CONF_NAME) or p_type)
             for name, target in notify_service.targets.items():
                 target_name = slugify('{}_{}'.format(platform_name, name))
                 targets[target_name] = target
                 hass.services.async_register(
-                    DOMAIN, target_name, async_notify_message,
+                    DOMAIN,
+                    target_name,
+                    async_notify_message,
                     descriptions.get(SERVICE_NOTIFY),
                     schema=NOTIFY_SERVICE_SCHEMA)
 
-        platform_name = (
-            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
-            SERVICE_NOTIFY)
+        platform_name = (p_config.get(CONF_NAME)
+                         or discovery_info.get(CONF_NAME) or SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
         hass.services.async_register(
-            DOMAIN, platform_name_slug, async_notify_message,
-            descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
+            DOMAIN,
+            platform_name_slug,
+            async_notify_message,
+            descriptions.get(SERVICE_NOTIFY),
+            schema=NOTIFY_SERVICE_SCHEMA)
 
         return True
 
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
+    setup_tasks = [
+        async_setup_platform(p_type, p_config)
+        for p_type, p_config in config_per_platform(config, DOMAIN)
+    ]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)

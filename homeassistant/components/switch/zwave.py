@@ -26,9 +26,8 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     def __init__(self, values):
         """Initialize the Z-Wave switch device."""
         zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self.refresh_on_update = (
-            workaround.get_device_mapping(values.primary) ==
-            workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
+        self.refresh_on_update = (workaround.get_device_mapping(
+            values.primary) == workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
         self.last_update = time.perf_counter()
         self._state = self.values.primary.data
 

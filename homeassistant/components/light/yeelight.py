@@ -17,10 +17,9 @@ from homeassistant.util.color import (
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
-    Light, PLATFORM_SCHEMA)
+    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
+    SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['yeelight==0.3.3']
@@ -36,23 +35,26 @@ CONF_MODE_MUSIC = 'use_music_mode'
 DOMAIN = 'yeelight'
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-    vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
-    vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
+    vol.Optional(CONF_NAME):
+    cv.string,
+    vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION):
+    cv.positive_int,
+    vol.Optional(CONF_MODE_MUSIC, default=False):
+    cv.boolean,
+    vol.Optional(CONF_SAVE_ON_CHANGE, default=True):
+    cv.boolean,
 })
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: DEVICE_SCHEMA
+    },
+})
 
-SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
-                    SUPPORT_TRANSITION |
-                    SUPPORT_FLASH)
+SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH)
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
-                        SUPPORT_RGB_COLOR |
-                        SUPPORT_EFFECT |
-                        SUPPORT_COLOR_TEMP)
+SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT | SUPPORT_RGB_COLOR | SUPPORT_EFFECT
+                        | SUPPORT_COLOR_TEMP)
 
 YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
 YEELIGHT_RGB_MIN_KELVIN = 1700
@@ -76,34 +78,25 @@ EFFECT_TWITTER = "Twitter"
 EFFECT_STOP = "Stop"
 
 YEELIGHT_EFFECT_LIST = [
-    EFFECT_DISCO,
-    EFFECT_TEMP,
-    EFFECT_STROBE,
-    EFFECT_STROBE_COLOR,
-    EFFECT_ALARM,
-    EFFECT_POLICE,
-    EFFECT_POLICE2,
-    EFFECT_CHRISTMAS,
-    EFFECT_RGB,
-    EFFECT_RANDOM_LOOP,
-    EFFECT_FAST_RANDOM_LOOP,
-    EFFECT_SLOWDOWN,
-    EFFECT_WHATSAPP,
-    EFFECT_FACEBOOK,
-    EFFECT_TWITTER,
-    EFFECT_STOP]
+    EFFECT_DISCO, EFFECT_TEMP, EFFECT_STROBE, EFFECT_STROBE_COLOR,
+    EFFECT_ALARM, EFFECT_POLICE, EFFECT_POLICE2, EFFECT_CHRISTMAS, EFFECT_RGB,
+    EFFECT_RANDOM_LOOP, EFFECT_FAST_RANDOM_LOOP, EFFECT_SLOWDOWN,
+    EFFECT_WHATSAPP, EFFECT_FACEBOOK, EFFECT_TWITTER, EFFECT_STOP
+]
 
 
 # Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
 def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
     """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
-    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
+    red, green, blue = colorsys.hsv_to_rgb(hsv[0] / 360, hsv[1] / 100,
+                                           hsv[2] / 100)
     return int(red * 255), int(green * 255), int(blue * 255)
 
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
+
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -295,8 +288,8 @@ class YeelightLight(Light):
         """Set bulb brightness."""
         if brightness:
             _LOGGER.debug("Setting brightness: %s", brightness)
-            self._bulb.set_brightness(brightness / 255 * 100,
-                                      duration=duration)
+            self._bulb.set_brightness(
+                brightness / 255 * 100, duration=duration)
 
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
@@ -342,11 +335,14 @@ class YeelightLight(Light):
             transitions = list()
             transitions.append(
                 RGBTransition(255, 0, 0, brightness=10, duration=duration))
-            transitions.append(SleepTransition(
-                duration=transition))
+            transitions.append(SleepTransition(duration=transition))
             transitions.append(
-                RGBTransition(red, green, blue, brightness=self.brightness,
-                              duration=duration))
+                RGBTransition(
+                    red,
+                    green,
+                    blue,
+                    brightness=self.brightness,
+                    duration=duration))
 
             flow = Flow(count=count, transitions=transitions)
             try:
@@ -359,10 +355,9 @@ class YeelightLight(Light):
         """Activate effect."""
         if effect:
             from yeelight import (Flow, BulbException)
-            from yeelight.transitions import (disco, temp, strobe, pulse,
-                                              strobe_color, alarm, police,
-                                              police2, christmas, rgb,
-                                              randomloop, slowdown)
+            from yeelight.transitions import (
+                disco, temp, strobe, pulse, strobe_color, alarm, police,
+                police2, christmas, rgb, randomloop, slowdown)
             if effect == EFFECT_STOP:
                 self._bulb.stop_flow()
                 return
@@ -440,8 +435,7 @@ class YeelightLight(Light):
             return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
-                                                 or colortemp
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp
                                                  or rgb):
             try:
                 self.set_default()

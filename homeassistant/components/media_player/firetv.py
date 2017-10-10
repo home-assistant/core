@@ -13,10 +13,10 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, SUPPORT_PLAY,
     MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME, CONF_DEVICE,
-    CONF_DEVICES)
+from homeassistant.const import (STATE_IDLE, STATE_OFF, STATE_PAUSED,
+                                 STATE_PLAYING, STATE_STANDBY, STATE_UNKNOWN,
+                                 CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME,
+                                 CONF_DEVICE, CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,11 +35,16 @@ DEVICE_LIST_URL = '{0}://{1}:{2}/devices/list'
 DEVICE_STATE_URL = '{0}://{1}:{2}/devices/state/{3}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+    cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST):
+    cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+    cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL):
+    cv.boolean,
 })
 
 
@@ -90,21 +95,22 @@ class FireTV(object):
         """Get the device state. An exception means UNKNOWN state."""
         try:
             response = requests.get(
-                DEVICE_STATE_URL.format(
-                    self.proto, self.host, self.port, self.device_id
-                    ), timeout=10).json()
+                DEVICE_STATE_URL.format(self.proto, self.host, self.port,
+                                        self.device_id),
+                timeout=10).json()
             return response.get('state', STATE_UNKNOWN)
         except requests.exceptions.RequestException:
-            _LOGGER.error(
-                "Could not retrieve device state for %s", self.device_id)
+            _LOGGER.error("Could not retrieve device state for %s",
+                          self.device_id)
             return STATE_UNKNOWN
 
     def action(self, action_id):
         """Perform an action on the device."""
         try:
-            requests.get(DEVICE_ACTION_URL.format(
-                self.proto, self.host, self.port, self.device_id, action_id
-                ), timeout=10)
+            requests.get(
+                DEVICE_ACTION_URL.format(self.proto, self.host, self.port,
+                                         self.device_id, action_id),
+                timeout=10)
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Action request for %s was not accepted for device %s",

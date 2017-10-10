@@ -19,9 +19,7 @@ REQUIREMENTS = ['discord.py==0.16.12']
 
 CONF_TOKEN = 'token'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
 def get_service(hass, config, discovery_info=None):

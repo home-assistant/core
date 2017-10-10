@@ -13,8 +13,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS,
+                                 TEMP_FAHRENHEIT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,11 +33,16 @@ MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
-    vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
-    vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
-    vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_INDOOR_TEMP):
+    cv.entity_id,
+    vol.Required(CONF_OUTDOOR_TEMP):
+    cv.entity_id,
+    vol.Required(CONF_INDOOR_HUMIDITY):
+    cv.entity_id,
+    vol.Optional(CONF_CALIBRATION_FACTOR):
+    vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
 })
 
 
@@ -50,9 +55,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
     calib_factor = config.get(CONF_CALIBRATION_FACTOR)
 
-    add_devices([MoldIndicator(
-        hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-        indoor_humidity_sensor, calib_factor)], True)
+    add_devices([
+        MoldIndicator(hass, name, indoor_temp_sensor, outdoor_temp_sensor,
+                      indoor_humidity_sensor, calib_factor)
+    ], True)
 
 
 class MoldIndicator(Entity):
@@ -123,13 +129,12 @@ class MoldIndicator(Entity):
         hum = util.convert(state.state, float)
 
         if hum is None:
-            _LOGGER.error('Unable to parse sensor humidity: %s',
-                          state.state)
+            _LOGGER.error('Unable to parse sensor humidity: %s', state.state)
             return None
 
         if unit != '%':
-            _LOGGER.error("Humidity sensor has unsupported unit: %s %s",
-                          unit, " (allowed: %)")
+            _LOGGER.error("Humidity sensor has unsupported unit: %s %s", unit,
+                          " (allowed: %)")
 
         if hum > 100 or hum < 0:
             _LOGGER.error("Humidity sensor out of range: %s %s", hum,
@@ -182,8 +187,8 @@ class MoldIndicator(Entity):
            self._calib_factor == 0:
 
             _LOGGER.debug("Invalid inputs - dewpoint: %s,"
-                          " calibration-factor: %s",
-                          self._dewpoint, self._calib_factor)
+                          " calibration-factor: %s", self._dewpoint,
+                          self._calib_factor)
             self._state = None
             return
 
@@ -192,8 +197,8 @@ class MoldIndicator(Entity):
             self._outdoor_temp + (self._indoor_temp - self._outdoor_temp) / \
             self._calib_factor
 
-        _LOGGER.debug("Estimated Critical Temperature: %f " +
-                      TEMP_CELSIUS, self._crit_temp)
+        _LOGGER.debug("Estimated Critical Temperature: %f " + TEMP_CELSIUS,
+                      self._crit_temp)
 
         # Then calculate the humidity at this point
         alpha = MAGNUS_K2 * self._crit_temp / (MAGNUS_K3 + self._crit_temp)
@@ -244,7 +249,7 @@ class MoldIndicator(Entity):
             }
         return {
             ATTR_DEWPOINT:
-                util.temperature.celsius_to_fahrenheit(self._dewpoint),
+            util.temperature.celsius_to_fahrenheit(self._dewpoint),
             ATTR_CRITICAL_TEMP:
-                util.temperature.celsius_to_fahrenheit(self._crit_temp),
+            util.temperature.celsius_to_fahrenheit(self._crit_temp),
         }

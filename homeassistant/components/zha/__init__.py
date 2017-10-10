@@ -24,17 +24,25 @@ CONF_DEVICE_CONFIG = 'device_config'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(ha_const.CONF_TYPE): cv.string,
+    vol.Optional(ha_const.CONF_TYPE):
+    cv.string,
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        CONF_USB_PATH: cv.string,
-        CONF_DATABASE: cv.string,
-        vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            CONF_USB_PATH:
+            cv.string,
+            CONF_DATABASE:
+            cv.string,
+            vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({
+                cv.string: DEVICE_CONFIG_SCHEMA_ENTRY
+            }),
+        })
+    },
+    extra=vol.ALLOW_EXTRA)
 
 ATTR_DURATION = 'duration'
 
@@ -51,12 +59,12 @@ SERVICE_DESCRIPTIONS = {
     },
 }
 SERVICE_SCHEMAS = {
-    SERVICE_PERMIT: vol.Schema({
+    SERVICE_PERMIT:
+    vol.Schema({
         vol.Optional(ATTR_DURATION, default=60):
-            vol.All(vol.Coerce(int), vol.Range(1, 254)),
+        vol.All(vol.Coerce(int), vol.Range(1, 254)),
     }),
 }
-
 
 # ZigBee definitions
 CENTICELSIUS = 'C-100'
@@ -153,9 +161,8 @@ class ApplicationListener:
 
             if endpoint.profile_id in bellows.zigbee.profiles.PROFILES:
                 profile = bellows.zigbee.profiles.PROFILES[endpoint.profile_id]
-                if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
-                                              {}).get(endpoint.device_type,
-                                                      None):
+                if zha_const.DEVICE_CLASS.get(endpoint.profile_id, {}).get(
+                        endpoint.device_type, None):
                     profile_clusters = profile.CLUSTERS[endpoint.device_type]
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
@@ -165,16 +172,20 @@ class ApplicationListener:
                 profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
 
             if component:
-                in_clusters = [endpoint.in_clusters[c]
-                               for c in profile_clusters[0]
-                               if c in endpoint.in_clusters]
-                out_clusters = [endpoint.out_clusters[c]
-                                for c in profile_clusters[1]
-                                if c in endpoint.out_clusters]
+                in_clusters = [
+                    endpoint.in_clusters[c] for c in profile_clusters[0]
+                    if c in endpoint.in_clusters
+                ]
+                out_clusters = [
+                    endpoint.out_clusters[c] for c in profile_clusters[1]
+                    if c in endpoint.out_clusters
+                ]
                 discovery_info = {
                     'endpoint': endpoint,
-                    'in_clusters': {c.cluster_id: c for c in in_clusters},
-                    'out_clusters': {c.cluster_id: c for c in out_clusters},
+                    'in_clusters': {c.cluster_id: c
+                                    for c in in_clusters},
+                    'out_clusters': {c.cluster_id: c
+                                     for c in out_clusters},
                     'new_join': join,
                 }
                 discovery_info.update(discovered_info)
@@ -185,8 +196,7 @@ class ApplicationListener:
                     component,
                     DOMAIN,
                     {'discovery_key': device_key},
-                    self._config,
-                )
+                    self._config, )
 
             for cluster_id, cluster in endpoint.in_clusters.items():
                 cluster_type = type(cluster)
@@ -198,7 +208,9 @@ class ApplicationListener:
                 component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
                 discovery_info = {
                     'endpoint': endpoint,
-                    'in_clusters': {cluster.cluster_id: cluster},
+                    'in_clusters': {
+                        cluster.cluster_id: cluster
+                    },
                     'out_clusters': {},
                     'new_join': join,
                 }
@@ -211,8 +223,7 @@ class ApplicationListener:
                     component,
                     DOMAIN,
                     {'discovery_key': cluster_key},
-                    self._config,
-                )
+                    self._config, )
 
 
 class Entity(entity.Entity):
@@ -224,27 +235,22 @@ class Entity(entity.Entity):
                  model, **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
-        ieeetail = ''.join([
-            '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
-        ])
+        ieeetail = ''.join(['%02x' % (o, ) for o in endpoint.device.ieee[-4:]])
         if manufacturer and model is not None:
             self.entity_id = '%s.%s_%s_%s_%s' % (
                 self._domain,
                 slugify(manufacturer),
                 slugify(model),
                 ieeetail,
-                endpoint.endpoint_id,
-            )
+                endpoint.endpoint_id, )
             self._device_state_attributes['friendly_name'] = '%s %s' % (
                 manufacturer,
-                model,
-            )
+                model, )
         else:
             self.entity_id = "%s.zha_%s_%s" % (
                 self._domain,
                 ieeetail,
-                endpoint.endpoint_id,
-            )
+                endpoint.endpoint_id, )
         for cluster in in_clusters.values():
             cluster.add_listener(self)
         for cluster in out_clusters.values():
@@ -283,8 +289,7 @@ def _discover_endpoint_info(endpoint):
         """Read attributes and update extra_info convenience function."""
         result, _ = yield from endpoint.in_clusters[0].read_attributes(
             attributes,
-            allow_cache=True,
-        )
+            allow_cache=True, )
         extra_info.update(result)
 
     yield from read(['manufacturer', 'model'])
