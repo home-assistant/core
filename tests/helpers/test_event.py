@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timedelta
 
 from astral import Astral
+import pytest
 
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
@@ -634,8 +635,9 @@ class TestEventHelpers(unittest.TestCase):
         """Test periodic tasks with wrong input."""
         specific_runs = []
 
-        track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), year='/two')
+        with pytest.raises(ValueError):
+            track_utc_time_change(
+                self.hass, lambda x: specific_runs.append(1), year='/two')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
