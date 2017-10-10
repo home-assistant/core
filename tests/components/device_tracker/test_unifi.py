@@ -112,7 +112,7 @@ def test_scanner_update():
         {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, detection_time)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -122,7 +122,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, detection_time)
 
 
 def test_scan_devices():
@@ -133,7 +133,7 @@ def test_scan_devices():
         {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, detection_time)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -151,7 +151,7 @@ def test_get_device_name():
          'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, detection_time)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
