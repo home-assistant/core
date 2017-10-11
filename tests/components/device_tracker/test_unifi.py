@@ -13,6 +13,7 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
+
 @pytest.fixture
 def mock_ctrl():
     """Mock pyunifi."""
@@ -51,7 +52,8 @@ def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
                   version='v4', site_id='default', ssl_verify="/tmp/unifi.crt")
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value, DEFAULT_DETECTION_TIME)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
@@ -71,7 +73,8 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
                   version='v4', site_id='default', ssl_verify=True)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value, DEFAULT_DETECTION_TIME)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_full(hass, mock_scanner, mock_ctrl):
@@ -96,7 +99,8 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
                   version='v4', site_id='abcdef01', ssl_verify=False)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value, DEFAULT_DETECTION_TIME)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_error():
