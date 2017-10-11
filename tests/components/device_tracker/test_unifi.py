@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
-
+DEFAULT_DETECTION_TIME = 180
 
 @pytest.fixture
 def mock_ctrl():
