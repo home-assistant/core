@@ -129,11 +129,11 @@ def async_setup(hass, config):
     )
 
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
-                                 descriptions[DOMAIN][SERVICE_CREATE],
+                                 descriptions[SERVICE_CREATE],
                                  SCHEMA_SERVICE_CREATE)
 
     hass.services.async_register(DOMAIN, SERVICE_DISMISS, dismiss_service,
-                                 descriptions[DOMAIN][SERVICE_DISMISS],
+                                 descriptions[SERVICE_DISMISS],
                                  SCHEMA_SERVICE_DISMISS)
 
     return True

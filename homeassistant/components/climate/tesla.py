@@ -35,7 +35,6 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
         self._target_temperature = None
         self._temperature = None
-        self._name = self.tesla_device.name
 
     @property
     def current_operation(self):
