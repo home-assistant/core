@@ -16,7 +16,7 @@ from homeassistant.const import (CONF_PLATFORM, CONF_SWITCHES, CONF_ZONE,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['pyrainbird==0.1.0','pycrypto>=2.6.0']
+REQUIREMENTS = ['pyrainbird==0.1.0','pycrypto==2.6.1']
 
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)
