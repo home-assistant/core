@@ -96,6 +96,9 @@ history:
 # View all events in a logbook
 logbook:
 
+# Enables a map showing the location of tracked devices
+map:
+
 # Track the sun
 sun:
 
