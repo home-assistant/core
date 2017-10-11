@@ -158,7 +158,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME)
 
 
 def test_scan_devices():
