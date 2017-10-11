@@ -109,5 +109,5 @@ class UnifiScanner(DeviceScanner):
         """
         client = self._clients.get(mac, {})
         name = client.get('name') or client.get('hostname')
-        _LOGGER.debug("Device %s name %s", mac, name)
+        _LOGGER.debug("Device mac %s name %s", mac, name)
         return name
