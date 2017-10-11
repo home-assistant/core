@@ -49,7 +49,6 @@ class TeslaSensor(TeslaDevice, Entity):
             self.entity_id = ENTITY_ID_FORMAT.format(
                 '{}_{}'.format(self.tesla_id, self.type))
         else:
-            self._name = self.tesla_device.name
             self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     @property

@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.11']
+REQUIREMENTS = ['teslajsonpy==0.0.17']
 
 DOMAIN = 'tesla'
 
@@ -39,7 +39,7 @@ NOTIFICATION_ID = 'tesla_integration_notification'
 NOTIFICATION_TITLE = 'Tesla integration setup'
 
 TESLA_COMPONENTS = [
-    'sensor', 'lock', 'climate', 'binary_sensor', 'device_tracker'
+    'sensor', 'lock', 'climate', 'binary_sensor', 'device_tracker', 'switch'
 ]
 
 
@@ -55,7 +55,8 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaApi(email, password, update_interval),
+                'controller': teslaApi(
+                    email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
