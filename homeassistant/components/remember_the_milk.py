@@ -45,7 +45,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 CONFIG_TOKEN = 'token'
 CONFIG_FILE_NAME = 'remember_the_milk.conf'
-_CONFIGURING = dict()
 
 SERVICE_DESCRIPTION_CREATE_TASK = {
     'description': 'Create a new task in your Remember The Milk account',
@@ -110,6 +109,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
                           stored_rtm_config, component):
     from rtmapi import Rtm
 
+    request_id = None
     configurator = hass.components.configurator
     api = Rtm(api_key, shared_secret, "write", None)
     url, frob = api.authenticate_desktop()
@@ -122,7 +122,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
         if api.token is None:
             _LOGGER.error('Failed to register, please try again.')
             configurator.notify_errors(
-                _CONFIGURING[account_name],
+                request_id,
                 'Failed to register, please try again.')
             return
         else:
@@ -133,10 +133,10 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
                 hass, account_name, api_key, shared_secret, token,
                 stored_rtm_config, component)
 
-            configurator.request_done(_CONFIGURING[account_name])
-            _CONFIGURING.pop(account_name)
+            configurator.request_done(request_id)
+            request_id.pop(account_name)
 
-    _CONFIGURING[account_name] = configurator.async_request_config(
+    request_id = configurator.async_request_config(
         '{} - {}'.format(DOMAIN, account_name),
         callback=register_account_callback,
         description='You need to log in to Remember The Milk to' +
