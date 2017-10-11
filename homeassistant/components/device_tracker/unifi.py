@@ -91,7 +91,7 @@ class UnifiScanner(DeviceScanner):
             clients = []
 
             if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
-                client['last_seen']))) < self._detection_time}
+                client['last_seen']))) < self._detection_time
 
     def scan_devices(self):
         """Scan for devices."""
