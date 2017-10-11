@@ -19,13 +19,17 @@ from homeassistant.setup import async_prepare_setup_platform
 
 DEPENDENCIES = ['http']
 DOMAIN = 'calendar'
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
     calendars = []
+
+    component = EntityComponent(
+            _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+
     hass.components.frontend.register_built_in_panel(
         'calendar', 'Calendar', 'mdi:calendar')
     hass.http.register_view(CalendarPlatformsView(calendars))
@@ -62,70 +66,36 @@ def async_setup(hass, config):
             return
 
         calendars.append(calendar)
-        calendar_entity = CalendarEntity(hass, calendar)
-        component = EntityComponent(
-            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
-        yield from component.async_add_entity(calendar_entity)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
-
-    @asyncio.coroutine
-    def async_platform_discovered(platform, info):
-        """Handle for discovered platform."""
-        yield from async_setup_platform(platform, discovery_info=None)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
+        yield from component.async_add_entities(calendars)
     return True
 
-class CalendarEntity(Entity):
-    """Entity for each calendar platform."""
-    def __init__(self, hass, calendar):
-        """Initialze calendar entity."""
-        self.calendar = calendar
-        self.hass = hass
-
-    @property
-    def state(self):
-        """Return the status of the calendar."""
-        return 'state'
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.calendar.name
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Retrieves evens from platform."""
-        # TODO
-        _LOGGER.info('Update')
-
 class Calendar(Entity):
-    """Represents a calendar device."""
-
+    """Entity for each calendar platform."""
     def __init__(self, hass, name):
-        """Initialize calendar object."""
+        """Initialze calendar entity."""
         self.hass = hass
         self._name = name
 
     @property
-    def name(self):
-        return self._name
+    def state(self):
+        """Return the status of the calendar."""
+        return 'state' # TODO
 
-    def async_update(self):
-        # TODO
-        _LOGGER.info('update')
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
 
     @asyncio.coroutine
     def async_get_events(self):
         """Returns a list of events."""
         raise NotImplementedError()
-
 
 class CalendarView(HomeAssistantView):
     """Base Calendar view."""
