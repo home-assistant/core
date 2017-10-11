@@ -683,7 +683,7 @@ class TestHelpersTemplate(unittest.TestCase):
             MATCH_ALL,
             template.extract_entities("""
 {% for state in states.sensor %}
-  {{ state.entity_id }}={{ state.state }},
+  {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
             """))
 
@@ -752,6 +752,15 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
+
+    def test_extract_entities_with_variables_match_entities(self):
+        """Test extract entities with variables function 
+           with entities stuff."""
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities_with_variables(
+                "{{ is_state('input_boolean.switch', 'off') }}", {}))
 
 
 @asyncio.coroutine
