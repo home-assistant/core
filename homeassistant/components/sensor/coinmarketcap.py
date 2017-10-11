@@ -15,7 +15,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['coinmarketcap==3.0.1']
+REQUIREMENTS = ['coinmarketcap==4.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

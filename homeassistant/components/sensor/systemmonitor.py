@@ -16,9 +16,11 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.2.2']
+REQUIREMENTS = ['psutil==5.3.1']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ARG = 'arg'
 
 SENSOR_TYPES = {
     'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
@@ -49,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
         vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-            vol.Optional('arg'): cv.string,
+            vol.Optional(CONF_ARG): cv.string,
         })])
 })
 
@@ -71,9 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
-        if 'arg' not in resource:
-            resource['arg'] = ''
-        dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource['arg']))
+        if CONF_ARG not in resource:
+            resource[CONF_ARG] = ''
+        dev.append(SystemMonitorSensor(
+            resource[CONF_TYPE], resource[CONF_ARG]))
 
     add_devices(dev, True)
 
@@ -137,10 +140,16 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
-            if any(self.argument in l.name() for l in psutil.process_iter()):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+            for proc in psutil.process_iter():
+                try:
+                    if self.argument == proc.name():
+                        self._state = STATE_ON
+                        return
+                except psutil.NoSuchProcess as err:
+                    _LOGGER.warning(
+                        "Failed to load process with id: %s, old name: %s",
+                        err.pid, err.name)
+            self._state = STATE_OFF
         elif self.type == 'network_out' or self.type == 'network_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:

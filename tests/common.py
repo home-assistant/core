@@ -119,7 +119,7 @@ def async_test_home_assistant(loop):
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, Mock):
-            return mock_coro(target())
+            return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
@@ -477,7 +477,7 @@ def assert_setup_component(count, domain=None):
     - domain: The domain to count is optional. It can be automatically
               determined most of the time
 
-    Use as a context manager aroung setup.setup_component
+    Use as a context manager around setup.setup_component
         with assert_setup_component(0) as result_config:
             setup_component(hass, domain, start_config)
             # using result_config is optional

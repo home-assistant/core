@@ -121,7 +121,7 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_PUSH: {
             CONF_PUSH_CATEGORIES: vol.All(cv.ensure_list, [{
                 vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Upper,
+                vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
                 vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): ACTION_SCHEMA_LIST
             }])
         }

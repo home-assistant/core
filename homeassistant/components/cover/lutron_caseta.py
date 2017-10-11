@@ -1,14 +1,14 @@
 """
-Support for Lutron Caseta SerenaRollerShade.
+Support for Lutron Caseta shades.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.lutron_caseta/
 """
 import logging
 
-
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION)
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
+    ATTR_POSITION, DOMAIN)
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
 
@@ -19,11 +19,10 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Lutron Caseta Serena shades as a cover device."""
+    """Set up the Lutron Caseta shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    cover_devices = bridge.get_devices_by_types(["SerenaRollerShade",
-                                                 "SerenaHoneycombShade"])
+    cover_devices = bridge.get_devices_by_domain(DOMAIN)
     for cover_device in cover_devices:
         dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
@@ -32,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
-    """Representation of a Lutron Serena shade."""
+    """Representation of a Lutron shade."""
 
     @property
     def supported_features(self):
@@ -42,24 +41,26 @@ class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._state["current_state"] < 1
+        return self._state['current_state'] < 1
 
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return self._state["current_state"]
+        return self._state['current_state']
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         self._smartbridge.set_value(self._device_id, 0)
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         self._smartbridge.set_value(self._device_id, 100)
 
-    def set_cover_position(self, position, **kwargs):
-        """Move the roller shutter to a specific position."""
-        self._smartbridge.set_value(self._device_id, position)
+    def set_cover_position(self, **kwargs):
+        """Move the shade to a specific position."""
+        if ATTR_POSITION in kwargs:
+            position = kwargs[ATTR_POSITION]
+            self._smartbridge.set_value(self._device_id, position)
 
     def update(self):
         """Call when forcing a refresh of the device."""

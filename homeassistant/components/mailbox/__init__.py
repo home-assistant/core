@@ -111,7 +111,7 @@ class MailboxEntity(Entity):
 
         @callback
         def _mailbox_updated(event):
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         hass.bus.async_listen(EVENT, _mailbox_updated)
 
