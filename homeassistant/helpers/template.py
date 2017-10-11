@@ -29,8 +29,8 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M
 )
 _RE_GET_POSSIBLE_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+)|([\w]+))",
-    re.I | re.M
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states) \
+    \(.)([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
 
@@ -73,7 +73,7 @@ def extract_entities_with_variables(template, variables):
         elif result[0]:
             extraction_final.append(result[0])
 
-        if result[1] in variables and isinstance(variables[result[1]], str) :
+        if result[1] in variables and isinstance(variables[result[1]], str):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:
