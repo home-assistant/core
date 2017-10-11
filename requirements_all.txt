@@ -688,6 +688,7 @@ pyqwikswitch==0.4
 
 # homeassistant.components.switch.rainbird
 pyrainbird==0.1.0
+pycrypto>=2.6.0
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1
