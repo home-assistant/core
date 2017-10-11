@@ -29,8 +29,8 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M
 )
 _RE_GET_POSSIBLE_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states) \
-    \(.)([\w]+\.[\w]+)|([\w]+))", re.I | re.M
+    r"""(?:(?:states\.|(?:is_state|is_state_attr|
+    states)\(.)([\w]+\.[\w]+)|([\w]+))""", re.I | re.M
 )
 
 
