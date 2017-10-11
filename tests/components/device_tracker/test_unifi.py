@@ -2,6 +2,8 @@
 from unittest import mock
 from pyunifi.controller import APIError
 import homeassistant.util.dt as dt_util
+from datetime import timedelta
+
 
 import pytest
 import voluptuous as vol
@@ -9,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
-DEFAULT_DETECTION_TIME = 180
+DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 @pytest.fixture
 def mock_ctrl():
