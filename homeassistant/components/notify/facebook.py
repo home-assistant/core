@@ -56,8 +56,15 @@ class FacebookNotificationService(BaseNotificationService):
             return
 
         for target in targets:
+            # If the target starts with a "+", we suppose it's a phone number,
+            # otherwise it's a user id.
+            if target.startswith('+'):
+                recipient = {"phone_number": target}
+            else:
+                recipient = {"id": target}
+
             body = {
-                "recipient": {"phone_number": target},
+                "recipient": recipient,
                 "message": body_message
             }
             import json
