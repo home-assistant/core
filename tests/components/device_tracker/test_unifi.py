@@ -88,7 +88,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: False,
             'port': 123,
             'site_id': 'abcdef01',
-            'detection_time': 60,
+            'detection_time': 300,
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -100,7 +100,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
 
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
-                                               datetime.timedelta(0, 60))
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_error():
