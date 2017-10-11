@@ -25,12 +25,8 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
-    re.I | re.M
-)
-_RE_GET_POSSIBLE_ENTITIES = re.compile(
-    r"""(?:(?:states\.|(?:is_state|is_state_attr|
-    states)\(.)([\w]+\.[\w]+)|([\w]+))""", re.I | re.M
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"\(.)([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
 
@@ -47,23 +43,12 @@ def attach(hass, obj):
         obj.hass = hass
 
 
-def extract_entities(template):
+def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
-    if extraction:
-        return list(set(extraction))
-    return MATCH_ALL
-
-
-def extract_entities_with_variables(template, variables):
-    """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
-
-    extraction = _RE_GET_POSSIBLE_ENTITIES.findall(template)
     extraction_final = []
 
     for result in extraction:
@@ -73,7 +58,8 @@ def extract_entities_with_variables(template, variables):
         elif result[0]:
             extraction_final.append(result[0])
 
-        if result[1] in variables and isinstance(variables[result[1]], str):
+        if variables and result[1] in variables and \
+           isinstance(variables[result[1]], str):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:
@@ -106,10 +92,7 @@ class Template(object):
 
     def extract_entities(self, variables=None):
         """Extract all entities for state_changed listener."""
-        if not variables:
-            return extract_entities(self.template)
-        else:
-            return extract_entities_with_variables(self.template, variables)
+        return extract_entities(self.template, variables)
 
     def render(self, variables=None, **kwargs):
         """Render given template."""
