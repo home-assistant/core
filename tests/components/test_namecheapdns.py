@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 
-import xml.etree.ElementTree as ET
 import pytest
 
 from homeassistant.setup import async_setup_component
