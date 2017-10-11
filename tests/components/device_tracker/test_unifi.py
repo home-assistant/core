@@ -100,7 +100,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
 
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
-                                               DEFAULT_DETECTION_TIME)
+                                               datetime.timedelta(0, 60))
 
 
 def test_config_error():
