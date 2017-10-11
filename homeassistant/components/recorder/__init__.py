@@ -10,10 +10,11 @@ https://home-assistant.io/components/recorder/
 import asyncio
 import concurrent.futures
 import logging
+from os import path
 import queue
 import threading
 import time
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import Optional, Dict
 
 import voluptuous as vol
@@ -28,22 +29,33 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant import config as conf_util
 
 from . import purge, migration
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.1.13']
+REQUIREMENTS = ['sqlalchemy==1.1.14']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'recorder'
 
+SERVICE_PURGE = 'purge'
+
+ATTR_KEEP_DAYS = 'keep_days'
+
+SERVICE_PURGE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_KEEP_DAYS):
+        vol.All(vol.Coerce(int), vol.Range(min=0))
+})
+
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
-CONF_PURGE_DAYS = 'purge_days'
+CONF_PURGE_KEEP_DAYS = 'purge_keep_days'
+CONF_PURGE_INTERVAL = 'purge_interval'
 CONF_EVENT_TYPES = 'event_types'
 
 CONNECT_RETRY_WAIT = 3
@@ -65,7 +77,9 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Optional(CONF_PURGE_DAYS):
+        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
     })
@@ -106,7 +120,8 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
-    purge_days = conf.get(CONF_PURGE_DAYS)
+    purge_days = conf.get(CONF_PURGE_KEEP_DAYS)
+    purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
     db_url = conf.get(CONF_DB_URL, None)
     if not db_url:
@@ -116,10 +131,32 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass, purge_days=purge_days, uri=db_url, include=include,
-        exclude=exclude)
+        hass, uri=db_url, include=include, exclude=exclude)
     instance.async_initialize()
     instance.start()
+
+    @asyncio.coroutine
+    def async_handle_purge_interval(now):
+        """Handle purge interval."""
+        instance.do_purge(purge_days)
+
+    @asyncio.coroutine
+    def async_handle_purge_service(service):
+        """Handle calls to the purge service."""
+        instance.do_purge(service.data[ATTR_KEEP_DAYS])
+
+    descriptions = yield from hass.async_add_job(
+        conf_util.load_yaml_config_file, path.join(
+            path.dirname(__file__), 'services.yaml'))
+
+    if purge_interval and purge_days:
+        async_track_time_interval(hass, async_handle_purge_interval,
+                                  timedelta(days=purge_interval))
+
+    hass.services.async_register(DOMAIN, SERVICE_PURGE,
+                                 async_handle_purge_service,
+                                 descriptions.get(SERVICE_PURGE),
+                                 schema=SERVICE_PURGE_SCHEMA)
 
     return (yield from instance.async_db_ready)
 
@@ -127,13 +164,13 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
+    def __init__(self, hass: HomeAssistant, uri: str,
                  include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
         self.hass = hass
-        self.purge_days = purge_days
+        self.purge_days = None
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -148,11 +185,18 @@ class Recorder(threading.Thread):
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
+        self.purge_task = object()
 
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
         self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
+
+    def do_purge(self, purge_days=None):
+        """Event listener for purging data."""
+        if purge_days is not None:
+            self.purge_days = purge_days
+            self.queue.put(self.purge_task)
 
     def run(self):
         """Start processing events to save."""
@@ -190,7 +234,6 @@ class Recorder(threading.Thread):
             self.hass.add_job(connection_failed)
             return
 
-        purge_task = object()
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
@@ -220,15 +263,6 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
                                                 notify_hass_started)
 
-            if self.purge_days is not None:
-                @callback
-                def do_purge(now):
-                    """Event listener for purging data."""
-                    self.queue.put(purge_task)
-
-                async_track_time_interval(self.hass, do_purge,
-                                          timedelta(days=2))
-
         self.hass.add_job(register)
         result = hass_started.result()
 
@@ -244,7 +278,7 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif event is purge_task:
+            elif event is self.purge_task:
                 purge.purge_old_data(self, self.purge_days)
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:

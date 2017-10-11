@@ -17,7 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fitbit==0.3.0']
@@ -37,8 +37,8 @@ CONF_ATTRIBUTION = 'Data provided by Fitbit.com'
 
 DEPENDENCIES = ['http']
 
-FITBIT_AUTH_CALLBACK_PATH = '/auth/fitbit/callback'
-FITBIT_AUTH_START = '/auth/fitbit'
+FITBIT_AUTH_CALLBACK_PATH = '/api/fitbit/callback'
+FITBIT_AUTH_START = '/api/fitbit'
 FITBIT_CONFIG_FILE = 'fitbit.conf'
 FITBIT_DEFAULT_RESOURCES = ['activities/steps']
 
@@ -320,8 +320,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
     """Handle OAuth finish callback requests."""
 
     requires_auth = False
-    url = '/auth/fitbit/callback'
-    name = 'auth:fitbit:callback'
+    url = FITBIT_AUTH_CALLBACK_PATH
+    name = 'api:fitbit:callback'
 
     def __init__(self, config, add_devices, oauth):
         """Initialize the OAuth callback view."""
@@ -381,7 +381,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 ATTR_ACCESS_TOKEN: result.get('access_token'),
                 ATTR_REFRESH_TOKEN: result.get('refresh_token'),
                 ATTR_CLIENT_ID: self.oauth.client_id,
-                ATTR_CLIENT_SECRET: self.oauth.client_secret
+                ATTR_CLIENT_SECRET: self.oauth.client_secret,
+                ATTR_LAST_SAVED_AT: int(time.time())
             }
         if not config_from_file(hass.config.path(FITBIT_CONFIG_FILE),
                                 config_contents):

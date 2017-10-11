@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import dt as dt_util
+from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +89,10 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
 
+        if 'recorder' in self._hass.config.components:
+            # only use the database if it's configured
+            hass.async_add_job(self._initzialize_from_database)
+
         @callback
         # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
@@ -95,19 +100,22 @@ class StatisticsSensor(Entity):
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
-            try:
-                self.states.append(float(new_state.state))
-                if self._max_age is not None:
-                    now = dt_util.utcnow()
-                    self.ages.append(now)
-                self.count = self.count + 1
-            except ValueError:
-                self.count = self.count + 1
+            self._add_state_to_queue(new_state)
 
             hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_id, async_stats_sensor_state_listener)
+
+    def _add_state_to_queue(self, new_state):
+        try:
+            self.states.append(float(new_state.state))
+            if self._max_age is not None:
+                now = dt_util.utcnow()
+                self.ages.append(now)
+            self.count = self.count + 1
+        except ValueError:
+            self.count = self.count + 1
 
     @property
     def name(self):
@@ -187,3 +195,27 @@ class StatisticsSensor(Entity):
             else:
                 self.min = self.max = self.total = STATE_UNKNOWN
                 self.average_change = self.change = STATE_UNKNOWN
+
+    @asyncio.coroutine
+    def _initzialize_from_database(self):
+        """Initialize the list of states from the database.
+
+        The query will get the list of states in DESCENDING order so that we
+        can limit the result to self._sample_size. Afterwards reverse the
+        list so that we get it in the right order again.
+        """
+        from homeassistant.components.recorder.models import States
+        _LOGGER.debug("initializing values for %s from the database",
+                      self.entity_id)
+
+        with session_scope(hass=self._hass) as session:
+            query = session.query(States)\
+                .filter(States.entity_id == self._entity_id.lower())\
+                .order_by(States.last_updated.desc())\
+                .limit(self._sampling_size)
+            states = execute(query)
+
+        for state in reversed(states):
+            self._add_state_to_queue(state)
+
+        _LOGGER.debug("initializing from database completed")

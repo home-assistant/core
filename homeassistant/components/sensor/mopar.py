@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['motorparts==1.0.0']
+REQUIREMENTS = ['motorparts==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ class MoparData(object):
         self.vehicles = []
         self.vhrs = {}
         self.tow_guides = {}
+        self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):

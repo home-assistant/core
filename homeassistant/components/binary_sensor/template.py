@@ -135,7 +135,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         return False
 
     @callback
-    def _async_render(self, *args):
+    def _async_render(self):
         """Get the state of template."""
         try:
             return self._template.async_render().lower() == 'true'
@@ -161,7 +161,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         def set_state():
             """Set state of template binary sensor."""
             self._state = state
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         # state without delay
         if (state and not self._delay_on) or \
@@ -171,5 +171,5 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         period = self._delay_on if state else self._delay_off
         async_track_same_state(
-            self.hass, state, period, set_state, entity_ids=self._entities,
-            async_check_func=self._async_render)
+            self.hass, period, set_state, entity_ids=self._entities,
+            async_check_same_func=lambda *args: self._async_render() == state)

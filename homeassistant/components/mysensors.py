@@ -637,7 +637,7 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
     def _async_update_callback(self):
         """Update the entity."""
-        self.hass.async_add_job(self.async_update_ha_state(True))
+        self.async_schedule_update_ha_state(True)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_PORT
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['uvcclient==0.10.0']
+REQUIREMENTS = ['uvcclient==0.10.1']
 
 _LOGGER = logging.getLogger(__name__)
 

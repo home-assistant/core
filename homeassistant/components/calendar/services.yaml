@@ -1,0 +1,19 @@
+todoist:
+  new_task:
+    description: Create a new task and add it to a project.
+    fields:
+      content: 
+        description: The name of the task. [Required]
+        example: Pick up the mail
+      project:
+        description: The name of the project this task should belong to. Defaults to Inbox. [Optional]
+        example: Errands
+      labels:
+        description: Any labels that you want to apply to this task, separated by a comma. [Optional]
+        example: Chores,Deliveries
+      priority:
+        description: The priority of this task, from 1 (normal) to 4 (urgent). [Optional]
+        example: 2
+      due_date:
+        description: The day this task is due, in format YYYY-MM-DD. [Optional]
+        example: "2018-04-01"
