@@ -40,7 +40,6 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
-    'forecastio',
     'fuzzywuzzy',
     'gTTS-token',
     'ha-ffmpeg',
@@ -51,15 +50,16 @@ TEST_REQUIREMENTS = (
     'libpurecoollink',
     'libsoundtouch',
     'mficlient',
-    'nx584',
-    'paho',
+    'paho-mqtt',
     'pexpect',
     'pilight',
     'pmsensor',
     'prometheus_client',
-    'pydispatch',
+    'pydispatcher',
     'PyJWT',
     'pylitejet',
+    'pynx584',
+    'python-forecastio',
     'pyunifi',
     'pywebpush',
     'restrictedpython',
@@ -201,11 +201,13 @@ def requirements_test_output(reqs):
     output = []
     output.append('# Home Assistant test')
     output.append('\n')
-    with open('requirements_test.txt') as fp:
-        output.append(fp.read())
+    with open('requirements_test.txt') as test_file:
+        output.append(test_file.read())
     output.append('\n')
     filtered = {key: value for key, value in reqs.items()
-                if any(ign in key for ign in TEST_REQUIREMENTS)}
+                if any(
+                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                              key) is not None for ign in TEST_REQUIREMENTS)}
     output.append(generate_requirements_list(filtered))
 
     return ''.join(output)
