@@ -125,4 +125,4 @@ def test_warning_config_google_home_listen_port():
 
         assert mock_warn.called
         assert mock_warn.mock_calls[0][1][0] == \
-            "When targetting Google Home, listening port has to be port 80"
+            "When targeting Google Home, listening port has to be port 80"

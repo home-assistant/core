@@ -16,6 +16,7 @@ HM_STATE_HA_CAST = {
     'RotaryHandleSensor': {0: 'closed', 1: 'tilted', 2: 'open'},
     'WaterSensor': {0: 'dry', 1: 'wet', 2: 'water'},
     'CO2Sensor': {0: 'normal', 1: 'added', 2: 'strong'},
+    'IPSmoke': {0: 'off', 1: 'primary', 2: 'intrusion', 3: 'secondary'}
 }
 
 HM_UNIT_HA_CAST = {
@@ -57,8 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMSensor(hass, conf)
-        new_device.link_homematic()
+        new_device = HMSensor(conf)
         devices.append(new_device)
 
     add_devices(devices)

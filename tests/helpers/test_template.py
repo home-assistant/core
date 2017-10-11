@@ -745,11 +745,11 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
         self.assertListEqual(
             sorted([
                 'sensor.luftfeuchtigkeit_mean',
-                'input_slider.luftfeuchtigkeit',
+                'input_number.luftfeuchtigkeit',
             ]),
             sorted(template.extract_entities(
                 "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-                " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
+                " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
 
@@ -782,3 +782,17 @@ def test_state_with_unit(hass):
                             hass)
 
     assert tpl.async_render() == ''
+
+
+@asyncio.coroutine
+def test_length_of_states(hass):
+    """Test fetching the length of states."""
+    hass.states.async_set('sensor.test', '23')
+    hass.states.async_set('sensor.test2', 'wow')
+    hass.states.async_set('climate.test2', 'cooling')
+
+    tpl = template.Template('{{ states | length }}', hass)
+    assert tpl.async_render() == '3'
+
+    tpl = template.Template('{{ states.sensor | length }}', hass)
+    assert tpl.async_render() == '2'

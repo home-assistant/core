@@ -16,21 +16,29 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
 from homeassistant.components.config.automation import (
     CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
+from homeassistant.components.config.script import (
+    CONFIG_PATH as SCRIPTS_CONFIG_PATH)
+from homeassistant.components.config.customize import (
+    CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, mock_coro)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
+SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
+SCRIPTS_PATH = os.path.join(CONFIG_DIR, SCRIPTS_CONFIG_PATH)
+CUSTOMIZE_PATH = os.path.join(CONFIG_DIR, CUSTOMIZE_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -56,6 +64,9 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(YAML_PATH):
             os.remove(YAML_PATH)
 
+        if os.path.isfile(SECRET_PATH):
+            os.remove(SECRET_PATH)
+
         if os.path.isfile(VERSION_PATH):
             os.remove(VERSION_PATH)
 
@@ -65,16 +76,25 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(AUTOMATIONS_PATH):
             os.remove(AUTOMATIONS_PATH)
 
+        if os.path.isfile(SCRIPTS_PATH):
+            os.remove(SCRIPTS_PATH)
+
+        if os.path.isfile(CUSTOMIZE_PATH):
+            os.remove(CUSTOMIZE_PATH)
+
         self.hass.stop()
 
+    # pylint: disable=no-self-use
     def test_create_default_config(self):
         """Test creation of default config."""
         config_util.create_default_config(CONFIG_DIR, False)
 
         assert os.path.isfile(YAML_PATH)
+        assert os.path.isfile(SECRET_PATH)
         assert os.path.isfile(VERSION_PATH)
         assert os.path.isfile(GROUP_PATH)
         assert os.path.isfile(AUTOMATIONS_PATH)
+        assert os.path.isfile(CUSTOMIZE_PATH)
 
     def test_find_config_file_yaml(self):
         """Test if it finds a YAML config file."""
@@ -169,7 +189,8 @@ class TestConfig(unittest.TestCase):
             CONF_ELEVATION: 101,
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             CONF_NAME: 'Home',
-            CONF_TIME_ZONE: 'America/Los_Angeles'
+            CONF_TIME_ZONE: 'America/Los_Angeles',
+            CONF_CUSTOMIZE: OrderedDict(),
         }
 
         assert expected_values == ha_conf
@@ -334,11 +355,12 @@ class TestConfig(unittest.TestCase):
 
         mock_open = mock.mock_open()
 
-        def mock_isfile(filename):
+        def _mock_isfile(filename):
             return True
 
         with mock.patch('homeassistant.config.open', mock_open, create=True), \
-                mock.patch('homeassistant.config.os.path.isfile', mock_isfile):
+                mock.patch(
+                    'homeassistant.config.os.path.isfile', _mock_isfile):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
@@ -359,11 +381,12 @@ class TestConfig(unittest.TestCase):
 
         mock_open = mock.mock_open()
 
-        def mock_isfile(filename):
+        def _mock_isfile(filename):
             return False
 
         with mock.patch('homeassistant.config.open', mock_open, create=True), \
-                mock.patch('homeassistant.config.os.path.isfile', mock_isfile):
+                mock.patch(
+                    'homeassistant.config.os.path.isfile', _mock_isfile):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version

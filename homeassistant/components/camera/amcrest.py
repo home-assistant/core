@@ -62,7 +62,7 @@ class AmcrestCam(Camera):
         self._token = self._auth = authentication
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         response = self._camera.snapshot(channel=self._resolution)
         return response.data
