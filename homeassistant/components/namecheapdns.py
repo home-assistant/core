@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import xml.etree.ElementTree as ET
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_ACCESS_TOKEN, CONF_DOMAIN
@@ -57,6 +56,8 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _update_namecheapdns(session, host, domain, token):
     """Update NamecheapDNS."""
+    import xml.etree.ElementTree as ET
+
     params = {
         'host': host,
         'domain': domain,
