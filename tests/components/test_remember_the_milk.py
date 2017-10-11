@@ -1,3 +1,5 @@
+"""Tests for the Remember The Milk component."""
+
 import unittest
 import logging
 import os
@@ -7,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TestConfiguration(unittest.TestCase):
+    """Basic tests for the class RememberTheMilkConfiguration."""
 
     @staticmethod
     def _delete_config_file():
