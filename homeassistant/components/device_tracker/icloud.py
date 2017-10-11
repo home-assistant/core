@@ -248,7 +248,7 @@ class Icloud(DeviceScanner):
                     self._trusted_device, self._verification_code):
                 raise PyiCloudException('Unknown failure')
         except PyiCloudException as error:
-            # Reset to the inital 2FA state to allow the user to retry
+            # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)
             self._trusted_device = None
             self._verification_code = None

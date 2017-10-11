@@ -745,11 +745,11 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
         self.assertListEqual(
             sorted([
                 'sensor.luftfeuchtigkeit_mean',
-                'input_slider.luftfeuchtigkeit',
+                'input_number.luftfeuchtigkeit',
             ]),
             sorted(template.extract_entities(
                 "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-                " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
+                " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
 

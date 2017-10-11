@@ -61,7 +61,7 @@ class TestMfiSensorSetup(unittest.TestCase):
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_failed_connect(self, mock_client):
-        """Test setup with conection failure."""
+        """Test setup with connection failure."""
         mock_client.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
             self.PLATFORM.setup_platform(

@@ -6,7 +6,7 @@ https://home-assistant.io/ecosystem/ios/
 """
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['ios']
 

@@ -1,5 +1,5 @@
 set_aux_heat:
-  description: Turn auxillary heater on/off for climate device
+  description: Turn auxiliary heater on/off for climate device
 
   fields:
     entity_id:

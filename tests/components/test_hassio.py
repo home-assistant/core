@@ -52,6 +52,102 @@ def test_fail_setup_cannot_connect(hass):
 
 
 @asyncio.coroutine
+def test_setup_api_ping(hass, aioclient_mock):
+    """Test setup with API ping."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {})
+        assert result
+
+    assert aioclient_mock.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_api_push_api_data(hass, aioclient_mock):
+    """Test setup with API push."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {
+            'http': {
+                'api_password': "123456",
+                'server_port': 9999
+            },
+            'hassio': {}
+        })
+        assert result
+
+    assert aioclient_mock.call_count == 2
+    assert not aioclient_mock.mock_calls[-1][2]['ssl']
+    assert aioclient_mock.mock_calls[-1][2]['password'] == "123456"
+    assert aioclient_mock.mock_calls[-1][2]['port'] == 9999
+
+
+@asyncio.coroutine
+def test_setup_api_push_api_data_default(hass, aioclient_mock):
+    """Test setup with API push default data."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
+
+    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+        result = yield from async_setup_component(hass, 'hassio', {
+            'http': {},
+            'hassio': {}
+        })
+        assert result
+
+    assert aioclient_mock.call_count == 2
+    assert not aioclient_mock.mock_calls[-1][2]['ssl']
+    assert aioclient_mock.mock_calls[-1][2]['password'] is None
+    assert aioclient_mock.mock_calls[-1][2]['port'] == 8123
+
+
+@asyncio.coroutine
+def test_service_register(hassio_env, hass):
+    """Check if service will be settup."""
+    assert (yield from async_setup_component(hass, 'hassio', {}))
+    assert hass.services.has_service('hassio', 'addon_start')
+    assert hass.services.has_service('hassio', 'addon_stop')
+    assert hass.services.has_service('hassio', 'addon_restart')
+    assert hass.services.has_service('hassio', 'addon_stdin')
+
+
+@asyncio.coroutine
+def test_service_calls(hassio_env, hass, aioclient_mock):
+    """Call service and check the API calls behind that."""
+    assert (yield from async_setup_component(hass, 'hassio', {}))
+
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/start", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/stop", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/restart", json={'result': 'ok'})
+    aioclient_mock.post(
+        "http://127.0.0.1/addons/test/stdin", json={'result': 'ok'})
+
+    yield from hass.services.async_call(
+        'hassio', 'addon_start', {'addon': 'test'})
+    yield from hass.services.async_call(
+        'hassio', 'addon_stop', {'addon': 'test'})
+    yield from hass.services.async_call(
+        'hassio', 'addon_restart', {'addon': 'test'})
+    yield from hass.services.async_call(
+        'hassio', 'addon_stdin', {'addon': 'test', 'input': 'test'})
+    yield from hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.mock_calls[-1][2] == 'test'
+
+
+@asyncio.coroutine
 def test_forward_request(hassio_client):
     """Test fetching normal path."""
     response = MagicMock()

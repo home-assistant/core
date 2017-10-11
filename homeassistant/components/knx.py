@@ -35,7 +35,7 @@ ATTR_DISCOVER_DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xknx==0.7.13']
+REQUIREMENTS = ['xknx==0.7.14']
 
 TUNNELING_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
@@ -217,7 +217,7 @@ class KNXModule(object):
 
     @asyncio.coroutine
     def service_send_to_knx_bus(self, call):
-        """Service for sending an arbitray KNX message to the KNX bus."""
+        """Service for sending an arbitrary KNX message to the KNX bus."""
         from xknx.knx import Telegram, Address, DPTBinary, DPTArray
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)

@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusRegisterSensor(Entity):
-    """Modbus resgister sensor."""
+    """Modbus register sensor."""
 
     def __init__(self, name, slave, register, register_type,
                  unit_of_measurement, count, scale, offset, data_type,

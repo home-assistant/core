@@ -117,7 +117,7 @@ class Script():
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
 
-                # check if condition allready okay
+                # check if condition already okay
                 if condition.async_template(
                         self.hass, wait_template, variables):
                     continue

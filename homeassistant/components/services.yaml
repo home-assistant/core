@@ -1,3 +1,4 @@
+
 foursquare:
   checkin:
     description: Check a user into a Foursquare venue
@@ -39,91 +40,6 @@ foursquare:
         description: Vertical accuracy of the user's location, in meters.
         example: 1
 
-group:
-  reload:
-    description: "Reload group configuration."
-
-  set_visibility:
-    description: Hide or show a group
-
-    fields:
-      entity_id:
-        description: Name(s) of entities to set value
-        example: 'group.travel'
-
-      visible:
-        description: True if group should be shown or False if it should be hidden.
-        example: True
-
-  set:
-    description: Create/Update a user group
-
-    fields:
-      object_id:
-        description: Group id and part of entity id
-        example: 'test_group'
-
-      name:
-        description: Name of group
-        example: 'My test group'
-
-      view:
-        description: Boolean for if the group is a view
-        example: True
-
-      icon:
-        description: Name of icon for the group
-        example: 'mdi:camera'
-
-      control:
-        description: Value for control the group control
-        example: 'hidden'
-
-      visible:
-        description: If the group is visible on UI
-        example: True
-
-      entities:
-        description: List of all members in the group. Not compatible with 'delta'
-        example: domain.entity_id1, domain.entity_id2
-
-      add_entities:
-        description: List of members they will change on group listening.
-        example: domain.entity_id1, domain.entity_id2
-
-  remove:
-    description: Remove a user group
-
-    fields:
-      object_id:
-        description: Group id and part of entity id
-        example: 'test_group'
-
-persistent_notification:
-  create:
-    description: Show a notification in the frontend
-
-    fields:
-      message:
-        description: Message body of the notification. [Templates accepted]
-        example: Please check your configuration.yaml.
-
-      title:
-        description: Optional title for your notification. [Optional, Templates accepted]
-        example: Test notification
-
-      notification_id:
-        description: Target ID of the notification, will replace a notification with the same Id. [Optional]
-        example: 1234
-        
-  dismiss:
-    description: Remove a notification from the frontend
-
-    fields:
-      notification_id:
-        description: Target ID of the notification, which should be removed. [Required]
-        example: 1234
-
 homematic:
   virtualkey:
     description: Press a virtual key from CCU/Homegear or simulate keypress
@@ -154,7 +70,7 @@ homematic:
         example: 'homematic.ccu2'
 
       name:
-        description: Name of the varaible to set
+        description: Name of the variable to set
         example: 'testvariable'
 
       value:
@@ -162,7 +78,7 @@ homematic:
         example: 1
 
   set_dev_value:
-    description: Set a device property on RPC XML inteface.
+    description: Set a device property on RPC XML interface.
 
     fields:
       address:
@@ -333,7 +249,7 @@ hdmi_cec:
     description: Select HDMI device.
     fields:
       device:
-        description: Addres of device to select. Can be entity_id, physical address or alias from confuguration.
+        description: Address of device to select. Can be entity_id, physical address or alias from confuguration.
         example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
 
   power_on:
@@ -347,21 +263,21 @@ ffmpeg:
     description: Send a start command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will start. Platform dependent.
+        description: Name(s) of entities that will start. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
   stop:
     description: Send a stop command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will stop. Platform dependent.
+        description: Name(s) of entities that will stop. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
   restart:
     description: Send a restart command to a ffmpeg based sensor.
     fields:
       entity_id:
-        description: Name(s) of entites that will restart. Platform dependent.
+        description: Name(s) of entities that will restart. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
 
 logger:
@@ -571,3 +487,96 @@ counter:
       entity_id:
         description: Entity id of the counter to reset.
         example: 'counter.count0'
+
+abode:
+  change_setting:
+    description: Change an Abode system setting.
+
+    fields:
+      setting:
+        description: Setting to change.
+        example: 'beeper_mute'
+
+      value:
+        description: Value of the setting.
+        example: '1'
+
+  capture_image:
+    description: Request a new image capture from a camera device.
+
+    fields:
+      entity_id:
+        description: Entity id of the camera to request an image.
+        example: 'camera.downstairs_motion_camera'
+
+  trigger_quick_action:
+    description: Trigger an Abode quick action.
+
+    fields:
+      entity_id:
+        description: Entity id of the quick action to trigger.
+        example: 'binary_sensor.home_quick_action'
+
+input_boolean:
+  toggle:
+    description: Toggles an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to toggle
+        example: 'input_boolean.notify_alerts'
+
+  turn_off:
+    description: Turns OFF an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn off
+        example: 'input_boolean.notify_alerts'
+
+  turn_on:
+    description: Turns ON an input boolean
+
+    fields:
+      entity_id:
+        description: Entity id of the input boolean to turn on
+        example: 'input_boolean.notify_alerts'
+
+wink:
+  pair_new_device:
+    description: Pair a new device to a Wink Hub.
+
+    fields:
+      hub_name:
+        description: The name of the hub to pair a new device to.
+        example: 'My hub'
+      pairing_mode:
+        description: One of ["zigbee", "zwave", "zwave_exclusion", "zwave_network_rediscovery", "lutron", "bluetooth", "kidde"]
+        example: 'zigbee'
+      kidde_radio_code:
+        description: A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8
+        example: '10101010'
+
+  rename_wink_device:
+    description: Rename the provided device.
+
+    fields:
+      entity_id:
+        description: The entity_id of the device to rename.
+        example: binary_sensor.front_door_opened
+      name:
+        description: The name to change it to.
+        example: back_door
+
+  delete_wink_device:
+    description: Remove/unpair device from Wink.
+
+    fields:
+      entity_id:
+        description: The entity_id of the device to delete.
+
+  pull_newly_added_devices_from_wink:
+    description: Pull newly pair devices from Wink.
+
+  refresh_state_from_wink:
+    description: Pull the latest states for every device.

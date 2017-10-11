@@ -17,7 +17,7 @@ from homeassistant.components.image_processing import (
     ImageProcessingEntity)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.13.1']
+REQUIREMENTS = ['numpy==1.13.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ CASCADE_URL = \
     'https://raw.githubusercontent.com/opencv/opencv/master/data/' + \
     'lbpcascades/lbpcascade_frontalface.xml'
 
-CONF_CLASSIFIER = 'classifer'
+CONF_CLASSIFIER = 'classifier'
 CONF_FILE = 'file'
 CONF_MIN_SIZE = 'min_size'
 CONF_NEIGHBORS = 'neighbors'

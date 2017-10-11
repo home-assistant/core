@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 from homeassistant.components.discovery import SERVICE_APPLE_TV
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyatv==0.3.4']
+REQUIREMENTS = ['pyatv==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 

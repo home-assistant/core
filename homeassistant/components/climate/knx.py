@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up climate(s) for KNX platform."""
     if DATA_KNX not in hass.data \
@@ -52,25 +52,25 @@ def async_setup_platform(hass, config, add_devices,
         return False
 
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, add_devices)
+        async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
-        async_add_devices_config(hass, config, add_devices)
+        async_add_devices_config(hass, config, async_add_devices)
 
     return True
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, add_devices):
+def async_add_devices_discovery(hass, discovery_info, async_add_devices):
     """Set up climates for KNX platform configured within plattform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXClimate(hass, device))
-    add_devices(entities)
+    async_add_devices(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, add_devices):
+def async_add_devices_config(hass, config, async_add_devices):
     """Set up climate for KNX platform configured within plattform."""
     import xknx
     climate = xknx.devices.Climate(
@@ -97,7 +97,7 @@ def async_add_devices_config(hass, config, add_devices):
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(climate)
-    add_devices([KNXClimate(hass, climate)])
+    async_add_devices([KNXClimate(hass, climate)])
 
 
 class KNXClimate(ClimateDevice):

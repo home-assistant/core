@@ -142,7 +142,7 @@ def test_logout_view_request_timeout(mock_auth, cloud_client):
 
 @asyncio.coroutine
 def test_logout_view_unknown_error(mock_auth, cloud_client):
-    """Test unknown error while loggin out."""
+    """Test unknown error while logging out."""
     mock_auth.logout.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post('/api/cloud/logout')
     assert req.status == 502
@@ -186,7 +186,7 @@ def test_register_view_request_timeout(mock_cognito, cloud_client):
 
 @asyncio.coroutine
 def test_register_view_unknown_error(mock_cognito, cloud_client):
-    """Test unknown error while loggin out."""
+    """Test unknown error while logging out."""
     mock_cognito.register.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post('/api/cloud/register', json={
         'email': 'hello@bla.com',
@@ -233,7 +233,7 @@ def test_confirm_register_view_request_timeout(mock_cognito, cloud_client):
 
 @asyncio.coroutine
 def test_confirm_register_view_unknown_error(mock_cognito, cloud_client):
-    """Test unknown error while loggin out."""
+    """Test unknown error while logging out."""
     mock_cognito.confirm_sign_up.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post('/api/cloud/confirm_register', json={
         'email': 'hello@bla.com',
@@ -274,7 +274,7 @@ def test_forgot_password_view_request_timeout(mock_cognito, cloud_client):
 
 @asyncio.coroutine
 def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
-    """Test unknown error while loggin out."""
+    """Test unknown error while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post('/api/cloud/forgot_password', json={
         'email': 'hello@bla.com',
@@ -329,7 +329,7 @@ def test_confirm_forgot_password_view_request_timeout(mock_cognito,
 @asyncio.coroutine
 def test_confirm_forgot_password_view_unknown_error(mock_cognito,
                                                     cloud_client):
-    """Test unknown error while loggin out."""
+    """Test unknown error while logging out."""
     mock_cognito.confirm_forgot_password.side_effect = auth_api.UnknownError
     req = yield from cloud_client.post(
         '/api/cloud/confirm_forgot_password', json={

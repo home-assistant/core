@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
@@ -66,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
 def setup(hass, yaml_config):
@@ -129,7 +131,7 @@ class Config(object):
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning("Alexa type is deprecated and will be removed in a"
-                            "future version")
+                            " future version")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
@@ -148,7 +150,7 @@ class Config(object):
                 self.listen_port)
 
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targetting Google Home, listening port has "
+            _LOGGER.warning("When targeting Google Home, listening port has "
                             "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
@@ -223,7 +225,15 @@ class Config(object):
 
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
+        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+        if explicit_expose is True or explicit_hidden is False:
+            expose = True
+        elif explicit_expose is False or explicit_hidden is True:
+            expose = False
+        else:
+            expose = None
+        get_deprecated(entity.attributes, ATTR_EMULATED_HUE_HIDDEN,
+                       ATTR_EMULATED_HUE, None)
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 
@@ -231,9 +241,9 @@ class Config(object):
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = \
-            domain_exposed_by_default and explicit_expose is not False
+            domain_exposed_by_default and expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or expose
 
     def _load_numbers_json(self):
         """Set up helper method to load numbers json."""
