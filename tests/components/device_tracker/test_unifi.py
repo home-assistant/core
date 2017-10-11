@@ -43,7 +43,7 @@ def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: "/tmp/unifi.crt"
         })
     }
-    result = unifi.get_scanner(hass, config, DEFAULT_DETECTION_TIME)
+    result = unifi.get_scanner(hass, config)
     assert mock_scanner.return_value == result
     assert mock_ctrl.call_count == 1
     assert mock_ctrl.mock_calls[0] == \
@@ -63,7 +63,7 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
             CONF_PASSWORD: 'password',
         })
     }
-    result = unifi.get_scanner(hass, config, DEFAULT_DETECTION_TIME)
+    result = unifi.get_scanner(hass, config)
     assert mock_scanner.return_value == result
     assert mock_ctrl.call_count == 1
     assert mock_ctrl.mock_calls[0] == \
@@ -88,7 +88,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             'detection_time': 60,
         })
     }
-    result = unifi.get_scanner(hass, config, DEFAULT_DETECTION_TIME)
+    result = unifi.get_scanner(hass, config)
     assert mock_scanner.return_value == result
     assert mock_ctrl.call_count == 1
     assert mock_ctrl.call_args == \
