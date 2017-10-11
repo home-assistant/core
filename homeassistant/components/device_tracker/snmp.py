@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pysnmp==4.3.9']
+REQUIREMENTS = ['pysnmp==4.3.10']
 
 CONF_COMMUNITY = 'community'
 CONF_AUTHKEY = 'authkey'
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Validate the configuration and return an snmp scanner."""
+    """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -75,7 +75,7 @@ class SnmpScanner(DeviceScanner):
         return [client['mac'] for client in self.last_results
                 if client.get('mac')]
 
-    # Supressing no-self-use warning
+    # Suppressing no-self-use warning
     # pylint: disable=R0201
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""

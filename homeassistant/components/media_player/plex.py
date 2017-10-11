@@ -287,12 +287,6 @@ class PlexClient(MediaPlayerDevice):
         self._is_player_available = False
         self._machine_identifier = None
         self._make = ''
-        self._media_content_id = None
-        self._media_content_rating = None
-        self._media_content_type = None
-        self._media_duration = None
-        self._media_image_url = None
-        self._media_title = None
         self._name = None
         self._player_state = 'idle'
         self._previous_volume_level = 1  # Used in fake muting
@@ -308,16 +302,7 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices = update_devices
         self.update_sessions = update_sessions
 
-        # Music
-        self._media_album_artist = None
-        self._media_album_name = None
-        self._media_artist = None
-        self._media_track = None
-
-        # TV Show
-        self._media_episode = None
-        self._media_season = None
-        self._media_series_title = None
+        self._clear_media()
 
         self.refresh(device, session)
 
@@ -339,10 +324,32 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
+    def _clear_media(self):
+        """Set all Media Items to None."""
+        # General
+        self._media_content_id = None
+        self._media_content_rating = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_title = None
+        self._media_position = None
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
+
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
-        if session:
+        self._clear_media()
+
+        if session:  # Not being triggered by Chrome or FireTablet Plex App
             self._session = session
         if device:
             self._device = device
@@ -369,9 +376,6 @@ class PlexClient(MediaPlayerDevice):
                 self._session.ratingKey)
             self._media_content_rating = self._convert_na_to_none(
                 self._session.contentRating)
-        else:
-            self._media_position = None
-            self._media_content_id = None
 
         # player dependent data
         if self._session and self._session.player:
@@ -405,7 +409,6 @@ class PlexClient(MediaPlayerDevice):
                 self._session.duration)
         else:
             self._session_type = None
-            self._media_duration = None
 
         # media type
         if self._session_type == 'clip':
@@ -418,11 +421,9 @@ class PlexClient(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_VIDEO
         elif self._session_type == 'track':
             self._media_content_type = MEDIA_TYPE_MUSIC
-        else:
-            self._media_content_type = None
 
         # title (movie name, tv episode name, music song name)
-        if self._session:
+        if self._session and self._is_player_active:
             self._media_title = self._convert_na_to_none(self._session.title)
 
         # Movies
@@ -431,9 +432,7 @@ class PlexClient(MediaPlayerDevice):
             self._media_title += ' (' + str(self._session.year) + ')'
 
         # TV Show
-        if (self._is_player_active and
-                self._media_content_type is MEDIA_TYPE_TVSHOW):
-
+        if self._media_content_type is MEDIA_TYPE_TVSHOW:
             # season number (00)
             if callable(self._convert_na_to_none(self._session.seasons)):
                 self._media_season = self._convert_na_to_none(
@@ -443,23 +442,15 @@ class PlexClient(MediaPlayerDevice):
                 self._media_season = self._session.parentIndex.zfill(2)
             else:
                 self._media_season = None
-
             # show name
             self._media_series_title = self._convert_na_to_none(
                 self._session.grandparentTitle)
-
             # episode number (00)
-            if self._convert_na_to_none(
-                    self._session.index) is not None:
+            if self._convert_na_to_none(self._session.index) is not None:
                 self._media_episode = str(self._session.index).zfill(2)
-        else:
-            self._media_season = None
-            self._media_series_title = None
-            self._media_episode = None
 
         # Music
-        if (self._is_player_active and
-                self._media_content_type == MEDIA_TYPE_MUSIC):
+        if self._media_content_type == MEDIA_TYPE_MUSIC:
             self._media_album_name = self._convert_na_to_none(
                 self._session.parentTitle)
             self._media_album_artist = self._convert_na_to_none(
@@ -469,14 +460,9 @@ class PlexClient(MediaPlayerDevice):
                 self._session.originalTitle)
             # use album artist if track artist is missing
             if self._media_artist is None:
-                _LOGGER.debug("Using album artist because track artist was "
-                              "not found: %s", self.entity_id)
+                _LOGGER.debug("Using album artist because track artist "
+                              "was not found: %s", self.entity_id)
                 self._media_artist = self._media_album_artist
-        else:
-            self._media_album_name = None
-            self._media_album_artist = None
-            self._media_track = None
-            self._media_artist = None
 
         # set app name to library name
         if (self._session is not None
@@ -501,8 +487,6 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self._get_thumbnail_url(self._session.art)
 
             self._media_image_url = thumb_url
-        else:
-            self._media_image_url = None
 
     def _get_thumbnail_url(self, property_value):
         """Return full URL (if exists) for a thumbnail property."""
@@ -521,6 +505,7 @@ class PlexClient(MediaPlayerDevice):
         """Force client to idle."""
         self._state = STATE_IDLE
         self._session = None
+        self._clear_media()
 
     @property
     def unique_id(self):
@@ -711,7 +696,7 @@ class PlexClient(MediaPlayerDevice):
             if ("127.0.0.1" in client.baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
-                # playback is occuring
+                # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)

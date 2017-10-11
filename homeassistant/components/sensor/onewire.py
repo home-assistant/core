@@ -1,5 +1,5 @@
 """
-Support for 1-Wire temperature sensors.
+Support for 1-Wire environment sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.onewire/
@@ -22,7 +22,22 @@ CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
 
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
-DEVICE_FAMILIES = ('10', '22', '28', '3B', '42')
+DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
+                  '12': {'temperature': 'TAI8570/temperature',
+                         'pressure': 'TAI8570/pressure'},
+                  '22': {'temperature': 'temperature'},
+                  '26': {'temperature': 'temperature',
+                         'humidity': 'humidity',
+                         'pressure': 'B1-R1-A/pressure'},
+                  '28': {'temperature': 'temperature'},
+                  '3B': {'temperature': 'temperature'},
+                  '42': {'temperature': 'temperature'}}
+
+SENSOR_TYPES = {
+    'temperature': ['temperature', TEMP_CELSIUS],
+    'humidity': ['humidity', '%'],
+    'pressure': ['pressure', 'mb'],
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAMES): {cv.string: cv.string},
@@ -34,66 +49,58 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)
-    sensor_ids = []
-    device_files = []
+    devs = []
+    device_names = {}
+    if 'names' in config:
+        if isinstance(config['names'], dict):
+            device_names = config['names']
+
     if base_dir == DEFAULT_MOUNT_DIR:
-        for device_family in DEVICE_FAMILIES:
+        for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, device_family +
                                                    '[.-]*')):
-                sensor_ids.append(os.path.split(device_folder)[1])
-                device_files.append(os.path.join(device_folder, 'w1_slave'))
+                sensor_id = os.path.split(device_folder)[1]
+                device_file = os.path.join(device_folder, 'w1_slave')
+                devs.append(OneWireDirect(device_names.get(sensor_id,
+                                                           sensor_id),
+                                          device_file, 'temperature'))
     else:
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
             family = family_file.read()
-            if family in DEVICE_FAMILIES:
-                sensor_id = os.path.split(
-                    os.path.split(family_file_path)[0])[1]
-                sensor_ids.append(sensor_id)
-                device_files.append(os.path.join(
-                    os.path.split(family_file_path)[0], 'temperature'))
+            if family in DEVICE_SENSORS:
+                for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
+                    sensor_id = os.path.split(
+                        os.path.split(family_file_path)[0])[1]
+                    device_file = os.path.join(
+                        os.path.split(family_file_path)[0], sensor_value)
+                    devs.append(OneWireOWFS(device_names.get(sensor_id,
+                                                             sensor_id),
+                                            device_file, sensor_key))
 
-    if device_files == []:
+    if devs == []:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
                       "is in your /boot/config.txt. "
                       "Check the mount_dir parameter if it's defined")
         return
 
-    devs = []
-    names = sensor_ids
-
-    for key in config.keys():
-        if key == 'names':
-            # Only one name given
-            if isinstance(config['names'], str):
-                names = [config['names']]
-            # Map names and sensors in given order
-            elif isinstance(config['names'], list):
-                names = config['names']
-            # Map names to ids.
-            elif isinstance(config['names'], dict):
-                names = []
-                for sensor_id in sensor_ids:
-                    names.append(config['names'].get(sensor_id, sensor_id))
-    for device_file, name in zip(device_files, names):
-        devs.append(OneWire(name, device_file))
     add_devices(devs, True)
 
 
 class OneWire(Entity):
     """Implementation of an One wire Sensor."""
 
-    def __init__(self, name, device_file):
+    def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        self._name = name
+        self._name = name+' '+sensor_type.capitalize()
         self._device_file = device_file
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
 
-    def _read_temp_raw(self):
-        """Read the temperature as it is returned by the sensor."""
-        ds_device_file = open(self._device_file, 'r')
-        lines = ds_device_file.readlines()
-        ds_device_file.close()
+    def _read_value_raw(self):
+        """Read the value as it is returned by the sensor."""
+        with open(self._device_file, 'r') as ds_device_file:
+            lines = ds_device_file.readlines()
         return lines
 
     @property
@@ -109,34 +116,39 @@ class OneWire(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
+        return self._unit_of_measurement
+
+
+class OneWireDirect(OneWire):
+    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
 
     def update(self):
         """Get the latest data from the device."""
-        temp = -99
-        if self._device_file.startswith(DEFAULT_MOUNT_DIR):
-            lines = self._read_temp_raw()
-            while lines[0].strip()[-3:] != 'YES':
-                time.sleep(0.2)
-                lines = self._read_temp_raw()
-            equals_pos = lines[1].find('t=')
-            if equals_pos != -1:
-                temp_string = lines[1][equals_pos+2:]
-                temp = round(float(temp_string) / 1000.0, 1)
-        else:
-            try:
-                ds_device_file = open(self._device_file, 'r')
-                temp_read = ds_device_file.readlines()
-                ds_device_file.close()
-                if len(temp_read) == 1:
-                    temp = round(float(temp_read[0]), 1)
-            except ValueError:
-                _LOGGER.warning("Invalid temperature value read from %s",
-                                self._device_file)
-            except FileNotFoundError:
-                _LOGGER.warning(
-                    "Cannot read from sensor: %s", self._device_file)
+        value = None
+        lines = self._read_value_raw()
+        while lines[0].strip()[-3:] != 'YES':
+            time.sleep(0.2)
+            lines = self._read_value_raw()
+        equals_pos = lines[1].find('t=')
+        if equals_pos != -1:
+            value_string = lines[1][equals_pos + 2:]
+            value = round(float(value_string) / 1000.0, 1)
+        self._state = value
 
-        if temp < -55 or temp > 125:
-            return
-        self._state = temp
+
+class OneWireOWFS(OneWire):
+    """Implementation of an One wire Sensor through owfs."""
+
+    def update(self):
+        """Get the latest data from the device."""
+        value = None
+        try:
+            value_read = self._read_value_raw()
+            if len(value_read) == 1:
+                value = round(float(value_read[0]), 1)
+        except ValueError:
+            _LOGGER.warning("Invalid value read from %s", self._device_file)
+        except FileNotFoundError:
+            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
+
+        self._state = value

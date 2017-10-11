@@ -29,9 +29,85 @@ mysensors_send_ir_code:
 
   fields:
     entity_id:
-      description: Name(s) of entites that should have the IR code set and be turned on. Platform dependent.
+      description: Name(s) of entities that should have the IR code set and be turned on. Platform dependent.
       example: 'switch.living_room_1_1'
 
     V_IR_SEND:
       description: IR code to send
       example: '0xC284'
+
+wink_set_chime_volume:
+  description: Set the volume of the chime for a Dome siren/chime.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    volume:
+        description: Volume level. One of ["low", "medium", "high"]
+        example: "low"
+
+
+wink_set_siren_volume:
+  description: Set the volume of the siren for a Dome siren/chime.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    volume:
+        description: Volume level. One of ["low", "medium", "high"]
+        example: "high"
+
+wink_enable_chime:
+  description: Enable the chime of a Dome siren with the provided sound.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    tone:
+        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+        example: "doorbell"
+
+wink_set_siren_tone:
+  description: Set the sound to use when the siren is enabled. (This doesn't enable the siren)
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    tone:
+        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+        example: "alert"
+
+wink_siren_set_auto_shutoff:
+  description: How long to sound the siren before turning off.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    auto_shutoff:
+        description: The time in seconds to sound the siren. One of [None, -1, 30, 60, 120] (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
+        example: 60
+
+wink_set_siren_strobe_enabled:
+  description: Enable or disable the strobe light when the siren is sounding.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    enabled:
+      description: "True or False"
+
+wink_set_chime_strobe_enabled:
+  description: Enable or disable the strobe light when the chime is sounding.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    enabled:
+        description: "True or False"

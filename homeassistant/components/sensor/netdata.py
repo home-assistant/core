@@ -44,6 +44,18 @@ SENSOR_TYPES = {
     'ipv4_in': ['IPv4 In', 'kb/s', 'system.ipv4', 'received', 0],
     'ipv4_out': ['IPv4 Out', 'kb/s', 'system.ipv4', 'sent', 0],
     'disk_free': ['Disk Free', 'GiB', 'disk_space._', 'avail', 2],
+    'cpu_iowait': ['CPU IOWait', '%', 'system.cpu', 'iowait', 1],
+    'cpu_user': ['CPU User', '%', 'system.cpu', 'user', 1],
+    'cpu_system': ['CPU System', '%', 'system.cpu', 'system', 1],
+    'cpu_softirq': ['CPU SoftIRQ', '%', 'system.cpu', 'softirq', 1],
+    'cpu_guest': ['CPU Guest', '%', 'system.cpu', 'guest', 1],
+    'uptime': ['Uptime', 's', 'system.uptime', 'uptime', 0],
+    'packets_received': ['Packets Received', 'packets/s', 'ipv4.packets',
+                         'received', 0],
+    'packets_sent': ['Packets Sent', 'packets/s', 'ipv4.packets',
+                     'sent', 0],
+    'connections': ['Active Connections', 'Count',
+                    'netfilter.conntrack_sockets', 'connections', 0]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
