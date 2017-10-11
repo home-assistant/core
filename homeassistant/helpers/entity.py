@@ -71,7 +71,7 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # protect for multible updates
+    # protect for multiple updates
     _update_warn = None
 
     @property
@@ -180,15 +180,6 @@ class Entity(object):
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    def update_ha_state(self, force_refresh=False):
-        """Update Home Assistant with current state of entity.
-
-        If force_refresh == True will update entity before setting state.
-        """
-        _LOGGER.warning("'update_ha_state' is deprecated. "
-                        "Use 'schedule_update_ha_state' instead.")
-        self.schedule_update_ha_state(force_refresh)
-
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
@@ -207,8 +198,7 @@ class Entity(object):
         # update entity data
         if force_refresh:
             if self._update_warn:
-                _LOGGER.warning("Update for %s is already in progress",
-                                self.entity_id)
+                # Update is already in progress.
                 return
 
             self._update_warn = self.hass.loop.call_later(
@@ -297,9 +287,13 @@ class Entity(object):
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule a update ha state change task.
 
-        That is only needed on executor to not block.
+        That avoid executor dead looks.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
+
+    def async_schedule_update_ha_state(self, force_refresh=False):
+        """Schedule a update ha state change task."""
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
         """Remove entity from HASS."""

@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -30,6 +30,7 @@ _RE_GET_ENTITIES = re.compile(
 )
 
 
+@bind_hass
 def attach(hass, obj):
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
@@ -187,6 +188,10 @@ class AllStates(object):
             sorted(self._hass.states.async_all(),
                    key=lambda state: state.entity_id))
 
+    def __len__(self):
+        """Return number of states."""
+        return len(self._hass.states.async_entity_ids())
+
     def __call__(self, entity_id):
         """Return the states."""
         state = self._hass.states.get(entity_id)
@@ -209,9 +214,13 @@ class DomainStates(object):
     def __iter__(self):
         """Return the iteration over all the states."""
         return iter(sorted(
-            (state for state in self._hass.states.async_all()
+            (_wrap_state(state) for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
+
+    def __len__(self):
+        """Return number of states."""
+        return len(self._hass.states.async_entity_ids(self._domain))
 
 
 class TemplateState(State):

@@ -98,7 +98,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class RoombaVacuum(VacuumDevice):
-    """Representation of a Xiaomi Vacuum cleaner robot."""
+    """Representation of a Roomba Vacuum cleaner robot."""
 
     def __init__(self, name, roomba):
         """Initialize the Roomba handler."""
@@ -310,7 +310,7 @@ class RoombaVacuum(VacuumDevice):
         if error_msg and error_msg != 'None':
             self._state_attrs[ATTR_ERROR] = error_msg
 
-        # Not all Roombas expose positon data
+        # Not all Roombas expose position data
         # https://github.com/koalazak/dorita980/issues/48
         if self._capabilities[CAP_POSITION]:
             pos_state = state.get('pose', {})

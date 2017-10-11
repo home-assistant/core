@@ -16,12 +16,13 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==1.1']
+REQUIREMENTS = ['pytradfri==2.2.2']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
+KEY_API = 'tradfri_api'
 KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
 CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
 DEFAULT_ALLOW_TRADFRI_GROUPS = True
@@ -109,17 +110,26 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import cli_api_factory, Gateway, RequestError, retry_timeout
-
+    from pytradfri import Gateway, RequestError
     try:
-        api = retry_timeout(cli_api_factory(host, key))
-    except RequestError:
+        from pytradfri.api.aiocoap_api import api_factory
+    except ImportError:
+        _LOGGER.exception("Looks like something isn't installed!")
         return False
 
-    gateway = Gateway(api)
-    gateway_id = gateway.get_gateway_info().id
+    try:
+        api = yield from api_factory(host, key, loop=hass.loop)
+    except RequestError:
+        _LOGGER.exception("Tradfri setup failed.")
+        return False
+
+    gateway = Gateway()
+    gateway_info_result = yield from api(gateway.get_gateway_info())
+    gateway_id = gateway_info_result.id
+    hass.data.setdefault(KEY_API, {})
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
+    hass.data[KEY_API][gateway_id] = api
 
     hass.data.setdefault(KEY_TRADFRI_GROUPS, {})
     tradfri_groups = hass.data[KEY_TRADFRI_GROUPS]
@@ -132,6 +142,8 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     gateways[gateway_id] = gateway
     hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
+    hass.async_add_job(discovery.async_load_platform(
+        hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
 
 

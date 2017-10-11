@@ -54,8 +54,8 @@ class TestYaml(unittest.TestCase):
                 patch_yaml_files(files):
             yaml.load_yaml(YAML_CONFIG_FILE)
 
-    def test_enviroment_variable(self):
-        """Test config file with enviroment variable."""
+    def test_environment_variable(self):
+        """Test config file with environment variable."""
         os.environ["PASSWORD"] = "secret_password"
         conf = "password: !env_var PASSWORD"
         with io.StringIO(conf) as file:
@@ -70,8 +70,8 @@ class TestYaml(unittest.TestCase):
             doc = yaml.yaml.safe_load(file)
         assert doc['password'] == "secret_password"
 
-    def test_invalid_enviroment_variable(self):
-        """Test config file with no enviroment variable sat."""
+    def test_invalid_environment_variable(self):
+        """Test config file with no environment variable sat."""
         conf = "password: !env_var PASSWORD"
         with self.assertRaises(HomeAssistantError):
             with io.StringIO(conf) as file:
@@ -302,7 +302,7 @@ class TestSecrets(unittest.TestCase):
         config_dir = get_test_config_dir()
         yaml.clear_secret_cache()
         self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, yaml._SECRET_YAML)
+        self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
         self._sub_folder_path = os.path.join(config_dir, 'subFolder')
         self._unrelated_path = os.path.join(config_dir, 'unrelated')
 
@@ -351,7 +351,7 @@ class TestSecrets(unittest.TestCase):
     def test_secret_overrides_parent(self):
         """Test loading current directory secret overrides the parent."""
         expected = {'api_password': 'override'}
-        load_yaml(os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+        load_yaml(os.path.join(self._sub_folder_path, yaml.SECRET_YAML),
                   'http_pw: override')
         self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
                                'http:\n'
@@ -365,7 +365,7 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
-        load_yaml(os.path.join(self._unrelated_path, yaml._SECRET_YAML),
+        load_yaml(os.path.join(self._unrelated_path, yaml.SECRET_YAML),
                   'test: failure')
         with self.assertRaises(HomeAssistantError):
             load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),

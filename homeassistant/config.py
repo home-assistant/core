@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -57,6 +57,7 @@ DEFAULT_CORE_CONFIG = (
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
+    (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
@@ -69,8 +70,8 @@ frontend:
 config:
 
 http:
-  # Uncomment this to add a password (recommended!)
-  # api_password: PASSWORD
+  # Secrets are defined in the file secrets.yaml
+  # api_password: !secret http_password
   # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
   # base_url: example.duckdns.org:8123
 
@@ -109,6 +110,11 @@ tts:
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
+"""
+DEFAULT_SECRETS = """
+# Use this file to store secrets like usernames and passwords.
+# Learn more at https://home-assistant.io/docs/configuration/secrets/
+http_password: welcome
 """
 
 
@@ -176,12 +182,16 @@ def create_default_config(config_dir, detect_location=True):
         CONFIG_PATH as AUTOMATION_CONFIG_PATH)
     from homeassistant.components.config.script import (
         CONFIG_PATH as SCRIPT_CONFIG_PATH)
+    from homeassistant.components.config.customize import (
+        CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
+    secret_path = os.path.join(config_dir, SECRET_YAML)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
+    customize_yaml_path = os.path.join(config_dir, CUSTOMIZE_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -205,7 +215,7 @@ def create_default_config(config_dir, detect_location=True):
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        with open(config_path, 'w') as config_file:
+        with open(config_path, 'wt') as config_file:
             config_file.write("homeassistant:\n")
 
             for attr, _, _, description in DEFAULT_CORE_CONFIG:
@@ -217,6 +227,9 @@ def create_default_config(config_dir, detect_location=True):
 
             config_file.write(DEFAULT_CONFIG)
 
+        with open(secret_path, 'wt') as secret_file:
+            secret_file.write(DEFAULT_SECRETS)
+
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
 
@@ -227,6 +240,9 @@ def create_default_config(config_dir, detect_location=True):
             fil.write('[]')
 
         with open(script_yaml_path, 'wt'):
+            pass
+
+        with open(customize_yaml_path, 'wt'):
             pass
 
         return config_path
