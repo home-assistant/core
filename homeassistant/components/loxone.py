@@ -21,7 +21,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
                                  CONF_PASSWORD)
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['websockets==3.4']
+REQUIREMENTS = ['websockets==3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
