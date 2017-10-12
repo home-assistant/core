@@ -82,10 +82,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
-        if not self._node.on(val=STATE_TO_VALUE.get(speed, 255)):
-            _LOGGER.debug("Unable to set fan speed")
-        else:
-            self.speed = self.state
+        self._node.on(val=STATE_TO_VALUE.get(speed, 255))
 
     def turn_on(self, speed: str=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
