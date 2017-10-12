@@ -55,6 +55,7 @@ homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
 
+homeassistant/components/*/axis.py @Kane610
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/tesla.py @zabuldon
