@@ -18,6 +18,6 @@ yarn install
 ./node_modules/.bin/bower install --allow-root
 
 # Build files that need to be generated to run development mode
-./node_modules/.bin/gulp gen-service-worker ru_all
+yarn dev
 
 cd ../../../../..
