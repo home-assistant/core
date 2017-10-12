@@ -25,7 +25,7 @@ CONF_VERSION = 'version'
 DEFAULT_NAME = 'SNMPSwitch'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = '161'
-DEFAULT_COMMUNITY = 'public'
+DEFAULT_COMMUNITY = 'private'
 DEFAULT_VERSION = '1'
 DEFAULT_PAYLOAD_ON = 1
 DEFAULT_PAYLOAD_OFF = 0
@@ -144,15 +144,16 @@ class SnmpCommand(object):
             setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
 
-        g = setCmd(SnmpEngine(),
-                   CommunityData(self._community, mpModel=self._version),
-                   UdpTransportTarget((self._host, self._port)),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(self._baseoid),
-                   self._typecast(self._payload_on))
-                   )
+        request = setCmd(
+            SnmpEngine(),
+            CommunityData(self._community, mpModel=self._version),
+            UdpTransportTarget((self._host, self._port)),
+            ContextData(),
+            ObjectType(ObjectIdentity(self._baseoid),
+                       self._typecast(self._payload_on))
+        )
 
-        next(g)
+        next(request)
 
     def turn_off(self):
         """Send SNMP set command to the switch to turn it off."""
@@ -160,15 +161,16 @@ class SnmpCommand(object):
             setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
 
-        g = setCmd(SnmpEngine(),
-                   CommunityData(self._community, mpModel=self._version),
-                   UdpTransportTarget((self._host, self._port)),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(self._baseoid),
-                   self._typecast(self._payload_off))
-                   )
+        request = setCmd(
+            SnmpEngine(),
+            CommunityData(self._community, mpModel=self._version),
+            UdpTransportTarget((self._host, self._port)),
+            ContextData(),
+            ObjectType(ObjectIdentity(self._baseoid),
+                       self._typecast(self._payload_off))
+        )
 
-        next(g)
+        next(request)
 
     @property
     def state(self):
