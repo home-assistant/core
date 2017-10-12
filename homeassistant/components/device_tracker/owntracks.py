@@ -399,6 +399,13 @@ def async_handle_encrypted_message(hass, context, message):
     yield from async_handle_message(hass, context, decrypted)
 
 
+@HANDLERS.register('lwt')
+@asyncio.coroutine
+def async_handle_lwt_message(hass, context, message):
+    """Handle an lwt message."""
+    _LOGGER.debug('Not handling lwt message: %s', message)
+
+
 @asyncio.coroutine
 def async_handle_message(hass, context, message):
     """Handle an OwnTracks message."""
