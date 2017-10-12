@@ -7,13 +7,14 @@ Eneco.
 
 from homeassistant.components.climate import (ClimateDevice,
                                               ATTR_TEMPERATURE,
+                                              STATE_PERFORMANCE,
                                               STATE_HEAT,
+                                              STATE_ECO,
                                               STATE_COOL)
-from homeassistant.const import (TEMP_CELSIUS,
-                                 STATE_HOME,
-                                 STATE_NOT_HOME)
+from homeassistant.const import TEMP_CELSIUS
 
 import homeassistant.components.toon as toon_main
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup thermostat."""
@@ -34,9 +35,9 @@ class ThermostatDevice(ClimateDevice):
         self._state = None
         self._temperature = None
         self._setpoint = None
-        self._operation_list = [STATE_HEAT,
-                                STATE_HOME,
-                                STATE_NOT_HOME,
+        self._operation_list = [STATE_PERFORMANCE,
+                                STATE_HEAT,
+                                STATE_ECO,
                                 STATE_COOL]
 
     @property
@@ -82,9 +83,9 @@ class ThermostatDevice(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode as toonlib requires it."""
-        toonlib_values = {STATE_HEAT: 'Comfort',
-                          STATE_HOME: 'Home',
-                          STATE_NOT_HOME: 'Away',
+        toonlib_values = {STATE_PERFORMANCE: 'Comfort',
+                          STATE_HEAT: 'Home',
+                          STATE_ECO: 'Away',
                           STATE_COOL: 'Sleep'}
 
         self.thermos.set_state(toonlib_values[operation_mode])
