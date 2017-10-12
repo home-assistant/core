@@ -437,7 +437,7 @@ class RfxtrxDevice(Entity):
         self._state = state
         self._brightness = brightness
         if self.added_to_hass:
-           self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def _send_command(self, command, brightness=0):
         if not self._event:
