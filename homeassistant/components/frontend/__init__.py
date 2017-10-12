@@ -327,9 +327,10 @@ class IndexView(HomeAssistantView):
         from jinja2 import FileSystemLoader, Environment
 
         self.templates = Environment(
+            autoescape=True,
             loader=FileSystemLoader(
                 os.path.join(os.path.dirname(__file__), 'templates/')
-            )
+            ),
         )
 
     @asyncio.coroutine
