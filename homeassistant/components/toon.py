@@ -12,11 +12,14 @@ import voluptuous as vol
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['toonlib==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DOMAIN = 'toon'
 TOON_HANDLE = 'toon_handle'
@@ -78,13 +81,10 @@ class ToonDataStore:
         self.last_update = datetime.min
         self.update()
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update toon data."""
-        now = datetime.now()
-        if now - self.last_update < timedelta(seconds=5):
-            return
-
-        self.last_update = now
+        self.last_update = datetime.now()
 
         self.data['power_current'] = self.toon.power.value
         self.data['power_today'] = round(
@@ -132,12 +132,10 @@ class ToonDataStore:
     def set_state(self, state):
         """Push a new state to the Toon unit."""
         self.toon.thermostat_state = state
-        self.update()
 
     def set_temp(self, temp):
         """Push a new temperature to the Toon unit."""
         self.toon.thermostat = temp
-        self.update()
 
     def get_data(self, data_id, plug_name=None):
         """Get the cached data."""
