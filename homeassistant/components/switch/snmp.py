@@ -116,13 +116,15 @@ class SnmpCommand(object):
             getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
 
-        g = getCmd(SnmpEngine(),
-                   CommunityData(self._community, mpModel=self._version),
-                   UdpTransportTarget((self._host, self._port)),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(self._baseoid)))
+        request = getCmd(
+            SnmpEngine(),
+            CommunityData(self._community, mpModel=self._version),
+            UdpTransportTarget((self._host, self._port)),
+            ContextData(),
+            ObjectType(ObjectIdentity(self._baseoid))
+        )
 
-        errindication, errstatus, errindex, restable = next(g)
+        errindication, errstatus, errindex, restable = next(request)
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)
@@ -131,9 +133,9 @@ class SnmpCommand(object):
                           errindex and restable[-1][int(errindex) - 1] or '?')
         else:
             for resrow in restable:
-                if resrow[-1] == self._typecast(self._payload_on):
+                if resrow[-1] == SnmpCommand._typecast(self._payload_on):
                     self._state = True
-                elif resrow[-1] == self._typecast(self._payload_off):
+                elif resrow[-1] == SnmpCommand._typecast(self._payload_off):
                     self._state = False
                 else:
                     self._state = None
@@ -150,7 +152,7 @@ class SnmpCommand(object):
             UdpTransportTarget((self._host, self._port)),
             ContextData(),
             ObjectType(ObjectIdentity(self._baseoid),
-                       self._typecast(self._payload_on))
+                       SnmpCommand._typecast(self._payload_on))
         )
 
         next(request)
@@ -167,7 +169,7 @@ class SnmpCommand(object):
             UdpTransportTarget((self._host, self._port)),
             ContextData(),
             ObjectType(ObjectIdentity(self._baseoid),
-                       self._typecast(self._payload_off))
+                       SnmpCommand._typecast(self._payload_off))
         )
 
         next(request)
@@ -175,12 +177,10 @@ class SnmpCommand(object):
     @property
     def state(self):
         """Return the switch's state."""
-        if self._state == self._payload_on:
-            return True
+        return self._state
 
-        return False
-
-    def _typecast(self, payload):
+    @staticmethod
+    def _typecast(payload):
         """Convert from python to SNMP type."""
         from pyasn1.type.univ import (Integer)
 
