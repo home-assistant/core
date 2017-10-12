@@ -25,6 +25,32 @@ def mock_scanner():
         yield scanner
 
 
+@mock.patch('os.access', return_value=True)
+@mock.patch('os.path.isfile', mock.Mock(return_value=True))
+def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
+    """Test the setup with a string for ssl_verify.
+
+    Representing the absolute path to a CA certificate bundle.
+    """
+    config = {
+        DOMAIN: unifi.PLATFORM_SCHEMA({
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "/tmp/unifi.crt"
+        })
+    }
+    result = unifi.get_scanner(hass, config)
+    assert mock_scanner.return_value == result
+    assert mock_ctrl.call_count == 1
+    assert mock_ctrl.mock_calls[0] == \
+        mock.call('localhost', 'foo', 'password', 8443,
+                  version='v4', site_id='default', ssl_verify="/tmp/unifi.crt")
+
+    assert mock_scanner.call_count == 1
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
+
+
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
     """Test the setup with minimal configuration."""
     config = {
@@ -85,6 +111,13 @@ def test_config_error():
             CONF_PASSWORD: 'password',
             CONF_HOST: 'myhost',
             'port': 'foo',  # bad port!
+        })
+    with pytest.raises(vol.Invalid):
+        unifi.PLATFORM_SCHEMA({
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "dfdsfsdfsd",  # Invalid ssl_verify (no file)
         })
 
 
