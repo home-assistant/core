@@ -87,8 +87,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         receiver = None
 
     if receiver:
-        _LOGGER.debug("receiver: %s / Port: %d", receiver, port)
-        add_devices([YamahaDevice(receiver, name)], True)
+        for zone in receiver.zones:
+            _LOGGER.debug(
+                "receiver: %s / Port: %d / Zone: %s",
+                receiver, port, zone)
+            add_devices(
+                [YamahaDevice(receiver, name, receiver.zones[zone])],
+                True)
     else:
         known_hosts.remove(reg_host)
 
@@ -96,10 +101,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha MusicCast device."""
 
-    def __init__(self, receiver, name):
+    def __init__(self, receiver, name, zone):
         """Initialize the Yamaha MusicCast device."""
         self._receiver = receiver
         self._name = name
+        self._zone = zone
         self.power = STATE_UNKNOWN
         self.volume = 0
         self.volume_max = 0
@@ -109,11 +115,12 @@ class YamahaDevice(MediaPlayerDevice):
         self.status = STATE_UNKNOWN
         self.media_status = None
         self._receiver.set_yamaha_device(self)
+        self._zone.set_yamaha_device(self)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return "{} ({})".format(self._name, self._zone.zone_id)
 
     @property
     def state(self):
@@ -217,12 +224,12 @@ class YamahaDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on specified media player or all."""
         _LOGGER.debug("Turn device: on")
-        self._receiver.set_power(True)
+        self._zone.set_power(True)
 
     def turn_off(self):
         """Turn off specified media player or all."""
         _LOGGER.debug("Turn device: off")
-        self._receiver.set_power(False)
+        self._zone.set_power(False)
 
     def media_play(self):
         """Send the media player the command for play/pause."""
@@ -252,16 +259,16 @@ class YamahaDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Send mute command."""
         _LOGGER.debug("Mute volume: %s", mute)
-        self._receiver.set_mute(mute)
+        self._zone.set_mute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         _LOGGER.debug("Volume level: %.2f / %d",
                       volume, volume * self.volume_max)
-        self._receiver.set_volume(volume * self.volume_max)
+        self._zone.set_volume(volume * self.volume_max)
 
     def select_source(self, source):
         """Send the media player the command to select input source."""
         _LOGGER.debug("select_source: %s", source)
         self.status = STATE_UNKNOWN
-        self._receiver.set_input(source)
+        self._zone.set_input(source)
