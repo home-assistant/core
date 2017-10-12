@@ -753,14 +753,34 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 " %}true{% endif %}"
             )))
 
-    def test_extract_entities_with_variables_match_entities(self):
-        """Test extract entities with variables function 
-           with entities stuff."""
+    def test_extract_entities_with_variables(self):
+        """Test extract entities function with variables and entities stuff."""
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state('input_boolean.switch', 'off') }}", {}))
+
+        self.assertEqual(
+            ['trigger.entity_id'],
+            template.extract_entities(
+                "{{ is_state( trigger.entity_id , 'off') }}", {} ))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ is_state( data , 'off') }}", {} ))
 
         self.assertEqual(
             ['input_boolean.switch'],
-            template.extract_entities_with_variables(
-                "{{ is_state('input_boolean.switch', 'off') }}", {}))
+            template.extract_entities(
+                "{{ is_state( data , 'off') }}",
+                {'data': 'input_boolean.switch'}))
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state( trigger.entity_id , 'off') }}",
+                {'trigger': {'entity_id': 'input_boolean.switch'}}))
 
 
 @asyncio.coroutine
