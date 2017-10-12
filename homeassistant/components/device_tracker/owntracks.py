@@ -5,23 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
 import asyncio
+import base64
 import json
 import logging
-import base64
 from collections import defaultdict
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import STATE_HOME
-from homeassistant.util import slugify, decorator
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.const import STATE_HOME
+from homeassistant.core import callback
+from homeassistant.util import slugify, decorator
 
-DEPENDENCIES = ['mqtt']
-REQUIREMENTS = ['libnacl==1.5.2']
+REQUIREMENTS = ['libnacl==1.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +32,8 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
+
+DEPENDENCIES = ['mqtt']
 
 OWNTRACKS_TOPIC = 'owntracks/#'
 
