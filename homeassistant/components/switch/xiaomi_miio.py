@@ -220,7 +220,8 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._state = state.is_on
             self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature,
-                # FIXME: The device implementation of the power strip at python-mirobo needs to be fixed.
+                # FIXME: The device implementation of the power strip at 
+                #        python-mirobo needs to be fixed.
                 # ATTR_LOAD_POWER: state.load_power,
                 ATTR_LOAD_POWER: state.current * 110
             })
