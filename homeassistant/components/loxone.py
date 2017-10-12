@@ -4,7 +4,7 @@ Component to create an interface to the Loxone Miniserver.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/loxone/
 """
-# pylint: disable=unused-import, too-many-lines
+
 import asyncio
 import codecs
 import hashlib
