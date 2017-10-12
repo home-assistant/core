@@ -722,7 +722,7 @@ class TestAutomationNumericState(unittest.TestCase):
                         'some':
                         '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                             'platform', 'entity_id', 'to_state.state'))
-                    },
+                     },
                 }],
             }
         })

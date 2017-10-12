@@ -418,7 +418,7 @@ class TestAutomationTemplate(unittest.TestCase):
                         '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                             'platform', 'entity_id', 'from_state.state',
                             'to_state.state'))
-                    },
+                     },
                 }],
             }
         })
