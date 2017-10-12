@@ -11,7 +11,7 @@ from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
                                           SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
-from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
-        if not self._node.on(val=STATE_TO_VALUE.get(speed, 0)):
+        if not self._node.on(val=STATE_TO_VALUE.get(speed, 255)):
             _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
