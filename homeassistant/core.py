@@ -512,13 +512,14 @@ class State(object):
     attributes: extra information on entity and state
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
+    last_seen: last time the object was heard from
     """
 
     __slots__ = ['entity_id', 'state', 'attributes',
-                 'last_changed', 'last_updated']
+                 'last_changed', 'last_updated', 'last_seen']
 
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
-                 last_updated=None):
+                 last_updated=None, last_seen=None):
         """Initialize a new state."""
         if not valid_entity_id(entity_id):
             raise InvalidEntityFormatError((
@@ -530,6 +531,7 @@ class State(object):
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
+        self.last_seen = last_seen or self.last_updated
 
     @property
     def domain(self):
@@ -562,6 +564,10 @@ class State(object):
                 'last_changed': self.last_changed,
                 'last_updated': self.last_updated}
 
+    def seen(self):
+        """Update the last_seen attribute without changing others"""
+        self.last_seen = dt_util.utcnow()
+
     @classmethod
     def from_dict(cls, json_dict):
         """Initialize a state from a dict.
@@ -584,8 +590,14 @@ class State(object):
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
+        last_seen = json_dict.get('last_seen')
+
+        if isinstance(last_seen, str):
+            last_seen = dt_util.parse_datetime(last_seen)
+
         return cls(json_dict['entity_id'], json_dict['state'],
-                   json_dict.get('attributes'), last_changed, last_updated)
+                   json_dict.get('attributes'), last_changed, last_updated,
+                   last_seen)
 
     def __eq__(self, other):
         """Return the comparison of the state."""
@@ -732,6 +744,9 @@ class StateMachine(object):
         same_state = (is_existing and old_state.state == new_state and
                       not force_update)
         same_attr = is_existing and old_state.attributes == attributes
+
+        if is_existing:
+            self._states[entity_id].seen()
 
         if same_state and same_attr:
             return
