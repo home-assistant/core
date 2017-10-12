@@ -409,8 +409,8 @@ class TestAutomationTemplate(unittest.TestCase):
                     'value_template':
                         "{{ states.test.entity.state == 'world' }}",
                 },
-                'action': [{
-                    'wait_template':
+                'action': [
+                    {'wait_template':
                         "{{ is_state( trigger.entity_id , 'hello') }}"},
                     {'service': 'test.automation',
                      'data_template': {
@@ -418,8 +418,8 @@ class TestAutomationTemplate(unittest.TestCase):
                         '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                             'platform', 'entity_id', 'from_state.state',
                             'to_state.state'))
-                     },
-                }],
+                     }}
+                ],
             }
         })
 
