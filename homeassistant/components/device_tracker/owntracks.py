@@ -402,7 +402,7 @@ def async_handle_encrypted_message(hass, context, message):
 @HANDLERS.register('lwt')
 @asyncio.coroutine
 def async_handle_lwt_message(hass, context, message):
-    """Handle an encrypted message."""
+    """Handle an lwt message."""
     _LOGGER.debug('Not handling lwt message: %s', message)
 
 
