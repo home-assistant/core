@@ -406,22 +406,20 @@ class TestAutomationTemplate(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
-                    'value_template': 
+                    'value_template':
                         "{{ states.test.entity.state == 'world' }}",
                 },
-                'action': {
+                'action': [{
                     'wait_template':
-                        "{{ is_state( trigger.entity_id , 'hello' ) }}"
-                },
-                'action': {
-                    'service': 'test.automation',
+                        "{{ is_state( trigger.entity_id , 'hello') }}"},
+                    {'service': 'test.automation',
                     'data_template': {
                         'some':
                         '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                             'platform', 'entity_id', 'from_state.state',
                             'to_state.state'))
                     },
-                },
+                }],
             }
         })
 

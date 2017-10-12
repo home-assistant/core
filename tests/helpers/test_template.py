@@ -763,12 +763,12 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
         self.assertEqual(
             ['trigger.entity_id'],
             template.extract_entities(
-                "{{ is_state( trigger.entity_id , 'off') }}", {} ))
+                "{{ is_state( trigger.entity_id , 'off') }}", {}))
 
         self.assertEqual(
             MATCH_ALL,
             template.extract_entities(
-                "{{ is_state( data , 'off') }}", {} ))
+                "{{ is_state( data , 'off') }}", {}))
 
         self.assertEqual(
             ['input_boolean.switch'],
