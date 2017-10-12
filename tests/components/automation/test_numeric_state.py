@@ -716,7 +716,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 },
                 'action': [
                     {'wait_template':
-                        "{{ states( trigger.entity_id ) | int < 10 }}"},
+                        "{{ states(trigger.entity_id) | int < 10 }}"},
                     {'service': 'test.automation',
                      'data_template': {
                         'some':

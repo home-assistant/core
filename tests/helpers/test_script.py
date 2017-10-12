@@ -361,7 +361,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'event': event},
-            {'wait_template': "{{is_state( data , 'off')}}"},
+            {'wait_template': "{{is_state(data, 'off')}}"},
             {'event': event}]))
 
         script_obj.run({

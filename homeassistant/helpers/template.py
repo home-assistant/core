@@ -26,7 +26,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
-    r"\(.)([\w]+\.[\w]+)|([\w]+))", re.I | re.M
+    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
 
