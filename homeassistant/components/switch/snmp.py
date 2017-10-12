@@ -10,7 +10,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-# from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT,
                                  CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF)
 import homeassistant.helpers.config_validation as cv
