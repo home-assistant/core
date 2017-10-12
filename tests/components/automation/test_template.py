@@ -412,13 +412,13 @@ class TestAutomationTemplate(unittest.TestCase):
                 'action': [{
                     'wait_template':
                         "{{ is_state( trigger.entity_id , 'hello') }}"},
-                   {'service': 'test.automation',
-                    'data_template': {
+                    {'service': 'test.automation',
+                     'data_template': {
                         'some':
                         '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                             'platform', 'entity_id', 'from_state.state',
                             'to_state.state'))
-                   },
+                    },
                 }],
             }
         })
