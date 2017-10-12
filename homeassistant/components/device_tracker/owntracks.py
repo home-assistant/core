@@ -407,7 +407,8 @@ def async_handle_message(hass, context, message):
     handler = HANDLERS.get(msgtype)
 
     if handler is None:
-        error = 'Received unsupported message type: {}.'.format(msgtype)
-        _LOGGER.warning(error)
+        _LOGGER.warning(
+            'Received unsupported message type: %s.', msgtype)
+        return
 
     yield from handler(hass, context, message)

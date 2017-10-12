@@ -130,7 +130,7 @@ rflink==0.0.34
 ring_doorbell==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.4.0
+rxv==0.5.1
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
