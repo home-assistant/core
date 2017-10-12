@@ -330,7 +330,7 @@ class IndexView(HomeAssistantView):
             autoescape=True,
             loader=FileSystemLoader(
                 os.path.join(os.path.dirname(__file__), 'templates/')
-            ),
+            )
         )
 
     @asyncio.coroutine
