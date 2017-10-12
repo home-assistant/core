@@ -199,7 +199,7 @@ class OwnTracksContext:
         self.async_see = async_see
         self.secret = secret
         self.max_gps_accuracy = max_gps_accuracy
-        self.mobile_beacons_active = defaultdict(list)
+        self.mobile_beacons_active = defaultdict(set)
         self.regions_entered = defaultdict(list)
         self.import_waypoints = import_waypoints
         self.waypoint_whitelist = waypoint_whitelist
@@ -234,12 +234,36 @@ class OwnTracksContext:
         return True
 
     @asyncio.coroutine
-    def async_see_beacons(self, dev_id, kwargs_param):
+    def async_see_beacons(self, hass, dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
+
+        # Mobile beacons should always be set to the location of the
+        # tracking device. I get the device state and make the necessary
+        # changes to kwargs.
+        device_tracker_state = hass.states.get(
+            "device_tracker.{}".format(dev_id))
+        _LOGGER.info("device tracker state: %s", device_tracker_state)
+
+        if device_tracker_state is not None:
+            try:
+                acc = device_tracker_state.attributes.get("gps_accuracy")
+                lat = device_tracker_state.attributes.get("latitude")
+                lon = device_tracker_state.attributes.get("longitude")
+                kwargs['gps_accuracy'] = acc
+                kwargs['gps'] = (lat, lon)
+            except AttributeError:
+                _LOGGER.warning('could not get device_tracker state '
+                                'attribute for setting beacon location.')
+
+        # import pdb; pdb.set_trace()
+
         # the battery state applies to the tracking device, not the beacon
+        # kwargs location is the beacon's configured lat/lon
         kwargs.pop('battery', None)
         for beacon in self.mobile_beacons_active[dev_id]:
+            _LOGGER.info("async_see_beacons beacon: %s kwargs %s",
+                         beacon, kwargs)
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
             yield from self.async_see(**kwargs)
@@ -261,7 +285,7 @@ def async_handle_location_message(hass, context, message):
         return
 
     yield from context.async_see(**kwargs)
-    yield from context.async_see_beacons(dev_id, kwargs)
+    yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @asyncio.coroutine
@@ -271,11 +295,15 @@ def _async_transition_message_enter(hass, context, message, location):
     dev_id, kwargs = _parse_see_args(message)
 
     if zone is None and message.get('t') == 'b':
-        # Not a HA zone, and a beacon so assume mobile
+        # Not a HA zone, and a beacon so mobile beacon.
+        # kwargs will contain the lat/lon of the beacon
+        # which is not where the beacon actually is
+        # and is probably set to 0/0
         beacons = context.mobile_beacons_active[dev_id]
         if location not in beacons:
-            beacons.append(location)
+            beacons.add(location)
         _LOGGER.info("Added beacon %s", location)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
     else:
         # Normal region
         regions = context.regions_entered[dev_id]
@@ -283,9 +311,8 @@ def _async_transition_message_enter(hass, context, message, location):
             regions.append(location)
         _LOGGER.info("Enter region %s", location)
         _set_gps_from_zone(kwargs, location, zone)
-
-    yield from context.async_see(**kwargs)
-    yield from context.async_see_beacons(dev_id, kwargs)
+        yield from context.async_see(**kwargs)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @asyncio.coroutine
@@ -297,30 +324,28 @@ def _async_transition_message_leave(hass, context, message, location):
     if location in regions:
         regions.remove(location)
 
-    new_region = regions[-1] if regions else None
-
-    if new_region:
-        # Exit to previous region
-        zone = hass.states.get(
-            "zone.{}".format(slugify(new_region)))
-        _set_gps_from_zone(kwargs, new_region, zone)
-        _LOGGER.info("Exit to %s", new_region)
-        yield from context.async_see(**kwargs)
-        yield from context.async_see_beacons(dev_id, kwargs)
-        return
-
-    else:
-        _LOGGER.info("Exit to GPS")
-
-        # Check for GPS accuracy
-        if context.async_valid_accuracy(message):
-            yield from context.async_see(**kwargs)
-            yield from context.async_see_beacons(dev_id, kwargs)
-
     beacons = context.mobile_beacons_active[dev_id]
     if location in beacons:
         beacons.remove(location)
         _LOGGER.info("Remove beacon %s", location)
+        yield from context.async_see_beacons(hass, dev_id, kwargs)
+    else:
+        new_region = regions[-1] if regions else None
+        if new_region:
+            # Exit to previous region
+            zone = hass.states.get(
+                "zone.{}".format(slugify(new_region)))
+            _set_gps_from_zone(kwargs, new_region, zone)
+            _LOGGER.info("Exit to %s", new_region)
+            yield from context.async_see(**kwargs)
+            yield from context.async_see_beacons(hass, dev_id, kwargs)
+        else:
+            _LOGGER.info("Exit to GPS")
+
+            # Check for GPS accuracy
+            if context.async_valid_accuracy(message):
+                yield from context.async_see(**kwargs)
+                yield from context.async_see_beacons(hass, dev_id, kwargs)
 
 
 @HANDLERS.register('transition')
