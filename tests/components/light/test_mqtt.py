@@ -750,6 +750,7 @@ class TestLightMQTT(unittest.TestCase):
             'name': 'test',
             'command_topic': 'test_light/set',
             'brightness_command_topic': 'test_light/bright',
+            'rgb_command_topic': "test_light/rgb",
             'on_command_type': 'BRIGHTNESS',
         }}
 
@@ -778,5 +779,18 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', brightness=50)
         self.hass.block_till_done()
 
+        self.assertEqual(('test_light/bright', 50, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        light.turn_off(self.hass, 'light.test')
+        self.hass.block_till_done()
+
+        # Turn on w/ just a color to insure brightness gets
+        # added and sent.
+        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
+        self.hass.block_till_done()
+
+        self.assertEqual(('test_light/rgb', '75,75,75', 0, False),
+                         self.mock_publish.mock_calls[-4][1])
         self.assertEqual(('test_light/bright', 50, 0, False),
                          self.mock_publish.mock_calls[-2][1])
