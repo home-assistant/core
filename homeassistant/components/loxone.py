@@ -18,7 +18,7 @@ from struct import unpack
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_USERNAME,
-                                 CONF_PASSWORD)
+                                 CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['websockets==3.2']
@@ -83,6 +83,15 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'event_websocket_command',
                                  handle_websocket_command)
 
+    @asyncio.coroutine
+    def stop_loxone_client(_):
+        """Run once when Home Assistant stops."""
+        yield from api.stop_task()
+        hass.services.async_remove(DOMAIN, 'event_websocket_command')
+        hass.services.async_remove(DOMAIN, 'event_bus_command')
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_loxone_client)
+
     return True
 
 
@@ -98,6 +107,9 @@ class LoxoneGateway:
         self._port = port
         self._ws = None
         self._current_typ = None
+        self._stop = False
+        self._task = None
+        self._loop = asyncio.get_event_loop()
 
     @asyncio.coroutine
     def send_websocket_command(self, device_uuid, value):
@@ -111,12 +123,7 @@ class LoxoneGateway:
 
     def start_listener(self, async_callback):
         """Start the websocket listener."""
-        try:
-            from asyncio import ensure_future
-        except ImportError:
-            from asyncio import async as ensure_future
-        # pylint: disable=deprecated-method
-        ensure_future(self._ws_listen(async_callback))
+        self._task = self._loop.create_task(self._ws_listen(async_callback))
 
     @asyncio.coroutine
     def send_keepalive(self, _):
@@ -146,15 +153,25 @@ class LoxoneGateway:
             return
 
         result = None
+
         try:
             result = yield from self._ws.recv()
         except Exception as ws_exc:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to read from websocket: %s", ws_exc)
+            if not self._stop:
+                _LOGGER.error("Failed to read from websocket: %s", ws_exc)
+
             try:
                 yield from self._ws.close()
             finally:
                 self._ws = None
+
         return result
+
+    @asyncio.coroutine
+    def stop_task(self):
+        """Stop task."""
+        self._stop = True
+        self._task.cancel()
 
     @asyncio.coroutine
     def _ws_listen(self, async_callback):
@@ -168,7 +185,6 @@ class LoxoneGateway:
                     _LOGGER.debug("Trying again in 30 seconds.")
                     yield from asyncio.sleep(30)
         finally:
-            print("CLOSED")
             if self._ws:
                 yield from self._ws.close()
 
