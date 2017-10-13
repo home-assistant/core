@@ -29,7 +29,8 @@ COMMENT_REQUIREMENTS = (
     'blinkt',
     'smbus-cffi',
     'envirophat',
-    'i2csense'
+    'i2csense',
+    'credstash'
 )
 
 TEST_REQUIREMENTS = (
