@@ -37,12 +37,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     light = http_rgb.http_rgb(host)
 
-    device = HTTP_RGB_Light(light, name)
+    device = HttpRgbLight(light, name)
     device.setup()
     add_devices([device], True)
 
 
-class HTTP_RGB_Light(Light):
+class HttpRgbLight(Light):
     """Representation of a HTTP_RGB! Light."""
 
     def __init__(self, light, name):
