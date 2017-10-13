@@ -2,7 +2,6 @@
 
 media_player:
   - platform: yamaha_musiccast
-    name: "Living Room"
     host: 192.168.xxx.xx
     port: 5005
 
@@ -13,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT,
+    CONF_HOST, CONF_PORT,
     STATE_UNKNOWN, STATE_ON
 )
 from homeassistant.components.media_player import (
@@ -41,7 +40,6 @@ DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
 })
@@ -57,7 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         known_hosts = hass.data[KNOWN_HOSTS_KEY] = []
     _LOGGER.debug("known_hosts: %s", known_hosts)
 
-    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
@@ -92,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "receiver: %s / Port: %d / Zone: %s",
                 receiver, port, zone)
             add_devices(
-                [YamahaDevice(receiver, name, receiver.zones[zone])],
+                [YamahaDevice(receiver, receiver.zones[zone])],
                 True)
     else:
         known_hosts.remove(reg_host)
@@ -101,10 +98,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha MusicCast device."""
 
-    def __init__(self, recv, name, zone):
+    def __init__(self, recv, zone):
         """Initialize the Yamaha MusicCast device."""
         self._recv = recv
-        self._name = name
+        self._name = recv.name
         self._source = None
         self._source_list = []
         self._zone = zone
