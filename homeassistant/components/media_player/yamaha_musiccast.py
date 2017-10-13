@@ -205,7 +205,8 @@ class YamahaDevice(MediaPlayerDevice):
         # call from constructor setup_platform()
         if not self.entity_id:
             _LOGGER.debug("First run")
-            self._recv.update_status(push=False)
+            self._recv.update_status()
+            self._zone.update_status()
         # call from regular polling
         else:
             # update_status_timer was set before
@@ -214,6 +215,7 @@ class YamahaDevice(MediaPlayerDevice):
                 if not self._recv.update_status_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
                     self._recv.update_status()
+                    self._zone.update_status()
 
     def turn_on(self):
         """Turn on specified media player or all."""
