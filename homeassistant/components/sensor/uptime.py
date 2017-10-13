@@ -1,10 +1,10 @@
 """
-Component to retrieve uptime for Home Assistant
+Component to retrieve uptime for Home Assistant.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.uptime/
 """
 
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -38,7 +38,7 @@ class UptimeSensor(Entity):
         self._name = name
         self._icon = 'mdi:clock'
         self._units = 'days'
-        self._initial = dt_util.now()
+        self.initial = dt_util.now()
         self._state = 0
 
     @property
@@ -63,7 +63,7 @@ class UptimeSensor(Entity):
 
     def update(self):
         """Update the state of the sensor."""
-        delta = dt_util.now() - self._initial
+        delta = dt_util.now() - self.initial
         delta_in_days = delta.total_seconds() / (3600 * 24)
-        self._state = round(delta_in_days, 2) 
+        self._state = round(delta_in_days, 2)
         _LOGGER.debug("New value: %s", delta_in_days)
