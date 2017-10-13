@@ -96,6 +96,9 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
+    'uv_index': ['UV Index', None, None, None, None, None,
+                                 'mdi:weather-sunny',
+                                 ['currently', 'hourly', 'daily']],
 }
 
 CONDITION_PICTURES = {
@@ -305,7 +308,7 @@ class DarkSkySensor(Entity):
                             'temperature_min', 'temperature_max',
                             'apparent_temperature_min',
                             'apparent_temperature_max',
-                            'pressure', 'ozone']):
+                            'pressure', 'ozone', 'uvIndex']):
             return round(state, 1)
         return state
 
