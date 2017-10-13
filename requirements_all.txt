@@ -156,7 +156,7 @@ colorlog==3.0.1
 concord232==0.14
 
 # homeassistant.scripts.credstash
-credstash==1.13.3
+# credstash==1.13.3
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
