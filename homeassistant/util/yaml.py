@@ -13,7 +13,7 @@ except ImportError:
     keyring = None
 
 try:
-    import credstash
+    import credstash  # pylint: disable=import-error
 except ImportError:
     credstash = None
 
