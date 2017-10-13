@@ -116,7 +116,7 @@ def test_setup_core_push_timezone(hass, aioclient_mock):
     """Test setup with API push default data."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/ping", json={'result': 'ok'})
-    aioclient_mock.get(
+    aioclient_mock.post(
         "http://127.0.0.1/supervisor/options", json={'result': 'ok'})
 
     with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
