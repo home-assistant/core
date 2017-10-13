@@ -5,7 +5,6 @@ module. The code is based on binary_sensor.workday home-assistant component
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.workday/
 """
-
 import asyncio
 import importlib
 import logging
@@ -24,15 +23,15 @@ REQUIREMENTS = ['workalendar==2.3.1']
 
 CONF_COUNTRY = 'country'
 CONF_WORKDAYS = 'workdays'
-# By default, Monday - Friday are workdays
-DEFAULT_WORKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
+CONF_OFFSET = 'days_offset'
 CONF_EXCLUDES = 'excludes'
-# By default, public holidays, Saturdays and Sundays are excluded from workdays
+
+DEFAULT_WORKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
 DEFAULT_EXCLUDES = ['sat', 'sun', 'holiday']
 DEFAULT_NAME = 'Workday Sensor'
-ALLOWED_DAYS = WEEKDAYS + ['holiday']
-CONF_OFFSET = 'days_offset'
 DEFAULT_OFFSET = 0
+
+ALLOWED_DAYS = WEEKDAYS + ['holiday']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): cv.string,
