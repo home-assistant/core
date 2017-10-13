@@ -25,6 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+CONF_CLOCK_FORMAT = 'clock_format'
+
+RING_DEFAULT_CONDITIONS = ['last_ding']
+
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
     'battery': ['Battery', ['doorbell'], '%', 'battery-50', None],
@@ -37,8 +41,10 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=RING_DEFAULT_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
+        vol.In(['12H', '24H'])
 })
 
 
@@ -46,15 +52,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
     ring = hass.data.get('ring')
 
+    clock_format = config.get(CONF_CLOCK_FORMAT)
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         for device in ring.chimes:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+                sensors.append(RingSensor(hass, device, sensor_type,
+                                          clock_format))
 
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+                sensors.append(RingSensor(hass, device, sensor_type,
+                                          clock_format))
 
     add_devices(sensors, True)
     return True
@@ -63,10 +72,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RingSensor(Entity):
     """A sensor implementation for Ring device."""
 
-    def __init__(self, hass, data, sensor_type):
+    def __init__(self, hass, data, sensor_type, clock_format):
         """Initialize a sensor for Ring device."""
         super(RingSensor, self).__init__()
         self._sensor_type = sensor_type
+        self._clock_format = clock_format
         self._data = data
         self._extra = None
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[3])
@@ -137,5 +147,19 @@ class RingSensor(Entity):
             if history:
                 self._extra = history[0]
                 created_at = self._extra['created_at']
-                self._state = '{0:0>2}:{1:0>2}'.format(
+                raw_state = '{0:0>2}:{1:0>2}'.format(
                     created_at.hour, created_at.minute)
+                if self._clock_format == '12H':
+                    hours, minutes = raw_state.split(':')
+                    hours, minutes = int(hours), int(minutes)
+                    setting = 'AM'
+                    if hours > 12:
+                        setting = 'PM'
+                        hours -= 12
+                    elif hours == 0:
+                        hours = 12
+                    if minutes == 0:
+                        minutes = '00'
+                    self._state = '{}:{} {}'.format(hours, minutes, setting)
+                else:
+                    self._state = raw_state
