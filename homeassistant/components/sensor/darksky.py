@@ -62,7 +62,7 @@ SENSOR_TYPES = {
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
-    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C',
+    'dew_point': ['Dew Point', '°C', '°F', '°C', '°C', '°C',
                   'mdi:thermometer', ['currently', 'hourly', 'daily']],
     'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph',
                    'mdi:weather-windy', ['currently', 'hourly', 'daily']],
