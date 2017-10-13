@@ -94,10 +94,10 @@ def async_setup(hass, config):
                                 'mdi:access-point-network')
 
     if 'http' in config:
-        yield from hassio.update_hass_api(config.get('http'))
+        yield from hassio.update_hass_api(config['http'])
 
     if 'homeassistant' in config:
-        yield from hassio.update_hass_timezone(config.get('core'))
+        yield from hassio.update_hass_timezone(config['homeassistant'])
 
     @asyncio.coroutine
     def async_service_handler(service):
