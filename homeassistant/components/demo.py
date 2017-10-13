@@ -109,7 +109,8 @@ def async_setup(hass, config):
     # Set up example persistent notification
     persistent_notification.async_create(
         'This is an example of a persistent notification.',
-        title='Example Notification')
+        title='Example Notification'
+        )
 
     # Set up room groups
     lights = sorted(hass.states.async_entity_ids('light'))
