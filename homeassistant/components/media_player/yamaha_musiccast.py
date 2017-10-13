@@ -101,20 +101,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha MusicCast device."""
 
-    def __init__(self, receiver, name, zone):
+    def __init__(self, recv, name, zone):
         """Initialize the Yamaha MusicCast device."""
-        self._receiver = receiver
+        self._recv = recv
         self._name = name
-        self._zone = zone
-        self.power = STATE_UNKNOWN
-        self.volume = 0
-        self.volume_max = 0
-        self.mute = False
         self._source = None
         self._source_list = []
-        self.status = STATE_UNKNOWN
+        self._zone = zone
+        self.mute = False
         self.media_status = None
-        self._receiver.set_yamaha_device(self)
+        self.power = STATE_UNKNOWN
+        self.status = STATE_UNKNOWN
+        self.volume = 0
+        self.volume_max = 0
+        self._recv.set_yamaha_device(self)
         self._zone.set_yamaha_device(self)
 
     @property
@@ -208,18 +208,18 @@ class YamahaDevice(MediaPlayerDevice):
         # call from constructor setup_platform()
         if not self.entity_id:
             _LOGGER.debug("First run")
-            self._receiver.update_status(push=False)
+            self._recv.update_status(push=False)
         # call from regular polling
         else:
             # update_status_timer was set before
-            if self._receiver.update_status_timer:
+            if self._recv.update_status_timer:
                 _LOGGER.debug(
                     "is_alive: %s",
-                    self._receiver.update_status_timer.is_alive())
+                    self._recv.update_status_timer.is_alive())
                 # e.g. computer was suspended, while hass was running
-                if not self._receiver.update_status_timer.is_alive():
+                if not self._recv.update_status_timer.is_alive():
                     _LOGGER.debug("Reinitializing")
-                    self._receiver.update_status()
+                    self._recv.update_status()
 
     def turn_on(self):
         """Turn on specified media player or all."""
@@ -234,27 +234,27 @@ class YamahaDevice(MediaPlayerDevice):
     def media_play(self):
         """Send the media player the command for play/pause."""
         _LOGGER.debug("Play")
-        self._receiver.set_playback("play")
+        self._recv.set_playback("play")
 
     def media_pause(self):
         """Send the media player the command for pause."""
         _LOGGER.debug("Pause")
-        self._receiver.set_playback("pause")
+        self._recv.set_playback("pause")
 
     def media_stop(self):
         """Send the media player the stop command."""
         _LOGGER.debug("Stop")
-        self._receiver.set_playback("stop")
+        self._recv.set_playback("stop")
 
     def media_previous_track(self):
         """Send the media player the command for prev track."""
         _LOGGER.debug("Previous")
-        self._receiver.set_playback("previous")
+        self._recv.set_playback("previous")
 
     def media_next_track(self):
         """Send the media player the command for next track."""
         _LOGGER.debug("Next")
-        self._receiver.set_playback("next")
+        self._recv.set_playback("next")
 
     def mute_volume(self, mute):
         """Send mute command."""
