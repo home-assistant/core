@@ -60,9 +60,6 @@ hbmqtt==0.8
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
-# homeassistant.components.binary_sensor.workalendar
-workalendar==2.3.1
-
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==3.0.0
@@ -143,6 +140,9 @@ statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
+
+# homeassistant.components.binary_sensor.workalendar
+workalendar==2.3.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
