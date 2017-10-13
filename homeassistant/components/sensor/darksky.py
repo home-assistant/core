@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_LATITUDE, CONF_LONGITUDE, UNIT_UV_INDEX)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -96,8 +96,9 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
-    'uv_index': ['UV Index', None, None, None, None, None,
-                 'mdi:weather-sunny',
+    'uv_index': ['UV Index',
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, 'mdi:weather-sunny',
                  ['currently', 'hourly', 'daily']],
 }
 
