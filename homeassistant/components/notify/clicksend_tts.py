@@ -1,10 +1,10 @@
 """
-Clicksend audio platform for notify component.
+Clicksend text-to-speech platform for notify component.
 
-This platform sends text to speech audio messages through clicksend
+This platform sends text to speech audio messages through Clicksend
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.clicksendaudio/
+https://home-assistant.io/components/notify.clicksendtts/
 """
 import json
 import logging
