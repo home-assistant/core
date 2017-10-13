@@ -30,7 +30,8 @@ COMMENT_REQUIREMENTS = (
     'smbus-cffi',
     'envirophat',
     'i2csense',
-    'credstash'
+    'credstash',
+    'http_rgb'
 )
 
 TEST_REQUIREMENTS = (

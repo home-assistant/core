@@ -2,7 +2,7 @@
 Support for HTTP_RGB lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.blinkt/
+https://home-assistant.io/components/light.http_rgb/
 """
 import logging
 
