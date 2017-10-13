@@ -59,6 +59,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             from mirobo import PlugV1
             plug = PlugV1(host, token)
 
+            # The device has two switchable channels (mains and a USB port).
+            # A switch device per channel will be created.
             for channel_usb in [True, False]:
                 device = ChuangMiPlugV1Switch(
                     name, plug, device_info, channel_usb)
@@ -70,13 +72,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             plug = Strip(host, token)
             device = XiaomiPowerStripSwitch(name, plug, device_info)
             devices.append(device)
-        else:
-            # chuangmi.plug.m1, chuangmi.plug.v2
+        elif device_info.raw['model'] in ['chuangmi.plug.m1',
+                                          'chuangmi.plug.v2']:
             from mirobo import Plug
             plug = Plug(host, token)
             device = XiaomiPlugGenericSwitch(name, plug, device_info)
             devices.append(device)
-
+        else:
+            _LOGGER.error('Unsupported device found! Please create an issue at '
+                          'https://github.com/rytilahti/python-miio/issues '
+                          'and provide the following data: %s', device_info.raw['model'])
     except DeviceException:
         raise PlatformNotReady
 
@@ -287,11 +292,6 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
                 self._state = state.usb_power
             else:
                 self._state = state.is_on
-
-                # FIXME: Does the device provide a temperature?
-                # self._state_attrs.update({
-                #    ATTR_TEMPERATURE: state.temperature,
-                # })
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
