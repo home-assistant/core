@@ -69,9 +69,11 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         category = "Category 1"
         name = "Name 1"
         unit_of_measurement = "Unit 1"
+        sort_reverse = False
         sensor = geo_rss_events.GeoRssServiceSensor(category,
                                                     data, name,
-                                                    unit_of_measurement)
+                                                    unit_of_measurement, None,
+                                                    sort_reverse)
 
         sensor.update()
         assert sensor.name == "Name 1 Category 1"
@@ -94,9 +96,11 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         category = None
         name = "Name 2"
         unit_of_measurement = "Unit 2"
+        sort_reverse = False
         sensor = geo_rss_events.GeoRssServiceSensor(category,
                                                     data, name,
-                                                    unit_of_measurement)
+                                                    unit_of_measurement, None,
+                                                    sort_reverse)
 
         sensor.update()
         assert sensor.name == "Name 2 Any"
@@ -115,9 +119,11 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         category = None
         name = "Name 3"
         unit_of_measurement = "Unit 3"
+        sort_reverse = False
         sensor = geo_rss_events.GeoRssServiceSensor(category,
                                                     data, name,
-                                                    unit_of_measurement)
+                                                    unit_of_measurement, None,
+                                                    sort_reverse)
 
         sensor.update()
         assert sensor.name == "Name 3 Any"
@@ -133,11 +139,48 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         category = None
         name = "Name 4"
         unit_of_measurement = "Unit 4"
+        sort_reverse = False
         sensor = geo_rss_events.GeoRssServiceSensor(category,
                                                     data, name,
-                                                    unit_of_measurement)
+                                                    unit_of_measurement, None,
+                                                    sort_reverse)
 
         sensor.update()
         assert sensor.name == "Name 4 Any"
         assert sensor.unit_of_measurement == "Unit 4"
         assert sensor.state == 0
+
+    def test_sorting(self):
+        """Test sorting entries."""
+        raw_data = load_fixture('geo_rss_events.xml')
+        data = self.setup_data(raw_data)
+        category = None
+        name = "Name 2"
+        unit_of_measurement = "Unit 2"
+        sort_by = "distance"
+        sort_reverse = False
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                    data, name,
+                                                    unit_of_measurement,
+                                                    sort_by, sort_reverse)
+
+        sensor.update()
+        assert sensor.state == 4
+        assert str(sensor.device_state_attributes) == str({'Title 6': "48km",
+                                                           'Title 1': "117km",
+                                                           'Title 3': "204km",
+                                                           'Title 2': "302km"})
+
+        # Test reverse sort order
+        sort_reverse = True
+        sensor = geo_rss_events.GeoRssServiceSensor(category,
+                                                    data, name,
+                                                    unit_of_measurement,
+                                                    sort_by, sort_reverse)
+
+        sensor.update()
+        assert sensor.state == 4
+        assert str(sensor.device_state_attributes) == str({'Title 2': "302km",
+                                                           'Title 3': "204km",
+                                                           'Title 1': "117km",
+                                                           'Title 6': "48km"})

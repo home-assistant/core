@@ -26,10 +26,14 @@ REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CATEGORY = 'category'
+ATTR_DATE = 'date'
 ATTR_DISTANCE = 'distance'
 ATTR_TITLE = 'title'
+VALID_SORT_BY = [ATTR_DATE, ATTR_DISTANCE, ATTR_TITLE]
 
 CONF_CATEGORIES = 'categories'
+CONF_SORT_BY = 'sort_by'
+CONF_SORT_REVERSE = 'sort_reverse'
 
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
@@ -51,6 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_SORT_BY, default=None): vol.In(VALID_SORT_BY),
+    vol.Optional(CONF_SORT_REVERSE, default=False): cv.boolean
 })
 
 
@@ -63,6 +69,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     categories = config.get(CONF_CATEGORIES)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+    sort_by = config.get(CONF_SORT_BY)
+    sort_reverse = config.get(CONF_SORT_REVERSE)
 
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s",
                   home_latitude, home_longitude, url, radius_in_km)
@@ -74,12 +82,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Create all sensors based on categories.
     devices = []
     if not categories:
-        device = GeoRssServiceSensor(None, data, name, unit_of_measurement)
+        device = GeoRssServiceSensor(None, data, name, unit_of_measurement,
+                                     sort_by, sort_reverse)
         devices.append(device)
     else:
         for category in categories:
             device = GeoRssServiceSensor(category, data, name,
-                                         unit_of_measurement)
+                                         unit_of_measurement, sort_by,
+                                         sort_reverse)
             devices.append(device)
     add_devices(devices, True)
 
@@ -87,7 +97,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, category, data, service_name, unit_of_measurement):
+    def __init__(self, category, data, service_name, unit_of_measurement,
+                 sort_by, sort_reverse):
         """Initialize the sensor."""
         self._category = category
         self._data = data
@@ -95,6 +106,8 @@ class GeoRssServiceSensor(Entity):
         self._state = STATE_UNKNOWN
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
+        self._sort_by = sort_by
+        self._sort_reverse = sort_reverse
 
     @property
     def name(self):
@@ -141,6 +154,11 @@ class GeoRssServiceSensor(Entity):
             _LOGGER.debug("Adding events to sensor %s: %s", self.entity_id,
                           my_events)
             self._state = len(my_events)
+            # Sort events if configured to do so.
+            if self._sort_by is not None:
+                my_events = sorted(my_events,
+                                   key=lambda event: event[self._sort_by],
+                                   reverse=self._sort_reverse)
             # And now compute the attributes from the filtered events.
             matrix = {}
             for event in my_events:
@@ -186,11 +204,19 @@ class GeoRssServiceData(object):
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
+                    # Extract last update date, fall back to publication date.
+                    pup_date_candidate = None
+                    if hasattr(entry, 'updated_parsed'):
+                        pup_date_candidate = entry.updated_parsed
+                    elif hasattr(entry, 'published_parsed'):
+                        pup_date_candidate = entry.published_parsed
+                    # Now create the event with attributes.
                     event = {
                         ATTR_CATEGORY: None if not hasattr(
                             entry, 'category') else entry.category,
                         ATTR_TITLE: None if not hasattr(
                             entry, 'title') else entry.title,
+                        ATTR_DATE: pup_date_candidate,
                         ATTR_DISTANCE: distance
                     }
                     events.append(event)
