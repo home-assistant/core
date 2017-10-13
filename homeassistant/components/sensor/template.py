@@ -94,7 +94,7 @@ class SensorTemplate(Entity):
         self._template = state_template
         self._state = None
         self._icon_template = icon_template
-        self._entity_picture_template = icon_template
+        self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
