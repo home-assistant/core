@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.netatmo import CameraData
 from homeassistant.loader import get_component
-from homeassistant.const import CONF_TIMEOUT, CONF_OFFSET
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
