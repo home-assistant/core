@@ -1,0 +1,82 @@
+{
+  "RWL_dc-02": {
+    "model": "RWL",
+    "name": "Remote bedroom",
+    "state": "2_hold",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "06:01:04"
+    ]
+  },
+  "SML_28-02": {
+    "temperature": 19.42,
+    "model": "SML",
+    "name": "Hall motion Sensor",
+    "state": "off",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "05:57:40"
+    ],
+    "light_level": 0,
+    "lux": 1,
+    "dark": true,
+    "daylight": false
+  },
+  "SML_ce-02": {
+    "temperature": 20.17,
+    "model": "SML",
+    "name": "Bedroom motion sensor",
+    "state": "on",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "06:00:53"
+    ],
+    "light_level": 0,
+    "lux": 1,
+    "dark": true,
+    "daylight": false
+  },
+  "Geofence": {
+    "name": "Robins iPhone",
+    "model": "GEO",
+    "state": "on"
+  },
+  "SML_9c-02": {
+    "temperature": 22.8,
+    "model": "SML",
+    "name": "Living room motion sensor",
+    "state": "off",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "06:01:07"
+    ],
+    "light_level": 0,
+    "lux": 1,
+    "dark": true,
+    "daylight": false
+  },
+  "RWL_1e-02": {
+    "model": "RWL",
+    "name": "Living room remote",
+    "state": "1_click",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "05:34:33"
+    ]
+  },
+  "RWL_9c-02": {
+    "model": "RWL",
+    "name": "Hall remote",
+    "state": "1_click",
+    "battery": 100,
+    "last_updated": [
+      "2017-10-13",
+      "05:36:46"
+    ]
+  }
+}

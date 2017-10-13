@@ -46,6 +46,7 @@ TEST_REQUIREMENTS = (
     'haversine',
     'hbmqtt',
     'holidays',
+    'hue-sensors',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
