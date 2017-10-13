@@ -1,9 +1,7 @@
 """The tests for the hue sensors platform."""
 
-import json
 import requests_mock
 import unittest
-from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from tests.common import (
@@ -38,3 +36,4 @@ class TestHueSensor(unittest.TestCase):
             setup_component(self.hass, 'sensor', {'sensor': VALID_CONFIG}))
         living_room_remote = self.hass.states.get('sensor.living_room_remote')
         assert living_room_remote.name == "Living room remote"
+        assert living_room_remote.state == '1_click'
