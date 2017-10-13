@@ -7,8 +7,8 @@ import homeassistant.components as core
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+from tests.common import (get_test_home_assistant, assert_setup_component,
+                          mock_component)
 
 
 class TestTemplateSwitch:
@@ -16,10 +16,11 @@ class TestTemplateSwitch:
 
     hass = None
     calls = None
+
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -35,7 +36,7 @@ class TestTemplateSwitch:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
@@ -43,7 +44,7 @@ class TestTemplateSwitch:
                     'switches': {
                         'test_template_switch': {
                             'value_template':
-                                "{{ states.switch.test_state.state }}",
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -80,8 +81,7 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template':
-                                "{{ 1 == 1 }}",
+                            'value_template': "{{ 1 == 1 }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -109,8 +109,7 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template':
-                                "{{ 1 == 2 }}",
+                            'value_template': "{{ 1 == 2 }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -139,7 +138,7 @@ class TestTemplateSwitch:
                     'switches': {
                         'test_template_switch': {
                             'value_template':
-                                "{{ states.switch.test_state.state }}",
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -149,9 +148,9 @@ class TestTemplateSwitch:
                                 'entity_id': 'switch.test_state'
                             },
                             'icon_template':
-                                "{% if states.switch.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}"
+                            "{% if states.switch.test_state.state %}"
+                            "mdi:check"
+                            "{% endif %}"
                         }
                     }
                 }
@@ -169,6 +168,45 @@ class TestTemplateSwitch:
         state = self.hass.states.get('switch.test_template_switch')
         assert state.attributes['icon'] == 'mdi:check'
 
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'value_template':
+                            "{{ states.switch.test_state.state }}",
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'entity_picture_template':
+                            "{% if states.switch.test_state.state %}"
+                            "/local/myimage.png"
+                            "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes['entity_picture'] == '/local/myimage.png'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0, 'switch'):
@@ -177,8 +215,7 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test_template_switch': {
-                            'value_template':
-                                "{% if rubbish %}",
+                            'value_template': "{% if rubbish %}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -205,8 +242,7 @@ class TestTemplateSwitch:
                     'platform': 'template',
                     'switches': {
                         'test INVALID switch': {
-                            'value_template':
-                                "{{ rubbish }",
+                            'value_template': "{{ rubbish }",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -245,11 +281,10 @@ class TestTemplateSwitch:
     def test_no_switches_does_not_create(self):
         """Test if there are no switches no creation."""
         with assert_setup_component(0, 'switch'):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'template'
-                }
-            })
+            assert setup.setup_component(self.hass, 'switch',
+                                         {'switch': {
+                                             'platform': 'template'
+                                         }})
 
         self.hass.start()
         self.hass.block_till_done()
@@ -265,7 +300,7 @@ class TestTemplateSwitch:
                     'switches': {
                         'test_template_switch': {
                             'not_value_template':
-                                "{{ states.switch.test_state.state }}",
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -293,7 +328,7 @@ class TestTemplateSwitch:
                     'switches': {
                         'test_template_switch': {
                             'value_template':
-                                "{{ states.switch.test_state.state }}",
+                            "{{ states.switch.test_state.state }}",
                             'not_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -321,7 +356,7 @@ class TestTemplateSwitch:
                     'switches': {
                         'test_template_switch': {
                             'value_template':
-                                "{{ states.switch.test_state.state }}",
+                            "{{ states.switch.test_state.state }}",
                             'turn_on': {
                                 'service': 'switch.turn_on',
                                 'entity_id': 'switch.test_state'
@@ -348,7 +383,7 @@ class TestTemplateSwitch:
                 'switches': {
                     'test_template_switch': {
                         'value_template':
-                            "{{ states.switch.test_state.state }}",
+                        "{{ states.switch.test_state.state }}",
                         'turn_on': {
                             'service': 'test.automation'
                         },
@@ -383,11 +418,10 @@ class TestTemplateSwitch:
                 'switches': {
                     'test_template_switch': {
                         'value_template':
-                            "{{ states.switch.test_state.state }}",
+                        "{{ states.switch.test_state.state }}",
                         'turn_on': {
                             'service': 'switch.turn_on',
                             'entity_id': 'switch.test_state'
-
                         },
                         'turn_off': {
                             'service': 'test.automation'
@@ -416,8 +450,8 @@ class TestTemplateSwitch:
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     hass.data[DATA_RESTORE_CACHE] = {
-        'switch.test_template_switch':
-            State('switch.test_template_switch', 'on'),
+        'switch.test_template_switch': State('switch.test_template_switch',
+                                             'on'),
     }
 
     hass.state = CoreState.starting
@@ -428,8 +462,7 @@ def test_restore_state(hass):
             'platform': 'template',
             'switches': {
                 'test_template_switch': {
-                    'value_template':
-                        "{{ states.switch.test_state.state }}",
+                    'value_template': "{{ states.switch.test_state.state }}",
                     'turn_on': {
                         'service': 'switch.turn_on',
                         'entity_id': 'switch.test_state'

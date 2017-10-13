@@ -8,8 +8,7 @@ from homeassistant import setup
 import homeassistant.components.cover as cover
 from homeassistant.const import STATE_OPEN, STATE_CLOSED
 
-from tests.common import (
-    get_test_home_assistant, assert_setup_component)
+from tests.common import (get_test_home_assistant, assert_setup_component)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -18,6 +17,7 @@ class TestTemplateCover(unittest.TestCase):
 
     hass = None
     calls = None
+
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
@@ -45,7 +45,7 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'value_template':
-                                "{{ states.cover.test_state.state }}",
+                            "{{ states.cover.test_state.state }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -82,8 +82,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template':
-                                "{{ 1 == 1 }}",
+                            'value_template': "{{ 1 == 1 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -112,7 +111,7 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'position_template':
-                                "{{ states.cover.test.attributes.position }}",
+                            "{{ states.cover.test.attributes.position }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test'
@@ -136,8 +135,7 @@ class TestTemplateCover(unittest.TestCase):
         attrs = dict()
         attrs['position'] = 42
         self.hass.states.async_set(
-            entity.entity_id, entity.state,
-            attributes=attrs)
+            entity.entity_id, entity.state, attributes=attrs)
         self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test_template_cover')
@@ -149,8 +147,7 @@ class TestTemplateCover(unittest.TestCase):
         entity = self.hass.states.get('cover.test')
         attrs['position'] = 0.0
         self.hass.states.async_set(
-            entity.entity_id, entity.state,
-            attributes=attrs)
+            entity.entity_id, entity.state, attributes=attrs)
         self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test_template_cover')
@@ -165,10 +162,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template':
-                                "{{ 1 == 1 }}",
-                            'tilt_template':
-                                "{{ 42 }}",
+                            'value_template': "{{ 1 == 1 }}",
+                            'tilt_template': "{{ 42 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -196,10 +191,8 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ -1 }}",
-                            'tilt_template':
-                                "{{ 110 }}",
+                            'position_template': "{{ -1 }}",
+                            'tilt_template': "{{ 110 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -229,9 +222,9 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'value_template':
-                                "{{ 1 == 1 }}",
+                            "{{ 1 == 1 }}",
                             'position_template':
-                                "{{ 42 }}",
+                            "{{ 42 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -241,9 +234,9 @@ class TestTemplateCover(unittest.TestCase):
                                 'entity_id': 'cover.test_state'
                             },
                             'icon_template':
-                                "{% if states.cover.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}"
+                            "{% if states.cover.test_state.state %}"
+                            "mdi:check"
+                            "{% endif %}"
                         }
                     }
                 }
@@ -262,8 +255,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template':
-                                "{{ 1 == 1 }}",
+                            'value_template': "{{ 1 == 1 }}",
                         }
                     }
                 }
@@ -282,8 +274,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'value_template':
-                                "{{ 1 == 1 }}",
+                            'value_template': "{{ 1 == 1 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -307,13 +298,13 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'position_template':
-                                "{{ on }}",
+                            "{{ on }}",
                             'tilt_template':
-                                "{% if states.cover.test_state.state %}"
-                                "on"
-                                "{% else %}"
-                                "off"
-                                "{% endif %}",
+                            "{% if states.cover.test_state.state %}"
+                            "on"
+                            "{% else %}"
+                            "off"
+                            "{% endif %}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -342,8 +333,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 0 }}",
+                            'position_template': "{{ 0 }}",
                             'open_cover': {
                                 'service': 'test.automation',
                             },
@@ -375,8 +365,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 100 }}",
+                            'position_template': "{{ 100 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -410,13 +399,13 @@ class TestTemplateCover(unittest.TestCase):
         """Test the set_position command."""
         with assert_setup_component(1, 'cover'):
             assert setup.setup_component(self.hass, 'input_number', {
-               'input_number': {
-                   'test': {
-                       'min': '0',
-                       'max': '100',
-                       'initial': '42',
-                   }
-               }
+                'input_number': {
+                    'test': {
+                        'min': '0',
+                        'max': '100',
+                        'initial': '42',
+                    }
+                }
             })
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
@@ -424,7 +413,7 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'position_template':
-                                "{{ states.input_number.test.state | int }}",
+                            "{{ states.input_number.test.state | int }}",
                             'set_cover_position': {
                                 'service': 'input_number.set_value',
                                 'entity_id': 'input_number.test',
@@ -455,8 +444,7 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 0.0
 
-        cover.set_cover_position(self.hass, 25,
-                                 'cover.test_template_cover')
+        cover.set_cover_position(self.hass, 25, 'cover.test_template_cover')
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 25.0
@@ -469,8 +457,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 100 }}",
+                            'position_template': "{{ 100 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -504,8 +491,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 100 }}",
+                            'position_template': "{{ 100 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -538,8 +524,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 100 }}",
+                            'position_template': "{{ 100 }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -585,8 +570,7 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') is None
 
-        cover.set_cover_position(self.hass, 42,
-                                 'cover.test_template_cover')
+        cover.set_cover_position(self.hass, 42, 'cover.test_template_cover')
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.attributes.get('current_position') == 42.0
@@ -609,8 +593,7 @@ class TestTemplateCover(unittest.TestCase):
                     'platform': 'template',
                     'covers': {
                         'test_template_cover': {
-                            'position_template':
-                                "{{ 100 }}",
+                            'position_template': "{{ 100 }}",
                             'set_cover_position': {
                                 'service': 'test.automation',
                             },
@@ -652,7 +635,7 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'value_template':
-                                "{{ states.cover.test_state.state }}",
+                            "{{ states.cover.test_state.state }}",
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'
@@ -662,9 +645,9 @@ class TestTemplateCover(unittest.TestCase):
                                 'entity_id': 'cover.test_state'
                             },
                             'icon_template':
-                                "{% if states.cover.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}"
+                            "{% if states.cover.test_state.state %}"
+                            "mdi:check"
+                            "{% endif %}"
                         }
                     }
                 }
@@ -682,3 +665,43 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
 
         assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
+                            'value_template':
+                            "{{ states.cover.test_state.state }}",
+                            'open_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'close_cover': {
+                                'service': 'cover.close_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'entity_picture_template':
+                            "{% if states.cover.test_state.state %}"
+                            "/local/myimage.png"
+                            "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test_template_cover')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('cover.test_state', STATE_OPEN)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('cover.test_template_cover')
+
+        assert state.attributes['entity_picture'] == '/local/myimage.png'
