@@ -42,13 +42,7 @@ def async_setup(hass, config):
         """Update the NamecheapDNS entry."""
         yield from _update_namecheapdns(session, host, domain, token)
 
-    @asyncio.coroutine
-    def update_domain_service(call):
-        """Update the NamecheapDNS entry."""
-        yield from _update_namecheapdns(session, host, domain, token)
-
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
-    hass.services.async_register(DOMAIN, 'update dns', update_domain_service)
 
     return result
 
