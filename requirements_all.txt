@@ -1052,6 +1052,9 @@ websocket-client==0.37.0
 # homeassistant.components.media_player.webostv
 websockets==3.2
 
+# homeassistant.components.binary_sensor.workalendar
+workalendar==2.3.1
+
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
 

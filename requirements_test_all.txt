@@ -151,5 +151,8 @@ uvcclient==0.10.1
 # homeassistant.components.cloud
 warrant==0.2.0
 
+# homeassistant.components.binary_sensor.workalendar
+workalendar==2.3.1
+
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
