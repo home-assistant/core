@@ -40,6 +40,7 @@ homeassistant/components/*/zwave.py @home-assistant/z-wave
 
 # Indiviudal components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
+homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
