@@ -83,44 +83,44 @@ class FortinetDeviceScanner(DeviceScanner):
             lines_result = string_result.splitlines()
       
             for line in lines_result:
-                line=line.strip()
-                parts=line.split()
+                line = line.strip()
+                parts = line.split()
                
                 _LOGGER.debug("line %s", line)
  
                 if line.startswith('vd '):
-                    hw_addr=parts[2].upper()
-                    ip_addr=None
+                    hw_addr = parts[2].upper()
+                    ip_addr = None
                 elif line.startswith('created '):
-                    seen=int(parts[5].replace('s', ''))
-                    last_seen=datetime.datetime.now()-datetime.timedelta(seconds=seen)
+                    seen = int(parts[5].replace('s', ''))
+                    last_seen = datetime.datetime.now() - datetime.timedelta(seconds=seen)
                 elif line.startswith('ip '):
-                    ip_addr=parts[1]
+                    ip_addr = parts[1]
                 elif line.startswith('host '):
                     if " src configured" in line:
-                        device_configured=True
+                        device_configured = True
                     else:
-                        device_configured=False
+                        device_configured = False
 
                     _LOGGER.info(">found %s/%s age %s<?%s cfg %s",ip_addr,hw_addr,seen,max_age,device_configured)
-                    if device_configured==True:
-                        start_index=line.index("'")+1
-                        end_index=line.rindex("'")
+                    if device_configured is True:
+                        start_index = line.index("'") + 1
+                        end_index = line.rindex("'")
 
-                        host=line[start_index:end_index]
-                        dev_id=slugify(host)
+                        host = line[start_index:end_index]
+                        dev_id = slugify(host)
 
                         _LOGGER.debug(">host %s", host)
     
-                        if not hw_addr==None:
+                        if not hw_addr is None:
                             _LOGGER.debug(">add the device")
-                            last_results[hw_addr] = { 
+                            last_results[hw_addr] = {
                                 'id': dev_id,
                                 'name': host,
                                 'last_seen': seen,
                                 'ip': ip_addr,
                                 'mac': hw_addr
-                            }   
+                            }
 
             self.last_results = last_results
             
@@ -150,13 +150,12 @@ class FortinetDeviceScanner(DeviceScanner):
 
         return None
 
-
     def _get_device_idle_timeout(self):
         """Gets the configured device_idle_timeout or returns the default."""
 
-        fortinet_ssh=self._login_to_router()
+        fortinet_ssh = self._login_to_router()
 
-        if not fortinet_ssh==None:
+        if not fortinet_ssh is None:
             fortinet_ssh.sendline("co sys glo")
             fortinet_ssh.prompt(1)
 
@@ -186,11 +185,11 @@ class FortinetDeviceScanner(DeviceScanner):
     def _get_device_data(self):
         """Open connection to the router and get device entries."""
         
-        fortinet_ssh=self._login_to_router()
+        fortinet_ssh = self._login_to_router()
 
-        if not fortinet_ssh==None:
+        if not fortinet_ssh is None:
             # Set VDOM (optional)
-            if not self.vdom==None:
+            if not self.vdom is None:
                 _LOGGER.info('vdom '+self.vdom)
                 fortinet_ssh.sendline("co vdom")
                 fortinet_ssh.prompt(1)
@@ -204,7 +203,7 @@ class FortinetDeviceScanner(DeviceScanner):
             devices_result = fortinet_ssh.before.decode('utf-8')
             _LOGGER.debug(devices_result)
 
-            if not self.vdom==None:
+            if not self.vdom is None:
                 fortinet_ssh.sendline('end')
                 fortinet_ssh.prompt(1)
 
