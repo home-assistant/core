@@ -97,8 +97,8 @@ SENSOR_TYPES = {
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
     'uv_index': ['UV Index', None, None, None, None, None,
-                                 'mdi:weather-sunny',
-                                 ['currently', 'hourly', 'daily']],
+                 'mdi:weather-sunny',
+                 ['currently', 'hourly', 'daily']],
 }
 
 CONDITION_PICTURES = {
