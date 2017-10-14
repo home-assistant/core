@@ -127,7 +127,8 @@ class TimeDateSensor(Entity):
         return attrs
 
     def _update_internal_state(self, time_date):
-        time = time_date if self.type == 'time_utc' else dt_util.as_local(time_date)
+        time = time_date if self.type == 'time_utc' else \
+            dt_util.as_local(time_date)
         date = dt_util.as_local(time_date).date()
         self._hour = time.hour
         self._minute = time.minute
