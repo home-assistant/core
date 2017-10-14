@@ -94,30 +94,32 @@ class FortinetDeviceScanner(DeviceScanner):
                     ip_addr = None
                 elif line.startswith('created '):
                     seen = int(parts[5].replace('s', ''))
-                    last_seen = datetime.datetime.now() 
-                              - datetime.timedelta(seconds=seen)
+                    last_seen = datetime.datetime.now()
+                    - datetime.timedelta(seconds=seen)
                 elif line.startswith('ip '):
                     ip_addr = parts[1]
                 elif line.startswith('host '):
                     if " src configured" in line:
-                        device_configured = True
+                        devcfg = True
                     else:
-                        device_configured = False
+                        devcfg = False
 
-                    _LOGGER.info(">found %s/%s age %s<?%s cfg %s",
-                            ip_addr, hw_addr, seen, max_age, device_configured)
+                    _LOGGER.info("found %s/%s age %s<?%s cfg %s",
+                                ip_addr, hw_addr, seen, max_age,
+                                devcfg)
 
-                    if device_configured is True:
+                    if devcfg is True:
                         start_index = line.index("'") + 1
                         end_index = line.rindex("'")
 
                         host = line[start_index:end_index]
                         dev_id = slugify(host)
 
-                        _LOGGER.debug(">host %s", host)
+                        _LOGGER.debug("host %s", host)
 
                         if hw_addr is not None:
-                            _LOGGER.debug(">add the device")
+                            _LOGGER.debug("add the device")
+
                             last_results[hw_addr] = {
                                 'id': dev_id,
                                 'name': host,
