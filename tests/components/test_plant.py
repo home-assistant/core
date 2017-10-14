@@ -46,8 +46,10 @@ class _MockState(object):
 
 
 class TestPlant(unittest.TestCase):
+    """Tests for component "plant"."""
 
     def setUp(self):
+        """Create test instance of home assistant."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -82,6 +84,10 @@ class TestPlant(unittest.TestCase):
         assert sensor.state_attributes['problem'] == 'battery low'
 
     def test_update_states(self):
+        """Test updating the state of a sensor.
+
+        Make sure that plant processes this correctly.
+        """
         plant_name = 'some_plant'
         assert setup_component(self.hass, plant.DOMAIN, {
             plant.DOMAIN: {
@@ -96,6 +102,7 @@ class TestPlant(unittest.TestCase):
         self.assertEquals(1000, state.attributes[plant.READING_BRIGHTNESS])
 
     def test_load_from_db(self):
+        """Test bootstrapping the brightnss history from the database."""
         init_recorder_component(self.hass)
         plant_name = 'wise_plant'
         for value in [20, 30, 10]:
@@ -120,12 +127,15 @@ class TestPlant(unittest.TestCase):
 
 
 class TestDailyHistory(unittest.TestCase):
+    """Test the DailyHistory helper class."""
 
     def test_no_data(self):
+        """Test with empty history."""
         dh = plant.DailyHistory(3)
         self.assertIsNone(dh.max)
 
     def test_one_day(self):
+        """Test storing data for the same day."""
         dh = plant.DailyHistory(3)
         values = [-2, 10, 0, 5, 20]
         for i in range(len(values)):
@@ -135,6 +145,7 @@ class TestDailyHistory(unittest.TestCase):
             self.assertEqual(dh.max, max_value)
 
     def test_multiple_days(self):
+        """Test storing data for different days."""
         dh = plant.DailyHistory(3)
         today = datetime.now()
         today_minus_1 = today - timedelta(days=1)

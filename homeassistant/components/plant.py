@@ -1,5 +1,4 @@
-"""
-Component to monitor plants.
+"""Component to monitor plants.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plant/
@@ -340,13 +339,14 @@ class DailyHistory(object):
     """
 
     def __init__(self, max_length):
+        """Create new DailyHistory with a maximum length of the history."""
         self.max_length = max_length
         self._days = None
         self._max_dict = dict()
         self.max = None
 
     def add_measurement(self, value, timestamp=datetime.now()):
-        """Add a new measurement for a certain day"""
+        """Add a new measurement for a certain day."""
         day = timestamp.date()
         if self._days is None:
             self._days = deque()
@@ -365,7 +365,8 @@ class DailyHistory(object):
     def _add_day(self, day, value):
         """Add a new day to the history.
 
-         Deletes the oldest day, if the queue becomes too long"""
+        Deletes the oldest day, if the queue becomes too long.
+        """
         if len(self._days) == self.max_length:
             oldest = self._days.popleft()
             del self._max_dict[oldest]
