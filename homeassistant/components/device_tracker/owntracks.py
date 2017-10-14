@@ -96,7 +96,7 @@ def _parse_topic(topic):
         _, user, device, *_ = topic.split('/', 3)
     except ValueError:
         _LOGGER.error("Can't parse topic: '%s'", topic)
-        raise ValueError
+        raise
 
     return user, device
 
