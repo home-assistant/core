@@ -162,7 +162,7 @@ colorlog==3.0.1
 concord232==0.14
 
 # homeassistant.scripts.credstash
-credstash==1.13.3
+# credstash==1.13.3
 
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
@@ -383,7 +383,7 @@ keyring>=9.3,<10.0
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
-libnacl==1.5.2
+libnacl==1.6.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
@@ -577,10 +577,10 @@ pyalarmdotcom==0.3.0
 pyarlo==0.0.7
 
 # homeassistant.components.notify.xmpp
-pyasn1-modules==0.1.4
+pyasn1-modules==0.1.5
 
 # homeassistant.components.notify.xmpp
-pyasn1==0.3.6
+pyasn1==0.3.7
 
 # homeassistant.components.apple_tv
 pyatv==0.3.5
