@@ -31,7 +31,8 @@ PLATFORM_SCHEMA = vol.All(
     })
 )
 
-DEFAULT_DEVICE_IDLE_TIMEOUT=300
+DEFAULT_DEVICE_IDLE_TIMEOUT = 300
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Fortinet scanner."""
@@ -93,8 +94,8 @@ class FortinetDeviceScanner(DeviceScanner):
                     ip_addr = None
                 elif line.startswith('created '):
                     seen = int(parts[5].replace('s', ''))
-                    last_seen = datetime.datetime.now() -
-                              datetime.timedelta(seconds=seen)
+                    last_seen = datetime.datetime.now() 
+                              - datetime.timedelta(seconds=seen)
                 elif line.startswith('ip '):
                     ip_addr = parts[1]
                 elif line.startswith('host '):
@@ -104,7 +105,7 @@ class FortinetDeviceScanner(DeviceScanner):
                         device_configured = False
 
                     _LOGGER.info(">found %s/%s age %s<?%s cfg %s",
-                      ip_addr, hw_addr, seen, max_age, device_configured)
+                            ip_addr, hw_addr, seen, max_age, device_configured)
 
                     if device_configured is True:
                         start_index = line.index("'") + 1
