@@ -1043,7 +1043,7 @@ wakeonlan==0.2.2
 waqiasync==1.0.0
 
 # homeassistant.components.cloud
-warrant==0.2.0
+warrant==0.5.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0

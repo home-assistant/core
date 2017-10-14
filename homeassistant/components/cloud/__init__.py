@@ -12,7 +12,7 @@ from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 
-REQUIREMENTS = ['warrant==0.2.0']
+REQUIREMENTS = ['warrant==0.5.0']
 DEPENDENCIES = ['http']
 CONF_MODE = 'mode'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
