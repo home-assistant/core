@@ -54,6 +54,7 @@ SERVICE_DECREMENT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
+
 def _cv_input_number(cfg):
     """Configure validation helper for input number (voluptuous)."""
     minimum = cfg.get(CONF_MIN)
