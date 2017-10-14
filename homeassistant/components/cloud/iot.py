@@ -38,7 +38,7 @@ class CloudIoT:
     def connect(self):
         """Connect to the IoT broker."""
         if self.client is not None:
-            raise Exception('Cannot connect while already connected')
+            raise RuntimeError('Cannot connect while already connected')
 
         self.close_requested = False
 
