@@ -81,19 +81,20 @@ class FortinetDeviceScanner(DeviceScanner):
             last_results = {}
 
             lines_result = string_result.splitlines()
-      
+
             for line in lines_result:
                 line = line.strip()
                 parts = line.split()
-               
+
                 _LOGGER.debug("line %s", line)
- 
+
                 if line.startswith('vd '):
                     hw_addr = parts[2].upper()
                     ip_addr = None
                 elif line.startswith('created '):
                     seen = int(parts[5].replace('s', ''))
-                    last_seen = datetime.datetime.now() - datetime.timedelta(seconds=seen)
+                    last_seen = datetime.datetime.now() -
+                              datetime.timedelta(seconds=seen)
                 elif line.startswith('ip '):
                     ip_addr = parts[1]
                 elif line.startswith('host '):
@@ -102,7 +103,9 @@ class FortinetDeviceScanner(DeviceScanner):
                     else:
                         device_configured = False
 
-                    _LOGGER.info(">found %s/%s age %s<?%s cfg %s",ip_addr,hw_addr,seen,max_age,device_configured)
+                    _LOGGER.info(">found %s/%s age %s<?%s cfg %s",
+                      ip_addr, hw_addr, seen, max_age, device_configured)
+
                     if device_configured is True:
                         start_index = line.index("'") + 1
                         end_index = line.rindex("'")
@@ -111,19 +114,19 @@ class FortinetDeviceScanner(DeviceScanner):
                         dev_id = slugify(host)
 
                         _LOGGER.debug(">host %s", host)
-    
-                        if not hw_addr is None:
+
+                        if hw_addr is not None:
                             _LOGGER.debug(">add the device")
                             last_results[hw_addr] = {
                                 'id': dev_id,
                                 'name': host,
-                                'last_seen': seen,
+                                'last_seen': last_seen,
                                 'ip': ip_addr,
                                 'mac': hw_addr
                             }
 
             self.last_results = last_results
-            
+
             return True
 
         return False
@@ -142,7 +145,7 @@ class FortinetDeviceScanner(DeviceScanner):
             router_hostname += "#"
             regex_expression = ('(?i)^%s' % router_hostname).encode()
             fortinet_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)
-        
+
             return fortinet_ssh
         except pxssh.ExceptionPxssh as px_e:
             _LOGGER.error("pxssh failed on login")
@@ -155,11 +158,11 @@ class FortinetDeviceScanner(DeviceScanner):
 
         fortinet_ssh = self._login_to_router()
 
-        if not fortinet_ssh is None:
+        if fortinet_ssh is not None:
             fortinet_ssh.sendline("co sys glo")
             fortinet_ssh.prompt(1)
 
-            fortinet_ssh.sendline("sh full-configuration | grep device-idle-timeout")
+            fortinet_ssh.sendline("sh fu | grep device-idle-timeout")
             fortinet_ssh.prompt(1)
 
             conf_result = fortinet_ssh.before.decode('utf-8')
@@ -184,26 +187,26 @@ class FortinetDeviceScanner(DeviceScanner):
 
     def _get_device_data(self):
         """Open connection to the router and get device entries."""
-        
+
         fortinet_ssh = self._login_to_router()
 
-        if not fortinet_ssh is None:
+        if fortinet_ssh is not None:
             # Set VDOM (optional)
-            if not self.vdom is None:
-                _LOGGER.info('vdom '+self.vdom)
+            if self.vdom is not None:
+                _LOGGER.info('vdom %s', self.vdom)
                 fortinet_ssh.sendline("co vdom")
                 fortinet_ssh.prompt(1)
 
-                fortinet_ssh.sendline("edit '"+self.vdom+"'")
+                fortinet_ssh.sendline("edit '" + self.vdom + "'")
                 fortinet_ssh.prompt(1)
-            
+
             fortinet_ssh.sendline("di user device list")
             fortinet_ssh.prompt(1)
 
             devices_result = fortinet_ssh.before.decode('utf-8')
             _LOGGER.debug(devices_result)
 
-            if not self.vdom is None:
+            if self.vdom is not None:
                 fortinet_ssh.sendline('end')
                 fortinet_ssh.prompt(1)
 
