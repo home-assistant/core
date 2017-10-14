@@ -74,7 +74,6 @@ class TimeDateSensor(Entity):
         self._day = None
         self._hour = None
         self._minute = None
-        self._second = None
         self.hass = hass
 
         self._update_internal_state(dt_util.utcnow())
