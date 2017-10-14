@@ -65,9 +65,8 @@ def async_setup(hass, config):
         if publish_attributes:
             for key, val in new_state.attributes.items():
                 if val:
-                    val_str = str(val)
                     hass.components.mqtt.async_publish(mybase + key,
-                                                       val_str, 1, True)
+                                                       str(val), 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True
