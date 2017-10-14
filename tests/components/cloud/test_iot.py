@@ -76,11 +76,10 @@ def test_connection_msg_for_unknown_handler(mock_client):
         type=WSMsgType.text,
         json=MagicMock(return_value={
             'msgid': 'test-msg-id',
-            'handler': 'test-handler',
+            'handler': 'non-existing-handler',
             'payload': 'test-payload'
         })
     ))
-    mock_handle_message.return_value = mock_coro('response')
     mock_client.send_json.return_value = mock_coro(None)
 
     yield from conn.connect()
@@ -89,12 +88,12 @@ def test_connection_msg_for_unknown_handler(mock_client):
     assert len(mock_client.send_json.mock_calls) == 1
     assert mock_client.send_json.mock_calls[0][1][0] == {
         'msgid': 'test-msg-id',
-        'error': True
+        'error': 'unknown-handler',
     }
 
 
 @asyncio.coroutine
-def test_connection_msg_for_handler_raising(mock_client):
+def test_connection_msg_for_handler_raising(mock_client, mock_handle_message):
     """Test we sent error when handler raises exception."""
     cloud = MagicMock()
     conn = iot.CloudIoT(cloud)
@@ -115,7 +114,7 @@ def test_connection_msg_for_handler_raising(mock_client):
     assert len(mock_client.send_json.mock_calls) == 1
     assert mock_client.send_json.mock_calls[0][1][0] == {
         'msgid': 'test-msg-id',
-        'error': True
+        'error': 'exception',
     }
 
 

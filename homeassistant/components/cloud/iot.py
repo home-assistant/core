@@ -15,6 +15,10 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
+class UnknownHandler(Exception):
+    """Exception raised when trying to handle unknown handler."""
+
+
 class CloudIoT:
     """Class to manage the IoT connection."""
 
@@ -98,9 +102,12 @@ class CloudIoT:
 
                     response['payload'] = result
 
+                except UnknownHandler:
+                    response['error'] = 'unknown-handler'
+
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception('Error handling message')
-                    response['error'] = True
+                    response['error'] = 'exception'
 
                 _LOGGER.debug('Publishing message: %s', response)
                 yield from client.send_json(response)
@@ -151,7 +158,7 @@ def async_handle_message(hass, cloud, handler_name, payload):
     handler = HANDLERS.get(handler_name)
 
     if handler is None:
-        raise ValueError('Unknown handler {}'.format(handler_name))
+        raise UnknownHandler()
 
     return (yield from handler(hass, cloud, payload))
 
