@@ -93,7 +93,7 @@ def _create_instance(hass, account_name, api_key, shared_secret,
                              token, stored_rtm_config)
     component.add_entity(entity)
     hass.services.async_register(
-        DOMAIN, 'create_task', entity.create_task,
+        DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
         description=SERVICE_DESCRIPTION_CREATE_TASK,
         schema=SERVICE_SCHEMA_CREATE_TASK)
 
