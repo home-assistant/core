@@ -1,26 +1,20 @@
 """Component to interact with Remember The Milk.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/remember_the_milk/
 
 Minimum viable product, it currently only support creating new tasks in your
 Remember The Milk (https://www.rememberthemilk.com/) account.
-
-Ideas for improvement:
-- add interface to resolve tasks
-- add option to add a task to a certain list
-- add option to list tasks stored in RTM
-- make registration dialog nicer
 """
 import logging
 import os
 import json
 import voluptuous as vol
-from homeassistant.const import (CONF_API_KEY, STATE_OK)
-import homeassistant.helpers.config_validation as cv
 
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.const import (CONF_API_KEY, STATE_OK, CONF_TOKEN, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
 REQUIREMENTS = ['RtmAPI==0.7.0', 'httplib2==0.10.3']
 
@@ -43,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
     }
 }, extra=vol.ALLOW_EXTRA)
 
-CONFIG_TOKEN = 'token'
 CONFIG_FILE_NAME = 'remember_the_milk.conf'
 
 SERVICE_DESCRIPTION_CREATE_TASK = {
@@ -64,13 +57,13 @@ SERVICE_DESCRIPTION_CREATE_TASK = {
 }
 
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
-    vol.Required('name'): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     # vol.Optional('list_id'): cv.string,
 })
 
 
 def setup(hass, config):
-    """Set up the Plant component."""
+    """Set up the remember_the_milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
 
@@ -178,14 +171,14 @@ class RememberTheMilkConfiguration(object):
     def get_token(self, profile_name):
         """Get the server token for a profile."""
         if profile_name in self._config:
-            return self._config[profile_name][CONFIG_TOKEN]
+            return self._config[profile_name][CONF_TOKEN]
         return None
 
     def set_token(self, profile_name, token):
         """Store a new server token for a profile."""
         if profile_name not in self._config:
             self._config[profile_name] = dict()
-        self._config[profile_name][CONFIG_TOKEN] = token
+        self._config[profile_name][CONF_TOKEN] = token
         self.save_config()
 
     def delete_token(self, profile_name):
