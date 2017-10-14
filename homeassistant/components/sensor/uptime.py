@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the uptime sensor platform."""
     name = config.get(CONF_NAME)
-    units = config.get(CONF_NAME)
+    units = config.get(CONF_UNIT_OF_MEASUREMENT)
     add_devices([UptimeSensor(name, units)])
 
 
