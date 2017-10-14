@@ -14,6 +14,7 @@ import os
 import json
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_API_KEY, STATE_OK, CONF_TOKEN, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -41,34 +42,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIG_FILE_NAME = 'remember_the_milk.conf'
-
-SERVICE_DESCRIPTION_CREATE_TASK = {
-    'description': 'Create a new task in your Remember The Milk account',
-    'fields': {
-        'name': {
-            'description': 'name of the new task, you can use the smart '
-                           'syntax here',
-            'example': 'do this ^today #from_hass',
-        },
-        # 'list_id': {
-        #     'description': 'Name of the list to which the task shall be '
-        #                    'added (optional). If no list_id is set, '
-        #                    'the task is added to the Inbox',
-        #     'example': 'some_list',
-        # }
-    }
-}
+SERVICE_CREATE_TASK = 'create_task'
 
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    # vol.Optional('list_id'): cv.string,
 })
-
 
 def setup(hass, config):
     """Set up the remember_the_milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_RTM)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
+
 
     stored_rtm_config = RememberTheMilkConfiguration()
     for account_name, rtm_config in config[DOMAIN].items():
@@ -80,29 +67,29 @@ def setup(hass, config):
             _LOGGER.debug("found token for account %s", account_name)
             _create_instance(
                 hass, account_name, api_key, shared_secret, token,
-                stored_rtm_config, component)
+                stored_rtm_config, component, descriptions)
         else:
             _register_new_account(
                 hass, account_name, api_key, shared_secret,
-                stored_rtm_config, component)
+                stored_rtm_config, component, descriptions)
 
     _LOGGER.debug("Finished adding all Remember the milk accounts")
     return True
 
 
 def _create_instance(hass, account_name, api_key, shared_secret,
-                     token, stored_rtm_config, component):
+                     token, stored_rtm_config, component, descriptions):
     entity = RememberTheMilk(account_name, api_key, shared_secret,
                              token, stored_rtm_config)
     component.add_entity(entity)
     hass.services.async_register(
         DOMAIN, '{}_create_task'.format(account_name), entity.create_task,
-        description=SERVICE_DESCRIPTION_CREATE_TASK,
+        description=descriptions.get(SERVICE_CREATE_TASK),
         schema=SERVICE_SCHEMA_CREATE_TASK)
 
 
 def _register_new_account(hass, account_name, api_key, shared_secret,
-                          stored_rtm_config, component):
+                          stored_rtm_config, component, descriptions):
     from rtmapi import Rtm
 
     request_id = None
@@ -127,10 +114,9 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
 
             _create_instance(
                 hass, account_name, api_key, shared_secret, token,
-                stored_rtm_config, component)
+                stored_rtm_config, component, descriptions)
 
             configurator.request_done(request_id)
-            request_id.pop(account_name)
 
     request_id = configurator.async_request_config(
         '{} - {}'.format(DOMAIN, account_name),
