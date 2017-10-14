@@ -3,11 +3,13 @@ import datetime
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
+from homeassistant.loader import bind_hass
 
 DATA_LOCATION_CACHE = 'astral_location_cache'
 
 
 @callback
+@bind_hass
 def get_astral_location(hass):
     """Get an astral location for the current Home Assistant configuration."""
     from astral import Location
@@ -29,6 +31,7 @@ def get_astral_location(hass):
 
 
 @callback
+@bind_hass
 def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
     """Calculate the next specified solar event."""
     import astral
@@ -56,6 +59,7 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
 
 
 @callback
+@bind_hass
 def get_astral_event_date(hass, event, date=None):
     """Calculate the astral event time for the specified date."""
     import astral
@@ -76,6 +80,7 @@ def get_astral_event_date(hass, event, date=None):
 
 
 @callback
+@bind_hass
 def is_up(hass, utc_point_in_time=None):
     """Calculate if the sun is currently up."""
     if utc_point_in_time is None:

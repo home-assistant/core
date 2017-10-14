@@ -18,7 +18,7 @@ from homeassistant.components.vacuum import (
     VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -5,11 +5,13 @@ import sys
 
 from homeassistant.core import callback
 from homeassistant.const import RESTART_EXIT_CODE
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+@bind_hass
 def async_register_signal_handling(hass):
     """Register system signal handler for core."""
     if sys.platform != 'win32':

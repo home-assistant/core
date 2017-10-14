@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -25,11 +25,12 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
-    re.I | re.M
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
 
+@bind_hass
 def attach(hass, obj):
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
@@ -42,14 +43,27 @@ def attach(hass, obj):
         obj.hass = hass
 
 
-def extract_entities(template):
+def extract_entities(template, variables=None):
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
     extraction = _RE_GET_ENTITIES.findall(template)
-    if extraction:
-        return list(set(extraction))
+    extraction_final = []
+
+    for result in extraction:
+        if result[0] == 'trigger.entity_id' and 'trigger' in variables and \
+           'entity_id' in variables['trigger']:
+            extraction_final.append(variables['trigger']['entity_id'])
+        elif result[0]:
+            extraction_final.append(result[0])
+
+        if variables and result[1] in variables and \
+           isinstance(variables[result[1]], str):
+            extraction_final.append(variables[result[1]])
+
+    if extraction_final:
+        return list(set(extraction_final))
     return MATCH_ALL
 
 
@@ -76,9 +90,9 @@ class Template(object):
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self):
+    def extract_entities(self, variables=None):
         """Extract all entities for state_changed listener."""
-        return extract_entities(self.template)
+        return extract_entities(self.template, variables)
 
     def render(self, variables=None, **kwargs):
         """Render given template."""

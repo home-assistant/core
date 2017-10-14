@@ -607,10 +607,10 @@ LANG_CODES = [
     'KR', 'KU', 'LA', 'LV', 'LT', 'ND',
     'MK', 'MT', 'GM', 'MI', 'MR', 'MN',
     'NO', 'OC', 'PS', 'GN', 'PL', 'BR',
-    'PA', 'PU', 'RO', 'RU', 'SR', 'SK',
-    'SL', 'SP', 'SI', 'SW', 'CH', 'TL',
-    'TT', 'TH', 'UA', 'UZ', 'VU', 'CY',
-    'SN', 'JI', 'YI',
+    'PA', 'RO', 'RU', 'SR', 'SK', 'SL',
+    'SP', 'SI', 'SW', 'CH', 'TL', 'TT',
+    'TH', 'TR', 'TK', 'UA', 'UZ', 'VU',
+    'CY', 'SN', 'JI', 'YI',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

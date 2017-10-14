@@ -41,6 +41,7 @@ def last_recorder_run(hass):
 
     with session_scope(hass=hass) as session:
         res = (session.query(RecorderRuns)
+               .filter(RecorderRuns.end.isnot(None))
                .order_by(RecorderRuns.end.desc()).first())
         if res is None:
             return None
@@ -283,9 +284,10 @@ class HistoryPeriodView(HomeAssistantView):
 
         end_time = request.query.get('end_time')
         if end_time:
-            end_time = dt_util.as_utc(
-                dt_util.parse_datetime(end_time))
-            if end_time is None:
+            end_time = dt_util.parse_datetime(end_time)
+            if end_time:
+                end_time = dt_util.as_utc(end_time)
+            else:
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day

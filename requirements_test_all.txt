@@ -69,7 +69,7 @@ holidays==0.8.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==3.0.0
+influxdb==4.1.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
@@ -130,7 +130,7 @@ rflink==0.0.34
 ring_doorbell==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.4.0
+rxv==0.5.1
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
