@@ -20,6 +20,13 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_YEAR = 'year'
+ATTR_MONTH = 'month'
+ATTR_DAY = 'day'
+
+ATTR_HOUR = 'hour'
+ATTR_MINUTE = 'minute'
+
 TIME_STR_FORMAT = '%H:%M'
 
 OPTION_TYPES = {
@@ -62,6 +69,11 @@ class TimeDateSensor(Entity):
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
+        self._year = None
+        self._month = None
+        self._day = None
+        self._hour = None
+        self._minute = None
         self.hass = hass
 
         self._update_internal_state(dt_util.utcnow())
@@ -100,10 +112,28 @@ class TimeDateSensor(Entity):
         delta = interval - (timestamp % interval)
         return now + timedelta(seconds=delta)
 
+    @property
+    def state_attributes(self):
+        """Return time/date state attributes."""
+        attrs = {}
+        if 'time' in self.type:
+            attrs[ATTR_HOUR] = self._hour
+            attrs[ATTR_MINUTE] = self._minute
+        if 'date' in self.type:
+            attrs[ATTR_YEAR] = self._year
+            attrs[ATTR_MONTH] = self._month
+            attrs[ATTR_DAY] = self._day
+        return attrs
+
     def _update_internal_state(self, time_date):
-        time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
-        time_utc = time_date.strftime(TIME_STR_FORMAT)
-        date = dt_util.as_local(time_date).date().isoformat()
+        time = time_date if self.type == 'time_utc' else \
+            dt_util.as_local(time_date)
+        date = dt_util.as_local(time_date).date()
+        self._hour = time.hour
+        self._minute = time.minute
+        self._year = date.year
+        self._month = date.month
+        self._day = date.day
 
         # Calculate Swatch Internet Time.
         time_bmt = time_date + timedelta(hours=1)
@@ -112,7 +142,9 @@ class TimeDateSensor(Entity):
             seconds=time_bmt.second, microseconds=time_bmt.microsecond)
         beat = int((delta.seconds + delta.microseconds / 1000000.0) / 86.4)
 
-        if self.type == 'time':
+        date = date.isoformat()
+        time = time.strftime(TIME_STR_FORMAT)
+        if self.type in ['time', 'time_utc']:
             self._state = time
         elif self.type == 'date':
             self._state = date
@@ -120,8 +152,6 @@ class TimeDateSensor(Entity):
             self._state = '{}, {}'.format(date, time)
         elif self.type == 'time_date':
             self._state = '{}, {}'.format(time, date)
-        elif self.type == 'time_utc':
-            self._state = time_utc
         elif self.type == 'beat':
             self._state = '@{0:03d}'.format(beat)
 
