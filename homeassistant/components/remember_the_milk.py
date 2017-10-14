@@ -5,6 +5,9 @@ https://home-assistant.io/components/remember_the_milk/
 
 Minimum viable product, it currently only support creating new tasks in your
 Remember The Milk (https://www.rememberthemilk.com/) account.
+
+This product uses the Remember The Milk API but is not endorsed or certified
+by Remember The Milk.
 """
 import logging
 import os
