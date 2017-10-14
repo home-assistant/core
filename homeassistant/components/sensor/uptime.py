@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.uptime/
 """
 
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -27,11 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the uptime sensor platform."""
     name = config.get(CONF_NAME)
     units = config.get(CONF_UNIT_OF_MEASUREMENT)
-    add_devices([UptimeSensor(name, units)])
+    async_add_devices([UptimeSensor(name, units)])
 
 
 class UptimeSensor(Entity):
@@ -65,7 +67,8 @@ class UptimeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the state of the sensor."""
         delta = dt_util.now() - self.initial
         div_factor = 3600
