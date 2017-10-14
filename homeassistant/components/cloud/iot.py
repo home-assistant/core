@@ -45,8 +45,6 @@ class CloudIoT:
         hass = self.cloud.hass
         remove_hass_stop_listener = None
 
-        yield from hass.async_add_job(auth_api.check_token, self.cloud)
-
         session = async_get_clientsession(self.cloud.hass)
         headers = {
             hdrs.AUTHORIZATION: 'Bearer {}'.format(self.cloud.access_token)
@@ -62,6 +60,8 @@ class CloudIoT:
         client = None
         disconnect_warn = None
         try:
+            yield from hass.async_add_job(auth_api.check_token, self.cloud)
+
             self.client = client = yield from session.ws_connect(
                 'ws://{}/websocket'.format(self.cloud.relayer),
                 headers=headers)
@@ -116,14 +116,17 @@ class CloudIoT:
                 _LOGGER.debug('Publishing message: %s', response)
                 yield from client.send_json(response)
 
-        except client_exceptions.WSServerHandshakeError as err:
-            if err.code == 401:
-                _LOGGER.warning('Unable to connect: invalid auth')
-                self.close_requested = True
-                # Should we notify user?
+        except auth_api.CloudError:
+            _LOGGER.warning('Unable to connect: Unable to refresh token.')
 
         except client_exceptions.ClientError as err:
             _LOGGER.warning('Unable to connect: %s', err)
+
+        except client_exceptions.WSServerHandshakeError as err:
+            if err.code == 401:
+                disconnect_warn = 'Invalid auth.'
+                self.close_requested = True
+                # Should we notify user?
 
         except Exception:  # pylint: disable=broad-except
             if not self.close_requested:
@@ -131,7 +134,7 @@ class CloudIoT:
 
         finally:
             if disconnect_warn is not None:
-                _LOGGER.warning('Connection closed: %s', disconnect_warn)
+                _LOGGER.warning('Connection closed : %s', disconnect_warn)
 
             if remove_hass_stop_listener is not None:
                 remove_hass_stop_listener()
