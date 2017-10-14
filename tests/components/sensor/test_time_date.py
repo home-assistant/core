@@ -1,6 +1,8 @@
 """The tests for Kira sensor platform."""
 import unittest
 
+from components.sensor.time_date import (ATTR_HOUR, ATTR_MINUTE,
+                                         ATTR_YEAR, ATTR_MONTH, ATTR_DAY)
 from homeassistant.components.sensor import time_date as time_date
 import homeassistant.util.dt as dt_util
 
@@ -55,6 +57,56 @@ class TestTimeDateSensor(unittest.TestCase):
         device = time_date.TimeDateSensor(self.hass, 'time_date')
         next_time = device.get_next_interval()
         assert next_time > now
+
+    def test_attributes(self):
+        """Test attributes of sensors."""
+        now = dt_util.utc_from_timestamp(1495068856)
+        device = time_date.TimeDateSensor(self.hass, 'time')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 2
+        assert attrs[ATTR_HOUR] == 0
+        assert attrs[ATTR_MINUTE] == 54
+
+        device = time_date.TimeDateSensor(self.hass, 'date')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 3
+        assert attrs[ATTR_YEAR] == 2017
+        assert attrs[ATTR_MONTH] == 5
+        assert attrs[ATTR_DAY] == 18
+
+        device = time_date.TimeDateSensor(self.hass, 'time_date')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 5
+        assert attrs[ATTR_YEAR] == 2017
+        assert attrs[ATTR_MONTH] == 5
+        assert attrs[ATTR_DAY] == 18
+        assert attrs[ATTR_HOUR] == 0
+        assert attrs[ATTR_MINUTE] == 54
+
+        device = time_date.TimeDateSensor(self.hass, 'date_time')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 5
+        assert attrs[ATTR_YEAR] == 2017
+        assert attrs[ATTR_MONTH] == 5
+        assert attrs[ATTR_DAY] == 18
+        assert attrs[ATTR_HOUR] == 0
+        assert attrs[ATTR_MINUTE] == 54
+
+        device = time_date.TimeDateSensor(self.hass, 'time_utc')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 2
+        assert attrs[ATTR_HOUR] == 0
+        assert attrs[ATTR_MINUTE] == 54
+
+        device = time_date.TimeDateSensor(self.hass, 'beat')
+        device._update_internal_state(now)
+        attrs = device.state_attributes
+        assert len(attrs) == 0
 
     def test_states(self):
         """Test states of sensors."""
