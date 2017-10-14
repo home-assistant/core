@@ -21,10 +21,10 @@ DEFAULT_NAME = 'Vultr_Server'
 DEPENDENCIES = ['vultr']
 
 MONITORED_CONDITIONS = {
-    'current_bandwidth_gb': ['Current Bandwidth Used', 'GB',
-                             'mdi:chart-histogram'],
-    'pending_charges': ['Pending Charges', 'US$',
-                        'mdi:currency-usd']
+    ATTR_CURRENT_BANDWIDTH_GB: ['Current Bandwidth Used', 'GB',
+                                'mdi:chart-histogram'],
+    ATTR_PENDING_CHARGES: ['Pending Charges', 'US$',
+                           'mdi:currency-usd']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -66,7 +66,6 @@ class VultrSensor(Entity):
         self._var_name = variable_info[0]
         self._var_units = variable_info[1]
         self._var_icon = variable_info[2]
-
 
     @property
     def name(self):

@@ -39,7 +39,7 @@ DATA_VULTR = 'data_vultr'
 VULTR_PLATFORMS = ['binary_sensor', 'sensor']
 DOMAIN = 'vultr'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

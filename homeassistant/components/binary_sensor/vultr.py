@@ -64,7 +64,7 @@ class VultrBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.data.get('status') == 'active'
+        return self.data.get('power_status') == 'running'
 
     @property
     def device_state_attributes(self):
@@ -84,8 +84,6 @@ class VultrBinarySensor(BinarySensorDevice):
             ATTR_REGION: self.data.get('location'),
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
-
-        return {}
 
     def update(self):
         """Update state of sensor."""
