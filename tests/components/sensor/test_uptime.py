@@ -51,6 +51,7 @@ class TestUptimeSensor(unittest.TestCase):
     def test_uptime_sensor_days_output(self):
         """Test uptime sensor output data."""
         sensor = UptimeSensor('test', 'days')
+        self.assertEqual(sensor.unit_of_measurement, 'days')
         new_time = sensor.initial + timedelta(days=1)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             sensor.update()
@@ -63,6 +64,7 @@ class TestUptimeSensor(unittest.TestCase):
     def test_uptime_sensor_hours_output(self):
         """Test uptime sensor output data."""
         sensor = UptimeSensor('test', 'hours')
+        self.assertEqual(sensor.unit_of_measurement, 'hours')
         new_time = sensor.initial + timedelta(hours=16)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             sensor.update()
