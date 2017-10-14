@@ -12,7 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,25 +22,28 @@ DEFAULT_NAME = 'Uptime'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='days'):
+        vol.All(cv.string, vol.In(['hours', 'days']))
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Version sensor platform."""
+    """Set up the uptime sensor platform."""
     name = config.get(CONF_NAME)
-    add_devices([UptimeSensor(name)])
+    units = config.get(CONF_NAME)
+    add_devices([UptimeSensor(name, units)])
 
 
 class UptimeSensor(Entity):
     """Representation of an uptime sensor."""
 
-    def __init__(self, name):
-        """Initialize the Version sensor."""
+    def __init__(self, name, units):
+        """Initialize the uptime sensor."""
         self._name = name
         self._icon = 'mdi:clock'
-        self._units = 'days'
+        self._units = units
         self.initial = dt_util.now()
-        self._state = 0
+        self._state = None
 
     @property
     def name(self):
@@ -64,6 +68,9 @@ class UptimeSensor(Entity):
     def update(self):
         """Update the state of the sensor."""
         delta = dt_util.now() - self.initial
-        delta_in_days = delta.total_seconds() / (3600 * 24)
-        self._state = round(delta_in_days, 2)
-        _LOGGER.debug("New value: %s", delta_in_days)
+        div_factor = 3600
+        if self.unit_of_measurement == 'days':
+            div_factor *= 24
+        delta = delta.total_seconds() / div_factor
+        self._state = round(delta, 2)
+        _LOGGER.debug("New value: %s", delta)

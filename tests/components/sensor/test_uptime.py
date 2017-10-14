@@ -38,9 +38,19 @@ class TestUptimeSensor(unittest.TestCase):
         }
         assert setup_component(self.hass, 'sensor', config)
 
-    def test_uptime_sensor_output(self):
+    def test_uptime_sensor_config_hours(self):
+        """Test uptime sensor with hours defined in config."""
+        config = {
+            'sensor': {
+                'platform': 'uptime',
+                'unit_of_measurement': 'hours',
+            }
+        }
+        assert setup_component(self.hass, 'sensor', config)
+
+    def test_uptime_sensor_days_output(self):
         """Test uptime sensor output data."""
-        sensor = UptimeSensor('test')
+        sensor = UptimeSensor('test', 'days')
         new_time = sensor.initial + timedelta(days=1)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             sensor.update()
@@ -49,3 +59,15 @@ class TestUptimeSensor(unittest.TestCase):
         with patch('homeassistant.util.dt.now', return_value=new_time):
             sensor.update()
             self.assertEqual(sensor.state, 111.50)
+
+    def test_uptime_sensor_hours_output(self):
+        """Test uptime sensor output data."""
+        sensor = UptimeSensor('test', 'hours')
+        new_time = sensor.initial + timedelta(hours=16)
+        with patch('homeassistant.util.dt.now', return_value=new_time):
+            sensor.update()
+            self.assertEqual(sensor.state, 16.00)
+        new_time = sensor.initial + timedelta(hours=72.499)
+        with patch('homeassistant.util.dt.now', return_value=new_time):
+            sensor.update()
+            self.assertEqual(sensor.state, 72.50)
