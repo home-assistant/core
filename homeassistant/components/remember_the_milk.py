@@ -48,6 +48,7 @@ SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
 })
 
+
 def setup(hass, config):
     """Set up the remember_the_milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
@@ -55,7 +56,6 @@ def setup(hass, config):
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml')).get(DOMAIN)
-
 
     stored_rtm_config = RememberTheMilkConfiguration()
     for account_name, rtm_config in config[DOMAIN].items():
