@@ -7,7 +7,7 @@ https://home-assistant.io/components/plant/
 import logging
 import asyncio
 from datetime import datetime, timedelta
-
+from collections import deque
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -33,6 +33,7 @@ READING_BRIGHTNESS = 'brightness'
 
 ATTR_PROBLEM = 'problem'
 PROBLEM_NONE = 'none'
+ATTR_MAX_BRIGHTNESS_HISTORY = 'max. brightness in history'
 
 CONF_MIN_BATTERY_LEVEL = 'min_' + READING_BATTERY
 CONF_MIN_TEMPERATURE = 'min_' + READING_TEMPERATURE
@@ -76,7 +77,7 @@ PLANT_SCHEMA = vol.Schema({
 })
 
 DOMAIN = 'plant'
-DEPENDENCIES = ['zone', 'group', 'recorder']
+DEPENDENCIES = ['zone', 'group']
 
 GROUP_NAME_ALL_PLANTS = 'all plants'
 ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format('all_plants')
@@ -104,7 +105,7 @@ def async_setup(hass, config):
             hass.components.group.set_group(group_name)
             _LOGGER.debug("Added plant group %s for plant %s",
                           group_name, plant_name)
-        entity = Plant(plant_name, plant_config, group_name)
+        entity = Plant(hass, plant_name, plant_config, group_name)
         sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
         _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
@@ -153,8 +154,9 @@ class Plant(Entity):
         }
     }
 
-    def __init__(self, name, config, group_name=None):
+    def __init__(self, hass, name, config, group_name=None):
         """Initialize the Plant component."""
+        self._hass = hass
         self._config = config
         self._group_name = group_name
         self._sensormap = dict()
@@ -173,11 +175,13 @@ class Plant(Entity):
         self._problems = PROBLEM_NONE
 
         self._conf_check_days = 3  # default check interval: 3 days
-        self._brightness_updated = True  # on startup check the brightness
-        self._max_brightness_over_days = None
-        self._brightness_problem = []
         if CONF_CHECK_DAYS in self._config:
             self._conf_check_days = self._config[CONF_CHECK_DAYS]
+        self._brightness_history = DailyHistory(self._conf_check_days)
+
+        if 'recorder' in self._hass.config.components:
+            # only use the database if it's configured
+            hass.async_add_job(self._load_history_from_db)
 
     @callback
     def state_changed(self, entity_id, _, new_state):
@@ -202,7 +206,8 @@ class Plant(Entity):
             self._conductivity = int(value)
         elif reading == READING_BRIGHTNESS:
             self._brightness = int(value)
-            self._brightness_updated = True
+            self._brightness_history.add_measurement(self._brightness,
+                                                     new_state.last_updated)
         else:
             raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
@@ -210,23 +215,19 @@ class Plant(Entity):
 
     def _update_state(self):
         """Update the state of the class based sensor data."""
-        self.check_brightness()
-        result = list(self._brightness_problem)
+        result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
             value = getattr(self, '_{}'.format(sensor_name))
             if value is not None:
-                if 'min' in params and params['min'] in self._config:
-                    min_value = self._config[params['min']]
-                    if value < min_value:
-                        result.append('{} low'.format(sensor_name))
-                        self._icon = params['icon']
+                if sensor_name == READING_BRIGHTNESS:
+                    result.append(self._check_min(
+                        sensor_name, self._brightness_history.max, params))
+                else:
+                    result.append(self._check_min(sensor_name, value, params))
+                result.append(self._check_max(sensor_name, value, params))
 
-                if 'max' in params and params['max'] in self._config:
-                    max_value = self._config[params['max']]
-                    if value > max_value:
-                        result.append('{} high'.format(sensor_name))
-                        self._icon = params['icon']
+        result = filter(lambda x: x is not None, result)
 
         if result:
             self._state = STATE_PROBLEM
@@ -238,56 +239,50 @@ class Plant(Entity):
         _LOGGER.debug("New data processed")
         self.async_schedule_update_ha_state()
 
-    def check_brightness(self):
-        """
-        Check brightness levels over a history of several days.
+    def _check_min(self, sensor_name, value, params):
+        """If configured, check the value against the defined minimum value."""
+        if 'min' in params and params['min'] in self._config:
+            min_value = self._config[params['min']]
+            if value < min_value:
+                self._icon = params['icon']
+                return '{} low'.format(sensor_name)
 
-        It usually does not make sense to check the minimum brightness now as
-        it might be night. So we need to check this over several days to see if
-        one of those days was bright enough.
+    def _check_max(self, sensor_name, value, params):
+        """If configured, check the value against the defined maximum value."""
+        if 'max' in params and params['max'] in self._config:
+            max_value = self._config[params['max']]
+            if value > max_value:
+                self._icon = params['icon']
+                return '{} high'.format(sensor_name)
+        return None
 
-        As this operation is quite expensive, we should not run it so
-        frequently. Thus we only check when the brightness really changed
-        (ie self._brightness_updated == True). The result of the last check
-        is cached in self._brightness_problem.
+    @asyncio.coroutine
+    def _load_history_from_db(self):
+        """Load the history of the brightness values from the database.
+
+        This only needs to be done once during startup.
         """
         from homeassistant.components.recorder.models import States
-
-        if CONF_MIN_BRIGHTNESS not in self._config or \
-                not self._brightness_updated:
-            # only run this if there is a minimum brightness level defined
-            return
-
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=self._conf_check_days)
-        _LOGGER.debug("Checking brightness history")
+        _LOGGER.debug("initializing values for %s from the database",
+                      self._name)
+        start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap[READING_BRIGHTNESS]
-        brightness_values = []
-        with session_scope(hass=self.hass) as session:
+        with session_scope(hass=self._hass) as session:
             query = session.query(States).filter(
                 (States.entity_id == entity_id.lower()) and
-                (States.last_updated > start_date) and
-                (States.last_updated <= end_date)
-            )
+                (States.last_updated > start_date)
+            ).order_by(States.last_updated.asc())
             states = execute(query)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states
                 # only keep real values
                 try:
-                    brightness_values.append(int(state.state))
+                    self._brightness_history.add_measurement(
+                        int(state.state), state.last_updated)
                 except ValueError:
                     pass
-        self._brightness_updated = False
-        self._max_brightness_over_days = max(brightness_values)
-        if self._max_brightness_over_days < self._config[CONF_MIN_BRIGHTNESS]:
-            self._brightness_problem = [
-                'maximum brightness of {} lux too low over last '
-                '{} days'.format(
-                    self._max_brightness_over_days, self._conf_check_days)
-            ]
-        else:
-            self._brightness_problem = []
+        _LOGGER.debug("initializing from database completed")
 
     @property
     def should_poll(self):
@@ -319,9 +314,8 @@ class Plant(Entity):
         for reading in self._sensormap.values():
             attrib[reading] = getattr(self, '_{}'.format(reading))
 
-        if self._max_brightness_over_days is not None:
-            attrib['max brightness over {} days'.format(
-                self._conf_check_days)] = self._max_brightness_over_days
+        if self._brightness_history.max is not None:
+            attrib[ATTR_MAX_BRIGHTNESS_HISTORY] = self._brightness_history.max
 
         return attrib
 
@@ -337,3 +331,43 @@ class Plant(Entity):
             members.extend(list(self._config[CONF_SENSORS].values()))
             self.hass.components.group.set_group(self._group_name,
                                                  entity_ids=members)
+
+
+class DailyHistory(object):
+    """Stores one measurement per day for a maximum number of days.
+
+    At the moment only the maximum value per day is kept.
+    """
+
+    def __init__(self, max_length):
+        self.max_length = max_length
+        self._days = None
+        self._max_dict = dict()
+        self.max = None
+
+    def add_measurement(self, value, timestamp=datetime.now()):
+        """Add a new measurement for a certain day"""
+        day = timestamp.date()
+        if self._days is None:
+            self._days = deque()
+            self._add_day(day, value)
+        else:
+            current_day = self._days[-1]
+            if day == current_day:
+                self._max_dict[day] = max(value, self._max_dict[day])
+            elif day > current_day:
+                self._add_day(day, value)
+            else:
+                _LOGGER.warning('received old measurement, not storing it!')
+
+        self.max = max(self._max_dict.values())
+
+    def _add_day(self, day, value):
+        """Add a new day to the history.
+
+         Deletes the oldest day, if the queue becomes too long"""
+        if len(self._days) == self.max_length:
+            oldest = self._days.popleft()
+            del self._max_dict[oldest]
+        self._days.append(day)
+        self._max_dict[day] = value
