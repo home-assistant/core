@@ -1,5 +1,5 @@
 """
-Support for HTTP_RGB lights.
+Support for http_rgb lights.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.http_rgb/
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the HTTP_RGB Light platform."""
+    """Set up the http_rgb Light platform."""
     import http_rgb
 
     name = config.get(CONF_NAME)
@@ -43,10 +43,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HttpRgbLight(Light):
-    """Representation of a HTTP_RGB! Light."""
+    """Representation of an http_rgb Light."""
 
     def __init__(self, light, name):
-        """Initialize a HTTP_RGB Light."""
+        """Initialize a http_rgb Light."""
         self._light = light
         self._name = name
         self._is_on = False
