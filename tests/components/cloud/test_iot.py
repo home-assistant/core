@@ -1,6 +1,5 @@
 """Test the cloud.iot module."""
 import asyncio
-import json
 from unittest.mock import patch, MagicMock, PropertyMock
 
 from aiohttp import WSMsgType
