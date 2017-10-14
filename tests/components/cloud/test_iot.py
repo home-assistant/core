@@ -16,8 +16,9 @@ def mock_client():
     client = MagicMock()
     type(client).closed = PropertyMock(side_effect=[False, True])
 
-    with patch('homeassistant.components.cloud.iot'
-               '.async_get_clientsession') as session:
+    with patch('asyncio.sleep'), \
+            patch('homeassistant.components.cloud.iot'
+                  '.async_get_clientsession') as session:
         session().ws_connect.return_value = mock_coro(client)
         yield client
 
