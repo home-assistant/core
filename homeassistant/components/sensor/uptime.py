@@ -4,7 +4,6 @@ Component to retrieve uptime for Home Assistant.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.uptime/
 """
-
 import asyncio
 import logging
 
@@ -33,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the uptime sensor platform."""
     name = config.get(CONF_NAME)
     units = config.get(CONF_UNIT_OF_MEASUREMENT)
-    async_add_devices([UptimeSensor(name, units)])
+    async_add_devices([UptimeSensor(name, units)], True)
 
 
 class UptimeSensor(Entity):
@@ -59,7 +58,7 @@ class UptimeSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Retrun the unit of measurement the value is expressed in."""
+        """Return the unit of measurement the value is expressed in."""
         return self._units
 
     @property
