@@ -7,6 +7,8 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.cloud import DOMAIN, auth_api
 
+from tests.common import mock_coro
+
 
 @pytest.fixture
 def cloud_client(hass, test_client):
@@ -133,6 +135,7 @@ def test_login_view_unknown_error(cloud_client):
 def test_logout_view(hass, cloud_client):
     """Test logging out."""
     cloud = hass.data['cloud'] = MagicMock()
+    cloud.logout.return_value = mock_coro()
     req = yield from cloud_client.post('/api/cloud/logout')
     assert req.status == 200
     data = yield from req.json()

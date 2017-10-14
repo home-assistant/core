@@ -79,7 +79,7 @@ class CloudLoginView(HomeAssistantView):
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             yield from hass.async_add_job(auth_api.login, cloud, data['email'],
                                           data['password'])
-            yield from hass.async_add_job(cloud.iot.connect)
+            hass.async_add_job(cloud.iot.connect)
 
         return self.json(_account_data(cloud))
 
@@ -98,7 +98,7 @@ class CloudLogoutView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(cloud.logout)
+            yield from cloud.logout()
 
         return self.json_message('ok')
 

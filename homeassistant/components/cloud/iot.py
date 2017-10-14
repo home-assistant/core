@@ -100,6 +100,10 @@ class CloudIoT:
                     result = yield from async_handle_message(
                         hass, self.cloud, msg['handler'], msg['payload'])
 
+                    # No response from handler
+                    if result is None:
+                        continue
+
                     response['payload'] = result
 
                 except UnknownHandler:
@@ -168,3 +172,19 @@ def async_handle_message(hass, cloud, handler_name, payload):
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
     return (yield from smart_home.async_handle_message(hass, payload))
+
+
+@HANDLERS.register('cloud')
+@asyncio.coroutine
+def async_handle_cloud(hass, cloud, payload):
+    """Handle an incoming IoT message for cloud component."""
+    action = payload['action']
+
+    if action == 'logout':
+        yield from cloud.logout()
+        _LOGGER.error('You have been logged out from Home Assistant cloud: %s',
+                      payload['reason'])
+    else:
+        _LOGGER.warning('Received unknown cloud action: %s', action)
+
+    return None

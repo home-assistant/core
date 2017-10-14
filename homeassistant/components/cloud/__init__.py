@@ -123,15 +123,18 @@ class Cloud:
         """Get config path inside cloud dir."""
         return self.hass.config.path(CONFIG_DIR, *parts)
 
+    @asyncio.coroutine
     def logout(self):
         """Close connection and remove all credentials."""
-        self.iot.disconnect()
+        yield from self.iot.disconnect()
 
         self.email = None
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
-        os.remove(self.user_info_path)
+
+        yield from self.hass.async_add_job(
+            lambda: os.remove(self.user_info_path))
 
     def write_user_info(self):
         """Write user info to a file."""

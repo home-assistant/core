@@ -80,7 +80,7 @@ def test_initialize_loads_info(mock_os, hass):
 
     cl = cloud.Cloud(hass, cloud.MODE_DEV)
     cl.iot = MagicMock()
-    cl.iot.connect.return_value = mock_coro(None)
+    cl.iot.connect.return_value = mock_coro()
 
     with patch('homeassistant.components.cloud.open', mopen, create=True):
         yield from cl.initialize()
@@ -93,12 +93,13 @@ def test_initialize_loads_info(mock_os, hass):
 
 
 @asyncio.coroutine
-def test_logout_clears_info(mock_os):
+def test_logout_clears_info(mock_os, hass):
     """Test logging out disconnects and removes info."""
-    cl = cloud.Cloud(MagicMock(), cloud.MODE_DEV)
+    cl = cloud.Cloud(hass, cloud.MODE_DEV)
     cl.iot = MagicMock()
+    cl.iot.disconnect.return_value = mock_coro()
 
-    cl.logout()
+    yield from cl.logout()
 
     assert len(cl.iot.disconnect.mock_calls) == 1
     assert cl.email is None
