@@ -401,7 +401,7 @@ lightify==1.0.6
 limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
-liveboxplaytv==1.4.9
+liveboxplaytv==1.5.0
 
 # homeassistant.components.lametric
 # homeassistant.components.notify.lametric
