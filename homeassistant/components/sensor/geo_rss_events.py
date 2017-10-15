@@ -12,6 +12,7 @@ https://home-assistant.io/components/sensor.geo_rss_events/
 import logging
 from collections import namedtuple
 from datetime import timedelta
+from functools import total_ordering
 
 import voluptuous as vol
 
@@ -27,10 +28,12 @@ REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CATEGORY = 'category'
-ATTR_DATE = 'date'
+ATTR_DATE_PUBLISHED = 'date_published'
+ATTR_DATE_UPDATED = 'date_updated'
 ATTR_DISTANCE = 'distance'
 ATTR_TITLE = 'title'
-VALID_SORT_BY = [ATTR_DATE, ATTR_DISTANCE, ATTR_TITLE]
+VALID_SORT_BY = [ATTR_DATE_PUBLISHED, ATTR_DATE_UPDATED, ATTR_DISTANCE,
+                 ATTR_TITLE]
 
 CONF_CATEGORIES = 'categories'
 CONF_RADIUS = 'radius'
@@ -98,6 +101,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
 
 
+@total_ordering
+class MinType(object):
+    """Represents an object type that is smaller than another when sorting."""
+
+    def __le__(self, other):
+        return True
+
+    def __eq__(self, other):
+        return self is other
+
+
 class GeoRssServiceSensor(Entity):
     """Representation of a Sensor."""
 
@@ -160,8 +174,11 @@ class GeoRssServiceSensor(Entity):
             self._state = len(my_events)
             # Sort events if configured to do so.
             if self._sort_by is not None:
+                min = MinType()
                 my_events = sorted(my_events,
-                                   key=lambda event: event[self._sort_by],
+                                   key=lambda event:
+                                   min if event[self._sort_by] is None
+                                   else event[self._sort_by],
                                    reverse=self._sort_reverse)
             # And now compute the attributes from the filtered events.
             matrix = {}
@@ -208,19 +225,17 @@ class GeoRssServiceData(object):
             if geometry:
                 distance = self.calculate_distance_to_geometry(geometry)
                 if distance <= self._radius_in_km:
-                    # Extract last update date, fall back to publication date.
-                    pup_date_candidate = None
-                    if hasattr(entry, 'updated_parsed'):
-                        pup_date_candidate = entry.updated_parsed
-                    elif hasattr(entry, 'published_parsed'):
-                        pup_date_candidate = entry.published_parsed
                     # Now create the event with attributes.
                     event = {
                         ATTR_CATEGORY: None if not hasattr(
                             entry, 'category') else entry.category,
                         ATTR_TITLE: None if not hasattr(
                             entry, 'title') else entry.title,
-                        ATTR_DATE: pup_date_candidate,
+                        ATTR_DATE_PUBLISHED: None if not hasattr(
+                            entry,
+                            'published_parsed') else entry.published_parsed,
+                        ATTR_DATE_UPDATED: None if not hasattr(
+                            entry, 'updated_parsed') else entry.updated_parsed,
                         ATTR_DISTANCE: distance
                     }
                     events.append(event)

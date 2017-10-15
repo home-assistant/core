@@ -8,6 +8,7 @@
             <description>Description 1</description>
             <category>Category 1</category>
             <pubDate>Sun, 30 Jul 2017 09:00:00 UTC</pubDate>
+            <updated>2017-07-30T09:12:00.000Z</updated>
             <guid>GUID 1</guid>
             <georss:point>-32.916667 151.75</georss:point>
         </item>
@@ -26,7 +27,8 @@
             <title>Title 3</title>
             <description>Description 3</description>
             <category>Category 3</category>
-            <pubDate>Sun, 30 Jul 2017 09:05:00 GMT</pubDate>
+            <pubDate>Sun, 30 Jul 2017 09:10:00 GMT</pubDate>
+            <updated>2017-07-30T09:11:00.000Z</updated>
             <guid>GUID 3</guid>
             <georss:polygon>
                 -33.283333 149.1
@@ -65,10 +67,10 @@
         </item>
         <!-- Entry with unsupported geometry - Line -->
         <item>
-            <title>Title 1</title>
+            <title>Title 7</title>
             <description>Description 1</description>
             <category>Category 1</category>
-            <pubDate>Sun, 30 Jul 2017 09:00:00 UTC</pubDate>
+            <pubDate>Sun, 30 Jul 2017 09:30:00 UTC</pubDate>
             <guid>GUID 1</guid>
             <georss:line>45.256 -110.45 46.46 -109.48 43.84 -109.86</georss:line>
         </item>
