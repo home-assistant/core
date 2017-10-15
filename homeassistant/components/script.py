@@ -29,7 +29,6 @@ DOMAIN = 'script'
 DEPENDENCIES = ['group']
 
 ATTR_CAN_CANCEL = 'can_cancel'
-ATTR_LAST_ACTION = 'last_action'
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 
@@ -200,8 +199,6 @@ class ScriptEntity(ToggleEntity):
         attrs[ATTR_LAST_TRIGGERED] = self.script.last_triggered
         if self.script.can_cancel:
             attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
-        if self.script.last_action:
-            attrs[ATTR_LAST_ACTION] = self.script.last_action
         return attrs
 
     @property
