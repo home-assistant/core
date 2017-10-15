@@ -14,6 +14,9 @@ astral==1.4
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
 
+# homeassistant.components.tradfri
+--process-dependency-links pytradfri[async]==3.0
+
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
@@ -831,9 +834,6 @@ pythonegardia==1.0.22
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
-
-# homeassistant.components.tradfri
-pytradfri[async]==3.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
