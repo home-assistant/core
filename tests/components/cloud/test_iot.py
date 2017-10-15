@@ -159,8 +159,7 @@ def test_cloud_getting_disconnected_by_server(mock_client, caplog):
     yield from conn.connect()
 
     assert 'Connection closed: Closed by server' in caplog.text
-    assert ('CloudIoT.connect' in
-            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+    assert 'connect' in str(cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
@@ -175,8 +174,7 @@ def test_cloud_receiving_bytes(mock_client, caplog):
     yield from conn.connect()
 
     assert 'Connection closed: Received non-Text message' in caplog.text
-    assert ('CloudIoT.connect' in
-            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+    assert 'connect' in str(cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
@@ -192,8 +190,7 @@ def test_cloud_sending_invalid_json(mock_client, caplog):
     yield from conn.connect()
 
     assert 'Connection closed: Received invalid JSON.' in caplog.text
-    assert ('CloudIoT.connect' in
-            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+    assert 'connect' in str(cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
@@ -206,8 +203,7 @@ def test_cloud_check_token_raising(mock_client, caplog):
     yield from conn.connect()
 
     assert 'Unable to connect: Unable to refresh token.' in caplog.text
-    assert ('CloudIoT.connect' in
-            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+    assert 'connect' in str(cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
