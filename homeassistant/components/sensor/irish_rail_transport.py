@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = IrishRailTransportData(irish_rail, station, direction,
                                   destination, stops_at)
     add_devices([IrishRailTransportSensor(data, station, direction,
-                                          destination, stops_at, name)])
+                                          destination, stops_at, name), True])
 
 
 class IrishRailTransportSensor(Entity):
