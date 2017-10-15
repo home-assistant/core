@@ -92,7 +92,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     self._client.get_current_channel_image(img_size=300)
                 self.refresh_channel_list()
         except requests.ConnectionError:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
     @property
     def name(self):
