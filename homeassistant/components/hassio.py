@@ -17,7 +17,8 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT
+from homeassistant.const import (
+    CONTENT_TYPE_TEXT_PLAIN, SERVER_PORT, CONF_TIME_ZONE)
 from homeassistant.components.http import (
     HomeAssistantView, KEY_AUTHENTICATED, CONF_API_PASSWORD, CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE)
@@ -33,6 +34,8 @@ SERVICE_ADDON_START = 'addon_start'
 SERVICE_ADDON_STOP = 'addon_stop'
 SERVICE_ADDON_RESTART = 'addon_restart'
 SERVICE_ADDON_STDIN = 'addon_stdin'
+SERVICE_HOST_SHUTDOWN = 'host_shutdown'
+SERVICE_HOST_REBOOT = 'host_reboot'
 
 ATTR_ADDON = 'addon'
 ATTR_INPUT = 'input'
@@ -63,6 +66,8 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_STOP: ('/addons/{addon}/stop', SCHEMA_ADDON),
     SERVICE_ADDON_RESTART: ('/addons/{addon}/restart', SCHEMA_ADDON),
     SERVICE_ADDON_STDIN: ('/addons/{addon}/stdin', SCHEMA_ADDON_STDIN),
+    SERVICE_HOST_SHUTDOWN: ('/host/shutdown', None),
+    SERVICE_HOST_REBOOT: ('/host/reboot', None),
 }
 
 
@@ -89,13 +94,16 @@ def async_setup(hass, config):
                                 'mdi:access-point-network')
 
     if 'http' in config:
-        yield from hassio.update_hass_api(config.get('http'))
+        yield from hassio.update_hass_api(config['http'])
+
+    if 'homeassistant' in config:
+        yield from hassio.update_hass_timezone(config['homeassistant'])
 
     @asyncio.coroutine
     def async_service_handler(service):
         """Handle service calls for HassIO."""
         api_command = MAP_SERVICE_API[service.service][0]
-        addon = service.data[ATTR_ADDON]
+        addon = service.data.get(ATTR_ADDON)
         data = service.data[ATTR_INPUT] if ATTR_INPUT in service.data else None
 
         yield from hassio.send_command(
@@ -137,6 +145,15 @@ class HassIO(object):
         }
 
         return self.send_command("/homeassistant/options", payload=options)
+
+    def update_hass_timezone(self, core_config):
+        """Update Home-Assistant timezone data on HassIO.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/supervisor/options", payload={
+            'timezone': core_config.get(CONF_TIME_ZONE)
+        })
 
     @asyncio.coroutine
     def send_command(self, command, method="post", payload=None, timeout=10):
