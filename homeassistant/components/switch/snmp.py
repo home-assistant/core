@@ -59,48 +59,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    data = SnmpCommand(host, port, community, baseoid, version, payload_on,
-                       payload_off)
-    add_devices([SnmpSwitch(data, name)], True)
+    add_devices([SnmpSwitch(name, host, port, community,
+                            baseoid, version, payload_on,
+                            payload_off)], True)
 
 
 class SnmpSwitch(SwitchDevice):
     """Represents a SNMP switch."""
 
-    def __init__(self, snmp_command, name):
+    def __init__(self, name, host, port, community,
+                 baseoid, version, payload_on, payload_off):
         """Initialize the switch."""
-        self._cmd = snmp_command
         self._name = name
-
-    def turn_on(self):
-        """Turn on the switch."""
-        self._cmd.turn_on()
-
-    def turn_off(self):
-        """Turn off the switch."""
-        self._cmd.turn_off()
-
-    def update(self):
-        """Update the state."""
-        self._cmd.update()
-
-    @property
-    def name(self):
-        """Return the switch's name."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on; False otherwise."""
-        return self._cmd.state
-
-
-class SnmpCommand(object):
-    """Turn on/off the switch and update the states."""
-
-    def __init__(self, host, port, community, baseoid,
-                 version, payload_on, payload_off):
-        """Initialize the data object."""
         self._host = host
         self._port = port
         self._community = community
@@ -110,11 +80,25 @@ class SnmpCommand(object):
         self._payload_on = payload_on
         self._payload_off = payload_off
 
+    def turn_on(self):
+        """Turn on the switch."""
+        from pyasn1.type.univ import (Integer)
+
+        self._set(Integer(self._payload_on))
+
+    def turn_off(self):
+        """Turn off the switch."""
+        from pyasn1.type.univ import (Integer)
+
+        self._set(Integer(self._payload_off))
+
     def update(self):
-        """Get the latest data from the remote SNMP capable host."""
+        """Update the state."""
         from pysnmp.hlapi import (
             getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
+
+        from pyasn1.type.univ import (Integer)
 
         request = getCmd(
             SnmpEngine(),
@@ -133,55 +117,34 @@ class SnmpCommand(object):
                           errindex and restable[-1][int(errindex) - 1] or '?')
         else:
             for resrow in restable:
-                if resrow[-1] == SnmpCommand._typecast(self._payload_on):
+                if resrow[-1] == Integer(self._payload_on):
                     self._state = True
-                elif resrow[-1] == SnmpCommand._typecast(self._payload_off):
+                elif resrow[-1] == Integer(self._payload_off):
                     self._state = False
                 else:
                     self._state = None
 
-    def turn_on(self):
-        """Send SNMP set command to the switch to turn it on."""
-        from pysnmp.hlapi import (
-            setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-            ObjectType, ObjectIdentity)
-
-        request = setCmd(
-            SnmpEngine(),
-            CommunityData(self._community, mpModel=self._version),
-            UdpTransportTarget((self._host, self._port)),
-            ContextData(),
-            ObjectType(ObjectIdentity(self._baseoid),
-                       SnmpCommand._typecast(self._payload_on))
-        )
-
-        next(request)
-
-    def turn_off(self):
-        """Send SNMP set command to the switch to turn it off."""
-        from pysnmp.hlapi import (
-            setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-            ObjectType, ObjectIdentity)
-
-        request = setCmd(
-            SnmpEngine(),
-            CommunityData(self._community, mpModel=self._version),
-            UdpTransportTarget((self._host, self._port)),
-            ContextData(),
-            ObjectType(ObjectIdentity(self._baseoid),
-                       SnmpCommand._typecast(self._payload_off))
-        )
-
-        next(request)
+    @property
+    def name(self):
+        """Return the switch's name."""
+        return self._name
 
     @property
-    def state(self):
-        """Return the switch's state."""
+    def is_on(self):
+        """Return true if switch is on; False if off. None if unknown."""
         return self._state
 
-    @staticmethod
-    def _typecast(payload):
-        """Convert from python to SNMP type."""
-        from pyasn1.type.univ import (Integer)
+    def _set(self, value):
+        from pysnmp.hlapi import (
+            setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
+            ObjectType, ObjectIdentity)
 
-        return Integer(payload)
+        request = setCmd(
+            SnmpEngine(),
+            CommunityData(self._community, mpModel=self._version),
+            UdpTransportTarget((self._host, self._port)),
+            ContextData(),
+            ObjectType(ObjectIdentity(self._baseoid), value)
+        )
+
+        next(request)
