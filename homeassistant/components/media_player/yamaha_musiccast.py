@@ -201,21 +201,8 @@ class YamahaDevice(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the device."""
         _LOGGER.debug("update: %s", self.entity_id)
-
-        # call from constructor setup_platform()
-        if not self.entity_id:
-            _LOGGER.debug("First run")
-            self._recv.update_status()
-            self._zone.update_status()
-        # call from regular polling
-        else:
-            # update_status_timer was set before
-            if self._recv.update_status_timer:
-                # e.g. computer was suspended, while hass was running
-                if not self._recv.update_status_timer.is_alive():
-                    _LOGGER.debug("Reinitializing")
-                    self._recv.update_status()
-                    self._zone.update_status()
+        self._recv.update_status()
+        self._zone.update_status()
 
     def turn_on(self):
         """Turn on specified media player or all."""
