@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
-REQUIREMENTS = ['paho-mqtt==1.3.0']
+REQUIREMENTS = ['paho-mqtt==1.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
