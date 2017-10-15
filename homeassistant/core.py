@@ -565,7 +565,7 @@ class State(object):
                 'last_updated': self.last_updated}
 
     def seen(self):
-        """Update the last_seen attribute without changing others"""
+        """Update the last_seen attribute without changing others."""
         self.last_seen = dt_util.utcnow()
 
     @classmethod
