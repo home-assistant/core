@@ -46,6 +46,7 @@ CONF_ADSVAR = 'adsvar'
 CONF_ADSTYPE = 'adstype'
 CONF_ADS_USE_NOTIFY = 'use_notify'
 CONF_ADS_POLL_INTERVAL = 'poll_interval'
+CONF_ADS_FACTOR = 'factor'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

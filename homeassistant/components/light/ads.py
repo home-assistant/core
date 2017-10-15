@@ -9,13 +9,13 @@ import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL, PLCTYPE_UINT
+from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL, \
+    PLCTYPE_UINT, CONF_ADSVAR
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
 DEFAULT_NAME = 'ADS Light'
-CONF_ADSVAR = 'adsvar'
 CONF_ADSVAR_BRIGHTNESS = 'adsvar_brightness'
 SUPPORT_ADS = SUPPORT_BRIGHTNESS
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

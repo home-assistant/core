@@ -68,6 +68,10 @@ class AdsBinarySensor(BinarySensorDevice):
         self.use_notify = use_notify
         self.poll_interval = poll_interval
 
+        # make first poll if notifications disabled
+        if not self.use_notify:
+            self.poll(None)
+
     @property
     def name(self):
         """ Return the default name of the binary sensor. """

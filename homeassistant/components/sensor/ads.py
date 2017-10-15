@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.components import ads
 from homeassistant.components.ads import CONF_ADSVAR, CONF_ADSTYPE, \
-    CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL
+    CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL, CONF_ADS_FACTOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ),
     vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
     vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
+    vol.Optional(CONF_ADS_FACTOR, default=1): cv.positive_int,
 })
 
 
@@ -43,9 +44,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     use_notify = config.get(CONF_ADS_USE_NOTIFY)
     poll_interval = config.get(CONF_ADS_POLL_INTERVAL)
+    factor = config.get(CONF_ADS_FACTOR)
 
     entity = AdsSensor(ads_hub, adsvar, adstype, name,
-                       unit_of_measurement, use_notify, poll_interval)
+                       unit_of_measurement, use_notify, poll_interval, factor)
 
     add_devices([entity])
 
@@ -60,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AdsSensor(Entity):
 
     def __init__(self, ads_hub, adsvar, adstype, devname, unit_of_measurement,
-                 use_notify, poll_interval):
+                 use_notify, poll_interval, factor):
         self._ads_hub = ads_hub
         self._name = devname
         self._value = 0
@@ -69,6 +71,11 @@ class AdsSensor(Entity):
         self.adstype = adstype
         self.use_notify = use_notify
         self.poll_interval = poll_interval
+        self.factor = factor
+
+        # make first poll if notifications disabled
+        if not self.use_notify:
+            self.poll(None)
 
     @property
     def name(self):
@@ -86,7 +93,7 @@ class AdsSensor(Entity):
     def callback(self, name, value):
         _LOGGER.debug('Variable "{0}" changed its value to "{1}"'
                       .format(name, value))
-        self._value = value
+        self._value = value / self.factor
         try:
             self.schedule_update_ha_state()
         except AttributeError:
@@ -95,7 +102,7 @@ class AdsSensor(Entity):
     def poll(self, now):
         self._value = self._ads_hub.read_by_name(
             self.adsvar, ads.ADS_TYPEMAP[self.adstype]
-        )
+        ) / self.factor
 
         _LOGGER.debug('Polled value for bool variable {0}: {1}'
                       .format(self.adsvar, self._value))
@@ -104,4 +111,3 @@ class AdsSensor(Entity):
             self.schedule_update_ha_state()
         except AttributeError:
             pass
-
