@@ -71,8 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
 APPLE_TV_SCAN_SCHEMA = vol.Schema({})
 
 APPLE_TV_AUTHENTICATE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-})
+    ATTR_ENTITY_ID: cv.entity_ids, })
 
 
 def request_configuration(hass, config, atv, credentials):
