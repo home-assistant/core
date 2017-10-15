@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['--process-dependency-links pytradfri[async]==3.0']
+REQUIREMENTS = ['pytradfri[async]==3.0 --process-dependency-links']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
