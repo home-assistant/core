@@ -35,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SETPOINT_ADDRESS): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
     vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
+    vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
