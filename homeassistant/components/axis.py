@@ -151,6 +151,7 @@ def request_configuration(hass, config, name, host, serialnumber):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Common setup for Axis devices."""
+    @callback
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
@@ -308,7 +309,6 @@ class AxisDeviceEvent(Entity):
         self.location = event_config[ATTR_LOCATION]
         self.axis_event.callback = self._update_callback
 
-    @callback
     def _update_callback(self):
         """Update the sensor's state, if needed."""
         self.update()
