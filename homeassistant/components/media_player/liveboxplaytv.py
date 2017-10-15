@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['liveboxplaytv==1.4.9']
+REQUIREMENTS = ['liveboxplaytv==1.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     self._client.get_current_channel_image(img_size=300)
                 self.refresh_channel_list()
         except requests.ConnectionError:
-            self._state = STATE_OFF
+            self._state = STATE_UNKNOWN
 
     @property
     def name(self):
