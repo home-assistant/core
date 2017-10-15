@@ -2,10 +2,10 @@
 import asyncio
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from aiohttp import WSMsgType
+from aiohttp import WSMsgType, client_exceptions
 import pytest
 
-from homeassistant.components.cloud import iot
+from homeassistant.components.cloud import iot, auth_api
 from tests.common import mock_coro
 
 
@@ -145,3 +145,103 @@ def test_handling_core_messages(hass):
         'reason': 'Logged in at two places.'
     })
     assert len(cloud.logout.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_cloud_getting_disconnected_by_server(mock_client, caplog):
+    """Test server disconnecting instance."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.return_value = mock_coro(MagicMock(
+        type=WSMsgType.CLOSING,
+    ))
+
+    yield from conn.connect()
+
+    assert 'Connection closed: Closed by server' in caplog.text
+    assert ('CloudIoT.connect' in
+            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+
+
+@asyncio.coroutine
+def test_cloud_receiving_bytes(mock_client, caplog):
+    """Test server disconnecting instance."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.return_value = mock_coro(MagicMock(
+        type=WSMsgType.BINARY,
+    ))
+
+    yield from conn.connect()
+
+    assert 'Connection closed: Received non-Text message' in caplog.text
+    assert ('CloudIoT.connect' in
+            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+
+
+@asyncio.coroutine
+def test_cloud_sending_invalid_json(mock_client, caplog):
+    """Test cloud sending invalid JSON."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.return_value = mock_coro(MagicMock(
+        type=WSMsgType.TEXT,
+        json=MagicMock(side_effect=ValueError)
+    ))
+
+    yield from conn.connect()
+
+    assert 'Connection closed: Received invalid JSON.' in caplog.text
+    assert ('CloudIoT.connect' in
+            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+
+
+@asyncio.coroutine
+def test_cloud_check_token_raising(mock_client, caplog):
+    """Test cloud sending invalid JSON."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.side_effect = auth_api.CloudError
+
+    yield from conn.connect()
+
+    assert 'Unable to connect: Unable to refresh token.' in caplog.text
+    assert ('CloudIoT.connect' in
+            str(cloud.hass.async_add_job.mock_calls[-1][1][0]))
+
+
+@asyncio.coroutine
+def test_cloud_connect_invalid_auth(mock_client, caplog):
+    """Test invalid auth detected by server."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.side_effect = \
+        client_exceptions.WSServerHandshakeError(None, None, code=401)
+
+    yield from conn.connect()
+
+    assert 'Connection closed: Invalid auth.' in caplog.text
+
+
+@asyncio.coroutine
+def test_cloud_unable_to_connect(mock_client, caplog):
+    """Test unable to connect error."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.side_effect = client_exceptions.ClientError(None, None)
+
+    yield from conn.connect()
+
+    assert 'Unable to connect:' in caplog.text
+
+
+@asyncio.coroutine
+def test_cloud_random_exception(mock_client, caplog):
+    """Test random exception."""
+    cloud = MagicMock()
+    conn = iot.CloudIoT(cloud)
+    mock_client.receive.side_effect = Exception
+
+    yield from conn.connect()
+
+    assert 'Unexpected error' in caplog.text

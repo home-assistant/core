@@ -77,7 +77,7 @@ class CloudIoT:
 
                 if msg.type in (WSMsgType.ERROR, WSMsgType.CLOSED,
                                 WSMsgType.CLOSING):
-                    disconnect_warn = 'Connection closed by server'
+                    disconnect_warn = 'Closed by server'
                     break
 
                 elif msg.type != WSMsgType.TEXT:
@@ -119,14 +119,16 @@ class CloudIoT:
         except auth_api.CloudError:
             _LOGGER.warning('Unable to connect: Unable to refresh token.')
 
-        except client_exceptions.ClientError as err:
-            _LOGGER.warning('Unable to connect: %s', err)
-
         except client_exceptions.WSServerHandshakeError as err:
             if err.code == 401:
                 disconnect_warn = 'Invalid auth.'
                 self.close_requested = True
                 # Should we notify user?
+            else:
+                _LOGGER.warning('Unable to connect: %s', err)
+
+        except client_exceptions.ClientError as err:
+            _LOGGER.warning('Unable to connect: %s', err)
 
         except Exception:  # pylint: disable=broad-except
             if not self.close_requested:
@@ -134,7 +136,7 @@ class CloudIoT:
 
         finally:
             if disconnect_warn is not None:
-                _LOGGER.warning('Connection closed : %s', disconnect_warn)
+                _LOGGER.warning('Connection closed: %s', disconnect_warn)
 
             if remove_hass_stop_listener is not None:
                 remove_hass_stop_listener()
