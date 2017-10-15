@@ -149,7 +149,7 @@ statsd==3.2.1
 uvcclient==0.10.1
 
 # homeassistant.components.cloud
-warrant==0.2.0
+warrant==0.5.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
