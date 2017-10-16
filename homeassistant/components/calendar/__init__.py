@@ -65,7 +65,7 @@ def async_setup(hass, config):
             _LOGGER.exception("Error setting up platform %s", p_type)
             return
 
-        calendars.append(calendar)
+        calendars.extend(calendar)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
