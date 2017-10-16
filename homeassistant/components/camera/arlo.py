@@ -6,7 +6,7 @@ https://home-assistant.io/components/camera.arlo/
 """
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -14,12 +14,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_UNKNOWN
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(seconds=90)
 
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
@@ -31,15 +31,16 @@ ATTR_MOTION = 'motion_detection_sensitivity'
 ATTR_POWERSAVE = 'power_save_mode'
 ATTR_SIGNAL_STRENGTH = 'signal_strength'
 ATTR_UNSEEN_VIDEOS = 'unseen_videos'
+ATTR_LAST_REFRESH = 'last_refresh'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
 POWERSAVE_MODE_MAPPING = {
-    1: 'best_battery_life',
-    2: 'optimized',
-    3: 'best_video'
+    '1': 'best_battery_life',
+    '2': 'optimized',
+    '3': 'best_video'
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -73,6 +74,7 @@ class ArloCam(Camera):
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
+        self._last_refresh = None
         self.attrs = {}
 
     def camera_image(self):
@@ -113,6 +115,7 @@ class ArloCam(Camera):
             ATTR_POWERSAVE: self.attrs.get(ATTR_POWERSAVE),
             ATTR_SIGNAL_STRENGTH: self.attrs.get(ATTR_SIGNAL_STRENGTH),
             ATTR_UNSEEN_VIDEOS: self.attrs.get(ATTR_UNSEEN_VIDEOS),
+            ATTR_LAST_REFRESH: self.attrs.get(ATTR_LAST_REFRESH),
         }
 
     @property
@@ -158,15 +161,43 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
+    def clean_attr(self, attr):
+        """Return unknown if attribute is None (non-subscriptable)."""
+        return str(attr) if attr is not None else STATE_UNKNOWN
+
     def update(self):
         """Add an attribute-update task to the executor pool."""
-        self.attrs[ATTR_BATTERY_LEVEL] = self._camera.get_battery_level
-        self.attrs[ATTR_BRIGHTNESS] = self._camera.get_battery_level
-        self.attrs[ATTR_FLIPPED] = self._camera.get_flip_state,
-        self.attrs[ATTR_MIRRORED] = self._camera.get_mirror_state,
-        self.attrs[
-            ATTR_MOTION] = self._camera.get_motion_detection_sensitivity,
+        base_stations = self._camera._session.base_stations
+
+        if not base_stations:
+            return None
+
+        base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
+
+        base_stations[0].update()
+        self._camera.update()
+
+        battery_level = self.clean_attr(self._camera.get_battery_level)
+        brightness = self.clean_attr(self._camera.get_brightness)
+        flip_state = self.clean_attr(self._camera.get_flip_state)
+        mirror_state = self.clean_attr(self._camera.get_mirror_state)
+        motion_sensitivity = self.clean_attr(
+            self._camera.get_motion_detection_sensitivity)
+        powersave_mode = self.clean_attr(self._camera.get_powersave_mode)
+        signal_strength = self.clean_attr(self._camera.get_signal_strength)
+        unseen_videos = self.clean_attr(self._camera.unseen_videos)
+
+        self.attrs[ATTR_BATTERY_LEVEL] = battery_level
+        self.attrs[ATTR_BRIGHTNESS] = brightness
+        self.attrs[ATTR_FLIPPED] = flip_state
+        self.attrs[ATTR_MIRRORED] = mirror_state
+        self.attrs[ATTR_MOTION] = motion_sensitivity
         self.attrs[ATTR_POWERSAVE] = POWERSAVE_MODE_MAPPING[
-            self._camera.get_powersave_mode],
-        self.attrs[ATTR_SIGNAL_STRENGTH] = self._camera.get_signal_strength,
-        self.attrs[ATTR_UNSEEN_VIDEOS] = self._camera.unseen_videos
+            powersave_mode] if powersave_mode != STATE_UNKNOWN \
+            else STATE_UNKNOWN
+        self.attrs[ATTR_SIGNAL_STRENGTH] = signal_strength
+        self.attrs[ATTR_UNSEEN_VIDEOS] = unseen_videos
+
+        self.attrs[ATTR_LAST_REFRESH] = (datetime.fromtimestamp(
+            base_stations[0]._last_refresh).strftime("%A, %B %d, %Y %I:%M:%S")
+            if base_stations[0]._last_refresh else STATE_UNKNOWN)

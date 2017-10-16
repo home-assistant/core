@@ -29,7 +29,8 @@ SENSOR_TYPES = {
     'last_capture': ['Last', None, 'run-fast'],
     'total_cameras': ['Arlo Cameras', None, 'video'],
     'captured_today': ['Captured Today', None, 'file-video'],
-    'battery_level': ['Battery Level', '%', 'battery-50']
+    'battery_level': ['Battery Level', '%', 'battery-50'],
+    'signal_strength': ['Signal Strength', None, 'signal']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -97,6 +98,17 @@ class ArloSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        try:
+            base_stations = self._data._session.base_stations
+        except (AttributeError, IndexError):
+            return None
+
+        if not base_stations:
+            return None
+
+        base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
+
+        base_stations[0].update()
         self._data.update()
 
         if self._sensor_type == 'total_cameras':
@@ -118,6 +130,12 @@ class ArloSensor(Entity):
             except TypeError:
                 self._state = None
 
+        elif self._sensor_type == 'signal_strength':
+            try:
+                self._state = self._data.get_signal_strength
+            except TypeError:
+                self._state = None
+
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
@@ -128,7 +146,8 @@ class ArloSensor(Entity):
 
         if self._sensor_type == 'last_capture' or \
            self._sensor_type == 'captured_today' or \
-           self._sensor_type == 'battery_level':
+           self._sensor_type == 'battery_level' or \
+           self._sensor_type == 'signal_strength':
             attrs['model'] = self._data.model_id
 
         return attrs
