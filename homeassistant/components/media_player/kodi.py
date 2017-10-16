@@ -588,23 +588,29 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_turn_on(self):
         """Execute turn_on_action to turn on media player."""
-        self._flag_switch_off = False
         if self._turn_on_action is not None:
             yield from self._turn_on_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_on requested but turn_on_action is none")
+        if self._use_off_mode:
+            self._flag_switch_off = False
+            # Update HA state to reflect the new state
+            self.async_schedule_update_ha_state()
 
     @cmd
     @asyncio.coroutine
     def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
-        self._flag_switch_off = True
         if self._turn_off_action is not None:
             yield from self._turn_off_action.async_run(
                 variables={"entity_id": self.entity_id})
         else:
             _LOGGER.warning("turn_off requested but turn_off_action is none")
+        if self._use_off_mode:
+            self._flag_switch_off = True
+            # Update HA state to reflect the OFF state
+            self.async_schedule_update_ha_state()
 
     @cmd
     @asyncio.coroutine
