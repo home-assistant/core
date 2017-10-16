@@ -26,8 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CURRENT_CONSUMPTION = 'current_consumption'
 ATTR_DAILY_CONSUMPTION = 'daily_consumption'
 ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
-ATTR_VOLTAGE = 'voltage'
-ATTR_CURRENT = 'current'
 
 SUPPORT_TPLINK = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
 
