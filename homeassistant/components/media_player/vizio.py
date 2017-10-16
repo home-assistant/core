@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyvizio==0.0.2']
+REQUIREMENTS = ['pyvizio==0.0.2', 'urllib3=1.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,11 +75,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if config.get(CONF_SUPPRESS_WARNING):
-        import requests
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        import urllib3
+        from urllib3.exceptions import InsecureRequestWarning
         _LOGGER.warning('InsecureRequestWarning is disabled '
                         'because of Vizio platform configuration.')
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        urllib3.disable_warnings(InsecureRequestWarning)
     add_devices([device], True)
 
 

@@ -111,7 +111,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.4
+bellows==0.4.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -401,7 +401,7 @@ lightify==1.0.6
 limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
-liveboxplaytv==1.4.9
+liveboxplaytv==1.5.0
 
 # homeassistant.components.lametric
 # homeassistant.components.notify.lametric
@@ -477,7 +477,7 @@ orvibo==1.1.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.3.0
+paho-mqtt==1.3.1
 
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
@@ -806,7 +806,7 @@ python-synology==0.1.0
 python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==8.0.0
+python-telegram-bot==8.1.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -1020,6 +1020,9 @@ uber_rides==0.6.0
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
 
+# homeassistant.components.media_player.vizio
+urllib3==1.2.2
+
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
@@ -1059,7 +1062,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.knx
-xknx==0.7.14
+xknx==0.7.16
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.swiss_hydrological_data
