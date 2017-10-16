@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyvizio==0.0.2', 'urllib3=1.22']
+REQUIREMENTS = ['pyvizio==0.0.2', 'urllib3==1.22']
 
 _LOGGER = logging.getLogger(__name__)
 
