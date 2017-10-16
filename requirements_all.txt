@@ -324,7 +324,7 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.tradfri
-https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
+# https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
