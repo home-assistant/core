@@ -99,6 +99,7 @@ class ArloSensor(Entity):
     def update(self):
         """Get the latest data and updates the state."""
         try:
+            # pylint: disable=W0212
             base_stations = self._data._session.base_stations
         except (AttributeError, IndexError):
             return None
@@ -106,6 +107,7 @@ class ArloSensor(Entity):
         if not base_stations:
             return None
 
+        # pylint: disable=W0212
         base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
 
         base_stations[0].update()

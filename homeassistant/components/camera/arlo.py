@@ -161,17 +161,20 @@ class ArloCam(Camera):
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
 
-    def clean_attr(self, attr):
+    @staticmethod
+    def clean_attr(attr):
         """Return unknown if attribute is None (non-subscriptable)."""
         return str(attr) if attr is not None else STATE_UNKNOWN
 
     def update(self):
         """Add an attribute-update task to the executor pool."""
+        # pylint: disable=W0212
         base_stations = self._camera._session.base_stations
 
         if not base_stations:
             return None
 
+        # pylint: disable=W0212
         base_stations[0]._refresh_rate = SCAN_INTERVAL.total_seconds()
 
         base_stations[0].update()
@@ -198,6 +201,8 @@ class ArloCam(Camera):
         self.attrs[ATTR_SIGNAL_STRENGTH] = signal_strength
         self.attrs[ATTR_UNSEEN_VIDEOS] = unseen_videos
 
-        self.attrs[ATTR_LAST_REFRESH] = (datetime.fromtimestamp(
-            base_stations[0]._last_refresh).strftime("%A, %B %d, %Y %I:%M:%S")
-            if base_stations[0]._last_refresh else STATE_UNKNOWN)
+        # pylint: disable=W0212
+        self.attrs[ATTR_LAST_REFRESH] = datetime.fromtimestamp(
+            base_stations[0]._last_refresh).strftime(
+                "%A, %B %d, %Y %I:%M:%S") if base_stations[0]._last_refresh \
+                else STATE_UNKNOWN
