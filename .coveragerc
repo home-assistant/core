@@ -409,7 +409,7 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/clicksend.py
-    homeassistant/components/notify/clicksendaudio.py
+    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
