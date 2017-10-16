@@ -1,8 +1,8 @@
 """
-Support for monitoring the state of Digital Ocean droplets.
+Support for monitoring the state of Vultr subscriptions (VPS).
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.digital_ocean/
+https://home-assistant.io/components/binary_sensor.vultr/
 """
 import logging
 
@@ -19,7 +19,7 @@ from homeassistant.components.vultr import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Vultr_Server'
+DEFAULT_NAME = 'Vultr Server'
 DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -75,13 +75,13 @@ class VultrBinarySensor(BinarySensorDevice):
             ATTR_COST_PER_MONTH: self.data.get('cost_per_month'),
             ATTR_CREATED_AT: self.data.get('date_created'),
             ATTR_DISK: self.data.get('disk'),
-            ATTR_SUBSCRIPTION_ID: self.data.get('SUBID'),
-            ATTR_SUBSCRIPTION_NAME: self.data.get('label'),
             ATTR_IPV4_ADDRESS: self.data.get('main_ip'),
             ATTR_IPV6_ADDRESS: self.data.get('v6_main_ip'),
             ATTR_MEMORY: self.data.get('ram'),
             ATTR_OS: self.data.get('os'),
             ATTR_REGION: self.data.get('location'),
+            ATTR_SUBSCRIPTION_ID: self.data.get('SUBID'),
+            ATTR_SUBSCRIPTION_NAME: self.data.get('label'),
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
 

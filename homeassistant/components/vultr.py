@@ -70,11 +70,11 @@ class Vultr(object):
 
     def __init__(self, api_key):
         """Initialize the Vultr connection."""
-        from vultr import Vultr as VultrApi
+        from vultr import Vultr as VultrAPI
 
         self._api_key = api_key
         self.data = {}
-        self.api = VultrApi(self._api_key)
+        self.api = VultrAPI(self._api_key)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
