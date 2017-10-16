@@ -9,10 +9,12 @@ import logging
 
 
 from datetime import timedelta
-from random import randint, randrange
+from random import randint, randrange, choice
 
 from homeassistant.util import Throttle
 
+
+from homeassistant.const import CONF_NAME
 
 import homeassistant.util.dt as dt
 from homeassistant.components.calendar import Calendar
@@ -24,13 +26,25 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 @asyncio.coroutine
 def async_get_handler(hass, config, discovery_info=None):
-    return DemoCalendar(hass, DOMAIN)
+    calendars = []
+
+    calendars.append(DemoCalendar(hass, 'DemoCalendar1'))
+    calendars.append(DemoCalendar(hass, 'DemoCalendar2'))
+
+    return calendars
 
 class DemoCalendar(Calendar):
     def __init__(self, hass, name):
         self._events = []
 
-        test = "Lorem Ipsum"
+        events = [
+            'Football',
+            'Doctor',
+            'Meeting with Jim',
+            'Open house',
+            'Shopping',
+            'Cleaning lady'
+        ]
 
         today = dt.now()
 
@@ -41,7 +55,7 @@ class DemoCalendar(Calendar):
             event = {
                 'start': start,
                 'end': end,
-                'text': test
+                'text': choice(events)
             }
             self._events.append(event)
 
