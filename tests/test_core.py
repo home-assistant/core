@@ -592,6 +592,21 @@ class TestStateMachine(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(events))
 
+    def test_last_seen_updated_on_same_state(self):
+        """Test that last_seen is updated even if the state is unchanged."""
+        state = self.states.get("light.Bowl")
+        seen = state.last_seen
+
+        future = dt_util.utcnow() + timedelta(hours=10)
+
+        with patch('homeassistant.util.dt.utcnow', return_value=future):
+            self.states.set("light.Bowl", "on")
+            self.hass.block_till_done()
+
+        state2 = self.states.get('light.Bowl')
+        assert state2 is not None
+        assert state.last_changed == state2.last_changed
+        assert seen != state2.last_seen
 
 class TestServiceCall(unittest.TestCase):
     """Test ServiceCall class."""
