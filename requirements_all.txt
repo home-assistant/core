@@ -386,7 +386,7 @@ libpurecoollink==0.4.2
 libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
-librouteros==1.0.2
+librouteros==1.0.4
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
