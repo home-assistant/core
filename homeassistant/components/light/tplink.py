@@ -27,8 +27,6 @@ ATTR_CURRENT_CONSUMPTION = 'current_consumption'
 ATTR_DAILY_CONSUMPTION = 'daily_consumption'
 ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
 
-SUPPORT_TPLINK = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
@@ -70,8 +68,6 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: 'SmartBulb', name):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-
-        # Use the name set on the device if not set
         self._name = None
         if name is not None:
             self._name = name
@@ -79,6 +75,7 @@ class TPLinkSmartBulb(Light):
         self._color_temp = None
         self._brightness = None
         self._rgb = None
+        self._supported_features = 0
         self._emeter_params = {}
 
     @property
@@ -135,17 +132,21 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
+            if self._supported_features == 0:
+                self.get_features()
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
             if self._name is None:
                 self._name = self.smartbulb.alias
-            self._brightness = brightness_from_percentage(
-                self.smartbulb.brightness)
-            if self.smartbulb.is_color:
+            if self.smartbulb.is_dimmable:
+                self._brightness = brightness_from_percentage(
+                    self.smartbulb.brightness)
+            if self.smartbulb.is_variable_color_temp:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+            if self.smartbulb.is_color:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
@@ -157,12 +158,18 @@ class TPLinkSmartBulb(Light):
                 self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
                     = "%.2f kW" % monthly_statistics[int(time.strftime("%m"))]
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
+            _LOGGER.warning('Could not read state for %s: %s', self._name, ex)
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_TPLINK
+        return self._supported_features
+
+    def get_features(self):
+        """Determine all supported features in one go."""
+        if self.smartbulb.is_dimmable:
+            self._supported_features += SUPPORT_BRIGHTNESS
+        if self.smartbulb.is_variable_color_temp:
+            self._supported_features += SUPPORT_COLOR_TEMP
         if self.smartbulb.is_color:
-            supported_features += SUPPORT_RGB_COLOR
-        return supported_features
+            self._supported_features += SUPPORT_RGB_COLOR
