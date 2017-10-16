@@ -111,7 +111,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.4
+bellows==0.4.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
