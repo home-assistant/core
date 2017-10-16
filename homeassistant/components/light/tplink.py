@@ -6,6 +6,8 @@ https://home-assistant.io/components/light.tplink/
 """
 import logging
 import colorsys
+import time
+
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
@@ -20,6 +22,12 @@ from typing import Tuple
 REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_CURRENT_CONSUMPTION = 'current_consumption'
+ATTR_DAILY_CONSUMPTION = 'daily_consumption'
+ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
+ATTR_VOLTAGE = 'voltage'
+ATTR_CURRENT = 'current'
 
 SUPPORT_TPLINK = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
 
@@ -66,21 +74,24 @@ class TPLinkSmartBulb(Light):
         self.smartbulb = smartbulb
 
         # Use the name set on the device if not set
-        if name is None:
-            self._name = self.smartbulb.alias
-        else:
+        self._name = None
+        if name is not None:
             self._name = name
-
         self._state = None
         self._color_temp = None
         self._brightness = None
         self._rgb = None
-        _LOGGER.debug("Setting up TP-Link Smart Bulb")
+        self._emeter_params = {}
 
     @property
     def name(self):
         """Return the name of the Smart Bulb, if any."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._emeter_params
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -119,7 +130,7 @@ class TPLinkSmartBulb(Light):
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return True if device is on."""
         return self._state
 
     def update(self):
@@ -128,6 +139,8 @@ class TPLinkSmartBulb(Light):
         try:
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
+            if self._name is None:
+                self._name = self.smartbulb.alias
             self._brightness = brightness_from_percentage(
                 self.smartbulb.brightness)
             if self.smartbulb.is_color:
@@ -136,6 +149,15 @@ class TPLinkSmartBulb(Light):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
+            if self.smartbulb.has_emeter:
+                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                    = "%.1f W" % self.smartbulb.current_consumption()
+                daily_statistics = self.smartbulb.get_emeter_daily()
+                monthly_statistics = self.smartbulb.get_emeter_monthly()
+                self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                    = "%.2f kW" % daily_statistics[int(time.strftime("%d"))]
+                self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
+                    = "%.2f kW" % monthly_statistics[int(time.strftime("%m"))]
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
 
