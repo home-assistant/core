@@ -205,4 +205,4 @@ class ArloCam(Camera):
         self.attrs[ATTR_LAST_REFRESH] = datetime.fromtimestamp(
             base_stations[0]._last_refresh).strftime(
                 "%A, %B %d, %Y %I:%M:%S") if base_stations[0]._last_refresh \
-                else STATE_UNKNOWN
+            else STATE_UNKNOWN
