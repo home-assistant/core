@@ -9,7 +9,7 @@ import logging
 
 
 from datetime import timedelta
-
+from random import randint, randrange
 
 from homeassistant.util import Throttle
 
@@ -32,10 +32,15 @@ class DemoCalendar(Calendar):
 
         test = "Lorem Ipsum"
 
+        today = dt.now()
+
         for eni in range(0, 10):
+            start = today.replace(day=randint(1, 30), hour=randint(6, 19), minute=randrange(0, 60, 15))
+            end = start + dt.dt.timedelta(days=randint(0, 3), hours=randint(1, 6), minutes=randrange(0, 60, 15))
+
             event = {
-                'start': dt.now() + dt.dt.timedelta(days = eni),
-                'end': dt.now() + dt.dt.timedelta(days = eni) + dt.dt.timedelta(minutes = 10 * eni),
+                'start': start,
+                'end': end,
                 'text': test
             }
             self._events.append(event)
