@@ -138,25 +138,31 @@ class TPLinkSmartBulb(Light):
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
             if self._name is None:
                 self._name = self.smartbulb.alias
-            if self.smartbulb.is_dimmable:
+            if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
                     self.smartbulb.brightness)
-            if self.smartbulb.is_variable_color_temp:
+            if self._supported_features & SUPPORT_COLOR_TEMP:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
-            if self.smartbulb.is_color:
+            if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
                     = "%.1f W" % self.smartbulb.current_consumption()
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
-                self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                    = "%.2f kW" % daily_statistics[int(time.strftime("%d"))]
-                self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
-                    = "%.2f kW" % monthly_statistics[int(time.strftime("%m"))]
+                try:
+                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                        = "%.2f kW" % daily_statistics[int(
+                            time.strftime("%d"))]
+                    self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
+                        = "%.2f kW" % monthly_statistics[int(
+                            time.strftime("%m"))]
+                except KeyError:
+                    # device returned no daily/monthly history
+                    pass
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self._name, ex)
 
