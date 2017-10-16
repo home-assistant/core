@@ -9,6 +9,9 @@ from homeassistant.util.unit_system import (
 from homeassistant.const import (
     LENGTH_METERS,
     LENGTH_KILOMETERS,
+    LENGTH_INCHES,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
     MASS_GRAMS,
     VOLUME_LITERS,
     TEMP_CELSIUS,
@@ -43,13 +46,6 @@ class TestUnitSystem(unittest.TestCase):
             UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
                        INVALID_UNIT)
 
-    def test_invalid_value(self):
-        """Test no conversion happens if value is non-numeric."""
-        with self.assertRaises(TypeError):
-            METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
-        with self.assertRaises(TypeError):
-            METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
-
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""
         expected = {
@@ -60,6 +56,13 @@ class TestUnitSystem(unittest.TestCase):
         }
 
         self.assertEqual(expected, METRIC_SYSTEM.as_dict())
+
+    def test_invalid_value(self):
+        """Test no conversion happens if value is non-numeric."""
+        with self.assertRaises(TypeError):
+            METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
+        with self.assertRaises(TypeError):
+            METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
 
     def test_temperature_same_unit(self):
         """Test no conversion happens if to unit is same as from unit."""
@@ -131,3 +134,25 @@ class TestUnitSystem(unittest.TestCase):
         """Test the is metric flag."""
         self.assertTrue(METRIC_SYSTEM.is_metric)
         self.assertFalse(IMPERIAL_SYSTEM.is_metric)
+
+    def test_conver_from_metric_with_alternate_display(self):
+        """Test conversion from meters to inches."""
+        m = float(2)
+        result = IMPERIAL_SYSTEM.length_and_unit(
+                m, LENGTH_METERS, True)
+        self.assertEqual(
+            78.74016,
+            result["value"]
+            )
+        self.assertTrue(result["unit"] == LENGTH_INCHES)
+
+    def test_conver_from_imperial_with_alternate_display(self):
+        """Test conversion from feet to cm."""
+        m = float(2)
+        result = METRIC_SYSTEM.length_and_unit(
+                m, LENGTH_FEET, True)
+        self.assertEqual(
+            60.96,
+            result["value"]
+            )
+        self.assertTrue(result["unit"] == LENGTH_CENTIMETERS)

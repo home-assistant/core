@@ -100,12 +100,46 @@ class UnitSystem(object):
                                         from_unit, self.temperature_unit)
 
     def length(self: object, length: float, from_unit: str) -> float:
-        """Convert the given length to this unit system."""
+        """Convert the given length to this unit system return a float.
+
+        Disable auto-ranging for backward-compatibility.
+        """
+        converted = self.length_and_unit(length, from_unit, False)
+        return converted["value"]
+
+    def length_and_unit(
+            self: object, length: float, from_unit: str,
+            auto_range: bool) -> dict:
+        """Convert the given length to this unit system return a dict.
+
+        If auto_range is true the method will attempt to auto-range the
+        value into the appropriate unit. If auto_range is false the
+        method will convert into the base length unit of this system.
+        This may lead to a zero result due to rounding.
+        """
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
-        return distance_util.convert(length, from_unit,
-                                     self.length_unit)  # type: float
+        to_unit = self.length_unit
+        if auto_range:
+            if self == METRIC_SYSTEM:
+                if from_unit in (LENGTH_FEET, LENGTH_INCHES):
+                    to_unit = LENGTH_CENTIMETERS
+                elif from_unit == LENGTH_YARD:
+                    to_unit = LENGTH_METERS
+            elif self == IMPERIAL_SYSTEM:
+                if from_unit == LENGTH_CENTIMETERS:
+                    to_unit = LENGTH_INCHES
+                elif from_unit == LENGTH_METERS:
+                    to_unit = LENGTH_INCHES
+
+        conv = distance_util.convert(
+            length, from_unit, to_unit)  # type: float
+
+        return {
+            "value": conv,
+            "unit": to_unit,
+        }
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
@@ -115,6 +149,31 @@ class UnitSystem(object):
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit
         }
+
+    def convert(self, value, unit):
+        """Generic conversion method."""
+        converted = None
+        if (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                unit != self.temperature_unit):
+            # Convert temperature if we detect one
+            try:
+                temp = self.temperature(float(value), unit)
+            except ValueError:
+                return None
+            converted = {
+                'value': temp,
+                'units': self.temperature_unit
+            }
+        elif (unit in LENGTH_UNITS and
+              unit != self.length_unit):
+            # Convert length if we detect one
+            try:
+                converted = self.length_and_unit(
+                    float(value), unit, True)
+            except ValueError:
+                return None
+
+        return converted
 
 
 METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,

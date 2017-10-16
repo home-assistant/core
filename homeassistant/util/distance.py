@@ -5,10 +5,12 @@ from numbers import Number
 
 from homeassistant.const import (
     LENGTH_KILOMETERS,
+    LENGTH_CENTIMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
     LENGTH_METERS,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    LENGTH_INCHES,
     LENGTH,
 )
 
@@ -18,7 +20,9 @@ VALID_UNITS = [
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_METERS,
+    LENGTH_CENTIMETERS
 ]
 
 
@@ -52,8 +56,12 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
         result = __meters_to_miles(meters)
     elif unit_2 == LENGTH_FEET:
         result = __meters_to_feet(meters)
+    elif unit_2 == LENGTH_INCHES:
+        result = __meters_to_feet(meters) * 12
     elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
+    elif unit_2 == LENGTH_CENTIMETERS:
+        result = result * 100
 
     return result
 

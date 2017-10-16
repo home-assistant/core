@@ -9,8 +9,10 @@ from typing import Optional, List
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+    STATE_UNAVAILABLE, STATE_UNKNOWN,
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS,
+    LENGTH_CENTIMETERS, LENGTH_FEET, LENGTH_INCHES, LENGTH_KILOMETERS,
+    LENGTH_METERS, LENGTH_MILES, LENGTH_YARD)
 from homeassistant.core import HomeAssistant
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -20,6 +22,11 @@ from homeassistant.util.async import (
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
+
+LENGTH_UNITS = (
+    LENGTH_CENTIMETERS, LENGTH_FEET, LENGTH_INCHES, LENGTH_KILOMETERS,
+    LENGTH_METERS, LENGTH_MILES, LENGTH_YARD
+)
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
@@ -267,19 +274,20 @@ class Entity(object):
         if not attr.get(ATTR_HIDDEN, True):
             attr.pop(ATTR_HIDDEN)
 
-        # Convert temperature if we detect one
-        try:
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
+        unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if unit_of_measure is not None:
+            converted = self.hass.config.units.convert(state, unit_of_measure)
+            if converted is not None:
+                if converted["unit"] is not None:
+                    attr[ATTR_UNIT_OF_MEASUREMENT] = converted["unit"]
+                if converted["value"] is not None:
+                    state = converted["value"]
+                    prec = (
+                        len(state) - state.index('.') - 1
+                        if '.' in state else 0)
+                    state = (
+                        str(round(state) if prec == 0 else round(state, prec)))
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
