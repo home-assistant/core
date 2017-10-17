@@ -28,7 +28,8 @@ DEFAULT_PORT = 9091
 SENSOR_TYPES = {
     'current_status': ['Status', None],
     'download_speed': ['Down Speed', 'MB/s'],
-    'upload_speed': ['Up Speed', 'MB/s']
+    'upload_speed': ['Up Speed', 'MB/s'],
+    'active_torrents': ['Active Torrents', None]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -140,3 +141,5 @@ class TransmissionSensor(Entity):
                 mb_spd = float(self.transmission_client.session.uploadSpeed)
                 mb_spd = mb_spd / 1024 / 1024
                 self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+            elif self.type == 'active_torrents':
+                self._state = self.transmission_client.session.activeTorrentCount
