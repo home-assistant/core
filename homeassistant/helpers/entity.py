@@ -72,7 +72,7 @@ class Entity(object):
     _slow_reported = False
 
     # Protect for multiple updates
-    _update_warn = None
+    _update_staged = False
 
     # Process updates sequential
     sequential_update = None
@@ -200,16 +200,15 @@ class Entity(object):
 
         # update entity data
         if force_refresh:
-            if self._update_warn:
-                # Update is already in progress.
+            if self._update_staged:
                 return
+            self._update_staged = True
 
             # Process update sequential
             if self.sequential_update:
-                self._update_warn = true
                 yield from self.sequential_update.acquire()
 
-            self._update_warn = self.hass.loop.call_later(
+            update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
                 "Update of %s is taking over %s seconds", self.entity_id,
                 SLOW_UPDATE_WARNING
@@ -225,8 +224,8 @@ class Entity(object):
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
             finally:
-                self._update_warn.cancel()
-                self._update_warn = None
+                self._update_staged = False
+                update_warn.cancel()
                 if self.sequential_update:
                     self.sequential_update.release()
 
