@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['py-synology==0.1.3']
+REQUIREMENTS = ['py-synology==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
