@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         urllib3.exceptions.InsecureRequestWarning
         _LOGGER.warning('InsecureRequestWarning is disabled '
                         'because of Vizio platform configuration.')
-        urllib3.disable_warnings(InsecureRequestWarning)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     add_devices([device], True)
 
 
