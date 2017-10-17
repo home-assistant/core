@@ -11,6 +11,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
@@ -18,18 +19,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_point_in_utc_time
+
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-INTERVAL = timedelta(seconds=1)
-
 EVENT_TIMER_FINISHED = 'timer.finished'
 
-ATTR_INITIAL = 'initial'
 ATTR_STATUS = 'status'
 ATTR_DURATION = 'duration'
+ATTR_START = 'start'
+ATTR_END = 'end'
+ATTR_REMAINING = 'remaining'
 
 STATUS_IDLE = 0
 STATUS_ACTIVE = 1
@@ -41,9 +43,9 @@ STATUS_MAPPING = {
     STATUS_PAUSED: 'paused'
 }
 
-CONF_INITIAL = 'initial'
+CONF_DURATION = 'duration'
 
-DEFAULT_INITIAL = 0
+DEFAULT_DURATION = 0
 DOMAIN = 'timer'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -65,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.Any({
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
+            vol.Optional(CONF_DURATION, default=DEFAULT_DURATION):
                 cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
         }, None)
@@ -128,10 +130,10 @@ def async_setup(hass, config):
             cfg = {}
 
         name = cfg.get(CONF_NAME)
-        initial = cfg.get(CONF_INITIAL)
+        duration = cfg.get(CONF_DURATION)
         icon = cfg.get(CONF_ICON)
 
-        entities.append(Timer(hass, object_id, name, initial, icon))
+        entities.append(Timer(hass, object_id, name, duration, icon))
 
     if not entities:
         return False
@@ -152,7 +154,7 @@ def async_setup(hass, config):
             for timer in target_timers:
                 tasks.append(
                     timer.async_reset(service.data.get(ATTR_DURATION,
-                                                       DEFAULT_INITIAL)))
+                                                       DEFAULT_DURATION)))
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
@@ -178,18 +180,17 @@ def async_setup(hass, config):
 class Timer(Entity):
     """Representation of a timer."""
 
-    def __init__(self, hass, object_id, name, initial, icon):
+    def __init__(self, hass, object_id, name, duration, icon):
         """Initialize a timer."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
-        self._state = self._initial = initial
+        self._state = STATUS_IDLE
+        self._duration = duration
+        self._remaining = None
         self._icon = icon
-        self._status = STATUS_IDLE
         self._hass = hass
-
-        async_track_time_interval(
-            hass, self.async_update, INTERVAL
-        )
+        self._start = None
+        self._end = None
 
     @property
     def should_poll(self):
@@ -215,8 +216,10 @@ class Timer(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._initial,
-            ATTR_STATUS: self._status,
+            ATTR_DURATION: self._duration,
+            ATTR_START: self._start,
+            ATTR_END: self._end,
+            ATTR_REMAINING: self._remaining
         }
 
     @asyncio.coroutine
@@ -232,30 +235,41 @@ class Timer(Entity):
     @asyncio.coroutine
     def async_start(self):
         """Start a timer."""
-        self._status = STATUS_ACTIVE
+        self._state = STATUS_ACTIVE
+        self._start = dt_util.utcnow()
+        if self._remaining:
+            self._end = self._start + timedelta(seconds=self._remaining)
+        else:
+            self._end = self._start + timedelta(seconds=self._duration)
+        async_track_point_in_utc_time(self._hass,
+                                      self.async_finished,
+                                      self._end)
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_pause(self):
         """Pause a timer."""
-        self._status = STATUS_PAUSED
+        self._remaining = (self._end - dt_util.utcnow()).seconds
+        self._state = STATUS_PAUSED
+        self._end = None
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_reset(self, duration):
         """Reset a timer."""
-        self._status = STATUS_IDLE
-        self._state = duration if duration else self._initial
+        self._state = STATUS_IDLE
+        self._start = None
+        self._end = None
+        self._duration = duration if duration else self._duration
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_update(self, time):
+    def async_finished(self, time):
         """Get the latest data and updates the states."""
-        if self._status == STATUS_ACTIVE and self._state > 0:
-            self._state -= 1
-            if self._state == 0:
-                self._status = STATUS_IDLE
-                self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
-                                          {"entity_id": self.entity_id})
+        if self._state == STATUS_ACTIVE:
+            self._state = STATUS_IDLE
+            self._remaining = None
+            self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
+                                      {"entity_id": self.entity_id})
             yield from self.async_update_ha_state()
         return
