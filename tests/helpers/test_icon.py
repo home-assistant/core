@@ -7,7 +7,7 @@ class TestIconUtil(unittest.TestCase):
 
     def test_battery_icon(self):
         """Test icon generator for battery sensor."""
-        from homeassistant.util.icon import icon_for_battery_level
+        from homeassistant.helpers.icon import icon_for_battery_level
 
         self.assertEqual('mdi:battery-unknown',
                          icon_for_battery_level(None, True))
@@ -16,7 +16,7 @@ class TestIconUtil(unittest.TestCase):
 
         self.assertEqual('mdi:battery-outline',
                          icon_for_battery_level(5, True))
-        self.assertEqual('mdi:battery-outline',
+        self.assertEqual('mdi:battery-alert',
                          icon_for_battery_level(5, False))
 
         self.assertEqual('mdi:battery-charging-100',
@@ -44,7 +44,7 @@ class TestIconUtil(unittest.TestCase):
             if 5 < level < 95:
                 postfix = '-{}'.format(int(round(level / 10 - .01)) * 10)
             elif level <= 5:
-                postfix = '-outline'
+                postfix = '-alert'
             else:
                 postfix = ''
             self.assertEqual(iconbase + postfix,

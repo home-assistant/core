@@ -213,7 +213,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning("Invalid white value value received")
+                    _LOGGER.warning("Invalid white value received")
 
             if self._xy is not None:
                 try:

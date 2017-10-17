@@ -11,8 +11,9 @@ MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 #ENV INSTALL_FFMPEG no
 #ENV INSTALL_LIBCEC no
 #ENV INSTALL_PHANTOMJS no
-#ENV INSTALL_COAP_CLIENT no
+#ENV INSTALL_COAP no
 #ENV INSTALL_SSOCR no
+
 
 VOLUME /config
 
@@ -25,7 +26,6 @@ RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
-
 # Uninstall enum34 because some depenndecies install it but breaks Python 3.4+.
 # See PR #8103 for more info.
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \

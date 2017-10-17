@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 
 
 DATA_KEY = 'intent'
@@ -19,6 +20,7 @@ SPEECH_TYPE_SSML = 'ssml'
 
 
 @callback
+@bind_hass
 def async_register(hass, handler):
     """Register an intent with Home Assistant."""
     intents = hass.data.get(DATA_KEY)
@@ -33,6 +35,7 @@ def async_register(hass, handler):
 
 
 @asyncio.coroutine
+@bind_hass
 def async_handle(hass, platform, intent_type, slots=None, text_input=None):
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)

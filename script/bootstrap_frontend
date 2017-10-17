@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 echo "Bootstrapping frontend..."
 
-git submodule update
+git submodule update --init
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
 
 # Install node modules
@@ -16,5 +16,8 @@ yarn install
 
 # Install bower web components. Allow to download the components as root since the user in docker is root.
 ./node_modules/.bin/bower install --allow-root
+
+# Build files that need to be generated to run development mode
+yarn dev
 
 cd ../../../../..

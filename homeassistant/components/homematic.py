@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyhomematic==0.1.32']
+REQUIREMENTS = ['pyhomematic==0.1.33']
 
 DOMAIN = 'homematic'
 
@@ -69,7 +69,8 @@ HM_DEVICE_TYPES = {
         'IPSmoke'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
-        'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall'],
+        'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
+        'ThermostatGroup'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
@@ -129,6 +130,7 @@ CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
 CONF_PORT = 'port'
+CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
 CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
@@ -140,6 +142,7 @@ DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
 DEFAULT_PORT = 2001
+DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
 DEFAULT_PASSWORD = ''
 DEFAULT_VARIABLES = False
@@ -160,8 +163,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOSTS): {cv.match_all: {
             vol.Required(CONF_IP): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-                cv.port,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES):
@@ -258,6 +261,7 @@ def setup(hass, config):
         remotes[rname] = {}
         remotes[rname][CONF_IP] = server
         remotes[rname][CONF_PORT] = rconfig.get(CONF_PORT)
+        remotes[rname][CONF_PATH] = rconfig.get(CONF_PATH)
         remotes[rname][CONF_RESOLVENAMES] = rconfig.get(CONF_RESOLVENAMES)
         remotes[rname][CONF_USERNAME] = rconfig.get(CONF_USERNAME)
         remotes[rname][CONF_PASSWORD] = rconfig.get(CONF_PASSWORD)
