@@ -24,6 +24,10 @@ def _validate_conf(config):
     """Validate a list of devices definitions."""
     res_config = []
     for gw_conf in config:
+        for _conf in gw_conf.keys():
+            if _conf not in [CONF_MAC, 'host', 'port', 'key']:
+              raise vol.Invalid('Invalid config: ', _conf)
+
         res_gw_conf = {'sid': gw_conf.get(CONF_MAC)}
         if res_gw_conf['sid'] is not None:
             res_gw_conf['sid'] = res_gw_conf['sid'].replace(":", "").lower()
