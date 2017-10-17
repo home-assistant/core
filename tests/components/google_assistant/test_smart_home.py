@@ -61,7 +61,7 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
     },
     'expected': (
         const.SERVICE_VOLUME_SET,
-        {'entity_id': 'media_player.living_room', 'volume': 0.3}
+        {'entity_id': 'media_player.living_room', 'volume_level': 0.3}
     ),
 }]
 

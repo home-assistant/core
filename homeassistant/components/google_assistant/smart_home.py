@@ -138,7 +138,7 @@ def determine_service(entity_id: str, command: str,
     # special media_player handling
     if domain == media_player.DOMAIN and command == COMMAND_BRIGHTNESS:
         brightness = params.get('brightness', 0)
-        service_data['volume'] = brightness / 100
+        service_data[media_player.ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100
         return (media_player.SERVICE_VOLUME_SET, service_data)
 
     # special cover handling
