@@ -13,7 +13,6 @@ from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.components.http.const import KEY_DEVELOPMENT
@@ -25,7 +24,9 @@ DEPENDENCIES = ['api', 'websocket_api']
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 
-STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
+POLYMER_PATH = os.path.join(os.path.dirname(__file__),
+                            'home-assistant-polymer/')
+FINAL_PATH = os.path.join(POLYMER_PATH, 'final')
 
 ATTR_THEMES = 'themes'
 ATTR_EXTRA_HTML_URL = 'extra_html_url'
@@ -87,18 +88,24 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
     nondev_path = 'panels/ha-panel-{}.html'.format(component_name)
 
     if hass.http.development:
-        url = ('/static/home-assistant-polymer/panels/'
+        url = ('/home-assistant-polymer/panels/'
                '{0}/ha-panel-{0}.html'.format(component_name))
         path = os.path.join(
-            STATIC_PATH, 'home-assistant-polymer/panels/',
-            '{0}/ha-panel-{0}.html'.format(component_name))
+            POLYMER_PATH,
+            'panels/{0}/ha-panel-{0}.html'.format(component_name))
+        fingerprint = None
     else:
-        url = None  # use default url generate mechanism
-        path = os.path.join(STATIC_PATH, nondev_path)
+        path = os.path.join(FINAL_PATH, nondev_path)
+        fingerprint = FINGERPRINTS.get(nondev_path)
 
-    # Fingerprint doesn't exist when adding new built-in panel
-    register_panel(hass, component_name, path,
-                   FINGERPRINTS.get(nondev_path, 'dev'), sidebar_title,
+        if nondev_path not in FINGERPRINTS:
+            _LOGGER.warning('Unable to find fingerprint for %s.', nondev_path)
+            fingerprint = _fingerprint(path)
+
+        url = '/static/panels/ha-panel-{}-{}.html'.format(
+            component_name, fingerprint)
+
+    register_panel(hass, component_name, path, fingerprint, sidebar_title,
                    sidebar_icon, url_path, url, config)
 
 
@@ -110,7 +117,7 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
     component_name: name of the web component
     path: path to the HTML of the web component
           (required unless url is provided)
-    md5: the md5 hash of the web component (for versioning, optional)
+    md5: the md5 hash of the web component (for versioning in url, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
     url_path: name to use in the url (defaults to component_name)
@@ -134,8 +141,7 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
             return
 
         if md5 is None:
-            with open(path) as fil:
-                md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
+            md5 = _fingerprint(path)
 
     data = {
         'url_path': url_path,
@@ -190,19 +196,19 @@ def add_manifest_json_key(key, val):
 
 def setup(hass, config):
     """Set up the serving of the frontend."""
-    hass.http.register_view(BootstrapView)
     hass.http.register_view(ManifestJSONView)
 
     if hass.http.development:
-        sw_path = "home-assistant-polymer/build/service_worker.js"
+        sw_path = os.path.join(POLYMER_PATH, "build/service_worker.js")
     else:
-        sw_path = "service_worker.js"
+        sw_path = os.path.join(FINAL_PATH, "service_worker.js")
 
-    hass.http.register_static_path("/service_worker.js",
-                                   os.path.join(STATIC_PATH, sw_path), False)
+    hass.http.register_static_path("/service_worker.js", sw_path, False)
     hass.http.register_static_path("/robots.txt",
-                                   os.path.join(STATIC_PATH, "robots.txt"))
-    hass.http.register_static_path("/static", STATIC_PATH)
+                                   os.path.join(FINAL_PATH, "robots.txt"))
+    hass.http.register_static_path("/static", FINAL_PATH)
+    if hass.http.development:
+        hass.http.register_static_path("/home-assistant-polymer", POLYMER_PATH)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
@@ -294,26 +300,6 @@ def setup_themes(hass, themes):
                            descriptions[SERVICE_RELOAD_THEMES])
 
 
-class BootstrapView(HomeAssistantView):
-    """View to bootstrap frontend with all needed data."""
-
-    url = '/api/bootstrap'
-    name = 'api:bootstrap'
-
-    @callback
-    def get(self, request):
-        """Return all data needed to bootstrap Home Assistant."""
-        hass = request.app['hass']
-
-        return self.json({
-            'config': hass.config.as_dict(),
-            'states': hass.states.async_all(),
-            'events': api.async_events_json(hass),
-            'services': api.async_services_json(hass),
-            'panels': hass.data[DATA_PANELS],
-        })
-
-
 class IndexView(HomeAssistantView):
     """Serve the frontend."""
 
@@ -339,10 +325,10 @@ class IndexView(HomeAssistantView):
         hass = request.app['hass']
 
         if request.app[KEY_DEVELOPMENT]:
-            core_url = '/static/home-assistant-polymer/build/core.js'
+            core_url = '/home-assistant-polymer/build/core.js'
             compatibility_url = \
-                '/static/home-assistant-polymer/build/compatibility.js'
-            ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
+                '/home-assistant-polymer/build/compatibility.js'
+            ui_url = '/home-assistant-polymer/src/home-assistant.html'
         else:
             core_url = '/static/core-{}.js'.format(
                 FINGERPRINTS['core.js'])
@@ -418,3 +404,9 @@ class ThemesView(HomeAssistantView):
             'themes': hass.data[DATA_THEMES],
             'default_theme': hass.data[DATA_DEFAULT_THEME],
         })
+
+
+def _fingerprint(path):
+    """Fingerprint a file."""
+    with open(path) as fil:
+        return hashlib.md5(fil.read().encode('utf-8')).hexdigest()
