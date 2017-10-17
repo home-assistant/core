@@ -71,8 +71,11 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # protect for multiple updates
+    # Protect for multiple updates
     _update_warn = None
+
+    # Process updates sequential
+    sequential_update = None
 
     @property
     def should_poll(self) -> bool:
@@ -201,6 +204,10 @@ class Entity(object):
                 # Update is already in progress.
                 return
 
+            # Process update sequential
+            if self.sequential_update:
+                yield from self.sequential_update.acquire()
+
             self._update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
                 "Update of %s is taking over %s seconds", self.entity_id,
@@ -219,6 +226,8 @@ class Entity(object):
             finally:
                 self._update_warn.cancel()
                 self._update_warn = None
+                if self.sequential_update:
+                    self.sequential_update.release()
 
         start = timer()
 
