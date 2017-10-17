@@ -263,6 +263,7 @@ class Timer(Entity):
         self._duration = duration if duration else self._duration
         yield from self.async_update_ha_state()
 
+    @asyncio.coroutine
     def async_finished(self, time):
         """Get the latest data and updates the states."""
         if self._state == STATUS_ACTIVE:
@@ -270,5 +271,5 @@ class Timer(Entity):
             self._remaining = None
             self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                       {"entity_id": self.entity_id})
-            self.async_update_ha_state()
+            yield from self.async_update_ha_state()
         return
