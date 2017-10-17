@@ -18,7 +18,7 @@ REQUIREMENTS = ['linode-api==4.1.4b0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CREATED = 'created'
-ATTR_NODEID = 'node_id'
+ATTR_NODE_ID = 'node_id'
 ATTR_NODE_NAME = 'node_name'
 ATTR_IPV4_ADDRESS = 'ipv4_address'
 ATTR_IPV6_ADDRESS = 'ipv6_address'

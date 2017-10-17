@@ -1,5 +1,5 @@
 """
-Support for monitoring the state of Digital Ocean droplets.
+Support for monitoring the state of Linode Nodes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.linode/
@@ -18,7 +18,7 @@ from homeassistant.components.linode import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'LiNode'
+DEFAULT_NAME = 'Node'
 DEFAULT_DEVICE_CLASS = 'moving'
 DEPENDENCIES = ['linode']
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if node_id is None:
             _LOGGER.error("Node %s is not available", node)
             return False
-        dev.append(LinodeBinarySensor(node, node_id))
+        dev.append(LinodeBinarySensor(linode, node_id))
 
     add_devices(dev, True)
 
@@ -49,9 +49,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LinodeBinarySensor(BinarySensorDevice):
     """Representation of a Linode droplet sensor."""
 
-    def __init__(self, do, node_id):
+    def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
-        self._linode = do
+        self._linode = li
         self._node_id = node_id
         self._state = None
         self.data = None
@@ -59,7 +59,7 @@ class LinodeBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.data.name
+        return self.data.label
 
     @property
     def is_on(self):
