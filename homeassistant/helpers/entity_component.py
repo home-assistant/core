@@ -30,7 +30,7 @@ class EntityComponent(object):
     """Helper class that will help a component manage its entities."""
 
     def __init__(self, logger, domain, hass,
-                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
+                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None, scan_sequential=False):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -38,13 +38,15 @@ class EntityComponent(object):
         self.domain = domain
         self.entity_id_format = domain + '.{}'
         self.scan_interval = scan_interval
+        self.scan_sequential = scan_sequential
         self.group_name = group_name
 
         self.entities = {}
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(self, domain, self.scan_interval, None),
+            'core': EntityPlatform(
+                self, domain, self.scan_interval, self.scan_sequential, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -133,7 +135,7 @@ class EntityComponent(object):
                          self.scan_interval)
         scan_sequential = (platform_config.get(CONF_SCAN_SEQUENTIAL) or
                            getattr(platform, 'SCAN_SEQURNTIAL', None) or
-                           False)
+                           self.scan_sequential)
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
         key = (platform_type, scan_interval, scan_sequential, entity_namespace)
