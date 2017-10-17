@@ -44,6 +44,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         self.last_results = []
 
         self._url = 'http://%s/data/getConnectInfo.asp' % config[CONF_HOST]
+        self._loginurl = 'http://%s/goform/login' % config[CONF_HOST]
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
@@ -77,7 +78,7 @@ class HitronCODADeviceScanner(DeviceScanner):
                 ('user', self._username),
                 ('pws', self._password),
             ]
-            res = requests.post('http://192.168.0.1/goform/login', data=data)
+            res = requests.post(self._loginurl, data=data)
         except requests.exceptions.Timeout:
             _LOGGER.error(
                 "Connection to the router timed out at URL %s", self._url)
