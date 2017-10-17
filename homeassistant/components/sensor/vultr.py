@@ -4,8 +4,6 @@ Support for monitoring the state of Digital Ocean droplets.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.digital_ocean/
 """
-import logging
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -14,8 +12,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.vultr import (
     CONF_SUBS, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES, DATA_VULTR)
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Vultr_Server'
 DEPENDENCIES = ['vultr']

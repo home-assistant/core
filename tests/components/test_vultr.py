@@ -2,6 +2,7 @@
 import unittest
 import requests_mock
 
+from copy import copy
 from homeassistant import setup
 import components.vultr as vultr
 
@@ -21,7 +22,7 @@ class TestVultr(unittest.TestCase):
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
+        self.config = copy(VALID_CONFIG)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that we started."""
@@ -45,11 +46,5 @@ class TestVultr(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_no_api_key(self, mock):
         """Test failed setup with missing API Key."""
-        mock.get(
-            'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_account_info.json'))
-
-        config = self.config.copy()
-        del config['vultr']['api_key']
-
-        assert not setup.setup_component(self.hass, vultr.DOMAIN, config)
+        assert not setup.setup_component(self.hass, vultr.DOMAIN,
+                                         {"vultr": {}})
