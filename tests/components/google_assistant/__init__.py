@@ -144,5 +144,30 @@ DEMO_DEVICES = [{
     ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
     'type':
     'action.devices.types.LIGHT',
+    'willReportState':
+    False
+}, {
+    'id': 'fan.living_room_fan',
+    'name': {
+        'name': 'Living Room Fan'
+    },
+    'traits': ['action.devices.traits.OnOff'],
+    'type': 'action.devices.types.SWITCH',
+    'willReportState': False
+}, {
+    'id': 'fan.ceiling_fan',
+    'name': {
+        'name': 'Ceiling Fan'
+    },
+    'traits': ['action.devices.traits.OnOff'],
+    'type': 'action.devices.types.SWITCH',
+    'willReportState': False
+}, {
+    'id': 'group.all_fans',
+    'name': {
+        'name': 'all fans'
+    },
+    'traits': ['action.devices.traits.ActivateScene'],
+    'type': 'action.devices.types.SCENE',
     'willReportState': False
 }]

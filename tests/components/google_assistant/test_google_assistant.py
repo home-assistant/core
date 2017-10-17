@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import setup, const, core
 from homeassistant.components import (
-    http, async_setup, light, cover, media_player
+    http, async_setup, light, cover, media_player, fan
 )
 from homeassistant.components import google_assistant as ga
 from tests.common import get_test_instance_port
@@ -72,6 +72,13 @@ def hass_fixture(loop, hass):
     loop.run_until_complete(
         setup.async_setup_component(hass, media_player.DOMAIN, {
             'media_player': [{
+                'platform': 'demo'
+            }]
+        }))
+
+    loop.run_until_complete(
+        setup.async_setup_component(hass, fan.DOMAIN, {
+            'fan': [{
                 'platform': 'demo'
             }]
         }))
