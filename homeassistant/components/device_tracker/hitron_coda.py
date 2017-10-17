@@ -69,7 +69,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         return None
 
     def _login(self):
-        """Log in to the router. This is required for any subsequent api calls."""
+        """Log in to the router. This is required for subsequent api calls."""
         _LOGGER.info("Logging in to CODA...")
 
         try:
