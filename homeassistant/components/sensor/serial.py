@@ -11,17 +11,19 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyserial-asyncio==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SERIAL_PORT = 'serial_port'
+
 DEFAULT_NAME = "Serial Sensor"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_SERIAL_PORT): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -30,9 +32,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
+    port = config.get(CONF_SERIAL_PORT)
 
-    async_add_devices([SerialSensor(name, port)], True)
+    sensor = SerialSensor(name, port)
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
+    async_add_devices([sensor], True)
 
 
 class SerialSensor(Entity):
@@ -61,6 +67,12 @@ class SerialSensor(Entity):
             line = yield from reader.readline()
             self._state = line.decode('utf-8').strip()
             self.async_schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def stop_serial_read(self):
+        """Close resources."""
+        if self._serial_loop_task:
+            self._serial_loop_task.cancel()
 
     @property
     def name(self):
