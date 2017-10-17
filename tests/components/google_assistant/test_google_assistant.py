@@ -133,7 +133,7 @@ def test_sync_request(hass_fixture, assistant_client):
         for demo in DEMO_DEVICES:
             if dev['id'] == demo['id']:
                 assert dev['name'] == demo['name']
-                assert dev['traits'] == demo['traits']
+                assert set(dev['traits']) == set(demo['traits'])
                 assert dev['type'] == demo['type']
 
 
