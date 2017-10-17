@@ -51,7 +51,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'all lights'
     },
-    'traits': ['action.devices.traits.ActivateScene'],
+    'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
     'willReportState': False
 }, {
@@ -99,7 +99,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'all covers'
     },
-    'traits': ['action.devices.traits.ActivateScene'],
+    'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
     'willReportState': False
 }, {
@@ -167,7 +167,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'all fans'
     },
-    'traits': ['action.devices.traits.ActivateScene'],
+    'traits': ['action.devices.traits.Scene'],
     'type': 'action.devices.types.SCENE',
     'willReportState': False
 }]

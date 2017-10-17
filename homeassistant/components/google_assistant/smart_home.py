@@ -15,39 +15,42 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON
 )
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan
+    switch, light, cover, media_player, group, fan, scene
 )
 
 from .const import (
     ATTR_GOOGLE_ASSISTANT_NAME,
-    COMMAND_BRIGHTNESS, COMMAND_ONOFF,
-    PREFIX_TRAITS, PREFIX_TYPES,
+    COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
+    TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
+    TRAIT_RGB_COLOR, TRAIT_SCENE,
+    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH,
     CONF_ALIASES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-# Mapping is [actions schema, command, optional features]
+# Mapping is [actions schema, primary trait, optional features]
 # optional is SUPPORT_* = (trait, command)
 MAPPING_COMPONENT = {
-    group.DOMAIN: ['SCENE', 'ActivateScene', None],
-    switch.DOMAIN: ['SWITCH', 'OnOff', None],
-    fan.DOMAIN: ['SWITCH', 'OnOff', None],
+    group.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    scene.DOMAIN: [TYPE_SCENE, TRAIT_SCENE, None],
+    switch.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
+    fan.DOMAIN: [TYPE_SWITCH, TRAIT_ONOFF, None],
     light.DOMAIN: [
-        'LIGHT', 'OnOff', {
-            light.SUPPORT_BRIGHTNESS: 'Brightness',
-            light.SUPPORT_RGB_COLOR: 'ColorSpectrum',
-            light.SUPPORT_COLOR_TEMP: 'ColorTemperature'
+        TYPE_LIGHT, TRAIT_ONOFF, {
+            light.SUPPORT_BRIGHTNESS: TRAIT_BRIGHTNESS,
+            light.SUPPORT_RGB_COLOR: TRAIT_RGB_COLOR,
+            light.SUPPORT_COLOR_TEMP: TRAIT_COLOR_TEMP,
         }
     ],
     cover.DOMAIN: [
-        'LIGHT', 'OnOff', {
-            cover.SUPPORT_SET_POSITION: 'Brightness'
+        TYPE_LIGHT, TRAIT_ONOFF, {
+            cover.SUPPORT_SET_POSITION: TRAIT_BRIGHTNESS
         }
     ],
     media_player.DOMAIN: [
-        'LIGHT', 'OnOff', {
-            media_player.SUPPORT_VOLUME_SET: 'Brightness'
+        TYPE_LIGHT, TRAIT_ONOFF, {
+            media_player.SUPPORT_VOLUME_SET: TRAIT_BRIGHTNESS
         }
     ],
 }  # type: Dict[str, list]
@@ -70,8 +73,8 @@ def entity_to_device(entity: Entity):
         'traits': [],
         'willReportState': False,
     }
-    device['type'] = PREFIX_TYPES + class_data[0]
-    device['traits'].append(PREFIX_TRAITS + class_data[1])
+    device['type'] = class_data[0]
+    device['traits'].append(class_data[1])
 
     # handle custom names
     device['name']['name'] = \
@@ -90,7 +93,7 @@ def entity_to_device(entity: Entity):
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
-                device['traits'].append(PREFIX_TRAITS + trait)
+                device['traits'].append(trait)
 
     return device
 
@@ -133,17 +136,17 @@ def determine_service(entity_id: str, command: str,
     domain = entity_id.split('.')[0]
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
     # special media_player handling
-    if domain == 'media_player' and command == COMMAND_BRIGHTNESS:
+    if domain == media_player.DOMAIN and command == COMMAND_BRIGHTNESS:
         brightness = params.get('brightness', 0)
         service_data['volume'] = brightness / 100
         return (media_player.SERVICE_VOLUME_SET, service_data)
 
     # special cover handling
-    if domain == 'cover' and command == COMMAND_BRIGHTNESS:
-        service_data['position'] = params.get('brightness', 0)
-        return (cover.SERVICE_SET_COVER_POSITION, service_data)
-    elif domain == 'cover' and command == COMMAND_ONOFF:
-        if params.get('on') is True:
+    if domain == cover.DOMAIN:
+        if command == COMMAND_BRIGHTNESS:
+            service_data['position'] = params.get('brightness', 0)
+            return (cover.SERVICE_SET_COVER_POSITION, service_data)
+        if command == COMMAND_ONOFF and params.get('on') is True:
             return (cover.SERVICE_OPEN_COVER, service_data)
         return (cover.SERVICE_CLOSE_COVER, service_data)
 
@@ -152,6 +155,7 @@ def determine_service(entity_id: str, command: str,
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
 
-    if COMMAND_ONOFF == command and params.get('on') is True:
+    if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
+                                            params.get('on') is True):
         return (SERVICE_TURN_ON, service_data)
     return (SERVICE_TURN_OFF, service_data)
