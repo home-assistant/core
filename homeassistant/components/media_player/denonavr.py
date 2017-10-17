@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.5.3']
+REQUIREMENTS = ['denonavr==0.5.4']
 
 _LOGGER = logging.getLogger(__name__)
 

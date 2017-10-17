@@ -157,14 +157,17 @@ logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
 def test_accessing_forbidden_methods(hass, caplog):
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
-    source = """
-hass.stop()
-    """
 
-    hass.async_add_job(execute, hass, 'test.py', source, {})
-    yield from hass.async_block_till_done()
-
-    assert "Not allowed to access HomeAssistant.stop" in caplog.text
+    for source, name in {
+        'hass.stop()': 'HomeAssistant.stop',
+        'dt_util.set_default_time_zone()': 'module.set_default_time_zone',
+        'datetime.non_existing': 'module.non_existing',
+        'time.tzset()': 'TimeWrapper.tzset',
+    }.items():
+        caplog.records.clear()
+        hass.async_add_job(execute, hass, 'test.py', source, {})
+        yield from hass.async_block_till_done()
+        assert "Not allowed to access {}".format(name) in caplog.text
 
 
 @asyncio.coroutine
@@ -206,6 +209,26 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
 
 
 @asyncio.coroutine
+def test_exposed_modules(hass, caplog):
+    """Test datetime and time modules exposed."""
+    caplog.set_level(logging.ERROR)
+    source = """
+hass.states.set('module.time', time.strftime('%Y', time.gmtime(521276400)))
+hass.states.set('module.datetime',
+                datetime.timedelta(minutes=1).total_seconds())
+"""
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('module.time', '1986')
+    assert hass.states.is_state('module.datetime', '60.0')
+
+    # No errors logged = good
+    assert caplog.text == ''
+
+
+@asyncio.coroutine
 def test_reload(hass):
     """Test we can re-discover scripts."""
     scripts = [
@@ -238,3 +261,19 @@ def test_reload(hass):
     assert hass.services.has_service('python_script', 'hello2')
     assert hass.services.has_service('python_script', 'world_beer')
     assert hass.services.has_service('python_script', 'reload')
+
+
+@asyncio.coroutine
+def test_sleep_warns_one(hass, caplog):
+    """Test time.sleep warns once."""
+    caplog.set_level(logging.WARNING)
+    source = """
+time.sleep(2)
+time.sleep(5)
+"""
+
+    with patch('homeassistant.components.python_script.time.sleep'):
+        hass.async_add_job(execute, hass, 'test.py', source, {})
+        yield from hass.async_block_till_done()
+
+    assert caplog.text.count('time.sleep') == 1
