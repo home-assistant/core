@@ -330,6 +330,11 @@ class Recorder(threading.Thread):
                                   CONNECT_RETRY_WAIT)
                     tries += 1
 
+                except exc.DataError as err:
+                    # catch query data error - for example longer state string
+                    # than 255 characters
+                    tries = 99
+
             if not updated:
                 _LOGGER.error("Error in database update. Could not save "
                               "after %d tries. Giving up", tries)
