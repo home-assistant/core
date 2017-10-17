@@ -6,7 +6,7 @@ from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
-    DEVICE_DEFAULT_NAME, CONF_SCAN_SEQUENTIAL)
+    DEVICE_DEFAULT_NAME)
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.loader import get_component
@@ -30,8 +30,7 @@ class EntityComponent(object):
     """Helper class that will help a component manage its entities."""
 
     def __init__(self, logger, domain, hass,
-                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None,
-                 scan_sequential=False):
+                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -39,7 +38,6 @@ class EntityComponent(object):
         self.domain = domain
         self.entity_id_format = domain + '.{}'
         self.scan_interval = scan_interval
-        self.scan_sequential = scan_sequential
         self.group_name = group_name
 
         self.entities = {}
@@ -47,7 +45,7 @@ class EntityComponent(object):
 
         self._platforms = {
             'core': EntityPlatform(
-                self, domain, self.scan_interval, self.scan_sequential, None),
+                self, domain, self.scan_interval, False, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -134,13 +132,11 @@ class EntityComponent(object):
         scan_interval = (platform_config.get(CONF_SCAN_INTERVAL) or
                          getattr(platform, 'SCAN_INTERVAL', None) or
                          self.scan_interval)
-        scan_sequential = (platform_config.get(CONF_SCAN_SEQUENTIAL) or
-                           getattr(platform, 'SCAN_SEQUENTIAL', None) or
-                           self.scan_sequential)
+        scan_sequential = getattr(platform, 'SCAN_SEQUENTIAL', False)
+
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
-        key = (platform_type, scan_interval, scan_sequential,
-               entity_namespace)
+        key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
             entity_platform = self._platforms[key] = EntityPlatform(
