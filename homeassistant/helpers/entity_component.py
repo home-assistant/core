@@ -44,8 +44,7 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(
-                self, domain, self.scan_interval, False, None),
+            'core': EntityPlatform(self, domain, self.scan_interval, 0, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -132,7 +131,7 @@ class EntityComponent(object):
         scan_interval = (platform_config.get(CONF_SCAN_INTERVAL) or
                          getattr(platform, 'SCAN_INTERVAL', None) or
                          self.scan_interval)
-        scan_sequential = getattr(platform, 'SCAN_SEQUENTIAL', False)
+        scan_sequential = getattr(platform, 'PARALLEL_UPDATES', 1)
 
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
@@ -328,7 +327,8 @@ class EntityPlatform(object):
         self._process_updates = asyncio.Lock(loop=component.hass.loop)
 
         if scan_sequential:
-            self.scan_sequential = asyncio.Lock(loop=component.hass.loop)
+            self.scan_sequential = asyncio.Semaphore(
+                scan_sequential, loop=component.hass.loop)
 
     @asyncio.coroutine
     def async_block_entities_done(self):
