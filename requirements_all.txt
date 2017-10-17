@@ -111,7 +111,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.4
+bellows==0.4.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -178,7 +178,7 @@ datapoint==0.4.3
 # decora_wifi==1.3
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.5.3
+denonavr==0.5.4
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -386,7 +386,7 @@ libpurecoollink==0.4.2
 libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
-librouteros==1.0.2
+librouteros==1.0.4
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
@@ -401,7 +401,7 @@ lightify==1.0.6
 limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
-liveboxplaytv==1.4.9
+liveboxplaytv==1.5.0
 
 # homeassistant.components.lametric
 # homeassistant.components.notify.lametric
@@ -477,7 +477,7 @@ orvibo==1.1.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.3.0
+paho-mqtt==1.3.1
 
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
@@ -524,7 +524,7 @@ proliphix==0.4.1
 prometheus_client==0.0.19
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.3.1
+psutil==5.4.0
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
@@ -806,7 +806,7 @@ python-synology==0.1.0
 python-tado==0.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==8.0.0
+python-telegram-bot==8.1.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -1043,7 +1043,7 @@ wakeonlan==0.2.2
 waqiasync==1.0.0
 
 # homeassistant.components.cloud
-warrant==0.2.0
+warrant==0.5.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
@@ -1060,7 +1060,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.knx
-xknx==0.7.14
+xknx==0.7.16
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.swiss_hydrological_data
@@ -1082,7 +1082,7 @@ yeelight==0.3.3
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2017.10.01
+youtube_dl==2017.10.12
 
 # homeassistant.components.light.zengge
 zengge==0.2
