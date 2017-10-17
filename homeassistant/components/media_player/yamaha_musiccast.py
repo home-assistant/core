@@ -33,15 +33,17 @@ SUPPORTED_FEATURES = (
 )
 
 KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
+INTERVAL_SECONDS = 'interval_seconds'
 
 REQUIREMENTS = ['pymusiccast==0.1.2']
 
-DEFAULT_NAME = "Yamaha Receiver"
 DEFAULT_PORT = 5005
+DEFAULT_INTERVAL = 480
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+    vol.Optional(INTERVAL_SECONDS, default=DEFAULT_INTERVAL): cv.positive_int,
 })
 
 
@@ -57,6 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    interval = config.get(INTERVAL_SECONDS)
 
     # Get IP of host to prevent duplicates
     try:
@@ -78,7 +81,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     known_hosts.append(reg_host)
 
     try:
-        receiver = pymusiccast.McDevice(ipaddr, udp_port=port)
+        receiver = pymusiccast.McDevice(
+            ipaddr, udp_port=port, mc_interval=interval)
     except pymusiccast.exceptions.YMCInitError as err:
         _LOGGER.error(err)
         receiver = None
