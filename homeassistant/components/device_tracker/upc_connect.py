@@ -6,7 +6,7 @@ https://home-assistant.io/components/device_tracker.upc_connect/
 """
 import asyncio
 import logging
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 import aiohttp
 import async_timeout
