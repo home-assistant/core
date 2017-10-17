@@ -75,7 +75,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     if config.get(CONF_SUPPRESS_WARNING):
-        import requests
         from requests.packages import urllib3
         urllib3.exceptions.InsecureRequestWarning
         _LOGGER.warning('InsecureRequestWarning is disabled '
