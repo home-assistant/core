@@ -12,6 +12,7 @@ ATTR_OPEN_SINCE = 'Open since'
 
 MOTION = 'motion'
 NO_MOTION = 'no_motion'
+ATTR_LAST_ACTION = 'last_action'
 ATTR_NO_MOTION_SINCE = 'No motion since'
 
 DENSITY = 'density'
@@ -327,9 +328,17 @@ class XiaomiCube(XiaomiBinarySensor):
     def __init__(self, device, hass, xiaomi_hub):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
+        self._last_action = None
         self._state = False
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
                                     None, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
 
     def parse_data(self, data):
         """Parse data sent by gateway."""
@@ -338,6 +347,7 @@ class XiaomiCube(XiaomiBinarySensor):
                 'entity_id': self.entity_id,
                 'action_type': data['status']
             })
+            self._last_action = data['status']
 
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
@@ -345,4 +355,6 @@ class XiaomiCube(XiaomiBinarySensor):
                 'action_type': 'rotate',
                 'action_value': float(data['rotate'].replace(",", "."))
             })
-        return False
+            self._last_action = 'rotate'
+
+        return True
