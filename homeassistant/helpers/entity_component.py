@@ -30,7 +30,8 @@ class EntityComponent(object):
     """Helper class that will help a component manage its entities."""
 
     def __init__(self, logger, domain, hass,
-                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None, scan_sequential=False):
+                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None,
+                 scan_sequential=False):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -138,12 +139,15 @@ class EntityComponent(object):
                            self.scan_sequential)
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
-        key = (platform_type, scan_interval, scan_sequential, entity_namespace)
+        key = (platform_type, scan_interval, scan_sequential,
+               entity_namespace)
 
         if key not in self._platforms:
-            self._platforms[key] = EntityPlatform(
-                self, platform_type, scan_interval, scan_sequential, entity_namespace)
-        entity_platform = self._platforms[key]
+            entity_platform = self._platforms[key] = EntityPlatform(
+                self, platform_type, scan_interval, scan_sequential,
+                entity_namespace)
+        else:
+            entity_platform = self._platforms[key]
 
         self.logger.info("Setting up %s.%s", self.domain, platform_type)
         warn_task = self.hass.loop.call_later(
