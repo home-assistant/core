@@ -6,7 +6,7 @@ from homeassistant import config as conf_util
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
-    DEVICE_DEFAULT_NAME)
+    DEVICE_DEFAULT_NAME, CONF_SCAN_SEQUENTIAL)
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.loader import get_component
@@ -135,7 +135,7 @@ class EntityComponent(object):
                          getattr(platform, 'SCAN_INTERVAL', None) or
                          self.scan_interval)
         scan_sequential = (platform_config.get(CONF_SCAN_SEQUENTIAL) or
-                           getattr(platform, 'SCAN_SEQURNTIAL', None) or
+                           getattr(platform, 'SCAN_SEQUENTIAL', None) or
                            self.scan_sequential)
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
