@@ -83,7 +83,7 @@ def send_message(sender, password, recipient, use_tls,
             self.add_event_handler('failed_auth', self.check_credentials)
             self.add_event_handler('session_start', self.start)
             if room:
-                self.register_plugin('xep_0045') # MUC
+                self.register_plugin('xep_0045')  # MUC
             if not verify_certificate:
                 self.add_event_handler('ssl_invalid_cert',
                                        self.discard_ssl_invalid_cert)
