@@ -32,7 +32,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REMOVED, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+    HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
@@ -63,6 +63,11 @@ def split_entity_id(entity_id: str) -> List[str]:
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format."""
     return ENTITY_ID_PATTERN.match(entity_id) is not None
+
+
+def valid_state(state: str) -> bool:
+    """Test if an state is valid."""
+    return len(state) < 256
 
 
 def callback(func: Callable[..., None]) -> Callable[..., None]:
@@ -524,6 +529,11 @@ class State(object):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
+
+        if not valid_state(state):
+            raise InvalidStateError((
+                "Invalid state encountered for entity id: {}. "
+                "State max length is 255 characters.").format(entity_id))
 
         self.entity_id = entity_id.lower()
         self.state = str(state)
