@@ -206,6 +206,7 @@ class Entity(object):
 
             # Process update sequential
             if self.sequential_update:
+                self._update_warn = true
                 yield from self.sequential_update.acquire()
 
             self._update_warn = self.hass.loop.call_later(
