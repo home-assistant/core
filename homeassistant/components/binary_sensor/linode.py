@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.linode import (
     CONF_NODES, ATTR_CREATED, ATTR_NODE_ID, ATTR_NODE_NAME,
-    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
+    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
     ATTR_REGION, ATTR_VCPUS, DATA_LINODE)
 
 _LOGGER = logging.getLogger(__name__)
