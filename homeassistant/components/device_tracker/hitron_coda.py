@@ -48,6 +48,8 @@ class HitronCODADeviceScanner(DeviceScanner):
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
 
+        self._userid = None
+
         self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
 
@@ -66,26 +68,45 @@ class HitronCODADeviceScanner(DeviceScanner):
             return filter_named[0]
         return None
 
+    def _login(self):
+        """Log in to the router. This is required for any subsequent api calls."""
+        _LOGGER.info("Logging in to CODA...")
+
+        try:
+            data = [
+                ('user', self._username),
+                ('pws', self._password),
+            ]
+            res = requests.post('http://192.168.0.1/goform/login', data=data)
+        except requests.exceptions.Timeout:
+            _LOGGER.error(
+                "Connection to the router timed out at URL %s", self._url)
+            return False
+        if res.status_code != 200:
+            _LOGGER.error(
+                "Connection failed with http code %s", res.status_code)
+            return False
+        try:
+            self._userid = res.cookies['userid']
+            return True
+        except KeyError:
+            _LOGGER.error("Failed to log in to router")
+            return False
+
     def _update_info(self):
         """Get ARP from router."""
         _LOGGER.info("Fetching...")
 
+        if self._userid is None:
+            if not self._login():
+                _LOGGER.error("Could not obtain a user ID from the router")
+                return False
         last_results = []
 
         # doing a request
         try:
             res = requests.get(self._url, timeout=10, cookies={
-                'LANG_COOKIE': 'en_US',
-                'cur_modelname': 'CODA-4582U',
-                'userName': self._username,
-                'password': self._password,
-                'userid': '1198377306',  # magic number
-                'modelname': 'CODA-4582U',
-                'IE8': '0',
-                'isEdit2': '0',
-                'isEdit3': '0',
-                'isEdit': '0',
-                'isEdit1': '0',
+                'userid': self._userid
             })
         except requests.exceptions.Timeout:
             _LOGGER.error(
@@ -104,8 +125,8 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         # parsing response
         for info in result:
-            mac = info.macAddr
-            name = info.hostName
+            mac = info['macAddr']
+            name = info['hostName']
             # No address = no item :)
             if mac is None:
                 continue
