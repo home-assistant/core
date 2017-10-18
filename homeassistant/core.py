@@ -525,6 +525,8 @@ class State(object):
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
+        state = str(state)
+
         if not valid_entity_id(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
@@ -536,7 +538,7 @@ class State(object):
                 "State max length is 255 characters.").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = str(state)
+        self.state = state
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
