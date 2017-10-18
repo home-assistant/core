@@ -59,7 +59,7 @@ fuzzywuzzy==0.15.1
 gTTS-token==1.1.1
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.7
+ha-ffmpeg==1.8
 
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
