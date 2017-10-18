@@ -34,7 +34,7 @@ def async_setup_platform(hass, config, async_add_devices,
             discovery_info[ATTR_DISCOVER_AREAS] is None):
         return
 
-    api = hass[DATA_API]
+    api = hass.data[DATA_API]
     devices = [SpcAlarm(api, area)
                for area in discovery_info[ATTR_DISCOVER_AREAS]]
 
