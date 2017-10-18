@@ -207,5 +207,3 @@ class NetatmoBinarySensor(BinarySensorDevice):
                 self._data.camera_data.moduleOpened(
                     self._home, self._module_name, self._camera_name,
                     self._timeout)
-        else:
-            return None
