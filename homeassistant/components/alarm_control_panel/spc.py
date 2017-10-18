@@ -34,7 +34,8 @@ def async_setup_platform(hass, config, async_add_devices,
             discovery_info[ATTR_DISCOVER_AREAS] is None):
         return
 
-    devices = [SpcAlarm(hass=hass, area=area)
+    api = hass[DATA_API]
+    devices = [SpcAlarm(api, area)
                for area in discovery_info[ATTR_DISCOVER_AREAS]]
 
     async_add_devices(devices)
@@ -43,9 +44,8 @@ def async_setup_platform(hass, config, async_add_devices,
 class SpcAlarm(alarm.AlarmControlPanel):
     """Represents the SPC alarm panel."""
 
-    def __init__(self, hass, area):
+    def __init__(self, api, area):
         """Initialize the SPC alarm panel."""
-        self._hass = hass
         self._area_id = area['id']
         self._name = area['name']
         self._state = _get_alarm_state(area['mode'])
@@ -53,16 +53,19 @@ class SpcAlarm(alarm.AlarmControlPanel):
             self._changed_by = area.get('last_unset_user_name', 'unknown')
         else:
             self._changed_by = area.get('last_set_user_name', 'unknown')
-        self._api = hass.data[DATA_API]
+        self._api = api
 
-        hass.data[DATA_REGISTRY].register_alarm_device(area['id'], self)
+    @asyncio.coroutine
+    def async_added_to_hass(self, state, extra):
+        """Calbback for init handlers."""
+        self.hass.data[DATA_REGISTRY].register_alarm_device(area['id'], self)
 
     @asyncio.coroutine
     def async_update_from_spc(self, state, extra):
         """Update the alarm panel with a new state."""
         self._state = state
         self._changed_by = extra.get('changed_by', 'unknown')
-        yield from self.async_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
