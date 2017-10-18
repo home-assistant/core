@@ -8,7 +8,7 @@ from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC)
 
-REQUIREMENTS = ['PyXiaomiGateway==0.5.1']
+REQUIREMENTS = ['PyXiaomiGateway==0.5.2']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
@@ -26,7 +26,8 @@ def _validate_conf(config):
     for gw_conf in config:
         for _conf in gw_conf.keys():
             if _conf not in [CONF_MAC, 'host', 'port', 'key']:
-                raise vol.Invalid('Invalid config: ', _conf)
+                raise vol.Invalid('{} is not a valid config parameter'.
+                                  format(_conf))
 
         res_gw_conf = {'sid': gw_conf.get(CONF_MAC)}
         if res_gw_conf['sid'] is not None:
@@ -34,13 +35,14 @@ def _validate_conf(config):
             if len(res_gw_conf['sid']) != 12:
                 raise vol.Invalid('Invalid mac address', gw_conf.get(CONF_MAC))
         key = gw_conf.get('key')
+
         if key is None:
             _LOGGER.warning(
                 'Gateway Key is not provided.'
                 ' Controlling gateway device will not be possible.')
         elif len(key) != 16:
-            raise vol.Invalid('Invalid key %s.'
-                              ' Key must be 16 characters', key)
+            raise vol.Invalid('Invalid key {}.'
+                              ' Key must be 16 characters'.format(key))
         res_gw_conf['key'] = key
 
         host = gw_conf.get('host')

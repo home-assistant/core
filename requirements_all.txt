@@ -33,7 +33,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.5.1
+PyXiaomiGateway==0.5.2
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
