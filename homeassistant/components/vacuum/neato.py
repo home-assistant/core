@@ -8,7 +8,7 @@ import logging
 import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (SUPPORT_BATTERY,
-                                             SUPPORT_FAN_SPEED, SUPPORT_PAUSE,
+                                             SUPPORT_PAUSE,
                                              SUPPORT_RETURN_HOME,
                                              SUPPORT_STATUS, SUPPORT_STOP,
                                              SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
@@ -16,7 +16,7 @@ from homeassistant.components.vacuum import (SUPPORT_BATTERY,
                                              ATTR_BATTERY_LEVEL,
                                              ATTR_BATTERY_ICON, VacuumDevice)
 from homeassistant.components.neato import (
-    NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
+    NEATO_ROBOTS, NEATO_LOGIN, ACTION, ERRORS, MODE, ALERTS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(NeatoConnectedVacuum(hass, robot))
     _LOGGER.debug("Adding vacuums %s", dev)
     add_devices(dev)
+
 
 class NeatoConnectedVacuum(VacuumDevice):
     """Neato Connected Vacuums."""
@@ -103,17 +104,17 @@ class NeatoConnectedVacuum(VacuumDevice):
     def icon(self):
         """Return the icon to use for device."""
         return ICON
-        
+
     @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_NEATO
-    
+
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self._state['details']['charge']
-    
+
     @property
     def status(self):
         """Return the status of the vacuum cleaner."""
@@ -136,7 +137,7 @@ class NeatoConnectedVacuum(VacuumDevice):
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
         self.robot.start_cleaning()
-        
+
     @property
     def is_on(self):
         """Return true if switch is on."""
