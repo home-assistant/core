@@ -14,11 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
-SWITCH_TYPE_CLEAN = 'clean'
-SWITCH_TYPE_SCHEDULE = 'scedule'
+SWITCH_TYPE_SCHEDULE = 'schedule'
 
 SWITCH_TYPES = {
-    SWITCH_TYPE_CLEAN: ['Clean'],
     SWITCH_TYPE_SCHEDULE: ['Schedule']
 }
 
@@ -64,15 +62,6 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._state = None
             return
         _LOGGER.debug('self._state=%s', self._state)
-        if self.type == SWITCH_TYPE_CLEAN:
-            if (self.robot.state['action'] == 1 or
-                    self.robot.state['action'] == 2 or
-                    self.robot.state['action'] == 3 and
-                    self.robot.state['state'] == 2):
-                self._clean_state = STATE_ON
-            else:
-                self._clean_state = STATE_OFF
-            _LOGGER.debug("Clean state: %s", self._clean_state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
             if self.robot.schedule_enabled:
@@ -94,26 +83,17 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self.type == SWITCH_TYPE_CLEAN:
-            if self._clean_state == STATE_ON:
-                return True
-            return False
-        elif self.type == SWITCH_TYPE_SCHEDULE:
+        if self.type == SWITCH_TYPE_SCHEDULE:
             if self._schedule_state == STATE_ON:
                 return True
             return False
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self.type == SWITCH_TYPE_CLEAN:
-            self.robot.start_cleaning()
-        elif self.type == SWITCH_TYPE_SCHEDULE:
+        if self.type == SWITCH_TYPE_SCHEDULE:
             self.robot.enable_schedule()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self.type == SWITCH_TYPE_CLEAN:
-            self.robot.pause_cleaning()
-            self.robot.send_to_base()
-        elif self.type == SWITCH_TYPE_SCHEDULE:
+        if self.type == SWITCH_TYPE_SCHEDULE:
             self.robot.disable_schedule()
