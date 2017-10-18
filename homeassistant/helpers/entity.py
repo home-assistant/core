@@ -74,8 +74,8 @@ class Entity(object):
     # Protect for multiple updates
     _update_staged = False
 
-    # Process updates sequential
-    sequential_update = None
+    # Process updates pararell
+    pararell_updates = None
 
     @property
     def should_poll(self) -> bool:
@@ -205,8 +205,8 @@ class Entity(object):
             self._update_staged = True
 
             # Process update sequential
-            if self.sequential_update:
-                yield from self.sequential_update.acquire()
+            if self.pararell_updates:
+                yield from self.pararell_updates.acquire()
 
             update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
@@ -226,8 +226,8 @@ class Entity(object):
             finally:
                 self._update_staged = False
                 update_warn.cancel()
-                if self.sequential_update:
-                    self.sequential_update.release()
+                if self.pararell_updates:
+                    self.pararell_updates.release()
 
         start = timer()
 

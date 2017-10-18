@@ -131,7 +131,9 @@ class EntityComponent(object):
         scan_interval = (platform_config.get(CONF_SCAN_INTERVAL) or
                          getattr(platform, 'SCAN_INTERVAL', None) or
                          self.scan_interval)
-        scan_sequential = getattr(platform, 'PARALLEL_UPDATES', 1)
+        pararell_updates = getattr(
+            platform, 'PARALLEL_UPDATES',
+            int(hasattr(platform, 'async_setup_platform')))
 
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
@@ -139,7 +141,7 @@ class EntityComponent(object):
 
         if key not in self._platforms:
             entity_platform = self._platforms[key] = EntityPlatform(
-                self, platform_type, scan_interval, scan_sequential,
+                self, platform_type, scan_interval, pararell_updates,
                 entity_namespace)
         else:
             entity_platform = self._platforms[key]
@@ -313,22 +315,22 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    def __init__(self, component, platform, scan_interval, scan_sequential,
+    def __init__(self, component, platform, scan_interval, pararell_updates,
                  entity_namespace):
         """Initialize the entity platform."""
         self.component = component
         self.platform = platform
         self.scan_interval = scan_interval
-        self.scan_sequential = None
+        self.pararell_updates = None
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._tasks = []
         self._async_unsub_polling = None
         self._process_updates = asyncio.Lock(loop=component.hass.loop)
 
-        if scan_sequential:
-            self.scan_sequential = asyncio.Semaphore(
-                scan_sequential, loop=component.hass.loop)
+        if pararell_updates:
+            self.pararell_updates = asyncio.Semaphore(
+                pararell_updates, loop=component.hass.loop)
 
     @asyncio.coroutine
     def async_block_entities_done(self):
@@ -376,7 +378,7 @@ class EntityPlatform(object):
         @asyncio.coroutine
         def async_process_entity(new_entity):
             """Add entities to StateMachine."""
-            new_entity.sequential_update = self.scan_sequential
+            new_entity.pararell_updates = self.pararell_updates
             ret = yield from self.component.async_add_entity(
                 new_entity, self, update_before_add=update_before_add
             )
