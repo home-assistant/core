@@ -107,23 +107,23 @@ def async_setup(hass, config):
                         try:
                             url = template_url.async_render(variables=service.data)
                             if command_config[CONF_METHOD] == 'get':
-                                request = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
                             elif command_config[CONF_METHOD] == 'post':
-                                request = requests.post(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.post(url, data=payload, timeout=10, auth=auth, headers=headers)
                             elif command_config[CONF_METHOD] == 'delete':
-                                request = requests.delete(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.delete(url, data=payload, timeout=10, auth=auth, headers=headers)
                             elif command_config[CONF_METHOD] == 'put':
-                                request = requests.put(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.put(url, data=payload, timeout=10, auth=auth, headers=headers)
                             elif command_config[CONF_METHOD] == 'head':
-                                request = requests.head(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.head(url, data=payload, timeout=10, auth=auth, headers=headers)
                             elif command_config[CONF_METHOD] == 'options':
-                                request = requests.options(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                response = requests.options(url, data=payload, timeout=10, auth=auth, headers=headers)
                                 
-                            return request
+                            return response
                         except requests.exceptions.RequestException as error:
                             _LOGGER.error("Rest command error %s.", url)
 
-                        response = yield from self.hass.async_add_job(
+                        request = yield from self.hass.async_add_job(
                             fetch)
                 else:    
                     with async_timeout.timeout(timeout, loop=hass.loop):
