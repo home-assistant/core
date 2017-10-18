@@ -351,6 +351,7 @@ class Recorder(threading.Thread):
         from sqlalchemy.engine import Engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
+        from sqlite3 import Connection
 
         from . import models
 
@@ -360,7 +361,7 @@ class Recorder(threading.Thread):
         @event.listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """Set sqlite's WAL mode."""
-            if self.db_url.startswith("sqlite://"):
+            if isinstance(dbapi_connection, Connection):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()

@@ -6,7 +6,6 @@ https://home-assistant.io/components/device_tracker.upc_connect/
 """
 import asyncio
 import logging
-import xml.etree.ElementTree as ET
 
 import aiohttp
 import async_timeout
@@ -18,6 +17,8 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+
+REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +64,8 @@ class UPCDeviceScanner(DeviceScanner):
     @asyncio.coroutine
     def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
+        import defusedxml.ElementTree as ET
+
         if self.token is None:
             token_initialized = yield from self.async_initialize_token()
             if not token_initialized:

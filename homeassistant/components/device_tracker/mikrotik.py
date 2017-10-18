@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 
-REQUIREMENTS = ['librouteros==1.0.2']
+REQUIREMENTS = ['librouteros==1.0.4']
 
 MTK_DEFAULT_API_PORT = '8728'
 
