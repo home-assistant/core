@@ -268,7 +268,7 @@ def test_async_pararell_updates_with_one(hass):
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.pararell_updates = test_semephore
+            self.parallel_updates = test_semephore
 
         @asyncio.coroutine
         def async_update(self):
@@ -331,7 +331,7 @@ def test_async_pararell_updates_with_two(hass):
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
-            self.pararell_updates = test_semephore
+            self.parallel_updates = test_semephore
 
         @asyncio.coroutine
         def async_update(self):
