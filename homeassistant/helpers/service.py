@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.exceptions import TemplateError
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -22,6 +22,7 @@ CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
 def call_from_config(hass, config, blocking=False, variables=None,
                      validate_config=True):
     """Call a service based on a config hash."""
@@ -31,6 +32,7 @@ def call_from_config(hass, config, blocking=False, variables=None,
 
 
 @asyncio.coroutine
+@bind_hass
 def async_call_from_config(hass, config, blocking=False, variables=None,
                            validate_config=True):
     """Call a service based on a config hash."""
@@ -80,6 +82,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
         domain, service_name, service_data, blocking)
 
 
+@bind_hass
 def extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 

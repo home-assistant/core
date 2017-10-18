@@ -104,7 +104,7 @@ def run(script_args: List) -> int:
     for index, measurement in enumerate(measurements):
         client.query('''SELECT * INTO {}..:MEASUREMENT FROM '''
                      '"{}" GROUP BY *'.format(old_dbname, measurement))
-        # Print progess
+        # Print progress
         print_progress(index + 1, nb_measurements)
 
     # Delete the database
@@ -184,7 +184,7 @@ def run(script_args: List) -> int:
             else:
                 # Increment offset
                 offset += args.step
-        # Print progess
+        # Print progress
         print_progress(index + 1, nb_measurements)
 
     # Delete database if needed

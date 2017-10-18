@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
@@ -32,6 +33,7 @@ from tests.common import (
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
+SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
@@ -62,6 +64,9 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(YAML_PATH):
             os.remove(YAML_PATH)
 
+        if os.path.isfile(SECRET_PATH):
+            os.remove(SECRET_PATH)
+
         if os.path.isfile(VERSION_PATH):
             os.remove(VERSION_PATH)
 
@@ -85,6 +90,7 @@ class TestConfig(unittest.TestCase):
         config_util.create_default_config(CONFIG_DIR, False)
 
         assert os.path.isfile(YAML_PATH)
+        assert os.path.isfile(SECRET_PATH)
         assert os.path.isfile(VERSION_PATH)
         assert os.path.isfile(GROUP_PATH)
         assert os.path.isfile(AUTOMATIONS_PATH)
@@ -436,6 +442,38 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
         assert self.hass.config.time_zone.zone == 'America/New_York'
 
+    def test_loading_configuration_from_packages(self):
+        """Test loading packages config onto hass object config."""
+        self.hass.config = mock.Mock()
+
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(self.hass, {
+                'latitude': 39,
+                'longitude': -1,
+                'elevation': 500,
+                'name': 'Huis',
+                CONF_TEMPERATURE_UNIT: 'C',
+                'time_zone': 'Europe/Madrid',
+                'packages': {
+                    'package_1': {'wake_on_lan': None},
+                    'package_2': {'light': {'platform': 'hue'},
+                                  'media_extractor': None,
+                                  'sun': None}},
+            }), self.hass.loop).result()
+
+        # Empty packages not allowed
+        with pytest.raises(MultipleInvalid):
+            run_coroutine_threadsafe(
+                config_util.async_process_ha_core_config(self.hass, {
+                    'latitude': 39,
+                    'longitude': -1,
+                    'elevation': 500,
+                    'name': 'Huis',
+                    CONF_TEMPERATURE_UNIT: 'C',
+                    'time_zone': 'Europe/Madrid',
+                    'packages': {'empty_package': None},
+                }), self.hass.loop).result()
+
     @mock.patch('homeassistant.util.location.detect_location_info',
                 autospec=True, return_value=location_util.LocationInfo(
                     '0.0.0.0', 'US', 'United States', 'CA', 'California',
@@ -535,6 +573,7 @@ def test_merge(merge_log_err):
         'pack_11': {'input_select': {'is1': None}},
         'pack_list': {'light': {'platform': 'test'}},
         'pack_list2': {'light': [{'platform': 'test'}]},
+        'pack_none': {'wake_on_lan': None},
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
@@ -544,10 +583,11 @@ def test_merge(merge_log_err):
     config_util.merge_packages_config(config, packages)
 
     assert merge_log_err.call_count == 0
-    assert len(config) == 4
+    assert len(config) == 5
     assert len(config['input_boolean']) == 2
     assert len(config['input_select']) == 1
     assert len(config['light']) == 3
+    assert config['wake_on_lan'] is None
 
 
 def test_merge_new(merge_log_err):

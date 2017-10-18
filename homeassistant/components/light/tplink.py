@@ -17,7 +17,7 @@ from homeassistant.util.color import (
 
 from typing import Tuple
 
-REQUIREMENTS = ['pyHS100==0.2.4.2']
+REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartPlugException
+        from pyHS100 import SmartDeviceException
         try:
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
@@ -136,7 +136,7 @@ class TPLinkSmartBulb(Light):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
-        except (SmartPlugException, OSError) as ex:
+        except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
 
     @property

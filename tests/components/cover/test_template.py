@@ -409,8 +409,8 @@ class TestTemplateCover(unittest.TestCase):
     def test_set_position(self):
         """Test the set_position command."""
         with assert_setup_component(1, 'cover'):
-            assert setup.setup_component(self.hass, 'input_slider', {
-               'input_slider': {
+            assert setup.setup_component(self.hass, 'input_number', {
+               'input_number': {
                    'test': {
                        'min': '0',
                        'max': '100',
@@ -424,10 +424,10 @@ class TestTemplateCover(unittest.TestCase):
                     'covers': {
                         'test_template_cover': {
                             'position_template':
-                                "{{ states.input_slider.test.state | int }}",
+                                "{{ states.input_number.test.state | int }}",
                             'set_cover_position': {
-                                'service': 'input_slider.select_value',
-                                'entity_id': 'input_slider.test',
+                                'service': 'input_number.set_value',
+                                'entity_id': 'input_number.test',
                                 'data_template': {
                                     'value': '{{ position }}'
                                 },
@@ -440,7 +440,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        state = self.hass.states.set('input_slider.test', 42)
+        state = self.hass.states.set('input_number.test', 42)
         self.hass.block_till_done()
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN

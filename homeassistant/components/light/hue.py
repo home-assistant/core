@@ -206,7 +206,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         if not skip_groups:
             # Group ID 0 is a special group in the hub for all lights, but it
-            # is not returned by get_api() so explicity get it and include it.
+            # is not returned by get_api() so explicitly get it and include it.
             # See https://developers.meethue.com/documentation/
             #               groups-api#21_get_all_groups
             _LOGGER.debug("Getting group 0 from bridge")
@@ -263,7 +263,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # create a service for calling run_scene directly on the bridge,
     # used to simplify automation rules.
     def hue_activate_scene(call):
-        """Service to call directly directly into bridge to set scenes."""
+        """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
         bridge.run_scene(group_name, scene_name)

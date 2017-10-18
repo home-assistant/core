@@ -82,6 +82,11 @@ class FedexSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'packages'
+
     def _update(self):
         """Update device state."""
         import fedexdeliverymanager

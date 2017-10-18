@@ -183,7 +183,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 2 == len(self.hass.states.entity_ids())
 
     def test_update_state_adds_entities_with_update_befor_add_true(self):
-        """Test if call update befor add to state machine."""
+        """Test if call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
@@ -196,7 +196,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ent.update.called
 
     def test_update_state_adds_entities_with_update_befor_add_false(self):
-        """Test if not call update befor add to state machine."""
+        """Test if not call update before add to state machine."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
@@ -209,7 +209,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert not ent.update.called
 
     def test_adds_entities_with_update_befor_add_true_deadlock_protect(self):
-        """Test if call update befor add to state machine.
+        """Test if call update before add to state machine.
 
         It need to run update inside executor and never call
         async_add_entities with True

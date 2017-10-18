@@ -181,7 +181,7 @@ class KNXCover(CoverDevice):
         """Return current tilt position of cover."""
         if not self.device.supports_angle:
             return None
-        return self.device.get_angle()
+        return self.device.current_angle()
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):

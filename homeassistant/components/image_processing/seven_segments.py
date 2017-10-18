@@ -1,5 +1,5 @@
 """
-Local optical character recognition processing of seven segements displays.
+Local optical character recognition processing of seven segments displays.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.seven_segments/

@@ -310,7 +310,7 @@ class RoombaVacuum(VacuumDevice):
         if error_msg and error_msg != 'None':
             self._state_attrs[ATTR_ERROR] = error_msg
 
-        # Not all Roombas expose positon data
+        # Not all Roombas expose position data
         # https://github.com/koalazak/dorita980/issues/48
         if self._capabilities[CAP_POSITION]:
             pos_state = state.get('pose', {})

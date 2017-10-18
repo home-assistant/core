@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get all regular switches that are not excluded or marked as lights
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        if data.is_excluded(device) or not data.is_light(device):
+        if data.is_excluded(device) or data.is_light(device):
             continue
 
         devices.append(AbodeSwitch(data, device))

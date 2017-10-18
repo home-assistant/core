@@ -1,14 +1,17 @@
 """Component to allow running Python scripts."""
-import glob
-import os
-import logging
 import datetime
+import glob
+import logging
+import os
+import time
 
 import voluptuous as vol
 
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+import homeassistant.util.dt as dt_util
 
 DOMAIN = 'python_script'
 REQUIREMENTS = ['restrictedpython==4.0a3']
@@ -24,6 +27,13 @@ ALLOWED_EVENTBUS = set(['fire'])
 ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
                             'is_state_attr', 'remove', 'set'])
 ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
+ALLOWED_TIME = set(['sleep', 'strftime', 'strptime', 'gmtime', 'localtime',
+                    'ctime', 'time', 'mktime'])
+ALLOWED_DATETIME = set(['date', 'time', 'datetime', 'timedelta', 'tzinfo'])
+ALLOWED_DT_UTIL = set([
+    'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
+    'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
+    'get_age'])
 
 
 class ScriptError(HomeAssistantError):
@@ -40,15 +50,37 @@ def setup(hass, config):
         _LOGGER.warning('Folder %s not found in config folder', FOLDER)
         return False
 
+    discover_scripts(hass)
+
+    def reload_scripts_handler(call):
+        """Handle reload service calls."""
+        discover_scripts(hass)
+    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
+
+    return True
+
+
+def discover_scripts(hass):
+    """Discover python scripts in folder."""
+    path = hass.config.path(FOLDER)
+
+    if not os.path.isdir(path):
+        _LOGGER.warning('Folder %s not found in config folder', FOLDER)
+        return False
+
     def python_script_service_handler(call):
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 
+    existing = hass.services.services.get(DOMAIN, {}).keys()
+    for existing_service in existing:
+        if existing_service == SERVICE_RELOAD:
+            continue
+        hass.services.remove(DOMAIN, existing_service)
+
     for fil in glob.iglob(os.path.join(path, '*.py')):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
-
-    return True
 
 
 @bind_hass
@@ -88,7 +120,10 @@ def execute(hass, filename, source, data=None):
         elif (obj is hass and name not in ALLOWED_HASS or
               obj is hass.bus and name not in ALLOWED_EVENTBUS or
               obj is hass.states and name not in ALLOWED_STATEMACHINE or
-              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY):
+              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
+              obj is dt_util and name not in ALLOWED_DT_UTIL or
+              obj is datetime and name not in ALLOWED_DATETIME or
+              isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
             raise ScriptError('Not allowed to access {}.{}'.format(
                 obj.__class__.__name__, name))
 
@@ -97,6 +132,8 @@ def execute(hass, filename, source, data=None):
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
     builtins['datetime'] = datetime
+    builtins['time'] = TimeWrapper()
+    builtins['dt_util'] = dt_util
     restricted_globals = {
         '__builtins__': builtins,
         '_print_': StubPrinter,
@@ -136,3 +173,24 @@ class StubPrinter:
         # pylint: disable=no-self-use
         _LOGGER.warning(
             "Don't use print() inside scripts. Use logger.info() instead.")
+
+
+class TimeWrapper:
+    """Wrapper of the time module."""
+
+    # Class variable, only going to warn once per Home Assistant run
+    warned = False
+
+    # pylint: disable=no-self-use
+    def sleep(self, *args, **kwargs):
+        """Sleep method that warns once."""
+        if not TimeWrapper.warned:
+            TimeWrapper.warned = True
+            _LOGGER.warning('Using time.sleep can reduce the performance of '
+                            'Home Assistant')
+
+        time.sleep(*args, **kwargs)
+
+    def __getattr__(self, attr):
+        """Fetch an attribute from Time module."""
+        return getattr(time, attr)

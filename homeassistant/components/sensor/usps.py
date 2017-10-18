@@ -11,7 +11,7 @@ from homeassistant.components.usps import DATA_USPS
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.util.dt import now, parse_datetime
+from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class USPSPackageSensor(Entity):
         for package in self._usps.packages:
             status = slugify(package['primary_status'])
             if status == STATUS_DELIVERED and \
-                    parse_datetime(package['date']).date() < now().date():
+                    package['delivery_date'] < now().date():
                 continue
             status_counts[status] += 1
         self._attributes = {
@@ -116,7 +116,7 @@ class USPSMailSensor(Entity):
         attr = {}
         attr[ATTR_ATTRIBUTION] = self._usps.attribution
         try:
-            attr[ATTR_DATE] = self._usps.mail[0]['date']
+            attr[ATTR_DATE] = str(self._usps.mail[0]['date'])
         except IndexError:
             pass
         return attr

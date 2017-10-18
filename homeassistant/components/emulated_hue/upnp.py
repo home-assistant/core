@@ -1,4 +1,4 @@
-"""Provides a UPNP discovery method that mimicks Hue hubs."""
+"""Provides a UPNP discovery method that mimics Hue hubs."""
 import threading
 import socket
 import logging
@@ -123,14 +123,14 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 if ssdp_socket in read:
                     data, addr = ssdp_socket.recvfrom(1024)
                 else:
-                    # most likely the timeout, so check for interupt
+                    # most likely the timeout, so check for interrupt
                     continue
             except socket.error as ex:
                 if self._interrupted:
                     clean_socket_close(ssdp_socket)
                     return
 
-                _LOGGER.error("UPNP Responder socket exception occured: %s",
+                _LOGGER.error("UPNP Responder socket exception occurred: %s",
                               ex.__str__)
                 # without the following continue, a second exception occurs
                 # because the data object has not been initialized
