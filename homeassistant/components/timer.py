@@ -25,7 +25,10 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+EVENT_TIMER_STARTED = 'timer.started'
+EVENT_TIMER_PAUSED = 'timer.paused'
 EVENT_TIMER_FINISHED = 'timer.finished'
+EVENT_TIMER_CANCELLED = 'timer.cancelled'
 
 ATTR_STATUS = 'status'
 ATTR_DURATION = 'duration'
@@ -52,13 +55,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
-SERVICE_RESET = 'reset'
+SERVICE_CANCEL = 'cancel'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-SERVICE_SCHEMA_RESET = vol.Schema({
+SERVICE_SCHEMA_DURATION = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_DURATION): cv.positive_int,
 })
@@ -76,17 +79,18 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-def start(hass, entity_id):
+def start(hass, entity_id, duration):
     """Start a timer."""
-    hass.add_job(async_start, hass, entity_id)
+    hass.add_job(async_start, hass, entity_id, duration)
 
 
 @callback
 @bind_hass
-def async_start(hass, entity_id):
+def async_start(hass, entity_id, duration):
     """Start a timer."""
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id}))
+        DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
+                                ATTR_DURATION: duration}))
 
 
 @bind_hass
@@ -105,17 +109,16 @@ def async_pause(hass, entity_id):
 
 @bind_hass
 def reset(hass, entity_id, duration):
-    """Reset a timer."""
-    hass.add_job(async_reset, hass, entity_id, duration)
+    """Cancel a timer."""
+    hass.add_job(async_cancel, hass, entity_id)
 
 
 @callback
 @bind_hass
-def async_reset(hass, entity_id, duration):
-    """Reset a timer."""
+def async_cancel(hass, entity_id, duration):
+    """Cancel a timer."""
     hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_RESET, {ATTR_ENTITY_ID: entity_id,
-                                ATTR_DURATION: duration}))
+        DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
 
 
 @asyncio.coroutine
@@ -144,16 +147,16 @@ def async_setup(hass, config):
         target_timers = component.async_extract_from_service(service)
 
         attr = None
-        if service.service == SERVICE_START:
-            attr = 'async_start'
-        elif service.service == SERVICE_PAUSE:
+        if service.service == SERVICE_PAUSE:
             attr = 'async_pause'
+        if service.service == SERVICE_CANCEL:
+            attr = 'async_cancel'
 
         tasks = [getattr(timer, attr)() for timer in target_timers if attr]
-        if service.service == SERVICE_RESET:
+        if service.service == SERVICE_START:
             for timer in target_timers:
                 tasks.append(
-                    timer.async_reset(service.data.get(ATTR_DURATION,
+                    timer.async_start(service.data.get(ATTR_DURATION,
                                                        DEFAULT_DURATION)))
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -165,13 +168,13 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_START, async_handler_service,
-        descriptions[DOMAIN][SERVICE_START], SERVICE_SCHEMA)
+        descriptions[DOMAIN][SERVICE_START], SERVICE_SCHEMA_DURATION)
     hass.services.async_register(
         DOMAIN, SERVICE_PAUSE, async_handler_service,
         descriptions[DOMAIN][SERVICE_PAUSE], SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_RESET, async_handler_service,
-        descriptions[DOMAIN][SERVICE_RESET], SERVICE_SCHEMA_RESET)
+        DOMAIN, SERVICE_CANCEL, async_handler_service,
+        descriptions[DOMAIN][SERVICE_CANCEL], SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
@@ -191,6 +194,7 @@ class Timer(Entity):
         self._hass = hass
         self._start = None
         self._end = None
+        self._listener = None
 
     @property
     def should_poll(self):
@@ -233,40 +237,57 @@ class Timer(Entity):
         self._state = state and state.state == state
 
     @asyncio.coroutine
-    def async_start(self):
+    def async_start(self, duration):
         """Start a timer."""
+        if self._listener:
+            self._listener()
+            self._listener = None
+        self._duration = duration if duration else self._duration
         self._state = STATUS_ACTIVE
         self._start = dt_util.utcnow()
-        if self._remaining:
+        if self._remaining and not duration:
             self._end = self._start + timedelta(seconds=self._remaining)
         else:
             self._end = self._start + timedelta(seconds=self._duration)
-        async_track_point_in_utc_time(self._hass,
-                                      self.async_finished,
-                                      self._end)
+        self._listener = async_track_point_in_utc_time(self._hass,
+                                                       self.async_finished,
+                                                       self._end)
+        self._hass.bus.async_fire(EVENT_TIMER_STARTED,
+                                  {"entity_id": self.entity_id})
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_pause(self):
         """Pause a timer."""
-        self._remaining = (self._end - dt_util.utcnow()).seconds
-        self._state = STATUS_PAUSED
-        self._end = None
-        yield from self.async_update_ha_state()
+        if self._listener:
+            self._listener()
+            self._listener = None
+            self._remaining = (self._end - dt_util.utcnow()).seconds
+            self._state = STATUS_PAUSED
+            self._end = None
+            self._hass.bus.async_fire(EVENT_TIMER_PAUSED,
+                                      {"entity_id": self.entity_id})
+            yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_reset(self, duration):
-        """Reset a timer."""
+    def async_cancel(self):
+        """Cancel a timer."""
+        if self._listener:
+            self._listener()
+            self._listener = None
         self._state = STATUS_IDLE
         self._start = None
         self._end = None
-        self._duration = duration if duration else self._duration
+        self._remaining = None
+        self._hass.bus.async_fire(EVENT_TIMER_CANCELLED,
+                                  {"entity_id": self.entity_id})
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_finished(self, time):
         """Get the latest data and updates the states."""
         if self._state == STATUS_ACTIVE:
+            self._listener = None
             self._state = STATUS_IDLE
             self._remaining = None
             self._hass.bus.async_fire(EVENT_TIMER_FINISHED,

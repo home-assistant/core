@@ -496,6 +496,9 @@ timer:
       entity_id:
         description: Entity id of the timer to start. [optional]
         example: 'timer.timer0'
+      duration:
+        description: Duration in seconds the timer should be running. [optional]
+        example: 60
 
   pause:
     description: Pause a timer.
@@ -505,16 +508,13 @@ timer:
         description: Entity id of the timer to pause. [optional]
         example: 'timer.timer0'
 
-  reset:
-    description: Reset a timer.
+  cancel:
+    description: Cancel a timer.
 
     fields:
       entity_id:
-        description: Entity id of the timer to reset. [optional]
+        description: Entity id of the timer to cancel. [optional]
         example: 'timer.timer0'
-      duration:
-        description: Duration in seconds the timer should be running. [optional]
-        example: 60
 
 abode:
   change_setting:
