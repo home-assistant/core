@@ -25,8 +25,7 @@ REQUIRES = [
     'aiohttp==2.2.5',
     'async_timeout==1.4.0',
     'chardet==3.0.4',
-    'astral==1.4',
-    'defusedxml==0.5.0'
+    'astral==1.4'
 ]
 
 setup(
