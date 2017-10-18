@@ -22,7 +22,6 @@ DOMAIN = 'GoogleCalendar'
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
-    'maxResults': 1,
     'singleEvents': True,
 }
 
@@ -52,11 +51,7 @@ class GoogleCalendar(Calendar):
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = data.get('search', None)
-        self.events = [
-            {'start': dt.now(),
-            'end': dt.now(),
-            'text': 'bla'}
-        ]
+        self.events = []
 
         super().__init__(hass, data.get('name', DOMAIN))
 
@@ -67,18 +62,15 @@ class GoogleCalendar(Calendar):
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
-        _LOGGER.info('Update G calendar')
+        service = self.calendar_service.get()
+        params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
+        params['timeMin'] = dt.now().replace(day=1, minute=0, hour=0).isoformat('T')
+        params['calendarId'] = self.calendar_id
 
-        #
-        #service = self.calendar_service.get()
- #       params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-  #      params['timeMin'] = dt.now().isoformat('T')
-   #     params['calendarId'] = self.calendar_id
+        events = service.events()
+        result = events.list(**params).execute()
 
-    #    events = service.events()
-     #   result = events.list(**params).execute()
+        _LOGGER.info('Finding events: %s', result)
 
-      #  _LOGGER.info('Finding events: %s', result)
-
-       # items = result.get('items', [])
-        #self.events = items
+        items = result.get('items', [])
+        self.events = items
