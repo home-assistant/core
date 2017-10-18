@@ -61,7 +61,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.sensor.imap
-aioimaplib==0.7.12
+aioimaplib==0.7.13
 
 # homeassistant.components.light.lifx
 aiolifx==0.6.0
