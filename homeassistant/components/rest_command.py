@@ -106,7 +106,19 @@ def async_setup(hass, config):
                         """Make request"""
                         try:
                             url = template_url.async_render(variables=service.data)
-                            response = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            if command_config[CONF_METHOD] == 'get':
+                                response = requests.get(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif command_config[CONF_METHOD] == 'post':
+                                response = requests.post(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif command_config[CONF_METHOD] == 'delete':
+                                response = requests.delete(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif command_config[CONF_METHOD] == 'put':
+                                response = requests.put(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif command_config[CONF_METHOD] == 'head':
+                                response = requests.head(url, data=payload, timeout=10, auth=auth, headers=headers)
+                            elif command_config[CONF_METHOD] == 'options':
+                                response = requests.options(url, data=payload, timeout=10, auth=auth, headers=headers)
+                                
                             return response.content
                         except requests.exceptions.RequestException as error:
                             _LOGGER.error("Rest command error %s.", request.url)
