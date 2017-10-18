@@ -73,6 +73,7 @@ class Linode(object):
 
     def get_node_id(self, node_name):
         """Get the status of a Linode Instance."""
+        import linode
         node_id = None
 
         try:
@@ -88,6 +89,7 @@ class Linode(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Use the data from Linode API."""
+        import linode
         try:
             self.data = self.manager.linode.get_instances()
         except linode.errors.ApiError as e:
