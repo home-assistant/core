@@ -306,7 +306,7 @@ hbmqtt==0.8
 heatmiserV3==0.9.1
 
 # homeassistant.components.switch.hikvisioncam
-hikvision==0.4
+hikvision==1.2
 
 # homeassistant.components.notify.hipchat
 hipnotify==1.0.8
