@@ -10,24 +10,23 @@ from functools import partial
 from os import path
 
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
-from homeassistant.helpers import discovery
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (ATTR_ATTRIBUTION, ATTR_DATE, ATTR_TIME,
-                                 ATTR_ENTITY_ID, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_EXCLUDE, CONF_NAME,
-                                 EVENT_HOMEASSISTANT_STOP,
-                                 EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_DATE, ATTR_TIME, ATTR_ENTITY_ID, CONF_USERNAME,
+    CONF_PASSWORD, CONF_EXCLUDE, CONF_NAME, CONF_LIGHTS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.helpers.entity import Entity
+from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['abodepy==0.12.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by goabode.com"
-CONF_LIGHTS = "lights"
-CONF_POLLING = "polling"
+CONF_POLLING = 'polling'
 
 DOMAIN = 'abode'
 
@@ -93,10 +92,9 @@ class AbodeSystem(object):
     def __init__(self, username, password, name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
-        self.abode = abodepy.Abode(username, password,
-                                   auto_login=True,
-                                   get_devices=True,
-                                   get_automations=True)
+        self.abode = abodepy.Abode(
+            username, password, auto_login=True, get_devices=True,
+            get_automations=True)
         self.name = name
         self.polling = polling
         self.exclude = exclude
@@ -210,7 +208,7 @@ def setup_hass_services(hass):
 
 
 def setup_hass_events(hass):
-    """Home assistant start and stop callbacks."""
+    """Home Assistant start and stop callbacks."""
     def startup(event):
         """Listen for push events."""
         hass.data[DOMAIN].abode.events.start()

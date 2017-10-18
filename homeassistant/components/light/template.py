@@ -14,8 +14,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON,
-    STATE_OFF, EVENT_HOMEASSISTANT_START, MATCH_ALL
-)
+    STATE_OFF, EVENT_HOMEASSISTANT_START, MATCH_ALL, CONF_LIGHTS)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -27,12 +26,10 @@ from homeassistant.helpers.script import Script
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
-CONF_LIGHTS = 'lights'
 CONF_ON_ACTION = 'turn_on'
 CONF_OFF_ACTION = 'turn_off'
 CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
-
 
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -51,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up Template Lights."""
+    """Set up the Template Lights."""
     lights = []
 
     for device, device_config in config[CONF_LIGHTS].items():
