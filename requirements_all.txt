@@ -212,7 +212,7 @@ dweepy==0.3.0
 eliqonline==1.0.13
 
 # homeassistant.components.enocean
-enocean==0.31
+enocean==0.40
 
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
