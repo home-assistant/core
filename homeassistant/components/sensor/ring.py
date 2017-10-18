@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['ring']
 
@@ -108,6 +109,9 @@ class RingSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if self._sensor_type == 'battery' and self._state is not STATE_UNKNOWN:
+            return icon_for_battery_level(battery_level=int(self._state),
+                                          charging=False)
         return self._icon
 
     @property

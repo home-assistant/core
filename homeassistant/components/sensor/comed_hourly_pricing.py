@@ -6,14 +6,17 @@ https://home-assistant.io/components/sensor.comed_hourly_pricing/
 """
 from datetime import timedelta
 import logging
+import asyncio
+import json
+import async_timeout
+import aiohttp
 import voluptuous as vol
-
-from requests import RequestException, get
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://hourlypricing.comed.com/api'
@@ -46,22 +49,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
+    websession = async_get_clientsession(hass)
     dev = []
+
     for variable in config[CONF_MONITORED_FEEDS]:
         dev.append(ComedHourlyPricingSensor(
-            variable[CONF_SENSOR_TYPE], variable[CONF_OFFSET],
-            variable.get(CONF_NAME)))
+            hass.loop, websession, variable[CONF_SENSOR_TYPE],
+            variable[CONF_OFFSET], variable.get(CONF_NAME)))
 
-    add_devices(dev, True)
+    async_add_devices(dev, True)
 
 
 class ComedHourlyPricingSensor(Entity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
-    def __init__(self, sensor_type, offset, name):
+    def __init__(self, loop, websession, sensor_type, offset, name):
         """Initialize the sensor."""
+        self.loop = loop
+        self.websession = websession
         if name:
             self._name = name
         else:
@@ -92,20 +100,30 @@ class ComedHourlyPricingSensor(Entity):
         attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attrs
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
-            if self.type == CONF_FIVE_MINUTE:
-                url_string = _RESOURCE + '?type=5minutefeed'
-                response = get(url_string, timeout=10)
-                self._state = round(
-                    float(response.json()[0]['price']) + self.offset, 2)
-            elif self.type == CONF_CURRENT_HOUR_AVERAGE:
-                url_string = _RESOURCE + '?type=currenthouraverage'
-                response = get(url_string, timeout=10)
-                self._state = round(
-                    float(response.json()[0]['price']) + self.offset, 2)
+            if self.type == CONF_FIVE_MINUTE or \
+                    self.type == CONF_CURRENT_HOUR_AVERAGE:
+                url_string = _RESOURCE
+                if self.type == CONF_FIVE_MINUTE:
+                    url_string += '?type=5minutefeed'
+                else:
+                    url_string += '?type=currenthouraverage'
+
+                with async_timeout.timeout(60, loop=self.loop):
+                    response = yield from self.websession.get(url_string)
+                    # The API responds with MIME type 'text/html'
+                    text = yield from response.text()
+                    data = json.loads(text)
+                    self._state = round(
+                        float(data[0]['price']) + self.offset, 2)
+
             else:
                 self._state = STATE_UNKNOWN
-        except (RequestException, ValueError, KeyError):
+
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error("Could not get data from ComEd API: %s", err)
+        except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

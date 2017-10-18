@@ -109,7 +109,7 @@ class AcerSwitch(SwitchDevice):
 
     def _write_read_format(self, msg):
         """Write msg, obtain awnser and format output."""
-        # awnsers are formated as ***\rawnser\r***
+        # awnsers are formatted as ***\rawnser\r***
         awns = self._write_read(msg)
         match = re.search(r'\r(.+)\r', awns)
         if match:

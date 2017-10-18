@@ -637,11 +637,11 @@ class MediaPlayerDevice(Entity):
         return self.hass.async_add_job(self.set_volume_level, volume)
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         raise NotImplementedError()
 
     def async_media_play(self):
-        """Send play commmand.
+        """Send play command.
 
         This method must be run in the event loop and returns a coroutine.
         """

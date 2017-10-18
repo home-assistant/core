@@ -1,6 +1,9 @@
 """The tests for the Unifi WAP device tracker platform."""
 from unittest import mock
 from pyunifi.controller import APIError
+import homeassistant.util.dt as dt_util
+from datetime import timedelta
+
 
 import pytest
 import voluptuous as vol
@@ -8,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM, CONF_VERIFY_SSL)
+DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 
 @pytest.fixture
@@ -23,6 +27,33 @@ def mock_scanner():
     with mock.patch('homeassistant.components.device_tracker'
                     '.unifi.UnifiScanner') as scanner:
         yield scanner
+
+
+@mock.patch('os.access', return_value=True)
+@mock.patch('os.path.isfile', mock.Mock(return_value=True))
+def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
+    """Test the setup with a string for ssl_verify.
+
+    Representing the absolute path to a CA certificate bundle.
+    """
+    config = {
+        DOMAIN: unifi.PLATFORM_SCHEMA({
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "/tmp/unifi.crt"
+        })
+    }
+    result = unifi.get_scanner(hass, config)
+    assert mock_scanner.return_value == result
+    assert mock_ctrl.call_count == 1
+    assert mock_ctrl.mock_calls[0] == \
+        mock.call('localhost', 'foo', 'password', 8443,
+                  version='v4', site_id='default', ssl_verify="/tmp/unifi.crt")
+
+    assert mock_scanner.call_count == 1
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
@@ -42,7 +73,8 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
                   version='v4', site_id='default', ssl_verify=True)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_full(hass, mock_scanner, mock_ctrl):
@@ -56,6 +88,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             CONF_VERIFY_SSL: False,
             'port': 123,
             'site_id': 'abcdef01',
+            'detection_time': 300,
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -66,7 +99,8 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
                   version='v4', site_id='abcdef01', ssl_verify=False)
 
     assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value)
+    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
+                                               DEFAULT_DETECTION_TIME)
 
 
 def test_config_error():
@@ -85,6 +119,13 @@ def test_config_error():
             CONF_PASSWORD: 'password',
             CONF_HOST: 'myhost',
             'port': 'foo',  # bad port!
+        })
+    with pytest.raises(vol.Invalid):
+        unifi.PLATFORM_SCHEMA({
+            CONF_PLATFORM: unifi.DOMAIN,
+            CONF_USERNAME: 'foo',
+            CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: "dfdsfsdfsd",  # Invalid ssl_verify (no file)
         })
 
 
@@ -107,11 +148,11 @@ def test_scanner_update():
     """Test the scanner update."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123'},
-        {'mac': '234'},
+        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -121,18 +162,18 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME)
 
 
 def test_scan_devices():
     """Test the scanning for devices."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123'},
-        {'mac': '234'},
+        {'mac': '123', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '234', 'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -140,12 +181,17 @@ def test_get_device_name():
     """Test the getting of device names."""
     ctrl = mock.MagicMock()
     fake_clients = [
-        {'mac': '123', 'hostname': 'foobar'},
-        {'mac': '234', 'name': 'Nice Name'},
-        {'mac': '456'},
+        {'mac': '123',
+         'hostname': 'foobar',
+         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '234',
+         'name': 'Nice Name',
+         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
+        {'mac': '456',
+         'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
