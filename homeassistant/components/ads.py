@@ -6,7 +6,6 @@ For more details about this component, please refer to the documentation.
 """
 import threading
 import struct
-import time
 import logging
 import ctypes
 from collections import namedtuple

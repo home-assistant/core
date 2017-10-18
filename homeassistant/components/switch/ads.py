@@ -41,6 +41,7 @@ class AdsSwitch(ToggleEntity):
         self._on_state = False
         self.dev_name = dev_name
         self.ads_var = ads_var
+        self.update()
 
     @property
     def is_on(self):
@@ -61,3 +62,6 @@ class AdsSwitch(ToggleEntity):
     def value_changed(self, val):
         self._on_state = val
         self.schedule_update_ha_state()
+
+    def update(self):
+        self._on_state = self._ads_hub.read_by_name(self.ads_var, PLCTYPE_BOOL)

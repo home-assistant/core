@@ -49,6 +49,8 @@ class AdsLight(Light):
         self.varname_brightness = varname_brightness
         self.stype = 'dimmer'
 
+        self.update()
+
     @property
     def name(self):
         """ Return the name of the device if any. """
@@ -107,3 +109,11 @@ class AdsLight(Light):
         self._brightness = math.floor(val / 100.0 * 256.0)
         self._on_state = bool(val != 0)
         self.schedule_update_ha_state()
+
+    def update(self):
+        self._on_state = self._ads_hub.read_by_name(self.varname_enable,
+                                                    PLCTYPE_BOOL)
+        if self.varname_brightness:
+            self._brightness = self._ads_hub.read_by_name(
+                self.varname_brightness, PLCTYPE_UINT
+            )
