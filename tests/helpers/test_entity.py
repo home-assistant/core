@@ -231,7 +231,7 @@ def test_async_pararell_updates_with_zero(hass):
 
         @asyncio.coroutine
         def async_update(self):
-            """test update"""
+            """Test update."""
             updates.append(self._count)
             yield from test_lock.wait()
 
@@ -272,7 +272,7 @@ def test_async_pararell_updates_with_one(hass):
 
         @asyncio.coroutine
         def async_update(self):
-            """test update"""
+            """Test update."""
             updates.append(self._count)
             yield from test_lock.acquire()
 
@@ -335,7 +335,7 @@ def test_async_pararell_updates_with_two(hass):
 
         @asyncio.coroutine
         def async_update(self):
-            """test update"""
+            """Test update."""
             updates.append(self._count)
             yield from test_lock.acquire()
 
