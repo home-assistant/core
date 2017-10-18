@@ -724,6 +724,9 @@ pyqwikswitch==0.4
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1
 
+# homeassistant.components.sensor.serial
+pyserial-asyncio==0.4
+
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
 
