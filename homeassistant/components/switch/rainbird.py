@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_SWITCHES, CONF_ZONE,
                                  CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME,
                                  CONF_SCAN_INTERVAL, CONF_HOST, CONF_PASSWORD)
@@ -21,7 +21,7 @@ REQUIREMENTS = ['pyrainbird==0.1.0']
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -57,8 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for dev_id, switch in config.get(CONF_SWITCHES).items():
         devices.append(RainBirdSwitch(controller, switch, dev_id))
-    add_devices(devices)
-    return True
+    add_devices(devices, True)
 
 
 class RainBirdSwitch(SwitchDevice):
@@ -69,8 +68,9 @@ class RainBirdSwitch(SwitchDevice):
         self._rainbird = rb
         self._devid = dev_id
         self._zone = int(dev.get(CONF_ZONE))
-        self._name = dev.get(CONF_FRIENDLY_NAME, "Sprinker %s" % self._zone)
-        self._state = self.get_device_status()
+        self._name = dev.get(CONF_FRIENDLY_NAME,
+                             "Sprinker {}".format(self._zone))
+        self._state = None
         self._duration = dev.get(CONF_TRIGGER_TIME)
         self._attributes = {
             "duration": self._duration,
@@ -81,11 +81,6 @@ class RainBirdSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return state attributes."""
         return self._attributes
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
