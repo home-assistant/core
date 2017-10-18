@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/axis/
 """
 
-import asyncio
 import json
 import logging
 import os
@@ -19,14 +18,13 @@ from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_NAME, CONF_PASSWORD, CONF_PORT,
                                  CONF_TRIGGER_TIME, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['axis==13']
+REQUIREMENTS = ['axis==14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,19 +146,16 @@ def request_configuration(hass, config, name, host, serialnumber):
     )
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Common setup for Axis devices."""
-    @callback
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
             _LOGGER.info("Stopping event stream for %s.", serialnumber)
             device.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    @asyncio.coroutine
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
         host = discovery_info[CONF_HOST]
@@ -187,12 +182,10 @@ def async_setup(hass, config):
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
             device.config.host = host
-            async_dispatcher_send(hass,
-                                  DOMAIN + '_' + device.name + '_new_ip',
-                                  host)
+            dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip', host)
 
     # Register discovery service
-    discovery.async_listen(hass, SERVICE_AXIS, axis_device_discovered)
+    discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
     if DOMAIN in config:
         for device in config[DOMAIN]:
@@ -210,20 +203,21 @@ def async_setup(hass, config):
         """Service to send a message."""
         for _, device in AXIS_DEVICES.items():
             if device.name == call.data[CONF_NAME]:
-                response = device.vapix.do_request(call.data[SERVICE_CGI],
-                                                   call.data[SERVICE_ACTION],
-                                                   call.data[SERVICE_PARAM])
-                hass.bus.async_fire(SERVICE_VAPIX_CALL_RESPONSE, response)
+                response = device.vapix.do_request(
+                    call.data[SERVICE_CGI],
+                    call.data[SERVICE_ACTION],
+                    call.data[SERVICE_PARAM])
+                hass.bus.fire(SERVICE_VAPIX_CALL_RESPONSE, response)
                 return True
         _LOGGER.info("Couldn\'t find device %s", call.data[CONF_NAME])
         return False
 
     # Register service with Home Assistant.
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_VAPIX_CALL,
-                                 vapix_service,
-                                 descriptions[DOMAIN][SERVICE_VAPIX_CALL],
-                                 schema=SERVICE_SCHEMA)
+    hass.services.register(DOMAIN,
+                           SERVICE_VAPIX_CALL,
+                           vapix_service,
+                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
+                           schema=SERVICE_SCHEMA)
     return True
 
 
@@ -241,11 +235,11 @@ def setup_device(hass, config, device_config):
                 CONF_TRIGGER_TIME: device_config[CONF_TRIGGER_TIME]
             }
             component = event.event_platform
-            hass.async_add_job(discovery.async_load_platform(hass,
-                                                             component,
-                                                             DOMAIN,
-                                                             event_config,
-                                                             config))
+            discovery.load_platform(hass,
+                                    component,
+                                    DOMAIN,
+                                    event_config,
+                                    config)
 
     event_types = list(filter(lambda x: x in device_config[CONF_INCLUDE],
                               EVENT_TYPES))
@@ -268,13 +262,14 @@ def setup_device(hass, config, device_config):
                 CONF_USERNAME: device_config[CONF_USERNAME],
                 CONF_PASSWORD: device_config[CONF_PASSWORD]
             }
-            hass.async_add_job(discovery.async_load_platform(hass,
-                                                             component,
-                                                             DOMAIN,
-                                                             camera_config,
-                                                             config))
+            discovery.load_platform(hass,
+                                    component,
+                                    DOMAIN,
+                                    camera_config,
+                                    config)
 
     AXIS_DEVICES[device.serial_number] = device
+    hass.add_job(device.start)
     return True
 
 
