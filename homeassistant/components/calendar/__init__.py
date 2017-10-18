@@ -66,13 +66,20 @@ def async_setup(hass, config):
             return
 
         calendars.extend(calendar)
+        yield from component.async_add_entities(calendar)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
-        yield from component.async_add_entities(calendars)
+
+    @asyncio.coroutine
+    def async_platform_discovered(platform, info):
+        yield from async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    
     return True
 
 class Calendar(Entity):

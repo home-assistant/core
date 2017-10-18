@@ -66,5 +66,6 @@ class DemoCalendar(Calendar):
         return self._events
 
     @asyncio.coroutine
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def async_update(self):
         _LOGGER.info('Updating demo calendar')
