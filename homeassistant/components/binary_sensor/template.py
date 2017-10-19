@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_same_state)
-from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +93,6 @@ class BinarySensorTemplate(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state == STATE_ON
-
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
             """Handle the target device state changes."""
