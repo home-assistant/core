@@ -5,7 +5,7 @@ import homeassistant.components as core
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+    get_test_home_assistant, assert_setup_component)
 
 
 class TestTemplateSwitch:

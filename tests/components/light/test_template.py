@@ -8,8 +8,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component,
-    mock_restore_cache)
+    get_test_home_assistant, assert_setup_component)
 _LOGGER = logging.getLogger(__name__)
 
 
