@@ -199,6 +199,7 @@ def test_basic_auth_works(mock_api_client, caplog):
     assert req.status == 200
     assert const.URL_API in caplog.text
 
+
 @asyncio.coroutine
 def test_basic_auth_api_user_works(mock_api_client, caplog):
     """Test access with basic authentication."""
