@@ -215,20 +215,12 @@ def async_setup(hass, config: dict):
         target_fans = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
+        update_tasks = []
         for fan in target_fans:
             yield from getattr(fan, method['method'])(**params)
-
-        update_tasks = []
-
-        for fan in target_fans:
             if not fan.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(fan.async_update_ha_state(True))
-            if hasattr(fan, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(fan.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

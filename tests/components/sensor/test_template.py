@@ -1,12 +1,7 @@
 """The test for the Template sensor platform."""
-import asyncio
+from homeassistant.setup import setup_component
 
-from homeassistant.core import CoreState, State
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
-
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestTemplateSensor:
@@ -188,36 +183,3 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         assert self.hass.states.all() == []
-
-
-@asyncio.coroutine
-def test_restore_state(hass):
-    """Ensure states are restored on startup."""
-    hass.data[DATA_RESTORE_CACHE] = {
-        'sensor.test_template_sensor':
-            State('sensor.test_template_sensor', 'It Test.'),
-    }
-
-    hass.state = CoreState.starting
-    mock_component(hass, 'recorder')
-
-    yield from async_setup_component(hass, 'sensor', {
-        'sensor': {
-            'platform': 'template',
-            'sensors': {
-                'test_template_sensor': {
-                    'value_template':
-                        "It {{ states.sensor.test_state.state }}."
-                }
-            }
-        }
-    })
-
-    state = hass.states.get('sensor.test_template_sensor')
-    assert state.state == 'It Test.'
-
-    yield from hass.async_start()
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('sensor.test_template_sensor')
-    assert state.state == 'It .'
