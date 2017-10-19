@@ -16,17 +16,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 REQUIREMENTS = ['pywemo==0.4.20']
 
-DOMAIN = 'wemo'
+DOMAIN = 'wemo_bridge'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
-    'Insight': 'switch',
-    'Maker':   'switch',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch',
-    'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
