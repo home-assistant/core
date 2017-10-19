@@ -113,7 +113,9 @@ def async_setup(hass, config):
             _LOGGER.error('Error rendering message %s: %s', message, ex)
             message = message.template
 
-        hass.states.async_set(entity_id, message, attr)
+        attr[ATTR_MESSAGE] = message
+
+        hass.states.async_set(entity_id, None, attr)
 
     @callback
     def dismiss_service(call):
