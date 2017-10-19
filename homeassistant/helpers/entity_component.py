@@ -379,6 +379,16 @@ class EntityPlatform(object):
         if not new_entities:
             return
 
+        hass = self.component.hass
+
+        # If the entities are not async, update them in sequence to avoid
+        # race conditions when component uses throttle.
+        if update_before_add and any(not hasattr(entity, 'async_update')
+                                     for entity in new_entities):
+            for entity in new_entities:
+                yield from hass.async_add_job(entity.update)
+            update_before_add = False
+
         @asyncio.coroutine
         def async_process_entity(new_entity):
             """Add entities to StateMachine."""
@@ -391,7 +401,7 @@ class EntityPlatform(object):
 
         tasks = [async_process_entity(entity) for entity in new_entities]
 
-        yield from asyncio.wait(tasks, loop=self.component.hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
         self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
@@ -400,7 +410,7 @@ class EntityPlatform(object):
             return
 
         self._async_unsub_polling = async_track_time_interval(
-            self.component.hass, self._update_entity_states, self.scan_interval
+            hass, self._update_entity_states, self.scan_interval
         )
 
     @asyncio.coroutine

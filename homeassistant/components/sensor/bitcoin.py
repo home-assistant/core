@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION, CONF_CURRENCY)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blockchain==1.4.0']
 
@@ -178,6 +179,7 @@ class BitcoinData(object):
         self.stats = None
         self.ticker = None
 
+    @Throttle(SCAN_INTERVAL - timedelta(seconds=5))
     def update(self):
         """Get the latest data from blockchain.info."""
         from blockchain import statistics, exchangerates
