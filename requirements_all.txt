@@ -1014,6 +1014,9 @@ tikteck==0.4
 # homeassistant.components.calendar.todoist
 todoist-python==7.0.17
 
+# homeassistant.components.toon
+toonlib==1.0.2
+
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.11
 
