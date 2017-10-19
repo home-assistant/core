@@ -88,9 +88,9 @@ class NeatoConnectedVacuum(VacuumDevice):
             self._status_state = ERRORS.get(self._state['error'])
 
         if (self.robot.state['action'] == 1 or
-            self.robot.state['action'] == 2 or
-            self.robot.state['action'] == 3 and
-            self.robot.state['state'] == 2):
+                self.robot.state['action'] == 2 or
+                self.robot.state['action'] == 3 and
+                self.robot.state['state'] == 2):
             self._clean_state = STATE_ON
         else:
             self._clean_state = STATE_OFF
