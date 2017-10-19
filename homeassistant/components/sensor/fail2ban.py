@@ -127,10 +127,11 @@ class BanLogParser(object):
         """Check if we are allowed to update."""
         boundary = dt_util.now() - self.interval
         if boundary > self.last_update:
-            last_update = dt_util.now()
+            self.last_update = dt_util.now()
             return True
 
     def read_log(self, jail):
+        """Read the fail2ban log and find entries for jail."""
         self.data = list()
         try:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
