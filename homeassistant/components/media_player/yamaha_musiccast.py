@@ -35,7 +35,7 @@ SUPPORTED_FEATURES = (
 KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
 INTERVAL_SECONDS = 'interval_seconds'
 
-REQUIREMENTS = ['pymusiccast==0.1.2']
+REQUIREMENTS = ['pymusiccast==0.1.3']
 
 DEFAULT_PORT = 5005
 DEFAULT_INTERVAL = 480
