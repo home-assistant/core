@@ -200,3 +200,22 @@ class TestBanSensor(unittest.TestCase):
         self.assertEqual(
             sensor2.state_attributes[STATE_ALL_BANS], ['222.222.222.222']
         )
+
+    def test_ban_active_after_update(self):
+        """Test that ban persists after subsequent update."""
+        log_parser = BanLogParser(timedelta(seconds=-1), '/tmp')
+        sensor = BanSensor('fail2ban', 'jail_one', log_parser)
+        self.assertEqual(sensor.name, 'fail2ban jail_one')
+        mock_fh = MockOpen(read_data=fake_log('single_ban'))
+        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+                   create=True):
+            sensor.update()
+            self.assertEqual(sensor.state, '111.111.111.111')
+            sensor.update()
+            self.assertEqual(sensor.state, '111.111.111.111')
+        self.assertEqual(
+            sensor.state_attributes[STATE_CURRENT_BANS], ['111.111.111.111']
+        )
+        self.assertEqual(
+            sensor.state_attributes[STATE_ALL_BANS], ['111.111.111.111']
+        )

@@ -87,7 +87,6 @@ class BanSensor(Entity):
         if self.log_parser.timer():
             self.log_parser.read_log(self.jail)
 
-        self.last_ban = 'None'
         if self.log_parser.data:
             for entry in self.log_parser.data:
                 _LOGGER.debug(entry)
