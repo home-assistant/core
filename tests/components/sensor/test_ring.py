@@ -58,9 +58,9 @@ class TestRingSensorSetup(unittest.TestCase):
         mock.get('https://api.ring.com/clients_api/doorbots/987652/history',
                  text=load_fixture('ring_doorbots.json'))
         mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
-                text=load_fixture('ring_doorboot_health_attrs.json'))
+                 text=load_fixture('ring_doorboot_health_attrs.json'))
         mock.get('https://api.ring.com/clients_api/chimes/999999/health',
-                text=load_fixture('ring_chime_health_attrs.json'))
+                 text=load_fixture('ring_chime_health_attrs.json'))
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
                             self.config,
@@ -80,7 +80,7 @@ class TestRingSensorSetup(unittest.TestCase):
                 self.assertEqual('1.2.3',
                                  device.device_state_attributes['firmware'])
                 self.assertEqual('ring_mock_wifi',
-                                device.device_state_attributes['wifi_name'])
+                                 device.device_state_attributes['wifi_name'])
                 self.assertEqual('mdi:bell-ring', device.icon)
                 self.assertEqual('chimes',
                                  device.device_state_attributes['type'])
