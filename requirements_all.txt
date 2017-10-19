@@ -270,6 +270,9 @@ fuzzywuzzy==0.15.1
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
+# homeassistant.components.tts.microsoft
+pycsspeechtts==1.0.1
+
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
