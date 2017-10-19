@@ -20,7 +20,6 @@ DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  'light',
     'Insight': 'switch',
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
