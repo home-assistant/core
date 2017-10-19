@@ -121,12 +121,14 @@ class HddTempData(object):
 
     def update(self):
         """Get the latest data from HDDTemp running as daemon."""
-
         try:
             connection = Telnet(
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
-            data = connection.read_all().decode('ascii').lstrip('|').rstrip('|').split('||')
-            self.data = {data[i].split('|')[0]: data[i]for i in range(0, len(data), 1)}
+            data = connection.read_all().decode(
+                'ascii').lstrip('|').rstrip('|').split('||')
+            self.data = {data[i].split('|')[0]: data[i]
+                         for i in range(0, len(data), 1)}
         except ConnectionRefusedError:
-            _LOGGER.error("HDDTemp is not available at %s:%s", self.host, self.port)
+            _LOGGER.error(
+                "HDDTemp is not available at %s:%s", self.host, self.port)
             self.data = None
