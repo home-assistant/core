@@ -20,7 +20,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No lights added")
         return False
 
-    async_add_devices(lights, True)
+    async_add_devices(lights)
     return True
 
 
@@ -150,10 +149,6 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state == STATE_ON
-
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
@@ -207,6 +202,7 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
+        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
