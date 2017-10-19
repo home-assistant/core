@@ -189,10 +189,12 @@ class Icloud(DeviceScanner):
             for device in self.api.devices:
                 status = device.status(DEVICESTATUSSET)
                 devicename = slugify(status['name'].replace(' ', '', 99))
-                if devicename not in self.devices:
-                    self.devices[devicename] = device
-                    self._intervals[devicename] = 1
-                    self._overridestates[devicename] = None
+                if devicename in self.devices:
+                    _LOGGER.error('Multiple devices with name: %s', devicename)
+                    continue
+                self.devices[devicename] = device
+                self._intervals[devicename] = 1
+                self._overridestates[devicename] = None
         except PyiCloudNoDevicesException:
             _LOGGER.error('No iCloud Devices found!')
 
