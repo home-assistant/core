@@ -6,12 +6,11 @@ https://home-assistant.io/components/sensor.fail2ban/
 """
 import os
 import asyncio
-from datetime import timedelta
 import logging
 
-import voluptuous as voluptuous
+import voluptuous as vol
 
-import homeassistant.helper.config_validation as cv
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -24,19 +23,19 @@ _LOGGER = logging.getLogger(__name__)
 CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
-DEFAULT_LOG = '/var/log/syslog'
+DEFAULT_LOG = '/var/log/fail2ban.log'
 DEFAULT_SCAN_INTERVAL = 120
 
-STATE_BANS = 'current_bans'
-STATE_COUNT = 'total_bans'
+STATE_CURRENT_BANS = 'current_bans'
+STATE_ALL_BANS = 'total_bans'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_JAILS, default=[]): 
+    vol.Required(CONF_JAILS, default=[]):
         vol.All(cv.ensure_list, vol.Length(min=1)),
     vol.Optional(CONF_FILE_PATH, default=DEFAULT_LOG): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL,default=DEFAULT_SCAN_INTERVAL): 
-        cv.positive_int,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        cv.positive_timedelta,
 })
 
 
@@ -60,13 +59,19 @@ class BanSensor(Entity):
 
     def __init__(self, name, jail, scan_interval, log_file):
         """Initialize the sensor."""
-        self._name = name
+        self._name = '{} {}'.format(name, jail)
         self.jail = jail
-        self.interval = timedelta(seconds=scan_interval)
+        self.interval = scan_interval
         self.log_file = log_file
-        self.ban_dict = {STATE_BANS: [], STATE_COUNT: 0}
+        self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None
         self.last_update = dt_util.now()
+        _LOGGER.debug("Setting up jail %s", self.jail)
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def state_attributes(self):
@@ -87,29 +92,34 @@ class BanSensor(Entity):
             try:
                 with open(self.log_file, 'r', encoding='utf-8') as file_data:
                     for line in file_data:
-                        if self.jail and 'fail2ban.action' in line:
+                        if self.jail in line and 'fail2ban.actions' in line:
                             jail_data.append(line)
             except (IndexError, FileNotFoundError, IsADirectoryError,
                     UnboundLocalError):
-                _LOGGER.warning("File or data not present at the moment: %s",
-                                os.path.basename(self._file_path))
+                _LOGGER.warning("File not present: %s",
+                                os.path.basename(self.log_file))
                 return
+        self.last_ban = 'None'
         if jail_data:
             for entry in jail_data:
                 _LOGGER.debug(entry)
                 split_entry = entry.split()
+
                 if 'Ban' in split_entry:
                     ip_index = split_entry.index('Ban') + 1
                     this_ban = split_entry[ip_index]
-                    if this_ban not in self.ban_dict[STATE_BANS]:
+                    if this_ban not in self.ban_dict[STATE_CURRENT_BANS]:
                         self.last_ban = this_ban
-                        self.ban_dict[STATE_BANS].append(self.last_ban)
-                        self.ban_dict[STATE_COUNT] += 1
+                        self.ban_dict[STATE_CURRENT_BANS].append(this_ban)
+                    if this_ban not in self.ban_dict[STATE_ALL_BANS]:
+                        self.ban_dict[STATE_ALL_BANS].append(this_ban)
+                    if len(self.ban_dict[STATE_ALL_BANS]) > 10:
+                        self.ban_dict[STATE_ALL_BANS].pop(0)
+
                 elif 'Unban' in split_entry:
                     ip_index = split_entry.index('Unban') + 1
                     this_unban = split_entry[ip_index]
-                    if this_unban in self.ban_dict[STATE_BANS]:
-                        self.ban_dict[STATE_BANS].remove(this_unban)
-        else:
-            self.last_ban = 'None'
-    
+                    if this_unban in self.ban_dict[STATE_CURRENT_BANS]:
+                        self.ban_dict[STATE_CURRENT_BANS].remove(this_unban)
+                    if self.last_ban == this_unban:
+                        self.last_ban = 'None'
