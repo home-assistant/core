@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 
-DEPENDENCIES = ['wemo']
+DEPENDENCIES = ['wemo_bridge']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
