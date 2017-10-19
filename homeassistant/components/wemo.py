@@ -27,6 +27,7 @@ WEMO_MODEL_DISPATCH = {
     'LightSwitch': 'switch',
     'Dimmer': 'light'
     'CoffeeMaker': 'switch'
+    'Bridge':  'light'
 }
 
 SUBSCRIPTION_REGISTRY = None
