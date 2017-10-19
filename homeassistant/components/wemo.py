@@ -26,6 +26,7 @@ WEMO_MODEL_DISPATCH = {
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
+    'Dimmer': 'light'
     'CoffeeMaker': 'switch'
 }
 
