@@ -48,8 +48,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     log_file = config.get(CONF_FILE_PATH)
 
     device_list = []
+    log_parser = BanLogParser(scan_interval, log_file)
     for jail in jails:
-        device_list.append(BanSensor(name, jail, scan_interval, log_file))
+        device_list.append(BanSensor(name, jail, log_parser))
 
     async_add_devices(device_list, True)
 
@@ -57,15 +58,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BanSensor(Entity):
     """Implementation of a fail2ban sensor."""
 
-    def __init__(self, name, jail, scan_interval, log_file):
+    def __init__(self, name, jail, log_parser):
         """Initialize the sensor."""
         self._name = '{} {}'.format(name, jail)
         self.jail = jail
-        self.interval = scan_interval
-        self.log_file = log_file
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None
-        self.last_update = dt_util.now()
+        self.log_parser = log_parser
         _LOGGER.debug("Setting up jail %s", self.jail)
 
     @property
@@ -85,23 +84,12 @@ class BanSensor(Entity):
 
     def update(self):
         """Update the list of banned ips."""
-        boundary = dt_util.now() - self.interval
-        jail_data = list()
-        if boundary > self.last_update:
-            _LOGGER.info("Checking log for ip bans in %s", self.jail)
-            try:
-                with open(self.log_file, 'r', encoding='utf-8') as file_data:
-                    for line in file_data:
-                        if self.jail in line and 'fail2ban.actions' in line:
-                            jail_data.append(line)
-            except (IndexError, FileNotFoundError, IsADirectoryError,
-                    UnboundLocalError):
-                _LOGGER.warning("File not present: %s",
-                                os.path.basename(self.log_file))
-                return
+        if self.log_parser.timer():
+            self.log_parser.read_log(self.jail)
+
         self.last_ban = 'None'
-        if jail_data:
-            for entry in jail_data:
+        if self.log_parser.data:
+            for entry in self.log_parser.data:
                 _LOGGER.debug(entry)
                 split_entry = entry.split()
 
@@ -123,3 +111,33 @@ class BanSensor(Entity):
                         self.ban_dict[STATE_CURRENT_BANS].remove(this_unban)
                     if self.last_ban == this_unban:
                         self.last_ban = 'None'
+
+
+class BanLogParser(object):
+    """Class to parse fail2ban logs."""
+
+    def __init__(self, interval, log_file):
+        """Initialize the parser."""
+        self.interval = interval
+        self.log_file = log_file
+        self.data = list()
+        self.last_update = dt_util.now()
+
+    def timer(self):
+        """Check if we are allowed to update."""
+        boundary = dt_util.now() - self.interval
+        if boundary > self.last_update:
+            last_update = dt_util.now()
+            return True
+
+    def read_log(self, jail):
+        self.data = list()
+        try:
+            with open(self.log_file, 'r', encoding='utf-8') as file_data:
+                for line in file_data:
+                    if jail in line and 'fail2ban.actions' in line:
+                        self.data.append(line)
+        except (IndexError, FileNotFoundError, IsADirectoryError,
+                UnboundLocalError):
+            _LOGGER.warning("File not present: %s",
+                            os.path.basename(self.log_file))
