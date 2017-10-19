@@ -8,16 +8,15 @@ import logging
 from collections import defaultdict
 
 import voluptuous as vol
-
 from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import (convert, slugify)
+from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyvera==0.2.37']
@@ -29,8 +28,6 @@ DOMAIN = 'vera'
 VERA_CONTROLLER = None
 
 CONF_CONTROLLER = 'vera_controller_url'
-CONF_EXCLUDE = 'exclude'
-CONF_LIGHTS = 'lights'
 
 VERA_ID_FORMAT = '{}_{}'
 

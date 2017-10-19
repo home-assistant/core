@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_TIMEOUT)
+    CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -38,8 +38,6 @@ DEFAULT_NAME = 'Room Sensor'
 DEFAULT_TIMEOUT = 5
 DEFAULT_AWAY_TIMEOUT = 0
 DEFAULT_TOPIC = 'room_presence'
-
-STATE_AWAY = 'away'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
@@ -73,7 +71,7 @@ class MQTTRoomSensor(Entity):
 
     def __init__(self, name, state_topic, device_id, timeout, consider_home):
         """Initialize the sensor."""
-        self._state = STATE_AWAY
+        self._state = STATE_NOT_HOME
         self._name = name
         self._state_topic = '{}{}'.format(state_topic, '/+')
         self._device_id = slugify(device_id).upper()
@@ -148,7 +146,7 @@ class MQTTRoomSensor(Entity):
         if self._updated \
                 and self._consider_home \
                 and dt.utcnow() - self._updated > self._consider_home:
-            self._state = STATE_AWAY
+            self._state = STATE_NOT_HOME
 
 
 def _parse_update_data(topic, data):

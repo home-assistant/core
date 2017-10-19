@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aioimaplib==0.7.12']
+REQUIREMENTS = ['aioimaplib==0.7.13']
 
 CONF_SERVER = 'server'
 
