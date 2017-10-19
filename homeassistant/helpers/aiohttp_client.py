@@ -161,7 +161,7 @@ def _async_get_connector(hass, verify_ssl=True):
 
     if verify_ssl:
         if DATA_CONNECTOR not in hass.data:
-            ssl_context = ssl.SSLContext()
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             ssl_context.load_verify_locations(cafile=certifi.where(),
                                               capath=None)
             connector = aiohttp.TCPConnector(loop=hass.loop,
