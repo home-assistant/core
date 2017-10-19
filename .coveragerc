@@ -190,6 +190,9 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/toon.py
+    homeassistant/components/*/toon.py
+
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
