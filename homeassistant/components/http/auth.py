@@ -6,7 +6,7 @@ import logging
 
 from aiohttp import hdrs
 
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.const import HTTP_HEADER_HA_AUTH, CONF_PASSWORD
 from .util import get_real_ip
 from .const import KEY_TRUSTED_NETWORKS, KEY_AUTHENTICATED
 
@@ -19,7 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def auth_middleware(app, handler):
     """Authenticate as middleware."""
     # If no password set, just always set authenticated=True
-    if app['hass'].http.api_password is None:
+    if ((app['hass'].http.api_password is None)
+            and (app['hass'].http.api_users is None)):
         @asyncio.coroutine
         def no_auth_middleware_handler(request):
             """Auth middleware to approve all requests."""
@@ -68,9 +69,49 @@ def is_trusted_ip(request):
 
 
 def validate_password(request, api_password):
-    """Test if password is valid."""
-    return hmac.compare_digest(
-        api_password, request.app['hass'].http.api_password)
+    """
+    Test if one of the passwords is valid.
+
+    First try the http.api_password, then the http.api_users' api_passwords.
+    """
+    validated = False
+    if request.app['hass'].http.api_password:
+        validated = hmac.compare_digest(
+            api_password, request.app['hass'].http.api_password)
+    if validated:
+        _LOGGER.debug("validation with old-style api_password was successful.")
+        return validated
+    if request.app['hass'].http.api_users is not None:
+        for username, api_user in request.app['hass'].http.api_users.items():
+            validated = hmac.compare_digest(
+                api_password, api_user[CONF_PASSWORD])
+            if validated:
+                _LOGGER.debug("validation using new api for [%s]", username)
+                break
+    return validated
+
+
+def validate_username_password(request, username, api_password):
+    """
+    Test if one of the passwords with username is valid.
+
+    First try the http.api_password, then the http.api_users' api_passwords.
+    """
+    validated = False
+    if username == 'homeassistant':
+        validated = hmac.compare_digest(
+            api_password, request.app['hass'].http.api_password)
+    if validated:
+        _LOGGER.debug("validation with old-style api_password was successful.")
+        return validated
+    if request.app['hass'].http.api_users is not None:
+        if username in request.app['hass'].http.api_users:
+            validated = hmac.compare_digest(
+                api_password,
+                request.app['hass'].http.api_users[username][CONF_PASSWORD])
+            if validated:
+                _LOGGER.debug("validation for [%s]", username)
+    return validated
 
 
 def validate_authorization_header(request):
@@ -85,8 +126,4 @@ def validate_authorization_header(request):
 
     decoded = base64.b64decode(auth).decode('utf-8')
     username, password = decoded.split(':', 1)
-
-    if username != 'homeassistant':
-        return False
-
-    return validate_password(request, password)
+    return validate_username_password(request, username, password)

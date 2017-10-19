@@ -14,7 +14,7 @@ class TestMQTT:
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_http_component(self.hass, 'super_secret')
+        mock_http_component(self.hass, api_password='super_secret')
 
     def teardown_method(self, method):
         """Stop everything that was started."""
