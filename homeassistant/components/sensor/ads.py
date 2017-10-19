@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([entity])
 
     if use_notify:
-        ads_hub.add_device_notification(adsvar, ads.ADS_TYPEMAP[adstype],
+        ads_hub.add_device_notification(adsvar, ads_hub.ADS_TYPEMAP[adstype],
                                         entity.callback)
     else:
         dtime = timedelta(0, 0, poll_interval * 1000)
@@ -101,7 +101,7 @@ class AdsSensor(Entity):
 
     def poll(self, now):
         self._value = self._ads_hub.read_by_name(
-            self.adsvar, ads.ADS_TYPEMAP[self.adstype]
+            self.adsvar, self._ads_hub.ADS_TYPEMAP[self.adstype]
         ) / self.factor
 
         _LOGGER.debug('Polled value for bool variable {0}: {1}'

@@ -8,9 +8,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, \
-    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA, STATE_ON
-from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL, \
-    CONF_ADSVAR, CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
+from homeassistant.components.ads import DATA_ADS, CONF_ADSVAR, \
+    CONF_ADS_USE_NOTIFY, CONF_ADS_POLL_INTERVAL
 from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([ads_sensor])
 
     if use_notify:
-        ads_hub.add_device_notification(adsvar, PLCTYPE_BOOL,
+        ads_hub.add_device_notification(adsvar, ads_hub.PLCTYPE_BOOL,
                                         ads_sensor.callback)
     else:
         dtime = timedelta(0, 0, poll_interval * 1000)
@@ -97,7 +97,8 @@ class AdsBinarySensor(BinarySensorDevice):
             pass
 
     def poll(self, now):
-        self._state = self._ads_hub.read_by_name(self.adsvar, PLCTYPE_BOOL)
+        self._state = self._ads_hub.read_by_name(self.adsvar,
+                                                 self._ads_hub.PLCTYPE_BOOL)
         _LOGGER.debug('Polled value for bool variable {0}: {1}'
                       .format(self.adsvar, self._state))
         try:

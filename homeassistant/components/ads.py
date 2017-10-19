@@ -13,11 +13,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
     EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-import pyads
-from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_UINT, PLCTYPE_BYTE, \
-    ADSError
 
-REQUIREMENTS = ['pyads']
+REQUIREMENTS = ['pyads==2.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +25,6 @@ ADSTYPE_INT = 'int'
 ADSTYPE_UINT = 'uint'
 ADSTYPE_BYTE = 'byte'
 ADSTYPE_BOOL = 'bool'
-
-ADS_TYPEMAP = {
-    ADSTYPE_BOOL: PLCTYPE_BOOL,
-    ADSTYPE_BYTE: PLCTYPE_BYTE,
-    ADSTYPE_INT: PLCTYPE_INT,
-    ADSTYPE_UINT: PLCTYPE_UINT,
-}
 
 
 ADS_PLATFORMS = ['switch', 'binary_sensor', 'light']
@@ -60,6 +50,7 @@ RETRY_SLEEPTIME_S = 0.1
 
 
 def setup(hass, config):
+    import pyads
     """ Set up the ADS component. """
     _LOGGER.info('created ADS client')
     conf = config[DOMAIN]
@@ -92,6 +83,20 @@ class AdsHub:
     """ Representation of a PyADS connection. """
 
     def __init__(self, ads_client):
+        from pyads import PLCTYPE_BOOL, PLCTYPE_BYTE, PLCTYPE_INT, PLCTYPE_UINT
+
+        self.ADS_TYPEMAP = {
+            ADSTYPE_BOOL: PLCTYPE_BOOL,
+            ADSTYPE_BYTE: PLCTYPE_BYTE,
+            ADSTYPE_INT: PLCTYPE_INT,
+            ADSTYPE_UINT: PLCTYPE_UINT,
+        }
+
+        self.PLCTYPE_BOOL = PLCTYPE_BOOL
+        self.PLCTYPE_BYTE = PLCTYPE_BYTE
+        self.PLCTYPE_INT = PLCTYPE_INT
+        self.PLCTYPE_UINT = PLCTYPE_UINT
+
         self._client = ads_client
         self._client.open()
 
@@ -125,8 +130,9 @@ class AdsHub:
             return self._client.read_by_name(name, plc_datatype)
 
     def add_device_notification(self, name, plc_datatype, callback):
+        from pyads import NotificationAttrib
         """ Add a notification to the ADS devices. """
-        attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
+        attr = NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
             hnotify, huser = self._client.add_device_notification(
@@ -142,6 +148,7 @@ class AdsHub:
         )
 
     def _device_notification_callback(self, addr, notification, huser):
+        from pyads import PLCTYPE_BOOL, PLCTYPE_INT, PLCTYPE_BYTE, PLCTYPE_UINT
         contents = notification.contents
 
         hnotify = int(contents.hNotification)
@@ -156,13 +163,13 @@ class AdsHub:
             return
 
         # parse data to desired datatype
-        if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
+        if notification_item.plc_datatype == PLCTYPE_BOOL:
             value = bool(struct.unpack('<?', bytearray(data)[:1])[0])
-        elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
+        elif notification_item.plc_datatype == PLCTYPE_INT:
             value = struct.unpack('<h', bytearray(data)[:2])[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
+        elif notification_item.plc_datatype == PLCTYPE_BYTE:
             value = struct.unpack('<B', bytearray(data)[:1])[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_UINT:
+        elif notification_item.plc_datatype == PLCTYPE_UINT:
             value = struct.unpack('<H', bytearray(data)[:2])[0]
         else:
             value = bytearray(data)

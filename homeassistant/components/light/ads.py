@@ -9,8 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, PLCTYPE_BOOL, \
-    PLCTYPE_UINT, CONF_ADSVAR
+from homeassistant.components.ads import DATA_ADS, CONF_ADSVAR
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +84,12 @@ class AdsLight(Light):
 
         bval = math.floor(self._brightness / 256.0 * 100.0)
 
-        self._ads_hub.write_by_name(self.varname_enable, True, PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self.varname_enable, True,
+                                    self._ads_hub.PLCTYPE_BOOL)
 
         if self.varname_brightness is not None:
             self._ads_hub.write_by_name(self.varname_brightness, bval,
-                                        PLCTYPE_UINT)
+                                        self._ads_hub.PLCTYPE_UINT)
 
         self._on_state = True
 
@@ -99,10 +99,11 @@ class AdsLight(Light):
         if brightness is not None:
             self._brightness = brightness
         bval = math.floor(self._brightness / 256.0 * 100.0)
-        self._ads_hub.write_by_name(self.varname_brightness, bval,
-                                    PLCTYPE_UINT)
         self._ads_hub.write_by_name(self.varname_enable, False,
-                                    PLCTYPE_BOOL)
+                                    self._ads_hub.PLCTYPE_BOOL)
+        if self.varname_brightness is not None:
+            self._ads_hub.write_by_name(self.varname_brightness, bval,
+                                        self._ads_hub.PLCTYPE_UINT)
         self._on_state = False
 
     def value_changed(self, val):
@@ -112,8 +113,8 @@ class AdsLight(Light):
 
     def update(self):
         self._on_state = self._ads_hub.read_by_name(self.varname_enable,
-                                                    PLCTYPE_BOOL)
-        if self.varname_brightness:
+                                                    self._ads_hub.PLCTYPE_BOOL)
+        if self.varname_brightness is not None:
             self._brightness = self._ads_hub.read_by_name(
-                self.varname_brightness, PLCTYPE_UINT
+                self.varname_brightness, self._ads_hub.PLCTYPE_UINT
             )
