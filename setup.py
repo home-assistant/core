@@ -26,6 +26,7 @@ REQUIRES = [
     'async_timeout==1.4.0',
     'chardet==3.0.4',
     'astral==1.4',
+    'certifi>=2017.4.17',
 ]
 
 setup(
