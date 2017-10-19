@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devname = config.get(CONF_NAME)
 
     add_devices([AdsLight(ads_hub, varname_enable, varname_brightness,
-                          devname)])
+                          devname)], True)
 
 
 class AdsLight(Light):
@@ -47,8 +47,6 @@ class AdsLight(Light):
         self.varname_enable = varname_enable
         self.varname_brightness = varname_brightness
         self.stype = 'dimmer'
-
-        self.update()
 
     @property
     def name(self):

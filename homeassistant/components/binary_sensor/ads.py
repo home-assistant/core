@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     ads_sensor = AdsBinarySensor(ads_hub, name, adsvar, device_class,
                                  use_notify, poll_interval)
-    add_devices([ads_sensor])
+    add_devices([ads_sensor], True)
 
     if use_notify:
         ads_hub.add_device_notification(adsvar, ads_hub.PLCTYPE_BOOL,

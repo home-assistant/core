@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev_name = config.get(CONF_NAME)
     ads_var = config.get(CONF_ADSVAR)
 
-    add_devices([AdsSwitch(ads_hub, dev_name, ads_var)])
+    add_devices([AdsSwitch(ads_hub, dev_name, ads_var)], True)
 
 
 class AdsSwitch(ToggleEntity):
@@ -41,7 +41,6 @@ class AdsSwitch(ToggleEntity):
         self._on_state = False
         self.dev_name = dev_name
         self.ads_var = ads_var
-        self.update()
 
     @property
     def is_on(self):
