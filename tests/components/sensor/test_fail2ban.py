@@ -18,37 +18,37 @@ def fake_log(log_key):
     """Return a fake fail2ban log."""
     fake_log_dict = {
         'single_ban': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111'
         ),
         'multi_ban': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 222.222.222.222'
         ),
         'multi_jail': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_two] Ban 222.222.222.222'
         ),
         'unban_all': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Unban 111.111.111.111\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 222.222.222.222\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Unban 222.222.222.222'
         ),
         'unban_one': (
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 222.222.222.222\n'
-            '2017-01-01 12:23:35 fail2ban.actions [111]:'
+            '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Unban 111.111.111.111'
         )
     }

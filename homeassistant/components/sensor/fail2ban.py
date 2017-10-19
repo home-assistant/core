@@ -8,6 +8,8 @@ import os
 import asyncio
 import logging
 
+import re
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -90,25 +92,20 @@ class BanSensor(Entity):
         if self.log_parser.data:
             for entry in self.log_parser.data:
                 _LOGGER.debug(entry)
-                split_entry = entry.split()
-
-                if 'Ban' in split_entry:
-                    ip_index = split_entry.index('Ban') + 1
-                    this_ban = split_entry[ip_index]
-                    if this_ban not in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.last_ban = this_ban
-                        self.ban_dict[STATE_CURRENT_BANS].append(this_ban)
-                    if this_ban not in self.ban_dict[STATE_ALL_BANS]:
-                        self.ban_dict[STATE_ALL_BANS].append(this_ban)
+                current_ip = entry[1]
+                if entry[0] == 'Ban':
+                    if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
+                        self.last_ban = current_ip
+                        self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
+                    if current_ip not in self.ban_dict[STATE_ALL_BANS]:
+                        self.ban_dict[STATE_ALL_BANS].append(current_ip)
                     if len(self.ban_dict[STATE_ALL_BANS]) > 10:
                         self.ban_dict[STATE_ALL_BANS].pop(0)
 
-                elif 'Unban' in split_entry:
-                    ip_index = split_entry.index('Unban') + 1
-                    this_unban = split_entry[ip_index]
-                    if this_unban in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.ban_dict[STATE_CURRENT_BANS].remove(this_unban)
-                    if self.last_ban == this_unban:
+                elif entry[0] == 'Unban':
+                    if current_ip in self.ban_dict[STATE_CURRENT_BANS]:
+                        self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
+                    if self.last_ban == current_ip:
                         self.last_ban = 'None'
 
 
@@ -134,9 +131,10 @@ class BanLogParser(object):
         self.data = list()
         try:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
-                for line in file_data:
-                    if jail in line and 'fail2ban.actions' in line:
-                        self.data.append(line)
+                self.data = re.findall(
+                    r'\[' + re.escape(jail) + r'\].(Ban|Unban) ([\w+\.]{3,})',
+                    ''.join(file_data.read())
+                )
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
             _LOGGER.warning("File not present: %s",
