@@ -7,10 +7,10 @@ https://home-assistant.io/components/switch.wemo/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, Light, DOMAIN)
+    ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_TRANSITION, Light, DOMAIN, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT)
 from homeassistant.util import convert
 from homeassistant.const import (
-    STATE_OFF, STATE_ON,)
+    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
@@ -42,6 +42,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device:
             add_devices_callback([WemoDimmer(device)])
 
+
 class WemoDimmer(light)
     ""Representation of a WeMo dimmer""
 
@@ -66,17 +67,6 @@ class WemoDimmer(light)
             return
         self.schedule_update_ha_state()
 
-        # Used for value change event handling
-        self.value_added()
-        self.update_properties()
-
-    @property
-    def should_poll(self):
-        """No polling needed with subscriptions."""
-        if self._model_name == 'Insight':
-            return True
-        return False
-
     @property
     def unique_id(self):
         """Return the ID of this WeMo dimmer."""
@@ -88,6 +78,11 @@ class WemoDimmer(light)
         return self.wemo.name
 
     @property
+    def supported_features(self):
+        """Flag supported features."""
+        return (SUPPORT_BRIGHTNESS_PCT | SUPPORT_TRANSITION | SUPPORT_EFFECT)
+
+    @property
     def is_on(self):
         """Return true if dimmer is on. Standby is on."""
         return self._state
@@ -95,11 +90,20 @@ class WemoDimmer(light)
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
         self._state = WEMO_ON
-        self.wemo.on()
-        self.schedule_update_ha_state()
+        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+        
+        # Wemo dimmer switches use a range of [0, 99] to control
+        # brightness. Level 255 might mean to set it to previous value
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = int((self._brightness / 255) * 99)
+        else:
+            brightness = 255
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
         self._state = WEMO_OFF
         self.wemo.off()
         self.schedule_update_ha_state()
+
+
