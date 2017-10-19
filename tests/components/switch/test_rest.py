@@ -97,11 +97,15 @@ class TestRestSwitch:
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.name = 'foo'
+        self.method = 'post'
         self.resource = 'http://localhost/'
+        self.auth = None
         self.body_on = Template('on', self.hass)
         self.body_off = Template('off', self.hass)
-        self.switch = rest.RestSwitch(self.hass, self.name, self.resource,
-                                      self.body_on, self.body_off, None, 10)
+        self.switch = rest.RestSwitch(
+            self.name, self.resource, self.method, self.auth, self.body_on,
+            self.body_off, None, 10)
+        self.switch.hass = self.hass
 
     def teardown_method(self):
         """Stop everything that was started."""

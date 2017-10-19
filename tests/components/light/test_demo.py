@@ -71,6 +71,15 @@ class TestDemoLight(unittest.TestCase):
         self.hass.block_till_done()
         self.assertFalse(light.is_on(self.hass, ENTITY_LIGHT))
 
+    def test_turn_off_without_entity_id(self):
+        """Test light turn off all lights."""
+        light.turn_on(self.hass, ENTITY_LIGHT)
+        self.hass.block_till_done()
+        self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
+        light.turn_off(self.hass)
+        self.hass.block_till_done()
+        self.assertFalse(light.is_on(self.hass, ENTITY_LIGHT))
+
 
 @asyncio.coroutine
 def test_restore_state(hass):

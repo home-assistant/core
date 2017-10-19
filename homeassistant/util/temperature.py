@@ -26,5 +26,4 @@ def convert(temperature: float, from_unit: str, to_unit: str) -> float:
         return temperature
     elif from_unit == TEMP_CELSIUS:
         return celsius_to_fahrenheit(temperature)
-    else:
-        return fahrenheit_to_celsius(temperature)
+    return fahrenheit_to_celsius(temperature)

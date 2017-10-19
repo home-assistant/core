@@ -13,16 +13,14 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID, CONF_SENSORS, EVENT_HOMEASSISTANT_START)
+    CONF_ICON_TEMPLATE, ATTR_ENTITY_ID, CONF_SENSORS,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_ICON_TEMPLATE = 'icon_template'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -94,14 +92,10 @@ class SensorTemplate(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state
-
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Handle device state changes."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def template_sensor_startup(event):
@@ -109,7 +103,7 @@ class SensorTemplate(Entity):
             async_track_state_change(
                 self.hass, self._entities, template_sensor_state_listener)
 
-            self.hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_sensor_startup)

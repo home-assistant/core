@@ -58,16 +58,29 @@ class TestHistoryStatsSensor(unittest.TestCase):
             self.hass, 'test', 'on', None, today, duration, 'time', 'test')
 
         sensor1.update_period()
+        sensor1_start, sensor1_end = sensor1._period
         sensor2.update_period()
+        sensor2_start, sensor2_end = sensor2._period
 
-        self.assertEqual(
-            sensor1.device_state_attributes['from'][-8:], '00:00:00')
-        self.assertEqual(
-            sensor1.device_state_attributes['to'][-8:], '02:01:00')
-        self.assertEqual(
-            sensor2.device_state_attributes['from'][-8:], '21:59:00')
-        self.assertEqual(
-            sensor2.device_state_attributes['to'][-8:], '00:00:00')
+        # Start = 00:00:00
+        self.assertEqual(sensor1_start.hour, 0)
+        self.assertEqual(sensor1_start.minute, 0)
+        self.assertEqual(sensor1_start.second, 0)
+
+        # End = 02:01:00
+        self.assertEqual(sensor1_end.hour, 2)
+        self.assertEqual(sensor1_end.minute, 1)
+        self.assertEqual(sensor1_end.second, 0)
+
+        # Start = 21:59:00
+        self.assertEqual(sensor2_start.hour, 21)
+        self.assertEqual(sensor2_start.minute, 59)
+        self.assertEqual(sensor2_start.second, 0)
+
+        # End = 00:00:00
+        self.assertEqual(sensor2_end.hour, 0)
+        self.assertEqual(sensor2_end.minute, 0)
+        self.assertEqual(sensor2_end.second, 0)
 
     def test_measure(self):
         """Test the history statistics sensor measure."""

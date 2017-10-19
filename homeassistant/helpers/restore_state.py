@@ -7,6 +7,7 @@ import async_timeout
 
 from homeassistant.core import HomeAssistant, CoreState, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.loader import bind_hass
 from homeassistant.components.history import get_states, last_recorder_run
 from homeassistant.components.recorder import (
     wait_connection_ready, DOMAIN as _RECORDER)
@@ -49,6 +50,7 @@ def _load_restore_cache(hass: HomeAssistant):
 
 
 @asyncio.coroutine
+@bind_hass
 def async_get_last_state(hass, entity_id: str):
     """Restore state."""
     if DATA_RESTORE_CACHE in hass.data:
@@ -76,8 +78,8 @@ def async_get_last_state(hass, entity_id: str):
 
     with (yield from hass.data[_LOCK]):
         if DATA_RESTORE_CACHE not in hass.data:
-            yield from hass.loop.run_in_executor(
-                None, _load_restore_cache, hass)
+            yield from hass.async_add_job(
+                _load_restore_cache, hass)
 
     return hass.data.get(DATA_RESTORE_CACHE, {}).get(entity_id)
 

@@ -19,8 +19,6 @@ DEPENDENCIES = ['wink']
 
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
-RGB_MODES = ['hsb', 'rgb']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Wink lights."""
@@ -30,14 +28,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkLight(light, hass)])
+    for light in pywink.get_light_groups():
+        _id = light.object_id() + light.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink device."""
-        super().__init__(wink, hass)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -54,16 +52,13 @@ class WinkLight(WinkDevice, Light):
         """Return the brightness of the light."""
         if self.wink.brightness() is not None:
             return int(self.wink.brightness() * 255)
-        else:
-            return None
+        return None
 
     @property
     def rgb_color(self):
         """Define current bulb color in RGB."""
         if not self.wink.supports_hue_saturation():
             return None
-        elif self.wink.color_model() not in RGB_MODES:
-            return False
         else:
             hue = self.wink.color_hue()
             saturation = self.wink.color_saturation()
@@ -110,7 +105,7 @@ class WinkLight(WinkDevice, Light):
                 xyb = color_util.color_RGB_to_xy(*rgb_color)
                 state_kwargs['color_xy'] = xyb[0], xyb[1]
                 state_kwargs['brightness'] = xyb[2]
-            elif self.wink.supports_hue_saturation():
+            if self.wink.supports_hue_saturation():
                 hsv = colorsys.rgb_to_hsv(
                     rgb_color[0], rgb_color[1], rgb_color[2])
                 state_kwargs['color_hue_saturation'] = hsv[0], hsv[1]

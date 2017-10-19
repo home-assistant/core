@@ -7,7 +7,8 @@ https://home-assistant.io/components/tellduslive/
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -52,11 +53,13 @@ def setup(hass, config):
     if not client.validate_session():
         _LOGGER.error(
             "Authentication Error: Please make sure you have configured your "
-            "keys that can be aquired from https://api.telldus.com/keys/index")
+            "keys that can be acquired from "
+            "https://api.telldus.com/keys/index")
         return False
 
     hass.data[DOMAIN] = client
-    client.update(utcnow())
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, client.update)
 
     return True
 
@@ -91,7 +94,7 @@ class TelldusLiveClient(object):
         response = self._client.request_user()
         return response and 'email' in response
 
-    def update(self, now):
+    def update(self, *args):
         """Periodically poll the servers for current state."""
         _LOGGER.debug("Updating")
         try:
@@ -114,17 +117,16 @@ class TelldusLiveClient(object):
                 return 'cover'
             elif device.methods & TURNON:
                 return 'switch'
-            else:
-                _LOGGER.warning(
-                    "Unidentified device type (methods: %d)", device.methods)
-                return 'switch'
+            _LOGGER.warning(
+                "Unidentified device type (methods: %d)", device.methods)
+            return 'switch'
 
         def discover(device_id, component):
             """Discover the component."""
             discovery.load_platform(
                 self._hass, component, DOMAIN, [device_id], self._config)
 
-        known_ids = set([entity.device_id for entity in self.entities])
+        known_ids = {entity.device_id for entity in self.entities}
         for device in self._client.devices:
             if device.device_id in known_ids:
                 continue
@@ -172,7 +174,7 @@ class TelldusLiveEntity(Entity):
 
     @property
     def device(self):
-        """Return the representaion of the device."""
+        """Return the representation of the device."""
         return self._client.device(self.device_id)
 
     @property

@@ -24,11 +24,13 @@ CONF_BRIDGES = 'bridges'
 CONF_GROUPS = 'groups'
 CONF_NUMBER = 'number'
 CONF_VERSION = 'version'
+CONF_FADE = 'fade'
 
 DEFAULT_LED_TYPE = 'rgbw'
 DEFAULT_PORT = 5987
 DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
+DEFAULT_FADE = False
 
 LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
 
@@ -58,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
                         vol.In(LED_TYPE),
                     vol.Required(CONF_NUMBER): cv.positive_int,
+                    vol.Optional(CONF_FADE, default=DEFAULT_FADE): cv.boolean,
                 }
             ]),
         },
@@ -112,7 +115,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 group_conf.get(CONF_NUMBER),
                 group_conf.get(CONF_NAME),
                 group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
-            lights.append(LimitlessLEDGroup.factory(group))
+            lights.append(LimitlessLEDGroup.factory(group, {
+                'fade': group_conf[CONF_FADE]
+            }))
     add_devices(lights)
 
 
@@ -152,25 +157,26 @@ def state(new_state):
 class LimitlessLEDGroup(Light):
     """Representation of a LimitessLED group."""
 
-    def __init__(self, group):
+    def __init__(self, group, config):
         """Initialize a group."""
         self.group = group
         self.repeating = False
         self._is_on = False
         self._brightness = None
+        self.config = config
 
     @staticmethod
-    def factory(group):
+    def factory(group, config):
         """Produce LimitlessLEDGroup objects."""
         from limitlessled.group.rgbw import RgbwGroup
         from limitlessled.group.white import WhiteGroup
         from limitlessled.group.rgbww import RgbwwGroup
         if isinstance(group, WhiteGroup):
-            return LimitlessLEDWhiteGroup(group)
+            return LimitlessLEDWhiteGroup(group, config)
         elif isinstance(group, RgbwGroup):
-            return LimitlessLEDRGBWGroup(group)
+            return LimitlessLEDRGBWGroup(group, config)
         elif isinstance(group, RgbwwGroup):
-            return LimitlessLEDRGBWWGroup(group)
+            return LimitlessLEDRGBWWGroup(group, config)
 
     @property
     def should_poll(self):
@@ -196,15 +202,17 @@ class LimitlessLEDGroup(Light):
     def turn_off(self, transition_time, pipeline, **kwargs):
         """Turn off a group."""
         if self.is_on:
-            pipeline.transition(transition_time, brightness=0.0).off()
+            if self.config[CONF_FADE]:
+                pipeline.transition(transition_time, brightness=0.0)
+            pipeline.off()
 
 
 class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
     """Representation of a LimitlessLED White group."""
 
-    def __init__(self, group):
+    def __init__(self, group, config):
         """Initialize White group."""
-        super().__init__(group)
+        super().__init__(group, config)
         # Initialize group with known values.
         self.group.on = True
         self.group.temperature = 1.0
@@ -242,9 +250,9 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
 class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
     """Representation of a LimitlessLED RGBW group."""
 
-    def __init__(self, group):
+    def __init__(self, group, config):
         """Initialize RGBW group."""
-        super().__init__(group)
+        super().__init__(group, config)
         # Initialize group with known values.
         self.group.on = True
         self.group.white()
@@ -301,9 +309,9 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
 class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
     """Representation of a LimitlessLED RGBWW group."""
 
-    def __init__(self, group):
+    def __init__(self, group, config):
         """Initialize RGBWW group."""
-        super().__init__(group)
+        super().__init__(group, config)
         # Initialize group with known values.
         self.group.on = True
         self.group.white()

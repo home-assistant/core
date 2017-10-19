@@ -56,12 +56,11 @@ class TellstickLight(TellstickDevice, Light):
         return kwargs.get(ATTR_BRIGHTNESS)
 
     def _parse_tellcore_data(self, tellcore_data):
-        """Turn the value recieved from tellcore into something useful."""
+        """Turn the value received from tellcore into something useful."""
         if tellcore_data is not None:
             brightness = int(tellcore_data)
             return brightness
-        else:
-            return None
+        return None
 
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""

@@ -137,8 +137,7 @@ class PAServer():
                            self._current_module_state)
         if result and result.group(1).isdigit():
             return int(result.group(1))
-        else:
-            return -1
+        return -1
 
 
 class PALoopbackSwitch(SwitchDevice):

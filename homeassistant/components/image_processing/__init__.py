@@ -16,6 +16,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_component
@@ -59,6 +60,7 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def scan(hass, entity_id=None):
     """Force process a image."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
@@ -72,8 +74,8 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -117,7 +119,7 @@ class ImageProcessingEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.process_image, image)
+        return self.hass.async_add_job(self.process_image, image)
 
     @asyncio.coroutine
     def async_update(self):

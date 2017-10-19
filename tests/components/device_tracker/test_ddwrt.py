@@ -57,7 +57,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=401)
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -77,7 +77,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=444)
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -95,7 +95,7 @@ class TestDdwrt(unittest.TestCase):
                 'ddwrt.DdWrtDeviceScanner.get_ddwrt_data', return_value=None)
     def test_no_response(self, data_mock, error_mock):
         """Create a Ddwrt scanner with no response in init, should fail."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
@@ -112,7 +112,7 @@ class TestDdwrt(unittest.TestCase):
     @mock.patch('homeassistant.components.device_tracker.ddwrt._LOGGER.error')
     def test_get_timeout(self, mock_error, mock_request):
         """Test get Ddwrt data with request time out."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
@@ -140,7 +140,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -169,7 +169,7 @@ class TestDdwrt(unittest.TestCase):
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST, text=None)
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -198,7 +198,7 @@ class TestDdwrt(unittest.TestCase):
                 text=load_fixture('Ddwrt_Status_Lan.txt').
                 replace('dhcp_leases', 'missing'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -229,7 +229,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
@@ -249,7 +249,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST,
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
-            with assert_setup_component(1):
+            with assert_setup_component(1, DOMAIN):
                 assert setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',

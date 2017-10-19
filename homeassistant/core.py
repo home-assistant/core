@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import enum
 import logging
 import os
+import pathlib
 import re
 import sys
 import threading
@@ -29,6 +30,7 @@ from homeassistant.const import (
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
+from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
@@ -46,9 +48,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
-# Size of a executor pool
-EXECUTOR_POOL_SIZE = 10
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -113,7 +112,15 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        self.executor = ThreadPoolExecutor(max_workers=EXECUTOR_POOL_SIZE)
+        executor_opts = {'max_workers': 10}
+        if sys.version_info[:2] >= (3, 5):
+            # It will default set to the number of processors on the machine,
+            # multiplied by 5. That is better for overlap I/O workers.
+            executor_opts['max_workers'] = None
+        if sys.version_info[:2] >= (3, 6):
+            executor_opts['thread_name_prefix'] = 'SyncWorker'
+
+        self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks = []
@@ -122,6 +129,8 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
+        self.components = loader.Components(self)
+        self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = CoreState.not_running
@@ -175,6 +184,8 @@ class HomeAssistant(object):
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
 
+        # Allow automations to set up the start triggers before changing state
+        yield from asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -208,7 +219,7 @@ class HomeAssistant(object):
         else:
             task = self.loop.run_in_executor(None, target, *args)
 
-        # If a task is sheduled
+        # If a task is scheduled
         if self._track_task and task is not None:
             self._pending_tasks.append(task)
 
@@ -233,7 +244,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_callback(target):
+        if not asyncio.iscoroutine(target) and is_callback(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -327,9 +338,9 @@ class Event(object):
             return "<Event {}[{}]: {}>".format(
                 self.event_type, str(self.origin)[0],
                 util.repr_helper(self.data))
-        else:
-            return "<Event {}[{}]>".format(self.event_type,
-                                           str(self.origin)[0])
+
+        return "<Event {}[{}]>".format(self.event_type,
+                                       str(self.origin)[0])
 
     def __eq__(self, other):
         """Return the comparison."""
@@ -775,8 +786,8 @@ class ServiceCall(object):
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
-        else:
-            return "<ServiceCall {}.{}>".format(self.domain, self.service)
+
+        return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
 class ServiceRegistry(object):
@@ -904,7 +915,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -927,7 +938,7 @@ class ServiceRegistry(object):
         Waits a maximum of SERVICE_CALL_LIMIT.
 
         If blocking = True, will return boolean if service executed
-        succesfully within SERVICE_CALL_LIMIT.
+        successfully within SERVICE_CALL_LIMIT.
 
         This method will fire an event to call the service.
         This event will be picked up by this ServiceRegistry and any
@@ -1047,6 +1058,9 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = None
 
+        # List of allowed external dirs to access
+        self.whitelist_external_dirs = set()
+
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
 
@@ -1064,6 +1078,25 @@ class Config(object):
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
+    def is_allowed_path(self, path: str) -> bool:
+        """Check if the path is valid for access from outside."""
+        assert path is not None
+
+        parent = pathlib.Path(path).parent
+        try:
+            parent = parent.resolve()  # pylint: disable=no-member
+        except (FileNotFoundError, RuntimeError, PermissionError):
+            return False
+
+        for whitelisted_path in self.whitelist_external_dirs:
+            try:
+                parent.relative_to(whitelisted_path)
+                return True
+            except ValueError:
+                pass
+
+        return False
+
     def as_dict(self):
         """Create a dictionary representation of this dict.
 
@@ -1080,6 +1113,7 @@ class Config(object):
             'time_zone': time_zone.zone,
             'components': self.components,
             'config_dir': self.config_dir,
+            'whitelist_external_dirs': self.whitelist_external_dirs,
             'version': __version__
         }
 

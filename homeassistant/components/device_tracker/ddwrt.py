@@ -6,8 +6,6 @@ https://home-assistant.io/components/device_tracker.ddwrt/
 """
 import logging
 import re
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -16,9 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +45,6 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.lock = threading.Lock()
-
         self.last_results = {}
         self.mac2name = {}
 
@@ -69,68 +62,65 @@ class DdWrtDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        with self.lock:
-            # If not initialised and not already scanned and not found.
-            if device not in self.mac2name:
-                url = 'http://{}/Status_Lan.live.asp'.format(self.host)
-                data = self.get_ddwrt_data(url)
+        # If not initialised and not already scanned and not found.
+        if device not in self.mac2name:
+            url = 'http://{}/Status_Lan.live.asp'.format(self.host)
+            data = self.get_ddwrt_data(url)
 
-                if not data:
-                    return None
+            if not data:
+                return None
 
-                dhcp_leases = data.get('dhcp_leases', None)
+            dhcp_leases = data.get('dhcp_leases', None)
 
-                if not dhcp_leases:
-                    return None
+            if not dhcp_leases:
+                return None
 
-                # Remove leading and trailing quotes and spaces
-                cleaned_str = dhcp_leases.replace(
-                    "\"", "").replace("\'", "").replace(" ", "")
-                elements = cleaned_str.split(',')
-                num_clients = int(len(elements) / 5)
-                self.mac2name = {}
-                for idx in range(0, num_clients):
-                    # The data is a single array
-                    # every 5 elements represents one host, the MAC
-                    # is the third element and the name is the first.
-                    mac_index = (idx * 5) + 2
-                    if mac_index < len(elements):
-                        mac = elements[mac_index]
-                        self.mac2name[mac] = elements[idx * 5]
+            # Remove leading and trailing quotes and spaces
+            cleaned_str = dhcp_leases.replace(
+                "\"", "").replace("\'", "").replace(" ", "")
+            elements = cleaned_str.split(',')
+            num_clients = int(len(elements) / 5)
+            self.mac2name = {}
+            for idx in range(0, num_clients):
+                # The data is a single array
+                # every 5 elements represents one host, the MAC
+                # is the third element and the name is the first.
+                mac_index = (idx * 5) + 2
+                if mac_index < len(elements):
+                    mac = elements[mac_index]
+                    self.mac2name[mac] = elements[idx * 5]
 
-            return self.mac2name.get(device)
+        return self.mac2name.get(device)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Ensure the information from the DD-WRT router is up to date.
 
         Return boolean if scanning successful.
         """
-        with self.lock:
-            _LOGGER.info("Checking ARP")
+        _LOGGER.info("Checking ARP")
 
-            url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
-            data = self.get_ddwrt_data(url)
+        url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
+        data = self.get_ddwrt_data(url)
 
-            if not data:
-                return False
+        if not data:
+            return False
 
-            self.last_results = []
+        self.last_results = []
 
-            active_clients = data.get('active_wireless', None)
-            if not active_clients:
-                return False
+        active_clients = data.get('active_wireless', None)
+        if not active_clients:
+            return False
 
-            # The DD-WRT UI uses its own data format and then
-            # regex's out values so this is done here too
-            # Remove leading and trailing single quotes.
-            clean_str = active_clients.strip().strip("'")
-            elements = clean_str.split("','")
+        # The DD-WRT UI uses its own data format and then
+        # regex's out values so this is done here too
+        # Remove leading and trailing single quotes.
+        clean_str = active_clients.strip().strip("'")
+        elements = clean_str.split("','")
 
-            self.last_results.extend(item for item in elements
-                                     if _MAC_REGEX.match(item))
+        self.last_results.extend(item for item in elements
+                                 if _MAC_REGEX.match(item))
 
-            return True
+        return True
 
     def get_ddwrt_data(self, url):
         """Retrieve data from DD-WRT and return parsed result."""

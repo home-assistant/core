@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
-# reuqests more easily (by removing spaces from the requests as well).
+# requests more easily (by removing spaces from the requests as well).
 # This lets "dark seagreen" and "dark sea green" both match the same
 # color "darkseagreen".
 COLORS = {
@@ -265,6 +265,13 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
+def color_hsv_to_RGB(iH: int, iS: int, iV: int) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation."""
+    fRGB = colorsys.hsv_to_rgb(iH/65536, iS/255, iV/255)
+    return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
+
+
+# pylint: disable=invalid-sequence-index
 def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
@@ -301,7 +308,7 @@ def color_rgbw_to_rgb(r, g, b, w):
     # Add the white channel back into the rgb channels.
     rgb = (r + w, g + w, b + w)
 
-    # Match the output maximum value to the input. This ensures the the
+    # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
     return _match_max_scale((r, g, b, w), rgb)
 

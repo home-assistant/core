@@ -16,9 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_SENSOR_CLASS,
-    CONF_DEVICE_CLASS, STATE_UNKNOWN,)
-from homeassistant.helpers.deprecation import get_deprecated
+    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 
@@ -32,7 +30,6 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ATTRIBUTE): cv.string,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_INVERT, default=False): cv.boolean,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -50,8 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entity_id = device_config[ATTR_ENTITY_ID]
         attribute = device_config.get(CONF_ATTRIBUTE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        device_class = get_deprecated(
-            device_config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
         invert = device_config[CONF_INVERT]
 
         sensors.append(

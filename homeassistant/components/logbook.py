@@ -134,8 +134,8 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.loop.run_in_executor(
-            None, _get_events, hass, start_day, end_day)
+        events = yield from hass.async_add_job(
+            _get_events, hass, start_day, end_day)
         events = _exclude_events(events, self.config)
         return self.json(humanify(events))
 
@@ -367,14 +367,12 @@ def _entry_message_from_state(domain, state):
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'
-        else:
-            return 'is at {}'.format(state.state)
+        return 'is at {}'.format(state.state)
 
     elif domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
-        else:
-            return 'has set'
+        return 'has set'
 
     elif state.state == STATE_ON:
         # Future: combine groups and its entity entries ?

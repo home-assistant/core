@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
     CONF_LONGITUDE, CONF_ICON)
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util.async import run_callback_threadsafe
@@ -50,6 +51,7 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+@bind_hass
 def active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude."""
     return run_callback_threadsafe(
@@ -57,6 +59,7 @@ def active_zone(hass, latitude, longitude, radius=0):
     ).result()
 
 
+@bind_hass
 def async_active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude.
 

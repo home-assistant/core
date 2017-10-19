@@ -1,7 +1,10 @@
 """Authentication for HTTP component."""
 import asyncio
+import base64
 import hmac
 import logging
+
+from aiohttp import hdrs
 
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 from .util import get_real_ip
@@ -37,8 +40,12 @@ def auth_middleware(app, handler):
             # A valid auth header has been set
             authenticated = True
 
-        elif (DATA_API_PASSWORD in request.GET and
-              validate_password(request, request.GET[DATA_API_PASSWORD])):
+        elif (DATA_API_PASSWORD in request.query and
+              validate_password(request, request.query[DATA_API_PASSWORD])):
+            authenticated = True
+
+        elif (hdrs.AUTHORIZATION in request.headers and
+              validate_authorization_header(request)):
             authenticated = True
 
         elif is_trusted_ip(request):
@@ -64,3 +71,22 @@ def validate_password(request, api_password):
     """Test if password is valid."""
     return hmac.compare_digest(
         api_password, request.app['hass'].http.api_password)
+
+
+def validate_authorization_header(request):
+    """Test an authorization header if valid password."""
+    if hdrs.AUTHORIZATION not in request.headers:
+        return False
+
+    auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+
+    if auth_type != 'Basic':
+        return False
+
+    decoded = base64.b64decode(auth).decode('utf-8')
+    username, password = decoded.split(':', 1)
+
+    if username != 'homeassistant':
+        return False
+
+    return validate_password(request, password)

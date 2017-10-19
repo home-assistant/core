@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timedelta
 
 from astral import Astral
+import pytest
 
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
@@ -17,6 +18,7 @@ from homeassistant.helpers.event import (
     track_state_change,
     track_time_interval,
     track_template,
+    track_same_state,
     track_sunrise,
     track_sunset,
 )
@@ -24,7 +26,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, fire_time_changed
 from unittest.mock import patch
 
 
@@ -261,6 +263,115 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
         self.assertEqual(2, len(wildercard_runs))
+
+    def test_track_same_state_simple_trigger(self):
+        """Test track_same_change with trigger simple."""
+        thread_runs = []
+        callback_runs = []
+        coroutine_runs = []
+        period = timedelta(minutes=1)
+
+        def thread_run_callback():
+            thread_runs.append(1)
+
+        track_same_state(
+            self.hass, period, thread_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
+            entity_ids='light.Bowl')
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        track_same_state(
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
+            entity_ids='light.Bowl')
+
+        @asyncio.coroutine
+        def coroutine_run_callback():
+            coroutine_runs.append(1)
+
+        track_same_state(
+            self.hass, period, coroutine_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on')
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(thread_runs))
+        self.assertEqual(0, len(callback_runs))
+        self.assertEqual(0, len(coroutine_runs))
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(thread_runs))
+        self.assertEqual(1, len(callback_runs))
+        self.assertEqual(1, len(coroutine_runs))
+
+    def test_track_same_state_simple_no_trigger(self):
+        """Test track_same_change with no trigger."""
+        callback_runs = []
+        period = timedelta(minutes=1)
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        track_same_state(
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
+            entity_ids='light.Bowl')
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+        # Change state on state machine
+        self.hass.states.set("light.Bowl", "off")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+
+    def test_track_same_state_simple_trigger_check_funct(self):
+        """Test track_same_change with trigger and check funct."""
+        callback_runs = []
+        check_func = []
+        period = timedelta(minutes=1)
+
+        @ha.callback
+        def callback_run_callback():
+            callback_runs.append(1)
+
+        @ha.callback
+        def async_check_func(entity, from_s, to_s):
+            check_func.append((entity, from_s, to_s))
+            return True
+
+        track_same_state(
+            self.hass, period, callback_run_callback,
+            entity_ids='light.Bowl', async_check_same_func=async_check_func)
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.block_till_done()
+        self.assertEqual(0, len(callback_runs))
+        self.assertEqual('on', check_func[-1][2].state)
+        self.assertEqual('light.bowl', check_func[-1][0])
+
+        # change time to track and see if they trigger
+        future = dt_util.utcnow() + period
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(callback_runs))
 
     def test_track_time_interval(self):
         """Test tracking time interval."""
@@ -524,8 +635,9 @@ class TestEventHelpers(unittest.TestCase):
         """Test periodic tasks with wrong input."""
         specific_runs = []
 
-        track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), year='/two')
+        with pytest.raises(ValueError):
+            track_utc_time_change(
+                self.hass, lambda x: specific_runs.append(1), year='/two')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()

@@ -80,8 +80,8 @@ class GoogleProvider(Provider):
 
         data = b''
         for idx, part in enumerate(message_parts):
-            part_token = yield from self.hass.loop.run_in_executor(
-                None, token.calculate_token, part)
+            part_token = yield from self.hass.async_add_job(
+                token.calculate_token, part)
 
             url_param = {
                 'ie': 'UTF-8',
@@ -129,8 +129,7 @@ class GoogleProvider(Provider):
             if len(fullstring) > MESSAGE_SIZE:
                 idx = fullstring.rfind(' ', 0, MESSAGE_SIZE)
                 return [fullstring[:idx]] + split_by_space(fullstring[idx:])
-            else:
-                return [fullstring]
+            return [fullstring]
 
         msg_parts = []
         for part in parts:

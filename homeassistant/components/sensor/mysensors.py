@@ -4,89 +4,18 @@ Support for MySensors sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
-import logging
-
 from homeassistant.components import mysensors
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MySensors platform for sensors."""
-    # Only act if loaded via mysensors by discovery event.
-    # Otherwise gateway is not setup.
-    if discovery_info is None:
-        return
-
-    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
-    if not gateways:
-        return
-
-    for gateway in gateways:
-        # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a dict of lists.
-        pres = gateway.const.Presentation
-        set_req = gateway.const.SetReq
-        map_sv_types = {
-            pres.S_TEMP: [set_req.V_TEMP],
-            pres.S_HUM: [set_req.V_HUM],
-            pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
-            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST, set_req.V_DIRECTION],
-            pres.S_RAIN: [set_req.V_RAIN, set_req.V_RAINRATE],
-            pres.S_UV: [set_req.V_UV],
-            pres.S_WEIGHT: [set_req.V_WEIGHT, set_req.V_IMPEDANCE],
-            pres.S_POWER: [set_req.V_WATT, set_req.V_KWH],
-            pres.S_DISTANCE: [set_req.V_DISTANCE],
-            pres.S_LIGHT_LEVEL: [set_req.V_LIGHT_LEVEL],
-            pres.S_IR: [set_req.V_IR_RECEIVE],
-            pres.S_WATER: [set_req.V_FLOW, set_req.V_VOLUME],
-            pres.S_CUSTOM: [set_req.V_VAR1,
-                            set_req.V_VAR2,
-                            set_req.V_VAR3,
-                            set_req.V_VAR4,
-                            set_req.V_VAR5],
-            pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
-                                      set_req.V_SCENE_OFF],
-        }
-        if float(gateway.protocol_version) < 1.5:
-            map_sv_types.update({
-                pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
-                pres.S_DUST: [set_req.V_DUST_LEVEL],
-            })
-        if float(gateway.protocol_version) >= 1.5:
-            map_sv_types.update({
-                pres.S_COLOR_SENSOR: [set_req.V_RGB],
-                pres.S_MULTIMETER: [set_req.V_VOLTAGE,
-                                    set_req.V_CURRENT,
-                                    set_req.V_IMPEDANCE],
-                pres.S_SOUND: [set_req.V_LEVEL],
-                pres.S_VIBRATION: [set_req.V_LEVEL],
-                pres.S_MOISTURE: [set_req.V_LEVEL],
-                pres.S_AIR_QUALITY: [set_req.V_LEVEL],
-                pres.S_DUST: [set_req.V_LEVEL],
-            })
-            map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
-
-        if float(gateway.protocol_version) >= 2.0:
-            map_sv_types.update({
-                pres.S_INFO: [set_req.V_TEXT],
-                pres.S_GAS: [set_req.V_FLOW, set_req.V_VOLUME],
-                pres.S_GPS: [set_req.V_POSITION],
-                pres.S_WATER_QUALITY: [set_req.V_TEMP, set_req.V_PH,
-                                       set_req.V_ORP, set_req.V_EC]
-            })
-            map_sv_types[pres.S_CUSTOM].append(set_req.V_CUSTOM)
-            map_sv_types[pres.S_POWER].extend(
-                [set_req.V_VAR, set_req.V_VA, set_req.V_POWER_FACTOR])
-
-        devices = {}
-        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, MySensorsSensor, add_devices))
+    mysensors.setup_mysensors_platform(
+        hass, DOMAIN, discovery_info, MySensorsSensor, add_devices=add_devices)
 
 
-class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
+class MySensorsSensor(mysensors.MySensorsEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property

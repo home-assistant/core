@@ -278,6 +278,9 @@ def test_get_config(hass, websocket_client):
 
     if 'components' in msg['result']:
         msg['result']['components'] = set(msg['result']['components'])
+    if 'whitelist_external_dirs' in msg['result']:
+        msg['result']['whitelist_external_dirs'] = \
+            set(msg['result']['whitelist_external_dirs'])
 
     assert msg['result'] == hass.config.as_dict()
 

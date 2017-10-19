@@ -5,13 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/apiai/
 """
 import asyncio
-import copy
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import PROJECT_NAME, HTTP_BAD_REQUEST
-from homeassistant.helpers import template, script, config_validation as cv
+from homeassistant.helpers import intent, template
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,24 +28,14 @@ DOMAIN = 'apiai'
 DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        CONF_INTENTS: {
-            cv.string: {
-                vol.Optional(CONF_SPEECH): cv.template,
-                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(CONF_ASYNC_ACTION,
-                             default=DEFAULT_CONF_ASYNC_ACTION): cv.boolean
-            }
-        }
-    }
+    DOMAIN: {}
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Activate API.AI component."""
-    intents = config[DOMAIN].get(CONF_INTENTS, {})
-
-    hass.http.register_view(ApiaiIntentsView(hass, intents))
+    hass.http.register_view(ApiaiIntentsView)
 
     return True
 
@@ -57,24 +46,10 @@ class ApiaiIntentsView(HomeAssistantView):
     url = INTENTS_API_ENDPOINT
     name = 'api:apiai'
 
-    def __init__(self, hass, intents):
-        """Initialize API.AI view."""
-        super().__init__()
-
-        self.hass = hass
-        intents = copy.deepcopy(intents)
-        template.attach(hass, intents)
-
-        for name, intent in intents.items():
-            if CONF_ACTION in intent:
-                intent[CONF_ACTION] = script.Script(
-                    hass, intent[CONF_ACTION], "Apiai intent {}".format(name))
-
-        self.intents = intents
-
     @asyncio.coroutine
     def post(self, request):
         """Handle API.AI."""
+        hass = request.app['hass']
         data = yield from request.json()
 
         _LOGGER.debug("Received api.ai request: %s", data)
@@ -91,55 +66,41 @@ class ApiaiIntentsView(HomeAssistantView):
         if action_incomplete:
             return None
 
-        # use intent to no mix HASS actions with this parameter
-        intent = req.get('action')
+        action = req.get('action')
         parameters = req.get('parameters')
-        # contexts = req.get('contexts')
-        response = ApiaiResponse(parameters)
+        apiai_response = ApiaiResponse(parameters)
 
-        # Default Welcome Intent
-        # Maybe is better to handle this in api.ai directly?
-        #
-        # if intent == 'input.welcome':
-        #     response.add_speech(
-        #     "Hello, and welcome to the future. How may I help?")
-        #     return self.json(response)
-
-        if intent == "":
+        if action == "":
             _LOGGER.warning("Received intent with empty action")
-            response.add_speech(
+            apiai_response.add_speech(
                 "You have not defined an action in your api.ai intent.")
-            return self.json(response)
+            return self.json(apiai_response)
 
-        config = self.intents.get(intent)
+        try:
+            intent_response = yield from intent.async_handle(
+                hass, DOMAIN, action,
+                {key: {'value': value} for key, value
+                 in parameters.items()})
 
-        if config is None:
-            _LOGGER.warning("Received unknown intent %s", intent)
-            response.add_speech(
-                "Intent '%s' is not yet configured within Home Assistant." %
-                intent)
-            return self.json(response)
+        except intent.UnknownIntent as err:
+            _LOGGER.warning('Received unknown intent %s', action)
+            apiai_response.add_speech(
+                "This intent is not yet configured within Home Assistant.")
+            return self.json(apiai_response)
 
-        speech = config.get(CONF_SPEECH)
-        action = config.get(CONF_ACTION)
-        async_action = config.get(CONF_ASYNC_ACTION)
+        except intent.InvalidSlotInfo as err:
+            _LOGGER.error('Received invalid slot data: %s', err)
+            return self.json_message('Invalid slot data received',
+                                     HTTP_BAD_REQUEST)
+        except intent.IntentError:
+            _LOGGER.exception('Error handling request for %s', action)
+            return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
 
-        if action is not None:
-            # API.AI expects a response in less than 5s
-            if async_action:
-                # Do not wait for the action to be executed.
-                # Needed if the action will take longer than 5s to execute
-                self.hass.async_add_job(action.async_run(response.parameters))
-            else:
-                # Wait for the action to be executed so we can use results to
-                # render the answer
-                yield from action.async_run(response.parameters)
+        if 'plain' in intent_response.speech:
+            apiai_response.add_speech(
+                intent_response.speech['plain']['speech'])
 
-        # pylint: disable=unsubscriptable-object
-        if speech is not None:
-            response.add_speech(speech)
-
-        return self.json(response)
+        return self.json(apiai_response)
 
 
 class ApiaiResponse(object):

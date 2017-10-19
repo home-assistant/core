@@ -16,7 +16,7 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['face_recognition==0.1.14']
+REQUIREMENTS = ['face_recognition==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,9 +57,13 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                 split_entity_id(camera_entity)[1])
 
         self._faces = {}
-        for name, face_file in faces.items():
-            image = face_recognition.load_image_file(face_file)
-            self._faces[name] = face_recognition.face_encodings(image)[0]
+        for face_name, face_file in faces.items():
+            try:
+                image = face_recognition.load_image_file(face_file)
+                self._faces[face_name] = \
+                    face_recognition.face_encodings(image)[0]
+            except IndexError as err:
+                _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
 
     @property
     def camera_entity(self):

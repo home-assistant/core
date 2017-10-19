@@ -23,11 +23,10 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
-from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['phue==0.9']
+REQUIREMENTS = ['phue==1.0']
 
 # Track previously setup bridges
 _CONFIGURED_BRIDGES = {}
@@ -84,6 +83,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+GROUP_NAME_ALL_HUE_LIGHTS = "All Hue Lights"
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         if "HASS Bridge" in discovery_info.get('name', ''):
-            _LOGGER.info('Emulated hue found, will not add')
+            _LOGGER.info("Emulated hue found, will not add")
             return False
 
         host = discovery_info.get('host')
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             host = _find_host_from_config(hass, filename)
 
         if host is None:
-            _LOGGER.error('No host found in configuration')
+            _LOGGER.error("No host found in configuration")
             return False
 
     # Only act if we are not already configuring this host
@@ -164,9 +164,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-
-        configurator = get_component('configurator')
-
+        configurator = hass.components.configurator
         configurator.request_done(request_id)
 
     lights = {}
@@ -180,6 +178,12 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         try:
             api = bridge.get_api()
+        except phue.PhueRequestTimeout:
+            _LOGGER.warning("Timeout trying to reach the bridge")
+            return
+        except ConnectionRefusedError:
+            _LOGGER.error("The bridge refused the connection")
+            return
         except socket.error:
             # socket.error when we cannot reach Hue
             _LOGGER.exception("Cannot reach the bridge")
@@ -199,6 +203,21 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
         if not isinstance(api_groups, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
+
+        if not skip_groups:
+            # Group ID 0 is a special group in the hub for all lights, but it
+            # is not returned by get_api() so explicitly get it and include it.
+            # See https://developers.meethue.com/documentation/
+            #               groups-api#21_get_all_groups
+            _LOGGER.debug("Getting group 0 from bridge")
+            all_lights = bridge.get_group(0)
+            if not isinstance(all_lights, dict):
+                _LOGGER.error("Got unexpected result from Hue API for group 0")
+                return
+            # Hue hub returns name of group 0 as "Group 0", so rename
+            # for ease of use in HA.
+            all_lights['name'] = GROUP_NAME_ALL_HUE_LIGHTS
+            api_groups["0"] = all_lights
 
         new_lights = []
 
@@ -221,8 +240,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         for lightgroup_id, info in api_groups.items():
             if 'state' not in info:
-                _LOGGER.warning('Group info does not contain state. '
-                                'Please update your hub.')
+                _LOGGER.warning("Group info does not contain state. "
+                                "Please update your hub.")
                 skip_groups = True
                 break
 
@@ -244,7 +263,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
     # create a service for calling run_scene directly on the bridge,
     # used to simplify automation rules.
     def hue_activate_scene(call):
-        """Service to call directly directly into bridge to set scenes."""
+        """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
         bridge.run_scene(group_name, scene_name)
@@ -262,7 +281,7 @@ def request_configuration(host, hass, add_devices, filename,
                           allow_unreachable, allow_in_emulated_hue,
                           allow_hue_groups):
     """Request configuration steps from the user."""
-    configurator = get_component('configurator')
+    configurator = hass.components.configurator
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
@@ -278,7 +297,7 @@ def request_configuration(host, hass, add_devices, filename,
                      allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Philips Hue", hue_configuration_callback,
+        "Philips Hue", hue_configuration_callback,
         description=("Press the button on the bridge to register Philips Hue "
                      "with Home Assistant."),
         entity_picture="/static/images/logo_philips_hue.png",
@@ -330,36 +349,31 @@ class HueLight(Light):
         """Return the brightness of this light between 0..255."""
         if self.is_group:
             return self.info['action'].get('bri')
-        else:
-            return self.info['state'].get('bri')
+        return self.info['state'].get('bri')
 
     @property
     def xy_color(self):
         """Return the XY color value."""
         if self.is_group:
             return self.info['action'].get('xy')
-        else:
-            return self.info['state'].get('xy')
+        return self.info['state'].get('xy')
 
     @property
     def color_temp(self):
         """Return the CT color value."""
         if self.is_group:
             return self.info['action'].get('ct')
-        else:
-            return self.info['state'].get('ct')
+        return self.info['state'].get('ct')
 
     @property
     def is_on(self):
         """Return true if device is on."""
         if self.is_group:
             return self.info['state']['any_on']
-        else:
-            if self.allow_unreachable:
-                return self.info['state']['on']
-            else:
-                return self.info['state']['reachable'] and \
-                    self.info['state']['on']
+        elif self.allow_unreachable:
+            return self.info['state']['on']
+        return self.info['state']['reachable'] and \
+            self.info['state']['on']
 
     @property
     def supported_features(self):
@@ -383,7 +397,6 @@ class HueLight(Light):
                 hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
                 command['hue'] = hue
                 command['sat'] = sat
-                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
@@ -398,13 +411,12 @@ class HueLight(Light):
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
                 command['bri'] = xyb[2]
+        elif ATTR_COLOR_TEMP in kwargs:
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            temp = kwargs[ATTR_COLOR_TEMP]
-            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 
@@ -424,9 +436,9 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.bridge_type == 'hue':
-            if self.info.get('manufacturername') != "OSRAM":
-                command['effect'] = 'none'
+        elif (self.bridge_type == 'hue' and
+              self.info.get('manufacturername') == 'Philips'):
+            command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
 

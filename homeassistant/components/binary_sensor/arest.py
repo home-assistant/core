@@ -13,10 +13,9 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_SENSOR_CLASS, CONF_DEVICE_CLASS)
+    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_DEVICE_CLASS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_PIN): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
@@ -35,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     try:
         response = requests.get(resource, timeout=10).json()
@@ -51,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([ArestBinarySensor(
         arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-        device_class, pin)])
+        device_class, pin)], True)
 
 
 class ArestBinarySensor(BinarySensorDevice):
@@ -64,12 +62,11 @@ class ArestBinarySensor(BinarySensorDevice):
         self._name = name
         self._device_class = device_class
         self._pin = pin
-        self.update()
 
         if self._pin is not None:
             request = requests.get(
                 '{}/mode/{}/i'.format(self._resource, self._pin), timeout=10)
-            if request.status_code is not 200:
+            if request.status_code != 200:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

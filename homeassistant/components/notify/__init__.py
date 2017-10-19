@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
@@ -51,6 +52,7 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
     info = {
@@ -69,8 +71,8 @@ def send_message(hass, message, title=None, data=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the notify services."""
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     targets = {}
@@ -80,8 +82,6 @@ def async_setup(hass, config):
         """Set up a notify platform."""
         if p_config is None:
             p_config = {}
-        if discovery_info is None:
-            discovery_info = {}
 
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
@@ -97,14 +97,18 @@ def async_setup(hass, config):
                 notify_service = yield from \
                     platform.async_get_service(hass, p_config, discovery_info)
             elif hasattr(platform, 'get_service'):
-                notify_service = yield from hass.loop.run_in_executor(
-                    None, platform.get_service, hass, p_config, discovery_info)
+                notify_service = yield from hass.async_add_job(
+                    platform.get_service, hass, p_config, discovery_info)
             else:
                 raise HomeAssistantError("Invalid notify platform.")
 
             if notify_service is None:
-                _LOGGER.error(
-                    "Failed to initialize notification service %s", p_type)
+                # Platforms can decide not to create a service based
+                # on discovery data.
+                if discovery_info is None:
+                    _LOGGER.error(
+                        "Failed to initialize notification service %s",
+                        p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
@@ -112,6 +116,9 @@ def async_setup(hass, config):
             return
 
         notify_service.hass = hass
+
+        if discovery_info is None:
+            discovery_info = {}
 
         @asyncio.coroutine
         def async_notify_message(service):
@@ -192,5 +199,5 @@ class BaseNotificationService(object):
         kwargs can contain ATTR_TITLE to specify a title.
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.send_message, message, **kwargs))
+        return self.hass.async_add_job(
+            partial(self.send_message, message, **kwargs))

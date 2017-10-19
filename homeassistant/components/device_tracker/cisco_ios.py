@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.cisco_ios/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -14,9 +13,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
-from homeassistant.util import Throttle
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +61,6 @@ class CiscoDeviceScanner(DeviceScanner):
 
         return self.last_results
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """
         Ensure the information from the Cisco router is up to date.
@@ -87,21 +82,20 @@ class CiscoDeviceScanner(DeviceScanner):
             lines_result = lines_result[2:]
 
             for line in lines_result:
-                if len(line.split()) is 6:
-                    parts = line.split()
-                    if len(parts) != 6:
-                        continue
+                parts = line.split()
+                if len(parts) != 6:
+                    continue
 
-                    # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
-                    # 'GigabitEthernet0']
-                    age = parts[2]
-                    hw_addr = parts[3]
+                # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
+                # 'GigabitEthernet0']
+                age = parts[2]
+                hw_addr = parts[3]
 
-                    if age != "-":
-                        mac = _parse_cisco_mac_address(hw_addr)
-                        age = int(age)
-                        if age < 1:
-                            last_results.append(mac)
+                if age != "-":
+                    mac = _parse_cisco_mac_address(hw_addr)
+                    age = int(age)
+                    if age < 1:
+                        last_results.append(mac)
 
             self.last_results = last_results
             return True

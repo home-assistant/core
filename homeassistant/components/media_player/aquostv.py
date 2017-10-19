@@ -108,7 +108,6 @@ def _retry(func):
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
         global SUPPORT_SHARPTV

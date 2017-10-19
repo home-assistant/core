@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.4.0']
+REQUIREMENTS = ['rxv==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,9 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("%s already manually configured", ctrl_url)
             return
         receivers = rxv.RXV(
-            ctrl_url,
-            model_name=model,
-            friendly_name=name,
+            ctrl_url, model_name=model, friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
         # when we are dynamically discovered config is empty
@@ -86,7 +84,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone not in zone_ignore:
             hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
-                YamahaDevice(name, receiver, source_ignore, source_names)])
+                YamahaDevice(name, receiver, source_ignore, source_names)
+            ], True)
 
 
 class YamahaDevice(MediaPlayerDevice):
@@ -106,7 +105,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
-        self.update()
         self._name = name
         self._zone = receiver.zone
 
@@ -216,7 +214,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._volume = (self._receiver.volume / 100) + 1
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._call_playback_function(self._receiver.play, "play")
 
     def media_pause(self):
@@ -289,5 +287,5 @@ class YamahaDevice(MediaPlayerDevice):
             # just the one we have.
             if song and station:
                 return '{}: {}'.format(station, song)
-            else:
-                return song or station
+
+            return song or station

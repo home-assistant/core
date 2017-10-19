@@ -9,11 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION, CONF_BASE)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['fixerio==0.1.1']
 
@@ -31,7 +30,7 @@ DEFAULT_NAME = 'Exchange rate'
 
 ICON = 'mdi:currency'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
+SCAN_INTERVAL = timedelta(days=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TARGET): cv.string,
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     data = ExchangeData(base, target)
-    add_devices([ExchangeRateSensor(data, name, target)])
+    add_devices([ExchangeRateSensor(data, name, target)], True)
 
 
 class ExchangeRateSensor(Entity):
@@ -67,7 +66,6 @@ class ExchangeRateSensor(Entity):
         self._target = target
         self._name = name
         self._state = None
-        self.update()
 
     @property
     def name(self):
@@ -120,7 +118,6 @@ class ExchangeData(object):
             base=self.base_currency, symbols=[self.target_currency],
             secure=True)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Fixer.io."""
         self.rate = self.exchange.latest()

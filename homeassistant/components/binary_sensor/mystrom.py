@@ -38,7 +38,7 @@ class MyStromView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """The GET request received from a myStrom button."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
@@ -92,4 +92,4 @@ class MyStromBinarySensor(BinarySensorDevice):
     def async_on_update(self, value):
         """Receive an update."""
         self._state = value
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()

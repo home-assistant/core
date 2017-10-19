@@ -5,24 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.mikrotik/
 """
 import logging
-import threading
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (CONF_HOST,
-                                 CONF_PASSWORD,
-                                 CONF_USERNAME,
-                                 CONF_PORT)
-from homeassistant.util import Throttle
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 
-REQUIREMENTS = ['librouteros==1.0.2']
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+REQUIREMENTS = ['librouteros==1.0.4']
 
 MTK_DEFAULT_API_PORT = '8728'
 
@@ -54,19 +46,23 @@ class MikrotikScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.lock = threading.Lock()
-
         self.connected = False
         self.success_init = False
         self.client = None
-
+        self.wireless_exist = None
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info("Start polling Mikrotik router...")
+            _LOGGER.info(
+                "Start polling Mikrotik (%s) router...",
+                self.host
+            )
             self._update_info()
         else:
-            _LOGGER.error("Connection to Mikrotik failed")
+            _LOGGER.error(
+                "Connection to Mikrotik (%s) failed",
+                self.host
+            )
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
@@ -87,6 +83,25 @@ class MikrotikScanner(DeviceScanner):
                              routerboard_info[0].get('model', 'Router'),
                              self.host)
                 self.connected = True
+                self.capsman_exist = self.client(
+                    cmd='/capsman/interface/getall'
+                )
+                if not self.capsman_exist:
+                    _LOGGER.info(
+                        'Mikrotik %s: Not a CAPSman controller. Trying '
+                        'local interfaces ',
+                        self.host
+                    )
+                self.wireless_exist = self.client(
+                    cmd='/interface/wireless/getall'
+                )
+                if not self.wireless_exist:
+                    _LOGGER.info(
+                        'Mikrotik %s: Wireless adapters not found. Try to '
+                        'use DHCP lease table as presence tracker source. '
+                        'Please decrease lease time as much as possible.',
+                        self.host
+                    )
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
@@ -101,31 +116,54 @@ class MikrotikScanner(DeviceScanner):
 
     def get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
-        with self.lock:
-            return self.last_results.get(mac)
+        return self.last_results.get(mac)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
-        with self.lock:
-            _LOGGER.info("Loading wireless device from Mikrotik...")
+        if self.capsman_exist:
+            devices_tracker = 'capsman'
+        elif self.wireless_exist:
+            devices_tracker = 'wireless'
+        else:
+            devices_tracker = 'ip'
 
-            wireless_clients = self.client(
+        _LOGGER.info(
+            "Loading %s devices from Mikrotik (%s) ...",
+            devices_tracker,
+            self.host
+        )
+
+        device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
+        if devices_tracker == 'capsman':
+            devices = self.client(
+                cmd='/caps-man/registration-table/getall'
+            )
+        elif devices_tracker == 'wireless':
+            devices = self.client(
                 cmd='/interface/wireless/registration-table/getall'
             )
-            device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
+        else:
+            devices = device_names
 
-            if device_names is None or wireless_clients is None:
-                return False
+        if device_names is None and devices is None:
+            return False
 
-            mac_names = {device.get('mac-address'): device.get('host-name')
-                         for device in device_names
-                         if device.get('mac-address')}
+        mac_names = {device.get('mac-address'): device.get('host-name')
+                     for device in device_names
+                     if device.get('mac-address')}
 
+        if self.wireless_exist:
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
-                for device in wireless_clients
+                for device in devices
+            }
+        else:
+            self.last_results = {
+                device.get('mac-address'):
+                    mac_names.get(device.get('mac-address'))
+                for device in device_names
+                if device.get('active-address')
             }
 
-            return True
+        return True

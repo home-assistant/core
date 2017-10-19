@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
-        return False
+        return
 
     sensor_items = []
     for zone in zones:
@@ -47,9 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if sensor_items:
         add_devices(sensor_items, True)
-        return True
-    else:
-        return False
 
 
 def create_zone_sensor(tado, zone, name, zone_id, variable):

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.local_file/
 """
 import logging
+import mimetypes
 import os
 
 import voluptuous as vol
@@ -46,6 +47,10 @@ class LocalFile(Camera):
 
         self._name = name
         self._file_path = file_path
+        # Set content type of local file
+        content, _ = mimetypes.guess_type(file_path)
+        if content is not None:
+            self.content_type = content
 
     def camera_image(self):
         """Return image response."""

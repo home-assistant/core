@@ -6,13 +6,16 @@ at https://home-assistant.io/components/input_boolean/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON)
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -41,21 +44,25 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+@bind_hass
 def is_on(hass, entity_id):
     """Test if input_boolean is True."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, entity_id):
     """Set input_boolean to True."""
     hass.services.call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
 
 
+@bind_hass
 def turn_off(hass, entity_id):
     """Set input_boolean to False."""
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
 
+@bind_hass
 def toggle(hass, entity_id):
     """Set input_boolean to False."""
     hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
@@ -97,12 +104,23 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
+
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TURN_OFF, async_handler_service,
+        descriptions[DOMAIN][SERVICE_TURN_OFF],
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TURN_ON, async_handler_service,
+        descriptions[DOMAIN][SERVICE_TURN_ON],
+        schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TOGGLE, async_handler_service,
+        descriptions[DOMAIN][SERVICE_TOGGLE],
+        schema=SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True

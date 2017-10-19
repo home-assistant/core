@@ -10,12 +10,11 @@ import logging
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://apilayer.net/api/live'
@@ -27,7 +26,7 @@ DEFAULT_NAME = 'CurrencyLayer Sensor'
 
 ICON = 'mdi:currency'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
+SCAN_INTERVAL = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -56,8 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if 'error' in response.json():
         return False
     else:
-        add_devices(sensors)
-        rest.update()
+        add_devices(sensors, True)
 
 
 class CurrencylayerSensor(Entity):
@@ -68,7 +66,7 @@ class CurrencylayerSensor(Entity):
         self.rest = rest
         self._quote = quote
         self._base = base
-        self.update()
+        self._state = None
 
     @property
     def name(self):
@@ -110,7 +108,6 @@ class CurrencylayerData(object):
         self._parameters = parameters
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Currencylayer."""
         try:

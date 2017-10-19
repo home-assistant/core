@@ -3,20 +3,21 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 
+import unittest
+from unittest.mock import patch, MagicMock
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
 from homeassistant.components.binary_sensor.zwave import get_device
 from homeassistant.components.zwave import (
-    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, ZWAVE_NETWORK)
+    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component
 
 import pytest
-import unittest
-from unittest.mock import patch, MagicMock
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed, mock_http_component)
+    get_test_home_assistant, async_fire_time_changed)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
@@ -82,7 +83,7 @@ def test_network_options(hass, mock_openzwave):
 
     assert result
 
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert network.options.device == 'mock_usb_path'
     assert network.options.config_path == 'mock_config_path'
 
@@ -94,7 +95,7 @@ def test_auto_heal_midnight(hass, mock_openzwave):
         'zwave': {
             'autoheal': True,
         }}))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
     time = datetime(2017, 5, 6, 0, 0, 0)
@@ -111,7 +112,7 @@ def test_auto_heal_disabled(hass, mock_openzwave):
         'zwave': {
             'autoheal': False,
         }}))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
     time = datetime(2017, 5, 6, 0, 0, 0)
@@ -121,40 +122,25 @@ def test_auto_heal_disabled(hass, mock_openzwave):
 
 
 @asyncio.coroutine
-def test_frontend_panel_register(hass, mock_openzwave):
-    """Test network auto-heal disabled."""
-    mock_http_component(hass)
-    hass.config.components |= set(['frontend'])
-    with patch('homeassistant.components.zwave.'
-               'register_built_in_panel') as mock_register:
-        assert (yield from async_setup_component(hass, 'zwave', {
-            'zwave': {
-                'autoheal': False,
-            }}))
-    assert mock_register.called
-    assert len(mock_register.mock_calls) == 1
-
-
-@asyncio.coroutine
 def test_setup_platform(hass, mock_openzwave):
     """Test invalid device config."""
     mock_device = MagicMock()
-    hass.data[ZWAVE_NETWORK] = MagicMock()
-    hass.data[zwave.DATA_ZWAVE_DICT] = {456: mock_device}
+    hass.data[DATA_NETWORK] = MagicMock()
+    hass.data[zwave.DATA_DEVICES] = {456: mock_device}
     async_add_devices = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, None)
+        hass, None, async_add_devices, None)
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
     assert result
     assert async_add_devices.called
     assert len(async_add_devices.mock_calls) == 1
@@ -170,7 +156,7 @@ def test_zwave_ready_wait(hass, mock_openzwave):
 
     with patch.object(zwave.time, 'sleep') as mock_sleep:
         with patch.object(zwave, '_LOGGER') as mock_logger:
-            hass.data[ZWAVE_NETWORK].state = MockNetwork.STATE_STARTED
+            hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             yield from hass.async_block_till_done()
 
@@ -214,7 +200,9 @@ def test_node_discovery(hass, mock_openzwave):
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
@@ -222,7 +210,7 @@ def test_node_discovery(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('zwave.mock_node_14').state is 'unknown'
+    assert hass.states.get('zwave.mock_node').state is 'unknown'
 
 
 @asyncio.coroutine
@@ -236,8 +224,9 @@ def test_node_ignored(hass, mock_openzwave):
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
             'device_config': {
-                'zwave.mock_node_14': {
+                'zwave.mock_node': {
                     'ignored': True,
                     }}}})
 
@@ -247,7 +236,7 @@ def test_node_ignored(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('zwave.mock_node_14') is None
+    assert hass.states.get('zwave.mock_node') is None
 
 
 @asyncio.coroutine
@@ -260,7 +249,9 @@ def test_value_discovery(hass, mock_openzwave):
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
@@ -272,7 +263,7 @@ def test_value_discovery(hass, mock_openzwave):
     yield from hass.async_block_till_done()
 
     assert hass.states.get(
-        'binary_sensor.mock_node_mock_value_11_12_13').state is 'off'
+        'binary_sensor.mock_node_mock_value').state is 'off'
 
 
 @asyncio.coroutine
@@ -285,7 +276,9 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
@@ -297,9 +290,9 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node, setpoint)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'temperature'] == 22.0
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'current_temperature'] is None
 
     def mock_update(self):
@@ -308,79 +301,60 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
     with patch.object(zwave.node_entity.ZWaveBaseEntity,
                       'maybe_schedule_update', new=mock_update):
         temperature = MockValue(
-            data=23.5, node=node, index=12, instance=13,
+            data=23.5, node=node, index=1, instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
-            label='Temperature', genre=const.GENRE_USER, units='C')
+            genre=const.GENRE_USER, units='C')
         hass.async_add_job(mock_receivers[0], node, temperature)
         yield from hass.async_block_till_done()
 
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'temperature'] == 22.0
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'current_temperature'] == 23.5
 
 
 @asyncio.coroutine
-def test_scene_activated(hass, mock_openzwave):
-    """Test scene activated event."""
+def test_power_schemes(hass, mock_openzwave):
+    """Test power attribute."""
     mock_receivers = []
 
     def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_SCENE_EVENT:
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
-    events = []
+    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SWITCH_BINARY)
+    switch = MockValue(
+        data=True, node=node, index=12, instance=13,
+        command_class=const.COMMAND_CLASS_SWITCH_BINARY,
+        genre=const.GENRE_USER, type=const.TYPE_BOOL)
+    hass.async_add_job(mock_receivers[0], node, switch)
 
-    def listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(const.EVENT_SCENE_ACTIVATED, listener)
-
-    node = MockNode(node_id=11)
-    scene_id = 123
-    hass.async_add_job(mock_receivers[0], node, scene_id)
     yield from hass.async_block_till_done()
 
-    assert len(events) == 1
-    assert events[0].data[ATTR_ENTITY_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_OBJECT_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_SCENE_ID] == scene_id
+    assert hass.states.get('switch.mock_node_mock_value').state == 'on'
+    assert 'power_consumption' not in hass.states.get(
+        'switch.mock_node_mock_value').attributes
 
+    def mock_update(self):
+        self.hass.async_add_job(self.async_update_ha_state)
 
-@asyncio.coroutine
-def test_node_event_activated(hass, mock_openzwave):
-    """Test Node event activated event."""
-    mock_receivers = []
+    with patch.object(zwave.node_entity.ZWaveBaseEntity,
+                      'maybe_schedule_update', new=mock_update):
+        power = MockValue(
+            data=23.5, node=node, index=const.INDEX_SENSOR_MULTILEVEL_POWER,
+            instance=13, command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL)
+        hass.async_add_job(mock_receivers[0], node, power)
+        yield from hass.async_block_till_done()
 
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_NODE_EVENT:
-            mock_receivers.append(receiver)
-
-    with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
-
-    assert len(mock_receivers) == 1
-
-    events = []
-
-    def listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(const.EVENT_NODE_EVENT, listener)
-
-    node = MockNode(node_id=11)
-    value = 234
-    hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data[const.ATTR_OBJECT_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_BASIC_LEVEL] == value
+    assert hass.states.get('switch.mock_node_mock_value').attributes[
+        'power_consumption'] == 23.5
 
 
 @asyncio.coroutine
@@ -393,7 +367,9 @@ def test_network_ready(hass, mock_openzwave):
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
@@ -420,7 +396,9 @@ def test_network_complete(hass, mock_openzwave):
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
 
     assert len(mock_receivers) == 1
 
@@ -450,7 +428,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.start()
 
-        setup_component(self.hass, 'zwave', {'zwave': {}})
+        setup_component(self.hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
         self.hass.block_till_done()
 
         self.node = MockNode()
@@ -478,9 +458,10 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.no_match_value = MockValue(
             command_class='mock_bad_class', node=self.node)
 
-        self.entity_id = '{}.{}'.format('mock_component',
-                                        zwave.object_id(self.primary))
-        self.zwave_config = {}
+        self.entity_id = 'mock_component.mock_node_mock_value'
+        self.zwave_config = {'zwave': {
+            'new_entity_ids': True,
+        }}
         self.device_config = {self.entity_id: {}}
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -491,6 +472,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_discovery(self, discovery, get_platform):
         """Test the creation of a new entity."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         values = zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
             schema=self.mock_schema,
@@ -550,6 +536,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_existing_values(self, discovery, get_platform):
         """Test the loading of already discovered values."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
@@ -585,7 +576,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
-        assert self.primary.disable_poll.called
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
@@ -613,11 +603,15 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
         """Test ignore workaround."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.manufacturer_id = '010f'
         self.node.product_type = '0b00'
         self.primary.command_class = const.COMMAND_CLASS_SENSOR_ALARM
-        self.entity_id = '{}.{}'.format('binary_sensor',
-                                        zwave.object_id(self.primary))
+        self.entity_id = 'binary_sensor.mock_node_mock_value'
         self.device_config = {self.entity_id: {}}
 
         self.mock_schema = {
@@ -721,6 +715,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_config_polling_intensity(self, discovery, get_platform):
         """Test polling intensity."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
@@ -742,7 +741,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert self.primary.enable_poll.called
         assert len(self.primary.enable_poll.mock_calls) == 1
         assert self.primary.enable_poll.mock_calls[0][1][0] == 123
-        assert not self.primary.disable_poll.called
 
 
 class TestZwave(unittest.TestCase):
@@ -770,9 +768,11 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.start()
 
         # Initialize zwave
-        setup_component(self.hass, 'zwave', {'zwave': {}})
+        setup_component(self.hass, 'zwave', {'zwave': {
+            'new_entity_ids': True,
+            }})
         self.hass.block_till_done()
-        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
+        self.zwave_network = self.hass.data[DATA_NETWORK]
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
@@ -867,6 +867,102 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.nodes[11].name == 'test_name'
+
+    def test_rename_value(self):
+        """Test zwave rename_value service."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, label="Old Label")
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.label == "Old Label"
+        self.hass.services.call('zwave', 'rename_value', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_NAME: "New Label",
+        })
+        self.hass.block_till_done()
+
+        assert value.label == "New Label"
+
+    def test_set_poll_intensity_enable(self):
+        """Test zwave set_poll_intensity service, succsessful set."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=0)
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 0
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 4,
+        })
+        self.hass.block_till_done()
+
+        enable_poll = value.enable_poll
+        assert value.enable_poll.called
+        assert len(enable_poll.mock_calls) == 2
+        assert enable_poll.mock_calls[0][1][0] == 4
+
+    def test_set_poll_intensity_enable_failed(self):
+        """Test zwave set_poll_intensity service, failed set."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=0)
+        value.enable_poll.return_value = False
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 0
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 4,
+        })
+        self.hass.block_till_done()
+
+        enable_poll = value.enable_poll
+        assert value.enable_poll.called
+        assert len(enable_poll.mock_calls) == 1
+
+    def test_set_poll_intensity_disable(self):
+        """Test zwave set_poll_intensity service, successful disable."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=4)
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 4
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 0,
+        })
+        self.hass.block_till_done()
+
+        disable_poll = value.disable_poll
+        assert value.disable_poll.called
+        assert len(disable_poll.mock_calls) == 2
+
+    def test_set_poll_intensity_disable_failed(self):
+        """Test zwave set_poll_intensity service, failed disable."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, poll_intensity=4)
+        value.disable_poll.return_value = False
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.poll_intensity == 4
+        self.hass.services.call('zwave', 'set_poll_intensity', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_POLL_INTENSITY: 0,
+        })
+        self.hass.block_till_done()
+
+        disable_poll = value.disable_poll
+        assert value.disable_poll.called
+        assert len(disable_poll.mock_calls) == 1
 
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""
@@ -1014,6 +1110,46 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert value.data == 15
+
+    def test_reset_node_meters(self):
+        """Test zwave reset_node_meters service."""
+        value = MockValue(
+            instance=1,
+            index=8,
+            data=99.5,
+            command_class=const.COMMAND_CLASS_METER,
+        )
+        reset_value = MockValue(
+            instance=1,
+            index=33,
+            command_class=const.COMMAND_CLASS_METER,
+        )
+        node = MockNode(node_id=14)
+        node.values = {8: value, 33: reset_value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'reset_node_meters', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_INSTANCE: 2,
+        })
+        self.hass.block_till_done()
+
+        assert not self.zwave_network.manager.pressButton.called
+        assert not self.zwave_network.manager.releaseButton.called
+
+        self.hass.services.call('zwave', 'reset_node_meters', {
+            const.ATTR_NODE_ID: 14,
+        })
+        self.hass.block_till_done()
+
+        assert self.zwave_network.manager.pressButton.called
+        value_id, = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
+        assert value_id == reset_value.value_id
+        assert self.zwave_network.manager.releaseButton.called
+        value_id, = (
+            self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1])
+        assert value_id == reset_value.value_id
 
     def test_add_association(self):
         """Test zwave change_association service."""

@@ -13,6 +13,7 @@ import csv
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
@@ -26,6 +27,7 @@ from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
@@ -77,6 +79,8 @@ EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
+COLOR_GROUP = "Color descriptors"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 PROP_TO_ATTR = {
@@ -98,17 +102,21 @@ VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PROFILE: cv.string,
+    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME: cv.string,
-    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple)),
-    ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
-                           vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
-    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
@@ -140,12 +148,14 @@ def extract_info(state):
     return params
 
 
+@bind_hass
 def is_on(hass, entity_id=None):
     """Return if the lights are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             brightness_pct=None, rgb_color=None, xy_color=None,
             color_temp=None, kelvin=None, white_value=None,
@@ -158,6 +168,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 
 
 @callback
+@bind_hass
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   color_temp=None, kelvin=None, white_value=None,
@@ -184,12 +195,14 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
+@bind_hass
 def turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
     hass.add_job(async_turn_off, hass, entity_id, transition)
 
 
 @callback
+@bind_hass
 def async_turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
     data = {
@@ -203,6 +216,7 @@ def async_turn_off(hass, entity_id=None, transition=None):
         DOMAIN, SERVICE_TURN_OFF, data))
 
 
+@bind_hass
 def toggle(hass, entity_id=None, transition=None):
     """Toggle all or specified light."""
     data = {
@@ -260,6 +274,7 @@ def async_setup(hass, config):
 
         preprocess_turn_on_alternatives(params)
 
+        update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
                 yield from light.async_turn_on(**params)
@@ -268,25 +283,16 @@ def async_setup(hass, config):
             else:
                 yield from light.async_toggle(**params)
 
-        update_tasks = []
-
-        for light in target_lights:
             if not light.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                light.async_update_ha_state(True))
-            if hasattr(light, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(light.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -341,8 +347,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = yield from hass.loop.run_in_executor(
-            None, load_profile_data, hass)
+        cls._all = yield from hass.async_add_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod
