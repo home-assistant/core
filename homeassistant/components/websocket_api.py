@@ -283,10 +283,12 @@ class ActiveConnection:
         try:
             if request[KEY_AUTHENTICATED]:
                 authenticated = True
+
             else:
                 yield from self.wsock.send_json(auth_required_message())
                 msg = yield from wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
+
                 if validate_password(request, msg['api_password']):
                     authenticated = True
 
@@ -300,9 +302,12 @@ class ActiveConnection:
                 return wsock
 
             yield from self.wsock.send_json(auth_ok_message())
+
             # ---------- AUTH PHASE OVER ----------
+
             msg = yield from wsock.receive_json()
             last_id = 0
+
             while msg:
                 self.debug("Received", msg)
                 msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
