@@ -1,11 +1,13 @@
 """The tests for the  Template light platform."""
+import asyncio
 import logging
 
-from homeassistant.core import callback
+from homeassistant.core import callback, State, CoreState
 from homeassistant import setup
-import homeassistant.components as core
-from homeassistant.components.light import ATTR_BRIGHTNESS
+import homeassistant.components.light as light
 from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from tests.common import mock_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
@@ -378,7 +380,7 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_OFF
 
-        core.light.turn_on(self.hass, 'light.test_template_light')
+        light.turn_on(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -418,7 +420,7 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_OFF
 
-        core.light.turn_on(self.hass, 'light.test_template_light')
+        light.turn_on(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test_template_light')
@@ -461,7 +463,7 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_ON
 
-        core.light.turn_off(self.hass, 'light.test_template_light')
+        light.turn_off(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -498,7 +500,7 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_OFF
 
-        core.light.turn_off(self.hass, 'light.test_template_light')
+        light.turn_off(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -538,8 +540,9 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state.attributes.get('brightness') is None
 
-        core.light.turn_on(
-            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
+        light.turn_on(
+            self.hass, 'light.test_template_light',
+            **{light.ATTR_BRIGHTNESS: 124})
         self.hass.block_till_done()
         assert len(self.calls) == 1
         assert self.calls[0].data['brightness'] == '124'
