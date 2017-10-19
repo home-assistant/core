@@ -28,7 +28,7 @@ ATTR_VCPUS = 'vcpus'
 
 CONF_NODES = 'nodes'
 
-DATA_LINODE = 'data_do'
+DATA_LINODE = 'data_li'
 LINODE_PLATFORMS = ['binary_sensor']
 DOMAIN = 'linode'
 
