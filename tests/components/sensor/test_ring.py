@@ -69,6 +69,12 @@ class TestRingSensorSetup(unittest.TestCase):
 
         for device in self.DEVICES:
             device.update()
+            if device.name == 'Front Battery':
+                self.assertEqual(80, device.state)
+                self.assertEqual('hp_cam_v1',
+                                 device.device_state_attributes['kind'])
+                self.assertEqual('stickup_cams',
+                                    device.device_state_attributes['type'])
             if device.name == 'Front Door Battery':
                 self.assertEqual(100, device.state)
                 self.assertEqual('lpd_v1',
