@@ -77,7 +77,7 @@ class TestVultrSensorSetup(unittest.TestCase):
     def test_invalid_sensor(self, mock):
         """Test the Vultr sensor class and methods."""
         mock.get('https://api.vultr.com/v1/account/info',
-            text="{}")
+                 text="{}")
 
         mock.get('https://api.vultr.com/v1/server/list')
 
@@ -90,8 +90,3 @@ class TestVultrSensorSetup(unittest.TestCase):
                                      None)
 
         self.assertFalse(setup)
-
-        with pytest.raises(vol.Invalid):
-            vultr.PLATFORM_SCHEMA({
-                # No subs
-            })
