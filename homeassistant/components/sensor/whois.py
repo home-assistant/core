@@ -23,6 +23,7 @@ CONF_HOST = 'hosts'
 ATTR_NAME_SERVERS = 'name_servers'
 ATTR_REGISTRAR = 'registrar'
 ATTR_UPDATED = 'updated'
+ATTR_EXPIRES = 'expires'
 
 SCAN_INTERVAL = timedelta(hours=24)  # WHOIS info is very slow moving
 # We also want to prevent DOS / TOS breaking; One request per domain
@@ -91,13 +92,16 @@ class WhoisSensor(Entity):
     def device_state_attributes(self):
         """Get the more info attributes."""
         if self._data:
-            updated_formatted = self._expiration_date.strftime(
+            updated_formatted = self._updated_date.strftime(
+                '%Y-%m-%d %H:%M:%S')
+            expires_formatted = self._expiration_date.strftime(
                 '%Y-%m-%d %H:%M:%S')
 
             return {
                 ATTR_NAME_SERVERS: ' '.join(self._name_servers),
                 ATTR_REGISTRAR: self._data['registrar'][0],
-                ATTR_UPDATED: updated_formatted
+                ATTR_UPDATED: updated_formatted,
+                ATTR_EXPIRES: expires_formatted,
             }
 
     def update(self):
@@ -111,6 +115,7 @@ class WhoisSensor(Entity):
                 self._name_servers = self._data['nameservers']
 
             self._expiration_date = self._data['expiration_date'][0]
+            self._updated_date = self._data['updated_date'][0]
 
             time_delta = (self._expiration_date - self._expiration_date.now())
 
