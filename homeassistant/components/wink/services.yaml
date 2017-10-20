@@ -1,0 +1,122 @@
+pair_new_device:
+  description: Pair a new device to a Wink Hub.
+
+  fields:
+    hub_name:
+      description: The name of the hub to pair a new device to.
+      example: 'My hub'
+    pairing_mode:
+      description: One of ["zigbee", "zwave", "zwave_exclusion", "zwave_network_rediscovery", "lutron", "bluetooth", "kidde"]
+      example: 'zigbee'
+    kidde_radio_code:
+      description: 'A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8'
+      example: '10101010'
+
+rename_wink_device:
+  description: Rename the provided device.
+
+  fields:
+    entity_id:
+      description: The entity_id of the device to rename.
+      example: binary_sensor.front_door_opened
+    name:
+      description: The name to change it to.
+      example: back_door
+
+delete_wink_device:
+  description: Remove/unpair device from Wink.
+
+  fields:
+    entity_id:
+      description: The entity_id of the device to delete.
+
+pull_newly_added_devices_from_wink:
+  description: Pull newly pair devices from Wink.
+
+refresh_state_from_wink:
+  description: Pull the latest states for every device.
+
+set_siren_volume:
+  description: Set the volume of the siren for a Dome siren/chime.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    volume:
+        description: Volume level. One of ["low", "medium", "high"]
+        example: "high"
+
+enable_chime:
+  description: Enable the chime of a Dome siren with the provided sound.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    tone:
+        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+        example: "doorbell"
+
+set_siren_tone:
+  description: Set the sound to use when the siren is enabled. (This doesn't enable the siren)
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    tone:
+        description: The tone to use for the chime. One of ["doorbell", "fur_elise", "doorbell_extended", "alert", "william_tell", "rondo_alla_turca", "police_siren", "evacuation", "beep_beep", "beep", "inactive"]
+        example: "alert"
+
+siren_set_auto_shutoff:
+  description: How long to sound the siren before turning off.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    auto_shutoff:
+        description: The time in seconds to sound the siren. One of [None, -1, 30, 60, 120] (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
+        example: 60
+
+set_siren_strobe_enabled:
+  description: Enable or disable the strobe light when the siren is sounding.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    enabled:
+      description: "True or False"
+
+set_chime_strobe_enabled:
+  description: Enable or disable the strobe light when the chime is sounding.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    enabled:
+        description: "True or False"
+
+enable_siren:
+  description: Enable/disable the siren.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    enabled:
+        description: "True or False"
+
+set_chime_volume:
+  description: Set the volume of the chime for a Dome siren/chime.
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'switch.dome_siren'
+    volume:
+        description: Volume level. One of ["low", "medium", "high"]
+        example: "low"
