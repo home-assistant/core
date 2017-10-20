@@ -117,7 +117,7 @@ class FortinetDeviceScanner(DeviceScanner):
 
                         _LOGGER.debug("host %s", host)
 
-                        if hw_addr is not None:
+                        if hw_addr is not None and seen < max_age:
                             _LOGGER.debug("add the device")
 
                             last_results[hw_addr] = {
