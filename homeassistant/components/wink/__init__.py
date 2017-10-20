@@ -691,6 +691,7 @@ class WinkDevice(Entity):
         self.wink.update_state()
 
     def ha_state_fired(self):
+        """Used to document when HA issues a Wink state change."""
         self.external_change = False
         self.last_ha_change = datetime.now()
 
