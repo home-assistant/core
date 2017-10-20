@@ -10,9 +10,9 @@ from datetime import timedelta
 import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, ATTR_BRIGHTNESS_PCT, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, 
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, \
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, \
+    SUPPORT_TRANSITION, ATTR_BRIGHTNESS_PCT, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, \
     SUPPORT_XY_COLOR)
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
@@ -220,4 +220,3 @@ class WemoDimmer(light)
         self._state = WEMO_OFF
         self.wemo.off()
         self.schedule_update_ha_state()
-
