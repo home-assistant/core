@@ -77,5 +77,5 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = super().device_state_attributes
-        attributes['private'] self.wink.private()
+        attributes['private'] = self.wink.private()
         return attributes
