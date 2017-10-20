@@ -105,8 +105,8 @@ class FortinetDeviceScanner(DeviceScanner):
                         devcfg = False
 
                     _LOGGER.info("found %s/%s age %s<?%s cfg %s",
-                                ip_addr, hw_addr, seen, max_age,
-                                devcfg)
+                                 ip_addr, hw_addr, seen, max_age,
+                                 devcfg)
 
                     if devcfg is True:
                         start_index = line.index("'") + 1
