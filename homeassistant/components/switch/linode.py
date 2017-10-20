@@ -1,16 +1,15 @@
 """
-Support for monitoring the state of Linode Nodes.
+Support for interacting with Linode nodes.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.linode/
+https://home-assistant.io/components/switch.linode/
 """
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.linode import (
     CONF_NODES, ATTR_CREATED, ATTR_NODE_ID, ATTR_NODE_NAME,
     ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
@@ -18,9 +17,9 @@ from homeassistant.components.linode import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Node'
-DEFAULT_DEVICE_CLASS = 'moving'
 DEPENDENCIES = ['linode']
+
+DEFAULT_NAME = 'Node'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string]),
@@ -28,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Linode droplet sensor."""
+    """Set up the Linode Node switch."""
     linode = hass.data.get(DATA_LINODE)
     if not linode:
         return False
@@ -41,24 +40,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if node_id is None:
             _LOGGER.error("Node %s is not available", node)
             return False
-        dev.append(LinodeBinarySensor(linode, node_id))
+        dev.append(LinodeSwitch(linode, node_id))
 
     add_devices(dev, True)
 
 
-class LinodeBinarySensor(BinarySensorDevice):
-    """Representation of a Linode droplet sensor."""
+class LinodeSwitch(SwitchDevice):
+    """Representation of a Linode Node switch."""
 
     def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id
-        self._state = None
         self.data = None
+        self._state = None
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the switch."""
         if self.data is not None:
             return self.data.label
         else:
@@ -66,16 +65,11 @@ class LinodeBinarySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if the binary sensor is on."""
+        """Return true if switch is on."""
         if self.data is not None:
             return self.data.status == 'running'
         else:
             return False
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
 
     @property
     def device_state_attributes(self):
@@ -103,8 +97,18 @@ class LinodeBinarySensor(BinarySensorDevice):
                 ATTR_VCPUS: self.data.specs.vcpus,
             }
 
+    def turn_on(self, **kwargs):
+        """Boot-up the Node."""
+        if self.data.status != 'running':
+            self.data.boot()
+
+    def turn_off(self, **kwargs):
+        """Shutdown the nodes."""
+        if self.data.status == 'running':
+            self.data.shutdown()
+
     def update(self):
-        """Update state of sensor."""
+        """Get the latest data from the device and update the data."""
         self._linode.update()
 
         if self._linode.data is not None:
