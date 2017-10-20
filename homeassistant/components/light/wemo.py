@@ -151,8 +151,8 @@ class WemoLight(Light):
         self.update_lights(no_throttle=True)
 
 
-class WemoDimmer(light)
-    ""Representation of a WeMo dimmer""
+class WemoDimmer(light):
+    """Representation of a WeMo dimmer"""
 
     def __init__(self, device):
         """Initialize the WeMo dimmer."""
