@@ -277,7 +277,7 @@ gTTS-token==1.1.1
 # gattlib==0.20150805
 
 # homeassistant.components.sensor.gitter
-gitterpy==0.1.5
+gitterpy==0.1.6
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
