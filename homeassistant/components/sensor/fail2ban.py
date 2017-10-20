@@ -8,8 +8,9 @@ import os
 import asyncio
 import logging
 
-import re
+from datetime import timedelta
 
+import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,7 @@ CONF_JAILS = 'jails'
 
 DEFAULT_NAME = 'fail2ban'
 DEFAULT_LOG = '/var/log/fail2ban.log'
-SCAN_INTERVAL = 120
+SCAN_INTERVAL = timedelta(seconds=120)
 
 STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
