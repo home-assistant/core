@@ -652,20 +652,22 @@ class PlexClient(MediaPlayerDevice):
 
         # if this device's machineIdentifier matches an active client
         # with a loopback address, the device must be local or casting
-        for client in self.device.server.clients():
-            if ("127.0.0.1" in client.baseurl and
+        # TODO: using _baseurl & _server need to fix?
+        for client in self.device._server.clients():
+            if ("127.0.0.1" in client._baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
                 # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)
-                server_url = self.device.server.baseurl
-                client_url = self.device.baseurl
-                self.device.baseurl = "{}://{}:{}".format(
+                server_url = self.device._server._baseurl
+                client_url = self.device._baseurl
+                self.device._baseurl = "{}://{}:{}".format(
                     urlparse(client_url).scheme,
                     urlparse(server_url).hostname,
                     str(urlparse(client_url).port))
+                print(self.device._baseurl)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
