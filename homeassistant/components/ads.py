@@ -83,7 +83,8 @@ class AdsHub:
     """ Representation of a PyADS connection. """
 
     def __init__(self, ads_client):
-        from pyads import PLCTYPE_BOOL, PLCTYPE_BYTE, PLCTYPE_INT, PLCTYPE_UINT
+        from pyads import PLCTYPE_BOOL, PLCTYPE_BYTE, PLCTYPE_INT, \
+            PLCTYPE_UINT, ADSError
 
         self.ADS_TYPEMAP = {
             ADSTYPE_BOOL: PLCTYPE_BOOL,
@@ -96,6 +97,7 @@ class AdsHub:
         self.PLCTYPE_BYTE = PLCTYPE_BYTE
         self.PLCTYPE_INT = PLCTYPE_INT
         self.PLCTYPE_UINT = PLCTYPE_UINT
+        self.ADSError = ADSError
 
         self._client = ads_client
         self._client.open()

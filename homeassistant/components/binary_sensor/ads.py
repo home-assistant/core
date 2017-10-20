@@ -97,10 +97,14 @@ class AdsBinarySensor(BinarySensorDevice):
             pass
 
     def poll(self, now):
-        self._state = self._ads_hub.read_by_name(self.adsvar,
-                                                 self._ads_hub.PLCTYPE_BOOL)
-        _LOGGER.debug('Polled value for bool variable {0}: {1}'
-                      .format(self.adsvar, self._state))
+        try:
+            self._state = self._ads_hub.read_by_name(self.adsvar,
+                                                     self._ads_hub.PLCTYPE_BOOL)
+            _LOGGER.debug('Polled value for bool variable {0}: {1}'
+                          .format(self.adsvar, self._state))
+        except self._ads_hub.ADSError as e:
+            _LOGGER.error(e)
+
         try:
             self.schedule_update_ha_state()
         except AttributeError:

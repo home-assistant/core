@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ),
     vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
     vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
-    vol.Optional(CONF_ADS_FACTOR, default=1): cv.positive_int,
+    vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
 })
 
 
@@ -93,19 +93,33 @@ class AdsSensor(Entity):
     def callback(self, name, value):
         _LOGGER.debug('Variable "{0}" changed its value to "{1}"'
                       .format(name, value))
-        self._value = value / self.factor
+
+        # if factor is set use it otherwise not
+        if self.factor is None:
+            self._value = value
+        else:
+            self._value = value / self.factor
+
         try:
             self.schedule_update_ha_state()
         except AttributeError:
             pass
 
     def poll(self, now):
-        self._value = self._ads_hub.read_by_name(
-            self.adsvar, self._ads_hub.ADS_TYPEMAP[self.adstype]
-        ) / self.factor
+        try:
+            val = self._ads_hub.read_by_name(
+                self.adsvar, self._ads_hub.ADS_TYPEMAP[self.adstype]
+            )
 
-        _LOGGER.debug('Polled value for bool variable {0}: {1}'
-                      .format(self.adsvar, self._value))
+            if self.factor is None:
+                self._value = val
+            else:
+                self._value = val / self.factor
+
+            _LOGGER.debug('Polled value for bool variable {0}: {1}'
+                          .format(self.adsvar, self._value))
+        except self._ads_hub.ADSError as e:
+            _LOGGER.error(e)
 
         try:
             self.schedule_update_ha_state()
