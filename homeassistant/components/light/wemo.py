@@ -41,13 +41,11 @@ def setup_platform(hass, config, add_devices, add_devices_callback, discovery_in
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
-
-        if device:
-            setup_bridge(device, add_devices)
             
-        if device:
-            add_devices_callback([WemoDimmer(device)])
-
+        if device.model_name == 'Dimmer':
+            add_devices_callback([WemoDimmer(SwitchDevice)])
+        else:
+            setup_bridge(device, add_devices)
 
 def setup_bridge(bridge, add_devices):
     """Set up a WeMo link."""
