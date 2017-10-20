@@ -202,6 +202,8 @@ dlipower==0.7.165
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
 
+-e git+git://github.com/wardcraigj/pizzapi.git#egg=pizzapi
+
 # homeassistant.components.sensor.dovado
 dovado==0.4.1
 
