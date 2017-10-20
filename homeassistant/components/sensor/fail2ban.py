@@ -95,7 +95,6 @@ class BanSensor(Entity):
                 current_ip = entry[1]
                 if entry[0] == 'Ban':
                     if current_ip not in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.last_ban = current_ip
                         self.ban_dict[STATE_CURRENT_BANS].append(current_ip)
                     if current_ip not in self.ban_dict[STATE_ALL_BANS]:
                         self.ban_dict[STATE_ALL_BANS].append(current_ip)
@@ -105,8 +104,11 @@ class BanSensor(Entity):
                 elif entry[0] == 'Unban':
                     if current_ip in self.ban_dict[STATE_CURRENT_BANS]:
                         self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
-                    if self.last_ban == current_ip:
-                        self.last_ban = 'None'
+
+        if self.ban_dict[STATE_CURRENT_BANS]:
+            self.last_ban = self.ban_dict[STATE_CURRENT_BANS][-1]
+        else:
+            self.last_ban = 'None'
 
 
 class BanLogParser(object):
@@ -125,6 +127,7 @@ class BanLogParser(object):
         if boundary > self.last_update:
             self.last_update = dt_util.now()
             return True
+        return False
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""
@@ -133,8 +136,9 @@ class BanLogParser(object):
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
                 self.data = re.findall(
                     r'\[' + re.escape(jail) + r'\].(Ban|Unban) ([\w+\.]{3,})',
-                    ''.join(file_data.read())
+                    file_data.read()
                 )
+
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
             _LOGGER.warning("File not present: %s",
