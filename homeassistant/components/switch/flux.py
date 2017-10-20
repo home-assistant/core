@@ -24,6 +24,7 @@ from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
+from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,6 +169,12 @@ class FluxSwitch(SwitchDevice):
             self.hass, self.flux_update, second=[0, self._interval])
 
         self.schedule_update_ha_state()
+
+        async_track_state_change(self.hass, self._lights, self.handle_light_on, 'off', 'on')
+
+    def handle_light_on(self, entity_id, old_state, new_state):
+        _LOGGER.info("Light %s turned on, updating lights", entity_id)
+        self.flux_update()
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
