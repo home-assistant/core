@@ -62,6 +62,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
             if device.name == 'my new server':
                 self.assertEqual('on', device.state)
+                self.assertEqual('mdi:server', device.icon)
                 self.assertEqual('1000',
                                  device_attrs[ATTR_ALLOWED_BANDWIDTH_GB])
                 self.assertEqual('yes',
@@ -76,6 +77,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
             elif device.name == 'my failed server':
                 self.assertEqual('off', device.state)
+                self.assertEqual('mdi:server-off', device.icon)
                 self.assertEqual('100',
                                  device_attrs[ATTR_ALLOWED_BANDWIDTH_GB])
                 self.assertEqual('no',
@@ -88,3 +90,15 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('123456',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
+
+    @requests_mock.Mocker()
+    def test_invalid_binary_sensor(self, mock):
+        """Test failed instance."""
+
+        self.assertFalse(base_vultr.setup(self.hass, {"vultr": {}}))
+        setup = vultr.setup_platform(self.hass,
+                                     self.config,
+                                     self.add_devices,
+                                     None)
+
+        self.assertFalse(setup)

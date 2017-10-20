@@ -1,8 +1,8 @@
 """
-Support for monitoring the state of Digital Ocean droplets.
+Support for monitoring the state of Vultr Subscriptions.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.digital_ocean/
+https://home-assistant.io/components/sensor.vultr/
 """
 import voluptuous as vol
 
@@ -81,10 +81,10 @@ class VultrSensor(Entity):
 
     @property
     def state(self):
-        """Return true if the binary sensor is on."""
+        """Return the value of this given sensor type."""
         try:
             return round(float(self.data.get(self._var_id)), 2)
-        except TypeError:
+        except (TypeError, ValueError):
             return self.data.get(self._var_id)
 
     def update(self):

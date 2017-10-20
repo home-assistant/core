@@ -40,7 +40,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_sensor(self, mock):
-        """Test the Ring senskor class and methods."""
+        """Test the Vultr sensor class and methods."""
         mock.get(
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
@@ -62,9 +62,36 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             if device.name == 'my new server Current Bandwidth Used':
                 self.assertEqual(131.51, device.state)
+                self.assertEqual('GB', device.unit_of_measurement)
+                self.assertEqual('mdi:chart-histogram', device.icon)
             elif device.name == 'my new server Pending Charges':
                 self.assertEqual(46.67, device.state)
+                self.assertEqual('US$', device.unit_of_measurement)
+                self.assertEqual('mdi:currency-usd', device.icon)
             elif device.name == 'my failed server Current Bandwidth Used':
                 self.assertEqual(957.46, device.state)
             elif device.name == 'my failed server Pending Charges':
-                self.assertEqual(31.75, device.state)
+                self.assertEqual("not a number", device.state)
+
+    @requests_mock.Mocker()
+    def test_invalid_sensor(self, mock):
+        """Test the Vultr sensor class and methods."""
+        mock.get('https://api.vultr.com/v1/account/info',
+            text="{}")
+
+        mock.get('https://api.vultr.com/v1/server/list')
+
+        self.assertFalse(
+            base_vultr.setup(self.hass, {"vultr": {}}))
+
+        setup = vultr.setup_platform(self.hass,
+                                     self.config,
+                                     self.add_devices,
+                                     None)
+
+        self.assertFalse(setup)
+
+        with pytest.raises(vol.Invalid):
+            vultr.PLATFORM_SCHEMA({
+                # No subs
+            })
