@@ -229,13 +229,14 @@ class MiroboVacuum(VacuumDevice):
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_XIAOMI
 
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    @classmethod
+    def _try_command(cls, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from mirobo import DeviceException, VacuumException
+        from mirobo import DeviceException
         try:
             func(*args, **kwargs)
             return True
-        except (DeviceException, VacuumException) as exc:
+        except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
 
