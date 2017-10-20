@@ -373,7 +373,7 @@ class PlexClient(MediaPlayerDevice):
                                 self._device.machineIdentifier][0]
                 self._name = self._player.title
                 self._player_state = self._player.state
-                self._session_username = self._session.username
+                self._session_username = self._session.usernames[0]
                 self._make = self._player.device
             else:
                 self._is_player_available = False
