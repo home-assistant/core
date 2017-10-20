@@ -361,7 +361,7 @@ class PlexClient(MediaPlayerDevice):
             # set valid session, preferring device session
             if self.plex_sessions.get(self._device.machineIdentifier, None):
                 self._session = self.plex_sessions.get(
-                        self._device.machineIdentifier, None)
+                    self._device.machineIdentifier, None)
 
         if self._session:
             if self._device.machineIdentifier is not None and \
