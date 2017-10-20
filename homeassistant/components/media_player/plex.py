@@ -296,7 +296,6 @@ class PlexClient(MediaPlayerDevice):
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
-        self.na_type = None
         self.config = config
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
