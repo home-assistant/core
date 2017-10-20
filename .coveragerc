@@ -190,6 +190,9 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/toon.py
+    homeassistant/components/*/toon.py
+
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
@@ -220,7 +223,7 @@ omit =
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
-    homeassistant/components/wink.py
+    homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi_aqara.py
@@ -534,6 +537,7 @@ omit =
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
+    homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/skybeacon.py

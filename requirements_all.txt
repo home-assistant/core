@@ -1,5 +1,5 @@
 # Home Assistant core
-requests==2.14.2
+requests==2.18.4
 pyyaml>=3.11,<4
 pytz>=2017.02
 pip>=8.0.3
@@ -10,12 +10,16 @@ aiohttp==2.2.5
 async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
+certifi>=2017.4.17
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
 
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
+
+# homeassistant.components.tradfri
+# DTLSSocket==0.1.3
 
 # homeassistant.components.doorbird
 DoorBirdPy==0.0.4
@@ -33,7 +37,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.5.1
+PyXiaomiGateway==0.5.2
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -177,11 +181,14 @@ datapoint==0.4.3
 # homeassistant.components.light.decora_wifi
 # decora_wifi==1.3
 
+# homeassistant.components.device_tracker.upc_connect
+defusedxml==0.5.0
+
 # homeassistant.components.media_player.denonavr
 denonavr==0.5.4
 
 # homeassistant.components.media_player.directv
-directpy==0.1
+directpy==0.2
 
 # homeassistant.components.notify.discord
 discord.py==0.16.12
@@ -209,7 +216,7 @@ dweepy==0.3.0
 eliqonline==1.0.13
 
 # homeassistant.components.enocean
-enocean==0.31
+enocean==0.40
 
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
@@ -252,10 +259,10 @@ freesms==0.1.1
 # homeassistant.components.device_tracker.fritz
 # homeassistant.components.sensor.fritzbox_callmonitor
 # homeassistant.components.sensor.fritzbox_netmonitor
-# fritzconnection==0.6.3
+# fritzconnection==0.6.5
 
 # homeassistant.components.switch.fritzdect
-fritzhome==1.0.2
+fritzhome==1.0.3
 
 # homeassistant.components.media_player.frontier_silicon
 fsapi==0.0.7
@@ -288,7 +295,7 @@ gps3==0.33.3
 gstreamer-player==1.1.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.7
+ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
@@ -303,7 +310,7 @@ hbmqtt==0.8
 heatmiserV3==0.9.1
 
 # homeassistant.components.switch.hikvisioncam
-hikvision==0.4
+hikvision==1.2
 
 # homeassistant.components.notify.hipchat
 hipnotify==1.0.8
@@ -319,6 +326,9 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
+
+# homeassistant.components.tradfri
+# https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -635,7 +645,7 @@ pyharmony==1.0.16
 pyhik==0.1.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.33
+pyhomematic==0.1.34
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.2.0
@@ -726,6 +736,9 @@ pyqwikswitch==0.4
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1
+
+# homeassistant.components.sensor.serial
+pyserial-asyncio==0.4
 
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
@@ -839,7 +852,7 @@ pythonegardia==1.0.22
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==2.2.2
+pytradfri==3.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -1009,6 +1022,9 @@ tikteck==0.4
 
 # homeassistant.components.calendar.todoist
 todoist-python==7.0.17
+
+# homeassistant.components.toon
+toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.11
