@@ -194,7 +194,7 @@ class WemoDimmer(light):
     @property
     def brightness(self):
         """Return the brightness of this light between 1 and 100"""
-        brightness = self._brighness
+        brightness = self.get_brighness
         return brightness
 
     @property
