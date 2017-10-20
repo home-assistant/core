@@ -21,7 +21,7 @@ REQUIREMENTS = ['beautifulsoup4==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SELECT = 'select'
-CONF_ATTRIBUTE = 'attribute'
+CONF_ATTR = 'attribute'
 
 DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True
@@ -29,7 +29,7 @@ DEFAULT_VERIFY_SSL = True
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
     vol.Required(CONF_SELECT): cv.string,
-    vol.Optional(CONF_ATTRIBUTE): cv.string,
+    vol.Optional(CONF_ATTR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload = auth = headers = None
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
-    attribute = config.get(CONF_ATTRIBUTE)
+    attr = config.get(CONF_ATTR)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -59,20 +59,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([
-        ScrapeSensor(hass, rest, name, select, attribute, value_template, unit)
+        ScrapeSensor(hass, rest, name, select, attr, value_template, unit)
     ], True)
 
 
 class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
-    def __init__(self, hass, rest, name, select, attribute, value_template, unit):
+    def __init__(self, hass, rest, name, select, attr, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest
         self._name = name
         self._state = STATE_UNKNOWN
         self._select = select
-        self._attribute = attribute
+        self._attr = attr
         self._value_template = value_template
         self._unit_of_measurement = unit
 
@@ -99,8 +99,8 @@ class ScrapeSensor(Entity):
 
         raw_data = BeautifulSoup(self.rest.data, 'html.parser')
         _LOGGER.debug(raw_data)
-        if self._attribute is not None:
-            value = raw_data.select(self._select)[0][self._attribute]
+        if self._attr is not None:
+            value = raw_data.select(self._select)[0][self._attr]
         else:
             value = raw_data.select(self._select)[0].text
         _LOGGER.debug(value)
