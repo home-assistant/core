@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.hddtemp/
 """
 import logging
 from datetime import timedelta
-from telnetlib import Telnet
 
 import voluptuous as vol
 
@@ -32,7 +31,8 @@ DEFAULT_TIMEOUT = 5
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISKS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DISKS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -52,6 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except RuntimeError:
         _LOGGER.error("Unable to fetch the data from %s:%s", host, port)
         return False
+
+    if not disks:
+        disks = [next(iter(hddtemp.data)).split('|')[0]]
 
     dev = []
     for disk in disks:
@@ -121,6 +124,8 @@ class HddTempData(object):
 
     def update(self):
         """Get the latest data from HDDTemp running as daemon."""
+        from telnetlib import Telnet
+
         try:
             connection = Telnet(
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
