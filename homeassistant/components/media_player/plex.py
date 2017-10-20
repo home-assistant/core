@@ -667,7 +667,6 @@ class PlexClient(MediaPlayerDevice):
                     urlparse(client_url).scheme,
                     urlparse(server_url).hostname,
                     str(urlparse(client_url).port))
-                print(self.device._baseurl)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
