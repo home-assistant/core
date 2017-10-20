@@ -223,7 +223,7 @@ omit =
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
-    homeassistant/components/wink.py
+    homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi_aqara.py
