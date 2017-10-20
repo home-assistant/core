@@ -32,11 +32,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up a Ring Door Bell IP Camera."""
+    """Set up a Ring Door Bell and StickUp Camera."""
     ring = hass.data[DATA_RING]
 
     cams = []
     for camera in ring.doorbells:
+        cams.append(RingCam(hass, camera, config))
+
+    for camera in ring.stickup_cams:
         cams.append(RingCam(hass, camera, config))
 
     async_add_devices(cams, True)
@@ -54,8 +57,8 @@ class RingCam(Camera):
         self._name = self._camera.name
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
-        self._last_video_id = self._camera.last_recording_id
-        self._video_url = self._camera.recording_url(self._last_video_id)
+        self._last_video_id = None
+        self._video_url = None
         self._expires_at = None
         self._utcnow = None
 
@@ -113,14 +116,10 @@ class RingCam(Camera):
 
     def update(self):
         """Update camera entity and refresh attributes."""
-        x_amz_expires = int(self._video_url.split('&')[0].split('=')[-1])
-        x_amz_date = self._video_url.split('&')[1].split('=')[-1]
-
-        self._expires_at = \
-            timedelta(seconds=x_amz_expires) + \
-            dt_util.as_utc(datetime.strptime(x_amz_date, "%Y%m%dT%H%M%SZ"))
-
         self._utcnow = dt_util.utcnow()
+
+        if not self._last_video_id or not self._video_url:
+            self._refresh_attrs()
 
         # refresh last_video_id if a new video has been published
         if self._last_video_id != self._camera.last_recording_id:
@@ -133,3 +132,11 @@ class RingCam(Camera):
         _LOGGER.debug("Updated Ring DoorBell camera attributes.")
         self._last_video_id = self._camera.last_recording_id
         self._video_url = self._camera.recording_url(self._last_video_id)
+
+        # extract the video expiration from URL
+        x_amz_expires = int(self._video_url.split('&')[0].split('=')[-1])
+        x_amz_date = self._video_url.split('&')[1].split('=')[-1]
+
+        self._expires_at = \
+            timedelta(seconds=x_amz_expires) + \
+            dt_util.as_utc(datetime.strptime(x_amz_date, "%Y%m%dT%H%M%SZ"))

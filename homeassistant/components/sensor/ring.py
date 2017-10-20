@@ -27,16 +27,30 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
-    'battery': ['Battery', ['doorbell'], '%', 'battery-50', None],
-    'last_activity': ['Last Activity', ['doorbell'], None, 'history', None],
-    'last_ding': ['Last Ding', ['doorbell'], None, 'history', 'ding'],
-    'last_motion': ['Last Motion', ['doorbell'], None, 'history', 'motion'],
-    'volume':
-        ['Volume', ['chime', 'doorbell'], None, 'bell-ring', None],
-    'wifi_signal_category':
-        ['WiFi Signal Category', ['chime', 'doorbell'], None, 'wifi', None],
-    'wifi_signal_strength':
-        ['WiFi Signal Strength', ['chime', 'doorbell'], 'dBm', 'wifi', None],
+    'battery': [
+        'Battery', ['doorbell', 'stickup_cams'], '%', 'battery-50', None],
+
+    'last_activity': [
+        'Last Activity', ['doorbell', 'stickup_cams'], None, 'history', None],
+
+    'last_ding': [
+        'Last Ding', ['doorbell', 'stickup_cams'], None, 'history', 'ding'],
+
+    'last_motion': [
+        'Last Motion', ['doorbell', 'stickup_cams'], None,
+        'history', 'motion'],
+
+    'volume': [
+        'Volume', ['chime', 'doorbell', 'stickup_cams'], None,
+        'bell-ring', None],
+
+    'wifi_signal_category': [
+        'WiFi Signal Category', ['chime', 'doorbell', 'stickup_cams'], None,
+        'wifi', None],
+
+    'wifi_signal_strength': [
+        'WiFi Signal Strength', ['chime', 'doorbell', 'stickup_cams'], 'dBm',
+        'wifi', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,6 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
+                sensors.append(RingSensor(hass, device, sensor_type))
+
+        for device in ring.stickup_cams:
+            if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
     add_devices(sensors, True)

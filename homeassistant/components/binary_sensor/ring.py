@@ -27,8 +27,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    'ding': ['Ding', ['doorbell'], 'occupancy'],
-    'motion': ['Motion', ['doorbell'], 'motion'],
+    'ding': ['Ding', ['doorbell', 'stickup_cams'], 'occupancy'],
+    'motion': ['Motion', ['doorbell', 'stickup_cams'], 'motion'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -47,6 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
+                sensors.append(RingBinarySensor(hass,
+                                                device,
+                                                sensor_type))
+
+        for device in ring.stickup_cams:
+            if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
                                                 sensor_type))
