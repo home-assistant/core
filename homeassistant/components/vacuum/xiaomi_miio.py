@@ -115,9 +115,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for vacuum in target_vacuums:
             getattr(vacuum, method['method'])(**params)
-
-        for vacuum in target_vacuums:
-            vacuum.update_ha_state(True)
+            vacuum.schedule_update_ha_state(True)
 
     descriptions = load_yaml_config_file(os.path.join(
         os.path.dirname(__file__), 'services.yaml'))
