@@ -669,7 +669,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
                 current_time = datetime.now()
                 difference = current_time - self.last_ha_change
-                if difference.total_seconds() > 10:
+                if difference.total_seconds() > 15:
                     self.external_change = True
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error("Error in pubnub JSON for %s "
