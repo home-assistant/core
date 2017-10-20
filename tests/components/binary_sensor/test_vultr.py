@@ -91,13 +91,3 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 self.assertEqual('123456',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
 
-    @requests_mock.Mocker()
-    def test_invalid_binary_sensor(self, mock):
-        """Test failed instance."""
-        self.assertFalse(base_vultr.setup(self.hass, {"vultr": {}}))
-        setup = vultr.setup_platform(self.hass,
-                                     self.config,
-                                     self.add_devices,
-                                     None)
-
-        self.assertFalse(setup)
