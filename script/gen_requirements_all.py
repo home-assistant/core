@@ -78,6 +78,7 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'warrant',
     'yahoo-finance',
+    'pythonwhois'
 )
 
 IGNORE_PACKAGES = (
