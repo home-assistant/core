@@ -36,14 +36,17 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the shade."""
+        self.ha_state_fired()
         self.wink.set_state(0)
 
     def open_cover(self, **kwargs):
         """Open the shade."""
+        self.ha_state_fired()
         self.wink.set_state(1)
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
+        self.ha_state_fired()
         self.wink.set_state(float(position)/100)
 
     @property

@@ -81,34 +81,34 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        data = {}
+        attributes = super().device_state_attributes
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
+            attributes[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
                 self.target_temperature_high)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
+            attributes[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
                 self.target_temperature_low)
 
         if self.external_temperature:
-            data[ATTR_EXTERNAL_TEMPERATURE] = self._convert_for_display(
+            attributes[ATTR_EXTERNAL_TEMPERATURE] = self._convert_for_display(
                 self.external_temperature)
 
         if self.smart_temperature:
-            data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
+            attributes[ATTR_SMART_TEMPERATURE] = self.smart_temperature
 
         if self.occupied:
-            data[ATTR_OCCUPIED] = self.occupied
+            attributes[ATTR_OCCUPIED] = self.occupied
 
         if self.eco_target:
-            data[ATTR_ECO_TARGET] = self.eco_target
+            attributes[ATTR_ECO_TARGET] = self.eco_target
 
         current_humidity = self.current_humidity
         if current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = current_humidity
+            attributes[ATTR_CURRENT_HUMIDITY] = current_humidity
 
-        return data
+        return attributes
 
     @property
     def current_temperature(self):
@@ -227,6 +227,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             target_temp_low = target_temp_low
         if target_temp_high is not None:
             target_temp_high = target_temp_high
+        self.ha_state_fired()
         self.wink.set_temperature(target_temp_low, target_temp_high)
 
     def set_operation_mode(self, operation_mode):
@@ -235,6 +236,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         # The only way to disable aux heat is with the toggle
         if self.is_aux_heat_on and op_mode_to_set == STATE_HEAT:
             return
+        self.ha_state_fired()
         self.wink.set_operation_mode(op_mode_to_set)
 
     @property
@@ -256,10 +258,12 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
+        self.ha_state_fired()
         self.wink.set_away_mode()
 
     def turn_away_mode_off(self):
         """Turn away off."""
+        self.ha_state_fired()
         self.wink.set_away_mode(False)
 
     @property
@@ -281,14 +285,17 @@ class WinkThermostat(WinkDevice, ClimateDevice):
 
     def set_fan_mode(self, fan):
         """Turn fan on/off."""
+        self.ha_state_fired()
         self.wink.set_fan_mode(fan.lower())
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
+        self.ha_state_fired()
         self.wink.set_operation_mode('aux')
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
+        self.ha_state_fired()
         self.set_operation_mode(STATE_HEAT)
 
     @property
@@ -356,19 +363,19 @@ class WinkAC(WinkDevice, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        data = {}
+        attributes = super().device_state_attributes
         target_temp_high = self.target_temperature_high
         target_temp_low = self.target_temperature_low
         if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
+            attributes[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
                 self.target_temperature_high)
         if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
+            attributes[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
                 self.target_temperature_low)
-        data["total_consumption"] = self.wink.total_consumption()
-        data["schedule_enabled"] = self.wink.schedule_enabled()
+        attributes["total_consumption"] = self.wink.total_consumption()
+        attributes["schedule_enabled"] = self.wink.schedule_enabled()
 
-        return data
+        return attributes
 
     @property
     def current_temperature(self):
@@ -404,6 +411,7 @@ class WinkAC(WinkDevice, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
+        self.ha_state_fired()
         self.wink.set_temperature(target_temp)
 
     def set_operation_mode(self, operation_mode):
@@ -411,6 +419,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         op_mode_to_set = HA_STATE_TO_WINK.get(operation_mode)
         if op_mode_to_set == 'eco':
             op_mode_to_set = 'auto_eco'
+        self.ha_state_fired()
         self.wink.set_operation_mode(op_mode_to_set)
 
     @property
@@ -443,6 +452,7 @@ class WinkAC(WinkDevice, ClimateDevice):
             speed = 0.8
         elif fan == SPEED_HIGH:
             speed = 1.0
+        self.ha_state_fired()
         self.wink.set_ac_fan_speed(speed)
 
 
@@ -458,11 +468,11 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        data = {}
-        data["vacation_mode"] = self.wink.vacation_mode_enabled()
-        data["rheem_type"] = self.wink.rheem_type()
+        attributes = super().device_state_attributes
+        attributes["vacation_mode"] = self.wink.vacation_mode_enabled()
+        attributes["rheem_type"] = self.wink.rheem_type()
 
-        return data
+        return attributes
 
     @property
     def current_operation(self):
@@ -500,11 +510,13 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
+        self.ha_state_fired()
         self.wink.set_temperature(target_temp)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         op_mode_to_set = HA_STATE_TO_WINK.get(operation_mode)
+        self.ha_state_fired()
         self.wink.set_operation_mode(op_mode_to_set)
 
     @property
@@ -514,10 +526,12 @@ class WinkWaterHeater(WinkDevice, ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
+        self.ha_state_fired()
         self.wink.set_vacation_mode(True)
 
     def turn_away_mode_off(self):
         """Turn away off."""
+        self.ha_state_fired()
         self.wink.set_vacation_mode(False)
 
     @property

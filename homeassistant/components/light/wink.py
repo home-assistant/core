@@ -116,8 +116,10 @@ class WinkLight(WinkDevice, Light):
         if brightness:
             state_kwargs['brightness'] = brightness / 255.0
 
+        self.ha_state_fired()
         self.wink.set_state(True, **state_kwargs)
 
     def turn_off(self):
         """Turn the switch off."""
+        self.ha_state_fired()
         self.wink.set_state(False)
