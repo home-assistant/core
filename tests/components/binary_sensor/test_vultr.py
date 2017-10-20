@@ -90,4 +90,3 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('123456',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
-
