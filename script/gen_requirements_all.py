@@ -29,13 +29,17 @@ COMMENT_REQUIREMENTS = (
     'blinkt',
     'smbus-cffi',
     'envirophat',
-    'i2csense'
+    'i2csense',
+    'credstash',
+    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
+    'DTLSSocket'  # Requires cython.
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
     'apns2',
+    'defusedxml',
     'dsmr_parser',
     'ephem',
     'evohomeclient',

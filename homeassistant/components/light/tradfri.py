@@ -40,7 +40,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices_command = gateway.get_devices()
     devices_commands = yield from api(devices_command)
-    devices = yield from api(*devices_commands)
+    devices = yield from api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
         async_add_devices(TradfriLight(light, api) for light in lights)
@@ -49,7 +49,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if allow_tradfri_groups:
         groups_command = gateway.get_groups()
         groups_commands = yield from api(groups_command)
-        groups = yield from api(*groups_commands)
+        groups = yield from api(groups_commands)
         if groups:
             async_add_devices(TradfriGroup(group, api) for group in groups)
 
@@ -105,7 +105,7 @@ class TradfriGroup(Light):
         """Instruct the group lights to turn on, or dim."""
         keys = {}
         if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(
@@ -259,7 +259,7 @@ class TradfriLight(Light):
 
         keys = {}
         if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             self.hass.async_add_job(self._api(

@@ -113,6 +113,7 @@ CONF_ID = 'id'
 CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
+CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
 CONF_MINIMUM = 'minimum'
@@ -278,6 +279,9 @@ MASS_KILOGRAMS = 'kg'  # type: str
 
 MASS_OUNCES = 'oz'  # type: str
 MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'

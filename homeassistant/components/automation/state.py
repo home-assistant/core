@@ -65,7 +65,9 @@ def async_trigger(hass, config, action):
             return
 
         async_remove_track_same = async_track_same_state(
-            hass, to_s.state, time_delta, call_action, entity_ids=entity_id)
+            hass, time_delta, call_action,
+            lambda _, _2, to_state: to_state.state == to_s.state,
+            entity_ids=entity_id)
 
     unsub = async_track_state_change(
         hass, entity_id, state_automation_listener, from_state, to_state)
