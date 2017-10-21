@@ -30,7 +30,9 @@ COMMENT_REQUIREMENTS = (
     'smbus-cffi',
     'envirophat',
     'i2csense',
-    'credstash'
+    'credstash',
+    'aiocoap',  # Temp, will be removed when Python 3.4 is no longer supported.
+    'DTLSSocket'  # Requires cython.
 )
 
 TEST_REQUIREMENTS = (

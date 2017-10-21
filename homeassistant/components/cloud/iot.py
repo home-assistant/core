@@ -46,9 +46,6 @@ class CloudIoT:
         remove_hass_stop_listener = None
 
         session = async_get_clientsession(self.cloud.hass)
-        headers = {
-            hdrs.AUTHORIZATION: 'Bearer {}'.format(self.cloud.access_token)
-        }
 
         @asyncio.coroutine
         def _handle_hass_stop(event):
@@ -63,7 +60,10 @@ class CloudIoT:
             yield from hass.async_add_job(auth_api.check_token, self.cloud)
 
             self.client = client = yield from session.ws_connect(
-                self.cloud.relayer, headers=headers)
+                self.cloud.relayer, headers={
+                    hdrs.AUTHORIZATION:
+                        'Bearer {}'.format(self.cloud.access_token)
+                })
             self.tries = 0
 
             remove_hass_stop_listener = hass.bus.async_listen_once(

@@ -1,5 +1,5 @@
 # Home Assistant core
-requests==2.14.2
+requests==2.18.4
 pyyaml>=3.11,<4
 pytz>=2017.02
 pip>=8.0.3
@@ -10,12 +10,16 @@ aiohttp==2.2.5
 async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
+certifi>=2017.4.17
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
 
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
+
+# homeassistant.components.tradfri
+# DTLSSocket==0.1.3
 
 # homeassistant.components.doorbird
 DoorBirdPy==0.0.4
@@ -273,7 +277,7 @@ gTTS-token==1.1.1
 # gattlib==0.20150805
 
 # homeassistant.components.sensor.gitter
-gitterpy==0.1.5
+gitterpy==0.1.6
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
@@ -291,7 +295,7 @@ gps3==0.33.3
 gstreamer-player==1.1.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.8
+ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
@@ -322,6 +326,9 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
+
+# homeassistant.components.tradfri
+# https://github.com/chrysn/aiocoap/archive/3286f48f0b949901c8b5c04c0719dc54ab63d431.zip#aiocoap==0.3
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -842,7 +849,7 @@ pythonegardia==1.0.22
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==2.2.2
+pytradfri==3.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -893,7 +900,7 @@ restrictedpython==4.0a3
 rflink==0.0.34
 
 # homeassistant.components.ring
-ring_doorbell==0.1.4
+ring_doorbell==0.1.6
 
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
@@ -970,7 +977,7 @@ snapcast==2.0.7
 somecomfort==0.4.1
 
 # homeassistant.components.sensor.speedtest
-speedtest-cli==1.0.6
+speedtest-cli==1.0.7
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
@@ -1012,6 +1019,9 @@ tikteck==0.4
 
 # homeassistant.components.calendar.todoist
 todoist-python==7.0.17
+
+# homeassistant.components.toon
+toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.11

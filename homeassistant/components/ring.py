@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['ring_doorbell==0.1.4']
+REQUIREMENTS = ['ring_doorbell==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ CONF_ATTRIBUTION = "Data provided by Ring.com"
 NOTIFICATION_ID = 'ring_notification'
 NOTIFICATION_TITLE = 'Ring Sensor Setup'
 
+DATA_RING = 'ring'
 DOMAIN = 'ring'
 DEFAULT_CACHEDB = '.ring_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'ring'

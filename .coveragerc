@@ -190,6 +190,9 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/toon.py
+    homeassistant/components/*/toon.py
+
     homeassistant/components/tradfri.py
     homeassistant/components/*/tradfri.py
 
@@ -220,7 +223,7 @@ omit =
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
-    homeassistant/components/wink.py
+    homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
     homeassistant/components/xiaomi_aqara.py
@@ -269,6 +272,7 @@ omit =
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/onvif.py
+    homeassistant/components/camera/ring.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
     homeassistant/components/climate/eq3btsmart.py
