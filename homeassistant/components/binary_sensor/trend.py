@@ -106,7 +106,7 @@ class SensorTrend(BinarySensorDevice):
         self._min_gradient = min_gradient
         self._gradient = None
         self._state = None
-        self.samples = deque(maxlen = max_samples)
+        self.samples = deque(maxlen=max_samples)
 
     @property
     def name(self):
@@ -143,9 +143,10 @@ class SensorTrend(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
+        """Complete device setup after being added to hass."""
         @callback
         def trend_sensor_state_listener(entity, old_state, new_state):
-            """Handle the target device state changes."""
+            """Handle state changes on the observed device."""
             try:
                 if self._attribute:
                     state = new_state.attributes.get(self._attribute)
@@ -168,7 +169,7 @@ class SensorTrend(BinarySensorDevice):
         # Remove outdated samples
         if self._sample_duration > 0:
             cutoff = utcnow().timestamp() - self._sample_duration
-            while len(self.samples) > 0 and self.samples[0][0] < cutoff:
+            while self.samples and self.samples[0][0] < cutoff:
                 self.samples.popleft()
 
         if len(self.samples) < 2:
