@@ -244,7 +244,6 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn a channel on."""
-
         if self._channel_usb:
             result = yield from self._try_command(
                 "Turning the plug on failed.", self._plug.usb_on)
