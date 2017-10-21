@@ -274,6 +274,7 @@ def async_setup(hass, config):
 
         preprocess_turn_on_alternatives(params)
 
+        update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
                 yield from light.async_turn_on(**params)
@@ -282,18 +283,9 @@ def async_setup(hass, config):
             else:
                 yield from light.async_toggle(**params)
 
-        update_tasks = []
-
-        for light in target_lights:
             if not light.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                light.async_update_ha_state(True))
-            if hasattr(light, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(light.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
