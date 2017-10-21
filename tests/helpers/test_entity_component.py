@@ -578,3 +578,79 @@ def test_platform_not_ready(hass):
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
         assert 'test_domain.mod1' in hass.config.components
+
+
+@asyncio.coroutine
+def test_pararell_updates_async_platform(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    @asyncio.coroutine
+    def mock_update(*args, **kwargs):
+        pass
+
+    platform.async_setup_platform = mock_update
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is None
+
+
+@asyncio.coroutine
+def test_pararell_updates_async_platform_with_constant(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    @asyncio.coroutine
+    def mock_update(*args, **kwargs):
+        pass
+
+    platform.async_setup_platform = mock_update
+    platform.PARALLEL_UPDATES = 1
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is not None
+
+
+@asyncio.coroutine
+def test_pararell_updates_sync_platform(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates is not None

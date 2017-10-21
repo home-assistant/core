@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_LIGHTS
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -27,7 +27,6 @@ DEPENDENCIES = ['light']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LIGHTS = 'lights'
 CONF_START_TIME = 'start_time'
 CONF_STOP_TIME = 'stop_time'
 CONF_START_CT = 'start_colortemp'

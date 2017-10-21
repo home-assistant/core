@@ -6,9 +6,10 @@ jinja2>=2.9.6
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.2.5
-async_timeout==1.4.0
+async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
+certifi>=2017.4.17
 
 # Breaks Python 3.6 and is not needed for our supported Pythons
 enum34==1000000000.0.0
