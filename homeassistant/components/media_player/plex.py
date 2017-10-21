@@ -4,7 +4,6 @@ Support to interface with the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
 """
-# TODO: PlayBack Controls Broken: PlexClient obj has not attr server 735/672
 import json
 import logging
 import os
@@ -459,14 +458,12 @@ class PlexClient(MediaPlayerDevice):
             thumb_url = self._session.thumbUrl
             if (self.media_content_type is MEDIA_TYPE_TVSHOW
                     and not self.config.get(CONF_USE_EPISODE_ART)):
-                # TODO Using _server from session need to find better way
                 thumb_url = self._session._server.url(
                     self._session.grandparentThumb)
 
             if thumb_url is None:
                 _LOGGER.debug("Using media art because media thumb "
                               "was not found: %s", self.entity_id)
-                # TODO Using _server from session need to find better way
                 thumb_url = self._session._server.url(self._session.art)
 
             self._media_image_url = thumb_url
@@ -651,7 +648,6 @@ class PlexClient(MediaPlayerDevice):
 
         # if this device's machineIdentifier matches an active client
         # with a loopback address, the device must be local or casting
-        # TODO: using _baseurl & _server need to fix?
         for client in self.device._server.clients():
             if ("127.0.0.1" in client._baseurl and
                     client.machineIdentifier == self.device.machineIdentifier):
