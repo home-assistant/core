@@ -35,6 +35,11 @@ ATTR_DURATION = 'duration'
 ATTR_START = 'start'
 ATTR_END = 'end'
 ATTR_REMAINING = 'remaining'
+ATTR_WEEKS = 'weeks'
+ATTR_DAYS = 'days'
+ATTR_HOURS = 'hours'
+ATTR_MINUTES = 'minutes'
+ATTR_SECONDS = 'seconds'
 
 STATUS_IDLE = 0
 STATUS_ACTIVE = 1
@@ -46,7 +51,11 @@ STATUS_MAPPING = {
     STATUS_PAUSED: 'paused'
 }
 
-CONF_DURATION = 'duration'
+CONF_WEEKS = 'weeks'
+CONF_DAYS = 'days'
+CONF_HOURS = 'hours'
+CONF_MINUTES = 'minutes'
+CONF_SECONDS = 'seconds'
 
 DEFAULT_DURATION = 0
 DOMAIN = 'timer'
@@ -64,34 +73,64 @@ SERVICE_SCHEMA = vol.Schema({
 
 SERVICE_SCHEMA_DURATION = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DURATION): cv.positive_int,
+    vol.Optional(ATTR_WEEKS): cv.positive_int,
+    vol.Optional(ATTR_DAYS): cv.positive_int,
+    vol.Optional(ATTR_HOURS): cv.positive_int,
+    vol.Optional(ATTR_MINUTES): cv.positive_int,
+    vol.Optional(ATTR_SECONDS): cv.positive_int,
 })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.Any({
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_DURATION, default=DEFAULT_DURATION):
-                cv.positive_int,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(CONF_WEEKS, default=DEFAULT_DURATION):
+                cv.positive_int,
+            vol.Optional(CONF_DAYS, default=DEFAULT_DURATION):
+                cv.positive_int,
+            vol.Optional(CONF_HOURS, default=DEFAULT_DURATION):
+                cv.positive_int,
+            vol.Optional(CONF_MINUTES, default=DEFAULT_DURATION):
+                cv.positive_int,
+            vol.Optional(CONF_SECONDS, default=DEFAULT_DURATION):
+                cv.positive_int,
         }, None)
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-def start(hass, entity_id, duration):
+def start(hass, entity_id,
+          weeks=DEFAULT_DURATION, days=DEFAULT_DURATION,
+          hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
+          seconds=DEFAULT_DURATION):
     """Start a timer."""
-    hass.add_job(async_start, hass, entity_id, duration)
+    _LOGGER.warning("start")
+    hass.add_job(async_start, hass, entity_id,
+                 **{ATTR_ENTITY_ID: entity_id,
+                    ATTR_WEEKS: weeks,
+                    ATTR_DAYS: days,
+                    ATTR_HOURS: hours,
+                    ATTR_MINUTES: minutes,
+                    ATTR_SECONDS: seconds})
 
 
 @callback
 @bind_hass
-def async_start(hass, entity_id, duration):
+def async_start(hass, entity_id,
+                weeks=DEFAULT_DURATION, days=DEFAULT_DURATION,
+                hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
+                seconds=DEFAULT_DURATION):
     """Start a timer."""
+    _LOGGER.warning("async_start")
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
-                                ATTR_DURATION: duration}))
+                                ATTR_WEEKS: weeks,
+                                ATTR_DAYS: days,
+                                ATTR_HOURS: hours,
+                                ATTR_MINUTES: minutes,
+                                ATTR_SECONDS: seconds}))
 
 
 @bind_hass
@@ -148,10 +187,15 @@ def async_setup(hass, config):
             cfg = {}
 
         name = cfg.get(CONF_NAME)
-        duration = cfg.get(CONF_DURATION)
         icon = cfg.get(CONF_ICON)
+        weeks = cfg.get(CONF_WEEKS)
+        days = cfg.get(CONF_DAYS)
+        hours = cfg.get(CONF_HOURS)
+        minutes = cfg.get(CONF_MINUTES)
+        seconds = cfg.get(CONF_SECONDS)
 
-        entities.append(Timer(hass, object_id, name, duration, icon))
+        entities.append(Timer(hass, object_id, name, icon,
+                              weeks, days, hours, minutes, seconds))
 
     if not entities:
         return False
@@ -173,8 +217,19 @@ def async_setup(hass, config):
         if service.service == SERVICE_START:
             for timer in target_timers:
                 tasks.append(
-                    timer.async_start(service.data.get(ATTR_DURATION,
-                                                       DEFAULT_DURATION)))
+                    timer.async_start(
+                        weeks=service.data.get(
+                            ATTR_WEEKS, DEFAULT_DURATION),
+                        days=service.data.get(
+                            ATTR_DAYS, DEFAULT_DURATION),
+                        hours=service.data.get(
+                            ATTR_HOURS, DEFAULT_DURATION),
+                        minutes=service.data.get(
+                            ATTR_MINUTES, DEFAULT_DURATION),
+                        seconds=service.data.get(
+                            ATTR_SECONDS, DEFAULT_DURATION),
+                    )
+                )
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
@@ -203,13 +258,15 @@ def async_setup(hass, config):
 class Timer(Entity):
     """Representation of a timer."""
 
-    def __init__(self, hass, object_id, name, duration, icon):
+    def __init__(self, hass, object_id, name, icon,
+                 weeks, days, hours, minutes, seconds):
         """Initialize a timer."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = STATUS_IDLE
-        self._duration = duration
-        self._remaining = None
+        self._duration = timedelta(weeks=weeks, days=days, hours=hours,
+            minutes=minutes, seconds=seconds)
+        self._remaining = self._duration
         self._icon = icon
         self._hass = hass
         self._start = None
@@ -239,11 +296,15 @@ class Timer(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
+        start = dt_util.as_local(self._start) if self._start else None
+        end = dt_util.as_local(self._end) if self._end else None
         return {
-            ATTR_DURATION: self._duration,
-            ATTR_START: self._start,
-            ATTR_END: self._end,
-            ATTR_REMAINING: self._remaining
+            ATTR_DURATION: self._duration.__str__(),
+            #ATTR_START: self._start,
+            #ATTR_END: self._end,
+            ATTR_START: start,
+            ATTR_END: end,
+            ATTR_REMAINING: self._remaining.__str__()
         }
 
     @asyncio.coroutine
@@ -257,18 +318,26 @@ class Timer(Entity):
         self._state = state and state.state == state
 
     @asyncio.coroutine
-    def async_start(self, duration):
+    def async_start(self, **kwargs):
         """Start a timer."""
         if self._listener:
             self._listener()
             self._listener = None
-        self._duration = duration if duration else self._duration
+        newduration = None
+        if any(bool(v) for v in kwargs.values()):
+            newduration = timedelta(**kwargs)
+
         self._state = STATUS_ACTIVE
         self._start = dt_util.utcnow()
-        if self._remaining and not duration:
-            self._end = self._start + timedelta(seconds=self._remaining)
+        if self._remaining and newduration is None:
+            self._end = self._start + self._remaining
         else:
-            self._end = self._start + timedelta(seconds=self._duration)
+            if newduration:
+                self._duration = newduration
+                self._remaining = newduration
+            else:
+                self._remaining = self._duration
+            self._end = self._start + self._duration
         self._listener = async_track_point_in_utc_time(self._hass,
                                                        self.async_finished,
                                                        self._end)
@@ -282,7 +351,7 @@ class Timer(Entity):
         if self._listener:
             self._listener()
             self._listener = None
-            self._remaining = (self._end - dt_util.utcnow()).seconds
+            self._remaining = self._end - dt_util.utcnow()
             self._state = STATUS_PAUSED
             self._end = None
             self._hass.bus.async_fire(EVENT_TIMER_PAUSED,
@@ -298,18 +367,18 @@ class Timer(Entity):
         self._state = STATUS_IDLE
         self._start = None
         self._end = None
-        self._remaining = None
+        self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_CANCELLED,
                                   {"entity_id": self.entity_id})
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_finish(self, time):
+    def async_finish(self):
         """Reset and updates the states, fire finished event."""
         if self._state == STATUS_ACTIVE:
             self._listener = None
             self._state = STATUS_IDLE
-            self._remaining = None
+            self._remaining = timedelta()
             self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                       {"entity_id": self.entity_id})
             yield from self.async_update_ha_state()
@@ -321,7 +390,7 @@ class Timer(Entity):
         if self._state == STATUS_ACTIVE:
             self._listener = None
             self._state = STATUS_IDLE
-            self._remaining = None
+            self._remaining = timedelta()
             self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                       {"entity_id": self.entity_id})
             yield from self.async_update_ha_state()

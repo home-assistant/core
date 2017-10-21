@@ -496,7 +496,19 @@ timer:
       entity_id:
         description: Entity id of the timer to start. [optional]
         example: 'timer.timer0'
-      duration:
+      weeks:
+        description: Duration in weeks the timer should be running. [optional]
+        example: 1
+      days:
+        description: Duration in days the timer should be running. [optional]
+        example: 7
+      hours:
+        description: Duration in hours the timer should be running. [optional]
+        example: 24
+      minutes:
+        description: Duration in minutes the timer should be running. [optional]
+        example: 60
+      seconds:
         description: Duration in seconds the timer should be running. [optional]
         example: 60
 
