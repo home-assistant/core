@@ -59,6 +59,7 @@ class WhoisSensor(Entity):
         self._state = STATE_UNKNOWN
         self._data = None
         self._expired = False
+        self._updated_date = None
         self._expiration_date = None
         self._name_servers = []
 
