@@ -102,7 +102,7 @@ class TestPlant(unittest.TestCase):
         self.assertEquals(1000, state.attributes[plant.READING_BRIGHTNESS])
 
     def test_load_from_db(self):
-        """Test bootstrapping the brightnss history from the database."""
+        """Test bootstrapping the brightness history from the database."""
         init_recorder_component(self.hass)
         plant_name = 'wise_plant'
         for value in [20, 30, 10]:
