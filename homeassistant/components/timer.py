@@ -56,6 +56,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
 SERVICE_CANCEL = 'cancel'
+SERVICE_FINISH = 'finish'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -108,7 +109,7 @@ def async_pause(hass, entity_id):
 
 
 @bind_hass
-def reset(hass, entity_id, duration):
+def cancel(hass, entity_id, duration):
     """Cancel a timer."""
     hass.add_job(async_cancel, hass, entity_id)
 
@@ -119,6 +120,20 @@ def async_cancel(hass, entity_id, duration):
     """Cancel a timer."""
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
+
+
+@bind_hass
+def finish(hass, entity_id):
+    """Finish a timer."""
+    hass.add_job(async_cancel, hass, entity_id)
+
+
+@callback
+@bind_hass
+def async_finish(hass, entity_id):
+    """Finish a timer."""
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_FINISH, {ATTR_ENTITY_ID: entity_id}))
 
 
 @asyncio.coroutine
@@ -149,8 +164,10 @@ def async_setup(hass, config):
         attr = None
         if service.service == SERVICE_PAUSE:
             attr = 'async_pause'
-        if service.service == SERVICE_CANCEL:
+        elif service.service == SERVICE_CANCEL:
             attr = 'async_cancel'
+        elif service.service == SERVICE_FINISH:
+            attr = 'async_finish'
 
         tasks = [getattr(timer, attr)() for timer in target_timers if attr]
         if service.service == SERVICE_START:
@@ -175,6 +192,9 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_CANCEL, async_handler_service,
         descriptions[DOMAIN][SERVICE_CANCEL], SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_FINISH, async_handler_service,
+        descriptions[DOMAIN][SERVICE_FINISH], SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
@@ -284,8 +304,20 @@ class Timer(Entity):
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
+    def async_finish(self, time):
+        """Reset and updates the states, fire finished event."""
+        if self._state == STATUS_ACTIVE:
+            self._listener = None
+            self._state = STATUS_IDLE
+            self._remaining = None
+            self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
+                                      {"entity_id": self.entity_id})
+            yield from self.async_update_ha_state()
+        return
+
+    @asyncio.coroutine
     def async_finished(self, time):
-        """Get the latest data and updates the states."""
+        """Reset and updates the states, fire finished event."""
         if self._state == STATUS_ACTIVE:
             self._listener = None
             self._state = STATUS_IDLE

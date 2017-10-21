@@ -516,6 +516,14 @@ timer:
         description: Entity id of the timer to cancel. [optional]
         example: 'timer.timer0'
 
+  finish:
+    description: Finish a timer.
+
+    fields:
+      entity_id:
+        description: Entity id of the timer to finish. [optional]
+        example: 'timer.timer0'
+
 abode:
   change_setting:
     description: Change an Abode system setting.
