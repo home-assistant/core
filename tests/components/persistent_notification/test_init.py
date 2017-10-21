@@ -29,6 +29,7 @@ class TestPersistentNotification:
         assert len(entity_ids) == 1
 
         state = self.hass.states.get(entity_ids[0])
+        assert state.state == pn.STATE
         assert state.attributes.get('message') == 'Hello World 2'
         assert state.attributes.get('title') == '2 beers'
 
