@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.hddtemp/
 """
 import logging
 from datetime import timedelta
+from telnetlib import Telnet
 
 import voluptuous as vol
 
@@ -74,7 +75,7 @@ class HddTempSensor(Entity):
         self.hddtemp = hddtemp
         self.disk = disk
         self._name = '{} {}'.format(name, disk)
-        self._state = False
+        self._state = None
         self._details = None
 
     @property
@@ -124,8 +125,6 @@ class HddTempData(object):
 
     def update(self):
         """Get the latest data from HDDTemp running as daemon."""
-        from telnetlib import Telnet
-
         try:
             connection = Telnet(
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
