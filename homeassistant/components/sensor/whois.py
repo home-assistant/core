@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -19,6 +19,8 @@ REQUIREMENTS = ['pythonwhois==2.4.3']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOST = 'hosts'
+
+DEFAULT_NAME = 'Whois'
 
 ATTR_NAME_SERVERS = 'name_servers'
 ATTR_REGISTRAR = 'registrar'
@@ -31,17 +33,34 @@ SCAN_INTERVAL = timedelta(hours=24)  # WHOIS info is very slow moving
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, disovery_info=None):
     """Set up the WHOIS sensor."""
+    from pythonwhois import get_whois
+    from pythonwhois.shared import WhoisException
+
     hostnames = config.get(CONF_HOST)
 
     devices = []
 
+    # TODO: CONF_NAME per host
+    name = "bob"
+
     for hostname in hostnames:
-        devices.append(WhoisSensor(hass, hostname))
+        try:
+            if 'expiration_date' in get_whois(hostname, normalized=True):
+                devices.append(WhoisSensor(name, hostname))
+            else:
+                _LOGGER.warning("Failed to perform WHOIS lookup for %s", hostname)
+        except WhoisException as ex:
+            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
+
+    if not devices:
+        _LOGGER.error("Failed to lookup any hostnames")
+        return False
 
     add_devices(devices, True)
 
@@ -49,16 +68,17 @@ def setup_platform(hass, config, add_devices, disovery_info=None):
 class WhoisSensor(Entity):
     """Implementation of a WHOIS sensor."""
 
-    def __init__(self, hass, hostname):
+    def __init__(self, name, hostname):
         """Initialize the sensor."""
         from pythonwhois import get_whois
 
-        self.hass = hass
-        self._hostname = hostname
         self.whois = get_whois
-        self._state = STATE_UNKNOWN
+ 
+        self._name = name        
+        self._hostname = hostname
+
+        self._state = None
         self._data = None
-        self._expired = False
         self._updated_date = None
         self._expiration_date = None
         self._name_servers = []
@@ -66,7 +86,7 @@ class WhoisSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'whois_{}'.format(self._hostname)
+        return self._name
 
     @property
     def icon(self):
@@ -76,27 +96,19 @@ class WhoisSensor(Entity):
     @property
     def unit_of_measurement(self):
         """The unit of measurement to present the value in."""
-        if self._expired:
-            return None
-
-        return 'day{}'.format('' if self._state == 1 else 's')
+        return 'days'
 
     @property
     def state(self):
         """Return the expiration days for hostname."""
-        if self._expired:
-            return 'Expired'
-
         return self._state
 
     @property
     def device_state_attributes(self):
         """Get the more info attributes."""
         if self._data:
-            updated_formatted = self._updated_date.strftime(
-                '%Y-%m-%d %H:%M:%S')
-            expires_formatted = self._expiration_date.strftime(
-                '%Y-%m-%d %H:%M:%S')
+            updated_formatted = self._updated_date.isoformat()
+            expires_formatted = self._expiration_date.isoformat()
 
             return {
                 ATTR_NAME_SERVERS: ' '.join(self._name_servers),
@@ -107,7 +119,13 @@ class WhoisSensor(Entity):
 
     def update(self):
         """Get the current WHOIS data for hostname."""
-        response = self.whois(self._hostname, normalized=True)
+        from pythonwhois.shared import WhoisException
+
+        try:
+            response = self.whois(self._hostname, normalized=True)
+        except WhoisException as ex:
+            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
+            return False
 
         if response:
             self._data = response
@@ -122,5 +140,3 @@ class WhoisSensor(Entity):
 
             self._state = time_delta.days
             self._expired = self._state <= 0
-        else:
-            self._state = STATE_UNKNOWN
