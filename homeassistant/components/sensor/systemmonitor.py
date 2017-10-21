@@ -16,35 +16,35 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.3.1']
+REQUIREMENTS = ['psutil==5.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = 'arg'
 
 SENSOR_TYPES = {
-    'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
-    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
-    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
+    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
+    'disk_use': ['Disk used', 'GiB', 'mdi:harddisk'],
+    'disk_use_percent': ['Disk used', '%', 'mdi:harddisk'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
-    'last_boot': ['Last Boot', '', 'mdi:clock'],
-    'load_15m': ['Average Load (15m)', '', 'mdi:memory'],
-    'load_1m': ['Average Load (1m)', '', 'mdi:memory'],
-    'load_5m': ['Average Load (5m)', '', 'mdi:memory'],
-    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
-    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
-    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
+    'last_boot': ['Last boot', '', 'mdi:clock'],
+    'load_15m': ['Average load (15m)', '', 'mdi:memory'],
+    'load_1m': ['Average load (1m)', '', 'mdi:memory'],
+    'load_5m': ['Average load (5m)', '', 'mdi:memory'],
+    'memory_free': ['RAM available', 'MiB', 'mdi:memory'],
+    'memory_use': ['RAM used', 'MiB', 'mdi:memory'],
+    'memory_use_percent': ['RAM used', '%', 'mdi:memory'],
     'network_in': ['Received', 'MiB', 'mdi:server-network'],
     'network_out': ['Sent', 'MiB', 'mdi:server-network'],
     'packets_in': ['Packets received', ' ', 'mdi:server-network'],
     'packets_out': ['Packets sent', ' ', 'mdi:server-network'],
     'process': ['Process', ' ', 'mdi:memory'],
-    'processor_use': ['CPU Use', '%', 'mdi:memory'],
-    'since_last_boot': ['Since Last Boot', '', 'mdi:clock'],
-    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
-    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
-    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
+    'processor_use': ['CPU used', '%', 'mdi:memory'],
+    'since_last_boot': ['Since last boot', '', 'mdi:clock'],
+    'swap_free': ['Swap free', 'GiB', 'mdi:harddisk'],
+    'swap_use': ['Swap used', 'GiB', 'mdi:harddisk'],
+    'swap_use_percent': ['Swap used', '%', 'mdi:harddisk'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -126,8 +126,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'memory_use_percent':
             self._state = psutil.virtual_memory().percent
         elif self.type == 'memory_use':
-            self._state = round((psutil.virtual_memory().total -
-                                 psutil.virtual_memory().available) /
+            virtual_memory = psutil.virtual_memory()
+            self._state = round((virtual_memory.total -
+                                 virtual_memory.available) /
                                 1024**2, 1)
         elif self.type == 'memory_free':
             self._state = round(psutil.virtual_memory().available / 1024**2, 1)
@@ -140,10 +141,16 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
-            if any(self.argument in l.name() for l in psutil.process_iter()):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+            for proc in psutil.process_iter():
+                try:
+                    if self.argument == proc.name():
+                        self._state = STATE_ON
+                        return
+                except psutil.NoSuchProcess as err:
+                    _LOGGER.warning(
+                        "Failed to load process with id: %s, old name: %s",
+                        err.pid, err.name)
+            self._state = STATE_OFF
         elif self.type == 'network_out' or self.type == 'network_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:

@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 54
+MINOR_VERSION = 56
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -113,6 +113,7 @@ CONF_ID = 'id'
 CONF_IP_ADDRESS = 'ip_address'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
+CONF_LIGHTS = 'lights'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
 CONF_MINIMUM = 'minimum'
@@ -144,6 +145,7 @@ CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
+CONF_SHOW_ON_MAP = 'show_on_map'
 CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
@@ -246,6 +248,9 @@ ATTR_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM_METRIC = 'metric'  # type: str
 CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
+# Electrical attributes
+ATTR_VOLTAGE = 'voltage'
+
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
 TEMP_CELSIUS = '°C'
@@ -274,6 +279,9 @@ MASS_KILOGRAMS = 'kg'  # type: str
 
 MASS_OUNCES = 'oz'  # type: str
 MASS_POUNDS = 'lb'  # type: str
+
+# UV Index units
+UNIT_UV_INDEX = 'UV index'  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'

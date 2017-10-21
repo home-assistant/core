@@ -268,7 +268,7 @@ class Throttle(object):
 
         # We want to be able to differentiate between function and unbound
         # methods (which are considered functions).
-        # All methods have the classname in their qualname seperated by a '.'
+        # All methods have the classname in their qualname separated by a '.'
         # Functions have a '.' in their qualname if defined inline, but will
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (not hasattr(method, '__self__') and

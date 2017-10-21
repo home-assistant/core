@@ -22,7 +22,7 @@ add_node_secure:
   description: Add a new node to the Z-Wave network with secure communications. Secure network key must be set, this process will fallback to add_node (unsecure) for unsupported devices. Note that unsecure devices can't directly talk to secure devices. Refer to OZW.log for progress.
 
 cancel_command:
-  description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you wasn't going to use it but activated it.
+  description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you weren't going to use it but activated it.
 
 heal_network:
   description: Start a Z-Wave network heal. This might take a while and will slow down the Z-Wave network greatly while it is being processed. Refer to OZW.log for progress.

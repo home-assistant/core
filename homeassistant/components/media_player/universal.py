@@ -441,7 +441,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             SERVICE_VOLUME_SET, data, allow_override=True)
 
     def async_media_play(self):
-        """Send play commmand.
+        """Send play command.
 
         This method must be run in the event loop and returns a coroutine.
         """

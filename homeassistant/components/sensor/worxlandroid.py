@@ -51,11 +51,11 @@ ERROR_STATE = [
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
+def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the Worx Landroid sensors."""
     for typ in ('battery', 'state'):
-        async_add_entities([WorxLandroidSensor(typ, config)])
+        async_add_devices([WorxLandroidSensor(typ, config)])
 
 
 class WorxLandroidSensor(Entity):
@@ -86,8 +86,7 @@ class WorxLandroidSensor(Entity):
         """Return the unit of measurement of the sensor."""
         if self.sensor == 'battery':
             return '%'
-        else:
-            return None
+        return None
 
     @asyncio.coroutine
     def async_update(self):
@@ -159,7 +158,6 @@ class WorxLandroidSensor(Entity):
                 return 'charging-complete'
             elif state_obj[15] == 1:
                 return 'going-home'
-            else:
-                return 'mowing'
+            return 'mowing'
 
         return state

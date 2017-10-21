@@ -17,7 +17,7 @@ get_usercode:
       description: Node id of the lock
       example: 18
     code_slot:
-      description: Code slot to retrive a code from
+      description: Code slot to retrieve a code from
       example: 1
 
 nuki_lock_n_go:
@@ -83,7 +83,7 @@ wink_set_lock_vacation_mode:
       description: Name of lock to unlock
       example: 'lock.front_door'
     enabled:
-      description: enable or disable. true or false. 
+      description: enable or disable. true or false.
       example: true
 
 wink_set_lock_alarm_mode:
@@ -94,7 +94,7 @@ wink_set_lock_alarm_mode:
       description: Name of lock to unlock
       example: 'lock.front_door'
     mode:
-      description: One of tamper, activity, or forced_entry 
+      description: One of tamper, activity, or forced_entry
       example: tamper
 
 wink_set_lock_alarm_sensitivity:
@@ -105,7 +105,7 @@ wink_set_lock_alarm_sensitivity:
       description: Name of lock to unlock
       example: 'lock.front_door'
     sensitivity:
-      description: One of low, medium_low, medium, medium_high, high 
+      description: One of low, medium_low, medium, medium_high, high
       example: medium
 
 wink_set_lock_alarm_state:
@@ -116,7 +116,7 @@ wink_set_lock_alarm_state:
       description: Name of lock to unlock
       example: 'lock.front_door'
     enabled:
-      description: enable or disable. true or false. 
+      description: enable or disable. true or false.
       example: true
 
 wink_set_lock_beeper_state:
@@ -127,6 +127,19 @@ wink_set_lock_beeper_state:
       description: Name of lock to unlock
       example: 'lock.front_door'
     enabled:
-      description: enable or disable. true or false. 
+      description: enable or disable. true or false.
       example: true
 
+wink_add_new_lock_key_code:
+  description: Add a new user key code.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    name:
+      description: name of the new key code.
+      example: Bob
+    code:
+      description: new key code, length must match length of other codes. Default length is 4.
+      example: 1234

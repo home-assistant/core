@@ -3,10 +3,10 @@
 FINGERPRINTS = {
     "compatibility.js": "1686167ff210e001f063f5c606b2e74b",
     "core.js": "2a7d01e45187c7d4635da05065b5e54e",
-    "frontend.html": "6b0a95408d9ee869d0fe20c374077ed4",
-    "mdi.html": "89074face5529f5fe6fbae49ecb3e88b",
+    "frontend.html": "2de1bde3b4a6c6c47dd95504fc098906",
+    "mdi.html": "2e848b4da029bf73d426d5ba058a088d",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
-    "panels/ha-panel-config.html": "0b985cbf668b16bca9f34727036c7139",
+    "panels/ha-panel-config.html": "52e2e1d477bfd6dc3708d65b8337f0af",
     "panels/ha-panel-dev-event.html": "d409e7ab537d9fe629126d122345279c",
     "panels/ha-panel-dev-info.html": "b0e55eb657fd75f21aba2426ac0cedc0",
     "panels/ha-panel-dev-mqtt.html": "94b222b013a98583842de3e72d5888c6",

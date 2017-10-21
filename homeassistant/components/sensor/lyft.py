@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['lyft_rides==0.1.0b0']
+REQUIREMENTS = ['lyft_rides==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ Support for Wink hubs.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
+import asyncio
 import logging
 import time
 import json
@@ -20,11 +21,14 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, __version__)
+    EVENT_HOMEASSISTANT_STOP, __version__, ATTR_ENTITY_ID,
+    STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['python-wink==1.5.1', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.7.0', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +49,10 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
+ATTR_NAME = 'name'
+ATTR_PAIRING_MODE = 'pairing_mode'
+ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
+ATTR_HUB_NAME = 'hub_name'
 
 WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
 WINK_AUTH_START = '/auth/wink'
@@ -56,9 +64,31 @@ DEFAULT_CONFIG = {
     'client_secret': 'CLIENT_SECRET_HERE'
 }
 
-SERVICE_ADD_NEW_DEVICES = 'add_new_devices'
+SERVICE_ADD_NEW_DEVICES = 'pull_newly_added_devices_from_wink'
 SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
-SERVICE_KEEP_ALIVE = 'keep_pubnub_updates_flowing'
+SERVICE_RENAME_DEVICE = 'rename_wink_device'
+SERVICE_DELETE_DEVICE = 'delete_wink_device'
+SERVICE_SET_PAIRING_MODE = 'pair_new_device'
+SERVICE_SET_CHIME_VOLUME = "set_chime_volume"
+SERVICE_SET_SIREN_VOLUME = "set_siren_volume"
+SERVICE_ENABLE_CHIME = "enable_chime"
+SERVICE_SET_SIREN_TONE = "set_siren_tone"
+SERVICE_SET_AUTO_SHUTOFF = "siren_set_auto_shutoff"
+SERVICE_SIREN_STROBE_ENABLED = "set_siren_strobe_enabled"
+SERVICE_CHIME_STROBE_ENABLED = "set_chime_strobe_enabled"
+SERVICE_ENABLE_SIREN = "enable_siren"
+
+ATTR_VOLUME = "volume"
+ATTR_TONE = "tone"
+ATTR_ENABLED = "enabled"
+ATTR_AUTO_SHUTOFF = "auto_shutoff"
+
+VOLUMES = ["low", "medium", "high"]
+TONES = ["doorbell", "fur_elise", "doorbell_extended", "alert",
+         "william_tell", "rondo_alla_turca", "police_siren",
+         "evacuation", "beep_beep", "beep"]
+CHIME_TONES = TONES + ["inactive"]
+AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -74,10 +104,57 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+RENAME_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_NAME): cv.string
+}, extra=vol.ALLOW_EXTRA)
+
+DELETE_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+}, extra=vol.ALLOW_EXTRA)
+
+SET_PAIRING_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_HUB_NAME): cv.string,
+    vol.Required(ATTR_PAIRING_MODE): cv.string,
+    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
+}, extra=vol.ALLOW_EXTRA)
+
+SET_VOLUME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VOLUME): vol.In(VOLUMES)
+})
+
+SET_SIREN_TONE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TONE): vol.In(TONES)
+})
+
+SET_CHIME_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TONE): vol.In(CHIME_TONES)
+})
+
+SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)
+})
+
+SET_STROBE_ENABLED_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENABLED): cv.boolean
+})
+
+ENABLED_SIREN_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENABLED): cv.boolean
+})
+
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
     'fan', 'alarm_control_panel', 'scene'
 ]
+
+WINK_HUBS = []
 
 
 def _write_config_file(file_path, config):
@@ -176,6 +253,9 @@ def setup(hass, config):
     """Set up the Wink component."""
     import pywink
     from pubnubsubhandler import PubNubSubscriptionHandler
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -313,6 +393,7 @@ def setup(hass, config):
     def stop_subscription(event):
         """Stop the pubnub subscription."""
         hass.data[DOMAIN]['pubnub'].unsubscribe()
+        hass.data[DOMAIN]['pubnub'] = None
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
@@ -333,7 +414,9 @@ def setup(hass, config):
             for entity in entity_list:
                 time.sleep(1)
                 entity.schedule_update_ha_state(True)
-    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
+
+    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update,
+                           descriptions.get(SERVICE_REFRESH_STATES))
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
@@ -341,12 +424,170 @@ def setup(hass, config):
         for _component in WINK_COMPONENTS:
             discovery.load_platform(hass, _component, DOMAIN, {}, config)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
+    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices,
+                           descriptions.get(SERVICE_ADD_NEW_DEVICES))
+
+    def set_pairing_mode(call):
+        """Put the hub in provided pairing mode."""
+        hub_name = call.data.get('hub_name')
+        pairing_mode = call.data.get('pairing_mode')
+        kidde_code = call.data.get('kidde_radio_code')
+        for hub in WINK_HUBS:
+            if hub.name() == hub_name:
+                hub.pair_new_device(pairing_mode,
+                                    kidde_radio_code=kidde_code)
+
+    def rename_device(call):
+        """Set specified device's name."""
+        # This should only be called on one device at a time.
+        found_device = None
+        entity_id = call.data.get('entity_id')[0]
+        all_devices = []
+        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+            all_devices += list_of_devices
+        for device in all_devices:
+            if device.entity_id == entity_id:
+                found_device = device
+        if found_device is not None:
+            name = call.data.get('name')
+            found_device.wink.set_name(name)
+
+    hass.services.register(DOMAIN, SERVICE_RENAME_DEVICE, rename_device,
+                           descriptions.get(SERVICE_RENAME_DEVICE),
+                           schema=RENAME_DEVICE_SCHEMA)
+
+    def delete_device(call):
+        """Delete specified device."""
+        # This should only be called on one device at a time.
+        found_device = None
+        entity_id = call.data.get('entity_id')[0]
+        all_devices = []
+        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+            all_devices += list_of_devices
+        for device in all_devices:
+            if device.entity_id == entity_id:
+                found_device = device
+        if found_device is not None:
+            found_device.wink.remove_device()
+
+    hass.services.register(DOMAIN, SERVICE_DELETE_DEVICE, delete_device,
+                           descriptions.get(SERVICE_DELETE_DEVICE),
+                           schema=DELETE_DEVICE_SCHEMA)
+
+    hubs = pywink.get_hubs()
+    for hub in hubs:
+        if hub.device_manufacturer() == 'wink':
+            WINK_HUBS.append(hub)
+
+    if WINK_HUBS:
+        hass.services.register(
+            DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
+            descriptions.get(SERVICE_SET_PAIRING_MODE),
+            schema=SET_PAIRING_MODE_SCHEMA)
+
+    def service_handle(service):
+        """Handler for services."""
+        entity_ids = service.data.get('entity_id')
+        all_sirens = []
+        for switch in hass.data[DOMAIN]['entities']['switch']:
+            if isinstance(switch, WinkSirenDevice):
+                all_sirens.append(switch)
+        sirens_to_set = []
+        if entity_ids is None:
+            sirens_to_set = all_sirens
+        else:
+            for siren in all_sirens:
+                if siren.entity_id in entity_ids:
+                    sirens_to_set.append(siren)
+
+        for siren in sirens_to_set:
+            if (service.service != SERVICE_SET_AUTO_SHUTOFF and
+                    service.service != SERVICE_ENABLE_SIREN and
+                    siren.wink.device_manufacturer() != 'dome'):
+                _LOGGER.error("Service only valid for Dome sirens.")
+                return
+
+            if service.service == SERVICE_ENABLE_SIREN:
+                siren.wink.set_state(service.data.get(ATTR_ENABLED))
+            elif service.service == SERVICE_SET_AUTO_SHUTOFF:
+                siren.wink.set_auto_shutoff(
+                    service.data.get(ATTR_AUTO_SHUTOFF))
+            elif service.service == SERVICE_SET_CHIME_VOLUME:
+                siren.wink.set_chime_volume(service.data.get(ATTR_VOLUME))
+            elif service.service == SERVICE_SET_SIREN_VOLUME:
+                siren.wink.set_siren_volume(service.data.get(ATTR_VOLUME))
+            elif service.service == SERVICE_SET_SIREN_TONE:
+                siren.wink.set_siren_sound(service.data.get(ATTR_TONE))
+            elif service.service == SERVICE_ENABLE_CHIME:
+                siren.wink.set_chime(service.data.get(ATTR_TONE))
+            elif service.service == SERVICE_SIREN_STROBE_ENABLED:
+                siren.wink.set_siren_strobe_enabled(
+                    service.data.get(ATTR_ENABLED))
+            elif service.service == SERVICE_CHIME_STROBE_ENABLED:
+                siren.wink.set_chime_strobe_enabled(
+                    service.data.get(ATTR_ENABLED))
 
     # Load components for the devices in Wink that we support
-    for component in WINK_COMPONENTS:
-        hass.data[DOMAIN]['entities'][component] = []
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for wink_component in WINK_COMPONENTS:
+        hass.data[DOMAIN]['entities'][wink_component] = []
+        discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    sirens = []
+    has_dome_siren = False
+    for siren in pywink.get_sirens():
+        if siren.device_manufacturer() == "dome":
+            has_dome_siren = True
+        _id = siren.object_id() + siren.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            sirens.append(WinkSirenDevice(siren, hass))
+
+    if sirens:
+
+        hass.services.register(DOMAIN, SERVICE_SET_AUTO_SHUTOFF,
+                               service_handle,
+                               descriptions.get(SERVICE_SET_AUTO_SHUTOFF),
+                               schema=SET_AUTO_SHUTOFF_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_ENABLE_SIREN,
+                               service_handle,
+                               descriptions.get(SERVICE_ENABLE_SIREN),
+                               schema=ENABLED_SIREN_SCHEMA)
+
+    if has_dome_siren:
+
+        hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
+                               service_handle,
+                               descriptions.get(SERVICE_SET_SIREN_TONE),
+                               schema=SET_SIREN_TONE_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_ENABLE_CHIME,
+                               service_handle,
+                               descriptions.get(SERVICE_ENABLE_CHIME),
+                               schema=SET_CHIME_MODE_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_SET_SIREN_VOLUME,
+                               service_handle,
+                               descriptions.get(SERVICE_SET_SIREN_VOLUME),
+                               schema=SET_VOLUME_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_SET_CHIME_VOLUME,
+                               service_handle,
+                               descriptions.get(SERVICE_SET_CHIME_VOLUME),
+                               schema=SET_VOLUME_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_SIREN_STROBE_ENABLED,
+                               service_handle,
+                               descriptions.get(SERVICE_SIREN_STROBE_ENABLED),
+                               schema=SET_STROBE_ENABLED_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_CHIME_STROBE_ENABLED,
+                               service_handle,
+                               descriptions.get(SERVICE_CHIME_STROBE_ENABLED),
+                               schema=SET_STROBE_ENABLED_SCHEMA)
+
+    component.add_entities(sirens)
 
     return True
 
@@ -503,3 +744,59 @@ class WinkDevice(Entity):
         if hasattr(self.wink, 'tamper_detected'):
             return self.wink.tamper_detected()
         return None
+
+
+class WinkSirenDevice(WinkDevice):
+    """Representation of a Wink siren device."""
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['switch'].append(self)
+
+    @property
+    def state(self):
+        """Return sirens state."""
+        if self.wink.state():
+            return STATE_ON
+        return STATE_OFF
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return "mdi:bell-ring"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attributes = super(WinkSirenDevice, self).device_state_attributes
+
+        auto_shutoff = self.wink.auto_shutoff()
+        if auto_shutoff is not None:
+            attributes["auto_shutoff"] = auto_shutoff
+
+        siren_volume = self.wink.siren_volume()
+        if siren_volume is not None:
+            attributes["siren_volume"] = siren_volume
+
+        chime_volume = self.wink.chime_volume()
+        if chime_volume is not None:
+            attributes["chime_volume"] = chime_volume
+
+        strobe_enabled = self.wink.strobe_enabled()
+        if strobe_enabled is not None:
+            attributes["siren_strobe_enabled"] = strobe_enabled
+
+        chime_strobe_enabled = self.wink.chime_strobe_enabled()
+        if chime_strobe_enabled is not None:
+            attributes["chime_strobe_enabled"] = chime_strobe_enabled
+
+        siren_sound = self.wink.siren_sound()
+        if siren_sound is not None:
+            attributes["siren_sound"] = siren_sound
+
+        chime_mode = self.wink.chime_mode()
+        if chime_mode is not None:
+            attributes["chime_mode"] = chime_mode
+
+        return attributes
