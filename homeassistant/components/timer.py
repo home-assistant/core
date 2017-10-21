@@ -263,7 +263,7 @@ class Timer(Entity):
         self._name = name
         self._state = STATUS_IDLE
         self._duration = timedelta(weeks=weeks, days=days, hours=hours,
-            minutes=minutes, seconds=seconds)
+                                   minutes=minutes, seconds=seconds)
         self._remaining = self._duration
         self._icon = icon
         self._hass = hass
