@@ -146,6 +146,7 @@ class FluxSwitch(SwitchDevice):
         self._interval = interval
         self._transition = transition
         self.unsub_tracker = None
+        self.light_unsub_tracker = None
 
     @property
     def name(self):
@@ -170,7 +171,7 @@ class FluxSwitch(SwitchDevice):
 
         self.schedule_update_ha_state()
 
-        async_track_state_change(self.hass, self._lights, self.handle_light_on, 'off', 'on')
+        self.light_unsub_tracker = async_track_state_change(self.hass, self._lights, self.handle_light_on, 'off', 'on')
 
     def handle_light_on(self, entity_id, old_state, new_state):
         _LOGGER.info("Light %s turned on, updating lights", entity_id)
@@ -181,6 +182,10 @@ class FluxSwitch(SwitchDevice):
         if self.unsub_tracker is not None:
             self.unsub_tracker()
             self.unsub_tracker = None
+
+        if self.light_unsub_tracker is not None:
+            self.light_unsub_tracker()
+            self.light_unsub_tracker = None
 
         self.schedule_update_ha_state()
 
