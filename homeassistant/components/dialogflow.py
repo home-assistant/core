@@ -1,8 +1,8 @@
 """
-Support for API.AI webhook.
+Support for Dialogflow webhook.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/apiai/
+https://home-assistant.io/components/dialogflow/
 """
 import asyncio
 import logging
@@ -15,17 +15,16 @@ from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-INTENTS_API_ENDPOINT = '/api/apiai'
-
 CONF_INTENTS = 'intents'
 CONF_SPEECH = 'speech'
 CONF_ACTION = 'action'
 CONF_ASYNC_ACTION = 'async_action'
 
 DEFAULT_CONF_ASYNC_ACTION = False
-
-DOMAIN = 'apiai'
 DEPENDENCIES = ['http']
+DOMAIN = 'dialogflow'
+
+INTENTS_API_ENDPOINT = '/api/dialogflow'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {}
@@ -34,30 +33,30 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Activate API.AI component."""
-    hass.http.register_view(ApiaiIntentsView)
+    """Set up Dialogflow component."""
+    hass.http.register_view(DialogflowIntentsView)
 
     return True
 
 
-class ApiaiIntentsView(HomeAssistantView):
-    """Handle API.AI requests."""
+class DialogflowIntentsView(HomeAssistantView):
+    """Handle Dialogflow requests."""
 
     url = INTENTS_API_ENDPOINT
-    name = 'api:apiai'
+    name = 'api:dialogflow'
 
     @asyncio.coroutine
     def post(self, request):
-        """Handle API.AI."""
+        """Handle Dialogflow."""
         hass = request.app['hass']
         data = yield from request.json()
 
-        _LOGGER.debug("Received api.ai request: %s", data)
+        _LOGGER.debug("Received Dialogflow request: %s", data)
 
         req = data.get('result')
 
         if req is None:
-            _LOGGER.error("Received invalid data from api.ai: %s", data)
+            _LOGGER.error("Received invalid data from Dialogflow: %s", data)
             return self.json_message(
                 "Expected result value not received", HTTP_BAD_REQUEST)
 
@@ -68,13 +67,13 @@ class ApiaiIntentsView(HomeAssistantView):
 
         action = req.get('action')
         parameters = req.get('parameters')
-        apiai_response = ApiaiResponse(parameters)
+        dialogflow_response = DialogflowResponse(parameters)
 
         if action == "":
             _LOGGER.warning("Received intent with empty action")
-            apiai_response.add_speech(
-                "You have not defined an action in your api.ai intent.")
-            return self.json(apiai_response)
+            dialogflow_response.add_speech(
+                "You have not defined an action in your Dialogflow intent.")
+            return self.json(dialogflow_response)
 
         try:
             intent_response = yield from intent.async_handle(
@@ -83,31 +82,31 @@ class ApiaiIntentsView(HomeAssistantView):
                  in parameters.items()})
 
         except intent.UnknownIntent as err:
-            _LOGGER.warning('Received unknown intent %s', action)
-            apiai_response.add_speech(
+            _LOGGER.warning("Received unknown intent %s", action)
+            dialogflow_response.add_speech(
                 "This intent is not yet configured within Home Assistant.")
-            return self.json(apiai_response)
+            return self.json(dialogflow_response)
 
         except intent.InvalidSlotInfo as err:
-            _LOGGER.error('Received invalid slot data: %s', err)
+            _LOGGER.error("Received invalid slot data: %s", err)
             return self.json_message('Invalid slot data received',
                                      HTTP_BAD_REQUEST)
         except intent.IntentError:
-            _LOGGER.exception('Error handling request for %s', action)
+            _LOGGER.exception("Error handling request for %s", action)
             return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
 
         if 'plain' in intent_response.speech:
-            apiai_response.add_speech(
+            dialogflow_response.add_speech(
                 intent_response.speech['plain']['speech'])
 
-        return self.json(apiai_response)
+        return self.json(dialogflow_response)
 
 
-class ApiaiResponse(object):
-    """Help generating the response for API.AI."""
+class DialogflowResponse(object):
+    """Help generating the response for Dialogflow."""
 
     def __init__(self, parameters):
-        """Initialize the response."""
+        """Initialize the Dialogflow response."""
         self.speech = None
         self.parameters = {}
         # Parameter names replace '.' and '-' for '_'
@@ -125,7 +124,7 @@ class ApiaiResponse(object):
         self.speech = text
 
     def as_dict(self):
-        """Return response in an API.AI valid dict."""
+        """Return response in a Dialogflow valid dictionary."""
         return {
             'speech': self.speech,
             'displayText': self.speech,
