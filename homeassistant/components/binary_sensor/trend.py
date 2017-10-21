@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.trend/
 """
 import asyncio
 from collections import deque
-from datetime import datetime, timezone
 import logging
+from util import utcnow
 
 import voluptuous as vol
 
@@ -117,8 +117,8 @@ class SensorTrend(BinarySensorDevice):
                 else:
                     state = new_state.state
                 if state != STATE_UNKNOWN:
-                    now = datetime.now(timezone.utc).timestamp()
-                    self.samples.append((now, float(state)))
+                    sample = (utcnow.timestamp(), float(state))
+                    self.samples.append(sample)
                     hass.async_add_job(self.async_update_ha_state(True))
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
@@ -166,8 +166,7 @@ class SensorTrend(BinarySensorDevice):
 
         # Remove outdated samples
         if self._sample_duration > 0:
-            now = datetime.now(timezone.utc).timestamp()
-            cutoff = now - self._sample_duration
+            cutoff = utcnow().timestamp() - self._sample_duration
             while len(self.samples) > 0 and self.samples[0][0] < cutoff:
                 self.samples.popleft()
 
