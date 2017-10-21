@@ -205,6 +205,29 @@ class TestTrendBinarySensor:
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
+    def test_max_samples(self):
+        """Test that sample count is limited correctly."""
+        assert setup.setup_component(self.hass, 'binary_sensor', {
+            'binary_sensor': {
+                'platform': 'trend',
+                'sensors': {
+                    'test_trend_sensor': {
+                        'entity_id': "sensor.test_state",
+                        'max_samples': 3,
+                        'min_gradient': -1,
+                    }
+                }
+            }
+        })
+
+        for val in [0, 1, 2, 3, 2, 1]:
+            self.hass.states.set('sensor.test_state', val)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_trend_sensor')
+        assert state.state == 'on'
+        assert state.attributes['sample_count'] == 3
+
     def test_non_numeric(self):
         """Test up trend."""
         assert setup.setup_component(self.hass, 'binary_sensor', {

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trend/
 """
 import asyncio
+from collections import deque
 from datetime import datetime, timezone
 import logging
 
@@ -36,6 +37,7 @@ ATTR_SAMPLE_COUNT = 'sample_count'
 
 CONF_SENSORS = 'sensors'
 CONF_ATTRIBUTE = 'attribute'
+CONF_MAX_SAMPLES = 'max_samples'
 CONF_MIN_GRADIENT = 'min_gradient'
 CONF_INVERT = 'invert'
 CONF_SAMPLE_DURATION = 'sample_duration'
@@ -45,6 +47,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ATTRIBUTE): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
     vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
     vol.Optional(CONF_INVERT, default=False): cv.boolean,
     vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
@@ -60,19 +63,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the trend sensors."""
     sensors = []
 
-    for device, device_config in config[CONF_SENSORS].items():
+    for device_id, device_config in config[CONF_SENSORS].items():
         entity_id = device_config[ATTR_ENTITY_ID]
         attribute = device_config.get(CONF_ATTRIBUTE)
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
+        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device_id)
         invert = device_config[CONF_INVERT]
-        sample_duration = device_config[CONF_SAMPLE_DURATION]
+        max_samples = device_config[CONF_MAX_SAMPLES]
         min_gradient = device_config[CONF_MIN_GRADIENT]
+        sample_duration = device_config[CONF_SAMPLE_DURATION]
 
         sensors.append(
             SensorTrend(
-                hass, device, friendly_name, entity_id, attribute,
-                device_class, invert, sample_duration, min_gradient)
+                hass, device_id, friendly_name, entity_id, attribute,
+                device_class, invert, max_samples, min_gradient,
+                sample_duration)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -85,8 +90,8 @@ class SensorTrend(BinarySensorDevice):
     """Representation of a trend Sensor."""
 
     def __init__(self, hass, device_id, friendly_name, entity_id,
-                 attribute, device_class, invert, sample_duration,
-                 min_gradient):
+                 attribute, device_class, invert, max_samples,
+                 min_gradient, sample_duration):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(
@@ -100,7 +105,8 @@ class SensorTrend(BinarySensorDevice):
         self._min_gradient = min_gradient
         self._gradient = None
         self._state = None
-        self.samples = []
+
+        self.samples = deque(maxlen = max_samples)
 
         @callback
         def trend_sensor_state_listener(entity, old_state, new_state):
@@ -159,12 +165,11 @@ class SensorTrend(BinarySensorDevice):
         import numpy as np
 
         # Remove outdated samples
-        if self._sample_duration == 0:
-            self.samples = self.samples[-2:]
-        else:
+        if self._sample_duration > 0:
             now = datetime.now(timezone.utc).timestamp()
             cutoff = now - self._sample_duration
-            self.samples = [(t, v) for t, v in self.samples if t >= cutoff]
+            while len(self.samples) > 0 and self.samples[0][0] < cutoff:
+                self.samples.popleft()
 
         if len(self.samples) < 2:
             return
