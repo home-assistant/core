@@ -106,7 +106,6 @@ def start(hass, entity_id,
           hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
           seconds=DEFAULT_DURATION):
     """Start a timer."""
-    _LOGGER.warning("start")
     hass.add_job(async_start, hass, entity_id,
                  **{ATTR_ENTITY_ID: entity_id,
                     ATTR_WEEKS: weeks,
@@ -123,7 +122,6 @@ def async_start(hass, entity_id,
                 hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
                 seconds=DEFAULT_DURATION):
     """Start a timer."""
-    _LOGGER.warning("async_start")
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
                                 ATTR_WEEKS: weeks,
@@ -300,8 +298,6 @@ class Timer(Entity):
         end = dt_util.as_local(self._end) if self._end else None
         return {
             ATTR_DURATION: self._duration.__str__(),
-            #ATTR_START: self._start,
-            #ATTR_END: self._end,
             ATTR_START: start,
             ATTR_END: end,
             ATTR_REMAINING: self._remaining.__str__()
