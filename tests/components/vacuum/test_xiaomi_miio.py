@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.setup import setup_component
 
+from tests.common import get_test_home_assistant
 
 @pytest.fixture
 def mock_mirobo_is_off():
@@ -96,270 +97,298 @@ def mock_mirobo_errors():
     }):
         yield mock_vacuum
 
+class TestXiaomi(object):
+    """Test the Xiaomi vacuum platform."""
 
-def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
-    """Test vacuum supported features."""
-    entity_name = 'test_vacuum_cleaner_error'
-    setup_component(
-        hass, DOMAIN,
-        {DOMAIN: {CONF_PLATFORM: PLATFORM,
-                  CONF_HOST: '127.0.0.1',
-                  CONF_NAME: entity_name,
-                  CONF_TOKEN: '12345678901234567890123456789012'}})
+    def setup_method(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
 
-    assert 'Initializing with host 127.0.0.1 (token 12345...)' in caplog.text
-    assert str(mock_mirobo_errors.mock_calls[-1]) == 'call.Vacuum().status()'
-    assert 'ERROR' in caplog.text
-    assert 'Got OSError while fetching the state' in caplog.text
+    def teardown_method(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
+    def test_xiaomi_exceptions(self, caplog, mock_mirobo_errors):
+        """Test vacuum supported features."""
+        entity_name = 'test_vacuum_cleaner_error'
+        setup_component(
+            self.hass, DOMAIN,
+            {DOMAIN: {CONF_PLATFORM: PLATFORM,
+                      CONF_HOST: '127.0.0.1',
+                      CONF_NAME: entity_name,
+                      CONF_TOKEN: '12345678901234567890123456789012'}})
 
-def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
-    """Test vacuum supported features."""
-    entity_name = 'test_vacuum_cleaner_1'
-    entity_id = '{}.{}'.format(DOMAIN, entity_name)
-
-    setup_component(
-        hass, DOMAIN,
-        {DOMAIN: {CONF_PLATFORM: PLATFORM,
-                  CONF_HOST: '127.0.0.1',
-                  CONF_NAME: entity_name,
-                  CONF_TOKEN: '12345678901234567890123456789012'}})
-
-    assert 'Initializing with host 127.0.0.1 (token 12345...)' in caplog.text
-
-    # Check state attributes
-    state = hass.states.get(entity_id)
-
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_ON
-    assert state.attributes.get(ATTR_ERROR) == 'Error message'
-    assert (state.attributes.get(ATTR_BATTERY_ICON)
-            == 'mdi:battery-charging-80')
-    assert state.attributes.get(ATTR_CLEANING_TIME) == 155
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 123
-    assert state.attributes.get(ATTR_FAN_SPEED) == 'Quiet'
-    assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
-            == ['Quiet', 'Balanced', 'Turbo', 'Max'])
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
-    assert state.attributes.get(ATTR_FILTER_LEFT) == 12
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 695
-
-    # Call services
-    hass.services.call(
-        DOMAIN, SERVICE_TURN_ON, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_TURN_OFF, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().home()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_TOGGLE, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_STOP, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().stop()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_START_PAUSE, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().home()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_LOCATE, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().find()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {}, blocking=True)
-    assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().spot()'
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    # Set speed service:
-    hass.services.call(
-        DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": 60}, blocking=True)
-    assert (str(mock_mirobo_is_off.mock_calls[-4])
-            == 'call.Vacuum().set_fan_speed(60)')
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": "turbo"}, blocking=True)
-    assert (str(mock_mirobo_is_off.mock_calls[-4])
-            == 'call.Vacuum().set_fan_speed(77)')
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    assert 'ERROR' not in caplog.text
-    hass.services.call(
-        DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": "invent"}, blocking=True)
-    assert 'ERROR' in caplog.text
-
-    hass.services.call(
-        DOMAIN, SERVICE_SEND_COMMAND,
-        {"command": "raw"}, blocking=True)
-    assert (str(mock_mirobo_is_off.mock_calls[-4])
-            == "call.Vacuum().raw_command('raw', None)")
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
-
-    hass.services.call(
-        DOMAIN, SERVICE_SEND_COMMAND,
-        {"command": "raw", "params": {"k1": 2}}, blocking=True)
-    assert (str(mock_mirobo_is_off.mock_calls[-4])
-            == "call.Vacuum().raw_command('raw', {'k1': 2})")
-    assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_off.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_off.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        assert 'Initializing with host 127.0.0.1 (token 12345...)' in caplog.text
+        assert str(mock_mirobo_errors.mock_calls[-1]) == 'call.Vacuum().status()'
+        assert 'ERROR' in caplog.text
+        assert 'Got OSError while fetching the state' in caplog.text
 
 
-def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
-    """Test vacuum supported features."""
-    entity_name = 'test_vacuum_cleaner_2'
-    entity_id = '{}.{}'.format(DOMAIN, entity_name)
+    def test_xiaomi_vacuum_services(self, caplog, mock_mirobo_is_off):
+        """Test vacuum supported features."""
+        entity_name = 'test_vacuum_cleaner_1'
+        entity_id = '{}.{}'.format(DOMAIN, entity_name)
 
-    yield from setup_component(
-        hass, DOMAIN,
-        {DOMAIN: {CONF_PLATFORM: PLATFORM,
-                  CONF_HOST: '192.168.1.100',
-                  CONF_NAME: entity_name,
-                  CONF_TOKEN: '12345678901234567890123456789012'}})
+        setup_component(
+            self.hass, DOMAIN,
+            {DOMAIN: {CONF_PLATFORM: PLATFORM,
+                      CONF_HOST: '127.0.0.1',
+                      CONF_NAME: entity_name,
+                      CONF_TOKEN: '12345678901234567890123456789012'}})
 
-    assert 'Initializing with host 192.168.1.100 (token 12345' in caplog.text
+        assert 'Initializing with host 127.0.0.1 (token 12345...)' in caplog.text
 
-    # Check state attributes
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
-    assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_OFF
-    assert state.attributes.get(ATTR_ERROR) is None
-    assert (state.attributes.get(ATTR_BATTERY_ICON)
-            == 'mdi:battery-30')
-    assert state.attributes.get(ATTR_CLEANING_TIME) == 175
-    assert state.attributes.get(ATTR_CLEANED_AREA) == 133
-    assert state.attributes.get(ATTR_FAN_SPEED) == 99
-    assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
-            == ['Quiet', 'Balanced', 'Turbo', 'Max'])
-    assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
-    assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11
-    assert state.attributes.get(ATTR_FILTER_LEFT) == 11
-    assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
-    assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 323
-    assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 675
+        # Check state attributes
+        state = self.hass.states.get(entity_id)
 
-    # Check setting pause
-    hass.services.call(
-        DOMAIN, SERVICE_START_PAUSE, blocking=True)
-    assert str(mock_mirobo_is_on.mock_calls[-4]) == 'call.Vacuum().pause()'
-    assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_on.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_on.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        assert state.state == STATE_OFF
+        assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
+        assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_ON
+        assert state.attributes.get(ATTR_ERROR) == 'Error message'
+        assert (state.attributes.get(ATTR_BATTERY_ICON)
+                == 'mdi:battery-charging-80')
+        assert state.attributes.get(ATTR_CLEANING_TIME) == 155
+        assert state.attributes.get(ATTR_CLEANED_AREA) == 123
+        assert state.attributes.get(ATTR_FAN_SPEED) == 'Quiet'
+        assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
+                == ['Quiet', 'Balanced', 'Turbo', 'Max'])
+        assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
+        assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
+        assert state.attributes.get(ATTR_FILTER_LEFT) == 12
+        assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
+        assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123
+        assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 695
 
-    # Xiaomi vacuum specific services:
-    hass.services.call(
-        DOMAIN, SERVICE_START_REMOTE_CONTROL,
-        {ATTR_ENTITY_ID: entity_id}, blocking=True)
-    assert (str(mock_mirobo_is_on.mock_calls[-4])
-            == "call.Vacuum().manual_start()")
-    assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_on.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_on.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        # Call services
+        self.hass.services.call(
+            DOMAIN, SERVICE_TURN_ON, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
 
-    hass.services.call(
-        DOMAIN, SERVICE_MOVE_REMOTE_CONTROL,
-        {"duration": 1000, "rotation": -40, "velocity": -0.1}, blocking=True)
-    assert ('call.Vacuum().manual_control('
-            in str(mock_mirobo_is_on.mock_calls[-4]))
-    assert 'duration=1000' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert 'rotation=-40' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert 'velocity=-0.1' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_on.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_on.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        self.hass.services.call(
+            DOMAIN, SERVICE_TURN_OFF, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().home()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
 
-    hass.services.call(
-        DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True)
-    assert (str(mock_mirobo_is_on.mock_calls[-4])
-            == "call.Vacuum().manual_stop()")
-    assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_on.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_on.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        self.hass.services.call(
+            DOMAIN, SERVICE_TOGGLE, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
 
-    hass.services.call(
-        DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP,
-        {"duration": 2000, "rotation": 120, "velocity": 0.1}, blocking=True)
-    assert ('call.Vacuum().manual_control_once('
-            in str(mock_mirobo_is_on.mock_calls[-4]))
-    assert 'duration=2000' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert 'rotation=120' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert 'velocity=0.1' in str(mock_mirobo_is_on.mock_calls[-4])
-    assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
-    assert (str(mock_mirobo_is_on.mock_calls[-2])
-            == 'call.Vacuum().consumable_status()')
-    assert (str(mock_mirobo_is_on.mock_calls[-1])
-            == 'call.Vacuum().clean_history()')
+        self.hass.services.call(
+            DOMAIN, SERVICE_STOP, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().stop()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_START_PAUSE, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().start()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_RETURN_TO_BASE, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().home()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_LOCATE, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().find()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_CLEAN_SPOT, {}, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_off.mock_calls[-4]) == 'call.Vacuum().spot()'
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        # Set speed service:
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": 60}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_off.mock_calls[-4])
+                == 'call.Vacuum().set_fan_speed(60)')
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": "turbo"}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_off.mock_calls[-4])
+                == 'call.Vacuum().set_fan_speed(77)')
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        assert 'ERROR' not in caplog.text
+        self.hass.services.call(
+            DOMAIN, SERVICE_SET_FAN_SPEED, {"fan_speed": "invent"}, blocking=True)
+        self.hass.block_till_done()
+        assert 'ERROR' in caplog.text
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_SEND_COMMAND,
+            {"command": "raw"}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_off.mock_calls[-4])
+                == "call.Vacuum().raw_command('raw', None)")
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_SEND_COMMAND,
+            {"command": "raw", "params": {"k1": 2}}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_off.mock_calls[-4])
+                == "call.Vacuum().raw_command('raw', {'k1': 2})")
+        assert str(mock_mirobo_is_off.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_off.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_off.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+
+    def test_xiaomi_specific_services(self, caplog, mock_mirobo_is_on):
+        """Test vacuum supported features."""
+        entity_name = 'test_vacuum_cleaner_2'
+        entity_id = '{}.{}'.format(DOMAIN, entity_name)
+
+        setup_component(
+            self.hass, DOMAIN,
+            {DOMAIN: {CONF_PLATFORM: PLATFORM,
+                      CONF_HOST: '192.168.1.100',
+                      CONF_NAME: entity_name,
+                      CONF_TOKEN: '12345678901234567890123456789012'}})
+
+        assert 'Initializing with host 192.168.1.100 (token 12345' in caplog.text
+
+        # Check state attributes
+        state = self.hass.states.get(entity_id)
+        assert state.state == STATE_ON
+        assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
+        assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_OFF
+        assert state.attributes.get(ATTR_ERROR) is None
+        assert (state.attributes.get(ATTR_BATTERY_ICON)
+                == 'mdi:battery-30')
+        assert state.attributes.get(ATTR_CLEANING_TIME) == 175
+        assert state.attributes.get(ATTR_CLEANED_AREA) == 133
+        assert state.attributes.get(ATTR_FAN_SPEED) == 99
+        assert (state.attributes.get(ATTR_FAN_SPEED_LIST)
+                == ['Quiet', 'Balanced', 'Turbo', 'Max'])
+        assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
+        assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11
+        assert state.attributes.get(ATTR_FILTER_LEFT) == 11
+        assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
+        assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 323
+        assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 675
+
+        # Check setting pause
+        self.hass.services.call(
+            DOMAIN, SERVICE_START_PAUSE, blocking=True)
+        self.hass.block_till_done()
+        assert str(mock_mirobo_is_on.mock_calls[-4]) == 'call.Vacuum().pause()'
+        assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_on.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_on.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        # Xiaomi vacuum specific services:
+        self.hass.services.call(
+            DOMAIN, SERVICE_START_REMOTE_CONTROL,
+            {ATTR_ENTITY_ID: entity_id}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_on.mock_calls[-4])
+                == "call.Vacuum().manual_start()")
+        assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_on.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_on.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_MOVE_REMOTE_CONTROL,
+            {"duration": 1000, "rotation": -40, "velocity": -0.1}, blocking=True)
+        self.hass.block_till_done()
+        assert ('call.Vacuum().manual_control('
+                in str(mock_mirobo_is_on.mock_calls[-4]))
+        assert 'duration=1000' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert 'rotation=-40' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert 'velocity=-0.1' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_on.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_on.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True)
+        self.hass.block_till_done()
+        assert (str(mock_mirobo_is_on.mock_calls[-4])
+                == "call.Vacuum().manual_stop()")
+        assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_on.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_on.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
+
+        self.hass.services.call(
+            DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP,
+            {"duration": 2000, "rotation": 120, "velocity": 0.1}, blocking=True)
+        self.hass.block_till_done()
+        assert ('call.Vacuum().manual_control_once('
+                in str(mock_mirobo_is_on.mock_calls[-4]))
+        assert 'duration=2000' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert 'rotation=120' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert 'velocity=0.1' in str(mock_mirobo_is_on.mock_calls[-4])
+        assert str(mock_mirobo_is_on.mock_calls[-3]) == 'call.Vacuum().status()'
+        assert (str(mock_mirobo_is_on.mock_calls[-2])
+                == 'call.Vacuum().consumable_status()')
+        assert (str(mock_mirobo_is_on.mock_calls[-1])
+                == 'call.Vacuum().clean_history()')
