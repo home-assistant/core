@@ -200,3 +200,26 @@ lifx_effect_stop:
     entity_id:
       description: Name(s) of entities to stop effects on. Leave out to stop effects everywhere.
       example: 'light.bedroom'
+
+yeelight_set_scene:
+  description: Set the smart LED directly to a specified state.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'light.kitchen'
+
+    name:
+      description: Scene type ("color_and_brightness" - color and brigntess, "temperature_and_brightness" - temperature and brigtness, "nightlight" - switch to moonlight mode)
+
+    rgb_color:
+      description: Color for the light in RGB-format
+      example: '[255, 100, 100]'
+
+    brightness_pct:
+      description: Number between 0..100 indicating percentage of full brightness
+      example: 47
+
+    kelvin:
+      description: Color temperature for the light in Kelvin
+      example: 4000
