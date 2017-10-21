@@ -272,6 +272,7 @@ omit =
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/onvif.py
+    homeassistant/components/camera/ring.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
     homeassistant/components/climate/eq3btsmart.py
