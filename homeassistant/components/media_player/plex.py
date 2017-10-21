@@ -352,6 +352,8 @@ class PlexClient(MediaPlayerDevice):
             self._session = session
         if device:
             self._device = device
+            if ("127.0.0.1" in self._device.url("/")):
+                self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
             self._name = self._device.title or DEVICE_DEFAULT_NAME
@@ -642,32 +644,9 @@ class PlexClient(MediaPlayerDevice):
 
         return None
 
-    def _local_client_control_fix(self):
-        """Detect if local client and adjust url to allow control."""
-        if self.device is None:
-            return
-
-        # if this device's machineIdentifier matches an active client
-        # with a loopback address, the device must be local or casting
-        for client in self._server.clients():
-            if ("127.0.0.1" in client.url("/") and
-                    client.machineIdentifier == self.device.machineIdentifier):
-                # point controls to server since that's where the
-                # playback is occurring
-                _LOGGER.debug(
-                    "Local client detected, redirecting controls to "
-                    "Plex server: %s", self.entity_id)
-                server_url = self._server.url("/")
-                client_url = self.device.url("/")
-                self.device._baseurl = "{}://{}:{}".format(
-                    urlparse(client_url).scheme,
-                    urlparse(server_url).hostname,
-                    str(urlparse(client_url).port))
-
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.setVolume(
                 int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
@@ -706,19 +685,16 @@ class PlexClient(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.play(self._active_media_plexapi_type)
 
     def media_pause(self):
         """Send pause command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.pause(self._active_media_plexapi_type)
 
     def media_stop(self):
         """Send stop command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.stop(self._active_media_plexapi_type)
 
     def turn_off(self):
@@ -729,13 +705,11 @@ class PlexClient(MediaPlayerDevice):
     def media_next_track(self):
         """Send next track command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.skipNext(self._active_media_plexapi_type)
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and 'playback' in self._device_protocol_capabilities:
-            self._local_client_control_fix()
             self.device.skipPrevious(self._active_media_plexapi_type)
 
     # pylint: disable=W0613
@@ -830,8 +804,6 @@ class PlexClient(MediaPlayerDevice):
         # Delete dynamic playlists used to build playqueue (ex. play tv season)
         if delete:
             media.delete()
-
-        self._local_client_control_fix()
 
         server_url = self.device.server.baseurl.split(':')
         self.device.sendCommand('playback/playMedia', **dict({
