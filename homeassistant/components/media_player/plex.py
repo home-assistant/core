@@ -183,7 +183,7 @@ def setup_plexserver(
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
                                         plex_sessions, update_devices,
-                                        update_sessions)
+                                        update_sessions, plexserver)
                 plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
@@ -196,7 +196,7 @@ def setup_plexserver(
                         and machine_identifier is not None):
                     new_client = PlexClient(config, None, session,
                                             plex_sessions, update_devices,
-                                            update_sessions)
+                                            update_sessions, plexserver)
                     plex_clients[machine_identifier] = new_client
                     new_plex_clients.append(new_client)
                 else:
@@ -276,9 +276,10 @@ class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
     def __init__(self, config, device, session, plex_sessions,
-                 update_devices, update_sessions):
+                 update_devices, update_sessions, plex_server):
         """Initialize the Plex device."""
         self._app_name = ''
+        self._server = plex_server
         self._device = None
         self._device_protocol_capabilities = None
         self._is_player_active = False
@@ -458,13 +459,13 @@ class PlexClient(MediaPlayerDevice):
             thumb_url = self._session.thumbUrl
             if (self.media_content_type is MEDIA_TYPE_TVSHOW
                     and not self.config.get(CONF_USE_EPISODE_ART)):
-                thumb_url = self._session._server.url(
+                thumb_url = self._server.url(
                     self._session.grandparentThumb)
 
             if thumb_url is None:
                 _LOGGER.debug("Using media art because media thumb "
                               "was not found: %s", self.entity_id)
-                thumb_url = self._session._server.url(self._session.art)
+                thumb_url = self._server.url(self._session.art)
 
             self._media_image_url = thumb_url
 
@@ -648,16 +649,16 @@ class PlexClient(MediaPlayerDevice):
 
         # if this device's machineIdentifier matches an active client
         # with a loopback address, the device must be local or casting
-        for client in self.device._server.clients():
-            if ("127.0.0.1" in client._baseurl and
+        for client in self._server.clients():
+            if ("127.0.0.1" in client.url("/") and
                     client.machineIdentifier == self.device.machineIdentifier):
                 # point controls to server since that's where the
                 # playback is occurring
                 _LOGGER.debug(
                     "Local client detected, redirecting controls to "
                     "Plex server: %s", self.entity_id)
-                server_url = self.device._server._baseurl
-                client_url = self.device._baseurl
+                server_url = self._server.url("/")
+                client_url = self.device.url("/")
                 self.device._baseurl = "{}://{}:{}".format(
                     urlparse(client_url).scheme,
                     urlparse(server_url).hostname,
