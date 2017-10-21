@@ -1,16 +1,15 @@
 """
-Support for monitoring the state of Vultr subscriptions (VPS).
+Support for interacting with Vultr subscriptions.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.vultr/
+https://home-assistant.io/components/switch.vultr/
 """
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.vultr import (
     CONF_SUBS, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB, ATTR_CREATED_AT,
     ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
@@ -19,7 +18,7 @@ from homeassistant.components.vultr import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Vultr Server'
+DEFAULT_NAME = 'Vultr'
 DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -28,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Vultr subscription (server) sensor."""
+    """Set up the Vultr subscription switch."""
     vultr = hass.data.get(DATA_VULTR)
     if not vultr:
         return False
@@ -36,10 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     subscriptions = config.get(CONF_SUBS)
 
     dev = []
-
     for subscription in subscriptions:
+        # Check subscription is valid
         if subscription in vultr.data:
-            dev.append(VultrBinarySensor(vultr, subscription))
+            dev.append(VultrSwitch(vultr, subscription))
         else:
             _LOGGER.error(
                 "Subscription %s not found. Perhaps API key issue?",
@@ -52,29 +51,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev, True)
 
 
-class VultrBinarySensor(BinarySensorDevice):
-    """Representation of a Vultr subscription sensor."""
+class VultrSwitch(SwitchDevice):
+    """Representation of a Vultr subsciption switch."""
 
     def __init__(self, vultr, subscription):
-        """Initialize a new Vultr sensor."""
+        """Initialize a new Vultr switch."""
         self._vultr = vultr
         self._subscription = subscription
-        self.data = self._vultr.data.get(self._subscription)
+        self.data = None
+        self._state = None
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the switch."""
         return self.data['label']
+
+    @property
+    def is_on(self):
+        """Return true if switch is on."""
+        return self.data['power_status'] == 'running'
 
     @property
     def icon(self):
         """Return the icon of this server."""
         return 'mdi:server' if self.is_on else 'mdi:server-off'
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self.data['power_status'] == 'running'
 
     @property
     def device_state_attributes(self):
@@ -95,7 +95,17 @@ class VultrBinarySensor(BinarySensorDevice):
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
 
+    def turn_on(self, **kwargs):
+        """Boot-up the subscription."""
+        if self.data['power_status'] != 'running':
+            self._vultr.start(self._subscription)
+
+    def turn_off(self, **kwargs):
+        """Halt the subscription."""
+        if self.data['power_status'] == 'running':
+            self._vultr.halt(self._subscription)
+
     def update(self):
-        """Update state of sensor."""
+        """Get the latest data from the device and update the data."""
         self._vultr.update()
-        self.data = self._vultr.data[self._subscription]
+        self.data = self._vultr.data.get(self._subscription)

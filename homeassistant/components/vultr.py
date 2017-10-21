@@ -54,12 +54,12 @@ def setup(hass, config):
 
     vultr = Vultr(api_key)
 
-    if not vultr.api.account_info():
+    try:
+        vultr.update()
+    except RuntimeError:
         _LOGGER.error("No Vultr account found for the given API Key")
         return False
 
-    # Get init data dump
-    vultr.update()
     hass.data[DATA_VULTR] = vultr
 
     return True
@@ -73,10 +73,24 @@ class Vultr(object):
         from vultr import Vultr as VultrAPI
 
         self._api_key = api_key
-        self.data = {}
+        self.data = None
         self.api = VultrAPI(self._api_key)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Use the data from Vultr API."""
         self.data = self.api.server_list()
+
+    def _force_update(self):
+        """Use the data from Vultr API."""
+        self.data = self.api.server_list()
+
+    def halt(self, subscription):
+        """Halt a subscription (hard power off)."""
+        self.api.server_halt(subscription)
+        self._force_update()
+
+    def start(self, subscription):
+        """Start a subscription."""
+        self.api.server_start(subscription)
+        self._force_update()
