@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.trend/
 import asyncio
 from collections import deque
 import logging
+import math
 from util import utcnow
 
 import voluptuous as vol
@@ -22,7 +23,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 
 REQUIREMENTS = ['numpy==1.13.3']
 
@@ -105,25 +106,7 @@ class SensorTrend(BinarySensorDevice):
         self._min_gradient = min_gradient
         self._gradient = None
         self._state = None
-
         self.samples = deque(maxlen = max_samples)
-
-        @callback
-        def trend_sensor_state_listener(entity, old_state, new_state):
-            """Handle the target device state changes."""
-            try:
-                if self._attribute:
-                    state = new_state.attributes.get(self._attribute)
-                else:
-                    state = new_state.state
-                if state != STATE_UNKNOWN:
-                    sample = (utcnow.timestamp(), float(state))
-                    self.samples.append(sample)
-                    hass.async_add_job(self.async_update_ha_state(True))
-            except (ValueError, TypeError) as ex:
-                _LOGGER.error(ex)
-
-        track_state_change(hass, entity_id, trend_sensor_state_listener)
 
     @property
     def name(self):
@@ -159,11 +142,29 @@ class SensorTrend(BinarySensorDevice):
         return False
 
     @asyncio.coroutine
+    def async_added_to_hass(self):
+        @callback
+        def trend_sensor_state_listener(entity, old_state, new_state):
+            """Handle the target device state changes."""
+            try:
+                if self._attribute:
+                    state = new_state.attributes.get(self._attribute)
+                else:
+                    state = new_state.state
+                if state != STATE_UNKNOWN:
+                    sample = (utcnow().timestamp(), float(state))
+                    self.samples.append(sample)
+                    self.async_schedule_update_ha_state(True)
+            except (ValueError, TypeError) as ex:
+                _LOGGER.error(ex)
+
+        async_track_state_change(
+            self.hass, self._entity_id,
+            trend_sensor_state_listener)
+
+    @asyncio.coroutine
     def async_update(self):
         """Get the latest data and update the states."""
-        import math
-        import numpy as np
-
         # Remove outdated samples
         if self._sample_duration > 0:
             cutoff = utcnow().timestamp() - self._sample_duration
@@ -174,10 +175,7 @@ class SensorTrend(BinarySensorDevice):
             return
 
         # Calculate gradient of linear trend
-        timestamps = np.array([t for t, _ in self.samples])
-        values = np.array([s for _, s in self.samples])
-        coeffs = np.polyfit(timestamps, values, 1)
-        self._gradient = coeffs[0]
+        yield from self.hass.async_add_job(self.__calculate_gradient)
 
         # Update state
         self._state = (
@@ -187,3 +185,11 @@ class SensorTrend(BinarySensorDevice):
 
         if self._invert:
             self._state = not self._state
+
+    def __calculate_gradient(self):
+        """Compute the linear trend gradient of the current samples."""
+        import numpy as np
+        timestamps = np.array([t for t, _ in self.samples])
+        values = np.array([s for _, s in self.samples])
+        coeffs = np.polyfit(timestamps, values, 1)
+        self._gradient = coeffs[0]
