@@ -124,7 +124,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self.schedule_update_ha_state()
 
     def media_play(self):
-        """Play media media player."""
+        """Play media player."""
         self._state = self._player.play()
         self.schedule_update_ha_state()
 

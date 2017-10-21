@@ -125,7 +125,14 @@ class OpenWeatherMapSensor(Entity):
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
-        self.owa_client.update()
+        from pyowm.exceptions.api_call_error import APICallError
+
+        try:
+            self.owa_client.update()
+        except APICallError:
+            _LOGGER.error("Exception when calling OWM web API to update data")
+            return
+
         data = self.owa_client.data
         fc_data = self.owa_client.fc_data
 
@@ -185,10 +192,15 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OpenWeatherMap."""
+        from pyowm.exceptions.api_call_error import APICallError
+
         try:
             obs = self.owm.weather_at_coords(self.latitude, self.longitude)
-        except TypeError:
+        except (APICallError, TypeError):
+            _LOGGER.error("Exception when calling OWM web API "
+                          "to get weather at coords")
             obs = None
+
         if obs is None:
             _LOGGER.warning("Failed to fetch data")
             return
@@ -200,5 +212,5 @@ class WeatherData(object):
                 obs = self.owm.three_hours_forecast_at_coords(
                     self.latitude, self.longitude)
                 self.fc_data = obs.get_forecast()
-            except TypeError:
+            except (ConnectionResetError, TypeError):
                 _LOGGER.warning("Failed to fetch forecast")

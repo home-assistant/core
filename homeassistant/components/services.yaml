@@ -1,4 +1,5 @@
 
+
 foursquare:
   checkin:
     description: Check a user into a Foursquare venue
@@ -542,41 +543,30 @@ input_boolean:
         description: Entity id of the input boolean to turn on
         example: 'input_boolean.notify_alerts'
 
-wink:
-  pair_new_device:
-    description: Pair a new device to a Wink Hub.
-
-    fields:
-      hub_name:
-        description: The name of the hub to pair a new device to.
-        example: 'My hub'
-      pairing_mode:
-        description: One of ["zigbee", "zwave", "zwave_exclusion", "zwave_network_rediscovery", "lutron", "bluetooth", "kidde"]
-        example: 'zigbee'
-      kidde_radio_code:
-        description: A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8
-        example: '10101010'
-
-  rename_wink_device:
-    description: Rename the provided device.
-
+homeassistant:
+  check_config:
+    description: Check the Home Assistant configuration files for errors. Errors will be displayed in the Home Assistant log.
+  reload_core_config:
+    description: Reload the core configuration.
+  restart:
+    description: Restart the Home Assistant service. It is normal to get a "Failed to call service homeassistant/restart" message.
+  stop:
+    description: Stop the Home Assistant service. It is normal to get a "Failed to call service homeassistant/stop" message.
+  toggle:
+    description: Generic service to toggle devices on/off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
     fields:
       entity_id:
-        description: The entity_id of the device to rename.
-        example: binary_sensor.front_door_opened
-      name:
-        description: The name to change it to.
-        example: back_door
-
-  delete_wink_device:
-    description: Remove/unpair device from Wink.
-
+        description: The entity_id of the device to toggle on/off
+        example: light.living_room
+  turn_on:
+    description: Generic service to turn devices on under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
     fields:
       entity_id:
-        description: The entity_id of the device to delete.
-
-  pull_newly_added_devices_from_wink:
-    description: Pull newly pair devices from Wink.
-
-  refresh_state_from_wink:
-    description: Pull the latest states for every device.
+        description: The entity_id of the device to turn on
+        example: light.living_room
+  turn_off:
+    description: Generic service to turn devices off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
+    fields:
+      entity_id:
+        description: The entity_id of the device to turn off
+        example: light.living_room
