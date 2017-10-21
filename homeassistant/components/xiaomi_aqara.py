@@ -13,6 +13,7 @@ REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
 ATTR_RINGTONE_VOL = 'ringtone_vol'
+ATTR_DEVICE_ID = 'device_id'
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
@@ -162,11 +163,33 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    def remove_device_service(call):
+        """Service to remove a sub-device from the gateway."""
+
+        # FIXME: Validate input by a proper schema (device_id length & hex)
+        device_id = call.data.get(ATTR_DEVICE_ID)
+        gw_sid = call.data.get(ATTR_GW_MAC)
+        if device_id is None or gw_sid is None:
+            _LOGGER.error("A mandatory parameter is not specified.")
+            return
+
+        remove_device = {'remove_device': device_id}
+        gw_sid = gw_sid.replace(":", "").lower()
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+            if gateway.sid == gw_sid:
+                gateway.write_to_hub(gateway.sid, **remove_device)
+                break
+        else:
+            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+
     hass.services.async_register(DOMAIN, 'play_ringtone',
                                  play_ringtone_service,
                                  description=None, schema=None)
     hass.services.async_register(DOMAIN, 'stop_ringtone',
                                  stop_ringtone_service,
+                                 description=None, schema=None)
+    hass.services.async_register(DOMAIN, 'remove_device',
+                                 remove_device_service,
                                  description=None, schema=None)
     return True
 
