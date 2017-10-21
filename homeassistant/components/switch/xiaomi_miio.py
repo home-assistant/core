@@ -197,8 +197,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     """Representation of a Xiaomi Power Strip."""
 
-    # TODO: Add support for set_power_mode: normal/eco
-
     def __init__(self, name, plug, device_info):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, device_info)
