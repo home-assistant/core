@@ -174,9 +174,9 @@ class FluxSwitch(SwitchDevice):
 
         self.light_unsub_tracker = async_track_state_change(self.hass, self._lights, self.handle_light_on, 'off', 'on')
 
-    def handle_light_on(self, entity_id, old_state, new_state):
-        _LOGGER.info("Light %s turned on, updating lights", entity_id)
-        self.flux_update()
+    def handle_light_on(self, light, _old_state, _new_state):
+        _LOGGER.info("Light %s turned on, updating it", light)
+        self.flux_update(lights=[light])
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
@@ -190,8 +190,12 @@ class FluxSwitch(SwitchDevice):
 
         self.schedule_update_ha_state()
 
-    def flux_update(self, now=None):
+    def flux_update(self, now=None, lights=None):
         """Update all the lights using flux."""
+        if lights is None:
+            lights = self._lights
+        _LOGGER.info("Updating lights: %s", lights)
+
         if now is None:
             now = dt_now()
 
@@ -254,21 +258,21 @@ class FluxSwitch(SwitchDevice):
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:
-            set_lights_xy(self.hass, self._lights, x_val,
+            set_lights_xy(self.hass, lights, x_val,
                           y_val, brightness, self._transition)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
-            set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            set_lights_rgb(self.hass, lights, rgb, self._transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            set_lights_temp(self.hass, self._lights, mired, brightness,
+            set_lights_temp(self.hass, lights, mired, brightness,
                             self._transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
