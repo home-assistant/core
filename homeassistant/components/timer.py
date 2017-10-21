@@ -150,14 +150,14 @@ def async_pause(hass, entity_id):
 
 
 @bind_hass
-def cancel(hass, entity_id, duration):
+def cancel(hass, entity_id):
     """Cancel a timer."""
     hass.add_job(async_cancel, hass, entity_id)
 
 
 @callback
 @bind_hass
-def async_cancel(hass, entity_id, duration):
+def async_cancel(hass, entity_id):
     """Cancel a timer."""
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
