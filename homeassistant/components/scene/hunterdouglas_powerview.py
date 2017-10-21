@@ -42,7 +42,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # from aiopvapi.hub import Hub
     from aiopvapi.scenes import Scenes
     from aiopvapi.rooms import Rooms
-    from aiopvapi.resources.scene import Scene
+    from aiopvapi.resources.scene import Scene as PvScene
 
     hub_address = config.get(HUB_ADDRESS)
     websession = async_get_clientsession(hass)
@@ -54,11 +54,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     if not _scenes or not _rooms:
         _LOGGER.error(
-            "Unable to initialize PowerView hub: %s" % hub_address)
+            "Unable to initialize PowerView hub: %s", hub_address)
         return
     pvscenes = (PowerViewScene(hass,
-                               Scene(_raw_scene, hub_address, hass.loop,
-                                     websession), _rooms)
+                               PvScene(_raw_scene, hub_address, hass.loop,
+                                       websession), _rooms)
                 for _raw_scene in _scenes[SCENE_DATA])
     async_add_devices(pvscenes)
 
