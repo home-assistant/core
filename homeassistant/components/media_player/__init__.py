@@ -406,16 +406,9 @@ def async_setup(hass, config):
         update_tasks = []
         for player in target_players:
             yield from getattr(player, method['method'])(**params)
-
-        for player in target_players:
             if not player.should_poll:
                 continue
-
-            update_coro = player.async_update_ha_state(True)
-            if hasattr(player, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

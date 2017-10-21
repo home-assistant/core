@@ -36,6 +36,9 @@ aiohttp_cors==0.5.3
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
+# homeassistant.components.device_tracker.upc_connect
+defusedxml==0.5.0
+
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.11
 
@@ -56,7 +59,7 @@ fuzzywuzzy==0.15.1
 gTTS-token==1.1.1
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.7
+ha-ffmpeg==1.9
 
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
@@ -83,7 +86,7 @@ mficlient==0.3.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.3.0
+paho-mqtt==1.3.1
 
 # homeassistant.components.device_tracker.aruba
 # homeassistant.components.device_tracker.asuswrt
@@ -130,7 +133,7 @@ rflink==0.0.34
 ring_doorbell==0.1.4
 
 # homeassistant.components.media_player.yamaha
-rxv==0.4.0
+rxv==0.5.1
 
 # homeassistant.components.sleepiq
 sleepyq==0.6
@@ -149,7 +152,7 @@ statsd==3.2.1
 uvcclient==0.10.1
 
 # homeassistant.components.cloud
-warrant==0.2.0
+warrant==0.5.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0

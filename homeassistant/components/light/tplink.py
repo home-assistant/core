@@ -6,6 +6,8 @@ https://home-assistant.io/components/light.tplink/
 """
 import logging
 import colorsys
+import time
+
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
@@ -17,11 +19,13 @@ from homeassistant.util.color import (
 
 from typing import Tuple
 
-REQUIREMENTS = ['pyHS100==0.2.4.2']
+REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_TPLINK = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
+ATTR_CURRENT_CONSUMPTION = 'current_consumption'
+ATTR_DAILY_CONSUMPTION = 'daily_consumption'
+ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -64,23 +68,25 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: 'SmartBulb', name):
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-
-        # Use the name set on the device if not set
-        if name is None:
-            self._name = self.smartbulb.alias
-        else:
+        self._name = None
+        if name is not None:
             self._name = name
-
         self._state = None
         self._color_temp = None
         self._brightness = None
         self._rgb = None
-        _LOGGER.debug("Setting up TP-Link Smart Bulb")
+        self._supported_features = 0
+        self._emeter_params = {}
 
     @property
     def name(self):
         """Return the name of the Smart Bulb, if any."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._emeter_params
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -119,30 +125,57 @@ class TPLinkSmartBulb(Light):
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return True if device is on."""
         return self._state
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        from pyHS100 import SmartPlugException
+        from pyHS100 import SmartDeviceException
         try:
+            if self._supported_features == 0:
+                self.get_features()
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-            self._brightness = brightness_from_percentage(
-                self.smartbulb.brightness)
-            if self.smartbulb.is_color:
+            if self._name is None:
+                self._name = self.smartbulb.alias
+            if self._supported_features & SUPPORT_BRIGHTNESS:
+                self._brightness = brightness_from_percentage(
+                    self.smartbulb.brightness)
+            if self._supported_features & SUPPORT_COLOR_TEMP:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+            if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
-        except (SmartPlugException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self.name, ex)
+            if self.smartbulb.has_emeter:
+                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                    = "%.1f W" % self.smartbulb.current_consumption()
+                daily_statistics = self.smartbulb.get_emeter_daily()
+                monthly_statistics = self.smartbulb.get_emeter_monthly()
+                try:
+                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                        = "%.2f kW" % daily_statistics[int(
+                            time.strftime("%d"))]
+                    self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
+                        = "%.2f kW" % monthly_statistics[int(
+                            time.strftime("%m"))]
+                except KeyError:
+                    # device returned no daily/monthly history
+                    pass
+        except (SmartDeviceException, OSError) as ex:
+            _LOGGER.warning('Could not read state for %s: %s', self._name, ex)
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_TPLINK
+        return self._supported_features
+
+    def get_features(self):
+        """Determine all supported features in one go."""
+        if self.smartbulb.is_dimmable:
+            self._supported_features += SUPPORT_BRIGHTNESS
+        if self.smartbulb.is_variable_color_temp:
+            self._supported_features += SUPPORT_COLOR_TEMP
         if self.smartbulb.is_color:
-            supported_features += SUPPORT_RGB_COLOR
-        return supported_features
+            self._supported_features += SUPPORT_RGB_COLOR

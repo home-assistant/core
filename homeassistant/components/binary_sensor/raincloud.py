@@ -59,6 +59,8 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
         self._state = getattr(self.data, self._sensor_type)
+        if self._sensor_type == 'status':
+            self._state = self._state == 'Online'
 
     @property
     def icon(self):
