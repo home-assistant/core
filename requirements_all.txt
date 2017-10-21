@@ -912,7 +912,7 @@ roombapy==1.3.1
 # rpi-rf==0.9.6
 
 # homeassistant.components.media_player.russound_rnet
-russound==0.1.7
+russound==0.1.9
 
 # homeassistant.components.media_player.russound_rio
 russound_rio==0.1.4
