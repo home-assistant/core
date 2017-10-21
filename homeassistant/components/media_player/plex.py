@@ -8,7 +8,6 @@ import json
 import logging
 import os
 from datetime import timedelta
-from urllib.parse import urlparse
 
 import requests
 import voluptuous as vol
@@ -352,7 +351,7 @@ class PlexClient(MediaPlayerDevice):
             self._session = session
         if device:
             self._device = device
-            if ("127.0.0.1" in self._device.url("/")):
+            if "127.0.0.1" in self._device.url("/"):
                 self._device.proxyThroughServer()
             self._session = None
             self._machine_identifier = self._device.machineIdentifier
