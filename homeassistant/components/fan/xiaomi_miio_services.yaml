@@ -1,5 +1,5 @@
 
-set_buzzer_on:
+xiaomi_miio_set_buzzer_on:
   description: Turn the buzzer on.
 
   fields:
@@ -7,7 +7,7 @@ set_buzzer_on:
       description: Name of the air purifier entity.
       example: 'fan.xiaomi_air_purifier'
 
-set_buzzer_off:
+xiaomi_miio_set_buzzer_off:
   description: Turn the buzzer off.
 
   fields:
@@ -15,7 +15,7 @@ set_buzzer_off:
       description: Name of the air purifier entity.
       example: 'fan.xiaomi_air_purifier'
 
-set_led_on:
+xiaomi_miio_set_led_on:
   description: Turn the led on.
 
   fields:
@@ -23,7 +23,7 @@ set_led_on:
       description: Name of the air purifier entity.
       example: 'fan.xiaomi_air_purifier'
 
-set_led_off:
+xiaomi_miio_set_led_off:
   description: Turn the led off.
 
   fields:
@@ -31,7 +31,7 @@ set_led_off:
       description: Name of the air purifier entity.
       example: 'fan.xiaomi_air_purifier'
 
-set_favorite_level:
+xiaomi_miio_set_favorite_level:
   description: Set the favorite level.
 
   fields:
@@ -43,7 +43,7 @@ set_favorite_level:
       description: Level, between 0 and 17.
       example: '1'
 
-set_led_brightness:
+xiaomi_miio_set_led_brightness:
   description: Set the led brightness.
 
   fields:

@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED, )
+                                          SUPPORT_SET_SPEED, DOMAIN)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Air Purifier'
 PLATFORM = 'xiaomi_miio'
-DOMAIN = 'airpurifier'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -52,12 +51,12 @@ ATTR_LEVEL = 'level'
 
 SUCCESS = ['ok']
 
-SERVICE_SET_BUZZER_ON = 'set_buzzer_on'
-SERVICE_SET_BUZZER_OFF = 'set_buzzer_off'
-SERVICE_SET_LED_ON = 'set_led_on'
-SERVICE_SET_LED_OFF = 'set_led_off'
-SERVICE_SET_FAVORITE_LEVEL = 'set_favorite_level'
-SERVICE_SET_LED_BRIGHTNESS = 'set_led_brightness'
+SERVICE_SET_BUZZER_ON = 'xiaomi_miio_set_buzzer_on'
+SERVICE_SET_BUZZER_OFF = 'xiaomi_miio_set_buzzer_off'
+SERVICE_SET_LED_ON = 'xiaomi_miio_set_led_on'
+SERVICE_SET_LED_OFF = 'xiaomi_miio_set_led_off'
+SERVICE_SET_FAVORITE_LEVEL = 'xiaomi_miio_set_favorite_level'
+SERVICE_SET_LED_BRIGHTNESS = 'xiaomi_miio_set_led_brightness'
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
