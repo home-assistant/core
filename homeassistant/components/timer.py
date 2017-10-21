@@ -20,10 +20,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import Throttle
 
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
+
+UPDATE_INTERVAL = timedelta(minutes=1)
 
 EVENT_TIMER_STARTED = 'timer.started'
 EVENT_TIMER_PAUSED = 'timer.paused'
@@ -100,6 +103,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+# pylint: disable=redefined-outer-name
 @bind_hass
 def start(hass, entity_id,
           weeks=DEFAULT_DURATION, days=DEFAULT_DURATION,
@@ -274,7 +278,7 @@ class Timer(Entity):
     @property
     def should_poll(self):
         """If entity should be polled."""
-        return False
+        return True
 
     @property
     def name(self):
@@ -302,6 +306,12 @@ class Timer(Entity):
             ATTR_END: end,
             ATTR_REMAINING: self._remaining.__str__()
         }
+
+    @Throttle(UPDATE_INTERVAL)
+    def update(self):
+        """Calculate remaining time."""
+        if self._state == STATUS_ACTIVE:
+            self._remaining = self._end - dt_util.utcnow()
 
     @asyncio.coroutine
     def async_added_to_hass(self):
