@@ -163,6 +163,23 @@ def setup(hass, config):
         else:
             _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
 
+    def add_device_service(call):
+        """Service to add a new sub-device within the next 30 seconds."""
+        gw_sid = call.data.get(ATTR_GW_MAC)
+        if gw_sid is None:
+            _LOGGER.error("Mandatory parameter (%s) is not specified.",
+                          ATTR_GW_MAC)
+            return
+
+        gw_sid = gw_sid.replace(":", "").lower()
+        for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+            if gateway.sid == gw_sid:
+                join_permission = {'join_permission': 'yes'}
+                gateway.write_to_hub(gateway.sid, **join_permission)
+                break
+        else:
+            _LOGGER.error('Unknown gateway sid: %s was specified.', gw_sid)
+
     def remove_device_service(call):
         """Service to remove a sub-device from the gateway."""
 
@@ -190,6 +207,9 @@ def setup(hass, config):
                                  description=None, schema=None)
     hass.services.async_register(DOMAIN, 'remove_device',
                                  remove_device_service,
+                                 description=None, schema=None)
+    hass.services.async_register(DOMAIN, 'add_device',
+                                 add_device_service,
                                  description=None, schema=None)
     return True
 
