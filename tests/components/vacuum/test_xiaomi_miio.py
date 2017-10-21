@@ -51,7 +51,7 @@ def mock_mirobo_is_off():
     mock_vacuum.Vacuum().status().state = 'Test Xiaomi Charging'
 
     with mock.patch.dict('sys.modules', {
-        'mirobo': mock_vacuum,
+        'miio': mock_vacuum,
     }):
         yield mock_vacuum
 
@@ -82,7 +82,7 @@ def mock_mirobo_is_on():
     mock_vacuum.Vacuum().status().state = 'Test Xiaomi Cleaning'
 
     with mock.patch.dict('sys.modules', {
-        'mirobo': mock_vacuum,
+        'miio': mock_vacuum,
     }):
         yield mock_vacuum
 
@@ -93,7 +93,7 @@ def mock_mirobo_errors():
     mock_vacuum = mock.MagicMock()
     mock_vacuum.Vacuum().status.side_effect = OSError()
     with mock.patch.dict('sys.modules', {
-        'mirobo': mock_vacuum,
+        'miio': mock_vacuum,
     }):
         yield mock_vacuum
 

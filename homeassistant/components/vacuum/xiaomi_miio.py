@@ -89,7 +89,7 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from mirobo import Vacuum
+    from miio import Vacuum
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -249,11 +249,11 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from mirobo import DeviceException, VacuumException
+        from miio import DeviceException
         try:
             yield from self.hass.async_add_job(partial(func, *args, **kwargs))
             return True
-        except (DeviceException, VacuumException) as exc:
+        except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
 
