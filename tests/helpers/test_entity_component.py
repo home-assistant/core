@@ -128,7 +128,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert poll_ent.async_update.called
 
     def test_polling_updates_entities_with_exception(self):
-        """Test the updated entities that not brake with a exception."""
+        """Test the updated entities that not break with a exception."""
         component = EntityComponent(
             _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
@@ -510,6 +510,26 @@ def test_extract_from_service_available_device(hass):
     assert ['test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
                component.async_extract_from_service(call_2))
+
+
+@asyncio.coroutine
+def test_updated_state_used_for_entity_id(hass):
+    """Test that first update results used for entity ID generation."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    class EntityTestNameFetcher(EntityTest):
+        """Mock entity that fetches a friendly name."""
+
+        @asyncio.coroutine
+        def async_update(self):
+            """Mock update that assigns a name."""
+            self._values['name'] = "Living Room"
+
+    yield from component.async_add_entities([EntityTestNameFetcher()], True)
+
+    entity_ids = hass.states.async_entity_ids()
+    assert 1 == len(entity_ids)
+    assert entity_ids[0] == "test_domain.living_room"
 
 
 @asyncio.coroutine
