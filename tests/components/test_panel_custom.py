@@ -10,7 +10,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import panel_custom
 
-from tests.common import get_test_home_assistant, mock_coro, mock_component
+from tests.common import mock_coro, mock_component
 
 
 @pytest.fixture

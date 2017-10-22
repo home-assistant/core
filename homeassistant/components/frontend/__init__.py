@@ -206,7 +206,6 @@ class ExternalPanel(AbstractPanel):
                           self.component_name, self.path)
             hass.data[DATA_PANELS].pop(self.frontend_url_path)
 
-
         self.webcomponent_url = \
             URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
 

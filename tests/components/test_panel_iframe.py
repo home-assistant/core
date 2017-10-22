@@ -53,7 +53,9 @@ class TestPanelIframe(unittest.TestCase):
                 },
             })
 
-        assert self.hass.data[frontend.DATA_PANELS].get('router').as_dict() == {
+        panels = self.hass.data[frontend.DATA_PANELS]
+
+        assert panels.get('router').as_dict() == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
@@ -62,7 +64,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'router'
         }
 
-        assert self.hass.data[frontend.DATA_PANELS].get('weather').as_dict() == {
+        assert panels.get('weather').as_dict() == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',
