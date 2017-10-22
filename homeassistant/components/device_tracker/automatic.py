@@ -35,7 +35,7 @@ CONF_CURRENT_LOCATION = 'current_location'
 
 DEFAULT_TIMEOUT = 5
 
-DEFAULT_SCOPE = ['location', 'vehicle:profile', 'trip']
+DEFAULT_SCOPE = ['location', 'vehicle:profile', 'trip', 'vehicle:events']
 FULL_SCOPE = DEFAULT_SCOPE + ['current_location']
 
 ATTR_FUEL_LEVEL = 'fuel_level'
