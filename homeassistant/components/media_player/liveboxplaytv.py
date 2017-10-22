@@ -11,7 +11,6 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
@@ -44,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except IOError:
         _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
                       "Please check your configuration", host, port)
-    add_devices(livebox_devices, True)
+    async_add_devices(livebox_devices, True)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
