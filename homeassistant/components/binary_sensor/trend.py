@@ -187,6 +187,7 @@ class SensorTrend(BinarySensorDevice):
         if self._invert:
             self._state = not self._state
 
+    @asyncio.coroutine
     def __calculate_gradient(self):
         """Compute the linear trend gradient of the current samples."""
         import numpy as np
