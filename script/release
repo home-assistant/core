@@ -27,6 +27,4 @@ then
   exit 1
 fi
 
-script/build_frontend
-
-# python3 setup.py sdist bdist_wheel upload
+python3 setup.py sdist bdist_wheel upload
