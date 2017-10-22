@@ -210,6 +210,12 @@ class EntityComponent(object):
 
         entity.hass = self.hass
 
+        if update_before_add:
+            if hasattr(entity, 'async_update'):
+                yield from entity.async_update()
+            else:
+                yield from self.hass.async_add_job(entity.update)
+
         if getattr(entity, 'entity_id', None) is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
 
@@ -234,7 +240,7 @@ class EntityComponent(object):
         if hasattr(entity, 'async_added_to_hass'):
             yield from entity.async_added_to_hass()
 
-        yield from entity.async_update_ha_state(update_before_add)
+        yield from entity.async_update_ha_state()
 
         return True
 
