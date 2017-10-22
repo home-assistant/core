@@ -296,9 +296,9 @@ class TradfriLight(Light):
         self._features = SUPPORTED_FEATURES
 
         if self._light.device_info.manufacturer == IKEA:
-            if "WS" in self._light.device_info.model_number:
+            if self._light_control.can_set_kelvin:
                 self._features |= SUPPORT_COLOR_TEMP
-            if "CWS" in self._light.device_info.model_number:
+            if self._light_control.can_set_color:
                 self._features |= SUPPORT_RGB_COLOR
         else:
             if self._light_data.hex_color is not None:
