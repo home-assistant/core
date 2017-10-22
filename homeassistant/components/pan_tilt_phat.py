@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/pan_tilt_phat
 """
 
-from datetime import timedelta
+
 import logging
 
 from homeassistant.helpers.entity import Entity
@@ -13,7 +13,6 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['pantilthat==0.0.4']
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'pan_tilt_phat'
-SCAN_INTERVAL = timedelta(seconds=1)
 
 
 def setup(hass, config):
@@ -59,7 +58,6 @@ class PanTiltPhat(Entity):
     def __init__(self, pantilthat):
         """Initialise the stage."""
         self._name = DOMAIN
-        self._state = None
         self._pantilthat = pantilthat
         self._pan = self._pantilthat.get_pan()
         self._tilt = self._pantilthat.get_tilt()
@@ -70,11 +68,6 @@ class PanTiltPhat(Entity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self.ICON
@@ -83,4 +76,3 @@ class PanTiltPhat(Entity):
         """Get the latest data from the stage."""
         self._pan = self._pantilthat.get_pan()
         self._tilt = self._pantilthat.get_tilt()
-        self._state = "Pan:{}".format(self._pan)
