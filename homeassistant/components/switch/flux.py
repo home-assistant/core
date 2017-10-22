@@ -146,7 +146,6 @@ class FluxSwitch(SwitchDevice):
         self._mode = mode
         self._interval = interval
         self._transition = transition
-        self.unsub_tracker = None
         self.time_unsub_tracker = None
         self.light_unsub_tracker = None
 
