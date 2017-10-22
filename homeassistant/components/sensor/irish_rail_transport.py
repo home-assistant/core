@@ -59,10 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     irish_rail = IrishRailRTPI()
-    data = IrishRailTransportData(irish_rail, station, direction,
-                                  destination, stops_at)
-    add_devices([IrishRailTransportSensor(data, station, direction,
-                                          destination, stops_at, name), True])
+    data = IrishRailTransportData(
+        irish_rail, station, direction, destination, stops_at)
+    add_devices([IrishRailTransportSensor(
+        data, station, direction, destination, stops_at, name)], True)
 
 
 class IrishRailTransportSensor(Entity):
@@ -78,7 +78,6 @@ class IrishRailTransportSensor(Entity):
         self._name = name
         self._state = None
         self._times = []
-        self.update()
 
     @property
     def name(self):
