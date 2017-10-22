@@ -16,7 +16,6 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
-from homeassistant.components.http.const import KEY_DEVELOPMENT
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
@@ -119,14 +118,14 @@ class AbstractPanel:
 
         panels[self.frontend_url_path] = self
 
-
     @callback
     def async_register_index_routes(self, router, index_view):
         """Register routes for panel to be served by index view."""
         router.add_route(
             'get', '/{}'.format(self.frontend_url_path), index_view.get)
         router.add_route(
-            'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path), index_view.get)
+            'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
+            index_view.get)
 
     def as_dict(self):
         """Panel as dictionary."""
@@ -250,7 +249,6 @@ def async_register_panel(hass, component_name, path, md5=None,
     yield from panel.async_register(hass)
 
 
-
 @bind_hass
 @callback
 def add_extra_html_url(hass, url):
@@ -300,10 +298,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def finalize_panel(panel):
-        """Finalizes a panel.
-
-        Returns a coroutine.
-        """
+        """Finalize setup of a panel."""
         yield from panel.async_finalize(hass, repo_path)
         panel.async_register_index_routes(hass.http.app.router, index_view)
 
