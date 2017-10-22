@@ -202,7 +202,12 @@ def determine_service(entity_id: str, command: str,
                 service_data['rgb_color'] = color.rgb_hex_to_rgb_list(hex)
                 return (SERVICE_TURN_ON, service_data)
 
-    if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
-                                            params.get('on') is True):
+    if command == COMMAND_ACTIVATESCENE:
         return (SERVICE_TURN_ON, service_data)
-    return (SERVICE_TURN_OFF, service_data)
+
+    if COMMAND_ONOFF == command:
+        if params.get('on') is True:
+            return (SERVICE_TURN_ON, service_data)
+        else:
+            return (SERVICE_TURN_OFF, service_data)
+    return (None, service_data)

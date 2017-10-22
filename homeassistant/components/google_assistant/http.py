@@ -125,8 +125,9 @@ class GoogleAssistantView(HomeAssistantView):
                 domain = eid.split('.')[0]
                 (service, service_data) = determine_service(
                     eid, execution.get('command'), execution.get('params'))
-                success = yield from hass.services.async_call(
-                    domain, service, service_data, blocking=True)
+                if service is not None:
+                    success = yield from hass.services.async_call(
+                        domain, service, service_data, blocking=True)
                 result = {"ids": [eid], "states": {}}
                 if success:
                     result['status'] = 'SUCCESS'
@@ -153,6 +154,7 @@ class GoogleAssistantView(HomeAssistantView):
             return self.json_message(
                 "too many inputs", status_code=HTTP_BAD_REQUEST)
 
+        _LOGGER.debug(data)
         request_id = data.get('requestId')  # type: str
         intent = inputs[0].get('intent')
         payload = inputs[0].get('payload')
