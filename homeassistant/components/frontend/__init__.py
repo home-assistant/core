@@ -6,7 +6,6 @@ import logging
 import os
 
 from aiohttp import web
-import hass_frontend
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -19,6 +18,7 @@ from homeassistant.components.http.auth import is_trusted_ip
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
+REQUIREMENTS = ['home-assistant-frontend==20171021.2']
 
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
@@ -161,6 +161,8 @@ class BuiltInPanel(AbstractPanel):
         panel_path = 'panels/ha-panel-{}.html'.format(self.component_name)
 
         if frontend_repository_path is None:
+            import hass_frontend
+
             self.webcomponent_url = \
                 '/static/panels/ha-panel-{}-{}.html'.format(
                     self.component_name,
@@ -267,6 +269,8 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    import hass_frontend
+
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -407,6 +411,8 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, extra=None):
         """Serve the index view."""
+        import hass_frontend
+
         hass = request.app['hass']
 
         if self.use_repo:

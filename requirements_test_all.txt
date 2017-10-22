@@ -70,6 +70,9 @@ hbmqtt==0.8
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
+# homeassistant.components.frontend
+home-assistant-frontend==20171021.2
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==4.1.1

@@ -11,7 +11,6 @@ async_timeout==2.0.0
 chardet==3.0.4
 astral==1.4
 certifi>=2017.4.17
-home-assistant-frontend==0.1
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
@@ -318,6 +317,9 @@ hipnotify==1.0.8
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
+
+# homeassistant.components.frontend
+home-assistant-frontend==20171021.2
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a

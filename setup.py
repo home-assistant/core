@@ -27,7 +27,6 @@ REQUIRES = [
     'chardet==3.0.4',
     'astral==1.4',
     'certifi>=2017.4.17',
-    'home-assistant-frontend==0.1',
 ]
 
 setup(
