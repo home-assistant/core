@@ -8,7 +8,6 @@ import asyncio
 from collections import deque
 import logging
 import math
-from util import utcnow
 
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.util import utcnow
 
 REQUIREMENTS = ['numpy==1.13.3']
 
