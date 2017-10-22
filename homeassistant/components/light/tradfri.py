@@ -162,14 +162,14 @@ class TradfriLight(Light):
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.max_kelvin
+            self._light_control.max_kelvin
         )
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return color_util.color_temperature_kelvin_to_mired(
-                self._light_control.min_kelvin
+            self._light_control.min_kelvin
         )
 
     @property
@@ -311,6 +311,6 @@ class TradfriLight(Light):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
         self._rgb_color = color_util.rgb_hex_to_rgb_list(
-                self._light_data.hex_color_inferred
+            self._light_data.hex_color_inferred
         )
         self.hass.async_add_job(self.async_update_ha_state())
