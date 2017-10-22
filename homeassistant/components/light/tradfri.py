@@ -219,9 +219,9 @@ class TradfriLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._light_data.kelvin_color_inferred
-        )
+        kelvin_color = self._light_data.kelvin_color_inferred
+        if kelvin_color is not None:
+            return color_util.color_temperature_kelvin_to_mired(kelvin_color)
 
     @property
     def rgb_color(self):
