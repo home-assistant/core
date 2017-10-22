@@ -8,6 +8,7 @@ from aiohttp.web import Request, Response  # NOQA
 from typing import Dict, Tuple, Any  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA
 from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.util import color
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
@@ -19,7 +20,7 @@ from homeassistant.components import (
 )
 
 from .const import (
-    ATTR_GOOGLE_ASSISTANT_NAME,
+    ATTR_GOOGLE_ASSISTANT_NAME, COMMAND_COLOR,
     COMMAND_BRIGHTNESS, COMMAND_ONOFF, COMMAND_ACTIVATESCENE,
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE,
@@ -70,11 +71,25 @@ def entity_to_device(entity: Entity):
     device = {
         'id': entity.entity_id,
         'name': {},
+        'deviceInfo': {},
+        'attributes': {},
         'traits': [],
         'willReportState': False,
     }
     device['type'] = class_data[0]
     device['traits'].append(class_data[1])
+
+    if entity.attributes.get('manufacturer') is not None:
+        device['deviceInfo']['manufacturer'] = \
+            entity.attributes.get('manufacturer')
+
+    if entity.attributes.get('model_number') is not None:
+        device['deviceInfo']['model'] = \
+            entity.attributes.get('model_number')
+
+    if entity.attributes.get('firmware_version') is not None:
+        device['deviceInfo']['swVersion'] = \
+            entity.attributes.get('firmware_version')
 
     # handle custom names
     device['name']['name'] = \
@@ -93,8 +108,27 @@ def entity_to_device(entity: Entity):
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
+                _LOGGER.debug(trait)
                 device['traits'].append(trait)
 
+                # Actions require this attributes for a device
+                # supporting temperature
+                # For IKEA trådfri, these attributes only seem to
+                # be set only if the device is on?
+                if entity.domain == light.DOMAIN:
+                    if entity.attributes.get(
+                            light.ATTR_MAX_MIREDS) is not None:
+                        device['attributes']['temperatureMinK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                            entity.attributes.get(light.ATTR_MAX_MIREDS))))
+
+                    if entity.attributes.get(
+                            light.ATTR_MIN_MIREDS) is not None:
+                        device['attributes']['temperatureMaxK'] =  \
+                            int(round(color.color_temperature_mired_to_kelvin(
+                            entity.attributes.get(light.ATTR_MIN_MIREDS))))
+
+    _LOGGER.debug(device)
     return device
 
 
@@ -133,6 +167,7 @@ def determine_service(entity_id: str, command: str,
     Attempt to return a tuple of service and service_data based on the entity
     and action requested.
     """
+    _LOGGER.debug(params)
     domain = entity_id.split('.')[0]
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
     # special media_player handling
@@ -154,6 +189,18 @@ def determine_service(entity_id: str, command: str,
         brightness = params.get('brightness')
         service_data['brightness'] = int(brightness / 100 * 255)
         return (SERVICE_TURN_ON, service_data)
+
+    if command == COMMAND_COLOR:
+        color_data = params.get('color')
+        if color_data is not None:
+            if color_data.get('temperature', 0) > 0:
+                service_data['kelvin'] = color_data.get('temperature')
+                return (SERVICE_TURN_ON, service_data)
+            if color_data.get('spectrumRGB', 0) > 0:
+                # blue is 255 so pad up to 6
+                hex = ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
+                service_data['rgb_color'] = color.rgb_hex_to_rgb_list(hex)
+                return (SERVICE_TURN_ON, service_data)
 
     if command == COMMAND_ACTIVATESCENE or (COMMAND_ONOFF == command and
                                             params.get('on') is True):
