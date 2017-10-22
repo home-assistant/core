@@ -208,30 +208,6 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
         assert not ent.update.called
 
-    def test_adds_entities_with_update_befor_add_true_deadlock_protect(self):
-        """Test if call update before add to state machine.
-
-        It need to run update inside executor and never call
-        async_add_entities with True
-        """
-        call = []
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
-
-        @asyncio.coroutine
-        def async_add_entities_fake(entities, update_befor_add):
-            """Fake add_entities_call."""
-            call.append(update_befor_add)
-        component._platforms['core'].async_add_entities = \
-            async_add_entities_fake
-
-        ent = EntityTest()
-        ent.update = Mock(spec_set=True)
-        component.add_entities([ent], True)
-
-        assert ent.update.called
-        assert len(call) == 1
-        assert not call[0]
-
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -654,3 +630,24 @@ def test_pararell_updates_sync_platform(hass):
     handle = list(component._platforms.values())[-1]
 
     assert handle.parallel_updates is not None
+
+
+@asyncio.coroutine
+def test_raise_error_on_update(hass):
+    """Test the add entity if they raise an error on update."""
+    updates = []
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = EntityTest(name='test_1')
+    entity2 = EntityTest(name='test_2')
+
+    def _raise():
+        """Helper to raise a exception."""
+        raise AssertionError
+
+    entity1.update = _raise
+    entity2.update = lambda: updates.append(1)
+
+    yield from component.async_add_entities([entity1, entity2], True)
+
+    assert len(updates) == 1
+    assert 1 in updates

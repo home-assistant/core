@@ -374,7 +374,7 @@ class EntityPlatform(object):
         if update_before_add:
             self.component.logger.warning(
                 "Call 'add_entities' with update_before_add=True "
-                "only inside tests or you run into a deadlock!")
+                "only inside tests or you can run into a deadlock!")
 
         run_coroutine_threadsafe(
             self.async_add_entities(list(new_entities), update_before_add),
