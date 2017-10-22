@@ -1,6 +1,4 @@
 include README.rst
 include LICENSE.md
 graft homeassistant
-prune homeassistant/components/frontend/home-assistant-polymer
-graft homeassistant/components/frontend/home-assistant-polymer/final
 recursive-exclude * *.py[co]

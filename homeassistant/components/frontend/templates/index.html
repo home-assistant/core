@@ -10,9 +10,11 @@
           href='/static/icons/favicon-apple-180x180.png'>
     <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
     <link rel='preload' href='{{ core_url }}' as='script'/>
-    {% for panel in panels.values() -%}
-      <link rel='prefetch' href='{{ panel.url }}'>
-    {% endfor -%}
+    {% if not dev_mode %}
+      {% for panel in panels.values() -%}
+        <link rel='prefetch' href='{{ panel.webcomponent_url }}'>
+      {% endfor -%}
+    {% endif %}
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
     <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
