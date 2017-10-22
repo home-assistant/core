@@ -224,7 +224,9 @@ class TradfriLight(Light):
         if self._light_control.can_set_kelvin:
             kelvin_color = self._light_data.kelvin_color_inferred
             if kelvin_color is not None:
-                return color_util.color_temperature_kelvin_to_mired(kelvin_color)
+                return color_util.color_temperature_kelvin_to_mired(
+                    kelvin_color
+                )
 
     @property
     def rgb_color(self):
