@@ -181,7 +181,7 @@ class FluxSwitch(SwitchDevice):
     def handle_light_on(self, light, _old_state, _new_state):
         """Update a light's values when it turns on."""
         _LOGGER.info("Light %s turned on, updating it", light)
-        self.flux_update(lights=[light])
+        self.flux_update(lights=[light], transition=0)
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
@@ -195,14 +195,15 @@ class FluxSwitch(SwitchDevice):
 
         self.schedule_update_ha_state()
 
-    def flux_update(self, now=None, lights=None):
+    def flux_update(self, now=None, lights=None, transition=None):
         """Update all the lights using flux."""
-        if lights is None:
-            lights = self._lights
-        _LOGGER.info("Updating lights: %s", lights)
-
         if now is None:
             now = dt_now()
+        if lights is None:
+            lights = self._lights
+        if transition is None:
+            transition = self._transition
+        _LOGGER.info("Updating lights: %s", lights)
 
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
@@ -264,13 +265,13 @@ class FluxSwitch(SwitchDevice):
             brightness = None
         if self._mode == MODE_XY:
             set_lights_xy(self.hass, lights, x_val,
-                          y_val, brightness, self._transition)
+                          y_val, brightness, transition)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
-            set_lights_rgb(self.hass, lights, rgb, self._transition)
+            set_lights_rgb(self.hass, lights, rgb, transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
@@ -278,7 +279,7 @@ class FluxSwitch(SwitchDevice):
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
             set_lights_temp(self.hass, lights, mired, brightness,
-                            self._transition)
+                            transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)

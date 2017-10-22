@@ -909,3 +909,4 @@ class TestSwitchFlux(unittest.TestCase):
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
         assert light.ATTR_COLOR_TEMP in call.data
+        self.assertEqual(call.data[light.ATTR_TRANSITION], 0)
