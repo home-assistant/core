@@ -64,7 +64,7 @@ if [ "$INSTALL_SSOCR" == "yes" ]; then
 fi
 
 if [ "$INSTALL_GACTION" == "yes" ]; then
-  virtualization/Docker/scripts/gaction
+  virtualization/Docker/scripts/gactions
 fi
 
 # Remove packages
