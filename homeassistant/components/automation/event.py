@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'event',
     vol.Required(CONF_EVENT_TYPE): cv.string,
-    vol.Optional(CONF_EVENT_DATA, default={}): dict,
+    vol.Optional(CONF_EVENT_DATA): dict,
 })
 
 
@@ -31,7 +31,8 @@ def async_trigger(hass, config, action):
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = vol.Schema(
         config.get(CONF_EVENT_DATA),
-        extra=vol.ALLOW_EXTRA)
+        extra=vol.ALLOW_EXTRA) if CONF_EVENT_DATA in config else \
+            vol.Schema(dict)
 
     @callback
     def handle_event(event):
