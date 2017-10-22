@@ -704,3 +704,37 @@ class TestAutomationNumericState(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    def test_wait_template_with_trigger(self):
+        """Test using wait template with 'trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'above': 10,
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ states(trigger.entity_id) | int < 10 }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'to_state.state'))
+                        }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', '12')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', '8')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'numeric_state - test.entity - 12',
+            self.calls[0].data['some'])

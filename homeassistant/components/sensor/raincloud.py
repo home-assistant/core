@@ -13,7 +13,7 @@ from homeassistant.components.raincloud import (
     DATA_RAINCLOUD, ICON_MAP, RainCloudEntity, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['raincloud']
 
@@ -56,7 +56,7 @@ class RainCloudSensor(RainCloudEntity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating RainCloud sensor: %s", self._name)
         if self._sensor_type == 'battery':
-            self._state = self.data.battery.strip('%')
+            self._state = self.data.battery
         else:
             self._state = getattr(self.data, self._sensor_type)
 

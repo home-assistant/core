@@ -18,10 +18,10 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
-    STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
+    STATE_PAUSED, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['liveboxplaytv==1.4.9']
+REQUIREMENTS = ['liveboxplaytv==1.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._muted = False
         self._name = name
         self._current_source = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._channel_list = {}
         self._current_channel = None
         self._current_program = None
@@ -92,7 +92,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     self._client.get_current_channel_image(img_size=300)
                 self.refresh_channel_list()
         except requests.ConnectionError:
-            self._state = STATE_OFF
+            self._state = None
 
     @property
     def name(self):

@@ -269,7 +269,7 @@ def load_config(path):
     calendars = {}
     try:
         with open(path) as file:
-            data = yaml.load(file)
+            data = yaml.safe_load(file)
             for calendar in data:
                 try:
                     calendars.update({calendar[CONF_CAL_ID]:

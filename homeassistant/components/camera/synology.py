@@ -16,11 +16,11 @@ from homeassistant.const import (
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
-    async_create_clientsession,
-    async_aiohttp_proxy_web)
+    async_aiohttp_proxy_web,
+    async_get_clientsession)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['py-synology==0.1.1']
+REQUIREMENTS = ['py-synology==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,13 +58,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     cameras = surveillance.get_all_cameras()
-    websession = async_create_clientsession(hass, verify_ssl)
 
     # add cameras
     devices = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
-            device = SynologyCamera(websession, surveillance, camera.camera_id)
+            device = SynologyCamera(surveillance, camera.camera_id, verify_ssl)
             devices.append(device)
 
     async_add_devices(devices)
@@ -73,12 +72,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, websession, surveillance, camera_id):
+    def __init__(self, surveillance, camera_id, verify_ssl):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
-        self._websession = websession
         self._surveillance = surveillance
         self._camera_id = camera_id
+        self._verify_ssl = verify_ssl
         self._camera = self._surveillance.get_camera(camera_id)
         self._motion_setting = self._surveillance.get_motion_setting(camera_id)
         self.is_streaming = self._camera.is_enabled
@@ -91,7 +90,9 @@ class SynologyCamera(Camera):
     def handle_async_mjpeg_stream(self, request):
         """Return a MJPEG stream image response directly from the camera."""
         streaming_url = self._camera.video_stream_url
-        stream_coro = self._websession.get(streaming_url)
+
+        websession = async_get_clientsession(self.hass, self._verify_ssl)
+        stream_coro = websession.get(streaming_url)
 
         yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 

@@ -1,10 +1,7 @@
-"""Package to offer tools to authenticate with the cloud."""
-import json
+"""Package to communicate with the authentication API."""
+import hashlib
 import logging
-import os
 
-from .const import AUTH_FILE, SERVERS
-from .util import get_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,210 +58,120 @@ def _map_aws_exception(err):
     return ex(err.response['Error']['Message'])
 
 
-def load_auth(hass):
-    """Load authentication from disk and verify it."""
-    info = _read_info(hass)
-
-    if info is None:
-        return Auth(hass)
-
-    auth = Auth(hass, _cognito(
-        hass,
-        id_token=info['id_token'],
-        access_token=info['access_token'],
-        refresh_token=info['refresh_token'],
-    ))
-
-    if auth.validate_auth():
-        return auth
-
-    return Auth(hass)
+def _generate_username(email):
+    """Generate a username from an email address."""
+    return hashlib.sha512(email.encode('utf-8')).hexdigest()
 
 
-def register(hass, email, password):
+def register(cloud, email, password):
     """Register a new account."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(hass, username=email)
+    cognito = _cognito(cloud)
     try:
-        cognito.register(email, password)
+        cognito.register(_generate_username(email), password, email=email)
     except ClientError as err:
         raise _map_aws_exception(err)
 
 
-def confirm_register(hass, confirmation_code, email):
+def confirm_register(cloud, confirmation_code, email):
     """Confirm confirmation code after registration."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(hass, username=email)
+    cognito = _cognito(cloud)
     try:
-        cognito.confirm_sign_up(confirmation_code, email)
+        cognito.confirm_sign_up(confirmation_code, _generate_username(email))
     except ClientError as err:
         raise _map_aws_exception(err)
 
 
-def forgot_password(hass, email):
+def forgot_password(cloud, email):
     """Initiate forgotten password flow."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(hass, username=email)
+    cognito = _cognito(cloud, username=_generate_username(email))
     try:
         cognito.initiate_forgot_password()
     except ClientError as err:
         raise _map_aws_exception(err)
 
 
-def confirm_forgot_password(hass, confirmation_code, email, new_password):
+def confirm_forgot_password(cloud, confirmation_code, email, new_password):
     """Confirm forgotten password code and change password."""
     from botocore.exceptions import ClientError
 
-    cognito = _cognito(hass, username=email)
+    cognito = _cognito(cloud, username=_generate_username(email))
     try:
         cognito.confirm_forgot_password(confirmation_code, new_password)
     except ClientError as err:
         raise _map_aws_exception(err)
 
 
-class Auth(object):
-    """Class that holds Cloud authentication."""
-
-    def __init__(self, hass, cognito=None):
-        """Initialize Hass cloud info object."""
-        self.hass = hass
-        self.cognito = cognito
-        self.account = None
-
-    @property
-    def is_logged_in(self):
-        """Return if user is logged in."""
-        return self.account is not None
-
-    def validate_auth(self):
-        """Validate that the contained auth is valid."""
-        from botocore.exceptions import ClientError
-
-        try:
-            self._refresh_account_info()
-        except ClientError as err:
-            if err.response['Error']['Code'] != 'NotAuthorizedException':
-                _LOGGER.error('Unexpected error verifying auth: %s', err)
-                return False
-
-            try:
-                self.renew_access_token()
-                self._refresh_account_info()
-            except ClientError:
-                _LOGGER.error('Unable to refresh auth token: %s', err)
-                return False
-
-        return True
-
-    def login(self, username, password):
-        """Login using a username and password."""
-        from botocore.exceptions import ClientError
-        from warrant.exceptions import ForceChangePasswordException
-
-        cognito = _cognito(self.hass, username=username)
-
-        try:
-            cognito.authenticate(password=password)
-            self.cognito = cognito
-            self._refresh_account_info()
-            _write_info(self.hass, self)
-
-        except ForceChangePasswordException as err:
-            raise PasswordChangeRequired
-
-        except ClientError as err:
-            raise _map_aws_exception(err)
-
-    def _refresh_account_info(self):
-        """Refresh the account info.
-
-        Raises boto3 exceptions.
-        """
-        self.account = self.cognito.get_user()
-
-    def renew_access_token(self):
-        """Refresh token."""
-        from botocore.exceptions import ClientError
-
-        try:
-            self.cognito.renew_access_token()
-            _write_info(self.hass, self)
-            return True
-        except ClientError as err:
-            _LOGGER.error('Error refreshing token: %s', err)
-            return False
-
-    def logout(self):
-        """Invalidate token."""
-        from botocore.exceptions import ClientError
-
-        try:
-            self.cognito.logout()
-            self.account = None
-            _write_info(self.hass, self)
-        except ClientError as err:
-            raise _map_aws_exception(err)
+def login(cloud, email, password):
+    """Log user in and fetch certificate."""
+    cognito = _authenticate(cloud, email, password)
+    cloud.id_token = cognito.id_token
+    cloud.access_token = cognito.access_token
+    cloud.refresh_token = cognito.refresh_token
+    cloud.email = email
+    cloud.write_user_info()
 
 
-def _read_info(hass):
-    """Read auth file."""
-    path = hass.config.path(AUTH_FILE)
+def check_token(cloud):
+    """Check that the token is valid and verify if needed."""
+    from botocore.exceptions import ClientError
 
-    if not os.path.isfile(path):
-        return None
+    cognito = _cognito(
+        cloud,
+        access_token=cloud.access_token,
+        refresh_token=cloud.refresh_token)
 
-    with open(path) as file:
-        return json.load(file).get(get_mode(hass))
-
-
-def _write_info(hass, auth):
-    """Write auth info for specified mode.
-
-    Pass in None for data to remove authentication for that mode.
-    """
-    path = hass.config.path(AUTH_FILE)
-    mode = get_mode(hass)
-
-    if os.path.isfile(path):
-        with open(path) as file:
-            content = json.load(file)
-    else:
-        content = {}
-
-    if auth.is_logged_in:
-        content[mode] = {
-            'id_token': auth.cognito.id_token,
-            'access_token': auth.cognito.access_token,
-            'refresh_token': auth.cognito.refresh_token,
-        }
-    else:
-        content.pop(mode, None)
-
-    with open(path, 'wt') as file:
-        file.write(json.dumps(content, indent=4, sort_keys=True))
+    try:
+        if cognito.check_token():
+            cloud.id_token = cognito.id_token
+            cloud.access_token = cognito.access_token
+            cloud.write_user_info()
+    except ClientError as err:
+        raise _map_aws_exception(err)
 
 
-def _cognito(hass, **kwargs):
+def _authenticate(cloud, email, password):
+    """Log in and return an authenticated Cognito instance."""
+    from botocore.exceptions import ClientError
+    from warrant.exceptions import ForceChangePasswordException
+
+    assert not cloud.is_logged_in, 'Cannot login if already logged in.'
+
+    cognito = _cognito(cloud, username=email)
+
+    try:
+        cognito.authenticate(password=password)
+        return cognito
+
+    except ForceChangePasswordException as err:
+        raise PasswordChangeRequired
+
+    except ClientError as err:
+        raise _map_aws_exception(err)
+
+
+def _cognito(cloud, **kwargs):
     """Get the client credentials."""
+    import botocore
+    import boto3
     from warrant import Cognito
 
-    mode = get_mode(hass)
-
-    info = SERVERS.get(mode)
-
-    if info is None:
-        raise ValueError('Mode {} is not supported.'.format(mode))
-
     cognito = Cognito(
-        user_pool_id=info['identity_pool_id'],
-        client_id=info['client_id'],
-        user_pool_region=info['region'],
-        access_key=info['access_key_id'],
-        secret_key=info['secret_access_key'],
+        user_pool_id=cloud.user_pool_id,
+        client_id=cloud.cognito_client_id,
+        user_pool_region=cloud.region,
         **kwargs
     )
-
+    cognito.client = boto3.client(
+        'cognito-idp',
+        region_name=cloud.region,
+        config=botocore.config.Config(
+            signature_version=botocore.UNSIGNED
+        )
+    )
     return cognito

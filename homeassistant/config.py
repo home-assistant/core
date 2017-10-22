@@ -96,6 +96,9 @@ history:
 # View all events in a logbook
 logbook:
 
+# Enables a map showing the location of tracked devices
+map:
+
 # Track the sun
 sun:
 
@@ -120,7 +123,7 @@ http_password: welcome
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
+        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
 })
 
 CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
