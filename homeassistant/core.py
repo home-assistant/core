@@ -670,6 +670,24 @@ class StateMachine(object):
         return state_obj is not None and \
             state_obj.attributes.get(name, None) == value
 
+    def get_state_changed(self, entity_id):
+        """Test if entity exists and returns 'last_changed' value."""
+        state_obj = self.get(entity_id)
+        if state_obj is not None:
+            return state_obj.last_changed
+
+    def get_state_updated(self, entity_id):
+        """Test if entity exists and returns 'last_updated' value."""
+        state_obj = self.get(entity_id)
+        if state_obj is not None:
+            return state_obj.last_updated
+
+    def get_state_attr(self, entity_id, name):
+        """Test if entity exists and returns state attribute."""
+        state_obj = self.get(entity_id)
+        if state_obj is not None:
+            return state_obj.attributes.get(name, None)
+
     def remove(self, entity_id):
         """Remove the state of an entity.
 

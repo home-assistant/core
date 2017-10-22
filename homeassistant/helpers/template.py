@@ -25,7 +25,8 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"(?:(?:states\.|(?:is_state|is_state_attr|"
+    r"get_state_changed|get_state_updated|get_state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
@@ -168,6 +169,9 @@ class Template(object):
             'distance': location_methods.distance,
             'is_state': self.hass.states.is_state,
             'is_state_attr': self.hass.states.is_state_attr,
+            'get_state_changed': self.hass.states.get_state_changed,
+            'get_state_updated': self.hass.states.get_state_updated,
+            'get_state_attr': self.hass.states.get_state_attr,
             'states': AllStates(self.hass),
         })
 

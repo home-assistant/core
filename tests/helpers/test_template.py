@@ -718,6 +718,21 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             """))
 
         self.assertListEqual(
+            ['device_tracker.phone_2'],
+            template.extract_entities("""
+                get_state_changed('device_tracker.phone_2')"""))
+
+        self.assertListEqual(
+            ['device_tracker.phone_2'],
+            template.extract_entities("""
+                get_state_updated('device_tracker.phone_2')"""))
+
+        self.assertListEqual(
+            ['device_tracker.phone_2'],
+            template.extract_entities("""
+                get_state_attr('device_tracker.phone_2' 'battery')"""))
+
+        self.assertListEqual(
             sorted([
                 'device_tracker.phone_1',
                 'device_tracker.phone_2',

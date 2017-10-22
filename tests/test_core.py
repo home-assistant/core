@@ -502,6 +502,30 @@ class TestStateMachine(unittest.TestCase):
         self.assertFalse(
             self.states.is_state_attr('light.Non_existing', 'brightness', 100))
 
+    def test_get_state_changed(self):
+        """Test get_state_changed method."""
+        self.states.set("light.Bowl", "on", {"brightness": 100})
+        self.assertEqual(
+            self.states.get("light.Bowl").last_changed,
+            self.states.get_state_changed("light.Bowl"))
+
+    def test_get_state_updated(self):
+        """Test get_state_updated method."""
+        self.states.set("light.Bowl", "on", {"brightness": 100})
+        self.assertEqual(
+            self.states.get("light.Bowl").last_updated,
+            self.states.get_state_updated("light.Bowl"))
+
+    def test_get_state_attr(self):
+        """Test get_state_attr method."""
+        self.states.set("light.Bowl", "on", {"brightness": 100})
+        self.assertEqual(
+            100,
+            self.states.get_state_attr("light.Bowl", "brightness"))
+        self.assertEqual(
+            None,
+            self.states.get_state_attr("light.Bowl", "friendly_name"))
+
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
