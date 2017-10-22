@@ -316,7 +316,7 @@ class APIDomainServicesView(HomeAssistantView):
         try:
             data = json.loads(body) if body else None
         except ValueError:
-            return self.json_message('Event data should be valid JSON',
+            return self.json_message('Data should be valid JSON',
                                      HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
