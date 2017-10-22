@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE)
+    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE, STATE_ON, STATE_OFF)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -175,8 +175,8 @@ class FluxSwitch(SwitchDevice):
         self.light_unsub_tracker = track_state_change(self.hass,
                                                       self._lights,
                                                       self.handle_light_on,
-                                                      'off',
-                                                      'on')
+                                                      STATE_OFF,
+                                                      STATE_ON)
 
     def handle_light_on(self, light, _old_state, _new_state):
         """Update a light's values when it turns on."""

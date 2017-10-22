@@ -6,7 +6,7 @@ from homeassistant.core import State
 from homeassistant.setup import setup_component
 from homeassistant.components import switch, light
 from homeassistant.const import (
-    CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON)
+    CONF_PLATFORM, STATE_ON, STATE_OFF, SERVICE_TURN_ON)
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
 
@@ -904,8 +904,8 @@ class TestSwitchFlux(unittest.TestCase):
                     self.hass, light.DOMAIN, SERVICE_TURN_ON)
                 mock_state_change_event(
                     self.hass,
-                    State(dev1.entity_id, 'on'),
-                    State(dev1.entity_id, 'off'))
+                    State(dev1.entity_id, STATE_ON),
+                    State(dev1.entity_id, STATE_OFF))
                 self.hass.block_till_done()
         call = turn_on_calls[-1]
         assert light.ATTR_COLOR_TEMP in call.data
