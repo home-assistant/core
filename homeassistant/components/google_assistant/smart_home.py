@@ -210,6 +210,5 @@ def determine_service(entity_id: str, command: str,
     if COMMAND_ONOFF == command:
         if params.get('on') is True:
             return (SERVICE_TURN_ON, service_data)
-        else:
-            return (SERVICE_TURN_OFF, service_data)
+        return (SERVICE_TURN_OFF, service_data)
     return (None, service_data)
