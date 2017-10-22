@@ -48,6 +48,7 @@ class TestTrendBinarySensor:
                         'entity_id': "sensor.test_state",
                         'sample_duration': 300,
                         'min_gradient': 1,
+                        'max_samples': 25,
                     }
                 }
             }
@@ -77,6 +78,7 @@ class TestTrendBinarySensor:
                         'entity_id': "sensor.test_state",
                         'sample_duration': 300,
                         'min_gradient': 1,
+                        'max_samples': 25,
                         'invert': 'Yes'
                     }
                 }
