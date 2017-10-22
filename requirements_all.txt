@@ -650,6 +650,9 @@ pyhydroquebec==1.2.0
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 
+# homeassistant.components.sensor.irish_rail_transport
+pyirishrail==0.0.2
+
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
