@@ -32,7 +32,7 @@ def async_trigger(hass, config, action):
     event_data_schema = vol.Schema(
         config.get(CONF_EVENT_DATA),
         extra=vol.ALLOW_EXTRA) if CONF_EVENT_DATA in config else \
-            vol.Schema(dict)
+        vol.Schema(dict)
 
     @callback
     def handle_event(event):
