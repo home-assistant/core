@@ -170,4 +170,5 @@ def test_panel_without_path(hass):
     """Test panel registration without file path."""
     yield from hass.components.frontend.async_register_panel(
         'test_component', 'nonexistant_file')
-    assert hass.data[DATA_PANELS] == {}
+    yield from async_setup_component(hass, 'frontend', {})
+    assert 'test_component' not in hass.data[DATA_PANELS]

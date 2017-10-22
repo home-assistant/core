@@ -32,10 +32,8 @@ class TestComponentLogbook(unittest.TestCase):
         init_recorder_component(self.hass)  # Force an in memory DB
         mock_http_component(self.hass)
         self.hass.config.components |= set(['frontend', 'recorder', 'api'])
-        with patch('homeassistant.components.logbook.'
-                   'register_built_in_panel'):
-            assert setup_component(self.hass, logbook.DOMAIN,
-                                   self.EMPTY_CONFIG)
+        assert setup_component(self.hass, logbook.DOMAIN,
+                               self.EMPTY_CONFIG)
         self.hass.start()
 
     def tearDown(self):

@@ -198,8 +198,14 @@ class ExternalPanel(AbstractPanel):
         frontend_repository_path is set, will be prepended to path of built-in
         components.
         """
-        if self.md5 is None:
-            yield from hass.async_add_job(self._generate_md5)
+        try:
+            if self.md5 is None:
+                yield from hass.async_add_job(_fingerprint, self.path)
+        except OSError:
+            _LOGGER.error('Cannot find or access %s at %s',
+                          self.component_name, self.path)
+            hass.data[DATA_PANELS].pop(self.frontend_url_path)
+
 
         self.webcomponent_url = \
             URL_PANEL_COMPONENT_FP.format(self.component_name, self.md5)
@@ -207,16 +213,6 @@ class ExternalPanel(AbstractPanel):
         if self.component_name not in self.REGISTERED_COMPONENTS:
             hass.http.register_static_path(self.webcomponent_url, self.path)
             self.REGISTERED_COMPONENTS.add(self.component_name)
-
-    def _generate_md5(self):
-        """Generate md5 hash if there is none."""
-        if not os.path.isfile(self.path):
-            _LOGGER.error(
-                "Panel %s component does not exist: %s",
-                self.component_name, self.path)
-            return
-
-        self.md5 = _fingerprint(self.path)
 
 
 @bind_hass
@@ -324,13 +320,13 @@ def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL, []):
         add_extra_html_url(hass, url)
 
-    setup_themes(hass, conf.get(CONF_THEMES))
+    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@callback
-def setup_themes(hass, themes):
+@asyncio.coroutine
+def async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.http.register_view(ThemesView)
     hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME

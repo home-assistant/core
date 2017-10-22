@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
-def setup(hass, config):
+def async_setup(hass, config):
     """Initialize custom panel."""
     success = False
 

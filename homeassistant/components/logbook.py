@@ -100,7 +100,7 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    yield from hass.components.frontend.register_built_in_panel(
+    yield from hass.components.frontend.async_register_built_in_panel(
         'logbook', 'Logbook', 'mdi:format-list-bulleted-type')
 
     hass.services.async_register(
