@@ -18,7 +18,7 @@ REQUIREMENTS = ['pythonwhois==2.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOST = 'hosts'
+CONF_DOMAIN = 'domain'
 
 DEFAULT_NAME = 'Whois'
 
@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(hours=24)  # WHOIS info is very slow moving
 # every 24 hours shouldn't count as "high volume"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_DOMAIN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -42,40 +42,34 @@ def setup_platform(hass, config, add_devices, disovery_info=None):
     from pythonwhois import get_whois
     from pythonwhois.shared import WhoisException
 
-    hostnames = config.get(CONF_HOST)
+    domain = config.get(CONF_DOMAIN)
+    name = config.get(CONF_NAME)
 
-    devices = []
-
-    # TODO: CONF_NAME per host
-    name = "bob"
-
-    for hostname in hostnames:
-        try:
-            if 'expiration_date' in get_whois(hostname, normalized=True):
-                devices.append(WhoisSensor(name, hostname))
-            else:
-                _LOGGER.warning("Failed to perform WHOIS lookup for %s", hostname)
-        except WhoisException as ex:
-            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
-
-    if not devices:
-        _LOGGER.error("Failed to lookup any hostnames")
+    try:
+        if 'expiration_date' in get_whois(domain, normalized=True):
+            add_devices([WhoisSensor(name, domain)], True)
+        else:
+            _LOGGER.warning("Failed to perform WHOIS lookup for %s",
+                            domain)
+            return False
+    except WhoisException as ex:
+        _LOGGER.error("Exception %s occurred during WHOIS lookup for %s",
+                      ex,
+                      domain)
         return False
-
-    add_devices(devices, True)
 
 
 class WhoisSensor(Entity):
     """Implementation of a WHOIS sensor."""
 
-    def __init__(self, name, hostname):
+    def __init__(self, name, domain):
         """Initialize the sensor."""
         from pythonwhois import get_whois
 
         self.whois = get_whois
- 
-        self._name = name        
-        self._hostname = hostname
+
+        self._name = name
+        self._domain = domain
 
         self._state = None
         self._data = None
@@ -122,7 +116,7 @@ class WhoisSensor(Entity):
         from pythonwhois.shared import WhoisException
 
         try:
-            response = self.whois(self._hostname, normalized=True)
+            response = self.whois(self._domain, normalized=True)
         except WhoisException as ex:
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             return False
@@ -139,4 +133,3 @@ class WhoisSensor(Entity):
             time_delta = (self._expiration_date - self._expiration_date.now())
 
             self._state = time_delta.days
-            self._expired = self._state <= 0
