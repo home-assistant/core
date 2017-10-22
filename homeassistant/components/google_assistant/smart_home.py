@@ -120,13 +120,13 @@ def entity_to_device(entity: Entity):
                             light.ATTR_MAX_MIREDS) is not None:
                         device['attributes']['temperatureMinK'] =  \
                             int(round(color.color_temperature_mired_to_kelvin(
-                            entity.attributes.get(light.ATTR_MAX_MIREDS))))
+                                entity.attributes.get(light.ATTR_MAX_MIREDS))))
 
                     if entity.attributes.get(
                             light.ATTR_MIN_MIREDS) is not None:
                         device['attributes']['temperatureMaxK'] =  \
                             int(round(color.color_temperature_mired_to_kelvin(
-                            entity.attributes.get(light.ATTR_MIN_MIREDS))))
+                                entity.attributes.get(light.ATTR_MIN_MIREDS))))
 
     _LOGGER.debug(device)
     return device
@@ -198,8 +198,10 @@ def determine_service(entity_id: str, command: str,
                 return (SERVICE_TURN_ON, service_data)
             if color_data.get('spectrumRGB', 0) > 0:
                 # blue is 255 so pad up to 6
-                hex = ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
-                service_data['rgb_color'] = color.rgb_hex_to_rgb_list(hex)
+                hex_value = \
+                    ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
+                service_data['rgb_color'] = \
+                    color.rgb_hex_to_rgb_list(hex_value)
                 return (SERVICE_TURN_ON, service_data)
 
     if command == COMMAND_ACTIVATESCENE:
