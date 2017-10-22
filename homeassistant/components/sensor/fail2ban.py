@@ -66,6 +66,9 @@ class BanSensor(Entity):
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None
         self.log_parser = log_parser
+        self.log_parser.ip_regex[self.jail] = re.compile(
+            r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
+        )
         _LOGGER.debug("Setting up jail %s", self.jail)
 
     @property
@@ -119,6 +122,7 @@ class BanLogParser(object):
         self.log_file = log_file
         self.data = list()
         self.last_update = dt_util.now()
+        self.ip_regex = dict()
 
     def timer(self):
         """Check if we are allowed to update."""
@@ -133,10 +137,7 @@ class BanLogParser(object):
         self.data = list()
         try:
             with open(self.log_file, 'r', encoding='utf-8') as file_data:
-                self.data = re.findall(
-                    r'\[' + re.escape(jail) + r'\].(Ban|Unban) ([\w+\.]{3,})',
-                    file_data.read()
-                )
+                self.data = self.ip_regex[jail].findall(file_data.read())
 
         except (IndexError, FileNotFoundError, IsADirectoryError,
                 UnboundLocalError):
