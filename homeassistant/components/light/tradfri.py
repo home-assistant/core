@@ -310,11 +310,5 @@ class TradfriLight(Light):
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
-
-        # Handle Hue lights paired with the gateway
-        # hex_color is 0 when bulb is unreachable
-        if self._light_data.hex_color not in (None, '0'):
-            self._rgb_color = color_util.rgb_hex_to_rgb_list(
-                self._light_data.hex_color)
-
+        self._rgb_color = color_util.rgb_hex_to_rgb_list(self._light_data.hex_color_inferred)
         self.hass.async_add_job(self.async_update_ha_state())
