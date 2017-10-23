@@ -43,19 +43,21 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Linode component."""
+    import linode
+
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
 
-    linode = Linode(access_token)
+    li = Linode(access_token)
 
     try:
-        _LOGGER.info("Linode Profile {}".format(
-            linode.manager.get_profile().username))
+        _LOGGER.info("Linode Profile %s",
+                     li.manager.get_profile().username)
     except linode.errors.ApiError as e:
         _LOGGER.error(e)
         return False
 
-    hass.data[DATA_LINODE] = linode
+    hass.data[DATA_LINODE] = li
 
     return True
 
