@@ -275,6 +275,7 @@ omit =
     homeassistant/components/camera/ring.py
     homeassistant/components/camera/synology.py
     homeassistant/components/camera/yi.py
+    homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py

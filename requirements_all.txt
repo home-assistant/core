@@ -626,6 +626,9 @@ pyemby==1.4
 # homeassistant.components.envisalink
 pyenvisalink==2.2
 
+# homeassistant.components.climate.ephember
+pyephember==0.1.1
+
 # homeassistant.components.sensor.fido
 pyfido==1.0.1
 

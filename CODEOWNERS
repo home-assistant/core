@@ -41,6 +41,7 @@ homeassistant/components/*/zwave.py @home-assistant/z-wave
 # Indiviudal components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
 homeassistant/components/camera/yi.py @bachya
+homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
 homeassistant/components/climate/sensibo.py @andrey-git
 homeassistant/components/cover/template.py @PhracturedBlue
@@ -58,7 +59,6 @@ homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
 
-homeassistant/components/*/axis.py @Kane610
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/tesla.py @zabuldon
