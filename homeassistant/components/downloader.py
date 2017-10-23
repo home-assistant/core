@@ -17,6 +17,7 @@ from homeassistant.util import sanitize_filename
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_FILENAME = 'filename'
 ATTR_SUBDIR = 'subdir'
 ATTR_URL = 'url'
 
@@ -29,6 +30,7 @@ SERVICE_DOWNLOAD_FILE = 'download_file'
 SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
     vol.Required(ATTR_URL): cv.url,
     vol.Optional(ATTR_SUBDIR): cv.string,
+    vol.Optional(ATTR_FILENAME): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -62,6 +64,8 @@ def setup(hass, config):
 
                 subdir = service.data.get(ATTR_SUBDIR)
 
+                friendly_name = service.data.get(ATTR_FILENAME)
+
                 if subdir:
                     subdir = sanitize_filename(subdir)
 
@@ -78,6 +82,9 @@ def setup(hass, config):
 
                         if match:
                             filename = match[0].strip("'\" ")
+
+                    if friendly_name:
+                        filename = friendly_name
 
                     if not filename:
                         filename = os.path.basename(
