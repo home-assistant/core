@@ -21,7 +21,7 @@ from homeassistant.exceptions import PlatformNotReady
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Philips Light'
-PLATFORM = 'xiaomi_miio'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
@@ -164,26 +164,20 @@ class XiaomiPhilipsGenericLight(Light):
                 "Setting brightness: %s %s%%",
                 self.brightness, percent_brightness)
 
-            result = yield from self._try_command(
+            if (yield from self._try_command(
                 "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)
-
-            if result:
+                self._light.set_brightness, percent_brightness)):
                 self._brightness = brightness
 
-        result = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
-
-        if result:
+        if (yield from self._try_command(
+            "Turning the light on failed.", self._light.on))
             self._state = True
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        result = yield from self._try_command(
-            "Turning the light off failed.", self._light.off)
-
-        if result:
+        if (yield from self._try_command(
+            "Turning the light off failed.", self._light.off)):
             self._state = True
 
     @asyncio.coroutine
@@ -250,11 +244,9 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 "%s mireds, %s%% cct",
                 color_temp, percent_color_temp)
 
-            result = yield from self._try_command(
+            if (yield from self._try_command(
                 "Setting color temperature failed: %s cct",
-                self._light.set_color_temperature, percent_color_temp)
-
-            if result:
+                self._light.set_color_temperature, percent_color_temp)):
                 self._color_temp = color_temp
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -265,17 +257,13 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 "Setting brightness: %s %s%%",
                 self.brightness, percent_brightness)
 
-            result = yield from self._try_command(
+            if (yield from self._try_command(
                 "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)
-
-            if result:
+                self._light.set_brightness, percent_brightness)):
                 self._brightness = brightness
 
-        result = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
-
-        if result:
+        if (yield from self._try_command(
+            "Turning the light on failed.", self._light.on)):
             self._state = True
 
     @asyncio.coroutine
