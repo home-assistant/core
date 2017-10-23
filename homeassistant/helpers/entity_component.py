@@ -370,6 +370,12 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
+        # That avoid deadlocks
+        if update_before_add:
+            self.component.logger.warning(
+                "Call 'add_entities' with update_before_add=True "
+                "only inside tests or you can run into a deadlock!")
+
         run_coroutine_threadsafe(
             self.async_add_entities(list(new_entities), update_before_add),
             self.component.hass.loop).result()
