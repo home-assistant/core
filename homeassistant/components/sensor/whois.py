@@ -131,7 +131,7 @@ class WhoisSensor(Entity):
             if 'expiration_date' in self._data:
                 self._expiration_date = self._data['expiration_date'][0]
             if 'updated_date' in self._data:
-            self._updated_date = self._data['updated_date'][0]
+                self._updated_date = self._data['updated_date'][0]
 
             time_delta = (self._expiration_date - self._expiration_date.now())
 
