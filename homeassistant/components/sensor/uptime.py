@@ -74,5 +74,5 @@ class UptimeSensor(Entity):
         if self.unit_of_measurement == 'days':
             div_factor *= 24
         delta = delta.total_seconds() / div_factor
-        self._state = round(delta, 2)
+        self._state = format(round(delta, 2), '.2f')
         _LOGGER.debug("New value: %s", delta)
