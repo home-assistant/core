@@ -223,8 +223,6 @@ omit =
     homeassistant/components/wemo.py
     homeassistant/components/*/wemo.py
 
-    homeassistant/components/sensor/whois.py
-
     homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
@@ -567,6 +565,7 @@ omit =
     homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/whois.py
     homeassistant/components/sensor/worldtidesinfo.py
     homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
