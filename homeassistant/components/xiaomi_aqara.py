@@ -25,7 +25,7 @@ def _validate_conf(config):
     res_config = []
     for gw_conf in config:
         for _conf in gw_conf.keys():
-            if _conf not in [CONF_MAC, CONF_HOST, CONF_PORT, 'key']:
+            if _conf not in [CONF_INTERFACE, CONF_DISCOVERY_RETRY, CONF_MAC, CONF_HOST, CONF_PORT, 'key']:
                 raise vol.Invalid('{} is not a valid config parameter'.
                                   format(_conf))
 
