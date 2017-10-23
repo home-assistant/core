@@ -753,6 +753,12 @@ pysma==0.1.3
 # homeassistant.components.sensor.snmp
 pysnmp==4.3.10
 
+# homeassistant.components.media_player.sonyavr
+pysonyavr==1.4
+
+# homeassistant.components.media_player.liveboxplaytv
+pyteleloisirs==3.1
+
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
 pythinkingcleaner==0.0.3
