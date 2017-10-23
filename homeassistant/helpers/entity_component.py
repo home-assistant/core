@@ -370,7 +370,7 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
-                # That avoid deadlocks
+        # That avoid deadlocks
         if update_before_add:
             self.component.logger.warning(
                 "Call 'add_entities' with update_before_add=True "
