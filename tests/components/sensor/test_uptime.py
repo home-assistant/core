@@ -59,14 +59,14 @@ class TestUptimeSensor(unittest.TestCase):
                 sensor.async_update(),
                 self.hass.loop
             ).result()
-            self.assertEqual(format(round(sensor.state, 2), '.2f'), 1.00)
+            self.assertEqual(sensor.state, 1.00)
         new_time = sensor.initial + timedelta(days=111.499)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop
             ).result()
-            self.assertEqual(format(round(sensor.state, 2), '.2f'), 111.50)
+            self.assertEqual(sensor.state, 111.50)
 
     def test_uptime_sensor_hours_output(self):
         """Test uptime sensor output data."""
@@ -78,11 +78,11 @@ class TestUptimeSensor(unittest.TestCase):
                 sensor.async_update(),
                 self.hass.loop
             ).result()
-            self.assertEqual(format(round(sensor.state, 2), '.2f'), 16.00)
+            self.assertEqual(sensor.state, 16.00)
         new_time = sensor.initial + timedelta(hours=72.499)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop
             ).result()
-            self.assertEqual(format(round(sensor.state, 2), '.2f'), 72.50)
+            self.assertEqual(sensor.state, 72.50)
