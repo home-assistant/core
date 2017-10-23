@@ -8,7 +8,7 @@ from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
                                  CONF_MAC, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['PyXiaomiGateway==0.5.3']
+REQUIREMENTS = ['PyXiaomiGateway==0.6.0']
 
 ATTR_GW_MAC = 'gw_mac'
 ATTR_RINGTONE_ID = 'ringtone_id'
