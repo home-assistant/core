@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, disovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the WHOIS sensor."""
     from pythonwhois import get_whois
     from pythonwhois.shared import WhoisException
