@@ -143,6 +143,14 @@ def test_saving_state_incl_entities(hass_recorder):
     assert hass.states.get('test2.recorder') == states[0]
 
 
+def test_saving_state_include_domain_include_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({
+        'include': {'domains': 'test', 'entities': 'test2.recorder'}})
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
+    assert len(states) == 2
+
+
 def test_saving_event_exclude_event_type(hass_recorder):
     """Test saving and restoring an event."""
     hass = hass_recorder({'exclude': {'event_types': 'test'}})
@@ -186,6 +194,18 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert hass.states.get('test.ok') == states[0]
     assert hass.states.get('test.ok').state == 'state2'
+
+
+def test_saving_state_include_exclude_domains_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({
+        'include': {'domains': 'test2', 'entities': 'test.recorder'},
+        'exclude': {'domains': 'test', 'entities': 'test2.recorder2'}})
+    states = _add_entities(hass, ['test.recorder', 'test.recorder2', 'test2.recorder', 'test2.recorder2', 'test3.recorder'])
+    assert len(states) == 3
+    assert hass.states.get('test.recorder') == states[0]
+    assert hass.states.get('test2.recorder') == states[1]
+    assert hass.states.get('test3.recorder') == states[2]
 
 
 def test_recorder_setup_failure():
