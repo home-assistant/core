@@ -49,8 +49,9 @@ def setup_platform(hass, config, add_devices, disovery_info=None):
         if 'expiration_date' in get_whois(domain, normalized=True):
             add_devices([WhoisSensor(name, domain)], True)
         else:
-            _LOGGER.warning("Failed to perform WHOIS lookup for %s",
-                            domain)
+            _LOGGER.warning(
+                "WHOIS lookup for %s didn't contain expiration_date",
+                domain)
             return False
     except WhoisException as ex:
         _LOGGER.error("Exception %s occurred during WHOIS lookup for %s",
