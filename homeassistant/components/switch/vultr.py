@@ -9,20 +9,22 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.vultr import (
-    CONF_SUBS, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB, ATTR_CREATED_AT,
-    ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
+    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB,
+    ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
     ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_DISK,
     ATTR_COST_PER_MONTH, ATTR_OS, ATTR_REGION, ATTR_VCPUS, DATA_VULTR)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Vultr'
+DEFAULT_NAME = 'Vultr {}'
 DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SUBS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_SUBSCRIPTION): cv.string,
+    vol.Optional(CONF_NAME): cv.string
 })
 
 
@@ -32,39 +34,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not vultr:
         return False
 
-    subscriptions = config.get(CONF_SUBS)
+    subscription = config.get(CONF_SUBSCRIPTION)
+    name = config.get(CONF_NAME)
 
-    dev = []
-    for subscription in subscriptions:
-        # Check subscription is valid
-        if subscription in vultr.data:
-            dev.append(VultrSwitch(vultr, subscription))
-        else:
-            _LOGGER.error(
-                "Subscription %s not found. Perhaps API key issue?",
-                subscription)
-
-    if not dev:
-        _LOGGER.error("No subscriptions were found")
+    if subscription in vultr.data:
+        add_devices([VultrSwitch(vultr, subscription, name)], True)
+    else:
+        _LOGGER.error(
+            "Subscription %s not found. Perhaps API key issue?",
+            subscription)
         return False
-
-    add_devices(dev, True)
 
 
 class VultrSwitch(SwitchDevice):
     """Representation of a Vultr subsciption switch."""
 
-    def __init__(self, vultr, subscription):
+    def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr switch."""
         self._vultr = vultr
         self._subscription = subscription
-        self.data = None
+        self.data = self._vultr.data[subscription]
         self._state = None
+        self._name = name.format(self.data['label'])
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return self.data['label']
+        return self._name
 
     @property
     def is_on(self):
@@ -108,4 +104,4 @@ class VultrSwitch(SwitchDevice):
     def update(self):
         """Get the latest data from the device and update the data."""
         self._vultr.update()
-        self.data = self._vultr.data.get(self._subscription)
+        self.data = self._vultr.data[self._subscription]

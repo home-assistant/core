@@ -55,7 +55,7 @@ class VultrBinarySensor(BinarySensorDevice):
         self._vultr = vultr
         self._subscription = subscription
 
-        self.data = self._vultr.data.get(self._subscription)
+        self.data = self._vultr.data[subscription]
 
         # If the DEFAULT_NAME is given, add the VPS label
         self._name = name.format(self.data['label'])

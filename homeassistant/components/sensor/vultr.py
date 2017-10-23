@@ -75,7 +75,7 @@ class VultrSensor(Entity):
         self._vultr = vultr
         self._subscription = subscription
         self._var_id = variable
-        self.data = self._vultr.data.get(self._subscription, {})
+        self.data = self._vultr.data[subscription]
 
         variable_info = MONITORED_CONDITIONS[variable]
 
