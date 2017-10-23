@@ -115,7 +115,7 @@ def entity_to_device(entity: Entity):
                 # supporting temperature
                 # For IKEA trådfri, these attributes only seem to
                 # be set only if the device is on?
-                if entity.domain == light.DOMAIN:
+                if trait == TRAIT_COLOR_TEMP:
                     if entity.attributes.get(
                             light.ATTR_MAX_MIREDS) is not None:
                         device['attributes']['temperatureMinK'] =  \
@@ -194,13 +194,13 @@ def determine_service(entity_id: str, command: str,
         color_data = params.get('color')
         if color_data is not None:
             if color_data.get('temperature', 0) > 0:
-                service_data['kelvin'] = color_data.get('temperature')
+                service_data[light.ATTR_KELVIN] = color_data.get('temperature')
                 return (SERVICE_TURN_ON, service_data)
             if color_data.get('spectrumRGB', 0) > 0:
                 # blue is 255 so pad up to 6
                 hex_value = \
                     ('%0x' % int(color_data.get('spectrumRGB'))).zfill(6)
-                service_data['rgb_color'] = \
+                service_data[light.ATTR_RGB_COLOR] = \
                     color.rgb_hex_to_rgb_list(hex_value)
                 return (SERVICE_TURN_ON, service_data)
 
