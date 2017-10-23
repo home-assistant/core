@@ -8,7 +8,8 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import (
-    CONF_CONDITION, CONF_TIMEOUT, CONF_FOLLOW_UP_ACTION, CONF_LOOK_FOR)
+    CONF_CONDITION, CONF_TIMEOUT, CONF_FOLLOW_UP_ACTION,
+    CONF_TIMER_END_ACTION, CONF_LOOK_FOR)
 from homeassistant.helpers import (
     service, condition, template, config_validation as cv)
 from homeassistant.helpers.event import (
@@ -136,7 +137,8 @@ class Script():
                         continue
 
                 @callback
-                def async_script_wait(entity_id, from_s, to_s):
+                def async_script_wait(entity_id, from_s, to_s,
+                                      follow_up_action):
                     """Handle script after template condition is true."""
                     self._async_remove_listener()
                     if follow_up_action == 'continue':
@@ -146,7 +148,7 @@ class Script():
 
                 self._async_listener.append(async_track_template(
                     self.hass, wait_template, async_script_wait,
-                    variables, look_for))
+                    variables, look_for, follow_up_action))
 
                 self._cur = cur + 1
                 if self._change_listener:
@@ -222,12 +224,19 @@ class Script():
         timeout = action[CONF_TIMEOUT]
         unsub = None
 
+        # var if script should continue or stop after condition is true
+        timer_end_action = action[CONF_TIMER_END_ACTION] \
+            if CONF_TIMER_END_ACTION in action else 'break'
+
         @callback
         def async_script_timeout(now):
             """Call after timeout is retrieve stop script."""
             self._async_listener.remove(unsub)
-            self._log("Timout reach, abort script.")
-            self.async_stop()
+            if timer_end_action == 'break':
+                self._log("Timout reach, abort script.")
+                self.async_stop()
+            elif timer_end_action == 'continue':
+                self.hass.async_add_job(self.async_run(variables))
 
         unsub = async_track_point_in_utc_time(
             self.hass, async_script_timeout,

@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
-    CONF_FOLLOW_UP_ACTION, CONF_LOOK_FOR)
+    CONF_FOLLOW_UP_ACTION, CONF_LOOK_FOR, CONF_TIMER_END_ACTION)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -539,13 +539,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
         template)
 })
 
-_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
     vol.Optional(CONF_LOOK_FOR): boolean,
     vol.Optional(CONF_FOLLOW_UP_ACTION): vol.Any('continue', 'break'),
-})
+    vol.Optional(CONF_TIMER_END_ACTION): vol.Any('continue', 'break'),
+}), key_dependency(CONF_TIMER_END_ACTION, CONF_TIMEOUT))
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
