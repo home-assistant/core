@@ -1,5 +1,5 @@
 """
-Support for Belkin WeMo lights and dimmer.
+Support for Belkin WeMo lights.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.wemo/
@@ -10,28 +10,23 @@ from datetime import timedelta
 import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, \
-    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, \
-    SUPPORT_TRANSITION, ATTR_BRIGHTNESS_PCT, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, \
-    SUPPORT_XY_COLOR)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
-from homeassistant.loader import get_component
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 
 DEPENDENCIES = ['wemo']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-ATTR_SWITCH_MODE = 'switch_mode'
-WEMO_ON = 1
-WEMO_OFF = 0
-WEMO_STANDBY = 8
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
                 SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
+WEMO_ON = 1
+WEMO_OFF = 0
+WEMO_STANDBY = 8
 
 def setup_platform(hass, config, add_devices, add_devices_callback, discovery_info=None):
     """Set up the WeMo bridges and register connected lights."""
@@ -41,9 +36,9 @@ def setup_platform(hass, config, add_devices, add_devices_callback, discovery_in
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
-            
+
         if device.model_name == 'Dimmer':
-            add_devices_callback([WemoDimmer(SwitchDevice)])
+            add_devices_callback([WemoDimmer(Light)])
         else:
             setup_bridge(device, add_devices)
 
@@ -150,7 +145,6 @@ class WemoLight(Light):
         """Synchronize state with bridge."""
         self.update_lights(no_throttle=True)
 
-
 class WemoDimmer(Light):
     """Representation of a WeMo dimmer"""
 
@@ -189,7 +183,7 @@ class WemoDimmer(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_BRIGHTNESS_PCT | SUPPORT_TRANSITION | SUPPORT_EFFECT)
+        return (SUPPORT_BRIGHTNESS_PCT | SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT)
 
     @property
     def brightness(self):
