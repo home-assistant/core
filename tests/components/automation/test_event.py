@@ -43,7 +43,7 @@ class TestAutomationEvent(unittest.TestCase):
             }
         })
 
-        self.hass.bus.fire('test_event')
+        self.hass.bus.fire('test_event', {'extra_key': 'extra_data'})
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
