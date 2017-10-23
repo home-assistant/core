@@ -176,7 +176,7 @@ class MpdDevice(MediaPlayerDevice):
         """Return the title of current playing media."""
         name = self._currentsong.get('name', None)
         title = self._currentsong.get('title', None)
-        file_name = self._currentsong('file', None)
+        file_name = self._currentsong.get('file', None)
 
         if name is None and title is None:
             if file_name is None:
