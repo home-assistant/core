@@ -80,7 +80,7 @@ class UERadioDevice(MediaPlayerDevice):
                                    self._session},
                           data=payload, timeout=5)
         except requests.exceptions.Timeout:
-            _LOGGER.error("Timed out when sending command to UE Smart Radio.")
+            _LOGGER.error("Timed out when sending command to UE Smart Radio")
 
     def update(self):
         """Get the latest details from the device."""
@@ -94,7 +94,7 @@ class UERadioDevice(MediaPlayerDevice):
                                               self._session}, data=payload,
                                      timeout=5).json())
         except requests.exceptions.Timeout:
-            _LOGGER.error("Timed out when retrieving status of UE Smart Radio.")
+            _LOGGER.error("Timed out when retrieving status of UE Smart Radio")
             return
 
         if request["error"] is not None:
