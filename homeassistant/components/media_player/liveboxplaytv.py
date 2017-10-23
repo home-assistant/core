@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
     STATE_PAUSED, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['liveboxplaytv==2.0.0', 'pyteleloisirs==3.1']
 
@@ -108,7 +109,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                         self._client.get_current_channel_image(img_size)
                     self._media_image_url = chan_img_url
                 # Media progress info
-                now = datetime.datetime.now()
+                now = dt_util.utcnow()
                 self._media_duration = \
                     pyteleloisirs.get_program_duration(program)
                 self._media_remaining_time = \
@@ -173,16 +174,12 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        # if self.media_status is None or \
-        #         not (self.media_status.player_is_playing or
-        #              self.media_status.player_is_paused or
-        #              self.media_status.player_is_idle):
-        #     return None
         return self._media_remaining_time
 
     @property
     def media_position_updated_at(self):
-        """When was the position of the current playing media valid.
+        """
+        When was the position of the current playing media valid.
         Returns value from homeassistant.util.dt.utcnow().
         """
         return self._media_last_updated
