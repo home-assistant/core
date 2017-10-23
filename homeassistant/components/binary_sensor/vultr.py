@@ -35,6 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     subscriptions = config.get(CONF_SUBS)
 
+    if not subscriptions:
+        _LOGGER.error("Failed to get subscriptions from config")
+        return False
+
     dev = []
 
     for subscription in subscriptions:

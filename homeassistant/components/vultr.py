@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Vultr component."""
-    api_key = config[DOMAIN].get(CONF_API_KEY, None)
+    api_key = config[DOMAIN].get(CONF_API_KEY)
 
     vultr = Vultr(api_key)
 
