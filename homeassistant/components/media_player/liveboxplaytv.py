@@ -162,8 +162,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             if self._current_program:
                 return '{}: {}'.format(self._current_channel,
                                        self._current_program)
-            else:
-                return self._current_channel
+            return self._current_channel
 
     @property
     def media_duration(self):
