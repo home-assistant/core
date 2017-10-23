@@ -3,7 +3,6 @@
 import logging
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components import sun
 import homeassistant.core as ha

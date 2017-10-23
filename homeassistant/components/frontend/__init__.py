@@ -304,7 +304,7 @@ def async_setup(hass, config):
     yield from asyncio.wait([
         async_register_built_in_panel(hass, panel)
         for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
-                      'dev-template', 'dev-mqtt', 'kiosk')])
+                      'dev-template', 'dev-mqtt', 'kiosk')], loop=hass.loop)
 
     hass.data[DATA_FINALIZE_PANEL] = finalize_panel
 

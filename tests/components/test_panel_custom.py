@@ -1,20 +1,17 @@
 """The tests for the panel_custom component."""
 import asyncio
-import os
-import shutil
-import unittest
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import setup
-from homeassistant.components import panel_custom
 
 from tests.common import mock_coro, mock_component
 
 
 @pytest.fixture
 def mock_register(hass):
+    """Mock th frontend component being loaded and yield register method."""
     mock_component(hass, 'frontend')
     with patch('homeassistant.components.frontend.async_register_panel',
                return_value=mock_coro()) as mock_register:
