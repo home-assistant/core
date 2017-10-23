@@ -164,20 +164,20 @@ class XiaomiPhilipsGenericLight(Light):
                 "Setting brightness: %s %s%%",
                 self.brightness, percent_brightness)
 
-            if (yield from self._try_command(
-                "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)):
+            if (yield from self._try_command("Setting brightness failed: %s",
+                                             self._light.set_brightness,
+                                             percent_brightness)):
                 self._brightness = brightness
 
-        if (yield from self._try_command(
-            "Turning the light on failed.", self._light.on))
+        if (yield from self._try_command("Turning the light on failed.",
+                                         self._light.on)):
             self._state = True
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        if (yield from self._try_command(
-            "Turning the light off failed.", self._light.off)):
+        if (yield from self._try_command("Turning the light off failed.",
+                                         self._light.off)):
             self._state = True
 
     @asyncio.coroutine
@@ -245,8 +245,8 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 color_temp, percent_color_temp)
 
             if (yield from self._try_command(
-                "Setting color temperature failed: %s cct",
-                self._light.set_color_temperature, percent_color_temp)):
+                    "Setting color temperature failed: %s cct",
+                    self._light.set_color_temperature, percent_color_temp)):
                 self._color_temp = color_temp
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -257,13 +257,13 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 "Setting brightness: %s %s%%",
                 self.brightness, percent_brightness)
 
-            if (yield from self._try_command(
-                "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)):
+            if (yield from self._try_command("Setting brightness failed: %s",
+                                             self._light.set_brightness,
+                                             percent_brightness)):
                 self._brightness = brightness
 
-        if (yield from self._try_command(
-            "Turning the light on failed.", self._light.on)):
+        if (yield from self._try_command("Turning the light on failed.",
+                                         self._light.on)):
             self._state = True
 
     @asyncio.coroutine
