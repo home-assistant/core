@@ -87,7 +87,8 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 @callback
 @bind_hass
-def async_track_template(hass, template, action, variables=None):
+def async_track_template(hass, template, action, variables=None,
+                         look_for=None):
     """Add a listener that track state changes with template condition."""
     from . import condition
 
@@ -101,7 +102,8 @@ def async_track_template(hass, template, action, variables=None):
         template_result = condition.async_template(hass, template, variables)
 
         # Check to see if template returns true
-        if template_result and not already_triggered:
+        if (template_result or not template_result and look_for is False) \
+                and not already_triggered:
             already_triggered = True
             hass.async_run_job(action, entity_id, from_s, to_s)
         elif not template_result:

@@ -7,7 +7,8 @@ from typing import Optional, Sequence
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.const import (
+    CONF_CONDITION, CONF_TIMEOUT, CONF_FOLLOW_UP_ACTION, CONF_LOOK_FOR)
 from homeassistant.helpers import (
     service, condition, template, config_validation as cv)
 from homeassistant.helpers.event import (
@@ -117,19 +118,35 @@ class Script():
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
 
+                # var if check should be for true or false
+                look_for = action[CONF_LOOK_FOR] \
+                    if CONF_LOOK_FOR in action else True
+                # var if script should continue or stop after condition is true
+                follow_up_action = action[CONF_FOLLOW_UP_ACTION] \
+                    if CONF_FOLLOW_UP_ACTION in action else 'continue'
+
                 # check if condition already okay
-                if condition.async_template(
-                        self.hass, wait_template, variables):
-                    continue
+                if look_for:
+                    if condition.async_template(
+                            self.hass, wait_template, variables):
+                        continue
+                else:
+                    if not condition.async_template(
+                            self.hass, wait_template, variables):
+                        continue
 
                 @callback
                 def async_script_wait(entity_id, from_s, to_s):
                     """Handle script after template condition is true."""
                     self._async_remove_listener()
-                    self.hass.async_add_job(self.async_run(variables))
+                    if follow_up_action == 'continue':
+                        self.hass.async_add_job(self.async_run(variables))
+                    elif follow_up_action == 'break':
+                        self.async_stop()
 
                 self._async_listener.append(async_track_template(
-                    self.hass, wait_template, async_script_wait, variables))
+                    self.hass, wait_template, async_script_wait,
+                    variables, look_for))
 
                 self._cur = cur + 1
                 if self._change_listener:
