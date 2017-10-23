@@ -2,6 +2,7 @@
 ADS Component.
 
 For more details about this component, please refer to the documentation.
+https://home-assistant.io/components/ads/
 
 """
 import threading
@@ -45,9 +46,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-MAX_RETRIES = 5
-RETRY_SLEEPTIME_S = 0.1
-
 
 def setup(hass, config):
     import pyads
@@ -55,12 +53,15 @@ def setup(hass, config):
     _LOGGER.info('created ADS client')
     conf = config[DOMAIN]
 
+    # get ads connection parameters from config
     net_id = conf.get(CONF_DEVICE)
     ip_address = conf.get(CONF_IP_ADDRESS)
     port = conf.get(CONF_PORT)
 
+    # create a new ads connection
     client = pyads.Connection(net_id, port, ip_address)
 
+    # connect to ads client and try to connect
     try:
         ads = AdsHub(client)
     except pyads.pyads.ADSError as e:
@@ -68,12 +69,30 @@ def setup(hass, config):
                       .format(net_id, port))
         return False
 
+    # add ads hub to hass data collection, listen to shutdown
     hass.data[DATA_ADS] = ads
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
+
+    def handle_write_data_by_name(call):
+        """ Write a value to the connected ADS device. """
+        adsvar = call.data.get('adsvar')
+        adstype = call.data.get('adstype')
+        value = call.data.get('value')
+
+        assert adstype in ads.ADS_TYPEMAP
+
+        try:
+            ads.write_by_name(adsvar, value, ads.ADS_TYPEMAP[adstype])
+        except pyads.ADSError as e:
+            _LOGGER.error(e)
+
+    hass.services.register(DOMAIN, 'write_data_by_name',
+                           handle_write_data_by_name)
 
     return True
 
 
+# tuple to hold data needed for notification
 NotificationItem = namedtuple(
     'NotificationItem', 'hnotify huser name plc_datatype callback'
 )
