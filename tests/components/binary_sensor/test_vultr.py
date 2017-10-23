@@ -1,12 +1,15 @@
 """Test the Vultr binary sensor platform."""
 import unittest
 import requests_mock
+import pytest
+import voluptuous as vol
 
 from components.binary_sensor import vultr
 from components import vultr as base_vultr
 from components.vultr import (
     ATTR_ALLOWED_BANDWIDTH_GB, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,
-    ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID)
+    ATTR_COST_PER_MONTH, ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, CONF_SUBS)
+from homeassistant.const import CONF_PLATFORM
 
 from tests.components.test_vultr import VALID_CONFIG
 from tests.common import (
@@ -90,3 +93,43 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                                  device_attrs[ATTR_CREATED_AT])
                 self.assertEqual('123456',
                                  device_attrs[ATTR_SUBSCRIPTION_ID])
+
+    def test_invalid_sensor_config(self):
+        """Test config type failures."""
+        with pytest.raises(vol.Invalid):  # No subs
+            vultr.PLATFORM_SCHEMA({
+                CONF_PLATFORM: base_vultr.DOMAIN,
+            })
+
+    @requests_mock.Mocker()
+    def test_invalid_sensors(self, mock):
+        """Test the VultrBinarySensor fails."""
+        mock.get(
+            'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_account_info.json'))
+
+        mock.get(
+            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
+            text=load_fixture('vultr_server_list.json'))
+
+        base_vultr.setup(self.hass, VALID_CONFIG)
+
+        bad_conf = {}  # No subs
+
+        no_subs_setup = vultr.setup_platform(self.hass,
+                                             bad_conf,
+                                             self.add_devices,
+                                             None)
+
+        self.assertFalse(no_subs_setup)
+
+        bad_conf = {
+            CONF_SUBS: ["555555"]
+        }  # Sub not associated with API key (not in server_list)
+
+        wrong_subs_setup = vultr.setup_platform(self.hass,
+                                                bad_conf,
+                                                self.add_devices,
+                                                None)
+
+        self.assertFalse(wrong_subs_setup)
