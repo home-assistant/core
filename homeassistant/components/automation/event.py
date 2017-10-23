@@ -36,11 +36,12 @@ def async_trigger(hass, config, action):
     @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
-        try:
-            event_data_schema(event.data)
-        except vol.Invalid:
-            # If event data doesn't match requested schema, skip event
-            return
+        if event_data_schema:
+            try:
+                event_data_schema(event.data)
+            except vol.Invalid:
+                # If event data doesn't match requested schema, skip event
+                return
 
         hass.async_run_job(action, {
             'trigger': {
