@@ -401,7 +401,7 @@ lightify==1.0.6
 limitlessled==1.0.8
 
 # homeassistant.components.linode
-linode-api==4.1.4b0
+linode-api==4.1.4b2
 
 # homeassistant.components.media_player.liveboxplaytv
 liveboxplaytv==1.5.0
