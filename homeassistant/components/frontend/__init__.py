@@ -310,8 +310,9 @@ def async_setup(hass, config):
 
     # Finalize registration of panels that registered before frontend was setup
     # This includes the built-in panels from line above.
-    yield from asyncio.wait([finalize_panel(panel) for panel
-                             in hass.data[DATA_PANELS].values()])
+    yield from asyncio.wait(
+        [finalize_panel(panel) for panel in hass.data[DATA_PANELS].values()],
+        loop=hass.loop)
 
     if DATA_EXTRA_HTML_URL not in hass.data:
         hass.data[DATA_EXTRA_HTML_URL] = set()
