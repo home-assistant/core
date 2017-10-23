@@ -33,7 +33,7 @@ ATTR_PENDING_CHARGES = 'pending_charges'
 ATTR_REGION = 'region'
 ATTR_VCPUS = 'vcpus'
 
-CONF_SUBS = 'subs'
+CONF_SUBSCRIPTION = 'subscription'
 
 DATA_VULTR = 'data_vultr'
 VULTR_PLATFORMS = ['binary_sensor', 'sensor']

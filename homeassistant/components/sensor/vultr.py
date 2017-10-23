@@ -4,18 +4,23 @@ Support for monitoring the state of Vultr Subscriptions.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.vultr/
 """
+import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, CONF_NAME)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.vultr import (
-    CONF_SUBS, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES, DATA_VULTR)
+    CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES, DATA_VULTR)
 
-DEFAULT_NAME = 'Vultr_Server'
+DEFAULT_NAME = 'Vultr Server'
 DEPENDENCIES = ['vultr']
 
+_LOGGER = logging.getLogger(__name__)
+
+# Monitored conditions: name, units, icon
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_GB: ['Current Bandwidth Used', 'GB',
                                 'mdi:chart-histogram'],
@@ -24,7 +29,8 @@ MONITORED_CONDITIONS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SUBS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_SUBSCRIPTION): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)])
 })
@@ -36,13 +42,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not vultr:
         return False
 
-    subscriptions = config.get(CONF_SUBS)
+    subscription = config.get(CONF_SUBSCRIPTION)
+    name = config.get(CONF_NAME)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
-    sensors = []
+    for condition in monitored_conditions:
+        if subscription in vultr.data:
+            sensors.append(VultrSensor(vultr,
+                                       subscription,
+                                       condition))
+        else:
+            _LOGGER.error(
+                "Subscription %s not found. Perhaps API key issue?",
+                subscription)
 
-    for subscription in subscriptions:
-        sensors += [VultrSensor(vultr, subscription, condition)
-                    for condition in config[CONF_MONITORED_CONDITIONS]]
+    if not sensors:
+        _LOGGER.error("No Vultr sensors to be added")
+        return False
 
     add_devices(sensors, True)
 

@@ -9,21 +9,23 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.vultr import (
-    CONF_SUBS, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB, ATTR_CREATED_AT,
-    ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
+    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH_GB,
+    ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
     ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_DISK,
     ATTR_COST_PER_MONTH, ATTR_OS, ATTR_REGION, ATTR_VCPUS, DATA_VULTR)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Vultr Server'
+DEFAULT_NAME = 'Vultr {}'
 DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SUBS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_SUBSCRIPTION): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
@@ -33,42 +35,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not vultr:
         return False
 
-    subscriptions = config.get(CONF_SUBS)
+    subscription = config.get(CONF_SUBSCRIPTION)
+    name = config.get(CONF_NAME)
 
-    if not subscriptions:
-        _LOGGER.error("Failed to get subscriptions from config")
+    if subscription in vultr.data:
+        add_devices([VultrBinarySensor(vultr, subscription, name)], True)
+    else:
+        _LOGGER.error(
+            "Subscription %s not found. Perhaps API key issue?",
+            subscription)
         return False
-
-    dev = []
-
-    for subscription in subscriptions:
-        if subscription in vultr.data:
-            dev.append(VultrBinarySensor(vultr, subscription))
-        else:
-            _LOGGER.error(
-                "Subscription %s not found. Perhaps API key issue?",
-                subscription)
-
-    if not dev:
-        _LOGGER.error("No subscriptions were found")
-        return False
-
-    add_devices(dev, True)
 
 
 class VultrBinarySensor(BinarySensorDevice):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription):
+    def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr sensor."""
         self._vultr = vultr
         self._subscription = subscription
+
         self.data = self._vultr.data.get(self._subscription)
+
+        # If the DEFAULT_NAME is given, add the VPS label
+        self._name = name.format(self.data['label'])
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.data['label']
+        return self._name
 
     @property
     def icon(self):
