@@ -31,7 +31,7 @@ def async_trigger(hass, config, action):
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = vol.Schema(
         config.get(CONF_EVENT_DATA),
-        extra=vol.ALLOW_EXTRA)
+        extra=vol.ALLOW_EXTRA) if config.get(CONF_EVENT_DATA) else None
 
     @callback
     def handle_event(event):
