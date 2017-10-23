@@ -201,7 +201,9 @@ def test_saving_state_include_exclude_domains_entity(hass_recorder):
     hass = hass_recorder({
         'include': {'domains': 'test2', 'entities': 'test.recorder'},
         'exclude': {'domains': 'test', 'entities': 'test2.recorder2'}})
-    states = _add_entities(hass, ['test.recorder', 'test.recorder2', 'test2.recorder', 'test2.recorder2', 'test3.recorder'])
+    states = _add_entities(hass, ['test.recorder', 'test.recorder2',
+                                  'test2.recorder', 'test2.recorder2',
+                                  'test3.recorder'])
     assert len(states) == 3
     assert hass.states.get('test.recorder') == states[0]
     assert hass.states.get('test2.recorder') == states[1]
