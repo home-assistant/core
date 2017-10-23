@@ -48,16 +48,16 @@ def setup(hass, config):
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
 
-    li = Linode(access_token)
+    _linode = Linode(access_token)
 
     try:
         _LOGGER.info("Linode Profile %s",
-                     li.manager.get_profile().username)
-    except linode.errors.ApiError as e:
-        _LOGGER.error(e)
+                     _linode.manager.get_profile().username)
+    except linode.errors.ApiError as _ex:
+        _LOGGER.error(_ex)
         return False
 
-    hass.data[DATA_LINODE] = li
+    hass.data[DATA_LINODE] = _linode
 
     return True
 
@@ -83,8 +83,8 @@ class Linode(object):
             for node in all_nodes:
                 if node_name == node.label:
                     node_id = node.id
-        except linode.errors.ApiError as e:
-            _LOGGER.error(e)
+        except linode.errors.ApiError as _ex:
+            _LOGGER.error(_ex)
 
         return node_id
 
@@ -94,5 +94,5 @@ class Linode(object):
         import linode
         try:
             self.data = self.manager.linode.get_instances()
-        except linode.errors.ApiError as e:
-            _LOGGER.error(e)
+        except linode.errors.ApiError as _ex:
+            _LOGGER.error(_ex)
