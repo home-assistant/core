@@ -13,9 +13,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_NAME)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.vultr import (
-    CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES, DATA_VULTR)
+    CONF_SUBSCRIPTION, ATTR_CURRENT_BANDWIDTH_GB, ATTR_PENDING_CHARGES,
+    DATA_VULTR)
 
-DEFAULT_NAME = 'Vultr Server'
+DEFAULT_NAME = '{} {}'
 DEPENDENCIES = ['vultr']
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if subscription in vultr.data:
             sensors.append(VultrSensor(vultr,
                                        subscription,
-                                       condition))
+                                       condition,
+                                       name))
         else:
             _LOGGER.error(
                 "Subscription %s not found. Perhaps API key issue?",
@@ -66,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VultrSensor(Entity):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription, variable):
+    def __init__(self, vultr, subscription, variable, name):
         """Initialize a new Vultr sensor."""
         self._vultr = vultr
         self._subscription = subscription
@@ -75,15 +77,14 @@ class VultrSensor(Entity):
 
         variable_info = MONITORED_CONDITIONS[variable]
 
-        self._var_name = variable_info[0]
+        self._name = name.format(self.data['label'], variable_info[0])
         self._var_units = variable_info[1]
         self._var_icon = variable_info[2]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.data.get('label', DEFAULT_NAME),
-                              self._var_name)
+        return self._name
 
     @property
     def icon(self):
@@ -106,4 +107,4 @@ class VultrSensor(Entity):
     def update(self):
         """Update state of sensor."""
         self._vultr.update()
-        self.data = self._vultr.data.get(self._subscription, {})
+        self.data = self._vultr.data[self._subscription]
