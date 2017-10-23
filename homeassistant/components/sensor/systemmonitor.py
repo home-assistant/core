@@ -86,7 +86,7 @@ class SystemMonitorSensor(Entity):
 
     def __init__(self, sensor_type, argument=''):
         """Initialize the sensor."""
-        self._name = '{} {}'.format(SENSOR_TYPES[sensor_type][0], argument)
+        self._name = sensor_type
         self.argument = argument
         self.type = sensor_type
         self._state = None
