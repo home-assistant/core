@@ -41,9 +41,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([EphEmberThermostat(ember, zone)])
     except RuntimeError:
         _LOGGER.error("Cannot connect to EphEmber")
-        return False
+        return
 
-    return True
+    return
 
 
 class EphEmberThermostat(ClimateDevice):
