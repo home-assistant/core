@@ -103,12 +103,11 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=redefined-outer-name
 @bind_hass
-def start(hass, entity_id,
-          weeks=DEFAULT_DURATION, days=DEFAULT_DURATION,
-          hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
-          seconds=DEFAULT_DURATION):
+def sync_start(hass, entity_id,
+               weeks=DEFAULT_DURATION, days=DEFAULT_DURATION,
+               hours=DEFAULT_DURATION, minutes=DEFAULT_DURATION,
+               seconds=DEFAULT_DURATION):
     """Start a timer."""
     hass.add_job(async_start, hass, entity_id,
                  **{ATTR_ENTITY_ID: entity_id,
