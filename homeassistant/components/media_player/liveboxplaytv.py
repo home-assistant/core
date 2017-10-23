@@ -177,8 +177,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     @property
     def media_position_updated_at(self):
-        """
-        When was the position of the current playing media valid.
+        """When was the position of the current playing media valid.
+
         Returns value from homeassistant.util.dt.utcnow().
         """
         return self._media_last_updated
