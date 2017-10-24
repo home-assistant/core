@@ -108,7 +108,6 @@ def entity_to_device(entity: Entity):
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         for feature, trait in class_data[2].items():
             if feature & supported > 0:
-                _LOGGER.debug(trait)
                 device['traits'].append(trait)
 
                 # Actions require this attributes for a device
@@ -128,7 +127,6 @@ def entity_to_device(entity: Entity):
                             int(round(color.color_temperature_mired_to_kelvin(
                                 entity.attributes.get(light.ATTR_MIN_MIREDS))))
 
-    _LOGGER.debug(device)
     return device
 
 
@@ -167,7 +165,6 @@ def determine_service(entity_id: str, command: str,
     Attempt to return a tuple of service and service_data based on the entity
     and action requested.
     """
-    _LOGGER.debug(params)
     domain = entity_id.split('.')[0]
     service_data = {ATTR_ENTITY_ID: entity_id}  # type: Dict[str, Any]
     # special media_player handling

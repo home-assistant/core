@@ -154,7 +154,6 @@ class GoogleAssistantView(HomeAssistantView):
             return self.json_message(
                 "too many inputs", status_code=HTTP_BAD_REQUEST)
 
-        _LOGGER.debug(data)
         request_id = data.get('requestId')  # type: str
         intent = inputs[0].get('intent')
         payload = inputs[0].get('payload')
