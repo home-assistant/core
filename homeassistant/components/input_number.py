@@ -172,7 +172,7 @@ def async_setup(hass, config):
     for service, data in SERVICE_TO_METHOD.items():
         hass.services.async_register(
             DOMAIN, service, async_handle_service,
-            description=descriptions.get(service), schema=data['schema'])
+            description=descriptions[DOMAIN][service], schema=data['schema'])
 
     yield from component.async_add_entities(entities)
     return True
