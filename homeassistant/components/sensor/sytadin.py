@@ -13,7 +13,8 @@ import re
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.const import (LENGTH_KILOMETERS, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (LENGTH_KILOMETERS, CONF_NAME,
+                                    CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -37,22 +38,19 @@ OPTION_CONGESTION = 'congestion'
 CONF_UPDATE_INTERVAL = 'update_interval'
 
 SENSOR_TYPES = {
-    OPTION_TRAFFIC_JAM: ('Sytadin Traffic Jam',
-                            LENGTH_KILOMETERS,
+    OPTION_TRAFFIC_JAM: ('Sytadin Traffic Jam', LENGTH_KILOMETERS,
                             TRAFFIC_JAM_XPATH),
-    OPTION_MEAN_VELOCITY: ('Sytadin Mean Velocity',
-                            LENGTH_KILOMETERS+'/h',
+    OPTION_MEAN_VELOCITY: ('Sytadin Mean Velocity', LENGTH_KILOMETERS+'/h',
                             MEAN_VELOCITY_XPATH),
-    OPTION_CONGESTION: ('Sytadin Congestion',
-                            '',
+    OPTION_CONGESTION: ('Sytadin Congestion', '',
                             CONGESTION_XPATH)
 }
 
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list,
+                                                [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
 })
@@ -67,11 +65,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug('add new device: ' + option)
 
         add_devices([
-            SytadinSensor(SENSOR_TYPES.get(option)[0],
-                            SYSTADIN,
-                            SENSOR_TYPES.get(option)[2],
-                            SYSTADIN_REGEX,
-                            SENSOR_TYPES.get(option)[1],
+            SytadinSensor(SENSOR_TYPES.get(option)[0], SYSTADIN,
+                            SENSOR_TYPES.get(option)[2], SYSTADIN_REGEX,
+                            SENSOR_TYPES.get(option)[1], 
                             config.get(CONF_UPDATE_INTERVAL))
             ])
 
