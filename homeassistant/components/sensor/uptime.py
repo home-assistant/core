@@ -23,7 +23,7 @@ DEFAULT_NAME = 'Uptime'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='days'):
-        vol.All(cv.string, vol.In(['hours', 'days']))
+        vol.All(cv.string, vol.In(['minutes', 'hours', 'days']))
 })
 
 
@@ -73,6 +73,8 @@ class UptimeSensor(Entity):
         div_factor = 3600
         if self.unit_of_measurement == 'days':
             div_factor *= 24
+        elif self.unit_of_measurement == 'minutes':
+            div_factor /= 60
         delta = delta.total_seconds() / div_factor
         self._state = round(delta, 2)
         _LOGGER.debug("New value: %s", delta)
