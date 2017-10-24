@@ -64,7 +64,7 @@ def setup(hass, config):
 
                 subdir = service.data.get(ATTR_SUBDIR)
 
-                friendly_name = service.data.get(ATTR_FILENAME)
+                filename = service.data.get(ATTR_FILENAME)
 
                 if subdir:
                     subdir = sanitize_filename(subdir)
@@ -74,21 +74,17 @@ def setup(hass, config):
                 req = requests.get(url, stream=True, timeout=10)
 
                 if req.status_code == 200:
-                    filename = None
 
-                    if 'content-disposition' in req.headers:
+                    if filename is None and \
+                       'content-disposition' in req.headers:
                         match = re.findall(r"filename=(\S+)",
                                            req.headers['content-disposition'])
 
                         if match:
                             filename = match[0].strip("'\" ")
 
-                    if friendly_name:
-                        filename = friendly_name
-
                     if not filename:
-                        filename = os.path.basename(
-                            url).strip()
+                        filename = os.path.basename(url).strip()
 
                     if not filename:
                         filename = 'ha_download'
