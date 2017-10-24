@@ -104,7 +104,6 @@ class SytadinSensor(Entity):
 
     def _update(self):
         """Fetch new state data for the sensor."""
-
         from lxml import etree
 
         html = requests.get(self._url, timeout=TIMEOUT)
