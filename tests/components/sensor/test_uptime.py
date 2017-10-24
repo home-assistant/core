@@ -21,7 +21,7 @@ class TestUptimeSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_uptime_min_config(self):
-        """Test minimum uptime configutation."""
+        """Test minimum uptime configuration."""
         config = {
             'sensor': {
                 'platform': 'uptime',
