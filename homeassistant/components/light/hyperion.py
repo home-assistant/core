@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     default_color = config.get(CONF_DEFAULT_COLOR)
 
     device = Hyperion(config.get(CONF_NAME), host, port, priority,
-        default_color)
+                      default_color)
 
     if device.setup():
         add_devices([device])
