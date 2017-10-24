@@ -49,13 +49,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CoinMarketCap sensor."""
     currency = config.get(CONF_CURRENCY)
-    display_currency = config.get(CONF_DISPLAY_CURRENCY).upper()
+    display_currency = config.get(CONF_DISPLAY_CURRENCY).lower()
 
     try:
         CoinMarketCapData(currency, display_currency).update()
     except HTTPError:
-        _LOGGER.warning("Currency %s or display currency %s is not available."
-                        + "Using bitcoin and USD.", currency, display_currency)
+        _LOGGER.warning("Currency %s or display currency %s is not available. "
+                        "Using bitcoin and USD.", currency, display_currency)
         currency = DEFAULT_CURRENCY
         display_currency = DEFAULT_DISPLAY_CURRENCY
 
@@ -70,7 +70,7 @@ class CoinMarketCapSensor(Entity):
         """Initialize the sensor."""
         self.data = data
         self._ticker = None
-        self._unit_of_measurement = self.data.display_currency
+        self._unit_of_measurement = self.data.display_currency.upper()
 
     @property
     def name(self):
@@ -81,8 +81,7 @@ class CoinMarketCapSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return round(float(self._ticker.get(
-            'price_' +
-            self._unit_of_measurement.lower())), 2)
+            'price_{}'.format(self.data.display_currency))), 2)
 
     @property
     def unit_of_measurement(self):
@@ -99,13 +98,11 @@ class CoinMarketCapSensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_24H_VOLUME: self._ticker.get(
-                '24h_volume_' +
-                self._unit_of_measurement.lower()),
+                '24h_volume_{}'.format(self.data.display_currency)),
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_AVAILABLE_SUPPLY: self._ticker.get('available_supply'),
             ATTR_MARKET_CAP: self._ticker.get(
-                'market_cap_' +
-                self._unit_of_measurement.lower()),
+                'market_cap_{}'.format(self.data.display_currency)),
             ATTR_PERCENT_CHANGE_24H: self._ticker.get('percent_change_24h'),
             ATTR_PERCENT_CHANGE_7D: self._ticker.get('percent_change_7d'),
             ATTR_SYMBOL: self._ticker.get('symbol'),
