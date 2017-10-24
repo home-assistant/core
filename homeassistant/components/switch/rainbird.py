@@ -47,8 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug("Rain Bird Controller set to " + str(server))
 
-    initialstatus = controller.currentIrrigation()
-    if initialstatus == -1:
+    if controller.currentIrrigation() == -1:
         _LOGGER.error("Error getting state. Possible configuration issues")
         raise PlatformNotReady
     else:
@@ -89,12 +88,10 @@ class RainBirdSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._state = True
         self._rainbird.startIrrigation(int(self._zone), int(self._duration))
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._state = False
         self._rainbird.stopIrrigation()
 
     def get_device_status(self):
