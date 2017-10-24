@@ -55,7 +55,7 @@ def async_trigger(hass, config, action):
             }
         }
         return condition.async_numeric_state(
-                hass, to_s, below, above, value_template, variables)
+            hass, to_s, below, above, value_template, variables)
 
     @callback
     def state_automation_listener(entity, from_s, to_s):
