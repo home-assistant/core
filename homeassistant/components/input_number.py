@@ -4,11 +4,13 @@ Component to offer a way to set a numeric value from a slider or text box.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_number/
 """
+import os
 import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
@@ -41,17 +43,13 @@ SERVICE_SET_VALUE = 'set_value'
 SERVICE_INCREMENT = 'increment'
 SERVICE_DECREMENT = 'decrement'
 
+SERVICE_DEFAULT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): vol.Coerce(float),
-})
-
-SERVICE_INCREMENT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
-
-SERVICE_DECREMENT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 
@@ -86,6 +84,18 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
 
+
+SERVICE_TO_METHOD = {
+    SERVICE_SET_VALUE: {
+        'method': 'async_set_value',
+        'schema': SERVICE_SET_VALUE_SCHEMA},
+    SERVICE_INCREMENT: {
+        'method': 'async_increment',
+        'schema': SERVICE_DEFAULT_SCHEMA},
+    SERVICE_DECREMENT: {
+        'method': 'async_decrement',
+        'schema': SERVICE_DEFAULT_SCHEMA},
+}
 
 @bind_hass
 def set_value(hass, entity_id, value):
@@ -137,46 +147,34 @@ def async_setup(hass, config):
         return False
 
     @asyncio.coroutine
-    def async_set_value_service(call):
-        """Handle a calls to the input slider services."""
-        target_inputs = component.async_extract_from_service(call)
+    def async_handle_service(service):
+        """Handle calls to input_number services"""
+        target_inputs = component.async_extract_from_service(service)
+        method = SERVICE_TO_METHOD.get(service.service)
+        params = service.data.copy()
+        params.pop(ATTR_ENTITY_ID, None)
 
-        tasks = [input_number.async_set_value(call.data[ATTR_VALUE])
-                 for input_number in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+        # call method
+        update_tasks = []
+        for target_input in target_inputs:
+            yield from getattr(target_input, method['method'])(**params)
+            if not target_input.should_poll:
+                continue
+            update_tasks.append(target_input.async_update_ha_state(True))
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_VALUE, async_set_value_service,
-        schema=SERVICE_SET_VALUE_SCHEMA)
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    @asyncio.coroutine
-    def async_increment_service(call):
-        """Handle calls to the input slider increment services."""
-        target_inputs = component.async_extract_from_service(call)
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
 
-        tasks = [input_number.async_increment()
-                 for input_number in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_INCREMENT, async_increment_service,
-        schema=SERVICE_INCREMENT_SCHEMA)
-
-    @asyncio.coroutine
-    def async_decrement_service(call):
-        """Handle calls to the input slider decrement services."""
-        target_inputs = component.async_extract_from_service(call)
-
-        tasks = [input_number.async_decrement()
-                 for input_number in target_inputs]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DECREMENT, async_decrement_service,
-        schema=SERVICE_DECREMENT_SCHEMA)
+    for service_name in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service_name].get(
+            'schema', SERVICE_DEFAULT_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service_name, async_handle_service,
+            description=descriptions.get(service_name), schema=schema)
 
     yield from component.async_add_entities(entities)
     return True
