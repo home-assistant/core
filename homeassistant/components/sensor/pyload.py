@@ -66,7 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type),
             client_name=name)
         devices.append(new_sensor)
+
     add_devices(devices)
+
 
 class pyLoadSensor(Entity):
     """Representation of a pyLoad sensor."""
@@ -119,6 +121,7 @@ class pyLoadSensor(Entity):
             self._state = round(value / 2**20, 2)
         else:
             self._state = value
+
 
 class pyLoadAPI(object):
     """Simple wrapper for pyLoad's API."""
