@@ -77,39 +77,51 @@ class TestInputNumber(unittest.TestCase):
             'test_2': {
                 'initial': 50,
                 'min': 0,
-                'max': 100,
+                'max': 51,
             },
         }}))
         entity_id = 'input_number.test_2'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(50, int(float(state.state)))
+        self.assertEqual(50, float(state.state))
 
         increment(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(51, int(float(state.state)))
+        self.assertEqual(51, float(state.state))
+
+        increment(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(51, float(state.state))
 
     def test_decrement(self):
         """Test decrement method."""
         self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_3': {
                 'initial': 50,
-                'min': 0,
+                'min': 49,
                 'max': 100,
             },
         }}))
         entity_id = 'input_number.test_3'
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(50, int(float(state.state)))
+        self.assertEqual(50, float(state.state))
 
         decrement(self.hass, entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
-        self.assertEqual(49, int(float(state.state)))
+        self.assertEqual(49, float(state.state))
+
+        decrement(self.hass, entity_id)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual(49, float(state.state))
 
     def test_mode(self):
         """Test mode settings."""
