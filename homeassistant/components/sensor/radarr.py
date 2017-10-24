@@ -136,7 +136,7 @@ class RadarrSensor(Entity):
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
                     to_unit(data['freeSpace'], self._unit),
                     to_unit(data['totalSpace'], self._unit),
-                    self._unit, (
+                    self._unit, 0 if data['totalSpace'] == 0 else (
                         to_unit(data['freeSpace'], self._unit) /
                         to_unit(data['totalSpace'], self._unit) * 100
                     )
