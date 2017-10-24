@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         deluge_api.connect()
     except ConnectionRefusedError:
         _LOGGING.error("Connection to Deluge Daemon failed")
-        return False
+        return
 
     add_devices([DelugeSwitch(deluge_api, name)])
 
