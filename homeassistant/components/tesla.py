@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.17']
+REQUIREMENTS = ['teslajsonpy==0.0.18']
 
 DOMAIN = 'tesla'
 
@@ -45,7 +45,7 @@ TESLA_COMPONENTS = [
 
 def setup(hass, base_config):
     """Set up of Tesla platform."""
-    from teslajsonpy.controller import Controller as teslaApi
+    from teslajsonpy import Controller as teslaAPI, TeslaException
 
     config = base_config.get(DOMAIN)
 
@@ -55,12 +55,12 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaApi(
+                'controller': teslaAPI(
                     email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
-        except HTTPError as ex:
+        except TeslaException as ex:
             if ex.code == 401:
                 hass.components.persistent_notification.create(
                     "Error:<br />Please check username and password."
@@ -72,12 +72,11 @@ def setup(hass, base_config):
                     "Error:<br />Can't communicate with Tesla API.<br />"
                     "Error code: {} Reason: {}"
                     "You will need to restart Home Assistant after fixing."
-                    "".format(ex.code, ex.reason),
+                    "".format(ex.code, ex.message),
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID)
             _LOGGER.error("Unable to communicate with Tesla API: %s",
                           ex.reason)
-
             return False
 
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
