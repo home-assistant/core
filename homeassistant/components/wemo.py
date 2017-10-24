@@ -80,26 +80,13 @@ def setup(hass, config):
         discovery.load_platform(hass, component, DOMAIN, discovery_info,
                                 config)
 
-    def get_model_from_uuid(uuid):
-        """Determine Wemo model from UUID."""
+    def get_component_from_uuid(uuid):
         if uuid is None:
             return None
-        elif uuid.startswith('uuid:Socket'):
-            return 'Switch'
-        elif uuid.startswith('uuid:Lightswitch'):
-            return 'LightSwitch'
-        elif uuid.startswith('uuid:Insight'):
-            return 'Insight'
-        elif uuid.startswith('uuid:Sensor'):
-            return 'Motion'
-        elif uuid.startswith('uuid:Maker'):
-            return 'Maker'
-        elif uuid.startswith('uuid:Bridge'):
-            return 'Bridge'
-        elif uuid.startswith('uuid:CoffeeMaker'):
-            return 'CoffeeMaker'
-        else:
-            return None
+        for model, component in WEMO_MODEL_DISPATCH.items():
+            if uuid.startswith('uuid:{}'.format(model)):
+                return component
+        return None
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
