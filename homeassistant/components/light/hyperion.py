@@ -92,7 +92,7 @@ class Hyperion(Light):
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
         else:
             self._rgb_color = self._default_color
-            
+
         self.json_request({
             'command': 'color',
             'priority': self._priority,
