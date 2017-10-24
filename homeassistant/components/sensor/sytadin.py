@@ -13,7 +13,9 @@ import re
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.const import (LENGTH_KILOMETERS, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (LENGTH_KILOMETERS,
+                                 CONF_MONITORED_CONDITIONS,
+                                 CONF_UPDATE_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -34,7 +36,6 @@ SYSTADIN_REGEX = '(\d*\.\d+|\d+)'
 OPTION_TRAFFIC_JAM = 'traffic_jam'
 OPTION_MEAN_VELOCITY = 'mean_velocity'
 OPTION_CONGESTION = 'congestion'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 SENSOR_TYPES = {
     OPTION_TRAFFIC_JAM: ['Sytadin Traffic Jam', LENGTH_KILOMETERS,
