@@ -37,12 +37,14 @@ OPTION_CONGESTION = 'congestion'
 CONF_UPDATE_INTERVAL = 'update_interval'
 
 SENSOR_TYPES = {
-    OPTION_TRAFFIC_JAM: ('Sytadin Traffic Jam', LENGTH_KILOMETERS,
-        TRAFFIC_JAM_XPATH),
-    OPTION_MEAN_VELOCITY: ('Sytadin Mean Velocity', LENGTH_KILOMETERS+'/h',
-        MEAN_VELOCITY_XPATH),
-    OPTION_CONGESTION: ('Sytadin Congestion', '',
-        CONGESTION_XPATH)
+    OPTION_TRAFFIC_JAM: ['Sytadin Traffic Jam', LENGTH_KILOMETERS,
+        TRAFFIC_JAM_XPATH],
+
+    OPTION_MEAN_VELOCITY: ['Sytadin Mean Velocity', LENGTH_KILOMETERS+'/h',
+        MEAN_VELOCITY_XPATH],
+
+    OPTION_CONGESTION: ['Sytadin Congestion', '',
+        CONGESTION_XPATH]
 }
 
 TIMEOUT = 10
@@ -69,6 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 SENSOR_TYPES.get(option)[1],
                 config.get(CONF_UPDATE_INTERVAL))
             ])
+
 
 class SytadinSensor(Entity):
     """Sytadin Sensor."""
