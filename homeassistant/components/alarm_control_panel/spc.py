@@ -56,7 +56,7 @@ class SpcAlarm(alarm.AlarmControlPanel):
         self._api = api
 
     @asyncio.coroutine
-    def async_added_to_hass(self, state, extra):
+    def async_added_to_hass(self):
         """Calbback for init handlers."""
         self.hass.data[DATA_REGISTRY].register_alarm_device(
             self._area_id, self)
