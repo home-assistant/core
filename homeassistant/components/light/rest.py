@@ -1,5 +1,6 @@
 """
 Support for RESTful lights.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rest/
 
@@ -8,12 +9,12 @@ Code adapted from the RESTful switch implementation.
 import asyncio
 import logging
 
+import ast
+import json
+
 import aiohttp
 import async_timeout
 import voluptuous as vol
-
-import ast
-import json
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP,
@@ -111,7 +112,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the RESTful switch."""
+    """Set up the RESTful light."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
     body_brightness = config.get(CONF_BODY_BRIGHTNESS)
@@ -386,8 +387,8 @@ class RestLight(Light):
             req = yield from websession.get(self._resource, auth=self._auth)
             text = yield from req.text()
 
-        result = self._is_on_template.async_render_with_possible_json_value(
-                text, 'None')
+        result = self._is_on_template.\
+            async_render_with_possible_json_value(text, 'None')
         result = result.lower()
         if result == 'true':
             self._state = True
