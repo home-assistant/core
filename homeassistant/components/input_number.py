@@ -169,12 +169,10 @@ def async_setup(hass, config):
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
-    for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get(
-            'schema', SERVICE_DEFAULT_SCHEMA)
+    for service, data in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, service_name, async_handle_service,
-            description=descriptions.get(service_name), schema=schema)
+            DOMAIN, service, async_handle_service,
+            description=descriptions.get(service), schema=data['schema'])
 
     yield from component.async_add_entities(entities)
     return True
