@@ -40,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the pyLoad sensors."""
@@ -158,10 +159,9 @@ class pyLoadAPI(object):
             raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-
     def update(self):
         """Update cached response."""
-        try:            
+        try:
             self.status = self.post('speed')
         except requests.exceptions.ConnectionError:
             # failed to update status - exception already logged in self.post
