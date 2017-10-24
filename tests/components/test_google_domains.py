@@ -16,6 +16,7 @@ PASSWORD = 'xyz789'
 
 UPDATE_URL = google_domains.UPDATE_URL.format(USERNAME, PASSWORD)
 
+
 @pytest.fixture
 def setup_google_domains(hass, aioclient_mock):
     """Fixture that sets up NamecheapDNS."""
