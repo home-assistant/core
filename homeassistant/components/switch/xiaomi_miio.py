@@ -18,7 +18,7 @@ from homeassistant.exceptions import PlatformNotReady
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Miio Switch'
-
+PLATFORM = 'xiaomi_miio'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
@@ -154,16 +154,20 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-        if (yield from self._try_command("Turning the plug on failed.",
-                                         self._plug.on)):
+        result = yield from self._try_command(
+            "Turning the plug on failed.", self._plug.on)
+
+        if result:
             self._state = True
             self._skip_update = True
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the plug off."""
-        if (yield from self._try_command("Turning the plug off failed.",
-                                         self._plug.off)):
+        result = yield from self._try_command(
+            "Turning the plug off failed.", self._plug.off)
+
+        if result:
             self._state = False
             self._skip_update = True
 
