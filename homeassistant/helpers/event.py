@@ -381,11 +381,11 @@ def _process_time_match(parameter):
     elif isinstance(parameter, str) and parameter.startswith('/'):
         plus_pos = parameter.find('+', 2)
         if plus_pos > 0:
+            remainder = float(parameter[plus_pos + 1:])
             parameter = float(parameter[1:plus_pos])
-            remainder = int(parameter[plus_pos + 1:])
         else:
-            parameter = float(parameter[1:])
             remainder = 0
+            parameter = float(parameter[1:])
         return lambda time: time % parameter == remainder
 
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
