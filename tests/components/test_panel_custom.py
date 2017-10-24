@@ -11,7 +11,7 @@ from tests.common import mock_coro, mock_component
 
 @pytest.fixture
 def mock_register(hass):
-    """Mock th frontend component being loaded and yield register method."""
+    """Mock the frontend component being loaded and yield register method."""
     mock_component(hass, 'frontend')
     with patch('homeassistant.components.frontend.async_register_panel',
                return_value=mock_coro()) as mock_register:
