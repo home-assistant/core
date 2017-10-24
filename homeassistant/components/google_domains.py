@@ -1,20 +1,27 @@
-"""Integrate with Google Domains."""
+"""
+Integrate with Google Domains.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/google_domains/
+"""
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-DOMAIN = 'google_domains'
-UPDATE_URL = 'https://{}:{}@domains.google.com/nic/update'
-INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
-SERVICE_UPDATE_DNS = 'update_dns'
+
+DOMAIN = 'google_domains'
+
+INTERVAL = timedelta(minutes=5)
+
+UPDATE_URL = 'https://{}:{}@domains.google.com/nic/update'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -31,6 +38,7 @@ def async_setup(hass, config):
     domain = config[DOMAIN][CONF_DOMAIN]
     user = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
+
     session = async_get_clientsession(hass)
 
     result = yield from _update_google_domains(session, domain, user, password)
@@ -43,14 +51,7 @@ def async_setup(hass, config):
         """Update the Google Domains entry."""
         yield from _update_google_domains(session, domain, user, password)
 
-    @asyncio.coroutine
-    def update_domain_service(call):
-        """Update the Google Domains entry."""
-        yield from _update_google_domains(session, domain, user, password)
-
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DNS, update_domain_service)
 
     return result
 
@@ -70,7 +71,7 @@ def _update_google_domains(session, domain, user, password):
     _LOGGER.debug(body)
 
     if not body.startswith('good') and not body.startswith('nochg'):
-        _LOGGER.warning('Updating Google Domains domain %s failed: %s', domain)
+        _LOGGER.warning('Updating Google Domains domain failed: %s', domain)
         return False
 
     return True
