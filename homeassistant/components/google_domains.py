@@ -72,7 +72,7 @@ def _update_google_domains(hass, session, domain, user, password, timeout):
     params = {
         'hostname': domain
     }
-    
+
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             resp = yield from session.get(url, params=params)
@@ -80,7 +80,7 @@ def _update_google_domains(hass, session, domain, user, password, timeout):
 
             if body.startswith('good') or body.startswith('nochg'):
                 return True
-                
+
             _LOGGER.warning('Updating Google Domains failed: %s => %s',
                             domain, body)
 
