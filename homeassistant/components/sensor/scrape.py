@@ -7,12 +7,15 @@ https://home-assistant.io/components/sensor.scrape/
 import logging
 
 import voluptuous as vol
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL)
+    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME,
+    CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -30,8 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
     vol.Required(CONF_SELECT): cv.string,
     vol.Optional(CONF_ATTR): cv.string,
+    vol.Optional(CONF_AUTHENTICATION):
+        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
@@ -42,15 +49,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     method = 'GET'
-    payload = auth = headers = None
+    payload = headers = None
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
 
+    if username and password:
+        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+            auth = HTTPDigestAuth(username, password)
+        else:
+            auth = HTTPBasicAuth(username, password)
+    else:
+        auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
@@ -59,14 +75,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([
-        ScrapeSensor(hass, rest, name, select, attr, value_template, unit)
-    ], True)
+        ScrapeSensor(rest, name, select, attr, value_template, unit)], True)
 
 
 class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
-    def __init__(self, hass, rest, name, select, attr, value_template, unit):
+    def __init__(self, rest, name, select, attr, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest
         self._name = name

@@ -3,7 +3,7 @@
 # This way, the development image and the production image are kept in sync.
 
 FROM python:3.6
-MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
+LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
 
 # Uncomment any of the following lines to disable the installation.
 #ENV INSTALL_TELLSTICK no
@@ -12,7 +12,6 @@ MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 #ENV INSTALL_LIBCEC no
 #ENV INSTALL_PHANTOMJS no
 #ENV INSTALL_SSOCR no
-#ENV INSTALL_GACTION no
 
 VOLUME /config
 
