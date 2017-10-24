@@ -27,17 +27,17 @@ CLASS_MAPPING = {
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Zigbee Home Automation binary sensors."""
+    """Set up the Zigbee Home Automation binary sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
     from bellows.zigbee.zcl.clusters.security import IasZone
 
-    clusters = discovery_info['clusters']
+    in_clusters = discovery_info['in_clusters']
 
     device_class = None
-    cluster = [c for c in clusters if isinstance(c, IasZone)][0]
+    cluster = in_clusters[IasZone.cluster_id]
     if discovery_info['new_join']:
         yield from cluster.bind()
         ieee = cluster.endpoint.device.application.ieee
@@ -55,16 +55,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
-    """ZHA Binary Sensor."""
+    """THe ZHA Binary Sensor."""
 
     _domain = DOMAIN
 
     def __init__(self, device_class, **kwargs):
-        """Initialize ZHA binary sensor."""
+        """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_class = device_class
         from bellows.zigbee.zcl.clusters.security import IasZone
-        self._ias_zone_cluster = self._clusters[IasZone.cluster_id]
+        self._ias_zone_cluster = self._in_clusters[IasZone.cluster_id]
 
     @property
     def is_on(self) -> bool:

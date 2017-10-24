@@ -13,9 +13,14 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/arraylabs/pymyq/archive/v0.0.8.zip'
-    '#pymyq==0.0.8']
+REQUIREMENTS = ['pymyq==0.0.8']
+
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'myq'
+
+NOTIFICATION_ID = 'myq_notification'
+NOTIFICATION_TITLE = 'MyQ Cover Setup'
 
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_TYPE): cv.string,
@@ -23,33 +28,35 @@ COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
-DEFAULT_NAME = 'myq'
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MyQ component."""
+    """Set up the MyQ component."""
     from pymyq import MyQAPI as pymyq
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     brand = config.get(CONF_TYPE)
-
-    logger = logging.getLogger(__name__)
-
     myq = pymyq(username, password, brand)
 
-    if not myq.is_supported_brand():
-        logger.error('MyQ Cover - Unsupported Type. See documentation')
-        return
-
-    if not myq.is_login_valid():
-        logger.error('MyQ Cover - Username or Password is incorrect')
-        return
-
     try:
+        if not myq.is_supported_brand():
+            raise ValueError("Unsupported type. See documentation")
+
+        if not myq.is_login_valid():
+            raise ValueError("Username or Password is incorrect")
+
         add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
-    except (TypeError, KeyError, NameError) as ex:
-        logger.error("MyQ Cover - %s", ex)
+        return True
+
+    except (TypeError, KeyError, NameError, ValueError) as ex:
+        _LOGGER.error("%s", ex)
+        hass.components.persistent_notification.create(
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
 
 
 class MyQDevice(CoverDevice):
@@ -74,7 +81,7 @@ class MyQDevice(CoverDevice):
 
     @property
     def is_closed(self):
-        """Return True if cover is closed, else False."""
+        """Return true if cover is closed, else False."""
         return self._status == STATE_CLOSED
 
     def close_cover(self):

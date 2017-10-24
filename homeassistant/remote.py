@@ -25,15 +25,15 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
-METHOD_GET = "get"
-METHOD_POST = "post"
-METHOD_DELETE = "delete"
-
 _LOGGER = logging.getLogger(__name__)
+
+METHOD_GET = 'get'
+METHOD_POST = 'post'
+METHOD_DELETE = 'delete'
 
 
 class APIStatus(enum.Enum):
-    """Represent API status."""
+    """Representation of an API status."""
 
     # pylint: disable=no-init, invalid-name
     OK = "ok"
@@ -51,7 +51,7 @@ class API(object):
 
     def __init__(self, host: str, api_password: Optional[str]=None,
                  port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
-        """Initalize the API."""
+        """Init the API."""
         self.host = host
         self.port = port
         self.api_password = api_password
@@ -92,10 +92,10 @@ class API(object):
             if method == METHOD_GET:
                 return requests.get(
                     url, params=data, timeout=timeout, headers=self._headers)
-            else:
-                return requests.request(
-                    method, url, data=data, timeout=timeout,
-                    headers=self._headers)
+
+            return requests.request(
+                method, url, data=data, timeout=timeout,
+                headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -116,29 +116,29 @@ class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
     # pylint: disable=method-hidden
-    def default(self, obj):
+    def default(self, o):
         """Convert Home Assistant objects.
 
         Hand other objects to the original method.
         """
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, set):
-            return list(obj)
-        elif hasattr(obj, 'as_dict'):
-            return obj.as_dict()
+        if isinstance(o, datetime):
+            return o.isoformat()
+        elif isinstance(o, set):
+            return list(o)
+        elif hasattr(o, 'as_dict'):
+            return o.as_dict()
 
         try:
-            return json.JSONEncoder.default(self, obj)
+            return json.JSONEncoder.default(self, o)
         except TypeError:
             # If the JSON serializer couldn't serialize it
             # it might be a generator, convert it to a list
             try:
                 return [self.default(child_obj)
-                        for child_obj in obj]
+                        for child_obj in o]
             except TypeError:
                 # Ok, we're lost, cause the original error
-                return json.JSONEncoder.default(self, obj)
+                return json.JSONEncoder.default(self, o)
 
 
 def validate_api(api):
@@ -152,8 +152,7 @@ def validate_api(api):
         elif req.status_code == 401:
             return APIStatus.INVALID_PASSWORD
 
-        else:
-            return APIStatus.UNKNOWN
+        return APIStatus.UNKNOWN
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
@@ -259,8 +258,8 @@ def set_state(api, entity_id, new_state, attributes=None, force_update=False):
             _LOGGER.error("Error changing state: %d - %s",
                           req.status_code, req.text)
             return False
-        else:
-            return True
+
+        return True
 
     except HomeAssistantError:
         _LOGGER.exception("Error setting state")

@@ -8,19 +8,18 @@ import logging
 from collections import defaultdict
 
 import voluptuous as vol
-
 from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import (convert, slugify)
+from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.27']
+REQUIREMENTS = ['pyvera==0.2.37']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +28,6 @@ DOMAIN = 'vera'
 VERA_CONTROLLER = None
 
 CONF_CONTROLLER = 'vera_controller_url'
-CONF_EXCLUDE = 'exclude'
-CONF_LIGHTS = 'lights'
 
 VERA_ID_FORMAT = '{}_{}'
 
@@ -56,13 +53,13 @@ VERA_COMPONENTS = [
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
-    """Common setup for Vera devices."""
+    """Set up for Vera devices."""
     global VERA_CONTROLLER
     import pyvera as veraApi
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
+        _LOGGER.info("Shutting down subscriptions")
         VERA_CONTROLLER.stop()
 
     config = base_config.get(DOMAIN)
@@ -100,9 +97,8 @@ def setup(hass, base_config):
     return True
 
 
-# pylint: disable=too-many-return-statements
 def map_vera_device(vera_device, remap):
-    """Map vera  classes to HA types."""
+    """Map vera classes to Home Assistant types."""
     import pyvera as veraApi
     if isinstance(vera_device, veraApi.VeraDimmer):
         return 'light'
@@ -123,8 +119,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
-        else:
-            return 'switch'
+        return 'switch'
     return None
 
 
@@ -145,6 +140,7 @@ class VeraDevice(Entity):
         self.update()
 
     def _update_callback(self, _device):
+        """Update the state."""
         self.update()
         self.schedule_update_ha_state()
 
@@ -164,7 +160,7 @@ class VeraDevice(Entity):
         attr = {}
 
         if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level
 
         if self.vera_device.is_armable:
             armed = self.vera_device.is_armed

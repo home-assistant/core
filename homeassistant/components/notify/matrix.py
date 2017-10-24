@@ -56,7 +56,7 @@ class MatrixNotificationService(BaseNotificationService):
 
     def __init__(self, config_file, homeserver, default_room, verify_ssl,
                  username, password):
-        """Setup the client."""
+        """Set up the client."""
         self.session_filepath = config_file
         self.auth_tokens = self.get_auth_tokens()
 

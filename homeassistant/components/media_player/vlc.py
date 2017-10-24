@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the vlc platform."""
+    """Set up the vlc platform."""
     add_devices([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
                            config.get(CONF_ARGUMENTS))])
 
@@ -137,7 +137,7 @@ class VlcDevice(MediaPlayerDevice):
         self._volume = volume
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._vlc.play()
         self._state = STATE_PLAYING
 

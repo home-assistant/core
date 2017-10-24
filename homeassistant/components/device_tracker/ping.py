@@ -37,8 +37,8 @@ class Host(object):
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
-        if sys.platform == "win32":
-            self._ping_cmd = ['ping', '-n 1', '-w 1000', self.ip_address]
+        if sys.platform == 'win32':
+            self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
         else:
             self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
                               self.ip_address]
@@ -57,7 +57,7 @@ class Host(object):
     def update(self, see):
         """Update device state by sending one or more ping messages."""
         failed = 0
-        while failed < self._count:  # check more times if host in unreachable
+        while failed < self._count:  # check more times if host is unreachable
             if self.ping():
                 see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
                 return True
@@ -67,7 +67,7 @@ class Host(object):
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the Host objects and return the update function."""
+    """Set up the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]
     interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + \

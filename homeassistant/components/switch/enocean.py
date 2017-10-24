@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the EnOcean switch platform."""
+    """Set up the EnOcean switch platform."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
 

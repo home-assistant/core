@@ -6,6 +6,7 @@ https://home-assistant.io/components/http/
 """
 import asyncio
 import json
+from functools import wraps
 import logging
 import ssl
 from ipaddress import ip_network
@@ -51,7 +52,7 @@ CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
-# TLS configuation follows the best-practice guidelines specified here:
+# TLS configuration follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
@@ -81,14 +82,13 @@ DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
-    vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(cv.ensure_list,
-                                                         [cv.string]),
+    vol.Optional(CONF_CORS_ORIGINS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
@@ -143,12 +143,12 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def stop_server(event):
-        """Callback to stop the server."""
+        """Stop the server."""
         yield from server.stop()
 
     @asyncio.coroutine
     def start_server(event):
-        """Callback to start the server."""
+        """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         yield from server.start()
 
@@ -294,7 +294,7 @@ class HomeAssistantWSGI(object):
 
     @asyncio.coroutine
     def start(self):
-        """Start the wsgi server."""
+        """Start the WSGI server."""
         cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
@@ -340,7 +340,7 @@ class HomeAssistantWSGI(object):
 
     @asyncio.coroutine
     def stop(self):
-        """Stop the wsgi server."""
+        """Stop the WSGI server."""
         if self.server:
             self.server.close()
             yield from self.server.wait_closed()
@@ -358,16 +358,21 @@ class HomeAssistantView(object):
     requires_auth = True  # Views inheriting from this class can override this
 
     # pylint: disable=no-self-use
-    def json(self, result, status_code=200):
+    def json(self, result, status_code=200, headers=None):
         """Return a JSON response."""
         msg = json.dumps(
             result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
         return web.Response(
-            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code)
+            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
+            headers=headers)
 
-    def json_message(self, error, status_code=200):
+    def json_message(self, message, status_code=200, message_code=None,
+                     headers=None):
         """Return a JSON message response."""
-        return self.json({'message': error}, status_code)
+        data = {'message': message}
+        if message_code is not None:
+            data['code'] = message_code
+        return self.json(data, status_code, headers=headers)
 
     @asyncio.coroutine
     # pylint: disable=no-self-use
@@ -400,7 +405,7 @@ class HomeAssistantView(object):
 
 
 def request_handler_factory(view, handler):
-    """Factory to wrap our handler classes."""
+    """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
         "Handler should be a coroutine or a callback."
 
@@ -444,3 +449,41 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
+
+
+class RequestDataValidator:
+    """Decorator that will validate the incoming data.
+
+    Takes in a voluptuous schema and adds 'post_data' as
+    keyword argument to the function call.
+
+    Will return a 400 if no JSON provided or doesn't match schema.
+    """
+
+    def __init__(self, schema):
+        """Initialize the decorator."""
+        self._schema = schema
+
+    def __call__(self, method):
+        """Decorate a function."""
+        @asyncio.coroutine
+        @wraps(method)
+        def wrapper(view, request, *args, **kwargs):
+            """Wrap a request handler with data validation."""
+            try:
+                data = yield from request.json()
+            except ValueError:
+                _LOGGER.error('Invalid JSON received.')
+                return view.json_message('Invalid JSON.', 400)
+
+            try:
+                kwargs['data'] = self._schema(data)
+            except vol.Invalid as err:
+                _LOGGER.error('Data does not match schema: %s', err)
+                return view.json_message(
+                    'Message format incorrect: {}'.format(err), 400)
+
+            result = yield from method(view, request, *args, **kwargs)
+            return result
+
+        return wrapper

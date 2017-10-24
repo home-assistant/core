@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_LATITUDE, CONF_LONGITUDE, UNIT_UV_INDEX)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ SENSOR_TYPES = {
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
-    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C',
+    'dew_point': ['Dew Point', '°C', '°F', '°C', '°C', '°C',
                   'mdi:thermometer', ['currently', 'hourly', 'daily']],
     'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph',
                    'mdi:weather-windy', ['currently', 'hourly', 'daily']],
@@ -96,6 +96,10 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
+    'uv_index': ['UV Index',
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
+                 UNIT_UV_INDEX, UNIT_UV_INDEX, 'mdi:weather-sunny',
+                 ['currently', 'hourly', 'daily']],
 }
 
 CONDITION_PICTURES = {
@@ -130,8 +134,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Dark Sky sensor."""
-    # latitude and longitude are inclusive on config
+    """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -163,8 +166,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
-                sensors.append(DarkSkySensor(forecast_data,
-                                             variable, name, forecast_day))
+                sensors.append(DarkSkySensor(
+                    forecast_data, variable, name, forecast_day))
 
     add_devices(sensors, True)
 
@@ -188,9 +191,9 @@ class DarkSkySensor(Entity):
         """Return the name of the sensor."""
         if self.forecast_day == 0:
             return '{} {}'.format(self.client_name, self._name)
-        else:
-            return '{} {} {}'.format(self.client_name, self._name,
-                                     self.forecast_day)
+
+        return '{} {} {}'.format(
+            self.client_name, self._name, self.forecast_day)
 
     @property
     def state(self):
@@ -215,8 +218,8 @@ class DarkSkySensor(Entity):
 
         if self._icon in CONDITION_PICTURES:
             return CONDITION_PICTURES[self._icon]
-        else:
-            return None
+
+        return None
 
     def update_unit_of_measurement(self):
         """Update units based on unit system."""
@@ -285,7 +288,7 @@ class DarkSkySensor(Entity):
 
     def get_state(self, data):
         """
-        Helper function that returns a new state based on the type.
+        Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """
@@ -306,7 +309,7 @@ class DarkSkySensor(Entity):
                             'temperature_min', 'temperature_max',
                             'apparent_temperature_min',
                             'apparent_temperature_max',
-                            'pressure', 'ozone']):
+                            'pressure', 'ozone', 'uvIndex']):
             return round(state, 1)
         return state
 

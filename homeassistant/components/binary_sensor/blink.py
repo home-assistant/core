@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BlinkCameraMotionSensor(BinarySensorDevice):
-    """A representation of a Blink binary sensor."""
+    """Representation of a Blink binary sensor."""
 
     def __init__(self, name, data):
         """Initialize the sensor."""

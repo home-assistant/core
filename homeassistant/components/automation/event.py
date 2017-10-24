@@ -9,12 +9,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback, CoreState
-from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_START
+from homeassistant.core import callback
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
-CONF_EVENT_TYPE = "event_type"
-CONF_EVENT_DATA = "event_data"
+CONF_EVENT_TYPE = 'event_type'
+CONF_EVENT_DATA = 'event_data'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,31 +29,27 @@ TRIGGER_SCHEMA = vol.Schema({
 def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
-    event_data = config.get(CONF_EVENT_DATA)
-
-    if (event_type == EVENT_HOMEASSISTANT_START and
-            hass.state == CoreState.starting):
-        _LOGGER.warning('Deprecation: Automations should not listen to event '
-                        "'homeassistant_start'. Use platform 'homeassistant' "
-                        'instead. Feature will be removed in 0.45')
-        hass.async_run_job(action, {
-            'trigger': {
-                'platform': 'event',
-                'event': None,
-            },
-        })
-        return lambda: None
+    event_data_schema = vol.Schema(
+        config.get(CONF_EVENT_DATA),
+        extra=vol.ALLOW_EXTRA) if config.get(CONF_EVENT_DATA) else None
 
     @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
-        if not event_data or all(val == event.data.get(key) for key, val
-                                 in event_data.items()):
-            hass.async_run_job(action, {
-                'trigger': {
-                    'platform': 'event',
-                    'event': event,
-                },
-            })
+        if event_data_schema:
+            # Check that the event data matches the configured
+            # schema if one was provided
+            try:
+                event_data_schema(event.data)
+            except vol.Invalid:
+                # If event data doesn't match requested schema, skip event
+                return
+
+        hass.async_run_job(action, {
+            'trigger': {
+                'platform': 'event',
+                'event': event,
+            },
+        })
 
     return hass.bus.async_listen(event_type, handle_event)

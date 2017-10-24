@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the scenes stored in the LIFX Cloud."""
+    """Set up the scenes stored in the LIFX Cloud."""
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
@@ -62,9 +62,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     elif status == 401:
         _LOGGER.error("Unauthorized (bad token?) on %s", url)
         return False
-    else:
-        _LOGGER.error("HTTP error %d on %s", scenes_resp.status, url)
-        return False
+
+    _LOGGER.error("HTTP error %d on %s", scenes_resp.status, url)
+    return False
 
 
 class LifxCloudScene(Scene):

@@ -7,9 +7,9 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_PORT
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pylitejet==0.1']
 
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Initialize the LiteJet component."""
+    """Set up the LiteJet component."""
     from pylitejet import LiteJet
 
     url = config[DOMAIN].get(CONF_PORT)

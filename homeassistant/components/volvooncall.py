@@ -14,10 +14,13 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.dt import utcnow
 import voluptuous as vol
 
 DOMAIN = 'volvooncall'
+
+DATA_KEY = DOMAIN
 
 REQUIREMENTS = ['volvooncall==0.3.3']
 
@@ -26,13 +29,17 @@ _LOGGER = logging.getLogger(__name__)
 CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+CONF_SERVICE_URL = 'service_url'
+
+SIGNAL_VEHICLE_SEEN = '{}.vehicle_seen'.format(DOMAIN)
 
 RESOURCES = {'position': ('device_tracker',),
              'lock': ('lock', 'Lock'),
              'heater': ('switch', 'Heater', 'mdi:radiator'),
              'odometer': ('sensor', 'Odometer', 'mdi:speedometer', 'km'),
-             'fuel_amount': ('sensor', 'Fuel', 'mdi:gas-station', 'L'),
-             'fuel_amount_level': ('sensor', 'Fuel', 'mdi:water-percent', '%'),
+             'fuel_amount': ('sensor', 'Fuel amount', 'mdi:gas-station', 'L'),
+             'fuel_amount_level': (
+                 'sensor', 'Fuel level', 'mdi:water-percent', '%'),
              'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
              'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
              'brake_fluid': ('binary_sensor', 'Brake Fluid'),
@@ -51,27 +58,22 @@ CONFIG_SCHEMA = vol.Schema({
             {cv.slug: cv.string}),
         vol.Optional(CONF_RESOURCES): vol.All(
             cv.ensure_list, [vol.In(RESOURCES)]),
+        vol.Optional(CONF_SERVICE_URL): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Setup the VOC component."""
-    from volvooncall import Connection
+    """Set up the Volvo On Call component."""
+    from volvooncall import Connection, DEFAULT_SERVICE_URL
     connection = Connection(
         config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD))
+        config[DOMAIN].get(CONF_PASSWORD),
+        config[DOMAIN].get(CONF_SERVICE_URL, DEFAULT_SERVICE_URL))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
-    class state:  # pylint:disable=invalid-name
-        """Namespace to hold state for each vehicle."""
-
-        entities = {}
-        vehicles = {}
-        names = config[DOMAIN].get(CONF_NAME)
-
-    hass.data[DOMAIN] = state
+    state = hass.data[DATA_KEY] = VolvoData(config)
 
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
@@ -79,29 +81,25 @@ def setup(hass, config):
         for attr, (component, *_) in RESOURCES.items():
             if (getattr(vehicle, attr + '_supported', True) and
                     attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
-                discovery.load_platform(hass,
-                                        component,
-                                        DOMAIN,
-                                        (vehicle.vin, attr),
-                                        config)
+                discovery.load_platform(
+                    hass, component, DOMAIN, (vehicle.vin, attr), config)
 
     def update_vehicle(vehicle):
-        """Updated information on vehicle received."""
+        """Revieve updated information on vehicle."""
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
             discover_vehicle(vehicle)
 
         for entity in state.entities[vehicle.vin]:
-            if isinstance(entity, Entity):
-                entity.schedule_update_ha_state()
-            else:
-                entity(vehicle)  # device tracker
+            entity.schedule_update_ha_state()
+
+        dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
     def update(now):
         """Update status from the online service."""
         try:
             if not connection.update():
-                _LOGGER.warning('Could not query server')
+                _LOGGER.warning("Could not query server")
                 return False
 
             for vehicle in connection.vehicles:
@@ -111,8 +109,33 @@ def setup(hass, config):
         finally:
             track_point_in_utc_time(hass, update, utcnow() + interval)
 
-    _LOGGER.info('Logging in to service')
+    _LOGGER.info("Logging in to service")
     return update(utcnow())
+
+
+class VolvoData:
+    """Hold component state."""
+
+    def __init__(self, config):
+        """Initialize the component state."""
+        self.entities = {}
+        self.vehicles = {}
+        self.names = config[DOMAIN].get(CONF_NAME)
+
+    def vehicle_name(self, vehicle):
+        """Provide a friendly name for a vehicle."""
+        if (vehicle.registration_number and
+                vehicle.registration_number.lower()) in self.names:
+            return self.names[vehicle.registration_number.lower()]
+        elif (vehicle.vin and
+              vehicle.vin.lower() in self.names):
+            return self.names[vehicle.vin.lower()]
+        elif vehicle.registration_number:
+            return vehicle.registration_number
+        elif vehicle.vin:
+            return vehicle.vin
+        else:
+            return ''
 
 
 class VolvoEntity(Entity):
@@ -127,7 +150,7 @@ class VolvoEntity(Entity):
 
     @property
     def _state(self):
-        return self._hass.data[DOMAIN]
+        return self._hass.data[DATA_KEY]
 
     @property
     def vehicle(self):
@@ -135,26 +158,23 @@ class VolvoEntity(Entity):
         return self._state.vehicles[self._vin]
 
     @property
-    def _vehicle_name(self):
-        return (self._state.names.get(self._vin.lower()) or
-                self._state.names.get(
-                    self.vehicle.registration_number.lower()) or
-                self.vehicle.registration_number)
-
-    @property
     def _entity_name(self):
         return RESOURCES[self._attribute][1]
 
     @property
+    def _vehicle_name(self):
+        return self._state.vehicle_name(self.vehicle)
+
+    @property
     def name(self):
         """Return full name of the entity."""
-        return '%s %s' % (
+        return '{} {}'.format(
             self._vehicle_name,
             self._entity_name)
 
     @property
     def should_poll(self):
-        """Polling is not needed."""
+        """Return the polling state."""
         return False
 
     @property
@@ -165,6 +185,6 @@ class VolvoEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return dict(model='%s/%s' % (
+        return dict(model='{}/{}'.format(
             self.vehicle.vehicle_type,
             self.vehicle.model_year))

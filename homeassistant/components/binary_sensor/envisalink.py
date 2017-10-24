@@ -15,13 +15,14 @@ from homeassistant.components.envisalink import (
     SIGNAL_ZONE_UPDATE)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 
-DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['envisalink']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Envisalink binary sensor devices."""
+    """Set up the Envisalink binary sensor devices."""
     configured_zones = discovery_info['zones']
 
     devices = []
@@ -79,4 +80,4 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

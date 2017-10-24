@@ -58,7 +58,18 @@ set_direction:
   fields:
     entity_id:
       description: Name(s) of the entities to toggle
-      exampl: 'fan.living_room'
+      example: 'fan.living_room'
     direction:
       description: The direction to rotate
       example: 'left'
+
+dyson_set_night_mode:
+  description: Set the fan in night mode
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable night mode
+      example: 'fan.living_room'
+    night_mode:
+      description: Night mode status
+      example: true

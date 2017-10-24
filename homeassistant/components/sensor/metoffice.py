@@ -4,7 +4,6 @@ Support for UK Met Office weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
-
 import logging
 from datetime import timedelta
 
@@ -25,20 +24,29 @@ REQUIREMENTS = ['datapoint==0.4.3']
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 
 CONDITION_CLASSES = {
-    'cloudy': ["7", "8"],
-    'fog': ["5", "6"],
-    'hail': ["19", "20", "21"],
-    'lightning': ["30"],
-    'lightning-rainy': ["28", "29"],
-    'partlycloudy': ["2", "3"],
-    'pouring': ["13", "14", "15"],
-    'rainy': ["9", "10", "11", "12"],
-    'snowy': ["22", "23", "24", "25", "26", "27"],
-    'snowy-rainy': ["16", "17", "18"],
-    'sunny': ["0", "1"],
+    'cloudy': ['7', '8'],
+    'fog': ['5', '6'],
+    'hail': ['19', '20', '21'],
+    'lightning': ['30'],
+    'lightning-rainy': ['28', '29'],
+    'partlycloudy': ['2', '3'],
+    'pouring': ['13', '14', '15'],
+    'rainy': ['9', '10', '11', '12'],
+    'snowy': ['22', '23', '24', '25', '26', '27'],
+    'snowy-rainy': ['16', '17', '18'],
+    'sunny': ['0', '1'],
     'windy': [],
     'windy-variant': [],
     'exceptional': [],
+}
+
+VISIBILTY_CLASSES = {
+    'VP': '<1',
+    'PO': '1-4',
+    'MO': '4-10',
+    'GO': '10-20',
+    'VG': '20-40',
+    'EX': '>40'
 }
 
 SCAN_INTERVAL = timedelta(minutes=35)
@@ -52,7 +60,8 @@ SENSOR_TYPES = {
     'wind_speed': ['Wind Speed', 'm/s'],
     'wind_direction': ['Wind Direction', None],
     'wind_gust': ['Wind Gust', 'm/s'],
-    'visibility': ['Visibility', 'km'],
+    'visibility': ['Visibility', None],
+    'visibility_distance': ['Visibility Distance', 'km'],
     'uv': ['UV', None],
     'precipitation': ['Probability of Precipitation', '%'],
     'humidity': ['Humidity', '%']
@@ -67,7 +76,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the Metoffice sensor platform."""
     import datapoint as dp
     datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
@@ -120,15 +129,16 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if (self._condition == 'visibility_distance' and
+                'visibility' in self.data.data.__dict__.keys()):
+            return VISIBILTY_CLASSES.get(self.data.data.visibility.value)
         if self._condition in self.data.data.__dict__.keys():
             variable = getattr(self.data.data, self._condition)
             if self._condition == "weather":
                 return [k for k, v in CONDITION_CLASSES.items() if
                         self.data.data.weather.value in v][0]
-            else:
-                return variable.value
-        else:
-            return STATE_UNKNOWN
+            return variable.value
+        return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):
@@ -142,7 +152,7 @@ class MetOfficeCurrentSensor(Entity):
         attr['Sensor Id'] = self._condition
         attr['Site Id'] = self.site.id
         attr['Site Name'] = self.site.name
-        attr['Last Update'] = self.data.lastupdate
+        attr['Last Update'] = self.data.data.date
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -167,8 +177,8 @@ class MetOfficeCurrentData(object):
         import datapoint as dp
 
         try:
-            forecast = self._datapoint.get_forecast_for_site(self._site.id,
-                                                             "3hourly")
+            forecast = self._datapoint.get_forecast_for_site(
+                self._site.id, "3hourly")
             self.data = forecast.now()
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)

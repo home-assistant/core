@@ -18,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
 })
@@ -34,7 +33,7 @@ def get_service(hass, config, discovery_info=None):
     tree = ET.fromstring(response.content)
 
     if tree[0].tag == 'error':
-        _LOGGER.error("Wrong API key supplied. %s", tree[0].text)
+        _LOGGER.error("Wrong API key supplied: %s", tree[0].text)
         return None
 
     return NmaNotificationService(config[CONF_API_KEY])

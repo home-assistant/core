@@ -11,7 +11,7 @@ DEVICES = []
 
 
 def init(empty=False):
-    """Initalize the platform with devices."""
+    """Initialize the platform with devices."""
     global DEVICES
 
     DEVICES = [] if empty else [

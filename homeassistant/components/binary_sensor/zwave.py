@@ -20,12 +20,10 @@ DEPENDENCIES = []
 
 
 def get_device(values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     device_mapping = workaround.get_device_mapping(values.primary)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
-        # Default the multiplier to 4
-        re_arm_multiplier = zwave.get_config_value(values.primary.node, 9) or 4
-        return ZWaveTriggerSensor(values, "motion", re_arm_multiplier * 8)
+        return ZWaveTriggerSensor(values, "motion")
 
     if workaround.get_device_component_mapping(values.primary) == DOMAIN:
         return ZWaveBinarySensor(values, None)
@@ -45,12 +43,12 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         self._state = self.values.primary.data
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     @property
@@ -62,15 +60,21 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, values, device_class, re_arm_sec=60):
+    def __init__(self, values, device_class):
         """Initialize the sensor."""
         super(ZWaveTriggerSensor, self).__init__(values, device_class)
-        self.re_arm_sec = re_arm_sec
+        # Set default off delay to 60 sec
+        self.re_arm_sec = 60
         self.invalidate_after = None
 
     def update_properties(self):
-        """Called when a value for this entity's node has changed."""
+        """Handle value changes for this entity's node."""
         self._state = self.values.primary.data
+        _LOGGER.debug('off_delay=%s', self.values.off_delay)
+        # Set re_arm_sec if off_delay is provided from the sensor
+        if self.values.off_delay:
+            _LOGGER.debug('off_delay.data=%s', self.values.off_delay.data)
+            self.re_arm_sec = self.values.off_delay.data * 8
         # only allow this value to be true for re_arm secs
         if not self.hass:
             return
@@ -83,7 +87,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
     @property
     def is_on(self):
-        """Return True if movement has happened within the rearm time."""
+        """Return true if movement has happened within the rearm time."""
         return self._state and \
             (self.invalidate_after is None or
              self.invalidate_after > dt_util.utcnow())

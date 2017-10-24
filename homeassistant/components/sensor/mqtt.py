@@ -75,13 +75,13 @@ class MqttSensor(Entity):
         self._expiration_trigger = None
 
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             # auto-expire enabled?
             if self._expire_after is not None and self._expire_after > 0:
                 # Reset old trigger
@@ -94,15 +94,13 @@ class MqttSensor(Entity):
                     dt_util.utcnow() + timedelta(seconds=self._expire_after))
 
                 self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass,
-                    self.value_is_expired,
-                    expiration_at)
+                    self.hass, self.value_is_expired, expiration_at)
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
@@ -112,7 +110,7 @@ class MqttSensor(Entity):
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._state = STATE_UNKNOWN
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):

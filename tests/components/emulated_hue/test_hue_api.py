@@ -16,8 +16,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueAllLightsStateView, HueOneLightStateView, HueOneLightChangeView)
 from homeassistant.components.emulated_hue import Config
 
-from tests.common import (
-    get_test_instance_port, mock_http_component_app)
+from tests.common import get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -100,6 +99,14 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
 
+    # Ceiling Fan is explicitly excluded from being exposed
+    ceiling_fan_entity = hass.states.get('fan.ceiling_fan')
+    attrs = dict(ceiling_fan_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
+    hass.states.async_set(
+        ceiling_fan_entity.entity_id, ceiling_fan_entity.state,
+        attributes=attrs)
+
     # Expose the script
     script_entity = hass.states.get('script.set_kitchen_light')
     attrs = dict(script_entity.attributes)
@@ -114,7 +121,7 @@ def hass_hue(loop, hass):
 @pytest.fixture
 def hue_client(loop, hass_hue, test_client):
     """Create web client for emulated hue api."""
-    web_app = mock_http_component_app(hass_hue)
+    web_app = hass_hue.http.app
     config = Config(None, {'type': 'alexa'})
 
     HueUsernameView().register(web_app.router)
@@ -147,6 +154,7 @@ def test_discover_lights(hue_client):
     assert 'media_player.walkman' in devices
     assert 'media_player.lounge_room' in devices
     assert 'fan.living_room_fan' in devices
+    assert 'fan.ceiling_fan' not in devices
 
 
 @asyncio.coroutine

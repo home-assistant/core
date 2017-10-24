@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup weblink component."""
+    """Set up the weblink component."""
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):

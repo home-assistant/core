@@ -1,5 +1,5 @@
 """
-Camera that loads a picture from a local file.
+Camera that loads a picture from Neato.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.neato/
@@ -18,12 +18,12 @@ DEPENDENCIES = ['neato']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Camera."""
+    """Set up the Neato Camera."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         if 'maps' in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
-    _LOGGER.debug('Adding robots for cleaning maps %s', dev)
+    _LOGGER.debug("Adding robots for cleaning maps %s", dev)
     add_devices(dev, True)
 
 
@@ -34,7 +34,7 @@ class NeatoCleaningMap(Camera):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self._robot_name = self.robot.name + ' Cleaning Map'
+        self._robot_name = '{} {}'.format(self.robot.name, 'Cleaning Map')
         self._robot_serial = self.robot.serial
         self.neato = hass.data[NEATO_LOGIN]
         self._image_url = None
@@ -53,7 +53,7 @@ class NeatoCleaningMap(Camera):
         map_data = self.hass.data[NEATO_MAP_DATA]
         image_url = map_data[self._robot_serial]['maps'][0]['url']
         if image_url == self._image_url:
-            _LOGGER.debug('The map image_url is the same as old')
+            _LOGGER.debug("The map image_url is the same as old")
             return
         image = self.neato.download_map(image_url)
         self._image = image.read()

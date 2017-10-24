@@ -4,8 +4,8 @@ Support for interfacing with Russound via RNET Protocol.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.russound_rnet/
 """
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -15,9 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/laf/russound/archive/0.1.7.zip'
-    '#russound==0.1.7']
+REQUIREMENTS = ['russound==0.1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Russound RNET platform."""
+    """Set up the Russound RNET platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
@@ -87,23 +85,30 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        if self._russ.get_power('1', self._zone_id) == 0:
-            self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
-
-        self._volume = self._russ.get_volume('1', self._zone_id) / 100.0
-
+        # Updated this function to make a single call to get_zone_info, so that
+        # with a single call we can get On/Off, Volume and Source, reducing the
+        # amount of traffic and speeding up the update process.
+        ret = self._russ.get_zone_info('1', self._zone_id, 4)
+        _LOGGER.debug("ret= %s", ret)
+        if ret is not None:
+            _LOGGER.debug("Updating status for zone %s", self._zone_id)
+            if ret[0] == 0:
+                self._state = STATE_OFF
+            else:
+                self._state = STATE_ON
+            self._volume = ret[2] * 2 / 100.0
         # Returns 0 based index for source.
-        index = self._russ.get_source('1', self._zone_id)
+            index = ret[1]
         # Possibility exists that user has defined list of all sources.
         # If a source is set externally that is beyond the defined list then
         # an exception will be thrown.
         # In this case return and unknown source (None)
-        try:
-            self._source = self._sources[index]
-        except IndexError:
-            self._source = None
+            try:
+                self._source = self._sources[index]
+            except IndexError:
+                self._source = None
+        else:
+            _LOGGER.error("Could not update status for zone %s", self._zone_id)
 
     @property
     def name(self):
@@ -137,7 +142,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level.  Volume has a range (0..1).
 
-        Translate this to a range of (0..100) as expected expected
+        Translate this to a range of (0..100) as expected
         by _russ.set_volume()
         """
         self._russ.set_volume('1', self._zone_id, volume * 100)
@@ -163,5 +168,5 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return a list of available input sources."""
         return self._sources

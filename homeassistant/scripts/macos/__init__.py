@@ -4,7 +4,7 @@ import time
 
 
 def install_osx():
-    """Setup to run via launchd on OS X."""
+    """Set up to run via launchd on OS X."""
     with os.popen('which hass') as inp:
         hass_path = inp.read().strip()
 

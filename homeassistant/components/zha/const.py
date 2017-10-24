@@ -1,6 +1,5 @@
-"""Constants related to the zha component."""
+"""All constants related to the ZHA component."""
 
-# Populated by populate_data() when zha component is initialized
 DEVICE_CLASS = {}
 SINGLE_CLUSTER_DEVICE_CLASS = {}
 COMPONENT_CLUSTERS = {}
@@ -47,6 +46,7 @@ def populate_data():
         profile = PROFILES[profile_id]
         for device_type, component in classes.items():
             if component not in COMPONENT_CLUSTERS:
-                COMPONENT_CLUSTERS[component] = set()
+                COMPONENT_CLUSTERS[component] = (set(), set())
             clusters = profile.CLUSTERS[device_type]
-            COMPONENT_CLUSTERS[component].update(clusters)
+            COMPONENT_CLUSTERS[component][0].update(clusters[0])
+            COMPONENT_CLUSTERS[component][1].update(clusters[1])

@@ -55,19 +55,19 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
 
     @property
     def address(self):
-        """Return the the address of the node."""
+        """Return the address of the node."""
         return self._address
 
     @property
     def name(self):
-        """Return the the name of the node."""
+        """Return the name of the node."""
         return self._name
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         sensorstate = self._plm.get_device_attr(self._address, 'sensorstate')
-        _LOGGER.info('sensor state for %s is %s', self._address, sensorstate)
+        _LOGGER.info("Sensor state for %s is %s", self._address, sensorstate)
         return bool(sensorstate)
 
     @property
@@ -83,5 +83,5 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
     @callback
     def async_binarysensor_update(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._address)
+        _LOGGER.info("Received update calback from PLM for %s", self._address)
         self._hass.async_add_job(self.async_update_ha_state())

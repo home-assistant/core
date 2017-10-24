@@ -17,7 +17,7 @@ PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): DOMAIN})
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick switches."""
+    """Set up Tellstick switches."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
@@ -39,7 +39,7 @@ class TellstickSwitch(TellstickDevice, ToggleEntity):
         return None
 
     def _parse_tellcore_data(self, tellcore_data):
-        """Turn the value recieved from tellcore into something useful."""
+        """Turn the value received from tellcore into something useful."""
         return None
 
     def _update_model(self, new_state, data):

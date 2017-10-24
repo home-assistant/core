@@ -7,13 +7,15 @@ https://home-assistant.io/components/nuimo_controller/
 import logging
 import threading
 import time
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = [
     '--only-binary=all '  # avoid compilation of gattlib
-    'http://github.com/getSenic/nuimo-linux-python'
+    'https://github.com/getSenic/nuimo-linux-python'
     '/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip'
     '#nuimo==1.0.0']
 
@@ -44,7 +46,7 @@ DEFAULT_ADAPTER = 'hci0'
 
 
 def setup(hass, config):
-    """Setup the Nuimo component."""
+    """Set up the Nuimo component."""
     conf = config[DOMAIN]
     mac = conf.get(CONF_MAC)
     name = conf.get(CONF_NAME)
@@ -62,7 +64,7 @@ class NuimoLogger(object):
 
     def received_gesture_event(self, event):
         """Input Event received."""
-        _LOGGER.debug("received event: name=%s, gesture_id=%s,value=%s",
+        _LOGGER.debug("Received event: name=%s, gesture_id=%s,value=%s",
                       event.name, event.gesture, event.value)
         self._hass.bus.fire(EVENT_NUIMO,
                             {'type': event.name, 'value': event.value,
@@ -83,7 +85,7 @@ class NuimoThread(threading.Thread):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
     def run(self):
-        """Setup connection or be idle."""
+        """Set up the connection or be idle."""
         while self._hass_is_running:
             if not self._nuimo or not self._nuimo.is_connected():
                 self._attach()
@@ -102,7 +104,7 @@ class NuimoThread(threading.Thread):
         self._hass_is_running = False
 
     def _attach(self):
-        """Create a nuimo object from mac address or discovery."""
+        """Create a Nuimo object from MAC address or discovery."""
         # pylint: disable=import-error
         from nuimo import NuimoController, NuimoDiscoveryManager
 
@@ -118,7 +120,7 @@ class NuimoThread(threading.Thread):
             nuimo_manager.start_discovery()
             # Were any Nuimos found?
             if not nuimo_manager.nuimos:
-                _LOGGER.debug('No Nuimos detected')
+                _LOGGER.debug("No Nuimo devices detected")
                 return
             # Take the first Nuimo found.
             self._nuimo = nuimo_manager.nuimos[0]
@@ -131,9 +133,9 @@ class NuimoThread(threading.Thread):
 
         try:
             self._nuimo.connect()
-            _LOGGER.debug('connected to %s', self._mac)
+            _LOGGER.debug("Connected to %s", self._mac)
         except RuntimeError as error:
-            _LOGGER.error('could not connect to %s: %s', self._mac, error)
+            _LOGGER.error("Could not connect to %s: %s", self._mac, error)
             time.sleep(1)
             return
 
@@ -148,9 +150,9 @@ class NuimoThread(threading.Thread):
             if self._name == name and matrix:
                 self._nuimo.write_matrix(matrix, interval)
 
-        self._hass.services.register(DOMAIN, SERVICE_NUIMO,
-                                     handle_write_matrix,
-                                     schema=SERVICE_NUIMO_SCHEMA)
+        self._hass.services.register(
+            DOMAIN, SERVICE_NUIMO, handle_write_matrix,
+            schema=SERVICE_NUIMO_SCHEMA)
 
         self._nuimo.write_matrix(HOMEASSIST_LOGO, 2.0)
 
@@ -173,15 +175,15 @@ class DiscoveryLogger(object):
 
     # pylint: disable=no-self-use
     def discovery_started(self):
-        """Discovery startet."""
-        _LOGGER.info("started discovery")
+        """Discovery started."""
+        _LOGGER.info("Started discovery")
 
     # pylint: disable=no-self-use
     def discovery_finished(self):
         """Discovery finished."""
-        _LOGGER.info("finished discovery")
+        _LOGGER.info("Finished discovery")
 
     # pylint: disable=no-self-use
     def controller_added(self, nuimo):
-        """Controller found."""
-        _LOGGER.info("added Nuimo: %s", nuimo)
+        """Return that a controller was found."""
+        _LOGGER.info("Added Nuimo: %s", nuimo)

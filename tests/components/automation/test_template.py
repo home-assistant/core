@@ -370,7 +370,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'template',
@@ -399,3 +399,38 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
+
+    def test_wait_template_with_trigger(self):
+        """Test using wait template with 'trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'template',
+                    'value_template':
+                        "{{ states.test.entity.state == 'world' }}",
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ is_state(trigger.entity_id, 'hello') }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                     }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', 'hello')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'template - test.entity - hello - world',
+            self.calls[0].data['some'])

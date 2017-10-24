@@ -21,8 +21,8 @@ REQUIREMENTS = ['https://github.com/mweinelt/anel-pwrctrl/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PORT_RECV = "port_recv"
-CONF_PORT_SEND = "port_send"
+CONF_PORT_RECV = 'port_recv'
+CONF_PORT_SEND = 'port_send'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup PwrCtrl devices/switches."""
+    """Set up PwrCtrl devices/switches."""
     host = config.get(CONF_HOST, None)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -76,7 +76,7 @@ class PwrCtrlSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed."""
+        """Return the polling state."""
         return True
 
     @property

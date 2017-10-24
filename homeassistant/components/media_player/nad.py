@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
-                '0.0.3.zip#nad_receiver==0.0.3']
+REQUIREMENTS = ['nad_receiver==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NAD platform."""
+    """Set up the NAD platform."""
     from nad_receiver import NADReceiver
     add_devices([NAD(
         config.get(CONF_NAME),
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
         config.get(CONF_SOURCE_DICT)
-    )])
+    )], True)
 
 
 class NAD(MediaPlayerDevice):
@@ -74,12 +73,7 @@ class NAD(MediaPlayerDevice):
         self._reverse_mapping = {value: key for key, value in
                                  self._source_dict.items()}
 
-        self._volume = None
-        self._state = None
-        self._mute = None
-        self._source = None
-
-        self.update()
+        self._volume = self._state = self._mute = self._source = None
 
     def calc_volume(self, decibel):
         """

@@ -22,12 +22,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_engine(hass, config):
-    """Setup Demo speech component."""
+    """Set up Demo speech component."""
     return DemoProvider(config[CONF_LANG])
 
 
 class DemoProvider(Provider):
-    """Demo speech api provider."""
+    """Demo speech API provider."""
 
     def __init__(self, lang):
         """Initialize demo provider."""
@@ -36,26 +36,26 @@ class DemoProvider(Provider):
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._lang
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
     def supported_options(self):
-        """List of supported options like voice, emotionen."""
+        """Return list of supported options like voice, emotionen."""
         return ['voice', 'age']
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from demo."""
-        filename = os.path.join(os.path.dirname(__file__), "demo.mp3")
+        filename = os.path.join(os.path.dirname(__file__), 'demo.mp3')
         try:
             with open(filename, 'rb') as voice:
                 data = voice.read()
         except OSError:
             return (None, None)
 
-        return ("mp3", data)
+        return ('mp3', data)

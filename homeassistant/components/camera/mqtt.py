@@ -32,17 +32,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Camera."""
+    """Set up the MQTT Camera."""
     topic = config[CONF_TOPIC]
 
     async_add_devices([MqttCamera(config[CONF_NAME], topic)])
 
 
 class MqttCamera(Camera):
-    """MQTT camera."""
+    """representation of a MQTT camera."""
 
     def __init__(self, name, topic):
-        """Initialize Local File Camera component."""
+        """Initialize the MQTT Camera."""
         super().__init__()
 
         self._name = name
@@ -61,13 +61,13 @@ class MqttCamera(Camera):
         return self._name
 
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             self._last_image = payload
 
         return mqtt.async_subscribe(

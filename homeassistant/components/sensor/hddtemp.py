@@ -10,27 +10,30 @@ from telnetlib import Telnet
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
 
+CONF_DISKS = 'disks'
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 7634
 DEFAULT_NAME = 'HD Temperature'
 DEFAULT_TIMEOUT = 5
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DISKS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -38,31 +41,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the HDDTemp sensor."""
+    """Set up the HDDTemp sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    disks = config.get(CONF_DISKS)
 
-    hddtemp = HddTempData(host, port)
-    hddtemp.update()
-
-    if hddtemp.data is None:
+    try:
+        hddtemp = HddTempData(host, port)
+        hddtemp.update()
+    except RuntimeError:
         _LOGGER.error("Unable to fetch the data from %s:%s", host, port)
         return False
 
-    add_devices([HddTempSensor(name, hddtemp)])
+    if not disks:
+        disks = [next(iter(hddtemp.data)).split('|')[0]]
+
+    dev = []
+    for disk in disks:
+        if disk in hddtemp.data:
+            dev.append(HddTempSensor(name, disk, hddtemp))
+        else:
+            continue
+
+    add_devices(dev, True)
 
 
 class HddTempSensor(Entity):
     """Representation of a HDDTemp sensor."""
 
-    def __init__(self, name, hddtemp):
+    def __init__(self, name, disk, hddtemp):
         """Initialize a HDDTemp sensor."""
         self.hddtemp = hddtemp
-        self._name = name
-        self._state = False
+        self.disk = disk
+        self._name = '{} {}'.format(name, disk)
+        self._state = None
         self._details = None
-        self.update()
 
     @property
     def name(self):
@@ -77,26 +91,25 @@ class HddTempSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self.details[4] == 'C':
+        if self._details[3] == 'C':
             return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_DEVICE: self.details[1],
-            ATTR_MODEL: self.details[2],
+            ATTR_DEVICE: self._details[0],
+            ATTR_MODEL: self._details[1],
         }
 
     def update(self):
         """Get the latest data from HDDTemp daemon and updates the state."""
         self.hddtemp.update()
 
-        if self.hddtemp.data is not None:
-            self.details = self.hddtemp.data.split('|')
-            self._state = self.details[3]
+        if self.disk in self.hddtemp.data:
+            self._details = self.hddtemp.data[self.disk].split('|')
+            self._state = self._details[2]
         else:
             self._state = STATE_UNKNOWN
 
@@ -110,14 +123,16 @@ class HddTempData(object):
         self.port = port
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from hhtemp running as daemon."""
+        """Get the latest data from HDDTemp running as daemon."""
         try:
             connection = Telnet(
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
-            self.data = connection.read_all().decode('ascii')
+            data = connection.read_all().decode(
+                'ascii').lstrip('|').rstrip('|').split('||')
+            self.data = {data[i].split('|')[0]: data[i]
+                         for i in range(0, len(data), 1)}
         except ConnectionRefusedError:
-            _LOGGER.error('HDDTemp is not available at %s:%s', self.host,
-                          self.port)
+            _LOGGER.error(
+                "HDDTemp is not available at %s:%s", self.host, self.port)
             self.data = None

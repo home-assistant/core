@@ -65,4 +65,4 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         expected_mac_results = [mac.replace('-', ':') for mac in
                                 [FAKE_MAC_1, FAKE_MAC_2, FAKE_MAC_3]]
 
-        self.assertEquals(tplink.last_results, expected_mac_results)
+        self.assertEqual(tplink.last_results, expected_mac_results)

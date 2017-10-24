@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _set_result_unless_cancelled(fut, result):
-    """Helper setting the result only if the future was not cancelled."""
+    """Set the result only if the Future was not cancelled."""
     if fut.cancelled():
         return
     fut.set_result(result)
@@ -41,7 +41,7 @@ def _set_concurrent_future_state(concurr, source):
 
 
 def _copy_future_state(source, dest):
-    """Internal helper to copy state from another Future.
+    """Copy state from another Future.
 
     The other Future may be a concurrent.futures.Future.
     """
@@ -112,7 +112,7 @@ def run_coroutine_threadsafe(coro, loop):
     future = concurrent.futures.Future()
 
     def callback():
-        """Callback to call the coroutine."""
+        """Handle the call to the coroutine."""
         try:
             # pylint: disable=deprecated-method
             _chain_future(ensure_future(coro, loop=loop), future)
@@ -142,7 +142,7 @@ def fire_coroutine_threadsafe(coro, loop):
         raise TypeError('A coroutine object is required: %s' % coro)
 
     def callback():
-        """Callback to fire coroutine."""
+        """Handle the firing of a coroutine."""
         # pylint: disable=deprecated-method
         ensure_future(coro, loop=loop)
 

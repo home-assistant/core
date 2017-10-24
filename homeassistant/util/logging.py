@@ -73,7 +73,7 @@ class AsyncHandler(object):
             self.loop.call_soon_threadsafe(self._queue.put_nowait, record)
 
     def __repr__(self):
-        """String name of this."""
+        """Return the string names."""
         return str(self.handler)
 
     def _process(self):
@@ -116,6 +116,6 @@ class AsyncHandler(object):
         return self.handler.get_name()
 
     @name.setter
-    def set_name(self, name):
+    def name(self, name):
         """Wrap property get_name to handler."""
         self.handler.name = name

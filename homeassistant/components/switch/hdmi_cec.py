@@ -67,5 +67,5 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
 
     @property
     def state(self) -> str:
-        """Cached state of device."""
+        """Return the cached state of device."""
         return self._state

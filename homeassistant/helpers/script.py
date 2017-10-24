@@ -19,14 +19,14 @@ from homeassistant.util.async import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ALIAS = "alias"
-CONF_SERVICE = "service"
-CONF_SERVICE_DATA = "data"
-CONF_SEQUENCE = "sequence"
-CONF_EVENT = "event"
-CONF_EVENT_DATA = "event_data"
-CONF_DELAY = "delay"
-CONF_WAIT_TEMPLATE = "wait_template"
+CONF_ALIAS = 'alias'
+CONF_SERVICE = 'service'
+CONF_SERVICE_DATA = 'data'
+CONF_SEQUENCE = 'sequence'
+CONF_EVENT = 'event'
+CONF_EVENT_DATA = 'event_data'
+CONF_DELAY = 'delay'
+CONF_WAIT_TEMPLATE = 'wait_template'
 
 
 def call_from_config(hass: HomeAssistant, config: ConfigType,
@@ -88,7 +88,7 @@ class Script():
 
                 @callback
                 def async_script_delay(now):
-                    """Called after delay is done."""
+                    """Handle delay."""
                     # pylint: disable=cell-var-from-loop
                     self._async_listener.remove(unsub)
                     self.hass.async_add_job(self.async_run(variables))
@@ -117,19 +117,19 @@ class Script():
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
 
-                # check if condition allready okay
+                # check if condition already okay
                 if condition.async_template(
                         self.hass, wait_template, variables):
                     continue
 
                 @callback
                 def async_script_wait(entity_id, from_s, to_s):
-                    """Called after template condition is true."""
+                    """Handle script after template condition is true."""
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
 
                 self._async_listener.append(async_track_template(
-                    self.hass, wait_template, async_script_wait))
+                    self.hass, wait_template, async_script_wait, variables))
 
                 self._cur = cur + 1
                 if self._change_listener:

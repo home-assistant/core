@@ -9,7 +9,7 @@ import homeassistant.config as config_util
 
 
 def run(script_args: List) -> int:
-    """The actual script body."""
+    """Run the actual script."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from influxdb import InfluxDBClient

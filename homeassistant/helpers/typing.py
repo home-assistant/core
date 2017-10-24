@@ -1,4 +1,4 @@
-"""Typing Helpers for Home-Assistant."""
+"""Typing Helpers for Home Assistant."""
 from typing import Dict, Any, Tuple
 
 import homeassistant.core

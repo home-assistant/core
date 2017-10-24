@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON)
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -56,6 +57,7 @@ SCENE_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def activate(hass, entity_id=None):
     """Activate a scene."""
     data = {}
@@ -68,7 +70,7 @@ def activate(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup scenes."""
+    """Set up the scenes."""
     logger = logging.getLogger(__name__)
     component = EntityComponent(logger, DOMAIN, hass)
 
@@ -112,4 +114,4 @@ class Scene(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.activate)
+        return self.hass.async_add_job(self.activate)

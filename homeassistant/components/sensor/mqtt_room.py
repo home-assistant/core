@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_TIMEOUT)
+    CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -39,8 +39,6 @@ DEFAULT_TIMEOUT = 5
 DEFAULT_AWAY_TIMEOUT = 0
 DEFAULT_TOPIC = 'room_presence'
 
-STATE_AWAY = 'away'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
@@ -58,7 +56,7 @@ MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup MQTT Sensor."""
+    """Set up MQTT room Sensor."""
     async_add_devices([MQTTRoomSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -73,7 +71,7 @@ class MQTTRoomSensor(Entity):
 
     def __init__(self, name, state_topic, device_id, timeout, consider_home):
         """Initialize the sensor."""
-        self._state = STATE_AWAY
+        self._state = STATE_NOT_HOME
         self._name = name
         self._state_topic = '{}{}'.format(state_topic, '/+')
         self._device_id = slugify(device_id).upper()
@@ -85,7 +83,7 @@ class MQTTRoomSensor(Entity):
         self._updated = None
 
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method must be run in the event loop and returns a coroutine.
         """
@@ -96,16 +94,16 @@ class MQTTRoomSensor(Entity):
             self._distance = distance
             self._updated = dt.utcnow()
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             try:
                 data = MQTT_PAYLOAD(payload)
             except vol.MultipleInvalid as error:
-                _LOGGER.debug('skipping update because of malformatted '
-                              'data: %s', error)
+                _LOGGER.debug(
+                    "Skipping update because of malformatted data: %s", error)
                 return
 
             device = _parse_update_data(topic, data)
@@ -148,7 +146,7 @@ class MQTTRoomSensor(Entity):
         if self._updated \
                 and self._consider_home \
                 and dt.utcnow() - self._updated > self._consider_home:
-            self._state = STATE_AWAY
+            self._state = STATE_NOT_HOME
 
 
 def _parse_update_data(topic, data):

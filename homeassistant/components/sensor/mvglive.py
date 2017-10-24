@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
     )
 
-REQUIREMENTS = ['PyMVGLive==1.1.3']
+REQUIREMENTS = ['PyMVGLive==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ CONF_DIRECTIONS = 'directions'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIMEOFFSET = 'timeoffset'
+
+DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'S-Bahn']
 
 ICONS = {
     'U-Bahn': 'mdi:subway',
@@ -47,16 +49,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_PRODUCTS,
-                     default=['U-Bahn', 'Tram',
-                              'Bus', 'S-Bahn']): cv.ensure_list_csv,
+        vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
+            cv.ensure_list_csv,
         vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_NAME): cv.string}]
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the MVGLive sensor."""
+    """Set up the MVGLive sensor."""
     sensors = []
     for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
         sensors.append(
@@ -90,8 +91,7 @@ class MVGLiveSensor(Entity):
         """Return the name of the sensor."""
         if self._name:
             return self._name
-        else:
-            return self._station
+        return self._station
 
     @property
     def state(self):
@@ -147,14 +147,13 @@ class MVGLiveData(object):
     def update(self):
         """Update the connection data."""
         try:
-            _departures = self.mvg.getlivedata(station=self._station,
-                                               ubahn=self._include_ubahn,
-                                               tram=self._include_tram,
-                                               bus=self._include_bus,
-                                               sbahn=self._include_sbahn)
+            _departures = self.mvg.getlivedata(
+                station=self._station, ubahn=self._include_ubahn,
+                tram=self._include_tram, bus=self._include_bus,
+                sbahn=self._include_sbahn)
         except ValueError:
             self.departures = {}
-            _LOGGER.warning("Returned data not understood.")
+            _LOGGER.warning("Returned data not understood")
             return
         for _departure in _departures:
             # find the first departure meeting the criteria

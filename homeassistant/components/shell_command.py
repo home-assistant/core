@@ -26,7 +26,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the shell_command component."""
+    """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
     cache = {}
@@ -51,16 +51,16 @@ def setup(hass, config):
             try:
                 rendered_args = args_compiled.render(call.data)
             except TemplateError as ex:
-                _LOGGER.exception('Error rendering command template: %s', ex)
+                _LOGGER.exception("Error rendering command template: %s", ex)
                 return
         else:
             rendered_args = None
 
         if rendered_args == args:
-            # no template used. default behavior
+            # No template used. default behavior
             shell = True
         else:
-            # template used. Break into list and use shell=False for security
+            # Template used. Break into list and use shell=False for security
             cmd = [prog] + shlex.split(rendered_args)
             shell = False
 
@@ -69,7 +69,7 @@ def setup(hass, config):
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL)
         except subprocess.SubprocessError:
-            _LOGGER.exception('Error running command: %s', cmd)
+            _LOGGER.exception("Error running command: %s", cmd)
 
     for name in conf.keys():
         hass.services.register(DOMAIN, name, service_handler)

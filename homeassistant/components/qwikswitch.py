@@ -123,7 +123,7 @@ class QSLight(QSToggleEntity, Light):
 
 
 def setup(hass, config):
-    """Setup the QSUSB component."""
+    """Set up the QSUSB component."""
     from pyqwikswitch import (
         QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
         QSType)
@@ -183,10 +183,10 @@ def setup(hass, config):
         qsreply = qsusb.devices()
         if qsreply is False:
             return
-        for item in qsreply:
-            if item[QS_ID] in QSUSB:
-                QSUSB[item[QS_ID]].update_value(
-                    round(min(item[PQS_VALUE], 100) * 2.55))
+        for itm in qsreply:
+            if itm[QS_ID] in QSUSB:
+                QSUSB[itm[QS_ID]].update_value(
+                    round(min(itm[PQS_VALUE], 100) * 2.55))
 
     def _start(event):
         """Start listening."""

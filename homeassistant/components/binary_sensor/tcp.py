@@ -27,5 +27,5 @@ class TcpBinarySensor(BinarySensorDevice, TcpSensor):
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state == self._config[CONF_VALUE_ON]

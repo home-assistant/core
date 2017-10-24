@@ -33,7 +33,7 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
         self._state = self.values.primary.data
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
         if self.refresh_on_update and \
                 time.perf_counter() - self.last_update > 30:

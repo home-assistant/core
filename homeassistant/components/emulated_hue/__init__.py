@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
@@ -53,11 +54,9 @@ DEFAULT_TYPE = TYPE_GOOGLE
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
-        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
         vol.Optional(CONF_ADVERTISE_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_ADVERTISE_PORT): cv.port,
         vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
         vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
@@ -68,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
 def setup(hass, yaml_config):
@@ -111,8 +111,8 @@ def setup(hass, yaml_config):
         """Start the emulated hue bridge."""
         upnp_listener.start()
         yield from server.start()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   stop_emulated_hue_bridge)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
@@ -120,7 +120,7 @@ def setup(hass, yaml_config):
 
 
 class Config(object):
-    """Holds configuration variables for the emulated hue bridge."""
+    """Hold configuration variables for the emulated hue bridge."""
 
     def __init__(self, hass, conf):
         """Initialize the instance."""
@@ -130,8 +130,8 @@ class Config(object):
         self.cached_states = {}
 
         if self.type == TYPE_ALEXA:
-            _LOGGER.warning('Alexa type is deprecated and will be removed in a'
-                            ' future version')
+            _LOGGER.warning("Alexa type is deprecated and will be removed in a"
+                            " future version")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
@@ -150,8 +150,8 @@ class Config(object):
                 self.listen_port)
 
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning('When targetting Google Home, listening port has '
-                            'to be port 80')
+            _LOGGER.warning("When targeting Google Home, listening port has "
+                            "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
@@ -195,7 +195,9 @@ class Config(object):
             if entity_id == ent_id:
                 return number
 
-        number = str(len(self.numbers) + 1)
+        number = '1'
+        if self.numbers:
+            number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
         self._save_numbers_json()
         return number
@@ -223,7 +225,15 @@ class Config(object):
 
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
+        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+        if explicit_expose is True or explicit_hidden is False:
+            expose = True
+        elif explicit_expose is False or explicit_hidden is True:
+            expose = False
+        else:
+            expose = None
+        get_deprecated(entity.attributes, ATTR_EMULATED_HUE_HIDDEN,
+                       ATTR_EMULATED_HUE, None)
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 
@@ -231,12 +241,12 @@ class Config(object):
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
         is_default_exposed = \
-            domain_exposed_by_default and explicit_expose is not False
+            domain_exposed_by_default and expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or expose
 
     def _load_numbers_json(self):
-        """Helper method to load numbers json."""
+        """Set up helper method to load numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE),
                       encoding='utf-8') as fil:
@@ -245,15 +255,15 @@ class Config(object):
             # OSError if file not found or unaccessible/no permissions
             # ValueError if could not parse JSON
             if not isinstance(err, FileNotFoundError):
-                _LOGGER.warning('Failed to open %s: %s', NUMBERS_FILE, err)
+                _LOGGER.warning("Failed to open %s: %s", NUMBERS_FILE, err)
             return {}
 
     def _save_numbers_json(self):
-        """Helper method to save numbers json."""
+        """Set up helper method to save numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE), 'w',
                       encoding='utf-8') as fil:
                 fil.write(json.dumps(self.numbers))
         except OSError as err:
             # OSError if file write permissions
-            _LOGGER.warning('Failed to write %s: %s', NUMBERS_FILE, err)
+            _LOGGER.warning("Failed to write %s: %s", NUMBERS_FILE, err)

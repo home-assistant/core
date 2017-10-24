@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the connection to the ZigBee device."""
+    """Set up the connection to the ZigBee device."""
     global DEVICE
     global GPIO_DIGITAL_OUTPUT_LOW
     global GPIO_DIGITAL_OUTPUT_HIGH
@@ -98,7 +98,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
 
     def _frame_received(frame):
-        """Called when a ZigBee frame is received.
+        """Run when a ZigBee frame is received.
 
         Pickles the frame, then encodes it into base64 since it contains
         non JSON serializable binary.
@@ -134,12 +134,12 @@ class ZigBeeConfig(object):
 
     @property
     def name(self):
-        """The name given to the entity."""
+        """Return the name given to the entity."""
         return self._config["name"]
 
     @property
     def address(self):
-        """The address of the device.
+        """Return the address of the device.
 
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local ZigBee device.
@@ -151,16 +151,16 @@ class ZigBeeConfig(object):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return self._should_poll
 
 
 class ZigBeePinConfig(ZigBeeConfig):
-    """Handle the fetching of configuration from the config file."""
+    """Handle the fetching of configuration from the configuration file."""
 
     @property
     def pin(self):
-        """The GPIO pin number."""
+        """Return the GPIO pin number."""
         return self._config["pin"]
 
 
@@ -195,7 +195,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def bool2state(self):
-        """A dictionary mapping the internal value to the ZigBee value.
+        """Return a dictionary mapping the internal value to the ZigBee value.
 
         For the translation of on/off as being pin high or low.
         """
@@ -203,7 +203,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def state2bool(self):
-        """A dictionary mapping the ZigBee value to the internal value.
+        """Return a dictionary mapping the ZigBee value to the internal value.
 
         For the translation of pin high/low as being on or off.
         """
@@ -245,7 +245,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
     @property
     def bool2state(self):
-        """A dictionary mapping booleans to GPIOSetting objects.
+        """Return a dictionary mapping booleans to GPIOSetting objects.
 
         For the translation of on/off as being pin high or low.
         """
@@ -253,7 +253,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
     @property
     def state2bool(self):
-        """A dictionary mapping GPIOSetting objects to booleans.
+        """Return a dictionary mapping GPIOSetting objects to booleans.
 
         For the translation of pin high/low as being on or off.
         """
@@ -265,7 +265,7 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
 
     @property
     def max_voltage(self):
-        """The voltage at which the ADC will report its highest value."""
+        """Return the voltage for ADC to report its highest value."""
         return float(self._config.get("max_volts", DEFAULT_ADC_MAX_VOLTS))
 
 
@@ -306,7 +306,7 @@ class ZigBeeDigitalIn(Entity):
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
@@ -428,17 +428,17 @@ class ZigBeeAnalogIn(Entity):
 
     @property
     def name(self):
-        """The name of the input."""
+        """Return the name of the input."""
         return self._config.name
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
     def should_poll(self):
-        """The state of the polling, if needed."""
+        """Return the polling state, if needed."""
         return self._config.should_poll
 
     @property

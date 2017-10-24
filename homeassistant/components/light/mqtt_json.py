@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a MQTT JSON Light."""
+    """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
     async_add_devices([MqttJson(
@@ -157,13 +157,13 @@ class MqttJson(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def state_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             values = json.loads(payload)
 
             if values['state'] == 'ON':
@@ -189,7 +189,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid brightness value received')
+                    _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
                 try:
@@ -197,7 +197,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid color temp value received')
+                    _LOGGER.warning("Invalid color temp value received")
 
             if self._effect is not None:
                 try:
@@ -205,7 +205,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid effect value received')
+                    _LOGGER.warning("Invalid effect value received")
 
             if self._white_value is not None:
                 try:
@@ -213,7 +213,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid white value value received')
+                    _LOGGER.warning("Invalid white value received")
 
             if self._xy is not None:
                 try:
@@ -226,7 +226,7 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning("Invalid XY color value received")
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -373,7 +373,7 @@ class MqttJson(Light):
             should_update = True
 
         if should_update:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -393,4 +393,4 @@ class MqttJson(Light):
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

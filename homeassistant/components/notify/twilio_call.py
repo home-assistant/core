@@ -15,10 +15,10 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["twilio"]
 
+DEPENDENCIES = ['twilio']
 
-CONF_FROM_NUMBER = "from_number"
+CONF_FROM_NUMBER = 'from_number'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FROM_NUMBER):
@@ -28,8 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Twilio Call notification service."""
-    return TwilioCallNotificationService(hass.data[DATA_TWILIO],
-                                         config[CONF_FROM_NUMBER])
+    return TwilioCallNotificationService(
+        hass.data[DATA_TWILIO], config[CONF_FROM_NUMBER])
 
 
 class TwilioCallNotificationService(BaseNotificationService):
@@ -58,8 +58,7 @@ class TwilioCallNotificationService(BaseNotificationService):
 
         for target in targets:
             try:
-                self.client.calls.create(to=target,
-                                         url=twimlet_url,
-                                         from_=self.from_number)
+                self.client.calls.create(
+                    to=target, url=twimlet_url, from_=self.from_number)
             except TwilioRestException as exc:
                 _LOGGER.error(exc)

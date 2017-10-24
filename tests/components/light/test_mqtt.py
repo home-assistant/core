@@ -123,6 +123,20 @@ light:
   payload_on: "on"
   payload_off: "off"
 
+config for RGB Version with RGB command template:
+
+light:
+  platform: mqtt
+  name: "Office Light RGB"
+  state_topic: "office/rgb1/light/status"
+  command_topic: "office/rgb1/light/switch"
+  rgb_state_topic: "office/rgb1/rgb/status"
+  rgb_command_topic: "office/rgb1/rgb/set"
+  rgb_command_template: "{{ '#%02x%02x%02x' | format(red, green, blue)}}"
+  qos: 0
+  payload_on: "on"
+  payload_off: "off"
+
 """
 import unittest
 from unittest import mock
@@ -151,7 +165,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_fail_setup_if_no_command_topic(self):
         """Test if command fails with command topic."""
-        with assert_setup_component(0):
+        with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt',
@@ -163,7 +177,7 @@ class TestLightMQTT(unittest.TestCase):
     def test_no_color_brightness_color_temp_white_xy_if_no_topics(self): \
             # pylint: disable=invalid-name
         """Test if there is no color and brightness if no topic."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt',
@@ -217,7 +231,7 @@ class TestLightMQTT(unittest.TestCase):
             'payload_off': 0
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -228,7 +242,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('white_value'))
         self.assertIsNone(state.attributes.get('xy_color'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', '1')
         self.hass.block_till_done()
@@ -301,7 +315,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_brightness_controlling_scale(self):
         """Test the brightness controlling scale."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt',
@@ -320,7 +334,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('brightness'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_scale/status', 'on')
         self.hass.block_till_done()
@@ -348,7 +362,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_white_value_controlling_scale(self):
         """Test the white_value controlling scale."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt',
@@ -367,7 +381,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('white_value'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_scale/status', 'on')
         self.hass.block_till_done()
@@ -416,7 +430,7 @@ class TestLightMQTT(unittest.TestCase):
             'xy_value_template': '{{ value_json.hello | join(",") }}',
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -467,7 +481,7 @@ class TestLightMQTT(unittest.TestCase):
             'payload_off': 'off'
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -491,8 +505,10 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         self.mock_publish.reset_mock()
+        light.turn_on(self.hass, 'light.test',
+                      brightness=50, xy_color=[0.123, 0.123])
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
-                      brightness=50, white_value=80, xy_color=[0.123, 0.123])
+                      white_value=80)
         self.hass.block_till_done()
 
         self.mock_publish().async_publish.assert_has_calls([
@@ -510,6 +526,38 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(80, state.attributes['white_value'])
         self.assertEqual((0.123, 0.123), state.attributes['xy_color'])
 
+    def test_sending_mqtt_rgb_command_with_template(self):
+        """Test the sending of RGB command with template."""
+        config = {light.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test_light_rgb/set',
+            'rgb_command_topic': 'test_light_rgb/rgb/set',
+            'rgb_command_template': '{{ "#%02x%02x%02x" | '
+                                    'format(red, green, blue)}}',
+            'payload_on': 'on',
+            'payload_off': 'off',
+            'qos': 0
+        }}
+
+        with assert_setup_component(1, light.DOMAIN):
+            assert setup_component(self.hass, light.DOMAIN, config)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', rgb_color=[255, 255, 255])
+        self.hass.block_till_done()
+
+        self.mock_publish().async_publish.assert_has_calls([
+            mock.call('test_light_rgb/set', 'on', 0, False),
+            mock.call('test_light_rgb/rgb/set', '#ffffff', 0, False),
+        ], any_order=True)
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual((255, 255, 255), state.attributes['rgb_color'])
+
     def test_show_brightness_if_only_command_topic(self):
         """Test the brightness if only a command topic is present."""
         config = {light.DOMAIN: {
@@ -520,7 +568,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status',
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -544,7 +592,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status'
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -568,7 +616,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status'
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -592,7 +640,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status',
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
@@ -616,7 +664,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status',
         }}
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')

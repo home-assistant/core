@@ -1,6 +1,6 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
-from datetime import timedelta, datetime as datetime_sys
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 import os
 import re
 from urllib.parse import urlparse
@@ -44,7 +44,7 @@ T = TypeVar('T')
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
-    """Validator that at least one key exists."""
+    """Validate that at least one key exists."""
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
@@ -54,6 +54,21 @@ def has_at_least_one_key(*keys: str) -> Callable:
             if k in keys:
                 return obj
         raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
+
+
+def has_at_least_one_key_value(*items: list) -> Callable:
+    """Validate that at least one (key, value) pair exists."""
+    def validate(obj: Dict) -> Dict:
+        """Test (key,value) exist in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for item in obj.items():
+            if item in items:
+                return obj
+        raise vol.Invalid('must contain one of {}.'.format(str(items)))
 
     return validate
 
@@ -145,6 +160,38 @@ time_period_dict = vol.All(
     lambda value: timedelta(**value))
 
 
+def time(value) -> time_sys:
+    """Validate and transform a time."""
+    if isinstance(value, time_sys):
+        return value
+
+    try:
+        time_val = dt_util.parse_time(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if time_val is None:
+        raise vol.Invalid('Invalid time specified: {}'.format(value))
+
+    return time_val
+
+
+def date(value) -> date_sys:
+    """Validate and transform a date."""
+    if isinstance(value, date_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_date(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if date_val is None:
+        raise vol.Invalid("Could not parse date")
+
+    return date_val
+
+
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
@@ -193,7 +240,7 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 
 
 def match_all(value):
-    """Validator that matches all values."""
+    """Validate that matches all values."""
     return value
 
 
@@ -298,16 +345,6 @@ def template_complex(value):
     return template(value)
 
 
-def time(value):
-    """Validate time."""
-    time_val = dt_util.parse_time(value)
-
-    if time_val is None:
-        raise vol.Invalid('Invalid time specified: {}'.format(value))
-
-    return time_val
-
-
 def datetime(value):
     """Validate datetime."""
     if isinstance(value, datetime_sys):
@@ -371,29 +408,6 @@ def x10_address(value):
     if not regex.match(value):
         raise vol.Invalid('Invalid X10 Address')
     return str(value).lower()
-
-
-def ordered_dict(value_validator, key_validator=match_all):
-    """Validate an ordered dict validator that maintains ordering.
-
-    value_validator will be applied to each value of the dictionary.
-    key_validator (optional) will be applied to each key of the dictionary.
-    """
-    item_validator = vol.Schema({key_validator: value_validator})
-
-    def validator(value):
-        """Validate ordered dict."""
-        config = OrderedDict()
-
-        if not isinstance(value, dict):
-            raise vol.Invalid('Value {} is not a dictionary'.format(value))
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
-
-        return config
-
-    return validator
 
 
 def ensure_list_csv(value: Any) -> Sequence:

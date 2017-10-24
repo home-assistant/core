@@ -1,4 +1,9 @@
-"""Tracking for bluetooth low energy devices."""
+"""
+Tracking for bluetooth low energy devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
+"""
 import logging
 
 import voluptuous as vol
@@ -16,17 +21,17 @@ REQUIREMENTS = ['gattlib==0.20150805']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
-CONF_SCAN_DURATION = "scan_duration"
-CONF_BLUETOOTH_DEVICE = "device_id"
+CONF_SCAN_DURATION = 'scan_duration'
+CONF_BLUETOOTH_DEVICE = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
-    vol.Optional(CONF_BLUETOOTH_DEVICE, default="hci0"): cv.string
+    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
 })
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the Bluetooth LE Scanner."""
+    """Set up the Bluetooth LE Scanner."""
     # pylint: disable=import-error
     from gattlib import DiscoveryService
 
@@ -36,8 +41,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Mark a device as seen."""
         if new_device:
             if address in new_devices:
-                _LOGGER.debug("Seen %s %s times", address,
-                              new_devices[address])
+                _LOGGER.debug(
+                    "Seen %s %s times", address, new_devices[address])
                 new_devices[address] += 1
                 if new_devices[address] >= MIN_SEEN_NEW:
                     _LOGGER.debug("Adding %s to tracked devices", address)

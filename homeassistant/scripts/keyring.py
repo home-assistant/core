@@ -1,4 +1,4 @@
-"""Script to get, set and delete secrets stored in the keyring."""
+"""Script to get, set, and delete secrets stored in the keyring."""
 import os
 import argparse
 import getpass
@@ -11,7 +11,7 @@ REQUIREMENTS = ['keyring>=9.3,<10.0']
 def run(args):
     """Handle keyring script."""
     parser = argparse.ArgumentParser(
-        description=("Modify Home-Assistant secrets in the default keyring. "
+        description=("Modify Home Assistant secrets in the default keyring. "
                      "Use the secrets in configuration files with: "
                      "!secret <name>"))
     parser.add_argument(

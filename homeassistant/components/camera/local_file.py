@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.local_file/
 """
 import logging
+import mimetypes
 import os
 
 import voluptuous as vol
@@ -26,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Camera."""
+    """Set up the Camera that works with local files."""
     file_path = config[CONF_FILE_PATH]
 
     # check filepath given is readable
@@ -38,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LocalFile(Camera):
-    """Local camera."""
+    """Representation of a local file camera."""
 
     def __init__(self, name, file_path):
         """Initialize Local File Camera component."""
@@ -46,6 +47,10 @@ class LocalFile(Camera):
 
         self._name = name
         self._file_path = file_path
+        # Set content type of local file
+        content, _ = mimetypes.guess_type(file_path)
+        if content is not None:
+            self.content_type = content
 
     def camera_image(self):
         """Return image response."""

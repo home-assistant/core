@@ -34,29 +34,17 @@ def get_service(hass, config, discovery_info=None):
 
 
 class CiscoSparkNotificationService(BaseNotificationService):
-    """CiscoSparkNotificationService."""
+    """The Cisco Spark Notification Service."""
 
     def __init__(self, token, default_room):
-        """
-        Initialize the service.
-
-        Args:
-            token: Cisco Spark Developer's Token
-            default_room: Cisco Spark Room ID
-        """
+        """Initialize the service."""
         from ciscosparkapi import CiscoSparkAPI
         self._default_room = default_room
         self._token = token
         self._spark = CiscoSparkAPI(access_token=self._token)
 
     def send_message(self, message="", **kwargs):
-        """
-        Send a message to a user.
-
-        Args:
-            message: notificaiton text
-            kwargs: attributes used - 'title'
-        """
+        """Send a message to a user."""
         from ciscosparkapi import SparkApiError
         try:
             title = ""

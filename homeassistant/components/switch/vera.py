@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Vera switches."""
+    """Set up the Vera switches."""
     add_devices(
         VeraSwitch(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['switch'])
@@ -46,7 +46,7 @@ class VeraSwitch(VeraDevice, SwitchDevice):
 
     @property
     def current_power_w(self):
-        """Current power usage in W."""
+        """Return the current power usage in W."""
         power = self.vera_device.power
         if power:
             return convert(power, float, 0.0)
@@ -57,5 +57,5 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         return self._state
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Update device state."""
         self._state = self.vera_device.is_switched_on()

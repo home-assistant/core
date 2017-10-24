@@ -27,8 +27,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Twilio SMS notification service."""
-    return TwilioSMSNotificationService(hass.data[DATA_TWILIO],
-                                        config[CONF_FROM_NUMBER])
+    return TwilioSMSNotificationService(
+        hass.data[DATA_TWILIO], config[CONF_FROM_NUMBER])
 
 
 class TwilioSMSNotificationService(BaseNotificationService):
@@ -48,5 +48,5 @@ class TwilioSMSNotificationService(BaseNotificationService):
             return
 
         for target in targets:
-            self.client.messages.create(to=target, body=message,
-                                        from_=self.from_number)
+            self.client.messages.create(
+                to=target, body=message, from_=self.from_number)

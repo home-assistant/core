@@ -7,8 +7,7 @@ import sys
 from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.core import HomeAssistant
-from homeassistant.components import (
-    zone as zone_cmp, sun as sun_cmp)
+from homeassistant.components import zone as zone_cmp
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _threaded_factory(async_factory):
-    """Helper method to create threaded versions of async factories."""
+    """Create threaded versions of async factories."""
     @ft.wraps(async_factory)
     def factory(config, config_validation=True):
         """Threaded factory."""
@@ -90,7 +90,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
                 if not check(hass, variables):
                     return False
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during and-condition: %s', ex)
+            _LOGGER.warning("Error during and-condition: %s", ex)
             return False
 
         return True
@@ -121,7 +121,7 @@ def async_or_from_config(config: ConfigType, config_validation: bool=True):
                 if check(hass, variables):
                     return True
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during or-condition: %s', ex)
+            _LOGGER.warning("Error during or-condition: %s", ex)
 
         return False
 
@@ -166,10 +166,10 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         _LOGGER.warning("Value cannot be processed as a number: %s", value)
         return False
 
-    if below is not None and value > below:
+    if below is not None and value >= below:
         return False
 
-    if above is not None and value < above:
+    if above is not None and value <= above:
         return False
 
     return True
@@ -234,24 +234,34 @@ def state_from_config(config, config_validation=True):
 
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
-    now = dt_util.now().time()
+    utcnow = dt_util.utcnow()
+    today = dt_util.as_local(utcnow).date()
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    if before == SUN_EVENT_SUNRISE and now > (sun_cmp.next_rising(hass) +
-                                              before_offset).time():
+    sunrise = get_astral_event_date(hass, 'sunrise', today)
+    sunset = get_astral_event_date(hass, 'sunset', today)
+
+    if sunrise is None and (before == SUN_EVENT_SUNRISE or
+                            after == SUN_EVENT_SUNRISE):
+        # There is no sunrise today
         return False
 
-    elif before == SUN_EVENT_SUNSET and now > (sun_cmp.next_setting(hass) +
-                                               before_offset).time():
+    if sunset is None and (before == SUN_EVENT_SUNSET or
+                           after == SUN_EVENT_SUNSET):
+        # There is no sunset today
         return False
 
-    if after == SUN_EVENT_SUNRISE and now < (sun_cmp.next_rising(hass) +
-                                             after_offset).time():
+    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and now < (sun_cmp.next_setting(hass) +
-                                              after_offset).time():
+    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+        return False
+
+    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
+        return False
+
+    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
@@ -285,7 +295,7 @@ def async_template(hass, value_template, variables=None):
     try:
         value = value_template.async_render(variables)
     except TemplateError as ex:
-        _LOGGER.error('Error during template condition: %s', ex)
+        _LOGGER.error("Error during template condition: %s", ex)
         return False
 
     return value.lower() == 'true'

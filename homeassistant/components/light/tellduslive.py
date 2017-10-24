@@ -5,7 +5,6 @@ This platform uses the Telldus Live online service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tellduslive/
-
 """
 import logging
 
@@ -17,22 +16,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup lights."""
+    """Set up the Tellstick Net lights."""
     if discovery_info is None:
         return
     add_devices(TelldusLiveLight(hass, light) for light in discovery_info)
 
 
 class TelldusLiveLight(TelldusLiveEntity, Light):
-    """Representation of a light."""
+    """Representation of a Tellstick Net light."""
 
     def __init__(self, hass, device_id):
-        """Initialize the light."""
+        """Initialize the  Tellstick Net light."""
         super().__init__(hass, device_id)
         self._last_brightness = self.brightness
 
     def changed(self):
-        """A property of the device might have changed."""
+        """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
         super().changed()
 

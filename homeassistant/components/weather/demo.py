@@ -29,7 +29,7 @@ CONDITION_CLASSES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo weather."""
+    """Set up the Demo weather."""
     add_devices([
         DemoWeather('South', 'Sunshine', 21, 92, 1099, 0.5, TEMP_CELSIUS,
                     [22, 19, 15, 12, 14, 18, 21]),

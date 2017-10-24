@@ -69,7 +69,7 @@ class TadoDeviceScanner(DeviceScanner):
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
 
         self.success_init = self._update_info()
-        _LOGGER.info("Tado scanner initialized")
+        _LOGGER.info("Scanner initialized")
 
     @asyncio.coroutine
     def async_scan_devices(self):
@@ -90,8 +90,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
@@ -108,14 +107,12 @@ class TadoDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
-                url = self.tadoapiurl.format(home_id=self.home_id,
-                                             username=self.username,
-                                             password=self.password)
+                url = self.tadoapiurl.format(
+                    home_id=self.home_id, username=self.username,
+                    password=self.password)
 
-                # Go get 'em!
                 response = yield from self.websession.get(url)
 
-                # error on Tado webservice
                 if response.status != 200:
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)

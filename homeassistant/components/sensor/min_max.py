@@ -123,7 +123,7 @@ class MinMaxSensor(Entity):
         @callback
         # pylint: disable=invalid-name
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle the sensor state changes."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:
                 self.states[entity] = STATE_UNKNOWN
                 hass.async_add_job(self.async_update_ha_state, True)

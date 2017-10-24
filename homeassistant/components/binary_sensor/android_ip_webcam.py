@@ -15,7 +15,7 @@ DEPENDENCIES = ['android_ip_webcam']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup IP Webcam binary sensors."""
+    """Set up the IP Webcam binary sensors."""
     if discovery_info is None:
         return
 
@@ -28,7 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
-    """Represents an IP Webcam binary sensor."""
+    """Representation of an IP Webcam binary sensor."""
 
     def __init__(self, name, host, ipcam, sensor):
         """Initialize the binary sensor."""
@@ -47,7 +47,7 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     @asyncio.coroutine

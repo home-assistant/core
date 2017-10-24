@@ -1,6 +1,8 @@
 """Test Home Assistant template helper methods."""
+import asyncio
 from datetime import datetime
 import unittest
+import random
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -231,6 +233,15 @@ class TestHelpersTemplate(unittest.TestCase):
             '"%Y-%m-%dT%H:%M:%S%z")) }}'
         self.assertEqual("1706951424.0",
                          template.Template(tpl, self.hass).render())
+
+    @patch.object(random, 'choice')
+    def test_random_every_time(self, test_choice):
+        """Ensure the random filter runs every time, not just once."""
+        tpl = template.Template('{{ [1,2] | random }}', self.hass)
+        test_choice.return_value = 'foo'
+        self.assertEqual('foo', tpl.render())
+        test_choice.return_value = 'bar'
+        self.assertEqual('bar', tpl.render())
 
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""
@@ -642,8 +653,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
         self.assertEqual(
-            'None',
-            template.Template('{{ closest(states) }}', self.hass).render())
+            '',
+            template.Template('{{ closest(states).entity_id }}',
+                              self.hass).render())
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
@@ -671,7 +683,7 @@ class TestHelpersTemplate(unittest.TestCase):
             MATCH_ALL,
             template.extract_entities("""
 {% for state in states.sensor %}
-  {{ state.entity_id }}={{ state.state }},
+  {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
             """))
 
@@ -733,10 +745,83 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
         self.assertListEqual(
             sorted([
                 'sensor.luftfeuchtigkeit_mean',
-                'input_slider.luftfeuchtigkeit',
+                'input_number.luftfeuchtigkeit',
             ]),
             sorted(template.extract_entities(
                 "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-                " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
+                " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
                 " %}true{% endif %}"
             )))
+
+    def test_extract_entities_with_variables(self):
+        """Test extract entities function with variables and entities stuff."""
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state('input_boolean.switch', 'off') }}", {}))
+
+        self.assertEqual(
+            ['trigger.entity_id'],
+            template.extract_entities(
+                "{{ is_state(trigger.entity_id, 'off') }}", {}))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ is_state(data, 'off') }}", {}))
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state(data, 'off') }}",
+                {'data': 'input_boolean.switch'}))
+
+        self.assertEqual(
+            ['input_boolean.switch'],
+            template.extract_entities(
+                "{{ is_state(trigger.entity_id, 'off') }}",
+                {'trigger': {'entity_id': 'input_boolean.switch'}}))
+
+
+@asyncio.coroutine
+def test_state_with_unit(hass):
+    """Test the state_with_unit property helper."""
+    hass.states.async_set('sensor.test', '23', {
+        'unit_of_measurement': 'beers',
+    })
+    hass.states.async_set('sensor.test2', 'wow')
+
+    tpl = template.Template(
+        '{{ states.sensor.test.state_with_unit }}', hass)
+
+    assert tpl.async_render() == '23 beers'
+
+    tpl = template.Template(
+        '{{ states.sensor.test2.state_with_unit }}', hass)
+
+    assert tpl.async_render() == 'wow'
+
+    tpl = template.Template(
+        '{% for state in states %}{{ state.state_with_unit }} {% endfor %}',
+        hass)
+
+    assert tpl.async_render() == '23 beers wow'
+
+    tpl = template.Template('{{ states.sensor.non_existing.state_with_unit }}',
+                            hass)
+
+    assert tpl.async_render() == ''
+
+
+@asyncio.coroutine
+def test_length_of_states(hass):
+    """Test fetching the length of states."""
+    hass.states.async_set('sensor.test', '23')
+    hass.states.async_set('sensor.test2', 'wow')
+    hass.states.async_set('climate.test2', 'cooling')
+
+    tpl = template.Template('{{ states | length }}', hass)
+    assert tpl.async_render() == '3'
+
+    tpl = template.Template('{{ states.sensor | length }}', hass)
+    assert tpl.async_render() == '2'

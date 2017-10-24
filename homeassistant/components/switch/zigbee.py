@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ZigBee switch platform."""
+    """Set up the ZigBee switch platform."""
     add_devices([ZigBeeSwitch(hass, ZigBeeDigitalOutConfig(config))])
 
 

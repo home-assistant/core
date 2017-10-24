@@ -1,5 +1,4 @@
 """Test config validators."""
-from collections import OrderedDict
 from datetime import timedelta, datetime, date
 import enum
 import os
@@ -406,6 +405,31 @@ def test_time_zone():
     schema('UTC')
 
 
+def test_date():
+    """Test date validation."""
+    schema = vol.Schema(cv.date)
+
+    for value in ['Not a date', '23:42', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().date())
+    schema('2016-11-23')
+
+
+def test_time():
+    """Test date validation."""
+    schema = vol.Schema(cv.time)
+
+    for value in ['Not a time', '2016-11-23', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().time())
+    schema('23:42:00')
+    schema('23:42')
+
+
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
@@ -448,61 +472,19 @@ def test_has_at_least_one_key():
         schema(value)
 
 
-def test_ordered_dict_only_dict():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.match_all))
+def test_has_at_least_one_key_value():
+    """Test has_at_least_one_key_value validator."""
+    schema = vol.Schema(cv.has_at_least_one_key_value(('drink', 'beer'),
+                                                      ('drink', 'soda'),
+                                                      ('food', 'maultaschen')))
 
-    for value in (None, [], 100, 'hello'):
+    for value in (None, [], {}, {'wine': None}, {'drink': 'water'}):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-
-def test_ordered_dict_order():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(int, cv.string))
-
-    val = OrderedDict()
-    val['first'] = 1
-    val['second'] = 2
-
-    validated = schema(val)
-
-    assert isinstance(validated, OrderedDict)
-    assert ['first', 'second'] == list(validated.keys())
-
-
-def test_ordered_dict_key_validator():
-    """Test ordered_dict key validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({None: 1})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 1})
-
-    schema({1: 'works'})
-
-
-def test_ordered_dict_value_validator():  # pylint: disable=invalid-name
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': None})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 'world'})
-
-    schema({'hello': 5})
+    for value in ({'drink': 'beer'}, {'food': 'maultaschen'},
+                  {'drink': 'soda', 'food': 'maultaschen'}):
+        schema(value)
 
 
 def test_enum():

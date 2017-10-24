@@ -10,7 +10,6 @@ import logging
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ STATE_VACATION = 'vacation'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Iterate through all MAX! Devices and add thermostats to HASS."""
+    """Iterate through all MAX! Devices and add thermostats."""
     cube = hass.data[MAXCUBE_HANDLE].cube
 
     devices = []
@@ -29,9 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = '{} {}'.format(
             cube.room_by_id(device.room_id).name, device.name)
 
-        # Only add thermostats and wallthermostats
         if cube.is_thermostat(device) or cube.is_wallthermostat(device):
-            # Add device to HASS
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
 
     if devices:
@@ -52,12 +49,12 @@ class MaxCubeClimate(ClimateDevice):
 
     @property
     def should_poll(self):
-        """Polling is required."""
+        """Return the polling state."""
         return True
 
     @property
     def name(self):
-        """Return the name of the ClimateDevice."""
+        """Return the name of the climate device."""
         return self._name
 
     @property
@@ -93,7 +90,7 @@ class MaxCubeClimate(ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         return self._operation_list
 
     @property
@@ -142,13 +139,13 @@ class MaxCubeClimate(ClimateDevice):
     def map_temperature_max_hass(temperature):
         """Map Temperature from MAX! to HASS."""
         if temperature is None:
-            return STATE_UNKNOWN
+            return 0.0
 
         return temperature
 
     @staticmethod
     def map_mode_hass_max(operation_mode):
-        """Map HASS Operation Modes to MAX! Operation Modes."""
+        """Map Home Assistant Operation Modes to MAX! Operation Modes."""
         from maxcube.device import \
             MAX_DEVICE_MODE_AUTOMATIC, \
             MAX_DEVICE_MODE_MANUAL, \
@@ -170,7 +167,7 @@ class MaxCubeClimate(ClimateDevice):
 
     @staticmethod
     def map_mode_max_hass(mode):
-        """Map MAX! Operation Modes to HASS Operation Modes."""
+        """Map MAX! Operation Modes to Home Assistant Operation Modes."""
         from maxcube.device import \
             MAX_DEVICE_MODE_AUTOMATIC, \
             MAX_DEVICE_MODE_MANUAL, \
