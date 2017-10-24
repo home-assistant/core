@@ -6,8 +6,6 @@ https://home-assistant.io/components/tesla/
 """
 from collections import defaultdict
 import logging
-
-from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -76,7 +74,7 @@ def setup(hass, base_config):
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID)
             _LOGGER.error("Unable to communicate with Tesla API: %s",
-                          ex.reason)
+                          ex.message)
             return False
 
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
