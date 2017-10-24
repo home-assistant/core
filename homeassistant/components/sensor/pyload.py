@@ -1,5 +1,6 @@
 """
 Support for monitoring pyLoad download speed.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pyload/
 """
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = "http{}://{}:{}/api/".format(ssl, host, port)
 
     try:
-        pyloadapi = pyLoadAPI(
+        pyloadapi = PyLoadAPI(
             api_url=url, username=username, password=password)
         pyloadapi.update()
     except (requests.exceptions.ConnectionError,
@@ -64,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     devices = []
     for ng_type in monitored_types:
-        new_sensor = pyLoadSensor(
+        new_sensor = PyLoadSensor(
             api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type),
             client_name=name)
         devices.append(new_sensor)
@@ -72,8 +73,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class pyLoadSensor(Entity):
+class PyLoadSensor(Entity):
     """Representation of a pyLoad sensor."""
+
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
         self._name = '{} {}'.format(client_name, sensor_type[1])
@@ -125,8 +127,9 @@ class pyLoadSensor(Entity):
             self._state = value
 
 
-class pyLoadAPI(object):
+class PyLoadAPI(object):
     """Simple wrapper for pyLoad's API."""
+
     def __init__(self, api_url, username=None, password=None):
         """Initialize pyLoad API and set headers needed later."""
         self.api_url = api_url
