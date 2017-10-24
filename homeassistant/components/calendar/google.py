@@ -66,7 +66,7 @@ class GoogleCalendar(Calendar):
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['timeMin'] = dt.now().replace(day=1, minute=0, hour=0).isoformat('T')
 
-        end = dt.now() + timedelta(months=2)
+        end = dt.now() + dt.dt.timedelta(weeks=8)
 
         params['timeMax'] = end.replace(day=1, minute=0, hour=0).isoformat('T')
         params['calendarId'] = self.calendar_id
