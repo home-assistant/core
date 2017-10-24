@@ -26,8 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADSVAR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
-    vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
+    vol.Optional(CONF_ADS_USE_NOTIFY): cv.boolean,
+    vol.Optional(CONF_ADS_POLL_INTERVAL): cv.positive_int,
 })
 
 
@@ -40,8 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     adsvar = config.get(CONF_ADSVAR)
     name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
-    use_notify = config.get(CONF_ADS_USE_NOTIFY)
-    poll_interval = config.get(CONF_ADS_POLL_INTERVAL)
+    use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)
+    poll_interval = config.get(CONF_ADS_POLL_INTERVAL, ads_hub.poll_interval)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, adsvar, device_class,
                                  use_notify, poll_interval)

@@ -26,8 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADSTYPE, default=ads.ADSTYPE_INT): vol.In(
         [ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]
     ),
-    vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
-    vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
+    vol.Optional(CONF_ADS_USE_NOTIFY): cv.boolean,
+    vol.Optional(CONF_ADS_POLL_INTERVAL): cv.positive_int,
     vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
 })
 
@@ -42,8 +42,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     adstype = config.get(CONF_ADSTYPE)
     name = config.get(CONF_NAME)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-    use_notify = config.get(CONF_ADS_USE_NOTIFY)
-    poll_interval = config.get(CONF_ADS_POLL_INTERVAL)
+    use_notify = config.get(CONF_ADS_USE_NOTIFY, ads_hub.use_notify)
+    poll_interval = config.get(CONF_ADS_POLL_INTERVAL, ads_hub.poll_interval)
     factor = config.get(CONF_ADS_FACTOR)
 
     entity = AdsSensor(ads_hub, adsvar, adstype, name,

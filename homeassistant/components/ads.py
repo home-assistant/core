@@ -43,6 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
         vol.Required(CONF_PORT): cv.port,
         vol.Optional(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_ADS_POLL_INTERVAL, default=1000): cv.positive_int,
+        vol.Optional(CONF_ADS_USE_NOTIFY, default=True): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -57,13 +59,16 @@ def setup(hass, config):
     net_id = conf.get(CONF_DEVICE)
     ip_address = conf.get(CONF_IP_ADDRESS)
     port = conf.get(CONF_PORT)
+    poll_interval = conf.get(CONF_ADS_POLL_INTERVAL)
+    use_notify = conf.get(CONF_ADS_USE_NOTIFY)
 
     # create a new ads connection
     client = pyads.Connection(net_id, port, ip_address)
 
     # connect to ads client and try to connect
     try:
-        ads = AdsHub(client)
+        ads = AdsHub(client, poll_interval=poll_interval,
+                     use_notify=use_notify)
     except pyads.pyads.ADSError as e:
         _LOGGER.error('Could not connect to ADS host (netid={}, port={})'
                       .format(net_id, port))
@@ -101,7 +106,7 @@ NotificationItem = namedtuple(
 class AdsHub:
     """ Representation of a PyADS connection. """
 
-    def __init__(self, ads_client):
+    def __init__(self, ads_client, poll_interval, use_notify):
         from pyads import PLCTYPE_BOOL, PLCTYPE_BYTE, PLCTYPE_INT, \
             PLCTYPE_UINT, ADSError
 
@@ -117,6 +122,8 @@ class AdsHub:
         self.PLCTYPE_INT = PLCTYPE_INT
         self.PLCTYPE_UINT = PLCTYPE_UINT
         self.ADSError = ADSError
+        self.poll_interval = poll_interval
+        self.use_notify = use_notify
 
         self._client = ads_client
         self._client.open()
