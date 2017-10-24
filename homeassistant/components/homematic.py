@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyhomematic==0.1.33']
+REQUIREMENTS = ['pyhomematic==0.1.34']
 
 DOMAIN = 'homematic'
 

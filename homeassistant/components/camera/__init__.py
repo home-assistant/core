@@ -126,23 +126,16 @@ def async_setup(hass, config):
         """Handle calls to the camera services."""
         target_cameras = component.async_extract_from_service(service)
 
+        update_tasks = []
         for camera in target_cameras:
             if service.service == SERVICE_EN_MOTION:
                 yield from camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISEN_MOTION:
                 yield from camera.async_disable_motion_detection()
 
-        update_tasks = []
-        for camera in target_cameras:
             if not camera.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                camera.async_update_ha_state(True))
-            if hasattr(camera, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(camera.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
