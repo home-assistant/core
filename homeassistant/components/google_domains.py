@@ -12,8 +12,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +37,7 @@ def async_setup(hass, config):
     user = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
 
-    session = async_get_clientsession(hass)
+    session = hass.helpers.aiohttp_client.async_get_clientsession()
 
     result = yield from _update_google_domains(session, domain, user, password)
 
@@ -51,7 +49,8 @@ def async_setup(hass, config):
         """Update the Google Domains entry."""
         yield from _update_google_domains(session, domain, user, password)
 
-    async_track_time_interval(hass, update_domain_interval, INTERVAL)
+    hass.helpers.event.async_track_time_interval(
+        update_domain_interval, INTERVAL)
 
     return result
 
@@ -68,10 +67,9 @@ def _update_google_domains(session, domain, user, password):
     resp = yield from session.get(url, params=params)
     body = yield from resp.text()
 
-    _LOGGER.debug(body)
-
     if not body.startswith('good') and not body.startswith('nochg'):
-        _LOGGER.warning('Updating Google Domains domain failed: %s', domain)
+        _LOGGER.warning('Updating Google Domains domain failed: %s => %s',
+                        domain, body)
         return False
 
     return True
