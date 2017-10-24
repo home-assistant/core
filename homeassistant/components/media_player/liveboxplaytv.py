@@ -92,10 +92,17 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             # Update current channel
             channel = self._client.channel
             if channel is not None:
+                self._current_channel = channel
                 program = yield from \
                     self._client.async_get_current_program()
-                self._current_program = program.get('name')
-                self._current_channel = channel
+                if program:
+                    self._current_program = program.get('name')
+                    # Media progress info
+                    self._media_duration = \
+                        pyteleloisirs.get_program_duration(program)
+                    self._media_remaining_time = \
+                        pyteleloisirs.get_remaining_time(program)
+                    self._media_last_updated = dt_util.utcnow()
                 # Set media image to current program if a thumbnail is
                 # available. Otherwise we'll use the channel's image.
                 img_size = 800
@@ -107,13 +114,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     chan_img_url = \
                         self._client.get_current_channel_image(img_size)
                     self._media_image_url = chan_img_url
-                # Media progress info
-                now = dt_util.utcnow()
-                self._media_duration = \
-                    pyteleloisirs.get_program_duration(program)
-                self._media_remaining_time = \
-                    pyteleloisirs.get_remaining_time(program)
-                self._media_last_updated = now
         except requests.ConnectionError:
             self._state = None
 
