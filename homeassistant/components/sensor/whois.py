@@ -27,9 +27,7 @@ ATTR_REGISTRAR = 'registrar'
 ATTR_UPDATED = 'updated'
 ATTR_EXPIRES = 'expires'
 
-SCAN_INTERVAL = timedelta(hours=24)  # WHOIS info is very slow moving
-# We also want to prevent DOS / TOS breaking; One request per domain
-# every 24 hours shouldn't count as "high volume"
+SCAN_INTERVAL = timedelta(hours=24)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DOMAIN): cv.string,
@@ -52,12 +50,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning(
                 "WHOIS lookup for %s didn't contain expiration_date",
                 domain)
-            return False
+            return
     except WhoisException as ex:
         _LOGGER.error("Exception %s occurred during WHOIS lookup for %s",
                       ex,
                       domain)
-        return False
+        return
 
 
 class WhoisSensor(Entity):
@@ -120,7 +118,7 @@ class WhoisSensor(Entity):
             response = self.whois(self._domain, normalized=True)
         except WhoisException as ex:
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
-            return False
+            return
 
         if response:
             self._data = response
